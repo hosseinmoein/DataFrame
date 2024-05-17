@@ -2623,10 +2623,10 @@ static void test_DT_IBM_data()  {
 
         assert(df.get_column<double>("IBM_Open")[0] == 98.4375);
         assert(df.get_column<double>("IBM_Close")[18] == 97.875);
-        assert(df.get_index()[18] == DateTime(20001128));
+        assert(df.get_index()[18] == DateTime(DateTime::DateType(20001128)));
         assert(fabs(df.get_column<double>("IBM_High")[5030] - 111.8) < 0.001);
         assert(df.get_column<long>("IBM_Volume")[5022] == 21501100L);
-        assert(df.get_index()[5020] == DateTime(20201016));
+        assert(df.get_index()[5020] == DateTime(DateTime::DateType(20201016)));
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

@@ -200,7 +200,7 @@ get_nan<float>()  { return (std::numeric_limits<float>::quiet_NaN()); }
 
 template<>
 inline DateTime
-get_nan<DateTime>()  { return (DateTime { 19700101 }); }
+get_nan<DateTime>()  { return (DateTime { DateTime::DateType(19700101) }); }
 
 // ----------------------------------------------------------------------------
 

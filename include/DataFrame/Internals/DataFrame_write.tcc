@@ -54,7 +54,8 @@ write(const char *file_name,
         err.printf("write(): ERROR: Unable to open file '%s'", file_name);
         throw DataFrameError(err.c_str());
     }
-    write<std::ostream, Ts ...>(stream, iof, precision, columns_only, max_recs);
+    write<std::ostream, Ts ...>
+        (stream, iof, precision, columns_only, max_recs);
     return (true);
 }
 

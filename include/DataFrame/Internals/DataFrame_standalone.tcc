@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/Utils/DateTime.h>
+#include <DataFrame/Utils/Endianness.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
 #include <cctype>
@@ -903,6 +904,7 @@ inline static STRM &_write_binary_string_(STRM &strm, const V &str_vec)  {
     }
     for (const auto &str : str_vec)
         strm.write(str.data(), str.size() * sizeof(char));
+
     return (strm);
 }
 
@@ -949,6 +951,7 @@ inline static STRM &_write_binary_data_(STRM &strm, const V &vec)  {
                            sizeof(ValueType));
         }
     }
+
     return (strm);
 }
 
@@ -970,6 +973,112 @@ inline static STRM &_write_binary_datetime_(STRM &strm, const V &dt_vec)  {
 
         strm.write(reinterpret_cast<const char *>(&val), sizeof(val));
     }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_string_(STRM &strm, V &str_vec, bool needs_flipping)  {
+
+    uint64_t    vec_size { 0 };
+
+    strm.read(reinterpret_cast<char *>(&vec_size), sizeof(vec_size));
+    if (needs_flipping)
+        vec_size =
+            SwapBytes<decltype(vec_size), sizeof(vec_size)> { }(vec_size);
+
+    std::vector<uint16_t>   sizes (vec_size, 0);
+
+    strm.read(reinterpret_cast<char *>(sizes.data()),
+              vec_size * sizeof(uint16_t));
+    if (needs_flipping)
+        for (auto &s : sizes)
+            s = SwapBytes<uint16_t, sizeof(uint16_t)> { }(s);
+
+    // Now read the strings
+    //
+    str_vec.reserve(vec_size);
+    for (const auto s : sizes)  {
+        std::string str(std::size_t(s + 1), 0);
+
+        strm.read(reinterpret_cast<char *>(str.data()), s);
+        str_vec.emplace_back(std::move(str));
+    }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_data_(STRM &strm, V &vec, bool needs_flipping)  {
+
+    using VecType = typename std::remove_reference<V>::type;
+    using ValueType = typename VecType::value_type;
+
+    uint64_t    vec_size { 0 };
+
+    strm.read(reinterpret_cast<char *>(&vec_size), sizeof(vec_size));
+    if (needs_flipping)
+        vec_size =
+            SwapBytes<decltype(vec_size), sizeof(vec_size)> { }(vec_size);
+
+    if constexpr (std::is_same_v<ValueType, bool>)  {
+        vec.reserve(vec_size);
+        for (uint64_t i = 0; i < vec_size; ++i)  {
+            bool    val;
+
+            strm.read(reinterpret_cast<char *>(&val), sizeof(val));
+            vec.push_back(val);
+        }
+    }
+    else  {
+        vec.resize(vec_size);
+        strm.read(reinterpret_cast<char *>(vec.data()),
+                  vec_size * sizeof(ValueType));
+    }
+    if (needs_flipping)  flip_endianness(vec);
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_datetime_(STRM &strm, V &dt_vec, bool needs_flipping)  {
+
+    uint64_t    vec_size { 0 };
+
+    strm.read(reinterpret_cast<char *>(&vec_size), sizeof(vec_size));
+    if (needs_flipping)
+        vec_size =
+            SwapBytes<decltype(vec_size), sizeof(vec_size)> { }(vec_size);
+
+    SwapBytes<double, sizeof(double)>   swaper { };
+
+    dt_vec.reserve(vec_size);
+    for (uint64_t i = 0; i < vec_size; ++i)  {
+        double  val { 0 };
+
+        strm.read(reinterpret_cast<char *>(&val), sizeof(val));
+        if (needs_flipping)  val = swaper(val);
+
+        DateTime                        dt;
+        const DateTime::EpochType       tm =
+            static_cast<DateTime::EpochType>(val);
+        const DateTime::NanosecondType  nano =
+            static_cast<DateTime::NanosecondType>(
+                (val - static_cast<double>(tm)) * 1'000'000'000.0);
+
+        dt.set_time(tm, nano);
+        dt_vec.emplace_back(dt);
+    }
+
     return (strm);
 }
 

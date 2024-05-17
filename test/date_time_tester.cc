@@ -38,6 +38,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace hmdf;
 
+using date_t = DateTime::DateType;
+
 // ----------------------------------------------------------------------------
 
 static void test_priority_queue()  {
@@ -216,7 +218,7 @@ int main (int, char *[])  {
                                  gmt_now.minute (), gmt_now.sec (),
                                  gmt_now.msec (), DT_TIME_ZONE::GMT);
 
-        DateTime    local_time_1970 (19700101);
+        DateTime    local_time_1970 (date_t(19700101));
         DateTime    gmt_time_1970 (19700101, 0, 0, 0, 0, DT_TIME_ZONE::GMT);
 
         DateTime    local_time_1989 (19891214, 20, 15, 23, 0);
@@ -1009,11 +1011,22 @@ int main (int, char *[])  {
 
         const DateTime  dt8("2018-12-21 13:07:35.123456789+00",
                             DT_DATE_STYLE::ISO_STYLE);
-		std::string     result;
+        std::string     result;
 
         dt8.date_to_str (DT_FORMAT::ISO_DT_NANO, result);
         std::cout << "2018-12-21 13:07:35.123456789+00 == " << result
                   << std::endl;
+    }
+
+    {
+        std::cout << "Testing DateTime double constructor ..." << std::endl;
+
+        const DateTime  dt1 ("2018-12-21 13:07:35.123456789",
+                             DT_DATE_STYLE::ISO_STYLE);
+        const double    val = static_cast<double>(dt1);
+        const DateTime  dt2 (val);
+
+        assert(dt1 == dt2);
     }
 
     test_priority_queue();

@@ -1273,27 +1273,6 @@ read_csv2_(std::istream &stream,
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 template<typename I, typename H>
 void DataFrame<I, H>::read_binary_(std::istream &stream)  {
 
@@ -1365,7 +1344,7 @@ void DataFrame<I, H>::read_binary_(std::istream &stream)  {
             col_type);
         throw DataFrameError(err.c_str());
     }
-    load_index(std::forward<IndexVecType &&>(idx_vec));
+    load_index(std::move(idx_vec));
 
     for (uint16_t i = 0; i < col_num; ++i)  {
         stream.read(col_name, sizeof(col_name));
@@ -1388,91 +1367,91 @@ void DataFrame<I, H>::read_binary_(std::istream &stream)  {
         else if (! std::strcmp(col_type, "float"))  {
             ColumnVecType<float>    vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "double"))  {
             ColumnVecType<double>   vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "short"))  {
             ColumnVecType<short int>    vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "ushort"))  {
             ColumnVecType<unsigned short int>   vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "int"))  {
             ColumnVecType<int>  vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "uint"))  {
             ColumnVecType<unsigned int> vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "long"))  {
             ColumnVecType<long int> vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "ulong"))  {
             ColumnVecType<unsigned long int>    vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "longlong"))  {
             ColumnVecType<long long int>    vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "ulonglong"))  {
             ColumnVecType<unsigned long long int>   vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "char"))  {
             ColumnVecType<char> vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "uchar"))  {
             ColumnVecType<unsigned char>    vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "bool"))  {
             ColumnVecType<bool> vec;
 
-            _read_binary_data_(stream, idx_vec, needs_flipping);
+            _read_binary_data_(stream, vec, needs_flipping);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }

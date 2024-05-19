@@ -994,17 +994,20 @@ _read_binary_string_(STRM &strm, V &str_vec, bool needs_flipping)  {
 
     strm.read(reinterpret_cast<char *>(sizes.data()),
               vec_size * sizeof(uint16_t));
-    if (needs_flipping)
+    if (needs_flipping)  {
+        SwapBytes<uint16_t, sizeof(uint16_t)>   swaper { };
+
         for (auto &s : sizes)
-            s = SwapBytes<uint16_t, sizeof(uint16_t)> { }(s);
+            s = swaper(s);
+    }
 
     // Now read the strings
     //
     str_vec.reserve(vec_size);
     for (const auto s : sizes)  {
-        std::string str(std::size_t(s + 1), 0);
+        std::string str (std::size_t(s), 0);
 
-        strm.read(reinterpret_cast<char *>(str.data()), s);
+        strm.read(str.data(), s * sizeof(char));
         str_vec.emplace_back(std::move(str));
     }
 
@@ -1040,8 +1043,8 @@ _read_binary_data_(STRM &strm, V &vec, bool needs_flipping)  {
         vec.resize(vec_size);
         strm.read(reinterpret_cast<char *>(vec.data()),
                   vec_size * sizeof(ValueType));
+        if (needs_flipping)  flip_endianness(vec);
     }
-    if (needs_flipping)  flip_endianness(vec);
 
     return (strm);
 }

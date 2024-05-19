@@ -3778,21 +3778,139 @@ static void test_writing_binary()  {
 
     typedef StdDataFrame64<std::string> StrDataFrame;
 
-    StrDataFrame    df;
+    StrDataFrame    ibm;
+    StrDataFrame    ibm_csv;
+    StrDataFrame    ibm_csv2;
+    StrDataFrame    ibm_dat;
+    StrDataFrame    ibm_vw_dat;
+    StrDataFrame    ibm_vw_json;
 
     try  {
-        df.read("SHORT_IBM.csv", io_format::csv2);
-        df.write<double, long>("./SHORT_IBM_dup.csv", io_format::csv);
-        df.write<double, long>("./SHORT_IBM_dup.csv2", io_format::csv2);
-        df.write<double, long>("./SHORT_IBM_dup.dat", io_format::binary);
+        ibm.read("SHORT_IBM.csv", io_format::csv2);
+
+        ibm.write<double, long>("./SHORT_IBM_dup.csv", io_format::csv);
+        ibm.write<double, long>("./SHORT_IBM_dup.csv2", io_format::csv2);
+        ibm.write<double, long>("./SHORT_IBM_dup.dat", io_format::binary);
 
         auto    vw =
-            df.get_view<double, long>(
+            ibm.get_view<double, long>(
                 { "IBM_Open", "IBM_High", "IBM_Close", "IBM_Volume" });
 
         vw.write<double, long>("./FROM_VW_SHORT_IBM.csv", io_format::csv);
         vw.write<double, long>("./FROM_VW_SHORT_IBM.csv2", io_format::csv2);
         vw.write<double, long>("./FROM_VW_SHORT_IBM.dat", io_format::binary);
+        vw.write<double, long>("./FROM_VW_SHORT_IBM.json", io_format::json);
+
+        ibm_csv.read("./SHORT_IBM_dup.csv", io_format::csv);
+        ibm_csv2.read("./SHORT_IBM_dup.csv2", io_format::csv2);
+        ibm_dat.read("./SHORT_IBM_dup.dat", io_format::binary);
+        ibm_vw_dat.read("./FROM_VW_SHORT_IBM.dat", io_format::binary);
+        ibm_vw_json.read("./FROM_VW_SHORT_IBM.json", io_format::json);
+
+        assert((ibm.get_index().size() == ibm_dat.get_index().size()));
+        assert((ibm.get_index().size() == ibm_csv.get_index().size()));
+        assert((ibm.get_index().size() == ibm_csv2.get_index().size()));
+        assert((ibm.get_index().size() == ibm_vw_dat.get_index().size()));
+        assert((ibm.get_index().size() == ibm_vw_json.get_index().size()));
+
+        assert((ibm.get_column<double>("IBM_Open").front() ==
+                    ibm_dat.get_column<double>("IBM_Open").front()));
+        assert((ibm.get_column<double>("IBM_Open").front() ==
+                    ibm_csv.get_column<double>("IBM_Open").front()));
+        assert((ibm.get_column<double>("IBM_Open").front() ==
+                    ibm_csv2.get_column<double>("IBM_Open").front()));
+        assert((ibm.get_column<double>("IBM_Open").front() ==
+                    ibm_vw_dat.get_column<double>("IBM_Open").front()));
+        assert((ibm.get_column<double>("IBM_Open").front() ==
+                    ibm_vw_json.get_column<double>("IBM_Open").front()));
+
+        assert((ibm.get_column<double>("IBM_Open").back() ==
+                    ibm_dat.get_column<double>("IBM_Open").back()));
+        assert((ibm.get_column<double>("IBM_Open").back() ==
+                    ibm_csv.get_column<double>("IBM_Open").back()));
+        assert((ibm.get_column<double>("IBM_Open").back() ==
+                    ibm_csv2.get_column<double>("IBM_Open").back()));
+        assert((ibm.get_column<double>("IBM_Open").back() ==
+                    ibm_vw_dat.get_column<double>("IBM_Open").back()));
+        assert((ibm.get_column<double>("IBM_Open").back() ==
+                    ibm_vw_json.get_column<double>("IBM_Open").back()));
+
+        assert((ibm.get_column<double>("IBM_Open")[850] ==
+                    ibm_dat.get_column<double>("IBM_Open")[850]));
+        assert((ibm.get_column<double>("IBM_Open")[850] ==
+                    ibm_csv.get_column<double>("IBM_Open")[850]));
+        assert((ibm.get_column<double>("IBM_Open")[850] ==
+                    ibm_csv2.get_column<double>("IBM_Open")[850]));
+        assert((ibm.get_column<double>("IBM_Open")[850] ==
+                    ibm_vw_dat.get_column<double>("IBM_Open")[850]));
+        assert((ibm.get_column<double>("IBM_Open")[850] ==
+                    ibm_vw_json.get_column<double>("IBM_Open")[850]));
+
+        assert((ibm.get_column<double>("IBM_High").front() ==
+                    ibm_dat.get_column<double>("IBM_High").front()));
+        assert((ibm.get_column<double>("IBM_High").front() ==
+                    ibm_csv.get_column<double>("IBM_High").front()));
+        assert((ibm.get_column<double>("IBM_High").front() ==
+                    ibm_csv2.get_column<double>("IBM_High").front()));
+        assert((ibm.get_column<double>("IBM_High").front() ==
+                    ibm_vw_dat.get_column<double>("IBM_High").front()));
+        assert((ibm.get_column<double>("IBM_High").front() ==
+                    ibm_vw_json.get_column<double>("IBM_High").front()));
+
+        assert((ibm.get_column<double>("IBM_High").back() ==
+                    ibm_dat.get_column<double>("IBM_High").back()));
+        assert((ibm.get_column<double>("IBM_High").back() ==
+                    ibm_csv.get_column<double>("IBM_High").back()));
+        assert((ibm.get_column<double>("IBM_High").back() ==
+                    ibm_csv2.get_column<double>("IBM_High").back()));
+        assert((ibm.get_column<double>("IBM_High").back() ==
+                    ibm_vw_dat.get_column<double>("IBM_High").back()));
+        assert((ibm.get_column<double>("IBM_High").back() ==
+                    ibm_vw_json.get_column<double>("IBM_High").back()));
+
+        assert((ibm.get_column<double>("IBM_High")[850] ==
+                    ibm_dat.get_column<double>("IBM_High")[850]));
+        assert((ibm.get_column<double>("IBM_High")[850] ==
+                    ibm_csv.get_column<double>("IBM_High")[850]));
+        assert((ibm.get_column<double>("IBM_High")[850] ==
+                    ibm_csv2.get_column<double>("IBM_High")[850]));
+        assert((ibm.get_column<double>("IBM_High")[850] ==
+                    ibm_vw_dat.get_column<double>("IBM_High")[850]));
+        assert((ibm.get_column<double>("IBM_High")[850] ==
+                    ibm_vw_json.get_column<double>("IBM_High")[850]));
+
+        assert((ibm.get_column<long>("IBM_Volume").front() ==
+                    ibm_dat.get_column<long>("IBM_Volume").front()));
+        assert((ibm.get_column<long>("IBM_Volume").front() ==
+                    ibm_csv.get_column<long>("IBM_Volume").front()));
+        assert((ibm.get_column<long>("IBM_Volume").front() ==
+                    ibm_csv2.get_column<long>("IBM_Volume").front()));
+        assert((ibm.get_column<long>("IBM_Volume").front() ==
+                    ibm_vw_dat.get_column<long>("IBM_Volume").front()));
+        assert((ibm.get_column<long>("IBM_Volume").front() ==
+                    ibm_vw_json.get_column<long>("IBM_Volume").front()));
+
+        assert((ibm.get_column<long>("IBM_Volume").back() ==
+                    ibm_dat.get_column<long>("IBM_Volume").back()));
+        assert((ibm.get_column<long>("IBM_Volume").back() ==
+                    ibm_csv.get_column<long>("IBM_Volume").back()));
+        assert((ibm.get_column<long>("IBM_Volume").back() ==
+                    ibm_csv2.get_column<long>("IBM_Volume").back()));
+        assert((ibm.get_column<long>("IBM_Volume").back() ==
+                    ibm_vw_dat.get_column<long>("IBM_Volume").back()));
+        assert((ibm.get_column<long>("IBM_Volume").back() ==
+                    ibm_vw_json.get_column<long>("IBM_Volume").back()));
+
+        assert((ibm.get_column<long>("IBM_Volume")[850] ==
+                    ibm_dat.get_column<long>("IBM_Volume")[850]));
+        assert((ibm.get_column<long>("IBM_Volume")[850] ==
+                    ibm_csv.get_column<long>("IBM_Volume")[850]));
+        assert((ibm.get_column<long>("IBM_Volume")[850] ==
+                    ibm_csv2.get_column<long>("IBM_Volume")[850]));
+        assert((ibm.get_column<long>("IBM_Volume")[850] ==
+                    ibm_vw_dat.get_column<long>("IBM_Volume")[850]));
+        assert((ibm.get_column<long>("IBM_Volume")[850] ==
+                    ibm_vw_json.get_column<long>("IBM_Volume")[850]));
 
         std::remove("./SHORT_IBM_dup.csv");
         std::remove("./SHORT_IBM_dup.csv2");
@@ -3800,6 +3918,7 @@ static void test_writing_binary()  {
         std::remove("./FROM_VW_SHORT_IBM.csv");
         std::remove("./FROM_VW_SHORT_IBM.csv2");
         std::remove("./FROM_VW_SHORT_IBM.dat");
+        std::remove("./FROM_VW_SHORT_IBM.json");
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

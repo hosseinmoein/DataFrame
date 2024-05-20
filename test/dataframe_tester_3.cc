@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/RandGen.h>
 
 #include <cassert>
+#include <cstdio>
 #include <iostream>
 #include <string>
 
@@ -3771,6 +3772,249 @@ static void test_EhlersBandPassFilterVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_writing_binary()  {
+
+    std::cout << "\nTesting test_writing_binary{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    ibm;
+    StrDataFrame    ibm_csv;
+    StrDataFrame    ibm_csv2;
+    StrDataFrame    ibm_dat;
+    StrDataFrame    ibm_vw_dat;
+    StrDataFrame    ibm_vw_json;
+
+    try  {
+        ibm.read("SHORT_IBM.csv", io_format::csv2);
+
+        ibm.write<double, long>("./SHORT_IBM_dup.csv", io_format::csv);
+        ibm.write<double, long>("./SHORT_IBM_dup.csv2", io_format::csv2);
+        ibm.write<double, long>("./SHORT_IBM_dup.dat", io_format::binary);
+
+        auto    vw =
+            ibm.get_view<double, long>(
+                { "IBM_Open", "IBM_High", "IBM_Close", "IBM_Volume" });
+
+        vw.write<double, long>("./FROM_VW_SHORT_IBM.csv", io_format::csv);
+        vw.write<double, long>("./FROM_VW_SHORT_IBM.csv2", io_format::csv2);
+        vw.write<double, long>("./FROM_VW_SHORT_IBM.dat", io_format::binary);
+        vw.write<double, long>("./FROM_VW_SHORT_IBM.json", io_format::json);
+
+        ibm_csv.read("./SHORT_IBM_dup.csv", io_format::csv);
+        ibm_csv2.read("./SHORT_IBM_dup.csv2", io_format::csv2);
+        ibm_dat.read("./SHORT_IBM_dup.dat", io_format::binary);
+        ibm_vw_dat.read("./FROM_VW_SHORT_IBM.dat", io_format::binary);
+        ibm_vw_json.read("./FROM_VW_SHORT_IBM.json", io_format::json);
+
+        assert((ibm.get_index().size() == ibm_dat.get_index().size()));
+        assert((ibm.get_index().size() == ibm_csv.get_index().size()));
+        assert((ibm.get_index().size() == ibm_csv2.get_index().size()));
+        assert((ibm.get_index().size() == ibm_vw_dat.get_index().size()));
+        assert((ibm.get_index().size() == ibm_vw_json.get_index().size()));
+
+        assert((ibm.get_index().front() == ibm_dat.get_index().front()));
+        assert((ibm.get_index().front() == ibm_csv.get_index().front()));
+        assert((ibm.get_index().front() == ibm_csv2.get_index().front()));
+        assert((ibm.get_index().front() == ibm_vw_dat.get_index().front()));
+        assert((ibm.get_index().front() == ibm_vw_json.get_index().front()));
+
+        assert((ibm.get_index().back() == ibm_dat.get_index().back()));
+        assert((ibm.get_index().back() == ibm_csv.get_index().back()));
+        assert((ibm.get_index().back() == ibm_csv2.get_index().back()));
+        assert((ibm.get_index().back() == ibm_vw_dat.get_index().back()));
+        assert((ibm.get_index().back() == ibm_vw_json.get_index().back()));
+
+        assert((ibm.get_index()[1000] == ibm_dat.get_index()[1000]));
+        assert((ibm.get_index()[1000] == ibm_csv.get_index()[1000]));
+        assert((ibm.get_index()[1000] == ibm_csv2.get_index()[1000]));
+        assert((ibm.get_index()[1000] == ibm_vw_dat.get_index()[1000]));
+        assert((ibm.get_index()[1000] == ibm_vw_json.get_index()[1000]));
+
+        assert((ibm.get_column<double>("IBM_Open").front() ==
+                    ibm_dat.get_column<double>("IBM_Open").front()));
+        assert((ibm.get_column<double>("IBM_Open").front() ==
+                    ibm_csv.get_column<double>("IBM_Open").front()));
+        assert((ibm.get_column<double>("IBM_Open").front() ==
+                    ibm_csv2.get_column<double>("IBM_Open").front()));
+        assert((ibm.get_column<double>("IBM_Open").front() ==
+                    ibm_vw_dat.get_column<double>("IBM_Open").front()));
+        assert((ibm.get_column<double>("IBM_Open").front() ==
+                    ibm_vw_json.get_column<double>("IBM_Open").front()));
+
+        assert((ibm.get_column<double>("IBM_Open").back() ==
+                    ibm_dat.get_column<double>("IBM_Open").back()));
+        assert((ibm.get_column<double>("IBM_Open").back() ==
+                    ibm_csv.get_column<double>("IBM_Open").back()));
+        assert((ibm.get_column<double>("IBM_Open").back() ==
+                    ibm_csv2.get_column<double>("IBM_Open").back()));
+        assert((ibm.get_column<double>("IBM_Open").back() ==
+                    ibm_vw_dat.get_column<double>("IBM_Open").back()));
+        assert((ibm.get_column<double>("IBM_Open").back() ==
+                    ibm_vw_json.get_column<double>("IBM_Open").back()));
+
+        assert((ibm.get_column<double>("IBM_Open")[850] ==
+                    ibm_dat.get_column<double>("IBM_Open")[850]));
+        assert((ibm.get_column<double>("IBM_Open")[850] ==
+                    ibm_csv.get_column<double>("IBM_Open")[850]));
+        assert((ibm.get_column<double>("IBM_Open")[850] ==
+                    ibm_csv2.get_column<double>("IBM_Open")[850]));
+        assert((ibm.get_column<double>("IBM_Open")[850] ==
+                    ibm_vw_dat.get_column<double>("IBM_Open")[850]));
+        assert((ibm.get_column<double>("IBM_Open")[850] ==
+                    ibm_vw_json.get_column<double>("IBM_Open")[850]));
+
+        assert((ibm.get_column<double>("IBM_High").front() ==
+                    ibm_dat.get_column<double>("IBM_High").front()));
+        assert((ibm.get_column<double>("IBM_High").front() ==
+                    ibm_csv.get_column<double>("IBM_High").front()));
+        assert((ibm.get_column<double>("IBM_High").front() ==
+                    ibm_csv2.get_column<double>("IBM_High").front()));
+        assert((ibm.get_column<double>("IBM_High").front() ==
+                    ibm_vw_dat.get_column<double>("IBM_High").front()));
+        assert((ibm.get_column<double>("IBM_High").front() ==
+                    ibm_vw_json.get_column<double>("IBM_High").front()));
+
+        assert((ibm.get_column<double>("IBM_High").back() ==
+                    ibm_dat.get_column<double>("IBM_High").back()));
+        assert((ibm.get_column<double>("IBM_High").back() ==
+                    ibm_csv.get_column<double>("IBM_High").back()));
+        assert((ibm.get_column<double>("IBM_High").back() ==
+                    ibm_csv2.get_column<double>("IBM_High").back()));
+        assert((ibm.get_column<double>("IBM_High").back() ==
+                    ibm_vw_dat.get_column<double>("IBM_High").back()));
+        assert((ibm.get_column<double>("IBM_High").back() ==
+                    ibm_vw_json.get_column<double>("IBM_High").back()));
+
+        assert((ibm.get_column<double>("IBM_High")[850] ==
+                    ibm_dat.get_column<double>("IBM_High")[850]));
+        assert((ibm.get_column<double>("IBM_High")[850] ==
+                    ibm_csv.get_column<double>("IBM_High")[850]));
+        assert((ibm.get_column<double>("IBM_High")[850] ==
+                    ibm_csv2.get_column<double>("IBM_High")[850]));
+        assert((ibm.get_column<double>("IBM_High")[850] ==
+                    ibm_vw_dat.get_column<double>("IBM_High")[850]));
+        assert((ibm.get_column<double>("IBM_High")[850] ==
+                    ibm_vw_json.get_column<double>("IBM_High")[850]));
+
+        assert((ibm.get_column<long>("IBM_Volume").front() ==
+                    ibm_dat.get_column<long>("IBM_Volume").front()));
+        assert((ibm.get_column<long>("IBM_Volume").front() ==
+                    ibm_csv.get_column<long>("IBM_Volume").front()));
+        assert((ibm.get_column<long>("IBM_Volume").front() ==
+                    ibm_csv2.get_column<long>("IBM_Volume").front()));
+        assert((ibm.get_column<long>("IBM_Volume").front() ==
+                    ibm_vw_dat.get_column<long>("IBM_Volume").front()));
+        assert((ibm.get_column<long>("IBM_Volume").front() ==
+                    ibm_vw_json.get_column<long>("IBM_Volume").front()));
+
+        assert((ibm.get_column<long>("IBM_Volume").back() ==
+                    ibm_dat.get_column<long>("IBM_Volume").back()));
+        assert((ibm.get_column<long>("IBM_Volume").back() ==
+                    ibm_csv.get_column<long>("IBM_Volume").back()));
+        assert((ibm.get_column<long>("IBM_Volume").back() ==
+                    ibm_csv2.get_column<long>("IBM_Volume").back()));
+        assert((ibm.get_column<long>("IBM_Volume").back() ==
+                    ibm_vw_dat.get_column<long>("IBM_Volume").back()));
+        assert((ibm.get_column<long>("IBM_Volume").back() ==
+                    ibm_vw_json.get_column<long>("IBM_Volume").back()));
+
+        assert((ibm.get_column<long>("IBM_Volume")[850] ==
+                    ibm_dat.get_column<long>("IBM_Volume")[850]));
+        assert((ibm.get_column<long>("IBM_Volume")[850] ==
+                    ibm_csv.get_column<long>("IBM_Volume")[850]));
+        assert((ibm.get_column<long>("IBM_Volume")[850] ==
+                    ibm_csv2.get_column<long>("IBM_Volume")[850]));
+        assert((ibm.get_column<long>("IBM_Volume")[850] ==
+                    ibm_vw_dat.get_column<long>("IBM_Volume")[850]));
+        assert((ibm.get_column<long>("IBM_Volume")[850] ==
+                    ibm_vw_json.get_column<long>("IBM_Volume")[850]));
+
+        std::remove("./SHORT_IBM_dup.csv");
+        std::remove("./SHORT_IBM_dup.csv2");
+        std::remove("./SHORT_IBM_dup.dat");
+        std::remove("./FROM_VW_SHORT_IBM.csv");
+        std::remove("./FROM_VW_SHORT_IBM.csv2");
+        std::remove("./FROM_VW_SHORT_IBM.dat");
+        std::remove("./FROM_VW_SHORT_IBM.json");
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_writing_binary_2()  {
+
+    std::cout << "\nTesting test_writing_binary_2{ } ..." << std::endl;
+
+    using DTDataFrame = StdDataFrame64<DateTime>;
+
+    DTDataFrame aapl;
+    DTDataFrame aapl_dat;
+    DTDataFrame aapl_vw_dat;
+
+    try  {
+        aapl.read("DT_AAPL.csv", io_format::csv2);
+
+        aapl.write<double, long>("./DT_AAPL_dup.dat", io_format::binary);
+
+        auto    vw =
+            aapl.get_view<double, long>(
+                { "AAPL_Close", "AAPL_Volume", "AAPL_Open" });
+
+        vw.write<double, long>("./FROM_VW_DT_AAPL.dat", io_format::binary);
+
+        aapl_dat.read("./DT_AAPL_dup.dat", io_format::binary);
+        aapl_vw_dat.read("./FROM_VW_DT_AAPL.dat", io_format::binary);
+
+        assert((aapl.get_index().size() == aapl_dat.get_index().size()));
+        assert((aapl.get_index().size() == aapl_vw_dat.get_index().size()));
+
+        assert((aapl.get_index().front() == aapl_dat.get_index().front()));
+        assert((aapl.get_index().front() == aapl_vw_dat.get_index().front()));
+        assert((aapl.get_index().back() == aapl_dat.get_index().back()));
+        assert((aapl.get_index().back() == aapl_vw_dat.get_index().back()));
+        assert((aapl.get_index()[1200] == aapl_dat.get_index()[1200]));
+        assert((aapl.get_index()[1200] == aapl_vw_dat.get_index()[1200]));
+
+        assert((aapl.get_column<double>("AAPL_Open").front() ==
+                    aapl_dat.get_column<double>("AAPL_Open").front()));
+        assert((aapl.get_column<double>("AAPL_Open").front() ==
+                    aapl_vw_dat.get_column<double>("AAPL_Open").front()));
+        assert((aapl.get_column<double>("AAPL_Open").back() ==
+                    aapl_dat.get_column<double>("AAPL_Open").back()));
+        assert((aapl.get_column<double>("AAPL_Open").back() ==
+                    aapl_vw_dat.get_column<double>("AAPL_Open").back()));
+        assert((aapl.get_column<double>("AAPL_Open")[830] ==
+                    aapl_dat.get_column<double>("AAPL_Open")[830]));
+        assert((aapl.get_column<double>("AAPL_Open")[830] ==
+                    aapl_vw_dat.get_column<double>("AAPL_Open")[830]));
+
+        assert((aapl.get_column<long>("AAPL_Volume").front() ==
+                    aapl_dat.get_column<long>("AAPL_Volume").front()));
+        assert((aapl.get_column<long>("AAPL_Volume").front() ==
+                    aapl_vw_dat.get_column<long>("AAPL_Volume").front()));
+        assert((aapl.get_column<long>("AAPL_Volume").back() ==
+                    aapl_dat.get_column<long>("AAPL_Volume").back()));
+        assert((aapl.get_column<long>("AAPL_Volume").back() ==
+                    aapl_vw_dat.get_column<long>("AAPL_Volume").back()));
+        assert((aapl.get_column<long>("AAPL_Volume")[830] ==
+                    aapl_dat.get_column<long>("AAPL_Volume")[830]));
+        assert((aapl.get_column<long>("AAPL_Volume")[830] ==
+                    aapl_vw_dat.get_column<long>("AAPL_Volume")[830]));
+
+        std::remove("./DT_AAPL_dup.dat");
+        std::remove("./FROM_VW_DT_AAPL.dat");
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3850,6 +4094,8 @@ int main(int, char *[]) {
     test_PeaksAndValleysVisitor();
     test_EhlersHighPassFilterVisitor();
     test_EhlersBandPassFilterVisitor();
+    test_writing_binary();
+    test_writing_binary_2();
 
     return (0);
 }

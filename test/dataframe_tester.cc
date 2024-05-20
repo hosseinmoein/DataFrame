@@ -1256,11 +1256,11 @@ static void test_dataframe_with_datetime()  {
 
     std::cout << "\nTesting DataFrame with DateTime ..." << std::endl;
 
-    DateTime                    dt(20010102);
-    StlVecType<DateTime>       idx;
-    StlVecType<double>         d1;
-    StlVecType<int>            i1;
-    StlVecType<std::string>    s1;
+    DateTime                dt (DateTime::DateType(20010102));
+    StlVecType<DateTime>    idx;
+    StlVecType<double>      d1;
+    StlVecType<int>         i1;
+    StlVecType<std::string> s1;
 
     idx.reserve(20);
     d1.reserve(20);

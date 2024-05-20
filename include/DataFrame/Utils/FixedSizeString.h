@@ -291,6 +291,12 @@ public:
     //
     [[nodiscard]] inline const_pointer
     c_str () const noexcept  { return (string_); }
+
+    [[nodiscard]] inline const_pointer
+    data () const noexcept  { return (string_); }
+    [[nodiscard]] inline pointer
+    data () noexcept  { return (string_); }
+
     [[nodiscard]] inline const_pointer
     sub_c_str (size_type offset) const noexcept  {
 

@@ -228,6 +228,25 @@ struct print_csv_functor_ : DataVec::template visitor_base<Ts ...>  {
     void operator() (const T &vec);
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
+struct print_binary_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline print_binary_functor_ (const char *n,
+                                  std::ostream &o,
+                                  long sr,
+                                  long er)
+        : name(n), os(o), start_row(sr), end_row(er) {   }
+
+    const char      *name;
+    std::ostream    &os;
+    const long      start_row;
+    const long      end_row;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
 
 // ----------------------------------------------------------------------------
 

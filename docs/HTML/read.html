@@ -95,7 +95,9 @@ read(const char *file_name,
           <LI>Column "INDEX" must be the first column, if it exists</LI>
           <LI>Fields in column dictionaries must be in N (name), T (type), D (data) order</LI>
         </OL>
-        <BR>
+ -----------------------------------------------<BR>
+        <B>Binary</B> format is a proprietary format, that is optimized for compressing algorithms. It also takes care of different endianness. The file is always written with the same endianness as the writing host. But it will be adjusted accordingly when reading it from a different host with a different endianness.<BR><BR>
+
  -----------------------------------------------<BR>
         In all formats the following data types are supported:
         <PRE>
@@ -117,8 +119,8 @@ string     -- const char *
 string     -- char *
 bool       -- bool
 DateTime   -- DateTime data in format of
-                        &lt;Epoch seconds&gt;.&lt;nanoseconds&gt;
-                        (1516179600.874123908)
+    &lt;Epoch seconds&gt;.&lt;nanoseconds&gt;
+    (1516179600.874123908)
         </PRE>
         In case of io_format::csv2 and io_format::csv the following additional types are also supported:
         <PRE>

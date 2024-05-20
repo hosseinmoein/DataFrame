@@ -3813,6 +3813,24 @@ static void test_writing_binary()  {
         assert((ibm.get_index().size() == ibm_vw_dat.get_index().size()));
         assert((ibm.get_index().size() == ibm_vw_json.get_index().size()));
 
+        assert((ibm.get_index().front() == ibm_dat.get_index().front()));
+        assert((ibm.get_index().front() == ibm_csv.get_index().front()));
+        assert((ibm.get_index().front() == ibm_csv2.get_index().front()));
+        assert((ibm.get_index().front() == ibm_vw_dat.get_index().front()));
+        assert((ibm.get_index().front() == ibm_vw_json.get_index().front()));
+
+        assert((ibm.get_index().back() == ibm_dat.get_index().back()));
+        assert((ibm.get_index().back() == ibm_csv.get_index().back()));
+        assert((ibm.get_index().back() == ibm_csv2.get_index().back()));
+        assert((ibm.get_index().back() == ibm_vw_dat.get_index().back()));
+        assert((ibm.get_index().back() == ibm_vw_json.get_index().back()));
+
+        assert((ibm.get_index()[1000] == ibm_dat.get_index()[1000]));
+        assert((ibm.get_index()[1000] == ibm_csv.get_index()[1000]));
+        assert((ibm.get_index()[1000] == ibm_csv2.get_index()[1000]));
+        assert((ibm.get_index()[1000] == ibm_vw_dat.get_index()[1000]));
+        assert((ibm.get_index()[1000] == ibm_vw_json.get_index()[1000]));
+
         assert((ibm.get_column<double>("IBM_Open").front() ==
                     ibm_dat.get_column<double>("IBM_Open").front()));
         assert((ibm.get_column<double>("IBM_Open").front() ==
@@ -3927,6 +3945,76 @@ static void test_writing_binary()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_writing_binary_2()  {
+
+    std::cout << "\nTesting test_writing_binary_2{ } ..." << std::endl;
+
+    using DTDataFrame = StdDataFrame64<DateTime>;
+
+    DTDataFrame aapl;
+    DTDataFrame aapl_dat;
+    DTDataFrame aapl_vw_dat;
+
+    try  {
+        aapl.read("DT_AAPL.csv", io_format::csv2);
+
+        aapl.write<double, long>("./DT_AAPL_dup.dat", io_format::binary);
+
+        auto    vw =
+            aapl.get_view<double, long>(
+                { "AAPL_Close", "AAPL_Volume", "AAPL_Open" });
+
+        vw.write<double, long>("./FROM_VW_DT_AAPL.dat", io_format::binary);
+
+        aapl_dat.read("./DT_AAPL_dup.dat", io_format::binary);
+        aapl_vw_dat.read("./FROM_VW_DT_AAPL.dat", io_format::binary);
+
+        assert((aapl.get_index().size() == aapl_dat.get_index().size()));
+        assert((aapl.get_index().size() == aapl_vw_dat.get_index().size()));
+
+        assert((aapl.get_index().front() == aapl_dat.get_index().front()));
+        assert((aapl.get_index().front() == aapl_vw_dat.get_index().front()));
+        assert((aapl.get_index().back() == aapl_dat.get_index().back()));
+        assert((aapl.get_index().back() == aapl_vw_dat.get_index().back()));
+        assert((aapl.get_index()[1200] == aapl_dat.get_index()[1200]));
+        assert((aapl.get_index()[1200] == aapl_vw_dat.get_index()[1200]));
+
+        assert((aapl.get_column<double>("AAPL_Open").front() ==
+                    aapl_dat.get_column<double>("AAPL_Open").front()));
+        assert((aapl.get_column<double>("AAPL_Open").front() ==
+                    aapl_vw_dat.get_column<double>("AAPL_Open").front()));
+        assert((aapl.get_column<double>("AAPL_Open").back() ==
+                    aapl_dat.get_column<double>("AAPL_Open").back()));
+        assert((aapl.get_column<double>("AAPL_Open").back() ==
+                    aapl_vw_dat.get_column<double>("AAPL_Open").back()));
+        assert((aapl.get_column<double>("AAPL_Open")[830] ==
+                    aapl_dat.get_column<double>("AAPL_Open")[830]));
+        assert((aapl.get_column<double>("AAPL_Open")[830] ==
+                    aapl_vw_dat.get_column<double>("AAPL_Open")[830]));
+
+        assert((aapl.get_column<long>("AAPL_Volume").front() ==
+                    aapl_dat.get_column<long>("AAPL_Volume").front()));
+        assert((aapl.get_column<long>("AAPL_Volume").front() ==
+                    aapl_vw_dat.get_column<long>("AAPL_Volume").front()));
+        assert((aapl.get_column<long>("AAPL_Volume").back() ==
+                    aapl_dat.get_column<long>("AAPL_Volume").back()));
+        assert((aapl.get_column<long>("AAPL_Volume").back() ==
+                    aapl_vw_dat.get_column<long>("AAPL_Volume").back()));
+        assert((aapl.get_column<long>("AAPL_Volume")[830] ==
+                    aapl_dat.get_column<long>("AAPL_Volume")[830]));
+        assert((aapl.get_column<long>("AAPL_Volume")[830] ==
+                    aapl_vw_dat.get_column<long>("AAPL_Volume")[830]));
+
+        std::remove("./DT_AAPL_dup.dat");
+        std::remove("./FROM_VW_DT_AAPL.dat");
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4007,6 +4095,7 @@ int main(int, char *[]) {
     test_EhlersHighPassFilterVisitor();
     test_EhlersBandPassFilterVisitor();
     test_writing_binary();
+    test_writing_binary_2();
 
     return (0);
 }

@@ -101,7 +101,7 @@ table {
 &nbsp;&nbsp;&nbsp;&nbsp;<span style='color:#800000; font-weight:bold; '>class</span> DataFrame;</B><BR><BR>
 
   <B>I</B> specifies the <I>index</I> column type. Index column in a DataFrame is unlike an index in a SQL database. SQL database index makes access efficient. It doesn't give you any more information. The index column in a DataFrame is metadata about the data in the DataFrame. Each entry in the index describes the given row. It could be time, frequency, …, or a set of descriptors in a struct (like temperature, altitude, …).<BR>
-  <B>H</B> specifies a heterogenous vector type to contain DataFrame columns &#8212; don't get hang up on this too much, instead use the convenient typedef's in <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>.<BR>
+  <B>H</B> specifies a heterogenous vector type to contain DataFrame columns &#8212; don't get hang up on this too much, instead use the convenient typedef's in <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>. <B>H</B> is a relatively complex construct. You do not need to fully understand <B>H</B> to use the DataFrame library.<BR>
   <B>H</B> can only be:<BR>
   <UL>
     <LI><B>HeteroVector<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>

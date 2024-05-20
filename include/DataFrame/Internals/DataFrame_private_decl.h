@@ -464,7 +464,7 @@ void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
                        std::is_base_of<HeteroVector<align_value>, H>::value)
                         this->indices_.erase(this->indices_.begin() +
                                              (col_indices[i] - del_count++));
-                    else 
+                    else
                         this->indices_.erase(col_indices[i] - del_count++);
                 }
             };
@@ -491,7 +491,7 @@ void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
             if constexpr (std::is_base_of<HeteroVector<align_value>, H>::value)
                 indices_.erase(indices_.begin() +
                                (col_indices[i] - del_count++));
-            else 
+            else
                 indices_.erase(col_indices[i] - del_count++);
         }
     }
@@ -991,6 +991,12 @@ struct  ColVectorPushBack_<const char *, StlVecType<std::string>, Dummy>  {
             value.clear();
             _get_token_from_file_(file, ',', value,
                                   file_type == io_format::json ? ']' : '\0');
+
+            if (file_type == io_format::json)  { // Get rid of "'s
+                value.pop_back();
+                value.erase(value.begin());
+            }
+
             vec.push_back(value);
         }
     }
@@ -1040,7 +1046,7 @@ inline static void
 json_str_col_vector_push_back_(StlVecType<std::string> &vec,
                                std::istream &file)  {
 
-    char    value[1024];
+    char    value[2048];
     char    c = 0;
 
     while (file.get(c))
@@ -1061,11 +1067,10 @@ json_str_col_vector_push_back_(StlVecType<std::string> &vec,
             throw DataFrameError(
                 "json_str_col_vector_push_back_(): ERROR: Expected '\"' (0)");
 
-        while (file.get(c))
-            if (c == '"')
-                break;
-            else
-                value[count++] = c;
+        while (file.get(c))  {
+            if (c == '"')  break;
+            else  value[count++] = c;
+        }
         if (c != '"')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (1)");

@@ -101,7 +101,7 @@ write(S &o,
     o.precision(precision);
     if (iof == io_format::json)  {
         o << "{\n";
-        if (! columns_only)  {
+        if (! columns_only) [[likely]]  {
             _write_json_df_header_<S, IndexType>(o,
                                                  DF_INDEX_COL_NAME,
                                                  end_row - start_row);
@@ -132,7 +132,7 @@ write(S &o,
         }
     }
     else if (iof == io_format::csv)  {
-        if (! columns_only)  {
+        if (! columns_only) [[likely]]  {
             _write_csv_df_header_<S, IndexType>(o,
                                                 DF_INDEX_COL_NAME,
                                                 end_row - start_row) << ':';
@@ -154,7 +154,7 @@ write(S &o,
         }
     }
     else if (iof == io_format::csv2)  {
-        if (! columns_only)  {
+        if (! columns_only) [[likely]]  {
             _write_csv_df_header_<S, IndexType>(o,
                                                 DF_INDEX_COL_NAME,
                                                 end_row - start_row);
@@ -177,7 +177,7 @@ write(S &o,
         for (long i = start_row; i < end_row; ++i)  {
             size_type   count = 0;
 
-            if (! columns_only)  {
+            if (! columns_only) [[likely]]  {
                 o << indices_[i];
                 need_pre_comma = true;
                 count += 1;
@@ -205,12 +205,12 @@ write(S &o,
 
         o.write(reinterpret_cast<const char *>(&col_num), sizeof(col_num));
 
-        print_binary_functor_<Ts ...>   idx_functor (DF_INDEX_COL_NAME,
-                                                     o,
-                                                     start_row,
-                                                     end_row);
+        if (! columns_only) [[likely]]  {
+            print_binary_functor_<Ts ...>   idx_functor (
+                DF_INDEX_COL_NAME, o, start_row, end_row);
 
-        idx_functor(indices_);
+            idx_functor(indices_);
+        }
 
         const SpinGuard guard(lock_);
 

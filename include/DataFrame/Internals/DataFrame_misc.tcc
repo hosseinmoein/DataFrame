@@ -227,11 +227,11 @@ DataFrame<I, H>::print_binary_functor_<Ts ...>::operator() (const T &vec)  {
     std::strncpy(col_name, name, sizeof(col_name));
     os.write(col_name, sizeof(col_name));
     if constexpr (std::is_same_v<ValueType, std::string>)
-        _write_binary_string_(os, vec);
+        _write_binary_string_(os, vec, start_row, end_row);
     else if constexpr (std::is_same_v<ValueType, DateTime>)
-        _write_binary_datetime_(os, vec);
+        _write_binary_datetime_(os, vec, start_row, end_row);
     else
-        _write_binary_data_(os, vec);
+        _write_binary_data_(os, vec, start_row, end_row);
 
     return;
 }

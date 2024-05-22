@@ -4015,6 +4015,48 @@ static void test_writing_binary_2()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_reading_in_binary_chunks()  {
+
+    std::cout << "\nTesting reading_in_binary_chunks(  ) ..." << std::endl;
+
+    try  {
+        StrDataFrame    df1;
+
+        df1.read("SHORT_IBM.dat", io_format::binary, false, 0, 10);
+        assert(df1.get_index().size() == 10);
+        assert(df1.get_column<double>("IBM_Close").size() == 10);
+        assert(df1.get_index()[0] == "2014-01-02");
+        assert(df1.get_index()[9] == "2014-01-15");
+        assert(fabs(df1.get_column<double>("IBM_Close")[0] - 185.53) < 0.0001);
+        assert(fabs(df1.get_column<double>("IBM_Close")[9] - 187.74) < 0.0001);
+
+        StrDataFrame    df2;
+
+        df2.read("SHORT_IBM.dat", io_format::binary, false, 800, 10);
+        assert(df2.get_index().size() == 10);
+        assert(df2.get_column<double>("IBM_Close").size() == 10);
+        assert(df2.get_index()[0] == "2017-03-08");
+        assert(df2.get_index()[9] == "2017-03-21");
+        assert(fabs(df2.get_column<double>("IBM_Close")[0] - 179.45) < 0.0001);
+        assert(fabs(df2.get_column<double>("IBM_Close")[9] - 173.88) < 0.0001);
+
+        StrDataFrame    df3;
+
+        df3.read("SHORT_IBM.dat", io_format::binary, false, 1716, 10);
+        assert(df3.get_index().size() == 5);
+        assert(df3.get_column<double>("IBM_Close").size() == 5);
+        assert(df3.get_index()[0] == "2020-10-26");
+        assert(df3.get_index()[4] == "2020-10-30");
+        assert(fabs(df3.get_column<double>("IBM_Close")[0] - 112.22) < 0.0001);
+        assert(fabs(df3.get_column<double>("IBM_Close")[4] - 111.66) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4096,6 +4138,7 @@ int main(int, char *[]) {
     test_EhlersBandPassFilterVisitor();
     test_writing_binary();
     test_writing_binary_2();
+    test_reading_in_binary_chunks();
 
     return (0);
 }

@@ -884,28 +884,36 @@ inline static S &_write_csv_df_index_(S &o, unsigned char value)  {
 // ----------------------------------------------------------------------------
 
 template<typename STRM, typename V>
+inline static void
+_write_binary_common_(STRM &strm, [[maybe_unused]] const V &vec,
+                      std::size_t start_row, std::size_t end_row)  {
+
+    using VecType = typename std::remove_reference<V>::type;
+    using ValueType = typename VecType::value_type;
+
+    char        buffer[32];
+    const auto  &citer = _typeinfo_name_.find(typeid(ValueType));
+
+    if (citer != _typeinfo_name_.end()) [[likely]]
+        std::strncpy(buffer, citer->second, sizeof(buffer));
+    else
+        std::strncpy(buffer, "N/A", sizeof(buffer));
+    strm.write(buffer, sizeof(buffer));
+
+    const uint64_t  vec_size = end_row - start_row;
+
+    strm.write(reinterpret_cast<const char *>(&vec_size), sizeof(vec_size));
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename STRM, typename V>
 inline static STRM &
 _write_binary_string_(STRM &strm, const V &str_vec,
                       std::size_t start_row, std::size_t end_row)  {
 
-    char    buffer[32];
-
-    std::strncpy(buffer, "string", sizeof(buffer));
-    strm.write(buffer, sizeof(buffer));
-
-    if (end_row > str_vec.size() || start_row > end_row)  {
-        const uint64_t  vec_size = 0;
-
-        strm.write(reinterpret_cast<const char *>(&vec_size),
-                   sizeof(vec_size));
-        return(strm);
-    }
-    else  {
-        const uint64_t  vec_size = end_row - start_row;
-
-        strm.write(reinterpret_cast<const char *>(&vec_size),
-                   sizeof(vec_size));
-    }
+    _write_binary_common_(strm, str_vec, start_row, end_row);
 
     // It is better for compression, if you write the alike data together
     //
@@ -933,28 +941,7 @@ _write_binary_data_(STRM &strm, const V &vec,
     using VecType = typename std::remove_reference<V>::type;
     using ValueType = typename VecType::value_type;
 
-    char        buffer[32];
-    const auto  &citer = _typeinfo_name_.find(typeid(ValueType));
-
-    if (citer != _typeinfo_name_.end()) [[likely]]
-        std::strncpy(buffer, citer->second, sizeof(buffer));
-    else
-        std::strncpy(buffer, "N/A", sizeof(buffer));
-    strm.write(buffer, sizeof(buffer));
-
-    if (end_row > vec.size() || start_row > end_row)  {
-        const uint64_t  vec_size = 0;
-
-        strm.write(reinterpret_cast<const char *>(&vec_size),
-                   sizeof(vec_size));
-        return(strm);
-    }
-    else  {
-        const uint64_t  vec_size = end_row - start_row;
-
-        strm.write(reinterpret_cast<const char *>(&vec_size),
-                   sizeof(vec_size));
-    }
+    _write_binary_common_(strm, vec, start_row, end_row);
 
     if constexpr (std::is_same_v<ValueType, bool>)  {
         for (uint64_t i = start_row; i < end_row; ++i)  {
@@ -990,24 +977,7 @@ inline static STRM &
 _write_binary_datetime_(STRM &strm, const V &dt_vec,
                         std::size_t start_row, std::size_t end_row)  {
 
-    char    buffer[32];
-
-    std::strncpy(buffer, "DateTime", sizeof(buffer));
-    strm.write(buffer, sizeof(buffer));
-
-    if (end_row > dt_vec.size() || start_row > end_row)  {
-        const uint64_t  vec_size = 0;
-
-        strm.write(reinterpret_cast<const char *>(&vec_size),
-                   sizeof(vec_size));
-        return(strm);
-    }
-    else  {
-        const uint64_t  vec_size = end_row - start_row;
-
-        strm.write(reinterpret_cast<const char *>(&vec_size),
-                   sizeof(vec_size));
-    }
+    _write_binary_common_(strm, dt_vec, start_row, end_row);
 
     for (uint64_t i = start_row; i < end_row; ++i)  {
         const double    val = static_cast<double>(dt_vec[i]);
@@ -1020,10 +990,9 @@ _write_binary_datetime_(STRM &strm, const V &dt_vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename STRM, typename V>
-inline static STRM &
-_read_binary_string_(STRM &strm, V &str_vec, bool needs_flipping,
-                     std::size_t start_row, std::size_t num_rows)  {
+template<typename STRM>
+inline static uint64_t
+_read_binary_common_(STRM &strm, bool needs_flipping, std::size_t start_row)  {
 
     uint64_t    vec_size { 0 };
 
@@ -1035,12 +1004,23 @@ _read_binary_string_(STRM &strm, V &str_vec, bool needs_flipping,
     if (start_row > vec_size)  {
         String1K    err;
 
-        err.printf("_read_binary_string_(): ERROR: start_row %lu > "
+        err.printf("_read_binary_common_(): ERROR: start_row %lu > "
                    "vec_size %lu",
                    start_row, vec_size);
         throw DataFrameError(err.c_str());
     }
 
+    return (vec_size);
+}
+// ----------------------------------------------------------------------------
+
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_string_(STRM &strm, V &str_vec, bool needs_flipping,
+                     std::size_t start_row, std::size_t num_rows)  {
+
+    const uint64_t          vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
     std::vector<uint16_t>   sizes (vec_size, 0);
 
     strm.read(reinterpret_cast<char *>(sizes.data()),
@@ -1085,22 +1065,8 @@ _read_binary_data_(STRM &strm, V &vec, bool needs_flipping,
     using VecType = typename std::remove_reference<V>::type;
     using ValueType = typename VecType::value_type;
 
-    uint64_t    vec_size { 0 };
-
-    strm.read(reinterpret_cast<char *>(&vec_size), sizeof(vec_size));
-    if (needs_flipping)
-        vec_size =
-            SwapBytes<decltype(vec_size), sizeof(vec_size)> { }(vec_size);
-
-    if (start_row > vec_size)  {
-        String1K    err;
-
-        err.printf("_read_binary_data_(): ERROR: start_row %lu > "
-                   "vec_size %lu",
-                   start_row, vec_size);
-        throw DataFrameError(err.c_str());
-    }
-
+    const uint64_t  vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
     const uint64_t  read_end =
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
@@ -1136,22 +1102,8 @@ _read_binary_datetime_(STRM &strm, V &dt_vec, bool needs_flipping,
 
     using ValueType = double;
 
-    uint64_t    vec_size { 0 };
-
-    strm.read(reinterpret_cast<char *>(&vec_size), sizeof(vec_size));
-    if (needs_flipping)
-        vec_size =
-            SwapBytes<decltype(vec_size), sizeof(vec_size)> { }(vec_size);
-
-    if (start_row > vec_size)  {
-        String1K    err;
-
-        err.printf("_read_binary_datetime_(): ERROR: start_row %lu > "
-                   "vec_size %lu",
-                   start_row, vec_size);
-        throw DataFrameError(err.c_str());
-    }
-
+    const uint64_t  vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
     const uint64_t  read_end =
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)

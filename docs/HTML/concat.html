@@ -85,7 +85,7 @@ concat(const RHS_T &amp;rhs,
         It concatenates rhs to the end of self and returns the result as another DataFrame.<BR>
         Concatenation is done based on policy
       </td>
-      <td>
+      <td width="35%">
         <B>RHS_T</B>: Type of DataFrame rhs<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>rhs</B>: The rhs DataFrame<BR>
@@ -106,7 +106,7 @@ concat_view(
       <td>
         This behaves just like concat(), but retunrs a view instead of another DataFrame.<BR>
       </td>
-      <td>
+      <td width="35%">
         <B>RHS_T</B>: Type of DataFrame rhs<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>rhs</B>: The rhs DataFrame<BR>
@@ -128,7 +128,7 @@ concat_view(
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is refelcted in the const view.       
       </td>
-      <td>
+      <td width="35%">
         <B>RHS_T</B>: Type of DataFrame rhs<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>rhs</B>: The rhs DataFrame<BR>
@@ -147,7 +147,7 @@ self_concat(const RHS_T &amp;rhs, bool add_new_columns = true);
       <td>
         This is similar to concat() method but it is applied to self. It changes self.
       </td>
-      <td>
+      <td width="35%">
         <B>RHS_T</B>: Type of DataFrame rhs<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>rhs</B>: The rhs DataFrame<BR>

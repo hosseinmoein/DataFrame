@@ -74,7 +74,7 @@ bucketize(bucket_type bt,
           Ts&amp;&amp; ... args) const;
         </B></PRE></font>
       </td>
-      <td WIDTH="33.3%">
+      <td width="35%">
         It bucketizes the data and index into intervals, based on index values and bucket_type.<BR>
         You must specify how the index column is bucketized, by providing a visitor.<BR>
         You must specify how each column is bucketized, by providing 3-member tuples (triples). Each triple must have the following members:<BR>
@@ -86,7 +86,7 @@ bucketize(bucket_type bt,
 
         The result of each bucket will be stored in a new DataFrame and returned. Some data at the end of source columns may not be included in the result columns, because based on bucket_type they may not fit into the bucket. The index of each bucket will be determined by idx_visitor.<BR>
       </td>
-      <td WIDTH="33.3%">
+      <td width="35%">
         <B>V</B>: Type of value to be uased for bucketizing based on bucket_type<BR>
         <B>I_V</B>: Type of visitor to be used to bucketize the index column<BR>
         <B>Ts</B>: Types of triples to specify each column's bucketization<BR>
@@ -108,10 +108,10 @@ bucketize_async(bucket_type bt,
                 Ts&amp;&amp; ... args) const;
         </B></PRE></font>
       </td>
-      <td WIDTH="33.3%">
+      <td width="35%">
         Same as bucketize() above, but executed asynchronously
       </td>
-      <td WIDTH="33.3%">
+      <td width="35%">
       </td>
     </tr>
 

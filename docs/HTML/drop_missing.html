@@ -151,7 +151,7 @@ fill_missing(const std::vector<const char *> &amp;col_names,
         (See fill_policy above). Missing is determined by being NaN for types that have NaN.
         For types without NaN (e.g. string), default value is considered missing value
       </td>
-      <td>
+      <td width="35%">
         <B>T</B>: Type of the column(s) in col_names vector<BR>
         <B>N</B>: Size of col_names and values vector
         <B>col_names</B>: A vector of names specifying the columns to fill.<BR>
@@ -175,7 +175,7 @@ fill_missing(const DF &rhs);
         <B>NOTE:</B> Self and rhs must have the same type index. The == operator must be well defined on the index type.<BR>
         <B>NOTE:</B> This method does not extend any of the columns in self. It just fills the holes, if data is present in rhs.<BR>
       </td>
-      <td>
+      <td width="35%">
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>rhs</B>: DataFrame to be used to find the missing values in self<BR>
       </td>

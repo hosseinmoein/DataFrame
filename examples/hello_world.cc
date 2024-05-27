@@ -109,7 +109,7 @@ int main(int, char *[])  {
     StrDataFrame    ibm_df;
 
     // Also, you can load data into a DataFrame from a file, supporting a few different formats. If the file cannot be found,
-    // an exception will be thrown. If the DataFrame root directory is your current directory when running this, it should
+    // an exception will be thrown. If the DataFrame data directory is your current directory when running this, it should
     // work fine.
     //
     ibm_df.read("IBM.csv", io_format::csv2);

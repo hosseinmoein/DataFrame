@@ -75,6 +75,19 @@ DataFrame<I, H>::to_string(std::streamsize precision) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename ... Ts>
+std::string
+DataFrame<I, H>::serialize() const  {
+
+    std::stringstream   ss (std::ios_base::out);
+
+    write<std::ostream, Ts ...>(ss, io_format::binary);
+    return (ss.str());
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename S, typename ... Ts>
 bool DataFrame<I, H>::
 write(S &o,
@@ -98,7 +111,8 @@ write(S &o,
     else
         start_row = std::max(long(0), end_row + max_recs);
 
-    o.precision(precision);
+    if (iof != io_format::binary)  o.precision(precision);
+
     if (iof == io_format::json)  {
         o << "{\n";
         if (! columns_only) [[likely]]  {

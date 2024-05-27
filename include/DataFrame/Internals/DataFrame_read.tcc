@@ -1584,6 +1584,21 @@ DataFrame<I, H>::from_string (const char *data_frame)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+bool
+DataFrame<I, H>::deserialize (const std::string &data_frame)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call deserialize()");
+
+    std::stringstream   ss (data_frame, std::ios_base::in);
+
+    read<std::istream>(ss, io_format::binary, false);
+    return (true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 std::future<bool> DataFrame<I, H>::
 read_async(const char *file_name,
            io_format iof,

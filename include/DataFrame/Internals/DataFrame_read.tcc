@@ -1658,7 +1658,21 @@ DataFrame<I, H>::from_string_async(const char *data_frame)  {
     return (thr_pool_.dispatch(true,
                                &DataFrame::from_string,
                                    this,
-                                   data_frame));
+                                   data_frame)
+            );
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+std::future<bool>
+DataFrame<I, H>::deserialize_async(const std::string &data_frame)  {
+
+    return (thr_pool_.dispatch(true,
+                               &DataFrame::deserialize,
+                                   this,
+                                   std::forward<const std::string>(data_frame)
+                               ));
 }
 
 } // namespace hmdf

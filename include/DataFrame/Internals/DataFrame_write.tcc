@@ -312,6 +312,16 @@ to_string_async (std::streamsize precision) const  {
                                    precision));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+std::future<std::string> DataFrame<I, H>::
+serialize_async () const  {
+
+    return (thr_pool_.dispatch(true, &DataFrame::serialize<Ts ...>, this));
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

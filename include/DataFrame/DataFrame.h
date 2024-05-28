@@ -4202,13 +4202,18 @@ public:  // Reading and writing
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // precision:
-    //   Specifies the precision for floating point numbers
     //
     template<typename ... Ts>
     [[nodiscard]] std::string
     serialize() const;
 
+    // Same as serialize() above, but executed asynchronously
+    //
+    template<typename ... Ts>
+    [[nodiscard]] std::future<std::string>
+    serialize_async() const;
+
+    // This is similar to to_string() to serialize a DataFrame into a binary
     // It inputs the contents of a text file into itself (i.e. DataFrame).
     // Currently two formats (i.e. csv, json) are supported specified by
     // the iof parameter.
@@ -4328,6 +4333,11 @@ public:  // Reading and writing
     //
     bool
     deserialize(const std::string &data_frame);
+
+    // Same as deserialize() above, but executed asynchronously
+    //
+    [[nodiscard]] std::future<bool>
+    deserialize_async(const std::string &data_frame);
 
 private:
 

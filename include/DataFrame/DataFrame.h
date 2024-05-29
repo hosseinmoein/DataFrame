@@ -4163,7 +4163,7 @@ public:  // Reading and writing
     //       or  '123' and so on. These set of numbers will produce a smaller
     //       buffer size in string form compared with binary form, especially
     //       if there are millions of them. But generally, in most cases
-    //       binary form is more efficient. 
+    //       binary form is more efficient.
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in

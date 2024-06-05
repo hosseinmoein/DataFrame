@@ -2206,37 +2206,35 @@ static void test_read_csv_with_maps()  {
     try  {
         df.read("AAPL_10dBucketWithMaps.csv", io_format::csv2);
 
-        // df.write<std::ostream, double, long, map_t, unomap_t>
-        //     (std::cout, io_format::csv2);
-        assert(df.get_index().size() == 4);
+        assert(df.get_index().size() == 93);
         assert((std::fabs(df.get_column<double>("Close")[3] - 1.0234) <
                               0.0001));
         assert((df.get_column<long>("Volume")[3] == 3605190400));
 
         assert((std::fabs(
-            df.get_column<map_t>("Map 1")[3]["label four 2"] - -782.5) <
-                0.001));
+            df.get_column<map_t>
+                ("Map 1")[3]["label four 2"] - -782.5) < 0.001));
         assert((std::fabs(
             df.get_column<map_t>("Map 1")[0]["label one 1"] - 123.0) < 0.001));
         assert((std::fabs(
             df.get_column<unomap_t>
-            ("Unordered Map")[3]["Key four 3"] - 444.44) < 0.001));
+                ("Unordered Map")[3]["Key four 3"] - 444.44) < 0.001));
         assert((std::fabs(
             df.get_column<unomap_t>
                 ("Unordered Map")[0]["Key one 2"] - -782.5) < 0.001));
 
-        assert((df.get_column<str_vec_t>("Str Vec").size() == 4));
+        assert((df.get_column<str_vec_t>("Str Vec").size() == 93));
         assert((df.get_column<str_vec_t>("Str Vec")[1].size() == 4));
         assert((df.get_column<str_vec_t>("Str Vec")[3].size() == 3));
         assert((df.get_column<str_vec_t>("Str Vec")[2][2] == "345"));
 
-        assert((df.get_column<dbl_set_t>("Double Set").size() == 4));
+        assert((df.get_column<dbl_set_t>("Double Set").size() == 93));
         assert((df.get_column<dbl_set_t>("Double Set")[1].size() == 3));
         assert((df.get_column<dbl_set_t>("Double Set")[3].size() == 4));
         assert((*(df.get_column<dbl_set_t>("Double Set")[2].find(444.44)) ==
                    444.44));
 
-        assert((df.get_column<str_set_t>("Str Set").size() == 4));
+        assert((df.get_column<str_set_t>("Str Set").size() == 93));
         assert((df.get_column<str_set_t>("Str Set")[1].size() == 3));
         assert((df.get_column<str_set_t>("Str Set")[3].size() == 4));
         assert((*(df.get_column<str_set_t>("Str Set")[0].find("123.0")) ==

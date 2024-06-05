@@ -58,13 +58,16 @@ using _TypeInfoRef_ = std::reference_wrapper<const std::type_info>;
 struct  _TypeinfoHasher_  {
 
     std::size_t
-    operator()(_TypeInfoRef_ item) const  { return (item.get().hash_code()); }
+    operator()(const _TypeInfoRef_ item) const  {
+
+        return (item.get().hash_code());
+    }
 };
 
 struct  _TypeinfoEqualTo_  {
 
     bool
-    operator()(_TypeInfoRef_ lhs, _TypeInfoRef_ rhs) const {
+    operator()(const _TypeInfoRef_ lhs, const _TypeInfoRef_ rhs) const {
 
         return (lhs.get() == rhs.get());
     }
@@ -74,7 +77,8 @@ static const
 std::unordered_map<_TypeInfoRef_,
                    const char *const,
                    _TypeinfoHasher_,
-                   _TypeinfoEqualTo_>   _typeinfo_name_  {
+                   _TypeinfoEqualTo_>
+_typeinfo_name_  {
     { typeid(float), "float" },
     { typeid(double), "double" },
     { typeid(long double), "longdouble" },
@@ -990,6 +994,122 @@ _write_binary_datetime_(STRM &strm, const V &dt_vec,
 
 // ----------------------------------------------------------------------------
 
+// Vector of double vectors
+//
+template<typename STRM, typename V>
+inline static STRM &
+_write_binary_dbl_vec_(STRM &strm, const V &vecs,
+                       std::size_t start_row, std::size_t end_row)  {
+
+    _write_binary_common_(strm, vecs, start_row, end_row);
+
+    for (uint64_t i = start_row; i < end_row; ++i)
+        _write_binary_data_(strm, vecs[i], 0, vecs[i].size());
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+// Vector of string vectors
+//
+template<typename STRM, typename V>
+inline static STRM &
+_write_binary_str_vec_(STRM &strm, const V &vecs,
+                       std::size_t start_row, std::size_t end_row)  {
+
+    _write_binary_common_(strm, vecs, start_row, end_row);
+
+    for (uint64_t i = start_row; i < end_row; ++i)
+        _write_binary_string_(strm, vecs[i], 0, vecs[i].size());
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+// Vector of double sets
+//
+template<typename STRM, typename S>
+inline static STRM &
+_write_binary_dbl_set_(STRM &strm, const S &dbl_sets,
+                       std::size_t start_row, std::size_t end_row)  {
+
+    _write_binary_common_(strm, dbl_sets, start_row, end_row);
+
+    for (uint64_t i = start_row; i < end_row; ++i)  {
+        const uint64_t  sz = dbl_sets.size();
+
+        strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
+        for (const double val : dbl_sets[i])
+            strm.write(reinterpret_cast<const char *>(&val), sizeof(val));
+    }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+// Vector of string sets
+//
+template<typename STRM, typename S>
+inline static STRM &
+_write_binary_str_set_(STRM &strm, const S &str_sets,
+                       std::size_t start_row, std::size_t end_row)  {
+
+    _write_binary_common_(strm, str_sets, start_row, end_row);
+
+    for (uint64_t i = start_row; i < end_row; ++i)  {
+        const uint64_t  sz = str_sets.size();
+
+        strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
+        for (const auto &str : str_sets[i])  {
+            const uint16_t  str_sz = static_cast<uint16_t>(str.size());
+
+            strm.write(reinterpret_cast<const char *>(&str_sz),
+                       sizeof(str_sz));
+        }
+
+        for (const auto &str : str_sets[i])
+            strm.write(str.data(), str.size() * sizeof(char));
+    }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+// Vector of string to double [unordered] maps
+//
+template<typename STRM, typename M>
+inline static STRM &
+_write_binary_str_dbl_map(STRM &strm, const M &sd_maps,
+                          std::size_t start_row, std::size_t end_row)  {
+
+    _write_binary_common_(strm, sd_maps, start_row, end_row);
+
+    for (uint64_t i = start_row; i < end_row; ++i)  {
+        const uint64_t  sz = sd_maps.size();
+
+        strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
+        for (const auto &[str, dbl] : sd_maps[i])  {
+            const uint16_t  str_sz = static_cast<uint16_t>(str.size());
+
+            strm.write(reinterpret_cast<const char *>(&str_sz),
+                       sizeof(str_sz));
+        }
+
+        for (const auto &[str, dbl] : sd_maps[i])  {
+            strm.write(str.data(), str.size() * sizeof(char));
+            strm.write(reinterpret_cast<const char *>(&dbl), sizeof(dbl));
+        }
+    }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename STRM>
 inline static uint64_t
 _read_binary_common_(STRM &strm, bool needs_flipping, std::size_t start_row)  {
@@ -1136,6 +1256,120 @@ _read_binary_datetime_(STRM &strm, V &dt_vec, bool needs_flipping,
 }
 
 // ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Vector of double vectors
+//
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_dbl_vec(STRM &strm, V &vec, bool needs_flipping,
+                     std::size_t start_row, std::size_t num_rows)  {
+
+    using VecType = typename std::remove_reference<V>::type;
+    using ValueType = typename VecType::value_type;
+
+    const uint64_t  vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
+    const uint64_t  read_end =
+        (num_rows == std::numeric_limits<std::size_t>::max() ||
+         (start_row + num_rows) > vec_size)
+            ? vec_size : uint64_t(start_row + num_rows);
+
+    vec.reserve(read_end - start_row);
+    for (uint64_t i = 0; i < vec_size; ++i)  {
+        // Skip type name
+        //
+        strm.seekg(32 * sizeof(char), std::ios_base::cur);
+
+        if (i >= start_row && i < read_end) [[likely]]  {
+            ValueType   dbl_vec;
+
+            _read_binary_data_(strm, dbl_vec, needs_flipping,
+                               0, std::numeric_limits<std::size_t>::max());
+            vec.push_back(std::move(dbl_vec));
+        }
+        else  {  // Skip the data
+            const uint64_t  inner_vec_size =
+                _read_binary_common_(strm, needs_flipping, 0);
+
+            strm.seekg(inner_vec_size * sizeof(double), std::ios_base::cur);
+        }
+    }
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+// Vector of string vectors
+//
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_str_vec(STRM &strm, V &vec, bool needs_flipping,
+                     std::size_t start_row, std::size_t num_rows)  {
+
+    using VecType = typename std::remove_reference<V>::type;
+    using ValueType = typename VecType::value_type;
+
+    const uint64_t  vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
+    const uint64_t  read_end =
+        (num_rows == std::numeric_limits<std::size_t>::max() ||
+         (start_row + num_rows) > vec_size)
+            ? vec_size : uint64_t(start_row + num_rows);
+    ValueType       str_vec;
+
+    vec.reserve(read_end - start_row);
+    for (uint64_t i = 0; i < vec_size; ++i)  {
+        // Skip type name
+        //
+        strm.seekg(32 * sizeof(char), std::ios_base::cur);
+
+        str_vec.clear();
+        _read_binary_string_(strm, str_vec, needs_flipping,
+                             0, std::numeric_limits<std::size_t>::max());
+        if (i >= start_row && i < read_end) [[likely]]
+            vec.push_back(std::move(str_vec));
+    }
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //
 // Specializing std::hash for tuples

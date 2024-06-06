@@ -248,7 +248,7 @@ DataFrame<I, H>::print_binary_functor_<Ts ...>::operator() (const T &vec)  {
         std::is_same_v<ValueType, DFMap<std::string, double>> ||
         std::is_same_v<ValueType, std::unordered_map<std::string, double>> ||
         std::is_same_v<ValueType, DFUnorderedMap<std::string, double>>)
-        _write_binary_str_dbl_map(os, vec, start_row, end_row);
+        _write_binary_str_dbl_map_(os, vec, start_row, end_row);
     else
         _write_binary_data_(os, vec, start_row, end_row);
 

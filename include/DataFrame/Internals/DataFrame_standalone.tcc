@@ -1083,7 +1083,7 @@ _write_binary_str_set_(STRM &strm, const S &str_sets,
 //
 template<typename STRM, typename M>
 inline static STRM &
-_write_binary_str_dbl_map(STRM &strm, const M &sd_maps,
+_write_binary_str_dbl_map_(STRM &strm, const M &sd_maps,
                           std::size_t start_row, std::size_t end_row)  {
 
     _write_binary_common_(strm, sd_maps, start_row, end_row);
@@ -1257,25 +1257,12 @@ _read_binary_datetime_(STRM &strm, V &dt_vec, bool needs_flipping,
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Vector of double vectors
 //
 template<typename STRM, typename V>
 inline static STRM &
-_read_binary_dbl_vec(STRM &strm, V &vec, bool needs_flipping,
-                     std::size_t start_row, std::size_t num_rows)  {
+_read_binary_dbl_vec_(STRM &strm, V &vec, bool needs_flipping,
+                      std::size_t start_row, std::size_t num_rows)  {
 
     using VecType = typename std::remove_reference<V>::type;
     using ValueType = typename VecType::value_type;
@@ -1316,8 +1303,8 @@ _read_binary_dbl_vec(STRM &strm, V &vec, bool needs_flipping,
 //
 template<typename STRM, typename V>
 inline static STRM &
-_read_binary_str_vec(STRM &strm, V &vec, bool needs_flipping,
-                     std::size_t start_row, std::size_t num_rows)  {
+_read_binary_str_vec_(STRM &strm, V &vec, bool needs_flipping,
+                      std::size_t start_row, std::size_t num_rows)  {
 
     using VecType = typename std::remove_reference<V>::type;
     using ValueType = typename VecType::value_type;
@@ -1347,29 +1334,161 @@ _read_binary_str_vec(STRM &strm, V &vec, bool needs_flipping,
 
 // ----------------------------------------------------------------------------
 
+// Vector of double sets
+//
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_dbl_set_(STRM &strm, V &set_vec, bool needs_flipping,
+                      std::size_t start_row, std::size_t num_rows)  {
 
+    using VecType = typename std::remove_reference<V>::type;
+    using ValueType = typename VecType::value_type;
 
+    const uint64_t                          vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
+    const uint64_t                          read_end =
+        (num_rows == std::numeric_limits<std::size_t>::max() ||
+         (start_row + num_rows) > vec_size)
+            ? vec_size : uint64_t(start_row + num_rows);
+    SwapBytes<uint64_t, sizeof(uint64_t)>   int_swaper { };
+    SwapBytes<double, sizeof(double)>       dbl_swaper { };
 
+    set_vec.reserve(read_end - start_row);
+    for (uint64_t i = 0; i < vec_size; ++i)  {
+        uint64_t    set_size { 0 };
 
+        strm.read(reinterpret_cast<char *>(&set_size), sizeof(set_size));
+        if (needs_flipping)  set_size = int_swaper(set_size);
 
+        if (i >= start_row && i < read_end) [[likely]]  {
+            ValueType   dbl_set;
 
+            for (uint64_t i = 0; i < set_size; ++i)   {
+                double  val { 0 };
 
+                strm.read(reinterpret_cast<char *>(&val), sizeof(val));
+                if (needs_flipping)  val = dbl_swaper(val);
+                dbl_set.insert(val);
+            }
+            set_vec.push_back(std::move(dbl_set));
+        }
+        else  {  // Skip the data
+            strm.seekg(set_size * sizeof(double), std::ios_base::cur);
+        }
+    }
+    return (strm);
+}
 
+// ----------------------------------------------------------------------------
 
+// Vector of string sets
+//
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_str_set_(STRM &strm, V &set_vec, bool needs_flipping,
+                      std::size_t start_row, std::size_t num_rows)  {
 
+    using VecType = typename std::remove_reference<V>::type;
+    using ValueType = typename VecType::value_type;
 
+    const uint64_t                          vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
+    const uint64_t                          read_end =
+        (num_rows == std::numeric_limits<std::size_t>::max() ||
+         (start_row + num_rows) > vec_size)
+            ? vec_size : uint64_t(start_row + num_rows);
+    SwapBytes<uint64_t, sizeof(uint64_t)>   int_swaper { };
 
+    set_vec.reserve(read_end - start_row);
+    for (uint64_t i = 0; i < vec_size; ++i)  {
+        uint64_t    set_size { 0 };
 
+        strm.read(reinterpret_cast<char *>(&set_size), sizeof(set_size));
+        if (needs_flipping)  set_size = int_swaper(set_size);
 
+        std::vector<uint16_t>   sizes (set_size, 0);
 
+        strm.read(reinterpret_cast<char *>(sizes.data()),
+                  set_size * sizeof(uint16_t));
+        if (needs_flipping)  flip_endianness(sizes);
 
+        ValueType   str_set;
 
+        for (auto sz : sizes)  {
+            if (i >= start_row && i < read_end) [[likely]]  {
+                std::string str (std::size_t(sz), 0);
 
+                strm.read(str.data(), sz * sizeof(char));
+                str_set.emplace(std::move(str));
+            }
+            else  // Skip the data
+                strm.seekg(sz * sizeof(char), std::ios_base::cur);
+        }
+        set_vec.push_back(std::move(str_set));
+    }
+    return (strm);
+}
 
+// ----------------------------------------------------------------------------
 
+// Vector of string to double [unordered] maps
+//
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_str_dbl_map_(STRM &strm, V &map_vec, bool needs_flipping,
+                          std::size_t start_row, std::size_t num_rows)  {
 
+    using VecType = typename std::remove_reference<V>::type;
+    using ValueType = typename VecType::value_type;
 
+    const uint64_t                          vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
+    const uint64_t                          read_end =
+        (num_rows == std::numeric_limits<std::size_t>::max() ||
+         (start_row + num_rows) > vec_size)
+            ? vec_size : uint64_t(start_row + num_rows);
+    SwapBytes<uint64_t, sizeof(uint64_t)>   int_swaper { };
+    SwapBytes<double, sizeof(double)>       dbl_swaper { };
 
+    map_vec.reserve(read_end - start_row);
+    for (uint64_t i = 0; i < vec_size; ++i)  {
+        uint64_t    map_size { 0 };
+
+        strm.read(reinterpret_cast<char *>(&map_size), sizeof(map_size));
+        if (needs_flipping)  map_size = int_swaper(map_size);
+
+        std::vector<uint16_t>   sizes (map_size, 0);
+
+        strm.read(reinterpret_cast<char *>(sizes.data()),
+                  map_size * sizeof(uint16_t));
+        if (needs_flipping)  flip_endianness(sizes);
+
+        ValueType       str_dbl_map;
+        constexpr bool  has_reserve_method =
+            requires(ValueType &v)  { v.reserve(ValueType::size_type()); };
+
+        if constexpr (has_reserve_method)  str_dbl_map.reserve(map_size);
+
+        for (auto sz : sizes)  {
+            if (i >= start_row && i < read_end) [[likely]]  {
+                std::string str (std::size_t(sz), 0);
+                double      val { 0 };
+
+                strm.read(str.data(), sz * sizeof(char));
+                strm.read(reinterpret_cast<char *>(&val), sizeof(double));
+                if (needs_flipping)  val = dbl_swaper(val);
+                str_dbl_map.emplace(std::move(str), val);
+            }
+            else  // Skip the data
+                strm.seekg(sz * sizeof(char) + sizeof(double),
+                           std::ios_base::cur);
+        }
+        map_vec.push_back(std::move(str_dbl_map));
+    }
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
 
 //
 // Specializing std::hash for tuples

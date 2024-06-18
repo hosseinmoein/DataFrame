@@ -1295,6 +1295,7 @@ read_binary_(std::istream &stream,
     char    col_type[32];
 
     std::memset(col_name, 0, sizeof(col_name));
+    std::memset(col_type, 0, sizeof(col_type));
     if (! columns_only) [[likely]]  {
         stream.read(col_name, sizeof(col_name));
         if (std::strcmp(col_name, DF_INDEX_COL_NAME))  {
@@ -1305,7 +1306,6 @@ read_binary_(std::istream &stream,
             throw DataFrameError(err.c_str());
         }
 
-        std::memset(col_type, 0, sizeof(col_type));
         stream.read(col_type, sizeof(col_type));
 
         IndexVecType    idx_vec;
@@ -1316,53 +1316,9 @@ read_binary_(std::istream &stream,
         else if constexpr (std::is_same_v<IndexType, DateTime>)
             _read_binary_datetime_(stream, idx_vec, needs_flipping,
                                    starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, float>)
+        else
             _read_binary_data_(stream, idx_vec, needs_flipping,
                                starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, double>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, short int>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, unsigned short int>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, int>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, unsigned int>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, long int>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, unsigned long int>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, long long int>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, unsigned long long int>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, char>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, unsigned char>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else if constexpr (std::is_same_v<IndexType, bool>)
-            _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
-        else  {
-            String1K    err;
-
-            err.printf(
-                "read_binary_(): ERROR: Type '%s' is not supported for index",
-                col_type);
-            throw DataFrameError(err.c_str());
-        }
         load_index(std::move(idx_vec));
     }
 
@@ -1487,6 +1443,54 @@ read_binary_(std::istream &stream,
 
             _read_binary_data_(stream, vec, needs_flipping,
                                starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if ( ! std::strcmp(col_type, "dbl_vec"))  {
+            ColumnVecType<std::vector<double>>  vec;
+
+            _read_binary_dbl_vec_(stream, vec, needs_flipping,
+                                  starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if ( ! std::strcmp(col_type, "str_vec"))  {
+            ColumnVecType<std::vector<std::string>> vec;
+
+            _read_binary_str_vec_(stream, vec, needs_flipping,
+                                  starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if ( ! std::strcmp(col_type, "dbl_set"))  {
+            ColumnVecType<std::set<double>> vec;
+
+            _read_binary_dbl_set_(stream, vec, needs_flipping,
+                                  starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if ( ! std::strcmp(col_type, "str_set"))  {
+            ColumnVecType<std::set<std::string>>    vec;
+
+            _read_binary_str_set_(stream, vec, needs_flipping,
+                                  starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if ( ! std::strcmp(col_type, "str_dbl_map"))  {
+            ColumnVecType<std::map<std::string, double>>    vec;
+
+            _read_binary_str_dbl_map_(stream, vec, needs_flipping,
+                                      starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if ( ! std::strcmp(col_type, "str_dbl_unomap"))  {
+            ColumnVecType<std::unordered_map<std::string, double>>  vec;
+
+            _read_binary_str_dbl_map_(stream, vec, needs_flipping,
+                                      starting_row, num_rows);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }

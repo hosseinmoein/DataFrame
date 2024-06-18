@@ -175,13 +175,9 @@ struct  SeqLock  {
 
         const size_type seq_0 = seq_.load (std::memory_order_relaxed);
 
-        seq_.store (seq_0 + 1, std::memory_order_relaxed);
-        std::atomic_thread_fence (std::memory_order_release);
-
+        seq_.store (seq_0 + 1, std::memory_order_release);
         value_ = value;
-
-        std::atomic_thread_fence (std::memory_order_release);
-        seq_.store (seq_0 + 2, std::memory_order_relaxed);
+        seq_.store (seq_0 + 2, std::memory_order_release);
     }
 
     // There can be multiple consumers concurrently

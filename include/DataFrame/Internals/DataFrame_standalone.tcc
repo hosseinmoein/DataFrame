@@ -1038,7 +1038,7 @@ _write_binary_dbl_set_(STRM &strm, const S &dbl_sets,
     _write_binary_common_(strm, dbl_sets, start_row, end_row);
 
     for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint64_t  sz = dbl_sets.size();
+        const uint64_t  sz = dbl_sets[i].size();
 
         strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
         for (const double val : dbl_sets[i])
@@ -1060,7 +1060,7 @@ _write_binary_str_set_(STRM &strm, const S &str_sets,
     _write_binary_common_(strm, str_sets, start_row, end_row);
 
     for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint64_t  sz = str_sets.size();
+        const uint64_t  sz = str_sets[i].size();
 
         strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
         for (const auto &str : str_sets[i])  {
@@ -1089,7 +1089,7 @@ _write_binary_str_dbl_map_(STRM &strm, const M &sd_maps,
     _write_binary_common_(strm, sd_maps, start_row, end_row);
 
     for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint64_t  sz = sd_maps.size();
+        const uint64_t  sz = sd_maps[i].size();
 
         strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
         for (const auto &[str, dbl] : sd_maps[i])  {
@@ -1101,7 +1101,7 @@ _write_binary_str_dbl_map_(STRM &strm, const M &sd_maps,
 
         for (const auto &[str, dbl] : sd_maps[i])  {
             strm.write(str.data(), str.size() * sizeof(char));
-            strm.write(reinterpret_cast<const char *>(&dbl), sizeof(dbl));
+            strm.write(reinterpret_cast<const char *>(&dbl), sizeof(double));
         }
     }
 
@@ -1475,13 +1475,14 @@ _read_binary_str_dbl_map_(STRM &strm, V &map_vec, bool needs_flipping,
                 double      val { 0 };
 
                 strm.read(str.data(), sz * sizeof(char));
-                strm.read(reinterpret_cast<char *>(&val), sizeof(double));
+                strm.read(reinterpret_cast<char *>(&val), sizeof(val));
                 if (needs_flipping)  val = dbl_swaper(val);
                 str_dbl_map.emplace(std::move(str), val);
             }
-            else  // Skip the data
+            else  {  // Skip the data
                 strm.seekg(sz * sizeof(char) + sizeof(double),
                            std::ios_base::cur);
+            }
         }
         map_vec.push_back(std::move(str_dbl_map));
     }

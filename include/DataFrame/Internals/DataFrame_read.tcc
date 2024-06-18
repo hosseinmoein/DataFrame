@@ -1295,6 +1295,7 @@ read_binary_(std::istream &stream,
     char    col_type[32];
 
     std::memset(col_name, 0, sizeof(col_name));
+    std::memset(col_type, 0, sizeof(col_type));
     if (! columns_only) [[likely]]  {
         stream.read(col_name, sizeof(col_name));
         if (std::strcmp(col_name, DF_INDEX_COL_NAME))  {
@@ -1305,7 +1306,6 @@ read_binary_(std::istream &stream,
             throw DataFrameError(err.c_str());
         }
 
-        std::memset(col_type, 0, sizeof(col_type));
         stream.read(col_type, sizeof(col_type));
 
         IndexVecType    idx_vec;
@@ -1447,28 +1447,52 @@ read_binary_(std::istream &stream,
                         nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "dbl_vec"))  {
-            ColumnVecType<ColumnVecType<double>>    vec;
+            ColumnVecType<std::vector<double>>  vec;
 
+            _read_binary_dbl_vec_(stream, vec, needs_flipping,
+                                  starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "str_vec"))  {
-            ColumnVecType<ColumnVecType<std::string>>   vec;
+            ColumnVecType<std::vector<std::string>> vec;
 
+            _read_binary_str_vec_(stream, vec, needs_flipping,
+                                  starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "dbl_set"))  {
-            ColumnVecType<DFSet<double>>    vec;
+            ColumnVecType<std::set<double>> vec;
 
+            _read_binary_dbl_set_(stream, vec, needs_flipping,
+                                  starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "str_set"))  {
-            ColumnVecType<DFSet<std::string>>   vec;
+            ColumnVecType<std::set<std::string>>    vec;
 
+            _read_binary_str_set_(stream, vec, needs_flipping,
+                                  starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "str_dbl_map"))  {
-            ColumnVecType<DFMap<std::string, double>>   vec;
+            ColumnVecType<std::map<std::string, double>>    vec;
 
+            _read_binary_str_dbl_map_(stream, vec, needs_flipping,
+                                      starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
         }
         else if ( ! std::strcmp(col_type, "str_dbl_unomap"))  {
-            ColumnVecType<DFUnorderedMap<std::string, double>>  vec;
+            ColumnVecType<std::unordered_map<std::string, double>>  vec;
 
+            _read_binary_str_dbl_map_(stream, vec, needs_flipping,
+                                      starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
         }
         else  {
             String1K    err;

@@ -4090,6 +4090,84 @@ static void test_reading_in_binary_chunks()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_writing_binary_3()  {
+
+    std::cout << "\nTesting test_writing_binary_3{ } ..." << std::endl;
+
+    using DTDataFrame = StdDataFrame<DateTime>;
+
+    DTDataFrame map_df;
+    DTDataFrame vec_df;
+    DTDataFrame bin_map_df;
+    DTDataFrame bin_vec_df;
+
+    try  {
+        map_df.read("AAPL_10dBucketWithMaps.csv", io_format::csv2);
+        vec_df.read("AAPL_10dBucketWithVector.csv", io_format::csv2);
+
+        map_df.write<double,
+                     long,
+                     typename std::map<std::string, double>,
+                     typename std::unordered_map<std::string, double>,
+                     typename std::vector<std::string>,
+                     typename std::set<double>,
+                     typename std::set<std::string>>(
+            "./tmp_AAPL_10dBucketWithMaps.dat",
+            io_format::binary);
+        vec_df.write<double, long, typename std::vector<double>>(
+            "./tmp_AAPL_10dBucketWithVector.dat",
+            io_format::binary);
+
+        bin_map_df.read("./tmp_AAPL_10dBucketWithMaps.dat", io_format::binary);
+        bin_vec_df.read("./tmp_AAPL_10dBucketWithVector.dat",
+                        io_format::binary);
+
+        assert((map_df.is_equal<
+                            double,
+                            long,
+                            typename std::map<std::string, double>,
+                            typename std::unordered_map<std::string, double>,
+                            typename std::vector<std::string>,
+                            typename std::set<double>,
+                            typename std::set<std::string>>(
+                    bin_map_df)));
+
+        assert((vec_df.get_index().size() == bin_vec_df.get_index().size()));
+        assert((vec_df.get_index() == bin_vec_df.get_index()));
+        assert((vec_df.get_column<double>("Mean").size() ==
+                bin_vec_df.get_column<double>("Mean").size()));
+        assert((vec_df.get_column<double>("25% Quantile").size() ==
+                bin_vec_df.get_column<double>("25% Quantile").size()));
+        assert((
+            std::fabs(bin_vec_df.get_column<double>("Open")[8] - 1.1317) <
+                0.0001));
+        assert((
+            std::fabs(bin_vec_df.get_column<double>("MAD")[530] - 1.917) <
+                0.0001));
+        assert((vec_df.get_column<double>("Volume").size() ==
+                    bin_vec_df.get_column<double>("Volume").size()));
+        assert((bin_vec_df.get_column<long>("Volume")[414] == 1704156400L));
+        assert((vec_df.get_column<std::vector<double>>("Z Score").size() ==
+                bin_vec_df.get_column<std::vector<double>>("Z Score").size()));
+        assert((std::fabs(bin_vec_df.get_column<std::vector<double>>
+                              ("Z Score")[520][2] - 0.6311) < 0.0001));
+        assert((
+            vec_df.get_column<std::vector<double>>("Return Vector").size() ==
+            bin_vec_df.get_column<std::vector<double>>
+                ("Return Vector").size()));
+        assert((std::fabs(bin_vec_df.get_column<std::vector<double>>
+                              ("Return Vector")[400][5] - -0.0093) < 0.0001));
+
+        std::remove("./tmp_AAPL_10dBucketWithMaps.dat");
+        std::remove("./tmp_AAPL_10dBucketWithVector.dat");
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4173,6 +4251,7 @@ int main(int, char *[]) {
     test_writing_binary();
     test_writing_binary_2();
     test_reading_in_binary_chunks();
+    test_writing_binary_3();
 
     return (0);
 }

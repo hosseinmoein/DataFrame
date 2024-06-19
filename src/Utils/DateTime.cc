@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/DateTime.h>
 
+#include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstring>
@@ -117,33 +118,33 @@ DateTime::DateTime (DateType d,
 
 // Supporting the following formats:
 
-//  (1)  YYYYMMDD
+//  (1)  YYYYMMDD [TZN]
 // AME_STYLE:
-//  (2)  MM/DD/YYYY
-//  (3)  MM/DD/YYYY HH
-//  (4)  MM/DD/YYYY HH:MM
-//  (5)  MM/DD/YYYY HH:MM:SS
-//  (6)  MM/DD/YYYY HH:MM:SS.MMM  // Milliseconds
-//  (7)  MM/DD/YYYY HH:MM:SS.IIIIII  // Microseconds
-//  (8)  MM/DD/YYYY HH:MM:SS.NNNNNNNNN  // Nanoseconds
+//  (2)  MM/DD/YYYY [TZN]
+//  (3)  MM/DD/YYYY HH [TZN]
+//  (4)  MM/DD/YYYY HH:MM [TZN]
+//  (5)  MM/DD/YYYY HH:MM:SS [TZN]
+//  (6)  MM/DD/YYYY HH:MM:SS.MMM [TZN]  // Milliseconds
+//  (7)  MM/DD/YYYY HH:MM:SS.IIIIII [TZN]  // Microseconds
+//  (8)  MM/DD/YYYY HH:MM:SS.NNNNNNNNN [TZN]  // Nanoseconds
 
 // EUR_STYLE:
-//  (9)  YYYY/MM/DD
-//  (10) YYYY/MM/DD HH
-//  (11) YYYY/MM/DD HH:MM
-//  (12) YYYY/MM/DD HH:MM:SS
-//  (13) YYYY/MM/DD HH:MM:SS.MMM  // Milliseconds
-//  (14) YYYY/MM/DD HH:MM:SS.IIIIII  // Microseconds
-//  (15) YYYY/MM/DD HH:MM:SS.NNNNNNNNN  // Nanoseconds
+//  (9)  YYYY/MM/DD [TZN]
+//  (10) YYYY/MM/DD HH [TZN]
+//  (11) YYYY/MM/DD HH:MM [TZN]
+//  (12) YYYY/MM/DD HH:MM:SS [TZN]
+//  (13) YYYY/MM/DD HH:MM:SS.MMM [TZN]  // Milliseconds
+//  (14) YYYY/MM/DD HH:MM:SS.IIIIII [TZN]  // Microseconds
+//  (15) YYYY/MM/DD HH:MM:SS.NNNNNNNNN [TZN]  // Nanoseconds
 
 // ISO_STYLE:
-//  (16) YYYY-MM-DD
-//  (17) YYYY-MM-DD HH
-//  (18) YYYY-MM-DD HH:MM
-//  (19) YYYY-MM-DD HH:MM:SS
-//  (20) YYYY-MM-DD HH:MM:SS.MMM  // Milliseconds
-//  (21) YYYY-MM-DD HH:MM:SS.IIIIII  // Microseconds
-//  (22) YYYY-MM-DD HH:MM:SS.NNNNNNNNN  // Nanoseconds
+//  (16) YYYY-MM-DD [TZN]
+//  (17) YYYY-MM-DD HH [TZN]
+//  (18) YYYY-MM-DD HH:MM [TZN]
+//  (19) YYYY-MM-DD HH:MM:SS [TZN]
+//  (20) YYYY-MM-DD HH:MM:SS.MMM [TZN]  // Milliseconds
+//  (21) YYYY-MM-DD HH:MM:SS.IIIIII [TZN]  // Microseconds
+//  (22) YYYY-MM-DD HH:MM:SS.NNNNNNNNN [TZN]  // Nanoseconds
 //
 DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
     : time_zone_ (tz)  {
@@ -152,13 +153,43 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
 
     while (::isspace (*str)) ++str;
 
-    if (ds == DT_DATE_STYLE::YYYYMMDD)
-        *this = str;
-    else  {
-        std::size_t str_len { 0 };
+    std::size_t str_len { std::strlen(str) };
 
+    assert(str_len > 3);
+
+    const bool  has_str_tz =
+        std::isalpha(str[str_len - 1]) &&
+        std::isalpha(str[str_len - 2]) &&
+        std::isalpha(str[str_len - 3]);
+    char        str_tz[4];
+
+    if (has_str_tz)  {
+        str_tz[0] = str[str_len - 3];
+        str_tz[1] = str[str_len - 2];
+        str_tz[2] = str[str_len - 1];
+        str_tz[3] = '\0';
+
+        const auto  &citer = ZONE_STR_TO_TIME_ZONE.find(str_tz);
+
+        if (citer != ZONE_STR_TO_TIME_ZONE.end()) [[likely]]
+            time_zone_ = citer->second;
+        else  {
+            String64    err;
+
+            err.printf ("DateTime::DateTime(const char *): Cannot find  "
+                        "time zone '%s'", str_tz);
+            throw std::runtime_error (err.c_str ());
+        }
+    }
+
+    if (ds == DT_DATE_STYLE::YYYYMMDD)  {
+        *this = str;
+    }
+    else  {
+        str_len = 0;
         for (const char *c = str; *c != '\0' && *c != '+'; ++c)
             str_len += 1;
+        if (has_str_tz)  str_len -= 4;  // 1 space + 3 time zone letters
 
         int year { 0 }, month { 0 }, day { 0 };
 
@@ -181,8 +212,8 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
             else if (str_len > 19 && str_len <= 23)  {
                 MillisecondType ms { 0 };
 
-                ::sscanf (str, "%d/%d/%d %hu:%hu:%hu.%hd",
-                          &month, &day, &year, &hour_, &minute_, &second_, &ms);
+                ::sscanf(str, "%d/%d/%d %hu:%hu:%hu.%hd",
+                         &month, &day, &year, &hour_, &minute_, &second_, &ms);
                 if (str_len <= 21)  ms *= 100;
                 else if (str_len == 22)  ms *= 10;
                 nanosecond_ = ms * 1000000;
@@ -221,8 +252,8 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
             else if (str_len > 19 && str_len <= 23)  {
                 MillisecondType ms { 0 };
 
-                ::sscanf (str, "%d/%d/%d %hu:%hu:%hu.%hd",
-                          &year, &month, &day, &hour_, &minute_, &second_, &ms);
+                ::sscanf(str, "%d/%d/%d %hu:%hu:%hu.%hd",
+                         &year, &month, &day, &hour_, &minute_, &second_, &ms);
                 if (str_len <= 21)  ms *= 100;
                 else if (str_len == 22)  ms *= 10;
                 nanosecond_ = ms * 1000000;
@@ -288,6 +319,7 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
                           &hour_, &minute_, &second_, &nanosecond_);
             }
         }
+
         if (year == 0 && month == 0 && day == 0)  {
             String512   err;
 
@@ -317,11 +349,11 @@ DateTime &DateTime::operator = (DateTime &&rhs) = default;
 // a date-time value. We will add code as need arises.
 //
 // Currently, the following formats are supported:
-//  (1)  YYYYMMDD
-//  (2)  YYYYMMDD HH
-//  (3)  YYYYMMDD HH:MM
-//  (4)  YYYYMMDD HH:MM:SS
-//  (5)  YYYYMMDD HH:MM:SS.MMM
+//  (1)  YYYYMMDD [TZN]
+//  (2)  YYYYMMDD HH [TZN]
+//  (3)  YYYYMMDD HH:MM [TZN]
+//  (4)  YYYYMMDD HH:MM:SS [TZN]
+//  (5)  YYYYMMDD HH:MM:SS.MMM [TZN]
 //
 DateTime &DateTime::operator = (const char *s)  {
 
@@ -331,7 +363,35 @@ DateTime &DateTime::operator = (const char *s)  {
 
     while (::isspace (*str)) ++str;
 
-    const size_t   str_len = ::strlen (str);
+	std::size_t str_len = std::strlen (str);
+
+    assert(str_len > 3);
+
+    const bool  has_str_tz =
+        std::isalpha(str[str_len - 1]) &&
+        std::isalpha(str[str_len - 2]) &&
+        std::isalpha(str[str_len - 3]);
+    char        str_tz[4];
+
+    if (has_str_tz)  {
+        str_tz[0] = str[str_len - 3];
+        str_tz[1] = str[str_len - 2];
+        str_tz[2] = str[str_len - 1];
+        str_tz[3] = '\0';
+
+        const auto  &citer = ZONE_STR_TO_TIME_ZONE.find(str_tz);
+
+        if (citer != ZONE_STR_TO_TIME_ZONE.end()) [[likely]]
+            time_zone_ = citer->second;
+        else  {
+            String64    err;
+
+            err.printf ("DateTime::DateTime(const char *): Cannot find  "
+                        "time zone '%s'", str_tz);
+            throw std::runtime_error (err.c_str ());
+        }
+        str_len -= 4;  // 1 space + 3 time zone letters
+    }
 
     if (str_len == 8)  {
         hour_ = minute_ = second_ = nanosecond_ = 0;
@@ -834,11 +894,13 @@ void DateTime::add_days (long days) noexcept  {
                 while (date () == prev_date.date ())
                     add_seconds (3600 * addend);
             }
-            else if (addend > 0 && int(dyear()) - int(prev_date.dyear()) > 1) {
+            else if (addend > 0 &&
+                     int(dyear()) - int(prev_date.dyear()) > 1)  {
                 while (int(dyear ()) - int(prev_date.dyear ()) > 1)
                     add_seconds (-3600 * addend);
             }
-            else if (addend < 0 && int(dyear()) - int(prev_date.dyear()) < -1) {
+            else if (addend < 0 &&
+                     int(dyear()) - int(prev_date.dyear()) < -1) {
                 while (int(dyear ()) - int(prev_date.dyear()) < -1)
                     add_seconds (3600);
             }

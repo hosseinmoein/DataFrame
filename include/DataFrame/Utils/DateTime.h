@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 
 // ----------------------------------------------------------------------------
 
@@ -61,6 +62,8 @@ enum class DT_FORMAT : unsigned short int  {
     ISO_DT = 13,       // e.g. 2015-05-05
     ISO_DT_NANO = 14,  // e.g. 2015-05-05 13:51:04.123456789
 };
+
+// --------------------------------------
 
 // DO NOT change the values of these enums. They are offsets to a
 // static array.
@@ -100,6 +103,44 @@ enum class DT_TIME_ZONE : short int  {
     EU_BUDAPEST = 30
 };
 
+inline static const
+std::unordered_map<std::string_view, DT_TIME_ZONE>  ZONE_STR_TO_TIME_ZONE  {
+    { "LOC", DT_TIME_ZONE::LOCAL },
+    { "GMT", DT_TIME_ZONE::GMT },
+    { "BUE", DT_TIME_ZONE::AM_BUENOS_AIRES },
+    { "CHI", DT_TIME_ZONE::AM_CHICAGO },
+    { "LAX", DT_TIME_ZONE::AM_LOS_ANGELES },
+    { "MEX", DT_TIME_ZONE::AM_MEXICO_CITY },
+    { "NYC", DT_TIME_ZONE::AM_NEW_YORK },
+    { "DXB", DT_TIME_ZONE::AS_DUBAI },
+    { "HKG", DT_TIME_ZONE::AS_HONG_KONG },
+    { "SHA", DT_TIME_ZONE::AS_SHANGHAI },
+    { "SIN", DT_TIME_ZONE::AS_SINGAPORE },
+    { "THR", DT_TIME_ZONE::AS_TEHRAN },
+    { "TLV", DT_TIME_ZONE::AS_TEL_AVIV },
+    { "TYO", DT_TIME_ZONE::AS_TOKYO },
+    { "MEL", DT_TIME_ZONE::AU_MELBOURNE },
+    { "SYD", DT_TIME_ZONE::AU_SYDNEY },
+    { "RIO", DT_TIME_ZONE::BR_RIO_DE_JANEIRO },
+    { "BER", DT_TIME_ZONE::EU_BERLIN },
+    { "LON", DT_TIME_ZONE::EU_LONDON },
+    { "MOW", DT_TIME_ZONE::EU_MOSCOW },
+    { "PAR", DT_TIME_ZONE::EU_PARIS },
+    { "ROM", DT_TIME_ZONE::EU_ROME },
+    { "VIE", DT_TIME_ZONE::EU_VIENNA },
+    { "ZRH", DT_TIME_ZONE::EU_ZURICH },
+    { "UTC", DT_TIME_ZONE::UTC },
+    { "SEL", DT_TIME_ZONE::AS_SEOUL },
+    { "TAY", DT_TIME_ZONE::AS_TAIPEI },
+    { "STO", DT_TIME_ZONE::EU_STOCKHOLM },
+    { "AKL", DT_TIME_ZONE::NZ },
+    { "OSL", DT_TIME_ZONE::EU_OSLO },
+    { "WAW", DT_TIME_ZONE::EU_WARSAW },
+    { "BUD", DT_TIME_ZONE::EU_BUDAPEST },
+};
+
+// --------------------------------------
+
 // 1 - 7 (Sunday - Saturday)
 // DO NOT change the numbers
 //
@@ -113,6 +154,8 @@ enum class DT_WEEKDAY : unsigned char  {
     FRI = 6,
     SAT = 7
 };
+
+// --------------------------------------
 
 // 1 - 12 (January - December)
 // DO NOT change the numbers
@@ -132,6 +175,8 @@ enum class DT_MONTH : unsigned char  {
     NOV = 11,
     DEC = 12
 };
+
+// --------------------------------------
 
 // AME_STYLE: MM/DD/YYYY
 // EUR_STYLE: YYYY/MM/DD
@@ -173,33 +218,33 @@ public:
                                 DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
 
     // Currently, the following formats are supported:
-    //  (1)  YYYYMMDD
+    //  (1)  YYYYMMDD [TZN]
     // AME_STYLE:
-    //  (2)  MM/DD/YYYY
-    //  (3)  MM/DD/YYYY HH
-    //  (4)  MM/DD/YYYY HH:MM
-    //  (5)  MM/DD/YYYY HH:MM:SS
-    //  (6)  MM/DD/YYYY HH:MM:SS.MMM  // Milliseconds
-    //  (7)  MM/DD/YYYY HH:MM:SS.IIIIII  // Microseconds
-    //  (8)  MM/DD/YYYY HH:MM:SS.NNNNNNNNN  // Nanoseconds
+    //  (2)  MM/DD/YYYY [TZN]
+    //  (3)  MM/DD/YYYY HH [TZN]
+    //  (4)  MM/DD/YYYY HH:MM [TZN]
+    //  (5)  MM/DD/YYYY HH:MM:SS [TZN]
+    //  (6)  MM/DD/YYYY HH:MM:SS.MMM [TZN]  // Milliseconds
+    //  (7)  MM/DD/YYYY HH:MM:SS.IIIIII [TZN]  // Microseconds
+    //  (8)  MM/DD/YYYY HH:MM:SS.NNNNNNNNN [TZN]  // Nanoseconds
     //
     // EUR_STYLE:
-    //  (9)  YYYY/MM/DD
-    //  (10) YYYY/MM/DD HH
-    //  (11) YYYY/MM/DD HH:MM
-    //  (12) YYYY/MM/DD HH:MM:SS
-    //  (13) YYYY/MM/DD HH:MM:SS.MMM  // Milliseconds
-    //  (14) YYYY/MM/DD HH:MM:SS.IIIIII  // Microseconds
-    //  (15) YYYY/MM/DD HH:MM:SS.NNNNNNNNN  // Nanoseconds
+    //  (9)  YYYY/MM/DD [TZN]
+    //  (10) YYYY/MM/DD HH [TZN]
+    //  (11) YYYY/MM/DD HH:MM [TZN]
+    //  (12) YYYY/MM/DD HH:MM:SS [TZN]
+    //  (13) YYYY/MM/DD HH:MM:SS.MMM [TZN]  // Milliseconds
+    //  (14) YYYY/MM/DD HH:MM:SS.IIIIII [TZN]  // Microseconds
+    //  (15) YYYY/MM/DD HH:MM:SS.NNNNNNNNN [TZN]  // Nanoseconds
     //
     // ISO_STYLE:
-    //  (16) YYYY-MM-DD
-    //  (17) YYYY-MM-DD HH
-    //  (18) YYYY-MM-DD HH:MM
-    //  (19) YYYY-MM-DD HH:MM:SS
-    //  (20) YYYY-MM-DD HH:MM:SS.MMM  // Milliseconds
-    //  (21) YYYY-MM-DD HH:MM:SS.IIIIII  // Microseconds
-    //  (22) YYYY-MM-DD HH:MM:SS.NNNNNNNNN  // Nanoseconds
+    //  (16) YYYY-MM-DD [TZN]
+    //  (17) YYYY-MM-DD HH [TZN]
+    //  (18) YYYY-MM-DD HH:MM [TZN]
+    //  (19) YYYY-MM-DD HH:MM:SS [TZN]
+    //  (20) YYYY-MM-DD HH:MM:SS.MMM [TZN]  // Milliseconds
+    //  (21) YYYY-MM-DD HH:MM:SS.IIIIII [TZN]  // Microseconds
+    //  (22) YYYY-MM-DD HH:MM:SS.NNNNNNNNN [TZN]  // Nanoseconds
     //
     HMDF_API explicit DateTime (const char *s,
                                 DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
@@ -228,8 +273,11 @@ public:
     HMDF_API DateTime &operator = (DateType rhs);  // dt = 20181223
 
     // Currently, the following formats are supported:
-    //  1)  YYYYMMDD [LOCAL | GMT]
-    //  2)  YYYYMMDD HH:MM:SS.MMM [LOCAL | GMT]
+    //  (1)  YYYYMMDD [TZN]
+    //  (2)  YYYYMMDD HH [TZN]
+    //  (3)  YYYYMMDD HH:MM [TZN]
+    //  (4)  YYYYMMDD HH:MM:SS [TZN]
+    //  (5)  YYYYMMDD HH:MM:SS.MMM [TZN]
     //
     HMDF_API DateTime &operator = (const char *rhs);  // dt = "20181223"
 

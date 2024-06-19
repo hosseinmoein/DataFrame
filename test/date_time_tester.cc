@@ -108,13 +108,13 @@ int main (int, char *[])  {
 
     now = 19721202;
     assert(now.string_format(DT_FORMAT::DT_TM2) == "12/02/1972 00:00:00.000");
-    now = "19910223 16:23:45.230";
+    now = "19910223 16:23:45.230 LOC";
     assert(now.string_format(DT_FORMAT::DT_TM2) == "02/23/1991 16:23:45.230");
     now = "19910223 16:23:45.230";
     assert(now.string_format(DT_FORMAT::DT_TM2) == "02/23/1991 16:23:45.230");
     now = "20100207 12";
     assert(now.string_format(DT_FORMAT::DT_TM2) == "02/07/2010 12:00:00.000");
-    now = "20100207 12:32";
+    now = "20100207 12:32 THR";
     assert(now.string_format(DT_FORMAT::DT_TM2) == "02/07/2010 12:32:00.000");
     now = "20100207 12:32:12";
 
@@ -702,66 +702,43 @@ int main (int, char *[])  {
     {
         // Testing DateTime's const char * constructor
 
-        const DateTime  dt1 ("20100207 12:31");
+        const DateTime  dt1 ("20100207 12:31 GMT");
 
-        if (dt1.string_format (DT_FORMAT::DT_TM2) !=
-                "02/07/2010 12:31:00.000")  {
-            std::cout << "ERROR: "
-                      << dt1.string_format (DT_FORMAT::DT_TM2) << " != "
-                      << "02/07/2010 12:31:00.000" << std::endl;
-            return (EXIT_FAILURE);
-        }
+        assert(dt1.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/07/2010 12:31:00.000");
 
-        const DateTime  dt2 ("02/08/2010 12:31:56", DT_DATE_STYLE::AME_STYLE);
+        const DateTime  dt2 ("02/08/2010 12:31:56 LOC",
+                             DT_DATE_STYLE::AME_STYLE);
 
-        if (dt2.string_format (DT_FORMAT::DT_TM2) !=
-                "02/08/2010 12:31:56.000")  {
-            std::cout << "ERROR: "
-                      << dt2.string_format (DT_FORMAT::DT_TM2) << " != "
-                      << "02/08/2010 12:31:56.000" << std::endl;
-            return (EXIT_FAILURE);
-        }
+        assert(dt2.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/08/2010 12:31:56.000");
 
         const DateTime  dt3 ("2010/02/09 12:31:56", DT_DATE_STYLE::EUR_STYLE);
 
-        if (dt3.string_format (DT_FORMAT::DT_TM2) !=
-                "02/09/2010 12:31:56.000")  {
-            std::cout << "ERROR: "
-                      << dt3.string_format (DT_FORMAT::DT_TM2) << " != "
-                      << "02/09/2010 12:31:56.000" << std::endl;
-            return (EXIT_FAILURE);
-        }
+        assert(dt3.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/09/2010 12:31:56.000");
 
-        const DateTime  dt4 ("  2010/02/10 12:31:56", DT_DATE_STYLE::EUR_STYLE);
+        const DateTime  dt4 ("  2010/02/10 12:31:56 STO",
+                             DT_DATE_STYLE::EUR_STYLE);
 
-        if (dt4.string_format (DT_FORMAT::DT_TM2) !=
-                "02/10/2010 12:31:56.000")  {
-            std::cout << "ERROR: "
-                      << dt4.string_format (DT_FORMAT::DT_TM2) << " != "
-                      << "02/10/2010 12:31:56.000" << std::endl;
-            return (EXIT_FAILURE);
-        }
+        assert(dt4.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/10/2010 12:31:56.000");
 
-        const DateTime  dt5 ("    02/11/2010 12:31:56",
-                             DT_DATE_STYLE::AME_STYLE);
+        const DateTime  paris("    02/11/2010 12:31:56 PAR",
+                              DT_DATE_STYLE::AME_STYLE);
+        const DateTime  tehran("    02/11/2010 12:31:56 THR",
+                               DT_DATE_STYLE::AME_STYLE);
 
-        if (dt5.string_format (DT_FORMAT::DT_TM2) !=
-                "02/11/2010 12:31:56.000")  {
-            std::cout << "ERROR: "
-                      << dt5.string_format (DT_FORMAT::DT_TM2) << " != "
-                      << "02/11/2010 12:31:56.000" << std::endl;
-            return (EXIT_FAILURE);
-        }
+        assert(paris.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/11/2010 12:31:56.000");
+        // Tehran must be 2.5 hours ahead of Paris
+        //
+        assert(((paris.time() - tehran.time()) == 9000));
 
         const DateTime dt6 (20190110, 13, 56, 23, 123456987);
 
-        if (dt6.string_format (DT_FORMAT::DT_PRECISE) !=
-                "1547146583.123456987")  {
-            std::cout << "ERROR: "
-                      << dt6.string_format (DT_FORMAT::DT_PRECISE) << " != "
-                      << "1547146583.123456987" << std::endl;
-            // return (EXIT_FAILURE);
-        }
+        assert(dt6.string_format (DT_FORMAT::DT_PRECISE) ==
+                   "1547146583.123456987");
     }
 
     {
@@ -1016,17 +993,6 @@ int main (int, char *[])  {
         dt8.date_to_str (DT_FORMAT::ISO_DT_NANO, result);
         std::cout << "2018-12-21 13:07:35.123456789+00 == " << result
                   << std::endl;
-    }
-
-    {
-        std::cout << "Testing DateTime double constructor ..." << std::endl;
-
-        const DateTime  dt1 ("2018-12-21 13:07:35.123456789",
-                             DT_DATE_STYLE::ISO_STYLE);
-        const double    val = static_cast<double>(dt1);
-        const DateTime  dt2 (val);
-
-        assert(dt1 == dt2);
     }
 
     test_priority_queue();

@@ -85,7 +85,7 @@ Both the header (DateTime.h) and source (DateTime.cc) files are part of the Data
 
 Follow the DataFrame build instructions.<BR>
   
-<BR><HR COLOR="Gray" SIZE="5">
+<HR COLOR="Gray" SIZE="5">
 
   <H2><font color="blue">Example</font></H2>
 
@@ -108,7 +108,7 @@ This library can have up to Nano second precision depending on what systems call
 
 For more examples see file <I>date_time_tester.cc</I><BR>
 
-<BR><HR COLOR="Gray" SIZE="5">
+<HR COLOR="Gray" SIZE="5">
 
   <H2><font color="blue">Types</font></H2>
 <font size="+1">These constants are used for formatting date/time into strings:</font><BR>
@@ -219,59 +219,100 @@ For more examples see file <I>date_time_tester.cc</I><BR>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> EpochType <span style="color:#808030; ">=</span> <span style="color:#603000; ">time_t</span><span style="color:#800080; ">;</span>                 <span style="color:#696969; ">// Signed epoch</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> LongTimeType <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">long</span> <span style="color:#800000; font-weight:bold; ">long</span> <span style="color:#800000; font-weight:bold; ">int</span><span style="color:#800080; ">;</span>       <span style="color:#696969; ">// Nano seconds since epoch</span></span></pre>
 
+<font size="+1">This table lists the 3-letter abbreviations for allowable time zones that can appear<BR>on text parsed by DateTime constructor of assignment operator:</font><BR>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">inline</span> <span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">const</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">unordered_map</span><span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>string_view<span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">&gt;</span>  ZONE_STR_TO_TIME_ZONE  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">LOC</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>LOCAL <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">GMT</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>GMT <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">BUE</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AM_BUENOS_AIRES <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">CHI</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AM_CHICAGO <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">LAX</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AM_LOS_ANGELES <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">MEX</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AM_MEXICO_CITY <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">NYC</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AM_NEW_YORK <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">DXB</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AS_DUBAI <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">HKG</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AS_HONG_KONG <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">SHA</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AS_SHANGHAI <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">SIN</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AS_SINGAPORE <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">THR</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AS_TEHRAN <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">TLV</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AS_TEL_AVIV <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">TYO</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AS_TOKYO <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">MEL</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AU_MELBOURNE <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">SYD</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AU_SYDNEY <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">RIO</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>BR_RIO_DE_JANEIRO <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">BER</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_BERLIN <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">LON</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_LONDON <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">MOW</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_MOSCOW <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">PAR</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_PARIS <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">ROM</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_ROME <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">VIE</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_VIENNA <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">ZRH</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_ZURICH <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">UTC</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>UTC <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">SEL</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AS_SEOUL <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">TAY</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>AS_TAIPEI <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">STO</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_STOCKHOLM <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">AKL</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>NZ <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">OSL</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_OSLO <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">WAW</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_WARSAW <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">BUD</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_BUDAPEST <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span></pre>
+
 <HR COLOR="Gray" SIZE="5">
   <H2><font color="blue">Member Functions</font></H2>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// A constructor that creates a DateTime initialized to now.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// tz: Desired time zone from DT_TIME_ZONE above.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">explicit</span></span>
-<span class="line_wrapper">    DateTime <span style="color:#808030; ">(</span>DT_TIME_ZONE tz <span style="color:#808030; ">=</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>LOCAL<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    DateTime<span style="color:#808030; ">(</span>DT_TIME_ZONE tz <span style="color:#808030; ">=</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>LOCAL<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// The constructor that creates a DateTime based on parameters passed.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">explicit</span></span>
-<span class="line_wrapper">    DateTime <span style="color:#808030; ">(</span>DateType d<span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Date e.g. 20180112</span></span>
-<span class="line_wrapper">              HourType hr <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span>  Hour e<span style="color:#808030; ">.</span>g<span style="color:#808030; ">.</span> <span style="color:#008c00; ">13</span></span>
-<span class="line_wrapper">              MinuteType mn <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Minute e.g. 45</span></span>
-<span class="line_wrapper">              SecondType sc <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Second e.g. 45</span></span>
-<span class="line_wrapper">              NanosecondType ns <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Nano-second e.g. 123456789</span></span>
-<span class="line_wrapper">              DT_TIME_ZONE tz <span style="color:#808030; ">=</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>LOCAL<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// Desired time zone from DT_TIME_ZONE above</span></span>
+<span class="line_wrapper">    DateTime<span style="color:#808030; ">(</span>DateType d<span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Date e.g. 20180112</span></span>
+<span class="line_wrapper">             HourType hr <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span>  Hour e<span style="color:#808030; ">.</span>g<span style="color:#808030; ">.</span> <span style="color:#008c00; ">13</span></span>
+<span class="line_wrapper">             MinuteType mn <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Minute e.g. 45</span></span>
+<span class="line_wrapper">             SecondType sc <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Second e.g. 45</span></span>
+<span class="line_wrapper">             NanosecondType ns <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Nano-second e.g. 123456789</span></span>
+<span class="line_wrapper">             DT_TIME_ZONE tz <span style="color:#808030; ">=</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>LOCAL<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// Desired time zone from DT_TIME_ZONE above</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// The constructor that creates a DateTime by parsing a string and based on parameters passed.</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">// Currently, the following formats are supported:</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (1)  YYYYMMDD</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Currently, the following formats are supported.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// <I>[TZN]</I> denotes an optional 3-letter time zone abbreviation listed above. The default is local time zone.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (1)  YYYYMMDD [TZN]</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// AME_STYLE:</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (2)  MM/DD/YYYY</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (3)  MM/DD/YYYY HH</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (4)  MM/DD/YYYY HH:MM</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (5)  MM/DD/YYYY HH:MM:SS</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (6)  MM/DD/YYYY HH:MM:SS.MMM        // Milliseconds</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (7)  MM/DD/YYYY HH:MM:SS.IIIIII     // Microseconds</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (8)  MM/DD/YYYY HH:MM:SS.NNNNNNNNN  // Nanoseconds</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (2)  MM/DD/YYYY [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (3)  MM/DD/YYYY HH [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (4)  MM/DD/YYYY HH:MM [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (5)  MM/DD/YYYY HH:MM:SS [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (6)  MM/DD/YYYY HH:MM:SS.MMM [TZN]        // Milliseconds</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (7)  MM/DD/YYYY HH:MM:SS.IIIIII [TZN]     // Microseconds</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (8)  MM/DD/YYYY HH:MM:SS.NNNNNNNNN [TZN]  // Nanoseconds</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// EUR_STYLE:</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (9)  YYYY/MM/DD</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (10) YYYY/MM/DD HH</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (11) YYYY/MM/DD HH:MM</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (12) YYYY/MM/DD HH:MM:SS</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (13) YYYY/MM/DD HH:MM:SS.MMM        // Milliseconds</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (14) YYYY/MM/DD HH:MM:SS.IIIIII     // Microseconds</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (15) YYYY/MM/DD HH:MM:SS.NNNNNNNNN  // Nanoseconds</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (9)  YYYY/MM/DD [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (10) YYYY/MM/DD HH [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (11) YYYY/MM/DD HH:MM [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (12) YYYY/MM/DD HH:MM:SS [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (13) YYYY/MM/DD HH:MM:SS.MMM [TZN]        // Milliseconds</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (14) YYYY/MM/DD HH:MM:SS.IIIIII [TZN]     // Microseconds</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (15) YYYY/MM/DD HH:MM:SS.NNNNNNNNN [TZN]  // Nanoseconds</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// ISO_STYLE:</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (16) YYYY-MM-DD</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (17) YYYY-MM-DD HH</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (18) YYYY-MM-DD HH:MM</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (19) YYYY-MM-DD HH:MM:SS</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (20) YYYY-MM-DD HH:MM:SS.MMM        // Milliseconds</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (21) YYYY-MM-DD HH:MM:SS.IIIIII     // Microseconds</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">//  (22) YYYY-MM-DD HH:MM:SS.NNNNNNNNN  // Nanoseconds</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (16) YYYY-MM-DD [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (17) YYYY-MM-DD HH [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (18) YYYY-MM-DD HH:MM [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (19) YYYY-MM-DD HH:MM:SS [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (20) YYYY-MM-DD HH:MM:SS.MMM [TZN]        // Milliseconds</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (21) YYYY-MM-DD HH:MM:SS.IIIIII [TZN]     // Microseconds</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  (22) YYYY-MM-DD HH:MM:SS.NNNNNNNNN [TZN]  // Nanoseconds</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
-<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">explicit</span> DateTime <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>s<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                        DT_DATE_STYLE ds <span style="color:#808030; ">=</span> DT_DATE_STYLE<span style="color:#800080; ">::</span>YYYYMMDD<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                        DT_TIME_ZONE tz <span style="color:#808030; ">=</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>LOCAL<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">explicit</span> DateTime<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>s<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      DT_DATE_STYLE ds <span style="color:#808030; ">=</span> DT_DATE_STYLE<span style="color:#800080; ">::</span>YYYYMMDD<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      DT_TIME_ZONE tz <span style="color:#808030; ">=</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>LOCAL<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"/>
+<span class="line_wrapper">    DateTime<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DateTime <span style="color:#808030; ">&amp;</span>that<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    DateTime<span style="color:#808030; ">(</span>DateTime <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>that<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
 
-<BR><HR COLOR="Gray" SIZE="1">
+<HR COLOR="Gray" SIZE="1">
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// A convenient method, if you already have a DateTime instance and want to change the date/time quickly.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// the_time: Time as epoch</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
@@ -285,14 +326,14 @@ For more examples see file <I>date_time_tester.cc</I><BR>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// tz: Desired time zone</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
-<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">void</span> set_timezone <span style="color:#808030; ">(</span>DT_TIME_ZONE tz<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">void</span> set_timezone<span style="color:#808030; ">(</span>DT_TIME_ZONE tz<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Returns the current time zone.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
-<span class="line_wrapper">    DT_TIME_ZONE get_timezone <span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    DT_TIME_ZONE get_timezone<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
 
-<BR><HR COLOR="Gray" SIZE="1">
+<HR COLOR="Gray" SIZE="1">
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// Sets self to right-hand-side.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// rhs: A date e.g.  dt = 20181215</span></span>
@@ -300,22 +341,26 @@ For more examples see file <I>date_time_tester.cc</I><BR>
 <span class="line_wrapper">    DateTime <span style="color:#808030; ">&amp;</span><span style="color:#800000; font-weight:bold; ">operator</span> <span style="color:#808030; ">=</span> <span style="color:#808030; ">(</span>DateType rhs<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Sets self to right-hand-side.</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">// Currently, the following formats are supported:</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">// 1)  YYYYMMDD [LOCAL | GMT]</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">// 2)  YYYYMMDD HH:MM:SS.MMM [LOCAL | GMT]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Currently, the following formats are supported.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// <I>[TZN]</I> denotes an optional 3-letter time zone abbreviation listed above. The default is local time zone.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// (1)  YYYYMMDD [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// (2)  YYYYMMDD HH [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// (3)  YYYYMMDD HH:MM [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// (4)  YYYYMMDD HH:MM:SS [TZN]</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// (5)  YYYYMMDD HH:MM:SS.MMM [TZN]</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">// rhs: A date/time string e.g.  dt = “20181215”;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// rhs: A date/time string e.g.  dt = “20181215 08:34 GMT”;</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    DateTime <span style="color:#808030; ">&amp;</span><span style="color:#800000; font-weight:bold; ">operator</span> <span style="color:#808030; ">=</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>rhs<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
 
-<BR><HR COLOR="Gray" SIZE="1">
+<HR COLOR="Gray" SIZE="1">
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// Compares self with right-hand-side and returns an integer result accordingly.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// rhs: Another DateTime instance</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">int</span> dt_compare<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DateTime <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span></pre>
 
-<BR><HR COLOR="Gray" SIZE="1">
+<HR COLOR="Gray" SIZE="1">
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// These methods return the corresponding date/time parts.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    DateType date<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>                <span style="color:#696969; ">// e.g. 20020303</span></span>
@@ -332,9 +377,9 @@ For more examples see file <I>date_time_tester.cc</I><BR>
 <span class="line_wrapper">    NanosecondType nanosec<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>       <span style="color:#696969; ">// 0 - 999,999,999</span></span>
 <span class="line_wrapper">    EpochType <span style="color:#603000; ">time</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>               <span style="color:#696969; ">// Like time()</span></span>
 <span class="line_wrapper">    LongTimeType long_time<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>       <span style="color:#696969; ">// Nano seconds since epoch</span></span>
-<span class="line_wrapper">    DatePartType days_in_month <span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// 28, 29, 30, 31</span></span></pre>
+<span class="line_wrapper">    DatePartType days_in_month<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// 28, 29, 30, 31</span></span></pre>
 
-<BR><HR COLOR="Gray" SIZE="1">
+<HR COLOR="Gray" SIZE="1">
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// These return the diff including the fraction of the unit. This is why they return a double.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// The diff could be +/- based on "this - that"</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
@@ -346,17 +391,27 @@ For more examples see file <I>date_time_tester.cc</I><BR>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span> diff_weeks<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DateTime <span style="color:#808030; ">&amp;</span>that<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
 
-<BR><HR COLOR="Gray" SIZE="1">
+<HR COLOR="Gray" SIZE="1">
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// These methods either advance or pullback the time accordingly. The parameter to these methods could be +/-.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">void</span> add_nanoseconds<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">long</span> nanosecs<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">void</span> add_seconds<span style="color:#808030; ">(</span>EpochType secs<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">void</span> add_days<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">long</span> days<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">void</span> add_weekdays <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">long</span> days<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">void</span> add_weekdays<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">long</span> days<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">void</span> add_months<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">long</span> months<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">void</span> add_years<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">long</span> years<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span></pre>
 
-<BR><HR COLOR="Gray" SIZE="1">
+<HR COLOR="Gray" SIZE="1">
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// These methods return a Boolean indicating holidays or special days.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span> is_weekend<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span> is_newyear<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span> is_xmas<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span> is_us_business_day<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span> is_us_bank_holiday<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span> is_valid<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span></span></pre>
+
+<HR COLOR="Gray" SIZE="1">
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// These methods format the date/time into a string based on the format parameter</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// T: Type of string</span></span>

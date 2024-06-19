@@ -160,7 +160,8 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
     const bool  has_str_tz =
         std::isalpha(str[str_len - 1]) &&
         std::isalpha(str[str_len - 2]) &&
-        std::isalpha(str[str_len - 3]);
+        std::isalpha(str[str_len - 3]) &&
+        std::isspace(str[str_len - 4]);
     char        str_tz[4];
 
     if (has_str_tz)  {
@@ -370,7 +371,8 @@ DateTime &DateTime::operator = (const char *s)  {
     const bool  has_str_tz =
         std::isalpha(str[str_len - 1]) &&
         std::isalpha(str[str_len - 2]) &&
-        std::isalpha(str[str_len - 3]);
+        std::isalpha(str[str_len - 3]) &&
+        std::isspace(str[str_len - 4]);
     char        str_tz[4];
 
     if (has_str_tz)  {

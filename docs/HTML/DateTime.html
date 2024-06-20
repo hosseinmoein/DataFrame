@@ -83,7 +83,7 @@ Both the header (DateTime.h) and source (DateTime.cc) files are part of the Data
 
   <H2><font color="blue">Build Instructions</font></H2>
 
-Follow the DataFrame build instructions.<BR>
+Follow the DataFrame build instructions.<BR><BR>
   
 <HR COLOR="Gray" SIZE="5">
 
@@ -99,14 +99,21 @@ This library can have up to Nano second precision depending on what systems call
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  diff <span style="color:#808030; ">=</span> now<span style="color:#808030; ">.</span>diff_seconds <span style="color:#808030; ">(</span>gmt_now<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">const</span> DateTime  paris<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">02/11/2010 12:31:56 PAR</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_DATE_STYLE<span style="color:#800080; ">::</span>AME_STYLE<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">const</span> DateTime  tehran<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">02/11/2010 12:31:56 THR</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_DATE_STYLE<span style="color:#800080; ">::</span>AME_STYLE<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Tehran must be 2.5 hours ahead of Paris</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#808030; ">(</span>paris<span style="color:#808030; ">.</span><span style="color:#400000; ">time</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> tehran<span style="color:#808030; ">.</span><span style="color:#400000; ">time</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">9000</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
 <span class="line_wrapper">    now <span style="color:#808030; ">=</span> <span style="color:#008c00; ">19721202</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    gmt_now <span style="color:#808030; ">=</span> <span style="color:#008c00; ">19721210</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    diff <span style="color:#808030; ">=</span> now<span style="color:#808030; ">.</span>diff_weekdays <span style="color:#808030; ">(</span>gmt_now<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    now<span style="color:#808030; ">.</span>add_days<span style="color:#808030; ">(</span><span style="color:#008c00; ">3</span><span style="color:#808030; ">)</span></span>
-<span class="line_wrapper">    now<span style="color:#808030; ">.</span>add_weekdays<span style="color:#808030; ">(</span><span style="color:#808030; ">-</span><span style="color:#008c00; ">2</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>  
+<span class="line_wrapper">    now<span style="color:#808030; ">.</span>add_weekdays<span style="color:#808030; ">(</span><span style="color:#808030; ">-</span><span style="color:#008c00; ">2</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
 
-For more examples see file <I>date_time_tester.cc</I><BR>
+For more examples see file <I>date_time_tester.cc</I><BR><BR>
 
 <HR COLOR="Gray" SIZE="5">
 
@@ -255,7 +262,6 @@ For more examples see file <I>date_time_tester.cc</I><BR>
 <span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">WAW</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_WARSAW <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">BUD</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_BUDAPEST <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
 <span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span></pre>
-
 <HR COLOR="Gray" SIZE="5">
   <H2><font color="blue">Member Functions</font></H2>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// A constructor that creates a DateTime initialized to now.</span></span>
@@ -424,9 +430,9 @@ For more examples see file <I>date_time_tester.cc</I><BR>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span> string_format<span style="color:#808030; ">(</span>DT_FORMAT format<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span></pre>
 
-<HR COLOR="Gray" SIZE="1">
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#696969; ">// Global DateTime operators:</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">//</span></span>
+<HR COLOR="Gray" SIZE="5">
+  <H2><font color="blue">Global DateTime Operators</font></H2>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;">
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> S<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">S <span style="color:#808030; ">&amp;</span><span style="color:#800000; font-weight:bold; ">operator</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#808030; ">(</span>S <span style="color:#808030; ">&amp;</span>o<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> DateTime <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>

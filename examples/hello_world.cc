@@ -81,7 +81,7 @@ int main(int, char *[])  {
     ULDataFrame ul_df1;
 
     // One way to load data into the DataFrame is one column at a time. A DataFrame column could be at most as long as its
-    // index column. So, you must load the indexfirst before loading any column.
+    // index column. So, you must load the index first before loading any column.
     //
     // Once you load a column or index, the data is moved to DataFrame. The original vectors are now empty. There are other
     // ways of loading data without the move.
@@ -145,7 +145,6 @@ int main(int, char *[])  {
     StrDataFrame       ibm_df_2;
 
     ibm_df_2.deserialize(ibm_df_serialized);
-    // std::cout << ibm_df_as_str << std::endl;  // Large output
 
     using ul_idx_t = ULDataFrame::IndexType;  // This is just unsigned long.
 
@@ -158,13 +157,13 @@ int main(int, char *[])  {
     // You could get another DataFrame by selecting on one or multiple columns.
     // You must specify all the column types, but only once.
     //
-    auto    above_150_fun = [](const std::string &, const double &val)-> bool { return (val > 150.0); };
-    auto    above_150_df = ibm_df.get_data_by_sel<double, decltype(above_150_fun), double, long>("IBM_Close", above_150_fun);
+    auto    above_150_fn = [](const std::string &, const double &val)-> bool { return (val > 150.0); };
+    auto    above_150_df = ibm_df.get_data_by_sel<double, decltype(above_150_fn), double, long>("IBM_Close", above_150_fn);
 
     // Or, you could choose to get a view. See docs for views.
     //
     auto    above_150_view =
-        ibm_df.get_view_by_sel<double, decltype(above_150_fun), double, long>("IBM_Close", above_150_fun);
+        ibm_df.get_view_by_sel<double, decltype(above_150_fn), double, long>("IBM_Close", above_150_fn);
 
     // You can get another DataFrame by group-bying on one or multiple columns.
     // You must specify only the type(s) of column(s), you are group-bying.
@@ -176,7 +175,7 @@ int main(int, char *[])  {
                                             std::make_tuple("integers",    "sum_int",      SumVisitor<int>()),
                                             std::make_tuple("my_data_col", "last_my_data", LastVisitor<MyData>()));
 
-    // You can run statistical, financial, ML, … algorithms on one or multiple columns by using visitors. You must specify
+    // You can run statistical, financial, ML, ... algorithms on one or multiple columns by using visitors. You must specify
     // the column(s) type(s). The visitor's data column is of type double and its index column is of type std::string.
     //
     StdVisitor<double, std::string> stdev_v;
@@ -274,7 +273,7 @@ int main(int, char *[])  {
     // Calculate the returns and load them as a column.
     //
     ibm_dt_df.load_result_as_column<double>("IBM_Close", std::move(return_v), "IBM_Return");
-    ibm_dt_df.get_column<double>("IBM_Return")[0] = 0;  // Remove the NaN
+    ibm_dt_df.get_column<double>("IBM_Return")[0] = 0;  // Remove the NaN. It messes things up.
 
     // Let's try to find 4 clusters.
     //

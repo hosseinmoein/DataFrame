@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd src
+# cd src
 make -f Makefile.Linux.GCC64 clobber
 make -f Makefile.Linux.GCC64D clobber
 make -f Makefile.Linux.GCC64

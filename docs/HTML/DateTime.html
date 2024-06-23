@@ -136,7 +136,8 @@ For more examples see file <I>date_time_tester.cc</I><BR><BR>
 <span class="line_wrapper">        ISO_DT_NANO <span style="color:#808030; ">=</span> <span style="color:#008c00; ">14</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// e.g. 2015-05-05 13:51:04.123456789</span></span>
 <span class="line_wrapper">    <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span></pre>
   
-<BR>
+<HR COLOR="Gray" SIZE="1">
+
 <font size="+1">These are the available time zones, used in a few methods and constructors.</font><BR>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> DT_TIME_ZONE <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">short</span> <span style="color:#800000; font-weight:bold; ">int</span>  <span style="color:#800080; ">{</span></span>
 <span class="line_wrapper">        LOCAL <span style="color:#808030; ">=</span> <span style="color:#808030; ">-</span><span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span></span>
@@ -173,7 +174,8 @@ For more examples see file <I>date_time_tester.cc</I><BR><BR>
 <span class="line_wrapper">        EU_BUDAPEST <span style="color:#808030; ">=</span> <span style="color:#008c00; ">30</span></span>
 <span class="line_wrapper">    <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span></pre>
 
-<BR>
+<HR COLOR="Gray" SIZE="1">
+
 <font size="+1">Week days: 1 - 7 (Sunday - Saturday), used by various methods:</font><BR>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> DT_WEEKDAY <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
 <span class="line_wrapper">        BAD_DAY <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
@@ -186,7 +188,8 @@ For more examples see file <I>date_time_tester.cc</I><BR><BR>
 <span class="line_wrapper">        SAT <span style="color:#808030; ">=</span> <span style="color:#008c00; ">7</span></span>
 <span class="line_wrapper">    <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span></PRE>
 
-<BR>
+<HR COLOR="Gray" SIZE="1">
+
 <font size="+1">Months:  1 - 12 (January - December), used by various methods:</font><BR>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> DT_MONTH <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
 <span class="line_wrapper">        BAD_MONTH <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
@@ -204,16 +207,18 @@ For more examples see file <I>date_time_tester.cc</I><BR><BR>
 <span class="line_wrapper">        DEC <span style="color:#808030; ">=</span> <span style="color:#008c00; ">12</span></span>
 <span class="line_wrapper">    <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span></pre>
 
-<BR>
+<HR COLOR="Gray" SIZE="1">
+
 <font size="+1">These constants are used for parsing data:</font><BR>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> DT_DATE_STYLE <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
 <span class="line_wrapper">        YYYYMMDD <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">        AME_STYLE <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// MM/DD/YYYY</span></span>
 <span class="line_wrapper">        EUR_STYLE <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// YYYY/MM/DD</span></span>
 <span class="line_wrapper">        ISO_STYLE <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">.</span>  <span style="color:#696969; ">// YYYY-MM-DD</span></span>
-<span class="line_wrapper">    <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span></pre>
 
-<BR>
+<HR COLOR="Gray" SIZE="1">
+
 <font size="+1">Types used in DateTime class:</font><BR>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> DateType <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">int</span><span style="color:#800080; ">;</span>            <span style="color:#696969; ">// YYYYMMDD</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> DatePartType <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">short</span> <span style="color:#800000; font-weight:bold; ">int</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// year, month etc.</span></span>
@@ -225,6 +230,8 @@ For more examples see file <I>date_time_tester.cc</I><BR><BR>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> NanosecondType <span style="color:#808030; ">=</span>  <span style="color:#800000; font-weight:bold; ">int</span><span style="color:#800080; ">;</span>              <span style="color:#696969; ">// 0 - 999,999,999</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> EpochType <span style="color:#808030; ">=</span> <span style="color:#603000; ">time_t</span><span style="color:#800080; ">;</span>                 <span style="color:#696969; ">// Signed epoch</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> LongTimeType <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">long</span> <span style="color:#800000; font-weight:bold; ">long</span> <span style="color:#800000; font-weight:bold; ">int</span><span style="color:#800080; ">;</span>       <span style="color:#696969; ">// Nano seconds since epoch</span></span></pre>
+
+<HR COLOR="Gray" SIZE="1">
 
 <font size="+1">This table lists the 3-letter abbreviations for allowable time zones that can appear<BR>in strings parsed by DateTime constructor or assignment operator:</font><BR>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">inline</span> <span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">const</span></span>
@@ -261,9 +268,11 @@ For more examples see file <I>date_time_tester.cc</I><BR><BR>
 <span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">OSL</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_OSLO <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">WAW</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_WARSAW <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">    <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">BUD</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> DT_TIME_ZONE<span style="color:#800080; ">::</span>EU_BUDAPEST <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
-<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span></pre>
-<HR COLOR="Gray" SIZE="5">
-  <H2><font color="blue">Member Functions</font></H2>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span></pre></pre>
+
+<BR><HR COLOR="Gray" SIZE="5">
+
+<H2><font color="blue">Member Functions</font></H2>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// A constructor that creates a DateTime initialized to now.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// tz: Desired time zone from DT_TIME_ZONE above.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
@@ -430,7 +439,7 @@ For more examples see file <I>date_time_tester.cc</I><BR><BR>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span> string_format<span style="color:#808030; ">(</span>DT_FORMAT format<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span></pre>
 
-<HR COLOR="Gray" SIZE="5">
+<BR><HR COLOR="Gray" SIZE="5">
   <H2><font color="blue">Global DateTime Operators</font></H2>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;">
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> S<span style="color:#800080; ">&gt;</span></span>

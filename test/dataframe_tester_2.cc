@@ -1997,6 +1997,44 @@ static void test_ExponentialFitVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_PowerFitVisitor()  {
+
+    std::cout << "\nTesting PowerFitVisitor{  } ..." << std::endl;
+
+    StlVecType<unsigned long>   idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    MyDataFrame                 df;
+
+    df.load_index(std::move(idx));
+    df.load_column<double>("X1",
+                           { 1, 2, 3, 4, 5, 6 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y1",
+                           { 2.98, 7.26, 11.75, 22.72, 27.20, 38.57 },
+                           nan_policy::dont_pad_with_nans);
+
+    PowerFitVisitor<double, unsigned long, 64>  pow_v;
+
+    df.single_act_visit<double, double>("X1", "Y1", pow_v);
+    assert(std::fabs(pow_v.get_residual() - 13.4058) < 0.0001);
+    assert(std::fabs(pow_v.get_slope() - 1.4332) < 0.0001);
+    assert(std::fabs(pow_v.get_intercept() - 1.0313) < 0.0001);
+
+    const auto  actual = StlVecType<double> {
+        2.8047, 7.5739, 13.5423, 20.4527, 28.1605, 36.5697
+    };
+
+    for (size_t i = 0; i < pow_v.get_result().size(); ++i)
+        assert(fabs(pow_v.get_result()[i] - actual[i]) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_LinearFitVisitor()  {
 
     std::cout << "\nTesting LinearFitVisitor{  } ..." << std::endl;
@@ -5265,6 +5303,7 @@ int main(int, char *[]) {
     test_HurstExponentVisitor();
     test_LogFitVisitor();
     test_ExponentialFitVisitor();
+    test_PowerFitVisitor();
     test_LinearFitVisitor();
     test_CubicSplineFitVisitor();
     test_ExpoSmootherVisitor();

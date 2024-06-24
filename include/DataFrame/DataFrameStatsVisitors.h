@@ -5753,6 +5753,165 @@ using efit_v = ExponentialFitVisitor<T, I, A>;
 // ----------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  PowerFitVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<forward_iterator K, forward_iterator H>
+    inline void
+    operator() (const K &, const K &,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
+
+        const size_type col_s = std::distance(x_begin, x_end);
+        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(y_begin, y_end)))
+            throw DataFrameError("PowerFitVisitor: two columns must be "
+                                 "of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        value_type  sum_x { 0 };   // Sum of all observed x
+        value_type  sum_y { 0 };   // Sum of all observed y
+        value_type  sum_x2 { 0 };  // Sum of all observed x squared
+        value_type  sum_xy { 0 };  // Sum of all x times sum of all observed y
+
+        if (thread_level > 2)  {
+            using sum_t =
+                std::tuple<value_type, value_type, value_type, value_type>;
+
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&x_begin, &y_begin](auto begin, auto end) -> sum_t  {
+                        value_type  sum_x { 0 };
+                        value_type  sum_y { 0 };
+                        value_type  sum_x2 { 0 };
+                        value_type  sum_xy { 0 };
+
+                        for (auto i = begin; i < end; ++i)  {
+                            const value_type    log_x =
+                                std::log(*(x_begin + i));
+                            const value_type    log_y =
+                                std::log(*(y_begin + i));
+
+                            sum_x += log_x;
+                            sum_y += log_y;
+                            sum_xy += log_x * log_y;
+                            sum_x2 += log_x * log_x;
+                        }
+                        return (std::make_tuple(sum_x, sum_y, sum_xy, sum_x2));
+                    });
+
+            for (auto &fut : futures)  {
+                const auto  &sums = fut.get();
+
+                sum_x += std::get<0>(sums);
+                sum_y += std::get<1>(sums);
+                sum_xy += std::get<2>(sums);
+                sum_x2 += std::get<3>(sums);
+            }
+        }
+        else  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    log_y = std::log(*(y_begin + i));
+                const value_type    log_x = std::log(*(x_begin + i));
+
+                sum_x += log_x;
+                sum_y += log_y;
+                sum_xy += log_x * log_y;
+                sum_x2 += log_x * log_x;
+            }
+        }
+
+        // The slope (the the power of exp) of best fit line
+        //
+        slope_ = (col_s * sum_xy - sum_x * sum_y) /
+                 (col_s * sum_x2 - sum_x * sum_x);
+
+        // The intercept of best fit line
+        //
+        intercept_ = (sum_y - slope_ * sum_x) / col_s;
+
+        const value_type    prefactor = std::exp(intercept_);
+
+        y_fits_.resize(col_s);
+        if (thread_level > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&x_begin, &y_begin, prefactor, this]
+                    (auto begin, auto end) -> value_type  {
+                        value_type  residual { 0 };
+
+                        for (auto i = begin; i < end; ++i)  {
+                            const value_type    pred =
+                                prefactor *
+                                std::pow(*(x_begin + i), this->slope_);
+
+                            // y fits at given x points
+                            //
+                            this->y_fits_[i] = pred;
+
+                            const value_type    r = *(y_begin + i) - pred;
+
+                            residual += r * r;
+                        }
+                        return (residual);
+                   });
+
+             for (auto &fut : futures)  residual_ += fut.get();
+        }
+        else  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    pred =
+                    prefactor * std::pow(*(x_begin + i), this->slope_);
+
+                // y fits at given x points
+                //
+                y_fits_[i] = pred;
+
+                const value_type    r = *(y_begin + i) - pred;
+
+                residual_ += r * r;
+            }
+        }
+    }
+
+    inline void pre ()  {
+
+        y_fits_.clear();
+        residual_ = 0;
+        slope_ = 0;
+        intercept_ = 0;
+    }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (y_fits_); }
+    inline result_type &get_result ()  { return (y_fits_); }
+    inline value_type get_residual () const  { return (residual_); }
+    inline value_type get_slope () const  { return (slope_); }
+    inline value_type get_intercept () const  { return (intercept_); }
+
+    PowerFitVisitor()  {   }
+
+private:
+
+    result_type y_fits_ {  };
+    value_type  residual_ { 0 };
+    value_type  slope_ { 0 };
+    value_type  intercept_ { 0 };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using powfit_v = PowerFitVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  LinearFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3

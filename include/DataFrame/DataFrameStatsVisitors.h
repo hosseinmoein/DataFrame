@@ -5912,6 +5912,206 @@ using powfit_v = PowerFitVisitor<T, I, A>;
 // ----------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  QuadraticFitVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<forward_iterator K, forward_iterator H>
+    inline void
+    operator() (const K &, const K &,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
+
+        const size_type col_s = std::distance(x_begin, x_end);
+        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(y_begin, y_end)))
+            throw DataFrameError("QuadraticFitVisitor: two columns must be "
+                                 "of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        value_type  sum_x { 0 };   // Sum of all observed x
+        value_type  sum_y { 0 };   // Sum of all observed y
+        value_type  sum_x2 { 0 };  // Sum of all observed x squared
+        value_type  sum_x3 { 0 };  // Sum of all observed x cubed
+        value_type  sum_x4 { 0 };  // Sum of all observed x quadrupled
+        value_type  sum_xy { 0 };  // Sum of all y times sum of all x squared
+        value_type  sum_yx2 { 0 }; // Sum of all x times sum of all observed y
+
+        if (thread_level > 2)  {
+            using sum_t =
+                std::tuple<value_type,  // sum_x
+                           value_type,  // sum_y
+                           value_type,  // sum_x2
+                           value_type,  // sum_x3
+                           value_type,  // sum_x4
+                           value_type,  // sum_xy
+                           value_type>; // sum_yx2
+
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&x_begin, &y_begin](auto begin, auto end) -> sum_t  {
+                        value_type  sum_x { 0 };
+                        value_type  sum_y { 0 };
+                        value_type  sum_x2 { 0 };
+                        value_type  sum_x3 { 0 };
+                        value_type  sum_x4 { 0 };
+                        value_type  sum_xy { 0 };
+                        value_type  sum_yx2 { 0 };
+
+                        for (auto i = begin; i < end; ++i)  {
+                            const value_type    x = *(x_begin + i);
+                            const value_type    y = *(y_begin + i);
+
+                            sum_x += x;
+                            sum_y += y;
+                            sum_x2 += x * x;
+                            sum_x3 += x * x * x;
+                            sum_x4 += x * x * x * x;
+                            sum_xy += x * y;
+                            sum_yx2 += y * x * x;
+                        }
+                        return (std::make_tuple(sum_x,
+                                                sum_y,
+                                                sum_x2,
+                                                sum_x3,
+                                                sum_x4,
+                                                sum_xy,
+                                                sum_yx2));
+                    });
+
+            for (auto &fut : futures)  {
+                const auto  &sums = fut.get();
+
+                sum_x += std::get<0>(sums);
+                sum_y += std::get<1>(sums);
+                sum_x2 += std::get<2>(sums);
+                sum_x3 += std::get<3>(sums);
+                sum_x4 += std::get<4>(sums);
+                sum_xy += std::get<5>(sums);
+                sum_yx2 += std::get<6>(sums);
+            }
+        }
+        else  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    x = *(x_begin + i);
+                const value_type    y = *(y_begin + i);
+
+                sum_x += x;
+                sum_y += y;
+                sum_x2 += x * x;
+                sum_x3 += x * x * x;
+                sum_x4 += x * x * x * x;
+                sum_xy += x * y;
+                sum_yx2 += y * x * x;
+            }
+        }
+
+        // Variables needed for calculation of coefficients
+        //
+        const value_type    c_xx = sum_x2 - sum_x * sum_x / col_s;
+        const value_type    c_xy = sum_xy - sum_x * sum_y / col_s;
+        const value_type    c_xx2 = sum_x3 - sum_x * sum_x2 / col_s;
+        const value_type    c_x2y = sum_yx2 - sum_x2 * sum_y / col_s;
+        const value_type    c_x2x2 = sum_x4 - sum_x2 * sum_x2 / col_s;
+
+        // Best fit curve is given by yc = c + bx + ax²
+
+        // The quadratic coefficient
+        //
+        slope_ =
+            (c_x2y * c_xx - c_xy * c_xx2) / (c_xx * c_x2x2 - c_xx2 * c_xx2);
+
+        // The linear coefficient
+        //
+        intercept_ =
+            (c_xy * c_x2x2 - c_x2y * c_xx2) / (c_xx * c_x2x2 - c_xx2 * c_xx2);
+
+        // Constant term
+        //
+        constant_ = (sum_y / col_s) -
+                    (intercept_ * sum_x / col_s) -
+                    (slope_ * sum_x2 / col_s);
+
+        y_fits_.resize(col_s);
+        if (thread_level > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&x_begin, &y_begin, this]
+                    (auto begin, auto end) -> value_type  {
+                        value_type  residual { 0 };
+
+                        for (auto i = begin; i < end; ++i)  {
+                            const value_type    x = *(x_begin + i);
+                            const value_type    pred =
+                                constant_ + intercept_ * x + slope_ * x * x;
+
+                            // y fits at given x points
+                            //
+                            this->y_fits_[i] = pred;
+
+                            const value_type    r = *(y_begin + i) - pred;
+
+                            residual += r * r;
+                        }
+                        return (residual);
+                   });
+
+             for (auto &fut : futures)  residual_ += fut.get();
+        }
+        else  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    x = *(x_begin + i);
+                const value_type    pred =
+                    constant_ + intercept_ * x + slope_ * x * x;
+
+                // y fits at given x points
+                //
+                y_fits_[i] = pred;
+
+                const value_type    r = *(y_begin + i) - pred;
+
+                residual_ += r * r;
+            }
+        }
+    }
+
+    inline void pre ()  {
+
+        y_fits_.clear();
+        residual_ = slope_ = intercept_ = constant_ = 0;
+    }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (y_fits_); }
+    inline result_type &get_result ()  { return (y_fits_); }
+    inline value_type get_residual () const  { return (residual_); }
+    inline value_type get_slope () const  { return (slope_); }
+    inline value_type get_intercept () const  { return (intercept_); }
+    inline value_type get_constant () const  { return (constant_); }
+
+    QuadraticFitVisitor()  {   }
+
+private:
+
+    result_type y_fits_ {  };
+    value_type  residual_ { 0 };
+    value_type  slope_ { 0 };
+    value_type  intercept_ { 0 };
+    value_type  constant_ { 0 };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using qfit_v = QuadraticFitVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  LinearFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3

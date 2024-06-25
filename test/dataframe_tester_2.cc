@@ -2035,6 +2035,47 @@ static void test_PowerFitVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_QuadraticFitVisitor()  {
+
+    std::cout << "\nTesting QuadraticFitVisitor{  } ..." << std::endl;
+
+    StlVecType<unsigned long>   idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    MyDataFrame                 df;
+
+    df.load_index(std::move(idx));
+    df.load_column<double>("X1",
+                           { 10, 15, 20, 24, 30, 34, 40, 45, 48, 50, 58 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y1",
+                           { 115.6, 157.2, 189.2, 220.8, 253.8, 269.2, 284.8,
+                             285, 277.4, 269.2, 244.2 },
+                           nan_policy::dont_pad_with_nans);
+
+    QuadraticFitVisitor<double, unsigned long, 64>  qud_v;
+
+    df.single_act_visit<double, double>("X1", "Y1", qud_v);
+    assert(std::fabs(qud_v.get_residual() - 188.2975) < 0.0001);
+    assert(std::fabs(qud_v.get_slope() - -0.1561) < 0.0001);
+    assert(std::fabs(qud_v.get_intercept() - 13.4522) < 0.0001);
+    assert(std::fabs(qud_v.get_constant() - -9.0735) < 0.0001);
+
+    const auto  actual = StlVecType<double> {
+        109.8382, 157.5867, 197.5302, 223.8654, 254.0023, 267.8496, 279.2546,
+        280.1733, 276.9781, 273.287, 246.0347
+    };
+
+    for (size_t i = 0; i < qud_v.get_result().size(); ++i)
+        assert(fabs(qud_v.get_result()[i] - actual[i]) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_LinearFitVisitor()  {
 
     std::cout << "\nTesting LinearFitVisitor{  } ..." << std::endl;
@@ -5304,6 +5345,7 @@ int main(int, char *[]) {
     test_LogFitVisitor();
     test_ExponentialFitVisitor();
     test_PowerFitVisitor();
+    test_QuadraticFitVisitor();
     test_LinearFitVisitor();
     test_CubicSplineFitVisitor();
     test_ExpoSmootherVisitor();

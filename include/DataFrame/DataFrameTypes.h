@@ -195,11 +195,17 @@ enum class  fill_policy : unsigned char  {
     //           X2 - X1
     //
     linear_interpolate = 4,  // Using the index as X coordinate
-    // linear_extrapolate = 5,  // Using the index as X coordinate
 
     // Fill missing values with mid-point of surrounding values
     //
-    mid_point = 6,
+    mid_point = 5,
+
+    // O(n2) algorithm for each missing value.
+    // It uses the index as X coordinate
+    // This is very much a garbage in, garbage out algorithm.
+    // The index and column data must be in the same scale and be corelated.
+    //
+    lagrange_interpolate = 6,
 };
 
 // ----------------------------------------------------------------------------

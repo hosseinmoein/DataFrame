@@ -114,11 +114,16 @@ enum class fill_policy : unsigned char  {
     // Use the index column as X coordinate and the given column as Y coordinate
     //
     linear_interpolate = 4,
-    linear_extrapolate = 5,
 
     // Fill missing values with mid-point of surrounding values
     //
-    mid_point = 6,
+    mid_point = 5,
+
+    // O(n<sup>2</sup>) algorithm for each missing value. It uses the index as X coordinate
+    // This is very much a <I>garbage in, garbage out</I> algorithm.
+    // The index and column data must be in the same scale and be corelated.
+    //
+    lagrange_interpolate = 6,
 };</B></PRE></font>
       </td>
       <td>

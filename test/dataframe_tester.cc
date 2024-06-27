@@ -1751,17 +1751,17 @@ static void test_fill_missing_fill_linear_interpolation()  {
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
     StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
-                               16,
-                               std::numeric_limits<double>::quiet_NaN(),
-                               18, 19, 16,
-                               std::numeric_limits<double>::quiet_NaN(),
-                               0.34, 1.56, 0.34, 2.3, 0.34,
+                              16,
+                              std::numeric_limits<double>::quiet_NaN(),
+                              18, 19, 16,
+                              std::numeric_limits<double>::quiet_NaN(),
+                              0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
     StlVecType<int>    i1 = { 22,
-                               std::numeric_limits<int>::quiet_NaN(),
-                               std::numeric_limits<int>::quiet_NaN(),
-                               25,
-                               std::numeric_limits<int>::quiet_NaN() };
+                              std::numeric_limits<int>::quiet_NaN(),
+                              std::numeric_limits<int>::quiet_NaN(),
+                              25,
+                              std::numeric_limits<int>::quiet_NaN() };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -1770,14 +1770,29 @@ static void test_fill_missing_fill_linear_interpolation()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
+    MyDataFrame df2 = df;
+
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, int, double>(std::cout);
 
     df.fill_missing<double>({ "col_1", "col_2", "col_3" },
                             fill_policy::linear_interpolate);
 
-    std::cout << "After fill missing with values DF:" << std::endl;
+    std::cout << "After fill missing with linear_interpolate:" << std::endl;
     df.write<std::ostream, int, double>(std::cout);
+
+	std::cout << "\n\n";
+    std::cout << "Original DF:" << std::endl;
+    df2.write<std::ostream, int, double>(std::cout);
+
+    df2.get_index() = { 2UL, 3UL, 4UL, 6UL, 7UL, 9UL, 11UL, 12UL, 13UL, 14UL,
+                        16UL, 18UL, 19UL, 21UL };
+    df2.fill_missing<double>({ "col_1", },
+                            fill_policy::lagrange_interpolate);
+
+    std::cout << "After fill missing with lagrange_interpolate:" << std::endl;
+    df2.write<std::ostream, int, double>(std::cout);
+	std::cout << "\n\n";
 }
 
 // -----------------------------------------------------------------------------

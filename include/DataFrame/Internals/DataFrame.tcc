@@ -229,18 +229,41 @@ fill_missing(const StlVecType<const char *> &col_names,
         ColumnVecType<T>    &vec = get_column<T>(col_names[i]);
 
         if (thread_level <= 2)  {
+            if constexpr (supports_arithmetic<T>::value &&
+                          supports_arithmetic<IndexType>::value)  {
+                if (fp == fill_policy::linear_interpolate)
+                    fill_missing_linter_<T>(vec, indices_, limit);
+                else if (fp == fill_policy::lagrange_interpolate)
+                    fill_missing_lagrange_<T>(vec, indices_, limit);
+            }
             if (fp == fill_policy::value)
                 fill_missing_value_(vec, values[i], limit, indices_.size());
             else if (fp == fill_policy::fill_forward)
                 fill_missing_ffill_<T>(vec, limit, indices_.size());
             else if (fp == fill_policy::fill_backward)
                 fill_missing_bfill_<T>(vec, limit);
-            else if (fp == fill_policy::linear_interpolate)
-                fill_missing_linter_<T>(vec, indices_, limit);
             else if (fp == fill_policy::mid_point)
                 fill_missing_midpoint_<T>(vec, limit, indices_.size());
         }
         else  {
+            if constexpr (supports_arithmetic<T>::value &&
+                          supports_arithmetic<IndexType>::value)  {
+                if (fp == fill_policy::linear_interpolate)
+                    futures.emplace_back(
+                        thr_pool_.dispatch(false,
+                                           &DataFrame::fill_missing_linter_<T>,
+                                               std::ref(vec),
+                                               std::cref(indices_),
+                                               limit));
+                else if (fp == fill_policy::lagrange_interpolate)
+                    futures.emplace_back(
+                        thr_pool_.dispatch(
+                            false,
+                            &DataFrame::fill_missing_lagrange_<T>,
+                                std::ref(vec),
+                                indices_,
+                                limit));
+            }
             if (fp == fill_policy::value)
                 futures.emplace_back(
                     thr_pool_.dispatch(false,
@@ -261,13 +284,6 @@ fill_missing(const StlVecType<const char *> &col_names,
                     thr_pool_.dispatch(false,
                                        &DataFrame::fill_missing_bfill_<T>,
                                            std::ref(vec),
-                                           limit));
-            else if (fp == fill_policy::linear_interpolate)
-                futures.emplace_back(
-                    thr_pool_.dispatch(false,
-                                       &DataFrame::fill_missing_linter_<T>,
-                                           std::ref(vec),
-                                           std::cref(indices_),
                                            limit));
             else if (fp == fill_policy::mid_point)
                 futures.emplace_back(

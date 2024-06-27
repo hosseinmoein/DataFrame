@@ -429,6 +429,48 @@ fill_missing_linter_(ColumnVecType<T> &vec,
 
 template<typename T,
          typename std::enable_if<
+             supports_arithmetic<T>::value &&
+             supports_arithmetic<IndexType>::value>::type* = nullptr>
+static void
+fill_missing_lagrange_(ColumnVecType<T> &vec,
+                       const IndexVecType &index,
+                       int limit)  {
+
+    const size_type vec_size = vec.size();
+
+    if (vec_size < 3)  return;
+
+    int count { 0 };
+
+    for (size_type k = 0; k < vec_size; ++k)  {
+        if (limit >= 0 && count >= limit) [[unlikely]]  break;
+
+        if (is_nan<T>(vec[k])) [[unlikely]]  {
+            const auto  x = index[k];
+            T           y { 0 };
+
+            for (size_type i = 0; i < vec_size; ++i)  {
+                T   product { static_cast<T>(index[i]) };
+
+                for (size_type j = 0; j < vec_size; ++j)
+                    if (i != j && index[i] != index[j]) [[likely]]
+                        product *= static_cast<T>(x - index[j]) /
+                                   static_cast<T>(index[i] - index[j]);
+
+                y += product;
+            }
+
+            vec[k] = y;
+            count += 1;
+        }
+	}
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename std::enable_if<
              ! supports_arithmetic<T>::value ||
              ! supports_arithmetic<IndexType>::value>::type* = nullptr>
 static void

@@ -71,8 +71,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-// I: Index (e.g. Timestamp) type. Although an index column need not
-//    necessarily represent time, it could be any built-in or user-defined type
+// I: Index type. It could be any built-in or user-defined type
 // H: See the static assert below. It can only be either
 //    a HeteroVector (typedef'ed to StdDataFrame) or
 //    a HeteroView (typedef'ed to View) or
@@ -88,7 +87,7 @@ class   DataFrame : public ThreadGranularity {
 
     using DataVec = H;
 
-public:  // Construction
+public:  // Construction and public types
 
     static constexpr std::size_t   align_value { std::size_t(H::align_value) };
 

@@ -1334,71 +1334,121 @@ public:
             cov_ (idx_begin, idx_end,
                   column_begin1, column_end1, column_begin2, column_end2);
         }
-        else  {  // correlation_type::spearman
+        else  {
             const size_type col_s =
                 std::min ({ std::distance(idx_begin, idx_end),
                             std::distance(column_begin1, column_end1),
                             std::distance(column_begin2, column_end2) });
-            auto            calc_lbd =
-                [col_s, this](const auto &rank1, const auto &rank2) -> void  {
-                value_type  diff_sum { 0 };
+            const auto      thread_level =
+                (col_s < ThreadPool::MUL_THR_THHOLD)
+                    ? 0L : ThreadGranularity::get_thread_level();
 
-                for (size_type i = 0; i < col_s; ++i)  {
-                    const value_type diff = rank1[i] - rank2[i];
+            if (type_ == correlation_type::spearman) {
+                auto    calc_lbd =
+                    [col_s, this]
+                    (const auto &rank1, const auto &rank2) -> void  {
+                        value_type  diff_sum { 0 };
 
-                    diff_sum += diff * diff;
+                        for (size_type i = 0; i < col_s; ++i)  {
+                            const value_type diff = rank1[i] - rank2[i];
+
+                            diff_sum += diff * diff;
+                        }
+
+                        this->result_ =
+                            value_type(1) -
+                            ((value_type(6) * diff_sum) /
+                             (value_type(col_s * (col_s * col_s - 1))));
+                    };
+
+                if (thread_level > 2)  {
+                    auto    lbd =
+                        [](const K &ib, const K &ie,
+                           const H &cb, const H &ce) -> RankVisitor<T, I>  {
+                            RankVisitor<T, I>   rank;
+
+                            rank.pre();
+                            rank(ib, ie, cb, ce);
+                            rank.post();
+                            return (rank);
+                        };
+                    auto    fut1 =
+                        ThreadGranularity::thr_pool_.dispatch(
+                              false,
+                              lbd,
+                                  std::cref(idx_begin),
+                                  std::cref(idx_end),
+                                  std::cref(column_begin1),
+                                  std::cref(column_end1));
+                    auto    fut2 =
+                        ThreadGranularity::thr_pool_.dispatch(
+                              false,
+                              lbd,
+                                  std::cref(idx_begin),
+                                  std::cref(idx_end),
+                                  std::cref(column_begin2),
+                                  std::cref(column_end2));
+
+                    calc_lbd(fut1.get().get_result(), fut2.get().get_result());
+                }
+                else  {
+                    RankVisitor<T, I>   rank1;
+
+                    rank1.pre();
+                    rank1(idx_begin, idx_end, column_begin1, column_end1);
+                    rank1.post();
+
+                    const auto  rank2 = rank1.get_result();
+
+                    rank1.pre();
+                    rank1(idx_begin, idx_end, column_begin2, column_end2);
+                    rank1.post();
+
+                    calc_lbd(rank2, rank1.get_result());
+                }
+            }
+            else if (type_ == correlation_type::kendall_tau)  {
+                auto        lbd =
+                    [&column_begin1 = std::as_const(column_begin1),
+                     &column_begin2 = std::as_const(column_begin2)]
+                    (auto begin, auto end) -> value_type  {
+                        // concordant pairs - discordant pairs
+                        //
+                        value_type  diff { 0 };
+
+                        for (size_type i { begin }; i < end - 1; ++i)  {
+                            for (size_type j { i + 1 }; j < end; ++j)  {
+                                diff +=
+                                    std::copysign(
+                                        T(1),
+                                        (*(column_begin1 + i) -
+                                         *(column_begin1 + j)) *
+                                        (*(column_begin2 + i) -
+                                         *(column_begin2 + j)));
+                            }
+                        }
+
+                        return (diff);
+                    };
+                // concordant - discordant
+                //
+                value_type  concordant_diff { 0 };
+
+                if (thread_level > 2)  {
+                    auto    futures =
+                        ThreadGranularity::thr_pool_.parallel_loop(
+                            size_type(0),
+                            col_s,
+                            std::move(lbd));
+
+                    for (auto &fut : futures)
+                        concordant_diff += fut.get();
+                }
+                else  {
+                    concordant_diff = lbd(size_type(0), col_s);
                 }
 
-                this->result_ = value_type(1) -
-                                ((value_type(6) * diff_sum) /
-                                 (value_type(col_s * (col_s * col_s - 1))));
-            };
-
-            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-                ThreadGranularity::get_thread_level() > 2)  {
-                auto    lbd =
-                    [](const K &ib, const K &ie,
-                       const H &cb, const H &ce) -> RankVisitor<T, I>  {
-                        RankVisitor<T, I>   rank;
-
-                        rank.pre();
-                        rank(ib, ie, cb, ce);
-                        rank.post();
-                        return (rank);
-                    };
-                auto    fut1 =
-                    ThreadGranularity::thr_pool_.dispatch(
-                          false,
-                          lbd,
-                              std::cref(idx_begin),
-                              std::cref(idx_end),
-                              std::cref(column_begin1),
-                              std::cref(column_end1));
-                auto    fut2 =
-                    ThreadGranularity::thr_pool_.dispatch(
-                          false,
-                          lbd,
-                              std::cref(idx_begin),
-                              std::cref(idx_end),
-                              std::cref(column_begin2),
-                              std::cref(column_end2));
-
-                calc_lbd(fut1.get().get_result(), fut2.get().get_result());
-            }
-            else  {
-                RankVisitor<T, I>   rank1;
-
-                rank1.pre();
-                rank1(idx_begin, idx_end, column_begin1, column_end1);
-                rank1.post();
-
-                const auto  rank2 = rank1.get_result();
-
-                rank1.pre();
-                rank1(idx_begin, idx_end, column_begin2, column_end2);
-                rank1.post();
-
-                calc_lbd(rank2, rank1.get_result());
+                result_ = concordant_diff / ((col_s * (col_s - 1)) / T(2));
             }
         }
     }

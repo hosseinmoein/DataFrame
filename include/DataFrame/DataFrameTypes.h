@@ -257,8 +257,12 @@ enum class  mean_type : unsigned char  {
 
 enum class  correlation_type : unsigned char  {
 
-    pearson = 1,   // ρ =  COV(X, Y) / (σ(X) * σ(Y))
-    spearman = 2,  // ρ = 1 - ((6 * SUM(di^2)) / n * (n^2 - 1))
+    pearson = 1,      // ρ =  COV(X, Y) / (σ(X) * σ(Y))
+
+    // Non-parametric (rank-based) correlations
+    //
+    spearman = 2,     // ρ = 1 - ((6 * SUM(di^2)) / (n * (n^2 - 1)))
+    kendall_tau = 3,  // ρ = (C - D) / ((n * (n - 1)) / 2)
 };
 
 // ----------------------------------------------------------------------------

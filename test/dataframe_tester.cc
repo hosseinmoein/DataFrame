@@ -304,9 +304,11 @@ static void test_haphazard()  {
 
     CorrVisitor<double> p_corr_visitor;
     CorrVisitor<double> s_corr_visitor(correlation_type::spearman);
+    CorrVisitor<double> k_corr_visitor(correlation_type::kendall_tau);
     CorrVisitor<double> rev_p_corr_visitor;
 
     df.single_act_visit<double, double>("dbl_col", "dbl_col_2", s_corr_visitor);
+    df.single_act_visit<double, double>("dbl_col", "dbl_col_2", k_corr_visitor);
 
     auto            fut10 =
         df.visit_async<double, double>("dbl_col", "dbl_col_2", p_corr_visitor);
@@ -318,6 +320,7 @@ static void test_haphazard()  {
 
     assert(fabs(corr - -0.358381) < 0.000001);
     assert(fabs(s_corr_visitor.get_result() - -0.380952) < 0.000001);
+    assert(fabs(k_corr_visitor.get_result() - -0.285714) < 0.000001);
     assert(fabs(rev_corr - -0.358381) < 0.000001);
 
     std::cout << "\nTesting Stats Visitor ..." << std::endl;

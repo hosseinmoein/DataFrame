@@ -42,6 +42,7 @@ using namespace hmdf;
 //
 using MyDataFrame = StdDataFrame256<unsigned long>;
 using StrDataFrame = StdDataFrame256<std::string>;
+using DTDataFrame = StdDataFrame256<DateTime>;
 
 template<typename T>
 using StlVecType = typename MyDataFrame::template StlVecType<T>;
@@ -3982,8 +3983,6 @@ static void test_writing_binary_2()  {
 
     std::cout << "\nTesting test_writing_binary_2{ } ..." << std::endl;
 
-    using DTDataFrame = StdDataFrame64<DateTime>;
-
     DTDataFrame aapl;
     DTDataFrame aapl_dat;
     DTDataFrame aapl_vw_dat;
@@ -4094,8 +4093,6 @@ static void test_writing_binary_3()  {
 
     std::cout << "\nTesting test_writing_binary_3{ } ..." << std::endl;
 
-    using DTDataFrame = StdDataFrame<DateTime>;
-
     DTDataFrame map_df;
     DTDataFrame vec_df;
     DTDataFrame bin_map_df;
@@ -4164,6 +4161,222 @@ static void test_writing_binary_3()  {
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
     }
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_change_freq()  {
+
+    std::cout << "\nTesting change_freq( ) ..." << std::endl;
+
+    //
+    // This test increases the frequnecy
+    //
+
+    MyDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45 };
+    StlVecType<double>          dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0 };
+    StlVecType<double>          dblvec2 = { 100.0, 101.0, 102.0, 103.0 };
+    StlVecType<int>             intvec = { 1, 2, 3, 4, 5 };
+    StlVecType<std::string>     strvec =
+        { "aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg", "hhh", "iii",
+          "jjj" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col",
+                   std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    const auto  df2 = df.change_freq<double, int, std::string>(1);
+
+    assert(df2.get_index().size() == 46);
+    assert(df2.get_column<double>("dbl_col").size() == 46);
+    assert(df2.get_column<double>("dbl_col_2").size() == 46);
+    assert(df2.get_column<int>("int_col").size() == 46);
+    assert(df2.get_column<std::string>("str_col").size() == 46);
+    assert(df2.get_index()[0] == 0);
+    assert(df2.get_index()[45] == 45);
+
+    assert(df2.get_column<double>("dbl_col")[0] == 0);
+    assert(df2.get_column<double>("dbl_col")[4] == 0);
+    assert(df2.get_column<double>("dbl_col")[7] == 15.0);
+    assert(df2.get_column<double>("dbl_col")[28] == 12.0);
+    assert(df2.get_column<double>("dbl_col")[44] == 7.0);
+    assert(df2.get_column<double>("dbl_col")[45] == 6.0);
+
+    assert(df2.get_column<double>("dbl_col_2")[0] == 100.0);
+    assert(df2.get_column<double>("dbl_col_2")[4] == 100.0);
+    assert(df2.get_column<double>("dbl_col_2")[7] == 101.0);
+    assert(std::isnan(df2.get_column<double>("dbl_col_2")[28]));
+    assert(std::isnan(df2.get_column<double>("dbl_col_2")[44]));
+    assert(std::isnan(df2.get_column<double>("dbl_col_2")[45]));
+
+    assert(df2.get_column<std::string>("str_col")[0] == "aaa");
+    assert(df2.get_column<std::string>("str_col")[4] == "aaa");
+    assert(df2.get_column<std::string>("str_col")[7] == "bbb");
+    assert(df2.get_column<std::string>("str_col")[28] == "fff");
+    assert(df2.get_column<std::string>("str_col")[44] == "iii");
+    assert(df2.get_column<std::string>("str_col")[45] == "jjj");
+
+    assert(df2.get_column<int>("int_col")[0] == 1);
+    assert(df2.get_column<int>("int_col")[4] == 1);
+    assert(df2.get_column<int>("int_col")[7] == 2);
+    assert(df2.get_column<int>("int_col")[28] == 5);
+    assert(df2.get_column<int>("int_col")[44] == 5);
+    assert(df2.get_column<int>("int_col")[45] == 5);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_change_freq_2()  {
+
+    std::cout << "\nTesting change_freq_2( ) ..." << std::endl;
+
+    //
+    // This test increases the frequnecy
+    //
+
+    DTDataFrame             df;
+    StlVecType<DateTime>    idxvec =
+        { DateTime(20240702, 0), DateTime(20240702, 5),
+          DateTime(20240702, 10), DateTime(20240702, 15),
+          DateTime(20240702, 20), DateTime(20240703, 1),
+          DateTime(20240703, 6), DateTime(20240703, 11),
+          DateTime(20240703, 16), DateTime(20240703, 21) };
+    StlVecType<double>      dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0 };
+    StlVecType<double>      dblvec2 = { 100.0, 101.0, 102.0, 103.0 };
+    StlVecType<int>         intvec = { 1, 2, 3, 4, 5 };
+    StlVecType<std::string> strvec =
+        { "aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg", "hhh", "iii",
+          "jjj" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col",
+                   std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    const auto  df2 =
+        df.change_freq<double, int, std::string>(30, time_frequency::minutely);
+
+    assert(df2.get_index().size() == 91);
+    assert(df2.get_column<double>("dbl_col").size() == 91);
+    assert(df2.get_column<double>("dbl_col_2").size() == 91);
+    assert(df2.get_column<int>("int_col").size() == 91);
+    assert(df2.get_column<std::string>("str_col").size() == 91);
+    assert(df2.get_index()[0] == DateTime(20240702, 0));
+    assert(df2.get_index()[89] == DateTime(20240703, 20, 30));
+    assert(df2.get_index()[90] == DateTime(20240703, 21));
+
+    assert(df2.get_column<double>("dbl_col")[0] == 0);
+    assert(df2.get_column<double>("dbl_col")[9] == 0);
+    assert(df2.get_column<double>("dbl_col")[17] == 15.0);
+    assert(df2.get_column<double>("dbl_col")[55] == 12.0);
+    assert(df2.get_column<double>("dbl_col")[80] == 7.0);
+    assert(df2.get_column<double>("dbl_col")[90] == 6.0);
+
+    assert(df2.get_column<double>("dbl_col_2")[0] == 100.0);
+    assert(df2.get_column<double>("dbl_col_2")[9] == 100.0);
+    assert(df2.get_column<double>("dbl_col_2")[17] == 101.0);
+    assert(std::isnan(df2.get_column<double>("dbl_col_2")[55]));
+    assert(std::isnan(df2.get_column<double>("dbl_col_2")[80]));
+    assert(std::isnan(df2.get_column<double>("dbl_col_2")[90]));
+
+    assert(df2.get_column<std::string>("str_col")[0] == "aaa");
+    assert(df2.get_column<std::string>("str_col")[9] == "aaa");
+    assert(df2.get_column<std::string>("str_col")[17] == "bbb");
+    assert(df2.get_column<std::string>("str_col")[55] == "fff");
+    assert(df2.get_column<std::string>("str_col")[80] == "iii");
+    assert(df2.get_column<std::string>("str_col")[90] == "jjj");
+
+    assert(df2.get_column<int>("int_col")[0] == 1);
+    assert(df2.get_column<int>("int_col")[9] == 1);
+    assert(df2.get_column<int>("int_col")[17] == 2);
+    assert(df2.get_column<int>("int_col")[55] == 5);
+    assert(df2.get_column<int>("int_col")[80] == 5);
+    assert(df2.get_column<int>("int_col")[90] == 5);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_change_freq_3()  {
+
+    std::cout << "\nTesting change_freq_3( ) ..." << std::endl;
+
+    //
+    // This test decreases the frequnecy
+    //
+
+    MyDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+    StlVecType<double>          dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 20.0, 21.0,
+          22.0, 23.0, 24.0, 25.0, 26.0 };
+    StlVecType<double>          dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.0, 107.0 };
+    StlVecType<int>             intvec = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    StlVecType<std::string>     strvec =
+        { "aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg", "hhh", "iii",
+          "jjj", "kkk", "lll", "mmm", "nnn", "ooo", "ppp", "qqq" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col",
+                   std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    const auto  df2 = df.change_freq<double, int, std::string>(3);
+
+    assert(df2.get_index().size() == 7);
+    assert(df2.get_column<double>("dbl_col").size() == 7);
+    assert(df2.get_column<double>("dbl_col_2").size() == 7);
+    assert(df2.get_column<int>("int_col").size() == 7);
+    assert(df2.get_column<std::string>("str_col").size() == 7);
+    assert(df2.get_index()[0] == 0);
+    assert(df2.get_index()[6] == 16);
+
+    assert(df2.get_column<double>("dbl_col")[0] == 0);
+    assert(df2.get_column<double>("dbl_col")[1] == 2);
+    assert(df2.get_column<double>("dbl_col")[2] == 11.0);
+    assert(df2.get_column<double>("dbl_col")[3] == 6.0);
+    assert(df2.get_column<double>("dbl_col")[4] == 22.0);
+    assert(df2.get_column<double>("dbl_col")[5] == 25.0);
+    assert(df2.get_column<double>("dbl_col")[6] == 26.0);
+
+    assert(df2.get_column<double>("dbl_col_2")[0] == 100.0);
+    assert(df2.get_column<double>("dbl_col_2")[1] == 103.0);
+    assert(df2.get_column<double>("dbl_col_2")[2] == 106.0);
+    assert(std::isnan(df2.get_column<double>("dbl_col_2")[3]));
+    assert(std::isnan(df2.get_column<double>("dbl_col_2")[4]));
+    assert(std::isnan(df2.get_column<double>("dbl_col_2")[5]));
+    assert(std::isnan(df2.get_column<double>("dbl_col_2")[6]));
+
+    assert(df2.get_column<std::string>("str_col")[0] == "aaa");
+    assert(df2.get_column<std::string>("str_col")[1] == "ddd");
+    assert(df2.get_column<std::string>("str_col")[2] == "ggg");
+    assert(df2.get_column<std::string>("str_col")[3] == "jjj");
+    assert(df2.get_column<std::string>("str_col")[4] == "mmm");
+    assert(df2.get_column<std::string>("str_col")[5] == "ppp");
+    assert(df2.get_column<std::string>("str_col")[6] == "qqq");
+
+    assert(df2.get_column<int>("int_col")[0] == 1);
+    assert(df2.get_column<int>("int_col")[1] == 4);
+    assert(df2.get_column<int>("int_col")[2] == 7);
+    assert(df2.get_column<int>("int_col")[3] == 8);
+    assert(df2.get_column<int>("int_col")[4] == 8);
+    assert(df2.get_column<int>("int_col")[5] == 8);
+    assert(df2.get_column<int>("int_col")[6] == 8);
 }
 
 // ----------------------------------------------------------------------------
@@ -4252,6 +4465,9 @@ int main(int, char *[]) {
     test_writing_binary_2();
     test_reading_in_binary_chunks();
     test_writing_binary_3();
+    test_change_freq();
+    test_change_freq_2();
+    test_change_freq_3();
 
     return (0);
 }

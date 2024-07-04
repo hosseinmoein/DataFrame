@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 
+#include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 
 #include <concepts>
@@ -200,6 +201,14 @@ concept StringOnly =
     std::is_same_v<T, VirtualString> ||
     std::is_same_v<T, char *> ||
     std::is_same_v<T, const char *>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+concept numeric_or_DateTime =
+	std::is_same_v<T, DateTime> ||
+    std::integral<T> ||
+    std::floating_point<T>;
 
 } // namespace hmdf
 

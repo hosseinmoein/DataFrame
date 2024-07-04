@@ -392,7 +392,8 @@ operator()(const T &lhs_vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const auto              &rhs_vec = rhs.template get_column<ValueType>(name);
+    const auto              &rhs_vec =
+        rhs.template get_column<ValueType>(name);
     StlVecType<ValueType>   lhs_result_col;
     StlVecType<ValueType>   rhs_result_col;
 
@@ -1003,6 +1004,65 @@ DataFrame<I, H>::describe_functor_<Ts ...>::operator() (const T &vec)  {
     result.template load_column<double>(name,
                                         std::move(col_to_load),
                                         nan_policy::pad_with_nans,
+                                        false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::change_freq_functor_<Ts ...>::
+operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+    using NewVecType = ColumnVecType<ValueType>;
+
+    const auto  &new_idx = res.get_index();
+    const auto  new_s = new_idx.size();
+    const auto  old_s = std::min(old_idx.size(), vec.size());
+    NewVecType  new_vec (new_s, get_nan<ValueType>());
+    size_type   i { 0 }, j { 0 };
+
+    if (new_s >= old_s)  {  // Frequency has increased
+        while (i < new_s && j < (old_s - 1))  {
+            if (new_idx[i] < old_idx[j + 1])
+                new_vec[i] = vec[j];
+            else
+                new_vec[i] = vec[++j];
+            i += 1;
+        }
+        if (i > 0)  {
+            const ValueType &last = new_vec[i - 1];
+
+            for ( ; i < new_s; ++i)
+                new_vec[i] = last;
+        }
+    }
+    else  {  // Frequency has decreased
+        while (i < new_s && j < old_s)  {
+            if (old_idx[j] == new_idx[i])
+                new_vec[i++] = vec[j++];
+            else if (old_idx[j] > new_idx[i])
+                new_vec[i++] = vec[j++ - 1];
+            else
+                j += 1;
+        }
+
+        if (i < new_s)  {
+            const ValueType &last = vec[old_s - 1];
+
+            for ( ; i < new_s; ++i)
+                new_vec[i] = last;
+        }
+    }
+
+
+    res.template load_column<ValueType>(name,
+                                        std::move(new_vec),
+                                        nan_policy::dont_pad_with_nans,
                                         false);
 }
 

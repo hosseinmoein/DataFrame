@@ -2717,6 +2717,64 @@ get_reindexed_view(const char *col_to_be_index,
 
 template<typename I, typename H>
 template<typename ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+change_freq(size_type new_freq,
+            [[maybe_unused]] time_frequency time_unit) const  {
+
+    static_assert(numeric_or_DateTime<I>,
+                  "convert_freq(): "
+                  "Index type must be either a numeric or DateTime");
+
+    DataFrame       result;
+    IndexVecType    new_idx;
+
+    if constexpr (std::is_same_v<I, DateTime>)  {
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (time_unit == time_frequency::not_valid)
+            throw NotFeasible(
+                "convert_freq(): "
+                "Index type of DateTime must have a valid time unit");
+#endif // HMDF_SANITY_EXCEPTIONS
+        new_idx = 
+            gen_datetime_index(
+                indices_.front().string_format(DT_FORMAT::DT_TM2).c_str(),
+                indices_.back().string_format(DT_FORMAT::DT_TM2).c_str(),
+                time_unit,
+                long(new_freq),
+                indices_.front().get_timezone());
+    }
+    else  {
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (time_unit != time_frequency::not_valid)
+            throw NotFeasible(
+                "convert_freq(): "
+                "Index type of numeric must have a not_valid time unit");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        new_idx =
+            gen_sequence_index(indices_.front(),
+                               indices_.back(),
+                               long(new_freq));
+    }
+    new_idx.push_back(indices_.back());
+    result.load_index(std::move(new_idx));
+
+    const SpinGuard guard(lock_);
+
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        change_freq_functor_<Ts ...>    functor (
+            name.c_str(), result, get_index());
+
+        data_[idx].change(functor);
+    }
+
+    return(result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
 typename DataFrame<I, H>::template StlVecType<
     std::tuple<typename DataFrame<I, H>::ColNameType,
                typename DataFrame<I, H>::size_type,

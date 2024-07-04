@@ -320,6 +320,7 @@ enum class  io_format : unsigned char  {
 
 enum class  time_frequency : unsigned char  {
 
+    not_valid = 0,
     annual = 1,
     monthly = 2,
     weekly = 3,

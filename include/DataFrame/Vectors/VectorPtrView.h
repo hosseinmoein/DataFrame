@@ -342,11 +342,6 @@ public:
             ret_node += static_cast<difference_type>(step);
             return (iterator { ret_node });
         }
-        template<>
-        inline iterator operator + (const iterator &rhs) const noexcept {
-
-            return (iterator (node_ + rhs.node_));
-        }
 
         friend difference_type
         operator - (iterator lhs, iterator rhs) noexcept  {
@@ -528,12 +523,6 @@ public:
 
             ret_node += static_cast<difference_type>(step);
             return (const_iterator { ret_node });
-        }
-        template<>
-        inline const_iterator
-        operator + (const const_iterator &rhs) const noexcept {
-
-            return (const_iterator (node_ + rhs.node_));
         }
 
         friend difference_type

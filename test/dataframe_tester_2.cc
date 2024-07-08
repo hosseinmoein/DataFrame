@@ -962,8 +962,8 @@ static void test_remove_duplicates()  {
     auto    result3 =
         df.remove_duplicates<double, double, int, std::string,
                              double, std::string, int>
-        ("dbl_col", "dbl_col_2", "int_col", "str_col",
-         false, remove_dup_spec::keep_last);
+            ("dbl_col", "dbl_col_2", "int_col", "str_col",
+             false, remove_dup_spec::keep_last);
 
     actual_d = StlVecType<double> {
         100, 102, 103, 101, 105, 106.55, 107.34, 1.8, 111, 112, 113,
@@ -978,8 +978,8 @@ static void test_remove_duplicates()  {
     auto    result4 =
         df.remove_duplicates<double, double, int, std::string,
                              double, std::string, int>
-        ("dbl_col", "dbl_col_2", "int_col", "str_col",
-         false, remove_dup_spec::keep_none);
+            ("dbl_col", "dbl_col_2", "int_col", "str_col",
+             false, remove_dup_spec::keep_none);
 
     actual_d = StlVecType<double> {
         100, 102, 103, 105, 106.55, 107.34, 1.8, 111, 112, 113,
@@ -994,8 +994,8 @@ static void test_remove_duplicates()  {
     auto    result5 =
         df.remove_duplicates<double, double, int, std::string,
                              double, std::string, int>
-        ("dbl_col", "dbl_col_2", "int_col", "str_col",
-         true, remove_dup_spec::keep_none);
+            ("dbl_col", "dbl_col_2", "int_col", "str_col",
+             true, remove_dup_spec::keep_none);
 
     actual_d = StlVecType<double> {
         100, 101, 102, 103, 101, 105, 106.55, 107.34, 1.8, 111, 112, 113,
@@ -1009,18 +1009,32 @@ static void test_remove_duplicates()  {
 
     auto    result6 =
         df.remove_duplicates<double, double, std::string, int>
-        ("dbl_col", false, remove_dup_spec::keep_first);
+            ("dbl_col", false, remove_dup_spec::keep_first);
 
     actual_d = StlVecType<double>
         { 100, 101, 102, 103, 105, 106.55, 107.34, 1.8, 111, 112, 113, 114,
           115, 116 };
     actual_s = StlVecType<std::string>
         { "zz", "bb", "cc", "ww", "ff", "gg", "hh", "ii", "jj", "kk", "ll",
-          "mm", "nn", "oo"
-        };
+          "mm", "nn", "oo" };
     assert(result6.get_index().size() == 14);
     assert(result6.get_column<double>("dbl_col_2") == actual_d);
     assert(result6.get_column<std::string>("str_col") == actual_s);
+
+    auto        result7 =
+        df.remove_duplicates<unsigned long, double, std::string, int>
+            (DF_INDEX_COL_NAME, false, remove_dup_spec::keep_first);
+    const auto  actual_idx = StlVecType<unsigned long>
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 13UL, 15UL, 14UL };
+
+    actual_d = StlVecType<double>
+        { 100, 101, 102, 103, 101, 105, 106.55, 107.34, 1.8, 113, 115, 116 };
+    actual_s = StlVecType<std::string>
+        { "zz", "bb", "cc", "ww", "bb", "ff", "gg", "hh", "ii", "ll",
+          "nn", "oo" };
+    assert(result7.get_index() == actual_idx);
+    assert(result7.get_column<double>("dbl_col_2") == actual_d);
+    assert(result7.get_column<std::string>("str_col") == actual_s);
 }
 
 // -----------------------------------------------------------------------------

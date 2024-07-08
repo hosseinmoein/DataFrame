@@ -1053,7 +1053,7 @@ template<typename T, typename F, typename ... Ts>
 void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
-				  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value,
                   "Only a StdDataFrame or a PtrView can call "
                   "remove_data_by_sel()");
 
@@ -1078,7 +1078,7 @@ void DataFrame<I, H>::
 remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
-				  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value,
                   "Only a StdDataFrame or a PtrView can call "
                   "remove_data_by_sel()");
 
@@ -1116,7 +1116,7 @@ remove_data_by_sel (const char *name1,
                     F &sel_functor)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
-				  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value,
                   "Only a StdDataFrame or a PtrView can call "
                   "remove_data_by_sel()");
 
@@ -1157,7 +1157,7 @@ remove_data_by_like (const char *name,
                      char esc_char)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
-				  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value,
                   "Only a StdDataFrame or a PtrView can call "
                   "remove_data_by_like()");
 
@@ -1201,7 +1201,7 @@ remove_data_by_like(const char *name1,
                     char esc_char)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
-				  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value,
                   "Only a StdDataFrame or a PtrView can call "
                   "remove_data_by_like()");
 
@@ -1255,22 +1255,29 @@ remove_duplicates (const char *name,
     using count_vec = StlVecType<size_type>;
     using map_t = DFUnorderedMap<data_tuple, count_vec, TupleHash>;
 
-    const ColumnVecType<T>  &vec = get_column<T>(name);
-    const auto              &index = get_index();
-    const size_type         col_s = std::min(vec.size(), index.size());
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    const ColumnVecType<T>  *vec { nullptr };
+
+    if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
+        vec = (const ColumnVecType<T> *) &(get_index());
+        include_index = false;
+    }
+    else
+        vec = (const ColumnVecType<T> *) &(get_column<T>(name, false));
+
+    const auto      &index = get_index();
+    const size_type col_s = std::min(vec->size(), index.size());
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
             row_table.emplace(
-                std::forward_as_tuple(vec[i],
+                std::forward_as_tuple((*vec)[i],
                                       include_index ? index[i] : dummy_idx),
                 dummy_vec);
 
-        if (insert_res.second)
-            insert_res.first->second.reserve(8);
+        if (insert_res.second)  insert_res.first->second.reserve(8);
         insert_res.first->second.push_back(i);
     }
 

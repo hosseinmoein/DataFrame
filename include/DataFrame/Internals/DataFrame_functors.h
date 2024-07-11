@@ -739,12 +739,34 @@ struct  change_freq_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline change_freq_functor_(const char *n,
                                 DataFrame &r,
-								const IndexVecType &oi)
+                                const IndexVecType &oi)
         : name (n), res(r), old_idx(oi)  {   }
 
     const char          *name;
     DataFrame           &res;
     const IndexVecType  &old_idx;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
+struct  dup_mask_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline dup_mask_functor_(const char *n,
+                             DataFrame &r,
+                             const IndexVecType &oi,
+                             bool ii,
+                             bool b)
+        : name (n), res(r), idx_vec(oi), incl_idx(ii), binary(b)  {   }
+
+    const char          *name;
+    DataFrame           &res;
+    const IndexVecType  &idx_vec;
+    const bool          incl_idx;
+    const bool          binary;
 
     template<typename T>
     void operator() (const T &vec);

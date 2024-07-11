@@ -4381,6 +4381,100 @@ static void test_change_freq_3()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_duplication_mask()  {
+
+    std::cout << "\nTesting duplication_mask( ) ..." << std::endl;
+
+    MyDataFrame                df;
+    StlVecType<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL,
+          10UL, 13UL, 10UL, 15UL, 14UL };
+    StlVecType<double>         dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 15.0, 12.0, 11.0, 8.0, 7.0, 11.0,
+          5.0, 11.0, 3.0, 9.0, 15.0 };
+    StlVecType<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 101.0, 105.0, 106.55, 107.34, 1.8, 111.0,
+          112.0, 113.0, 114.0, 115.0, 116.0 };
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 2, 8, 6, 7, 1 };
+    StlVecType<std::string>    strvec =
+        { "zz", "hh", "cc", "ww", "bb", "ff", "gg", "hh", "ii", "jj",
+          "kk", "ll", "mm", "ww", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col",
+                   std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    const auto  df2 = df.duplication_mask<double, int, std::string>(false);
+
+    {
+        StlVecType<unsigned long>   res_idx =
+            { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
+        StlVecType<int>             res_dbl_col =
+            { 1, 3, 1, 1, 3, 1, 3, 1, 1, 3, 1, 3, 1, 1, 3 };
+        StlVecType<int>             res_dbl_col_2 =
+            { 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        StlVecType<int>             res_str_col =
+            { 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1 };
+        StlVecType<int>             res_int_col =
+            { 2, 2, 1, 1, 2, 1, 1, 1, 2 };
+
+        assert(df2.get_index() == res_idx);
+        assert(df2.get_column<int>("dbl_col") == res_dbl_col);
+        assert(df2.get_column<int>("dbl_col_2") == res_dbl_col_2);
+        assert(df2.get_column<int>("str_col") == res_str_col);
+        assert(df2.get_column<int>("int_col") == res_int_col);
+    }
+
+    const auto  df3 = df.duplication_mask<double, int, std::string>(true);
+
+    {
+        StlVecType<unsigned long>   res_idx =
+            { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
+        StlVecType<int>             res_dbl_col =
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        StlVecType<int>             res_dbl_col_2 =
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        StlVecType<int>             res_str_col =
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        StlVecType<int>             res_int_col =
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+
+        assert(df3.get_index() == res_idx);
+        assert(df3.get_column<int>("dbl_col") == res_dbl_col);
+        assert(df3.get_column<int>("dbl_col_2") == res_dbl_col_2);
+        assert(df3.get_column<int>("str_col") == res_str_col);
+        assert(df3.get_column<int>("int_col") == res_int_col);
+    }
+
+    const auto  df4 =
+        df.duplication_mask<double, int, std::string>(false, true);
+
+    {
+        StlVecType<unsigned long>   res_idx =
+            { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
+        StlVecType<int>             res_dbl_col =
+            { 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1 };
+        StlVecType<int>             res_dbl_col_2 =
+            { 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        StlVecType<int>             res_str_col =
+            { 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0 };
+        StlVecType<int>             res_int_col =
+            { 1, 1, 0, 0, 1, 0, 0, 0, 1 };
+
+        assert(df4.get_index() == res_idx);
+        assert(df4.get_column<int>("dbl_col") == res_dbl_col);
+        assert(df4.get_column<int>("dbl_col_2") == res_dbl_col_2);
+        assert(df4.get_column<int>("str_col") == res_str_col);
+        assert(df4.get_column<int>("int_col") == res_int_col);
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4468,6 +4562,7 @@ int main(int, char *[]) {
     test_change_freq();
     test_change_freq_2();
     test_change_freq_3();
+    test_duplication_mask();
 
     return (0);
 }

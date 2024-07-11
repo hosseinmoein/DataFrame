@@ -2785,6 +2785,43 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data(const StlVecType<const char *> &col_names) const;
 
+    // This returns a new DataFrame with the same index column as self and an
+    // integer column with the same name for each column in self.
+    // The integer columns in returned DataFrame show a duplication mask for
+    // each column in self.
+    // For example, if self has a column like:
+    //     ----------------------------------------
+    //    |  aa | bb | cc | aa | dd | aa | bb | hh |
+    //     ----------------------------------------
+    // The returned DataFrame has a corresponding integer column with the
+    // same name
+    // If binary is false:
+    //     --------------------------------
+    //    |  3 | 2 | 1 | 3 | 1 | 3 | 2 | 1 |
+    //     --------------------------------
+    // If binary is true:
+    //     --------------------------------
+    //    |  1 | 1 | 0 | 1 | 0 | 1 | 1 | 0 |
+    //     --------------------------------
+    //
+    // NOTE: All column types must be hash-able and have == operator
+    //       well defined
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // include_index:
+    //   If true, it includes the index column to determine uniqueness
+    // binary:
+    //   If false, the returned integer columns contain the count of each item
+    //   in the original column. If true, the returned integer columns contain
+    //   0’s and 1’s depending on if original items in the column had
+    //   duplicates or not.
+    //
+    template<hashable_equal ... Ts>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+    duplication_mask(bool include_index, bool binrary = false) const;
+
     // It behaves like get_data(), but it returns a View.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will

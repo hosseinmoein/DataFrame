@@ -1066,6 +1066,69 @@ operator() (const T &vec)  {
                                         false);
 }
 
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::dup_mask_functor_<Ts ...>::
+operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+    using NewVecType = ColumnVecType<int>;
+
+    using data_tuple = std::tuple<const ValueType &, const IndexType &>;
+    using map_t = DFUnorderedMap<data_tuple, int, TupleHash>;
+
+    const IndexType dummy_idx { };
+    const auto      col_s = std::min(idx_vec.size(), vec.size());
+    map_t           table;
+    size_type       i { 0 };
+
+    table.reserve(col_s);
+    for (const auto &val : vec)  {
+        const auto  insert_res =
+            table.emplace(
+                std::forward_as_tuple(val, incl_idx ? idx_vec[i++] : dummy_idx),
+                0);
+
+        insert_res.first->second += 1;
+    }
+
+    NewVecType  new_vec;
+
+    new_vec.reserve(col_s);
+    i = 0;
+    if (! binary)  {
+        for (const auto &val : vec)  {
+            const auto  find_res =
+                table.find(std::make_tuple(
+                    val, incl_idx ? idx_vec[i++] : dummy_idx));
+
+            if (find_res != table.end())
+                new_vec.push_back(find_res->second);
+        }
+    }
+    else  {
+        for (const auto &val : vec)  {
+            const auto  find_res =
+                table.find(std::make_tuple(
+                    val, incl_idx ? idx_vec[i++] : dummy_idx));
+
+            if (find_res != table.end())
+                new_vec.push_back(find_res->second == 1 ? 0 : 1);
+        }
+    }
+
+    res.template load_column<int>(name,
+                                  std::move(new_vec),
+                                  nan_policy::dont_pad_with_nans,
+                                  false);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

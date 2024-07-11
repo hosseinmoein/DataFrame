@@ -362,35 +362,26 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
         const auto  thread_level =
             (indices_.size() < ThreadPool::MUL_THR_THHOLD)
                 ? 0L : get_thread_level();
+        auto        lbd =
+            [b_dist, e_dist, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    load_functor_<res_t, Ts ...>  functor (
+                         citer->first.c_str(), b_dist, e_dist, df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
 
         if (thread_level > 2)  {
-            auto    lbd =
-                [b_dist, e_dist, &df, this]
-                (const auto &begin, const auto &end) -> void  {
-                    for (auto citer = begin; citer < end; ++citer)  {
-                        load_functor_<res_t  , Ts ...>  functor (
-                             citer->first.c_str(), b_dist, e_dist, df);
-
-                        this->data_[citer->second].change(functor);
-                    }
-                };
-
-            auto    futuers =
-                thr_pool_.parallel_loop(column_list_.begin(),
-                                        column_list_.end(),
-                                        std::move(lbd));
+            auto    futuers = thr_pool_.parallel_loop(column_list_.begin(),
+                                                      column_list_.end(),
+                                                      std::move(lbd));
 
             for (auto &fut : futuers)  fut.get();
         }
         else  {
-            for (const auto &[name, idx] : column_list_) [[likely]]  {
-                load_functor_<res_t, Ts ...>    functor (name.c_str(),
-                                                         b_dist,
-                                                         e_dist,
-                                                         df);
-
-                data_[idx].change(functor);
-            }
+            lbd(column_list_.begin(), column_list_.end());
         }
     }
 
@@ -2550,6 +2541,55 @@ get_view(const StlVecType<const char *> &col_names) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<hashable_equal ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+duplication_mask (bool include_index, bool binary) const  {
+
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+
+    res_t   new_df;
+
+    new_df.load_index(indices_.begin(), indices_.end());
+
+    const SpinGuard guard(lock_);
+
+    for (const auto &[name, idx] : column_list_) [[likely]]
+        new_df.template create_column<int>(name.c_str(), false);
+
+    const auto  thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
+    auto        lbd =
+        [&new_df, this, include_index, binary]
+        (const auto &begin, const auto &end) -> void  {
+            for (auto citer = begin; citer < end; ++citer)  {
+                dup_mask_functor_<Ts ...>   functor(citer->first.c_str(),
+                                                    new_df,
+                                                    new_df.indices_,
+                                                    include_index,
+                                                    binary);
+
+                this->data_[citer->second].change(functor);
+            }
+        };
+
+    if (thread_level > 2)  {
+        auto    futuers = thr_pool_.parallel_loop(column_list_.begin(),
+                                                  column_list_.end(),
+                                                  std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        lbd(column_list_.begin(), column_list_.end());
+    }
+
+    return (new_df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
@@ -2735,7 +2775,7 @@ change_freq(size_type new_freq,
                 "convert_freq(): "
                 "Index type of DateTime must have a valid time unit");
 #endif // HMDF_SANITY_EXCEPTIONS
-        new_idx = 
+        new_idx =
             gen_datetime_index(
                 indices_.front().string_format(DT_FORMAT::DT_TM2).c_str(),
                 indices_.back().string_format(DT_FORMAT::DT_TM2).c_str(),

@@ -52,6 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <map>
 #include <numeric>
+#include <queue>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
@@ -760,62 +761,93 @@ using MinVisitor = ExtremumVisitor<T, I, std::greater<T>>;
 
 // ----------------------------------------------------------------------------
 
-// This visitor takes, at most (when sequance is already sorted), O(N*M)
-// time, where N is the number of largest values and M is the total number
-// of all values. The assumption is that N should be relatively small, so the
-// complexity is not bad.
-// I could have used a priority queue, but that requires a std::vector
-// instaed of std::array. I think the advantage of using std::array is bigger
-// than O(MlogM) vs. O(N*M) for majority of usage.
-// By default, this is a NLargestVisitor
+// This visitor takes O(M * log(N)),
+// where N is the number of largest values and M is the total number.
 //
-template<std::size_t N,
-         typename T, typename I = unsigned long,
-         typename C = std::less<T>>
+template<typename T, typename I, template<typename> typename C>
 struct  NExtremumVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
 
     struct  DataItem  {
         value_type  value { };
-        index_type  index { };
+        index_type  index_val { };
+        size_type   index_idx { };
+
+        inline friend bool
+        operator < (const DataItem &lhs, const DataItem &rhs)  {
+
+            return (lhs.value < rhs.value);
+        }
+        inline friend bool
+        operator > (const DataItem &lhs, const DataItem &rhs)  {
+
+            return (lhs.value > rhs.value);
+        }
+        inline friend bool
+        operator <= (const DataItem &lhs, const DataItem &rhs)  {
+
+            return (lhs.value <= rhs.value);
+        }
+        inline friend bool
+        operator >= (const DataItem &lhs, const DataItem &rhs)  {
+
+            return (lhs.value >= rhs.value);
+        }
     };
 
-    using compare_type = C;
-    using result_type = std::array<DataItem, N>;
+    using compare_type = C<DataItem>;
+    using result_type = std::vector<DataItem>;
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
+        const size_type c = counter_++;
+
         SKIP_NAN
 
-        if (counter_ < N)  {
-            result_[counter_] = { val, idx };
-            if (extremum_index_ < 0 ||
-                cmp_(val, result_[extremum_index_].value))
-                extremum_index_ = static_cast<long>(counter_);
-        }
-        else if (cmp_(result_[extremum_index_].value, val))  {
-            result_[extremum_index_] = { val, idx };
-            extremum_index_ = 0;
-            for (size_type i = 1; i < N; ++i)
-                if (cmp_(result_[i].value, result_[extremum_index_].value))
-                    extremum_index_ = static_cast<long>(i);
-        }
-
-        counter_ += 1;
+        p_queue_.push( { val, idx, c } );
+        if (p_queue_.size() > n_)  p_queue_.pop();
     }
-    PASS_DATA_ONE_BY_ONE
 
-    inline void pre ()  { counter_ = 0; extremum_index_ = -1; }
-    inline void post ()  {  }
+    template <typename K, typename H>
+    inline void
+    operator() (K idx_begin, K /*idx_end*/, H column_begin, H column_end)  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (std::distance(column_begin, column_end) < n_)
+            throw DataFrameError("NExtremumVisitor: column size must be >= N");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        while (column_begin < column_end)
+            (*this)(*idx_begin++, *column_begin++);
+    }
+
+    inline void pre ()  {
+
+        counter_ = 0;
+        result_.clear();
+        for (; ! p_queue_.empty(); p_queue_.pop()) ;
+    }
+    inline void post ()  {
+
+        for (; ! p_queue_.empty(); p_queue_.pop())
+            result_.push_back(p_queue_.top());
+    }
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
 
-    inline void sort_by_index()  {
+    inline void sort_by_index_val()  {
 
         std::sort(result_.begin(), result_.end(),
                   [](const DataItem &lhs, const DataItem &rhs) -> bool  {
-                      return (lhs.index < rhs.index);
+                      return (lhs.index_val < rhs.index_val);
+                  });
+    }
+    inline void sort_by_index_idx()  {
+
+        std::sort(result_.begin(), result_.end(),
+                  [](const DataItem &lhs, const DataItem &rhs) -> bool  {
+                      return (lhs.index_idx < rhs.index_idx);
                   });
     }
     inline void sort_by_value()  {
@@ -826,21 +858,32 @@ struct  NExtremumVisitor  {
                   });
     }
 
-    DECL_CTOR(NExtremumVisitor)
+    explicit
+    NExtremumVisitor(size_type n, bool skipnan = false)
+        : p_queue_(compare_type { }, result_type { n + 1 }),
+          n_(n),
+          skip_nan_(skipnan)  {
+
+        result_.reserve(n_);
+    }
+    NExtremumVisitor() = delete;
 
 private:
 
+    using q_type =
+        std::priority_queue<DataItem, std::vector<DataItem>, compare_type>;
+
     result_type     result_ { };
     size_type       counter_ { 0 };
-    long            extremum_index_ { -1 };
-    compare_type    cmp_ {  };
+    q_type          p_queue_;
+    const size_type n_;
     const bool      skip_nan_;
 };
 
-template<std::size_t N, typename T, typename I = unsigned long>
-using NLargestVisitor = NExtremumVisitor<N, T, I, std::less<T>>;
-template<std::size_t N, typename T, typename I = unsigned long>
-using NSmallestVisitor = NExtremumVisitor<N, T, I, std::greater<T>>;
+template<typename T, typename I = unsigned long>
+using NLargestVisitor = NExtremumVisitor<T, I, std::greater>;
+template<typename T, typename I = unsigned long>
+using NSmallestVisitor = NExtremumVisitor<T, I, std::less>;
 
 // ----------------------------------------------------------------------------
 

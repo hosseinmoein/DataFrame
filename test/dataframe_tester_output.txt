@@ -342,17 +342,19 @@ col_2:14:<double>:8,9,10,11,12,13,14,20,22,23,30,31,32,1.89,
 col_3:14:<double>:15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,0.34,19,nan,
 col_4:14:<int>:22,23,24,25,99,0,0,0,0,0,0,0,0,0,
 N largest result for col_3:
-123462|19 123456|21 123453|18 123455|16 123454|19 
-N largest result for col_3 sorted by index:
-123453|18 123454|19 123455|16 123456|21 123462|19 
+123451|12|16 123453|10|18 123462|1|19 123454|9|19 123456|7|21 
+N largest result for col_3 sorted by index_val:
+123451|12|16 123453|10|18 123454|9|19 123456|7|21 123462|1|19 
 N largest result for col_3 sorted by value:
-123455|16 123453|18 123454|19 123462|19 123456|21 
+123451|12|16 123453|10|18 123454|9|19 123462|1|19 123456|7|21 
 N smallest result for col_3:
-123460|2.3 123458|1.56 123461|0.34 123457|0.34 123459|0.34 
-N smallest result for col_3 sorted by index:
-123457|0.34 123458|1.56 123459|0.34 123460|2.3 123461|0.34 
+123460|10|2.3 123458|8|1.56 123457|7|0.34 123459|9|0.34 123461|11|0.34 
+N smallest result for col_3 sorted by index_val:
+123457|7|0.34 123458|8|1.56 123459|9|0.34 123460|10|2.3 123461|11|0.34 
 N smallest result for col_3 sorted by value:
-123457|0.34 123459|0.34 123461|0.34 123458|1.56 123460|2.3 
+123457|7|0.34 123459|9|0.34 123461|11|0.34 123458|8|1.56 123460|10|2.3 
+N smallest result for col_3 sorted by index_idx:
+123457|7|0.34 123458|8|1.56 123459|9|0.34 123460|10|2.3 123461|11|0.34 
 
 Testing Shifting Up/Down/Left/Right ...
 Original DF:
@@ -1989,6 +1991,8 @@ Testing change_freq( ) ...
 Testing change_freq_2( ) ...
 
 Testing change_freq_3( ) ...
+
+Testing duplication_mask( ) ...
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2007,7 +2011,7 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: 0.0358293343522, -0.00648451070336, -0.0360056309281, 0.00846107744331, 
+Means of clusters are: -0.0062858874242, 0.0373923431345, -0.0360056309281, 0.00873052301635, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 The seasonality of IBM returns is 59 days.
 So use this instead of 170 days in decomposition analysis

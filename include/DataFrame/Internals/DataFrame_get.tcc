@@ -2541,6 +2541,54 @@ get_view(const StlVecType<const char *> &col_names) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T, typename ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+get_top_n_data(const char *name, size_type n) const  {
+
+    using res_t = DataFrame<I, HeteroVector<align_value>>;
+    using visitor_t = NLargestVisitor<T, I>;
+
+    res_t   result;
+
+    top_n_common_<T, visitor_t, res_t, Ts ...>(name, visitor_t { n }, result);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T, typename ... Ts>
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_top_n_view(const char *name, size_type n)  {
+
+    using res_t = PtrView;
+    using visitor_t = NLargestVisitor<T, I>;
+
+    res_t   result;
+
+    top_n_common_<T, visitor_t, res_t, Ts ...>(name, visitor_t { n }, result);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T, typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
+get_top_n_view(const char *name, size_type n) const  {
+
+    using res_t = ConstPtrView;
+    using visitor_t = NLargestVisitor<T, I>;
+
+    res_t   result;
+
+    top_n_common_<T, visitor_t, res_t, Ts ...>(name, visitor_t { n }, result);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<hashable_equal ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 duplication_mask (bool include_index, bool binary) const  {

@@ -735,9 +735,9 @@ operator() (T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
-    using ViewType = typename DF::template ColumnVecType<ValueType>;
+    using ViewColType = typename DF::template ColumnVecType<ValueType>;
 
-    ViewType        new_col;
+    ViewColType     new_col;
     const size_type vec_size = vec.size();
 
     new_col.reserve(std::min(sel_indices.size(), vec_size));

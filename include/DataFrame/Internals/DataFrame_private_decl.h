@@ -463,7 +463,7 @@ fill_missing_lagrange_(ColumnVecType<T> &vec,
             vec[k] = y;
             count += 1;
         }
-	}
+    }
     return;
 }
 
@@ -602,7 +602,7 @@ join_helper_common_(
                  &rhs = std::as_const(rhs),
                  &joined_index_idx = std::as_const(joined_index_idx),
                  &result] () -> void  {
-                    index_join_functor_common_<res_t, RHS_T, Ts ...>    functor(
+                    index_join_functor_common_<res_t, RHS_T, Ts ...>   functor(
                         name.c_str(),
                         rhs,
                         joined_index_idx,
@@ -836,8 +836,8 @@ data_by_sel_common_(const StlVecType<size_type> &col_indices,
         for (const auto &[name, idx] : column_list_) [[likely]]  {
             sel_load_functor_<res_t, size_type, Ts ...> functor(name.c_str(),
                                                                 col_indices,
-                                                                 idx_s,
-                                                                 ret_df);
+                                                                idx_s,
+                                                                ret_df);
 
             data_[idx].change(functor);
         }
@@ -908,6 +908,62 @@ view_by_sel_common_(const StlVecType<size_type> &col_indices,
     }
 
     return (ret_dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename V, typename R, typename ... Ts>
+void top_n_common_(const char *col_name, V &&visitor, R &result) const  {
+
+    using res_t = R;
+
+    const ColumnVecType<T>  *vec { nullptr };
+
+    if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
+        vec = (const ColumnVecType<T> *) &(get_index());
+    else
+        vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
+
+    visitor.pre();
+    visitor(indices_.begin(), indices_.end(), vec->begin(), vec->end());
+    visitor.post();
+    visitor.sort_by_index_idx();
+
+    typename res_t::IndexVecType    new_index;
+    StlVecType<size_type>           idxs;
+
+    new_index.reserve(visitor.get_result().size());
+    idxs.reserve(visitor.get_result().size());
+    for (const auto &res : visitor.get_result())  {
+        if constexpr (std::is_same_v<res_t,
+                                     DataFrame<I, HeteroVector<align_value>>>)
+            new_index.push_back(indices_[res.index_idx]);
+        else  // Views
+            new_index.push_back(
+                &(const_cast<DataFrame *>(this)->indices_[res.index_idx]));
+        idxs.push_back(res.index_idx);
+    }
+    result.indices_ = std::move(new_index);
+
+    const SpinGuard guard(lock_);
+
+    if constexpr (std::is_same_v<res_t,
+                                  DataFrame<I, HeteroVector<align_value>>>)  {
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            sel_load_functor_<res_t, size_type, Ts ...> functor(
+                name.c_str(), idxs, 0, result);
+
+            data_[idx].change(functor);
+        }
+    }
+    else  {  // Views
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            sel_load_view_functor_<size_type, res_t, Ts ...>    functor(
+                name.c_str(), idxs, 0, result);
+
+            data_[idx].change(functor);
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------

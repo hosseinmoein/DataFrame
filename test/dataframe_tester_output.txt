@@ -714,18 +714,18 @@ col_2:1:<double>:8,
 col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
-INDEX:1:<ulong>:123450,
-col_1:1:<double>:1,
-col_2:1:<double>:8,
-col_3:1:<double>:15,
-col_str:1:<string>:11,
-col_4:1:<double>:22,
-INDEX:1:<ulong>:123450,
-col_1:1:<double>:1,
-col_2:1:<double>:8,
-col_3:1:<double>:15,
-col_str:1:<string>:11,
-col_4:1:<double>:22,
+INDEX:1:<ulong>:123451,
+col_1:1:<double>:2,
+col_2:1:<double>:9,
+col_3:1:<double>:16,
+col_str:1:<string>:22,
+col_4:1:<double>:23,
+INDEX:1:<ulong>:123452,
+col_1:1:<double>:3,
+col_2:1:<double>:10,
+col_3:1:<double>:17,
+col_str:1:<string>:33,
+col_4:1:<double>:24,
 
 Testing write(json) ...
 Writing in JSON:
@@ -1993,6 +1993,20 @@ Testing change_freq_2( ) ...
 Testing change_freq_3( ) ...
 
 Testing duplication_mask( ) ...
+
+Testing get_top_n_data( ) ...
+INDEX:4:<ulong>:123453,123454,123456,123462,
+col_1:4:<double>:4,5,7,13,
+col_2:4:<double>:11,12,14,32,
+col_3:4:<double>:18,19,21,19,
+col_4:4:<int>:25,99,0,0,
+
+INDEX:4:<ulong>:123453,123454,123456,123462,
+col_1:4:<double>:4,5,7,13,
+col_2:4:<double>:11,12,14,32,
+col_3:4:<double>:18,19,21,19,
+col_4:4:<int>:25,99,0,0,
+
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2011,7 +2025,7 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: -0.0062858874242, 0.0373923431345, -0.0360056309281, 0.00873052301635, 
+Means of clusters are: -0.0100857561436, -0.0419089561666, 0.0281756337157, 0.00469686633911, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 The seasonality of IBM returns is 59 days.
 So use this instead of 170 days in decomposition analysis

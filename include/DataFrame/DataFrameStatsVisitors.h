@@ -814,7 +814,7 @@ struct  NExtremumVisitor  {
     operator() (K idx_begin, K /*idx_end*/, H column_begin, H column_end)  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        if (std::distance(column_begin, column_end) < n_)
+        if (size_type(std::distance(column_begin, column_end)) < n_)
             throw DataFrameError("NExtremumVisitor: column size must be >= N");
 #endif // HMDF_SANITY_EXCEPTIONS
 

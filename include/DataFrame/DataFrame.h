@@ -2798,7 +2798,7 @@ public: // Read/access and slicing interfaces
     // col_name:
     //   Name of the given column
     // n:
-	//   Number of top rows
+    //   Number of top rows
     //
     template<typename T, typename ... Ts>
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
@@ -2817,6 +2817,39 @@ public: // Read/access and slicing interfaces
     template<typename T, typename ... Ts>
     [[nodiscard]] ConstPtrView
     get_top_n_view(const char *col_name, size_type n) const;
+
+    // This returns a new DataFrame with the n bottom rows of the given column.
+    // The returned DataFrame rows will be in the same order as self.
+    //
+    // NOTE: Comparison operators (<, >, ==) must be well defined for type T.
+    //
+    // T:
+    //   Type of column name
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // n:
+    //   Number of bottom rows
+    //
+    template<typename T, typename ... Ts>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+    get_bottom_n_data(const char *col_name, size_type n) const;
+
+    // Smae as above but it returns a View with the n bottom rows of
+    // the given column.
+    //
+    template<typename T, typename ... Ts>
+    [[nodiscard]] PtrView
+    get_bottom_n_view(const char *col_name, size_type n);
+
+    // Same as above but it returns a const View with the n bottom rows of
+    // the given column.
+    //
+    template<typename T, typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_bottom_n_view(const char *col_name, size_type n) const;
 
     // This returns a new DataFrame with the same index column as self and an
     // integer column with the same name for each column in self.

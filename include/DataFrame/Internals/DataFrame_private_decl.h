@@ -968,6 +968,70 @@ void top_n_common_(const char *col_name, V &&visitor, R &result) const  {
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename C, typename R, typename ... Ts>
+void
+above_quantile_common_(const char *col_name,
+                       double quantile,
+                       C &&comp_func,
+                       R &result) const  {
+
+    using res_t = R;
+
+    const ColumnVecType<T>  *vec { nullptr };
+
+    if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
+        vec = (const ColumnVecType<T> *) &(get_index());
+    else
+        vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
+
+    QuantileVisitor<T, I>   quant { quantile };
+
+    quant.pre();
+    quant(indices_.begin(), indices_.end(), vec->begin(), vec->end());
+    quant.post();
+
+    typename res_t::IndexVecType    new_index;
+    StlVecType<size_type>           idxs;
+
+    new_index.reserve(vec->size() / 2);
+    idxs.reserve(vec->size() / 2);
+    for (size_type i { 0 }; i < vec->size(); ++i)  {
+        if (comp_func((*vec)[i], quant.get_result()))  {
+            if constexpr (std::is_same_v<
+                              res_t,
+                              DataFrame<I, HeteroVector<align_value>>>)
+                new_index.push_back(indices_[i]);
+            else  // Views
+                new_index.push_back(
+                    &(const_cast<DataFrame *>(this)->indices_[i]));
+            idxs.push_back(i);
+        }
+    }
+    result.indices_ = std::move(new_index);
+
+    const SpinGuard guard(lock_);
+
+    if constexpr (std::is_same_v<res_t,
+                                  DataFrame<I, HeteroVector<align_value>>>)  {
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            sel_load_functor_<res_t, size_type, Ts ...> functor(
+                name.c_str(), idxs, 0, result);
+
+            data_[idx].change(functor);
+        }
+    }
+    else  {  // Views
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            sel_load_view_functor_<size_type, res_t, Ts ...>    functor(
+                name.c_str(), idxs, 0, result);
+
+            data_[idx].change(functor);
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename V, typename T>
 inline static void
 replace_vector_vals_(V &data_vec,

@@ -43,7 +43,7 @@ body {
     <tr bgcolor="Azure">
       <td bgcolor="blue"> <font color="white">
         <PRE><B>
-template&lt;typename T, typename F, typename ... Ts&gt;
+template&lt;typename T, typename ... Ts&gt;
 DataFrame
 get_top_n_data(const char *col_name, size_type n) const;
         </B></PRE></font>
@@ -64,7 +64,7 @@ get_top_n_data(const char *col_name, size_type n) const;
     <tr bgcolor="Azure">
       <td bgcolor="blue"> <font color="white">
         <PRE><B>
-template&lt;typename T, typename F, typename ... Ts&gt;
+template&lt;typename T, typename ... Ts&gt;
 PtrView
 get_top_n_view(const char *col_name, size_type n);
         </B></PRE></font>
@@ -89,7 +89,7 @@ get_top_n_view(const char *col_name, size_type n);
     <tr bgcolor="Azure">
       <td bgcolor="blue"> <font color="white">
         <PRE><B>
-template&lt;typename T, typename F, typename ... Ts&gt;
+template&lt;typename T, typename ... Ts&gt;
 ConstPtrView
 get_top_n_view(const char *col_name, size_type n) const;
         </B></PRE></font>
@@ -109,7 +109,7 @@ get_top_n_view(const char *col_name, size_type n) const;
     <tr bgcolor="Azure">
       <td bgcolor="blue"> <font color="white">
         <PRE><B>
-template&lt;typename T, typename F, typename ... Ts&gt;
+template&lt;typename T, typename ... Ts&gt;
 DataFrame
 get_bottom_n_data(const char *col_name, size_type n) const;
         </B></PRE></font>
@@ -130,7 +130,7 @@ get_bottom_n_data(const char *col_name, size_type n) const;
     <tr bgcolor="Azure">
       <td bgcolor="blue"> <font color="white">
         <PRE><B>
-template&lt;typename T, typename F, typename ... Ts&gt;
+template&lt;typename T, typename ... Ts&gt;
 PtrView
 get_bottom_n_view(const char *col_name, size_type n);
         </B></PRE></font>
@@ -155,7 +155,7 @@ get_bottom_n_view(const char *col_name, size_type n);
     <tr bgcolor="Azure">
       <td bgcolor="blue"> <font color="white">
         <PRE><B>
-template&lt;typename T, typename F, typename ... Ts&gt;
+template&lt;typename T, typename ... Ts&gt;
 ConstPtrView
 get_bottom_n_view(const char *col_name, size_type n) const;
         </B></PRE></font>

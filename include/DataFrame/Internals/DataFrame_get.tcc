@@ -2635,7 +2635,58 @@ get_bottom_n_view(const char *name, size_type n) const  {
 }
 
 // ----------------------------------------------------------------------------
- 
+
+template<typename I, typename H>
+template<typename T, typename ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+get_above_quantile_data(const char *col_name, double quantile) const  {
+
+    using res_t = DataFrame<I, HeteroVector<align_value>>;
+    using comp_func_t = std::greater_equal<T>;
+
+    res_t   result;
+
+    above_quantile_common_<T, comp_func_t, res_t, Ts ...>
+        (col_name, quantile, comp_func_t { }, result);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T, typename ... Ts>
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_above_quantile_view(const char *col_name, double quantile)  {
+
+    using res_t = PtrView;
+    using comp_func_t = std::greater_equal<T>;
+
+    res_t   result;
+
+    above_quantile_common_<T, comp_func_t, res_t, Ts ...>
+        (col_name, quantile, comp_func_t { }, result);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T, typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
+get_above_quantile_view(const char *col_name, double quantile) const  {
+
+    using res_t = ConstPtrView;
+    using comp_func_t = std::greater_equal<T>;
+
+    res_t   result;
+
+    above_quantile_common_<T, comp_func_t, res_t, Ts ...>
+        (col_name, quantile, comp_func_t { }, result);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename I, typename H>
 template<hashable_equal ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::

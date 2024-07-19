@@ -2866,7 +2866,7 @@ public: // Read/access and slicing interfaces
     // col_name:
     //   Name of the given column
     // quantile:
-    //   qunatile specified as fraction. For example, 0.35 for 35% quantile.
+    //   quantile specified as fraction. For example, 0.35 for 35% quantile.
     //
     template<typename T, typename ... Ts>
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>

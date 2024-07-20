@@ -2688,6 +2688,57 @@ get_above_quantile_view(const char *col_name, double quantile) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T, typename ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+get_below_quantile_data(const char *col_name, double quantile) const  {
+
+    using res_t = DataFrame<I, HeteroVector<align_value>>;
+    using comp_func_t = std::less<T>;
+
+    res_t   result;
+
+    above_quantile_common_<T, comp_func_t, res_t, Ts ...>
+        (col_name, quantile, comp_func_t { }, result);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T, typename ... Ts>
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_below_quantile_view(const char *col_name, double quantile)  {
+
+    using res_t = PtrView;
+    using comp_func_t = std::less<T>;
+
+    res_t   result;
+
+    above_quantile_common_<T, comp_func_t, res_t, Ts ...>
+        (col_name, quantile, comp_func_t { }, result);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T, typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
+get_below_quantile_view(const char *col_name, double quantile) const  {
+
+    using res_t = ConstPtrView;
+    using comp_func_t = std::less<T>;
+
+    res_t   result;
+
+    above_quantile_common_<T, comp_func_t, res_t, Ts ...>
+        (col_name, quantile, comp_func_t { }, result);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<hashable_equal ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 duplication_mask (bool include_index, bool binary) const  {

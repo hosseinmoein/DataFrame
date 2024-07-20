@@ -2852,7 +2852,7 @@ public: // Read/access and slicing interfaces
     get_bottom_n_view(const char *col_name, size_type n) const;
 
     // This returns a new DataFrame with rows greater than the specified
-    // quantile of the gievn column. The row equal to the quantile is also
+    // quantile of the given column. The row equal to the quantile is also
     // included.
     // The returned DataFrame rows will be in the same order as self.
     //
@@ -2883,6 +2883,38 @@ public: // Read/access and slicing interfaces
     template<typename T, typename ... Ts>
     [[nodiscard]] ConstPtrView
     get_above_quantile_view(const char *col_name, double quantile) const;
+
+    // This returns a new DataFrame with rows less than the specified
+    // quantile of the given column. The row equal to the quantile is excluded.
+    // The returned DataFrame rows will be in the same order as self.
+    //
+    // NOTE: Comparison operators (<, >, ==) must be well defined for type T.
+    //
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // quantile:
+    //   quantile specified as fraction. For example, 0.35 for 35% quantile.
+    //
+    template<typename T, typename ... Ts>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+    get_below_quantile_data(const char *col_name, double quantile) const;
+
+    // Same as above but it returns a View with above quantile rows
+    //
+    template<typename T, typename ... Ts>
+    [[nodiscard]] PtrView
+    get_below_quantile_view(const char *col_name, double quantile);
+
+    // Same as above but it returns a const View with above quantile rows
+    //
+    template<typename T, typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_below_quantile_view(const char *col_name, double quantile) const;
 
     // This returns a new DataFrame with the same index column as self and an
     // integer column with the same name for each column in self.

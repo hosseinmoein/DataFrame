@@ -4760,6 +4760,103 @@ static void test_get_above_quantile_data()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_get_below_quantile_data()  {
+
+    std::cout << "\nTesting get_below_quantile_data( ) ..." << std::endl;
+
+    StlVecType<unsigned long>   idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    StlVecType<double>          d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double>          d2 =
+        { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
+    StlVecType<double>          d3 =
+        { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 10 };
+    StlVecType<int>             i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    auto    lbd =
+        [](const unsigned long &, const double &val) -> bool {
+            return (val < 100.0);
+        };
+    auto    view =
+        df.get_view_by_sel<double, decltype(lbd), double, int, std::string>
+            ("col_1", lbd);
+
+    auto    res1 =
+        df.get_below_quantile_data<double, int, double, std::string>
+            ("col_3", 0.45);
+    auto    res2 =
+        view.get_below_quantile_data<double, int, double, std::string>
+            ("col_3", 0.45);
+    auto    res3 =
+        df.get_below_quantile_view<double, int, double, std::string>
+            ("col_3", 0.45);
+    auto    res4 =
+        view.get_below_quantile_view<double, int, double, std::string>
+            ("col_3", 0.45);
+    auto    res5 =
+        view.get_below_quantile_data<unsigned int, int, double, std::string>
+            (DF_INDEX_COL_NAME, 0.45);
+
+    {
+        StlVecType<unsigned long>   out_idx =
+            { 123457, 123458, 123459, 123460, 123461, 123466 };
+        StlVecType<double>          out_col_2 = { 20, 22, 23, 30, 31, 1.89 };
+        StlVecType<double>          out_col_3 =
+            { 0.34, 1.56, 0.34, 2.3, 0.34, 10 };
+        StlVecType<int>             out_col_4 = { 0, 0, 0, 0, 0, 0 };
+
+        assert(res1.get_index() == out_idx);
+        assert(res1.get_column<double>("col_2") == out_col_2);
+        assert(res1.get_column<double>("col_3") == out_col_3);
+        assert(res1.get_column<int>("col_4") == out_col_4);
+    }
+    {
+        StlVecType<unsigned long>   out_idx =
+            { 123457, 123458, 123459, 123460, 123461, 123466 };
+        StlVecType<double>          out_col_2 = { 20, 22, 23, 30, 31, 1.89 };
+        StlVecType<double>          out_col_3 =
+            { 0.34, 1.56, 0.34, 2.3, 0.34, 10 };
+        StlVecType<int>             out_col_4 = { 0, 0, 0, 0, 0, 0 };
+
+        assert(res2.get_index() == out_idx);
+        assert(res2.get_column<double>("col_2") == out_col_2);
+        assert(res2.get_column<double>("col_3") == out_col_3);
+        assert(res2.get_column<int>("col_4") == out_col_4);
+    }
+
+    res3.write<std::ostream, double, int, std::string>
+        (std::cout, io_format::csv);
+    std::cout << std::endl;
+
+    res4.write<std::ostream, double, int, std::string>
+        (std::cout, io_format::csv);
+    std::cout << std::endl;
+
+    {
+        StlVecType<unsigned long>   out_idx =
+            { 123450, 123451, 123452, 123453, 123454 };
+        StlVecType<double>          out_col_2 = { 8, 9, 10, 11, 12 };
+        StlVecType<double>          out_col_3 = { 15, 16, 15, 18, 19 };
+        StlVecType<int>             out_col_4 = { 22, 23, 24, 25, 99 };
+
+        assert(res5.get_index() == out_idx);
+        assert(res5.get_column<double>("col_2") == out_col_2);
+        assert(res5.get_column<double>("col_3") == out_col_3);
+        assert(res5.get_column<int>("col_4") == out_col_4);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4851,6 +4948,7 @@ int main(int, char *[]) {
     test_get_top_n_data();
     test_get_bottom_n_data();
     test_get_above_quantile_data();
+    test_get_below_quantile_data();
 
     return (0);
 }

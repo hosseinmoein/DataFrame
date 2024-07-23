@@ -4080,7 +4080,8 @@ struct  DiffVisitor  {
                     const auto &i,
                     const auto &j,
                     auto &result) -> void  {
-                if (local_skip_nan_ && (is_nan__(*i) || is_nan__(*j))) [[unlikely]]
+                if (local_skip_nan_ && (is_nan__(*i) || is_nan__(*j)))
+                [[unlikely]]
                     return;
 
                 const value_type    val = cond(*i - *j);

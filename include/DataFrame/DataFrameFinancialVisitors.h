@@ -62,55 +62,53 @@ struct  ReturnVisitor  {
 
         GET_COL_SIZE2
 
-        if (col_s < 3)  return;
+        if (col_s < (period_ + 2))  return;
 
-        // t1 = today,  tm1 = yesterday
+        // t_pr = present,  t_pa = past
 
-        // Log return
-        //
         std::function<value_type(value_type, value_type)>   func =
-            [](value_type t1, value_type tm1) -> value_type  {
-                return (std::log(t1 / tm1));
+            [](value_type t_pr, value_type t_pa) -> value_type { // Log return
+                return (std::log(t_pr / t_pa));
             };
 
         if (ret_p_ == return_policy::percentage)
-            func = [](value_type t1, value_type tm1) -> value_type  {
-                      return ((t1 - tm1) / tm1);
+            func = [](value_type t_pr, value_type t_pa) -> value_type  {
+                      return ((t_pr - t_pa) / t_pa);
                    };
         else if (ret_p_ == return_policy::monetary)
-            func = [](value_type t1, value_type tm1) -> value_type  {
-                       return (t1 - tm1);
+            func = [](value_type t_pr, value_type t_pa) -> value_type  {
+                       return (t_pr - t_pa);
                    };
         else if (ret_p_ == return_policy::trinary)
-            func = [](value_type t1, value_type tm1) -> value_type  {
-                       const value_type diff = t1 - tm1;
+            func = [](value_type t_pr, value_type t_pa) -> value_type  {
+                       const value_type diff = t_pr - t_pa;
 
                        return ((diff > 0) ? 1 : ((diff < 0) ? -1 : 0));
                    };
 
         result_type result(col_s);
+        auto        lbd =
+            [&result, &column_begin, &func, this]
+            (auto begin, auto end) mutable -> void  {
+                for (size_type i = begin; i < end; ++i) [[likely]]
+                    result[i] = func(*(column_begin + i),
+                                     *(column_begin + (i - this->period_)));
+            };
 
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
-                    size_type(1),
-                    col_s,
-                    [&result, &column_begin, &func]
-                    (auto begin, auto end) mutable -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]
-                            result[i] = func(*(column_begin + i),
-                                             *(column_begin + (i - 1)));
-                    });
+                ThreadGranularity::thr_pool_.parallel_loop(period_,
+                                                           col_s,
+                                                           std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            std::adjacent_difference (column_begin, column_end,
-                                      result.begin(),
-                                      func);
+            lbd(period_, col_s);
         }
-        result[0] = std::numeric_limits<T>::quiet_NaN();
+        for (size_type i = 0; i < period_; ++i)
+            result[i] = std::numeric_limits<T>::quiet_NaN();
         result.swap(result_);
     }
 
@@ -124,13 +122,16 @@ struct  ReturnVisitor  {
     inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
-    explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
+    explicit
+    ReturnVisitor (return_policy rp, size_type period = 1)
+        : period_(period), ret_p_(rp)  {   }
 
 private:
 
     OBO_PORT_DECL
 
     result_type         result_ {  };
+    const size_type     period_;
     const return_policy ret_p_;
 };
 

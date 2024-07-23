@@ -1799,7 +1799,7 @@ static void test_fill_missing_fill_linear_interpolation()  {
     std::cout << "After fill missing with linear_interpolate:" << std::endl;
     df.write<std::ostream, int, double>(std::cout);
 
-	std::cout << "\n\n";
+    std::cout << "\n\n";
     std::cout << "Original DF:" << std::endl;
     df2.write<std::ostream, int, double>(std::cout);
 
@@ -1810,7 +1810,7 @@ static void test_fill_missing_fill_linear_interpolation()  {
 
     std::cout << "After fill missing with lagrange_interpolate:" << std::endl;
     df2.write<std::ostream, int, double>(std::cout);
-	std::cout << "\n\n";
+    std::cout << "\n\n";
 }
 
 // -----------------------------------------------------------------------------
@@ -2191,18 +2191,18 @@ static void test_return()  {
 
     std::cout << "\nTesting Return ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    StlVecType<unsigned long>   idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    StlVecType<double>         d1 =
+    StlVecType<double>          d1 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 0.387,
           0.123, 1.06, 0.65, 2.03, 0.4, 1.0, 0.59 };
-    StlVecType<double>         d2 =
+    StlVecType<double>          d2 =
         { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
           1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
           1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
-    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>             i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame                 df;
 
     df.load_data(std::move(idx),
@@ -2257,6 +2257,20 @@ static void test_return()  {
     assert(result4[17] == 1);
     assert(result4[7] == -1);
     assert(result4[11] == -1);
+
+    ReturnVisitor<double>   return_visit5(return_policy::monetary, 3);
+    const auto              &result5 =
+        df.single_act_visit<double>("col_1", return_visit5).get_result();
+
+    assert(result5.size() == 21);
+    assert(std::isnan(result5[0]));
+    assert(std::isnan(result5[1]));
+    assert(std::isnan(result5[2]));
+    assert(fabs(result5[3] - 3) < 0.00001);
+    assert(fabs(result5[4] - 3) < 0.00001);
+    assert(fabs(result5[17] - 1.907) < 0.00001);
+    assert(fabs(result5[7] - -18.66) < 0.00001);
+    assert(fabs(result5[11] - -1.22) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
@@ -2440,7 +2454,7 @@ static void test_beta()  {
                  std::make_pair("dblcol_4", d4),
                  std::make_pair("dblcol_5", d5));
 
-    ReturnVisitor<double, unsigned long, 128>   return_visit(return_policy::log);
+    ReturnVisitor<double, unsigned long, 128>  return_visit(return_policy::log);
 
     df.load_column<double>(
         "dblcol_1_return",

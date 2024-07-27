@@ -30,6 +30,13 @@ target_compile_options(dataframe_tester_3
 )
 add_test(NAME dataframe_tester_3 COMMAND dataframe_tester_3)
 
+add_executable(dataframe_tester_4 dataframe_tester_4.cc)
+target_link_libraries(dataframe_tester_4 PRIVATE DataFrame)
+target_compile_options(dataframe_tester_4
+    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+)
+add_test(NAME dataframe_tester_4 COMMAND dataframe_tester_4)
+
 add_executable(dataframe_tester_schema dataframe_tester_schema.cc)
 target_link_libraries(dataframe_tester_schema PRIVATE DataFrame)
 add_test(NAME dataframe_tester_schema COMMAND dataframe_tester_schema)

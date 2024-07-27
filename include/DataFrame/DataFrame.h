@@ -1483,6 +1483,64 @@ public:  // Data manipulation
     [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
     value_counts(size_type index) const;
 
+    // This function determines if each item in the named column starts with
+    // the given pattern. The column type could be either a string or binary
+    // data. More precisely the column type could be any of the following:
+    //     std::string
+    //     std::basic_string<unsigned char>
+    //     std::basic_string<std::byte>
+    //     std::vector<char>
+    //     std::vector<unsigned char>
+    //     std::vector<std::byte>
+    //
+    // It returns a vector of chars with the same size as the named column.
+    // A 0 value means the corresponding element does not start with the
+    // pattern. A 1 value means the corresponding element does start with the
+    // pattern.
+    //
+    // T:
+    //   Type of the col_name column.
+    // col_name:
+    //   Name of the column
+    // pattern:
+    //   A string or binary pattern to match
+    //
+    template<binary_array T>
+    [[nodiscard]]
+    typename
+    DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template
+        StlVecType<char>
+    starts_with(const char *col_name, const T &pattern) const;
+
+    // This function determines if each item in the named column ends with
+    // the given pattern. The column type could be either a string or binary
+    // data. More precisely the column type could be any of the following:
+    //     std::string
+    //     std::basic_string<unsigned char>
+    //     std::basic_string<std::byte>
+    //     std::vector<char>
+    //     std::vector<unsigned char>
+    //     std::vector<std::byte>
+    //
+    // It returns a vector of chars with the same size as the named column.
+    // A 0 value means the corresponding element does not end with the
+    // pattern. A 1 value means the corresponding element does end with the
+    // pattern.
+    //
+    // T:
+    //   Type of the col_name column.
+    // col_name:
+    //   Name of the column
+    // pattern:
+    //   A string or binary pattern to match
+    //
+    template<binary_array T>
+    [[nodiscard]]
+    typename
+    DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template
+        StlVecType<char>
+    ends_with(const char *col_name, const T &pattern) const;
+
     // It bucketizes the data and index into intervals, based on index values
     // and bucket_type.
     // You must specify how the index column is bucketized, by providing

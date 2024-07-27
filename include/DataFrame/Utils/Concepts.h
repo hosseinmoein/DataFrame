@@ -206,9 +206,20 @@ concept StringOnly =
 
 template<typename T>
 concept numeric_or_DateTime =
-	std::is_same_v<T, DateTime> ||
+    std::is_same_v<T, DateTime> ||
     std::integral<T> ||
     std::floating_point<T>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+concept binary_array =
+    std::is_same_v<T, std::string> ||
+    std::is_same_v<T, std::basic_string<unsigned char>> ||
+    std::is_same_v<T, std::basic_string<std::byte>> ||
+    std::is_same_v<T, std::vector<char>> ||
+    std::is_same_v<T, std::vector<unsigned char>> ||
+    std::is_same_v<T, std::vector<std::byte>>;
 
 } // namespace hmdf
 

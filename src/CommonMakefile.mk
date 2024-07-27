@@ -13,6 +13,7 @@ PROJECT_INCLUDE_DIR = ../../include
 SRCS = ../test/dataframe_tester.cc \
        ../test/dataframe_tester_2.cc \
        ../test/dataframe_tester_3.cc \
+       ../test/dataframe_tester_4.cc \
        ../examples/hello_world.cc \
        ../test/dataframe_thread_safety.cc \
        ../test/dataframe_tester_schema.cc \
@@ -83,6 +84,7 @@ TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/dataframe_tester \
            $(LOCAL_BIN_DIR)/dataframe_tester_2 \
            $(LOCAL_BIN_DIR)/dataframe_tester_3 \
+           $(LOCAL_BIN_DIR)/dataframe_tester_4 \
            $(LOCAL_BIN_DIR)/hello_world \
            $(LOCAL_BIN_DIR)/dataframe_thread_safety \
            $(LOCAL_BIN_DIR)/dataframe_tester_schema \
@@ -159,6 +161,10 @@ DATAFRAME_TESTER_OBJ_3 = $(LOCAL_OBJ_DIR)/dataframe_tester_3.o
 $(LOCAL_BIN_DIR)/dataframe_tester_3: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ_3)
 	$(CXX) -o $@ $(DATAFRAME_TESTER_OBJ_3) $(LIBS)
 
+DATAFRAME_TESTER_OBJ_4 = $(LOCAL_OBJ_DIR)/dataframe_tester_4.o
+$(LOCAL_BIN_DIR)/dataframe_tester_4: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ_4)
+	$(CXX) -o $@ $(DATAFRAME_TESTER_OBJ_4) $(LIBS)
+
 HELLO_WORLD_OBJ = $(LOCAL_OBJ_DIR)/hello_world.o
 $(LOCAL_BIN_DIR)/hello_world: $(TARGET_LIB) $(HELLO_WORLD_OBJ)
 	$(CXX) -o $@ $(HELLO_WORLD_OBJ) $(LIBS)
@@ -217,7 +223,7 @@ clean:
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
           $(GEN_RAND_TESTER_OBJ) $(META_PROG_OBJ) \
           $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_TESTER_OBJ_2) \
-          $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ) \
+          $(DATAFRAME_TESTER_OBJ_3) $(DATAFRAME_TESTER_OBJ_4) $(HELLO_WORLD_OBJ) \
           $(DATAFRAME_PERFORMANCE_2_OBJ) $(DATAFRAME_THREAD_SAFTY_OBJ) \
           $(DATAFRAME_TESTER_SCHEMA_OBJ) $(ALLOCATOR_TESTER_OBJ) \
           $(LINKEDIN_BENCHMARK_OBJ)
@@ -227,7 +233,7 @@ clobber:
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
           $(GEN_RAND_TESTER_OBJ) $(DATAFRAME_PERFORMACE_OBJ) \
           $(DATAFRAME_TESTER_OBJ_2) $(DATAFRAME_THREAD_SAFTY_OBJ) \
-          $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ) \
+          $(DATAFRAME_TESTER_OBJ_3) $(DATAFRAME_TESTER_OBJ_4) $(HELLO_WORLD_OBJ) \
           $(DATAFRAME_TESTER_SCHEMA_OBJ) $(ALLOCATOR_TESTER_OBJ) \
           $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_PERFORMANCE_2_OBJ) \
           $(META_PROG_OBJ) $(LINKEDIN_BENCHMARK_OBJ)

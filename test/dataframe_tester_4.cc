@@ -54,13 +54,13 @@ static void test_starts_with()  {
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
 
     std::vector<std::string>                idx =
-        { "XXDnh\1", "XXD974h", "fbbgd", "XXDoiendg\0\0", "yehtfg", "mnbvcd",
-          "dfgsret", "jhnbdfg", "XXDomagdfert", "XXmj;'[-09", "XDimnaxcdf3",
-          "207652234", "XXD", "XX" };
+        { "XXDnh\1", "XXD974h", "fbbgd", std::string("XXDoiendg\0\0", 11),
+          "yehtfg", "mnbvcd", "dfgsret", "jhnbdfg", "XXDomagdfert",
+          "XXmj;'[-09", "XDimnaxcdf3", "207652234", "XXD", "XX" };
     std::vector<std::string>                s1 =
-        { "XXDnh\1", "XXD974h", "fbbgd", "XXDoiendg\0\0", "yehtfg", "mnbvcd",
-          "dfgsret", "jhnbdfg", "XXDomagdfert", "XXmj;'[-09", "XDimnaxcdf3",
-          "207652234", "XXD", "XX" };
+        { "XXDnh\1", "XXD974h", "fbbgd", std::string("XXDoiendg\0\0", 11),
+          "yehtfg", "mnbvcd", "dfgsret", "jhnbdfg", "XXDomagdfert",
+          "XXmj;'[-09", "XDimnaxcdf3", "207652234", "XXD", "XX" };
     std::vector<std::vector<unsigned char>> v1 =
         { { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
           { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
@@ -114,11 +114,79 @@ static void test_starts_with()  {
 }
 
 // ----------------------------------------------------------------------------
+
+static void test_ends_with()  {
+
+    std::cout << "\nTesting ends_with( ) ..." << std::endl;
+
+    std::vector<std::string>                idx =
+        { "nh\1XXD", "974hXXD", "fbbgd", std::string("oiendg\0\0XXD", 11),
+          "yehtfg", "mnbvcd", "dfgsret", "jhnbdfg", "omagdfertXXD",
+          "XXmj;'[-09", "XDimnaxcdf3", "207652234", "XXD", "XX" };
+    std::vector<std::string>                s1 =
+        { "nh\1XXD", "974hXXD", "fbbgd", std::string("oiendg\0\0XXD", 11),
+          "yehtfg", "mnbvcd", "dfgsret", "jhnbdfg", "omagdfertXXD",
+          "XXmj;'[-09", "XDimnaxcdf3", "207652234", "XXD", "XX" };
+    std::vector<std::vector<unsigned char>> v1 =
+        { { 12, 13, 14, 20, 22, 23, 30, 31, 32, 100, 8, 9, 10, 11 },
+          { 12, 13, 14, 20, 22, 23, 30, 31, 32, 100, 8, 9, 10, 11 },
+          { 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 12, 13, 14, 20, 22, 23, 30, 31, 32, 100, 8, 9, 10, 11 },
+          { 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 8, 9, 10 },
+          { 100 },
+          { 12, 13, 14, 20, 22, 23, 30, 31, 32, 100, 8, 9, 10, 11 },
+          { 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 23, 30, 31, 32, 100 } };
+    std::vector<double>                     d3 =
+        { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 10 };
+    std::vector<int>                        i1 = { 22, 23, 24, 25, 99 };
+    StrDataFrame                            df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("str_col", s1),
+                 std::make_pair("col2", v1),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    const auto  res1 = df.ends_with<std::string>("str_col", "XXD");
+
+    {
+        std::vector<char>  out_res =
+            { 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0 };
+
+        assert(res1 == out_res);
+    }
+
+    const auto  res2 =
+        df.ends_with<std::vector<unsigned char>>("col2", { 8, 9, 10, 11 });
+
+    {
+         std::vector<char>  out_res =
+            { 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0 };
+
+        assert(res2 == out_res);
+    }
+
+    const auto  res3 = df.ends_with<std::string>(DF_INDEX_COL_NAME, "XXD");
+
+    {
+        std::vector<char>  out_res =
+            { 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0 };
+
+        assert(res3 == out_res);
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
     test_starts_with();
+    test_ends_with();
 
     return (0);
 }

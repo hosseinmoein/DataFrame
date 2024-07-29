@@ -2305,6 +2305,44 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  CumCountVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type =
+        std::vector<size_type, typename allocator_declare<T, A>::type>;
+
+
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+        size_type   running_cnt { 0 };
+        result_type result;
+
+        result.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+            if (! is_nan__(*(column_begin + i))) [[unlikely]]
+                running_cnt += 1;
+            result.push_back(running_cnt);
+        }
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+private:
+
+    result_type result_ {  };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  CumProdVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3

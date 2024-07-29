@@ -1236,6 +1236,11 @@ static void test_groupby_2()  {
         { "A", "B", "C", "D", "X", "Y", "W", "P", "Z", "S", "M", "B",
           "A", "H", "X", "Q", "V", "P", "W", "K", "I", "L", "J", "N",
           "Y", "G", "T", "U" };
+    StlVecType<double>         dblvec33 =
+        { 0.998, 1.545, 0.056, 0.15678, 1.545, std::sqrt(-1), 0.06743,
+          0.1, -1.545, std::sqrt(-1), -0.9999, 1.545, 0.1002, -0.8888,
+          0.14, 0.0456, -1.545, -0.8999, std::sqrt(-1), 0.8002, -1.545,
+          0.2, 0.1056, 0.87865, -0.6999, std::sqrt(-1), 0.1902, -1.545 };
 
     MyDataFrame df;
 
@@ -1243,6 +1248,7 @@ static void test_groupby_2()  {
                  std::make_pair("xint_col", intvec2),
                  std::make_pair("dbl_col", xdblvec2),
                  std::make_pair("dbl_col_2", dblvec22),
+                 std::make_pair("dbl_col_3", dblvec33),
                  std::make_pair("str_col", strvec2),
                  std::make_pair("ul_col", xulgvec2));
 

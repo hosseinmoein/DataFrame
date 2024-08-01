@@ -974,6 +974,54 @@ DataFrame<I, H>::ends_with(const char *col_name, const T &pattern) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<comparable T>
+typename
+DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template
+    StlVecType<char>
+DataFrame<I, H>::in_between(const char *col_name,
+                            const T &lower_bound,
+                            const T &upper_bound) const  {
+
+    using res_t = StlVecType<char>;
+
+    const ColumnVecType<T>  *vec { nullptr };
+
+    if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
+        vec = (const ColumnVecType<T> *) &(get_index());
+    else
+        vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
+
+    const size_type col_s = vec->size();
+    res_t           result (col_s, char{ 0 });
+    const auto      thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    auto            lbd =
+        [&result, vec,
+         &lower_bound = std::as_const(lower_bound),
+         &upper_bound = std::as_const(upper_bound)]
+        (size_type begin, size_type end) -> void  {
+            for (auto idx = begin; idx < end; ++idx)  {
+                const auto  &val = (*vec)[idx];
+
+                if (val >= lower_bound && val < upper_bound)
+                    result[idx] = char{ 1 };
+            }
+        };
+
+    if (thread_level > 2)  {
+        auto    futures =
+            thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  lbd(size_type(0), col_s);
+
+    return(result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename V, typename I_V, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 bucketize(bucket_type bt,

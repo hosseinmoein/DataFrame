@@ -181,12 +181,69 @@ static void test_ends_with()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_in_between()  {
+
+    std::cout << "\nTesting in_between( ) ..." << std::endl;
+
+    StlVecType<unsigned long>               idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    StlVecType<std::string>                 s1 =
+        { "XXDnh\1", "XXD974h", "fbbgd", std::string("XXDoiendg\0\0", 11),
+          "yehtfg", "mnbvcd", "dfgsret", "jhnbdfg", "XXDomagdfert",
+          "XXmj;'[-09", "XDimnaxcdf3", "207652234", "XXD", "XX" };
+    StlVecType<StlVecType<unsigned char>>   v1 =
+        { { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 8, 9, 10 },
+          { 100 },
+          { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 100 },
+          { 23, 30, 31, 32, 100 } };
+    StlVecType<double>                      d3 =
+        { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 10 };
+    StlVecType<int>                         i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                             df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("str_col", s1),
+                 std::make_pair("col2", v1),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    const auto  res1 = df.in_between<double>("col_3", 15.0, 19.0);
+
+    {
+        StlVecType<char>    out_res =
+            { 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+        assert(res1 == out_res);
+    }
+
+    const auto  res2 =
+        df.in_between<unsigned long>(DF_INDEX_COL_NAME, 123453, 123460);
+
+    {
+        StlVecType<char>    out_res =
+            { 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0 };
+
+        assert(res2 == out_res);
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
     test_starts_with();
     test_ends_with();
+    test_in_between();
 
     return (0);
 }

@@ -2541,7 +2541,7 @@ get_view(const StlVecType<const char *> &col_names) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_top_n_data(const char *name, size_type n) const  {
 
@@ -2557,7 +2557,7 @@ get_top_n_data(const char *name, size_type n) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_top_n_view(const char *name, size_type n)  {
 
@@ -2573,7 +2573,7 @@ get_top_n_view(const char *name, size_type n)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
 get_top_n_view(const char *name, size_type n) const  {
 
@@ -2589,7 +2589,7 @@ get_top_n_view(const char *name, size_type n) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_bottom_n_data(const char *name, size_type n) const  {
 
@@ -2605,7 +2605,7 @@ get_bottom_n_data(const char *name, size_type n) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_bottom_n_view(const char *name, size_type n)  {
 
@@ -2621,7 +2621,7 @@ get_bottom_n_view(const char *name, size_type n)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
 get_bottom_n_view(const char *name, size_type n) const  {
 
@@ -2637,7 +2637,7 @@ get_bottom_n_view(const char *name, size_type n) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_above_quantile_data(const char *col_name, double quantile) const  {
 
@@ -2654,7 +2654,7 @@ get_above_quantile_data(const char *col_name, double quantile) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_above_quantile_view(const char *col_name, double quantile)  {
 
@@ -2671,7 +2671,7 @@ get_above_quantile_view(const char *col_name, double quantile)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
 get_above_quantile_view(const char *col_name, double quantile) const  {
 
@@ -2688,7 +2688,7 @@ get_above_quantile_view(const char *col_name, double quantile) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_below_quantile_data(const char *col_name, double quantile) const  {
 
@@ -2705,7 +2705,7 @@ get_below_quantile_data(const char *col_name, double quantile) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_below_quantile_view(const char *col_name, double quantile)  {
 
@@ -2722,7 +2722,7 @@ get_below_quantile_view(const char *col_name, double quantile)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<comparable T, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
 get_below_quantile_view(const char *col_name, double quantile) const  {
 

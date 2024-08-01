@@ -1541,6 +1541,33 @@ public:  // Data manipulation
         StlVecType<char>
     ends_with(const char *col_name, const T &pattern) const;
 
+    // This function determines if each item in the named column is between
+    // the given lower and upper bounds. Lower bound is inclusive and
+    // upper bound is excluded.
+    //
+    // It returns a vector of chars with the same size as the named column.
+    // A 0 value means the corresponding element is not between lower and
+    // upper bounds. A 1 value means it is.
+    //
+    // T:
+    //   Type of the col_name column. T must have the compariosn operators
+    //   (== != > < >= <=) well defined
+    // col_name:
+    //   Name of the column
+    // lower_bound:
+    //   A lower bound value
+    // upper_bound:
+    //   An upper bound value
+    //
+    template<comparable T>
+    [[nodiscard]]
+    typename
+    DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template
+        StlVecType<char>
+    in_between(const char *col_name,
+               const T &lower_bound,
+               const T &upper_bound) const;
+
     // It bucketizes the data and index into intervals, based on index values
     // and bucket_type.
     // You must specify how the index column is bucketized, by providing
@@ -2858,21 +2885,21 @@ public: // Read/access and slicing interfaces
     // n:
     //   Number of top rows
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_top_n_data(const char *col_name, size_type n) const;
 
     // Smae as above but it returns a View with the n top rows of
     // the given column.
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] PtrView
     get_top_n_view(const char *col_name, size_type n);
 
     // Same as above but it returns a const View with the n top rows of
     // the given column.
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] ConstPtrView
     get_top_n_view(const char *col_name, size_type n) const;
 
@@ -2891,21 +2918,21 @@ public: // Read/access and slicing interfaces
     // n:
     //   Number of bottom rows
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_bottom_n_data(const char *col_name, size_type n) const;
 
     // Same as above but it returns a View with the n bottom rows of
     // the given column.
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] PtrView
     get_bottom_n_view(const char *col_name, size_type n);
 
     // Same as above but it returns a const View with the n bottom rows of
     // the given column.
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] ConstPtrView
     get_bottom_n_view(const char *col_name, size_type n) const;
 
@@ -2926,19 +2953,19 @@ public: // Read/access and slicing interfaces
     // quantile:
     //   quantile specified as fraction. For example, 0.35 for 35% quantile.
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_above_quantile_data(const char *col_name, double quantile) const;
 
     // Same as above but it returns a View with above quantile rows
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] PtrView
     get_above_quantile_view(const char *col_name, double quantile);
 
     // Same as above but it returns a const View with above quantile rows
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] ConstPtrView
     get_above_quantile_view(const char *col_name, double quantile) const;
 
@@ -2958,19 +2985,19 @@ public: // Read/access and slicing interfaces
     // quantile:
     //   quantile specified as fraction. For example, 0.35 for 35% quantile.
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_below_quantile_data(const char *col_name, double quantile) const;
 
     // Same as above but it returns a View with above quantile rows
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] PtrView
     get_below_quantile_view(const char *col_name, double quantile);
 
     // Same as above but it returns a const View with above quantile rows
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     [[nodiscard]] ConstPtrView
     get_below_quantile_view(const char *col_name, double quantile) const;
 

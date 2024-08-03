@@ -1117,8 +1117,8 @@ read_csv2_(std::istream &stream,
     const size_type spec_s = spec_vec.size();
 
     if (spec_s > 0)  {  // Now load the data into the DataFrame
-        if (spec_vec[0].col_name != DF_INDEX_COL_NAME &&
-            ! columns_only) [[unlikely]]
+        if (spec_vec[0].col_name != DF_INDEX_COL_NAME && ! columns_only)
+        [[unlikely]]
             throw DataFrameError("DataFrame::read_csv2_(): ERROR: "
                                  "Index column is not the first column");
         if (! columns_only) [[likely]]

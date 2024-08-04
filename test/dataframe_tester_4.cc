@@ -281,6 +281,50 @@ static void test_peaks()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_valleys()  {
+
+    std::cout << "\nTesting valleys( ) ..." << std::endl;
+
+    MyDataFrame                df;
+    StlVecType<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    StlVecType<double>         dblvec =
+        { 0.0, 15.0, -14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0,
+          3.0, 9.0, 10.0};
+    StlVecType<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 103.9, 106.55, 106.34, 1.8,
+          111.0, 112.0, 111.5, 114.0, 115.0, 116.0};
+    StlVecType<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+
+    const auto  res1 = df.valleys<double>("dbl_col_2");
+
+    {
+        StlVecType<char>    out_res =
+            { 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0 };
+
+        assert(res1 == out_res);
+    }
+
+    const auto  res2 = df.valleys<unsigned long>(DF_INDEX_COL_NAME);
+
+    {
+        StlVecType<char>    out_res =
+            { 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0 };
+
+        assert(res2 == out_res);
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -289,6 +333,7 @@ int main(int, char *[]) {
     test_ends_with();
     test_in_between();
     test_peaks();
+    test_valleys();
 
     return (0);
 }

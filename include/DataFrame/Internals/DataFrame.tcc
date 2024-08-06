@@ -1026,7 +1026,7 @@ template<comparable T>
 typename
 DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template
     StlVecType<char>
-DataFrame<I, H>::peaks(const char *col_name) const  {
+DataFrame<I, H>::peaks(const char *col_name, size_type n) const  {
 
     using res_t = StlVecType<char>;
 
@@ -1040,14 +1040,14 @@ DataFrame<I, H>::peaks(const char *col_name) const  {
     const size_type col_s = vec->size();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (col_s < 4)
-        throw DataFrameError("peaks: column size must be >= 4 ");
+    if ((col_s <= (2 * n + 1)) || n < 1)
+        throw DataFrameError("peaks: column size must be >= 2n+1 and n > 0");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     res_t       result (col_s, char{ 0 });
     const auto  thread_level =
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-    auto        lbd =
+    auto        lbd1 =
         [&result, vec](size_type begin, size_type end) -> void  {
             for (auto idx = begin; idx < end; ++idx)  {
                 const auto  &val = (*vec)[idx];
@@ -1056,14 +1056,54 @@ DataFrame<I, H>::peaks(const char *col_name) const  {
                     result[idx] = char{ 1 };
             }
         };
+    auto        lbd2 =
+        [&result, vec](size_type begin, size_type end) -> void  {
+            for (auto idx = begin; idx < end; ++idx)  {
+                const auto  &val = (*vec)[idx];
+
+                if (val > (*vec)[idx + 1] &&
+                    val > (*vec)[idx + 2] &&
+                    val > (*vec)[idx - 1] &&
+                    val > (*vec)[idx - 2])
+                    result[idx] = char{ 1 };
+            }
+        };
+    auto        lbdn =
+        [&result, vec, n](size_type begin, size_type end) -> void  {
+            for (auto idx = begin; idx < end; ++idx)  {
+                const auto  &val = (*vec)[idx];
+                char        c { 1 };
+
+                for (size_type j = 1; j <= n; ++j)  {
+                    if (val <= (*vec)[idx + j] || val <= (*vec)[idx - j])  {
+                        c = 0;
+                        break;
+                    }
+                }
+                result[idx] = c;
+            }
+        };
 
     if (thread_level > 2)  {
-        auto    futures =
-            thr_pool_.parallel_loop(size_type(1), col_s - 1, std::move(lbd));
+		std::vector<std::future<void>>  futures;
+
+        if (n == 1)
+            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbd1));
+        else if (n == 2)
+            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbd2));
+        else
+            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbdn));
 
         for (auto &fut : futures)  fut.get();
     }
-    else  lbd(size_type(1), col_s - 1);
+    else  {
+        if (n == 1)
+            lbd1(n, col_s - n);
+        else if (n == 2)
+            lbd2(n, col_s - n);
+        else
+            lbdn(n, col_s - n);
+    }
 
     return(result);
 }
@@ -1075,7 +1115,7 @@ template<comparable T>
 typename
 DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template
     StlVecType<char>
-DataFrame<I, H>::valleys(const char *col_name) const  {
+DataFrame<I, H>::valleys(const char *col_name, size_type n) const  {
 
     using res_t = StlVecType<char>;
 
@@ -1089,14 +1129,14 @@ DataFrame<I, H>::valleys(const char *col_name) const  {
     const size_type col_s = vec->size();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (col_s < 4)
-        throw DataFrameError("valleys: column size must be >= 4 ");
+    if ((col_s <= (2 * n + 1)) || n < 1)
+        throw DataFrameError("valleys: column size must be >= 2n+1 and n > 0");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     res_t       result (col_s, char{ 0 });
     const auto  thread_level =
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-    auto        lbd =
+    auto        lbd1 =
         [&result, vec](size_type begin, size_type end) -> void  {
             for (auto idx = begin; idx < end; ++idx)  {
                 const auto  &val = (*vec)[idx];
@@ -1105,14 +1145,54 @@ DataFrame<I, H>::valleys(const char *col_name) const  {
                     result[idx] = char{ 1 };
             }
         };
+    auto        lbd2 =
+        [&result, vec](size_type begin, size_type end) -> void  {
+            for (auto idx = begin; idx < end; ++idx)  {
+                const auto  &val = (*vec)[idx];
+
+                if (val < (*vec)[idx + 1] &&
+                    val < (*vec)[idx + 2] &&
+                    val < (*vec)[idx - 1] &&
+                    val < (*vec)[idx - 2])
+                    result[idx] = char{ 1 };
+            }
+        };
+    auto        lbdn =
+        [&result, vec, n](size_type begin, size_type end) -> void  {
+            for (auto idx = begin; idx < end; ++idx)  {
+                const auto  &val = (*vec)[idx];
+                char        c { 1 };
+
+                for (size_type j = 1; j <= n; ++j)  {
+                    if (val >= (*vec)[idx + j] || val >= (*vec)[idx - j])  {
+                        c = 0;
+                        break;
+                    }
+                }
+                result[idx] = c;
+            }
+        };
 
     if (thread_level > 2)  {
-        auto    futures =
-            thr_pool_.parallel_loop(size_type(1), col_s - 1, std::move(lbd));
+		std::vector<std::future<void>>  futures;
+
+        if (n == 1)
+            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbd1));
+        else if (n == 2)
+            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbd2));
+        else
+            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbdn));
 
         for (auto &fut : futures)  fut.get();
     }
-    else  lbd(size_type(1), col_s - 1);
+    else  {
+        if (n == 1)
+            lbd1(n, col_s - n);
+        else if (n == 2)
+            lbd2(n, col_s - n);
+        else
+            lbdn(n, col_s - n);
+    }
 
     return(result);
 }

@@ -303,23 +303,29 @@ static void test_valleys()  {
                  std::make_pair("dbl_col", dblvec),
                  std::make_pair("dbl_col_2", dblvec2),
                  std::make_pair("str_col", strvec));
-
-    const auto  res1 = df.valleys<double>("dbl_col_2");
+    df.load_column("dbl_col_2_mask_1", df.valleys<double>("dbl_col_2"));
+    df.load_column("dbl_col_2_mask_2", df.valleys<double>("dbl_col_2", 2));
+    df.load_column("dbl_col_2_mask_3", df.valleys<double>("dbl_col_2", 3));
 
     {
-        StlVecType<char>    out_res =
+        StlVecType<char>    out_res1 =
             { 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0 };
+        StlVecType<char>    out_res2 =
+            { 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 };
+        StlVecType<char>    out_res3 =
+            { 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 };
 
-        assert(res1 == out_res);
+        assert((df.get_column<char>("dbl_col_2_mask_1") == out_res1));
+        assert((df.get_column<char>("dbl_col_2_mask_2") == out_res2));
+        assert((df.get_column<char>("dbl_col_2_mask_3") == out_res3));
     }
 
-    const auto  res2 = df.valleys<unsigned long>(DF_INDEX_COL_NAME);
-
+    df.load_column("index_mask", df.valleys<double>(DF_INDEX_COL_NAME));
     {
         StlVecType<char>    out_res =
             { 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0 };
 
-        assert(res2 == out_res);
+        assert((df.get_column<char>("index_mask") == out_res));
     }
 }
 

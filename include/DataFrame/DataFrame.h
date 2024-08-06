@@ -1573,40 +1573,46 @@ public:  // Data manipulation
     //
     // It returns a vector of chars with the same size as the named column.
     // A 0 value means the data point is not a peak. 1 means it is.
-    // The first and last values of the returned vector are always 0;
+    // The first and last n values of the returned vector are always 0;
     //
     // T:
     //   Type of the col_name column. T must have the compariosn operators
     //   (== != > < >= <=) well defined
     // col_name:
     //   Name of the column
+    // n
+    //   Number of periods to account for before and after.
+    //   It is defaulted to 1
     //
     template<comparable T>
     [[nodiscard]]
     typename
     DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template
         StlVecType<char>
-    peaks(const char *col_name) const;
+    peaks(const char *col_name, size_type n = 1) const;
 
     // This function determines if each item in the named column is a valley.
     // A valley data point is smaller than data points before and after it.
     //
     // It returns a vector of chars with the same size as the named column.
     // A 0 value means the data point is not a valley. 1 means it is.
-    // The first and last values of the returned vector are always 0;
+    // The first and last n values of the returned vector are always 0;
     //
     // T:
     //   Type of the col_name column. T must have the compariosn operators
     //   (== != > < >= <=) well defined
     // col_name:
     //   Name of the column
+    // n
+    //   Number of periods to account for before and after.
+    //   It is defaulted to 1
     //
     template<comparable T>
     [[nodiscard]]
     typename
     DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template
         StlVecType<char>
-    valleys(const char *col_name) const;
+    valleys(const char *col_name, size_type n = 1) const;
 
     // It bucketizes the data and index into intervals, based on index values
     // and bucket_type.

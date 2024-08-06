@@ -1660,22 +1660,23 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
   <H2 ID="9"><font color="blue">Build Instructions <font size="+4">&#x1F6E0;</font></font></H2>
     When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct (throw exceptions otherwise). If this is not defined there are no checks. For example, consider you pass a column with 3 values in it and ask DataFrame to find peaks that are higher than 5 data points around them. Without a sanity check you get a crash or garbage.<BR>
   <P>
+
     <font size="+1"><B>Using plain make and make-files:</B></font><BR>
     Go to the <I>src</I> subdirectory, and execute build_all.sh. This will build the library and test executables for <I>Linux/Unix flavors only</I><BR><BR>
+
     <font size="+1"><B>Using CMake:</B></font><BR>
-    <PRE>
-    mkdir [Debug|Release]
-    cd [Debug|Release]
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    mkdir <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
+<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cd</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    cmake -<span style="color:#797997; ">DCMAKE_BUILD_TYPE</span><span style="color:#808030; ">=</span>Release -<span style="color:#797997; ">DHMDF_BENCHMARKS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_EXAMPLES</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_TESTING</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> <span style="color:#800000; font-weight:bold; ">.</span><span style="color:#800000; font-weight:bold; ">.</span></span>
+<span class="line_wrapper">    cmake -<span style="color:#797997; ">DCMAKE_BUILD_TYPE</span><span style="color:#808030; ">=</span>Debug -<span style="color:#797997; ">DHMDF_SANITY_EXCEPTIONS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_BENCHMARKS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_EXAMPLES</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_TESTING</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> <span style="color:#800000; font-weight:bold; ">.</span><span style="color:#800000; font-weight:bold; ">.</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    make</span>
+<span class="line_wrapper">    make install</span>
+<span class="line_wrapper">    </span>
+<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cd</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
+<span class="line_wrapper">    make uninstall</span></pre>
 
-    cmake -DCMAKE_BUILD_TYPE=Release -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
-    cmake -DCMAKE_BUILD_TYPE=Debug -DHMDF_SANITY_EXCEPTIONS=1 -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
-
-    make
-    make install
-    
-    cd [Debug|Release]
-    make uninstall
-    </PRE>
     <font size="+1"><B>Using Package Managers:</B></font><BR>
       DataFrame is available on <a href="https://conan.io/center/recipes/dataframe"<I>Conan</I></a> platform. See the <a href="https://docs.conan.io/en/latest/"<I>Conan docs</I></a> for more information.<BR>
       DataFrame is also available on <a href="https://vcpkg.link/ports/dataframe"<I>VCPKG</I></a> platform. See <a href="https://learn.microsoft.com/en-us/vcpkg/"<I>VCPKG docs</i></a> for more information<BR>

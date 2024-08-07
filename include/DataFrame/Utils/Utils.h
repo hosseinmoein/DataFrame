@@ -347,7 +347,7 @@ shift_left(V &vec, std::size_t n)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename STR, std::size_t SIZ = 64 * 1024>
+template<typename STR, std::size_t SIZ = 256 * 1024>
 struct  IOStreamOpti  {
 
     IOStreamOpti (STR &stream, const char *file_name, bool binary = false)

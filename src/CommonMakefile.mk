@@ -26,6 +26,7 @@ SRCS = ../test/dataframe_tester.cc \
        ../test/gen_rand_tester.cc \
        ../test/allocator_tester.cc \
        ../test/linkedin_benchmark.cc \
+       ../test/dataframe_read_large_file.cc \
        Utils/DateTime.cc
 
 HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
@@ -93,6 +94,7 @@ TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/vectors_tester \
            $(LOCAL_BIN_DIR)/allocator_tester \
            $(LOCAL_BIN_DIR)/linkedin_benchmark \
+           $(LOCAL_BIN_DIR)/dataframe_read_large_file \
            $(LOCAL_BIN_DIR)/vector_ptr_view_tester \
            $(LOCAL_BIN_DIR)/meta_prog_tester \
            $(LOCAL_BIN_DIR)/date_time_tester \
@@ -197,6 +199,10 @@ LINKEDIN_BENCHMARK_OBJ = $(LOCAL_OBJ_DIR)/linkedin_benchmark.o
 $(LOCAL_BIN_DIR)/linkedin_benchmark: $(TARGET_LIB) $(LINKEDIN_BENCHMARK_OBJ)
 	$(CXX) -o $@ $(LINKEDIN_BENCHMARK_OBJ) $(LIBS)
 
+DATAFRAME_READ_LARGE_FILE_OBJ = $(LOCAL_OBJ_DIR)/dataframe_read_large_file.o
+$(LOCAL_BIN_DIR)/dataframe_read_large_file: $(TARGET_LIB) $(DATAFRAME_READ_LARGE_FILE_OBJ)
+	$(CXX) -o $@ $(DATAFRAME_READ_LARGE_FILE_OBJ) $(LIBS)
+
 VECTOR_PTR_VIEW_TESTER_OBJ = $(LOCAL_OBJ_DIR)/vector_ptr_view_tester.o
 $(LOCAL_BIN_DIR)/vector_ptr_view_tester: $(TARGET_LIB) $(VECTOR_PTR_VIEW_TESTER_OBJ)
 	$(CXX) -o $@ $(VECTOR_PTR_VIEW_TESTER_OBJ) $(LIBS)
@@ -223,20 +229,23 @@ clean:
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
           $(GEN_RAND_TESTER_OBJ) $(META_PROG_OBJ) \
           $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_TESTER_OBJ_2) \
-          $(DATAFRAME_TESTER_OBJ_3) $(DATAFRAME_TESTER_OBJ_4) $(HELLO_WORLD_OBJ) \
-          $(DATAFRAME_PERFORMANCE_2_OBJ) $(DATAFRAME_THREAD_SAFTY_OBJ) \
-          $(DATAFRAME_TESTER_SCHEMA_OBJ) $(ALLOCATOR_TESTER_OBJ) \
-          $(LINKEDIN_BENCHMARK_OBJ)
+          $(DATAFRAME_TESTER_OBJ_3) $(DATAFRAME_TESTER_OBJ_4) \
+          $(HELLO_WORLD_OBJ) $(DATAFRAME_PERFORMANCE_2_OBJ) \
+          $(DATAFRAME_THREAD_SAFTY_OBJ) $(DATAFRAME_TESTER_SCHEMA_OBJ) \
+          $(ALLOCATOR_TESTER_OBJ) $(LINKEDIN_BENCHMARK_OBJ) \
+          $(DATAFRAME_READ_LARGE_FILE_OBJ)
 
 clobber:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
           $(GEN_RAND_TESTER_OBJ) $(DATAFRAME_PERFORMACE_OBJ) \
           $(DATAFRAME_TESTER_OBJ_2) $(DATAFRAME_THREAD_SAFTY_OBJ) \
-          $(DATAFRAME_TESTER_OBJ_3) $(DATAFRAME_TESTER_OBJ_4) $(HELLO_WORLD_OBJ) \
-          $(DATAFRAME_TESTER_SCHEMA_OBJ) $(ALLOCATOR_TESTER_OBJ) \
-          $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_PERFORMANCE_2_OBJ) \
-          $(META_PROG_OBJ) $(LINKEDIN_BENCHMARK_OBJ)
+          $(DATAFRAME_TESTER_OBJ_3) $(DATAFRAME_TESTER_OBJ_4) \
+          $(HELLO_WORLD_OBJ) $(DATAFRAME_TESTER_SCHEMA_OBJ) \
+          $(ALLOCATOR_TESTER_OBJ) $(DATAFRAME_PERFORMANCE_OBJ) \
+          $(DATAFRAME_PERFORMANCE_2_OBJ) \
+          $(META_PROG_OBJ) $(LINKEDIN_BENCHMARK_OBJ) \
+          $(DATAFRAME_READ_LARGE_FILE_OBJ)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

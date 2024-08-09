@@ -643,6 +643,26 @@ _get_token_from_file_ (std::istream &file,
 
 // ----------------------------------------------------------------------------
 
+inline static void
+_get_token_from_string_ (std::string &str,
+                         std::size_t &str_idx,
+                         char delim,
+                         std::string &value)  {
+
+    std::size_t idx { 0 };
+
+    for (const auto s : str | std::views::drop(str_idx))  {
+        idx += 1;
+        if (s == delim)
+            break;
+        else  [[likely]]
+            value += s;
+    }
+    str_idx += idx;
+}
+
+// ----------------------------------------------------------------------------
+
 inline static std::vector<double>
 _get_dbl_vec_from_value_(const char *value)  {
 

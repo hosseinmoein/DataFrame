@@ -634,9 +634,6 @@ read_csv2_(std::istream &stream,
 
     std::string line;
     std::string value;
-    std::string token;
-    std::string type_str;
-    std::string col_name;
     SpecVec     spec_vec;
     bool        header_read { false };
     size_type   col_count { 0 };
@@ -644,24 +641,26 @@ read_csv2_(std::istream &stream,
     size_type   row_cnt { 0 };
 
     line.reserve(1024);
-    value.reserve(512);
-    token.reserve(32);
-    type_str.reserve(14);
-    col_name.reserve(32);
+    value.reserve(64);
     spec_vec.reserve(32);
     while (! stream.eof()) {
-        token.clear();
         std::getline(stream, line);
 
-        if (line.empty() || line[0] == '#')  continue;
-        if (header_read && ++data_rows_read >= num_rows)  break;
+        if (line.size() < 2  || line.empty() || line[0] == '#')  continue;
 
-        std::stringstream   s { line };
+        std::stringstream   sstream { line };
 
         // First get the header which is column names, sizes and types
         //
-        if (! header_read)  [[unlikely]]  {
-            while (std::getline(s, token, ','))  {
+        if (! header_read) [[unlikely]]  {
+            std::string type_str;
+            std::string col_name;
+            std::string token;
+
+            type_str.reserve(14);
+            col_name.reserve(32);
+            token.reserve(32);
+            while (std::getline(sstream, token, ','))  {
                 const size_type token_s = token.size();
                 size_type       token_idx { 0 };
 
@@ -802,20 +801,22 @@ read_csv2_(std::istream &stream,
 
         // Now read data rows
         //
-        if (row_cnt >= starting_row) [[likely]]  {
-            size_type   col_index { 0 };
-            size_type   token_index { 0 };
+        if (row_cnt++ >= starting_row) [[likely]]  {
+            if (data_rows_read++ >= num_rows) [[unlikely]]  break;
 
-            while (std::getline(s, token, ','))  {
-                if (col_index >= col_count) [[unlikely]]  break;
-
+            // Make sure we account for empty slots at the end of the line
+            // and create NaN data points
+            //
+            for (size_type col_idx = 0; col_idx < col_count; ++col_idx)
+            [[likely]]  {
                 value.clear();
-                _get_token_from_string_(token, token_index, ',', value);
+                if (! sstream.eof()) [[likely]]
+                    std::getline(sstream, value, ',');
 
-                _col_data_spec_ &col_spec = spec_vec[col_index];
+                _col_data_spec_ &col_spec = spec_vec[col_idx];
 
                 if (col_spec.type_spec == "float")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<float> &>
                             (col_spec.col_vec).push_back(
                                 strtof(value.c_str(), nullptr));
@@ -826,7 +827,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "double") [[likely]]  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<double> &>
                             (col_spec.col_vec).push_back(
                                 strtod(value.c_str(), nullptr));
@@ -837,7 +838,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "longdouble")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<long double> &>
                             (col_spec.col_vec).push_back(
                                 strtold(value.c_str(), nullptr));
@@ -849,7 +850,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "int")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<int> &>
                             (col_spec.col_vec).push_back(
                                 (int) strtol(value.c_str(), nullptr, 0));
@@ -860,7 +861,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "uint")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<unsigned int> &>
                             (col_spec.col_vec).push_back(
                                 (unsigned int) strtoul(value.c_str(),
@@ -906,7 +907,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "long")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<long> &>
                             (col_spec.col_vec).push_back(
                                 strtol(value.c_str(), nullptr, 0));
@@ -917,7 +918,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "longlong")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<long long> &>
                             (col_spec.col_vec).push_back(
                                 strtoll(value.c_str(), nullptr, 0));
@@ -928,7 +929,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "ulong")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         const unsigned long         v =
                             strtoul(value.c_str(), nullptr, 0);
                         StlVecType<unsigned long>  &vec =
@@ -944,7 +945,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "ulonglong")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<unsigned long long> &>
                             (col_spec.col_vec).push_back(
                                 strtoull(value.c_str(), nullptr, 0));
@@ -960,7 +961,7 @@ read_csv2_(std::istream &stream,
                         (col_spec.col_vec).emplace_back(value);
                 }
                 else if (col_spec.type_spec == "DateTime")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         time_t      t;
                         int         n;
                         DateTime    dt;
@@ -980,7 +981,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "DateTimeAME")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<DateTime> &>
                             (col_spec.col_vec).emplace_back(
                                 value.c_str(), DT_DATE_STYLE::AME_STYLE);
@@ -991,7 +992,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "DateTimeEUR")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<DateTime> &>
                             (col_spec.col_vec).emplace_back(
                                 value.c_str(), DT_DATE_STYLE::EUR_STYLE);
@@ -1002,7 +1003,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "DateTimeISO")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         std::any_cast<StlVecType<DateTime> &>
                             (col_spec.col_vec).emplace_back(
                                 value.c_str(), DT_DATE_STYLE::ISO_STYLE);
@@ -1013,7 +1014,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "bool")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         const bool          v =
                             static_cast<bool>
                                 (strtoul(value.c_str(), nullptr, 0));
@@ -1031,7 +1032,7 @@ read_csv2_(std::istream &stream,
                 // Containers
                 //
                 else if (col_spec.type_spec == "dbl_vec")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         StlVecType<std::vector<double>>  &vec =
                             std::any_cast<StlVecType<std::vector<double>> &>
                                 (col_spec.col_vec);
@@ -1046,7 +1047,7 @@ read_csv2_(std::istream &stream,
                     }
                 }
                 else if (col_spec.type_spec == "str_vec")  {
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         StlVecType<std::vector<std::string>> &vec =
                           std::any_cast<StlVecType<std::vector<std::string>> &>
                                 (col_spec.col_vec);
@@ -1063,7 +1064,7 @@ read_csv2_(std::istream &stream,
                 else if (col_spec.type_spec == "dbl_set")  {
                     using set_t = std::set<double>;
 
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         StlVecType<set_t>   &vec =
                             std::any_cast<StlVecType<set_t> &>
                                 (col_spec.col_vec);
@@ -1079,7 +1080,7 @@ read_csv2_(std::istream &stream,
                 else if (col_spec.type_spec == "str_set")  {
                     using set_t = std::set<std::string>;
 
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         StlVecType<set_t>   &vec =
                             std::any_cast<StlVecType<set_t> &>
                                 (col_spec.col_vec);
@@ -1095,7 +1096,7 @@ read_csv2_(std::istream &stream,
                 else if (col_spec.type_spec == "str_dbl_map")  {
                     using map_t = std::map<std::string, double>;
 
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         StlVecType<map_t>   &vec =
                             std::any_cast<StlVecType<map_t> &>
                                 (col_spec.col_vec);
@@ -1112,7 +1113,7 @@ read_csv2_(std::istream &stream,
                 else if (col_spec.type_spec == "str_dbl_unomap")  {
                     using map_t = std::unordered_map<std::string, double>;
 
-                    if (! value.empty())  {
+                    if (! value.empty()) [[likely]]  {
                         StlVecType<map_t>   &vec =
                             std::any_cast<StlVecType<map_t> &>
                                 (col_spec.col_vec);
@@ -1126,11 +1127,8 @@ read_csv2_(std::istream &stream,
                             (col_spec.col_vec).push_back(map_t { });
                     }
                 }
-
-                col_index += 1;
             }
         }
-        if (++row_cnt > num_rows)  break;
     }
 
     const size_type spec_s = spec_vec.size();

@@ -85,6 +85,11 @@ int main(int, char *[]) {
         << double(duration_cast<microseconds>(end - start).count()) / 1000000.0
         << " seconds\n";
 
+    /*
+    df.write<long, unsigned int, int, unsigned long>
+        ("Large_File.dat", io_format::binary);
+    */
+
     return (0);
 }
 

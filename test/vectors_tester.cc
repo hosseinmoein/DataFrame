@@ -99,7 +99,7 @@ int main(int, char *[]) {
     hv.push_back (std::string("fas"));
 
     {
-        // Tesing HeteroVector View
+        // Testing HeteroVector View
 
         HeteroView  v = hv.get_view<double>();
 
@@ -118,7 +118,7 @@ int main(int, char *[]) {
     }
 
     {
-        // Tesing HeteroVector PtrView
+        // Testing HeteroVector PtrView
 
         HeteroPtrView   v = hv.get_ptr_view<double>();
 
@@ -189,7 +189,7 @@ int main(int, char *[]) {
     std::cout << "hv.front<int>() result: " << a3 << std::endl;
 
     {
-        // Tesing VectorView
+        // Testing VectorView
 
         std::vector<int> vec { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         VectorView<int>  vec_view;

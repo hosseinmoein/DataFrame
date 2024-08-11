@@ -419,10 +419,10 @@ public:
     DEFINE_PRE_POST_2
 
     explicit
-    HampelFilterVisitor(size_type widnow_size,
+    HampelFilterVisitor(size_type window_size,
                         hampel_type ht = hampel_type::median,
                         value_type num_of_std = 3)
-        : window_size_(widnow_size),
+        : window_size_(window_size),
           type_(ht),
           num_of_std_(num_of_std)  {   }
 

@@ -1993,7 +1993,7 @@ static void test_drop_missing_any()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_drop_threashold_3()  {
+static void test_drop_threshold_3()  {
 
     std::cout << "\nTesting drop_missing(threshold=3) ..." << std::endl;
 
@@ -5329,7 +5329,7 @@ int main(int, char *[]) {
     test_drop_missing_all_no_drop();
     test_drop_missing_all_2_drop();
     test_drop_missing_any();
-    test_drop_threashold_3();
+    test_drop_threshold_3();
     test_get_row();
     test_auto_correlation();
     test_return();

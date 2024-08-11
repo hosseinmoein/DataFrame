@@ -87,7 +87,7 @@ gen_uniform_real_dist(std::size_t n, const RandGenParams<T> &params = { });
 // function. The probability of true is:
 //          ⎧     p if b == true
 // P(b|p) = ⎨
-//          ⎩ 1 - p if b == fasle
+//          ⎩ 1 - p if b == false
 //
 // It returns the vector of results
 // Optional parameters to set:

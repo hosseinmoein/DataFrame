@@ -174,7 +174,7 @@ public:  // Load/append/remove interfaces
     remove_column(size_type index);
 
     // This removes all the index and data columns but doesn't necessarily
-    // free memeory space of underlying containers. After this call DataFrame
+    // free memory space of underlying containers. After this call DataFrame
     // will be empty.
     // It is very similar to std::vector clear()
     //
@@ -746,7 +746,7 @@ public:  // Load/append/remove interfaces
                        const char *name3,
                        F &sel_functor);
 
-    // This reomves data rows by basic Glob-like pattern matching (also similar
+    // This removes data rows by basic Glob-like pattern matching (also similar
     // to SQL like clause) to filter data in the named column. Each element of
     // the named column is checked against a Glob-like matching logic
     //
@@ -1229,7 +1229,7 @@ public:  // Data manipulation
 
     // This sort function sorts DataFrame based on two columns, also
     // specified by the two directions.
-    // name[n] could be "INDEX" (or DF_INDEX_COL_NAME) in whcih case the index
+    // name[n] could be "INDEX" (or DF_INDEX_COL_NAME) in which case the index
     // column is taken as the sorting column.
     // NOTE: The order of T[n] type specifications must match the order of
     //       name[n] column names. In addition, all column types must be
@@ -1550,7 +1550,7 @@ public:  // Data manipulation
     // upper bounds. A 1 value means it is.
     //
     // T:
-    //   Type of the col_name column. T must have the compariosn operators
+    //   Type of the col_name column. T must have the comparison operators
     //   (== != > < >= <=) well defined
     // col_name:
     //   Name of the column
@@ -1576,7 +1576,7 @@ public:  // Data manipulation
     // The first and last n values of the returned vector are always 0;
     //
     // T:
-    //   Type of the col_name column. T must have the compariosn operators
+    //   Type of the col_name column. T must have the comparison operators
     //   (== != > < >= <=) well defined
     // col_name:
     //   Name of the column
@@ -1599,7 +1599,7 @@ public:  // Data manipulation
     // The first and last n values of the returned vector are always 0;
     //
     // T:
-    //   Type of the col_name column. T must have the compariosn operators
+    //   Type of the col_name column. T must have the comparison operators
     //   (== != > < >= <=) well defined
     // col_name:
     //   Name of the column
@@ -1770,10 +1770,10 @@ public:  // Data manipulation
     concat(const RHS_T &rhs,
            concat_policy cp = concat_policy::all_columns) const;
 
-    // This behaves just like concat(), but retunrs a view instead of another
+    // This behaves just like concat(), but returns a view instead of another
     // DataFrame.
     //
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // RHS_T:
@@ -1790,7 +1790,7 @@ public:  // Data manipulation
     //                           but only common columns and index are
     //                           concatenated
     //
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     template<typename RHS_T, typename ... Ts>
@@ -2082,7 +2082,7 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // Ts:
@@ -2163,7 +2163,7 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // Ts:
@@ -2187,7 +2187,7 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // Ts:
@@ -2291,7 +2291,7 @@ public: // Read/access and slicing interfaces
     //   2) Since the result is a view, you cannot call make_consistent() on
     //      the result.
     //
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // T1:
@@ -2356,7 +2356,7 @@ public: // Read/access and slicing interfaces
     //   2) Since the result is a view, you cannot call make_consistent() on
     //      the result.
     //
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // T1:
@@ -2439,7 +2439,7 @@ public: // Read/access and slicing interfaces
     //   2) Since the result is a view, you cannot call make_consistent() on
     //      the result.
     //
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // T1:
@@ -2533,7 +2533,7 @@ public: // Read/access and slicing interfaces
     //   2) Since the result is a view, you cannot call make_consistent() on
     //      the result.
     //
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // T1:
@@ -2879,7 +2879,7 @@ public: // Read/access and slicing interfaces
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
     // NOTE: The columns in the result are not padded with NaN.
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // Ts:
@@ -3082,7 +3082,7 @@ public: // Read/access and slicing interfaces
     //
     template<hashable_equal ... Ts>
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-    duplication_mask(bool include_index, bool binrary = false) const;
+    duplication_mask(bool include_index, bool binary = false) const;
 
     // It behaves like get_data(), but it returns a View.
     // A view is a DataFrame that is a reference to the original DataFrame.
@@ -3091,7 +3091,7 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // Ts:
@@ -3165,7 +3165,7 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
-    // NOTE: Views could not be const, becuase you can change original data
+    // NOTE: Views could not be const, because you can change original data
     //       through views.
     //
     // T:
@@ -3236,7 +3236,7 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] StringStats
     get_str_col_stats(const char *col_name) const;
 
-    // This retunrs the number of inversions in the named column. For example,
+    // This returns the number of inversions in the named column. For example,
     // in a column that is already sorted, the number of inversions is zero.
     // In a column that is sorted in reverse, the number of inversions is
     // n(n - 1) / 2.

@@ -45,7 +45,7 @@ namespace hmdf
 // This abstract base class makes it possible to pass different template
 // instances around as one type and to be able to assign them interchangeably.
 // The only penalty paid for having this base class is to carry around one
-// additional (pointer size) member. There shouldn't be any performace
+// additional (pointer size) member. There shouldn't be any performance
 // penalty, since everything is still stack based and there is no virtuality.
 //
 // NOTE: VirtualString MAKES NO BOUNDARY CHECKS. IT IS THE RESPONSIBILITY

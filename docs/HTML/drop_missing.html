@@ -121,7 +121,7 @@ enum class fill_policy : unsigned char  {
 
     // O(n<sup>2</sup>) algorithm for each missing value. It uses the index as X coordinate
     // This is very much a <I>garbage in, garbage out</I> algorithm.
-    // The index and column data must be in the same scale and be corelated.
+    // The index and column data must be in the same scale and be correlated.
     //
     lagrange_interpolate = 6,
 };</B></PRE></font>
@@ -357,7 +357,7 @@ fill_missing(const DF &rhs);
 
 <span style='color:#696969; '>// -----------------------------------------------------------------------------</span>
 
-<span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_drop_threashold_3<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+<span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_drop_threshold_3<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
 
     <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing drop_missing(threshold=3) ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
 

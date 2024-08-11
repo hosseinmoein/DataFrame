@@ -97,7 +97,7 @@ using <U>NMinSubArrayVisitor</U> =
       <td>
         This functor is similar to the above <I>ExtremumSubArrayVisitor</I>, but it finds at most N subintervals within the given column that contain elements with maximum or minimum sum than any other interval. It does it in O(n + kNlog(N)); where <I>n</I> = column length, <I>k</I> = a multiplier less than <I>n</I>, <I>N</I> = number of max sums to find<BR>
         The reason these two visitors are separated is because of performance complexity<BR><BR>
-        <I>get_result()</I> returns a std::vector of the folloing struct sorted <I>Cmp</I> parameter.<BR>
+        <I>get_result()</I> returns a std::vector of the following struct sorted <I>Cmp</I> parameter.<BR>
         <I>
         <PRE>
     struct  SubArrayInfo  {

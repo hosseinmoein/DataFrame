@@ -95,7 +95,7 @@ sort(const char *name1, sort_spec dir1,
 </B></PRE></font>
       </td>
       <td width = "33.3%">
-        This sort function sorts DataFrame based on two columns, also specified by the two directions. name[n] could be DF_INDEX_COL_NAME in whcih case the index column is taken as the sorting column.<BR>
+        This sort function sorts DataFrame based on two columns, also specified by the two directions. name[n] could be DF_INDEX_COL_NAME in which case the index column is taken as the sorting column.<BR>
         <B>NOTE</B>: The order of T[n] type specifications must match the order of name[n] column names. In addition, all column types must be specified separately. Otherwise, the behavior is undefined.<BR>
         <B>NOTE</B>: Sort first calls make_consistent() that may add nan values to data columns. nan values make sorting nondeterministic.
       </td>

@@ -203,7 +203,7 @@ enum class  fill_policy : unsigned char  {
     // O(n2) algorithm for each missing value.
     // It uses the index as X coordinate
     // This is very much a garbage in, garbage out algorithm.
-    // The index and column data must be in the same scale and be corelated.
+    // The index and column data must be in the same scale and be correlated.
     //
     lagrange_interpolate = 6,
 };

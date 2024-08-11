@@ -142,7 +142,7 @@ using efit_v = ExponentialFitVisitor&lt;T, I, A&gt;;
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
         The result gives you the vector of y fits for each given x.<BR>
-        There is also a method <I>get_slope()</I> which returns the slope -- coefficient of the exponetial function.<BR>
+        There is also a method <I>get_slope()</I> which returns the slope -- coefficient of the exponential function.<BR>
         There is also a method <I>get_residual()</I> which returns the sum of squared residuals.<BR>
         There is also a method <I>get_intercept()</I> which returns the intercept.<BR>
         <I>
@@ -178,7 +178,7 @@ using powfit_v = PowerFitVisitor&lt;T, I, A&gt;;
 
         The PowerFit method fits a function of the form y = ax<sup>b</sup> to data by performing a least-squares fit using the transformed model function ln(y) = a<sub>0</sub> + b*ln(x) where a<sub>0</sub> is ln(a). The new function is linear in the model parameters, a<sub>0</sub> and b. <BR><BR>
         The result gives you the vector of y fits for each given x.<BR>
-        There is also a method <I>get_slope()</I> which returns the slope -- logarithmic costant.<BR>
+        There is also a method <I>get_slope()</I> which returns the slope -- logarithmic constant.<BR>
         There is also a method <I>get_residual()</I> which returns the sum of squared residuals.<BR>
         There is also a method <I>get_intercept()</I> which returns the intercept -- coefficient of logarithmic term.<BR>
         <I>
@@ -283,7 +283,7 @@ using csfit_v = CubicSplineFitVisitor&lt;T, I, A&gt;;
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This functor uses cubic spline method to fit y into x-y coordinates specified by input. It is best discribed <a href="https://en.wikipedia.org/w/index.php?title=Spline_%28mathematics%29&oldid=288288033#Algorithm_for_computing_natural_cubic_splines">here</a>.<BR>
+        This functor uses cubic spline method to fit y into x-y coordinates specified by input. It is best described <a href="https://en.wikipedia.org/w/index.php?title=Spline_%28mathematics%29&oldid=288288033#Algorithm_for_computing_natural_cubic_splines">here</a>.<BR>
         y<sub>i</sub>(x) = a<sub>i</sub> + b<sub>i</sub>(x - x<sub>i</sub>) + c<sub>i</sub>(x - x<sub>i</sub>)<sup>2</sup> + d<sub>i</sub>(x - x<sub>i</sub>)<sup>3</sup><BR>
         <b>a</b> is just the input <b>y</b> vector<BR><BR>
         The result gives you the <B>b</B> vector of coefficients.<BR>

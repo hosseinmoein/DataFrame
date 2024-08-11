@@ -1116,7 +1116,7 @@ using vwbas_v = VWBASVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// This is meaningfull, only if the return series is close to normal
+// This is meaningful, only if the return series is close to normal
 // distribution
 //
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
@@ -1692,7 +1692,7 @@ public:
             bucket.rescaled_range = (max_dev - min_dev) / bucket.st_dev;
         }
 
-        // Caluculate Hurst exponent
+        // Calculate Hurst exponent
         //
         size_type   prev_id { 0 };
         size_type   prev_size { 0 };
@@ -2966,7 +2966,7 @@ struct  FisherTransVisitor  {
         size_type   i = 0;
         value_type  val = 0;
 
-        // This is done for effciency, so we do not use a third vector
+        // This is done for efficiency, so we do not use a third vector
         //
         std::swap(result, mid_hl);
         for ( ; i < roll_count_ - 1; ++i)
@@ -6792,7 +6792,7 @@ using t3_v = T3MovingMeanVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// This is meaningfull, only if the return series is close to normal
+// This is meaningful, only if the return series is close to normal
 // distribution
 //
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>

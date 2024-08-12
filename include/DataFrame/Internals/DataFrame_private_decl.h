@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <cstdio>
 #include <ranges>
 
 // ----------------------------------------------------------------------------
@@ -66,7 +67,7 @@ void read_binary_(std::istream &file,
                   size_type starting_row,
                   size_type num_rows);
 void read_csv_(std::istream &file, bool columns_only);
-void read_csv2_(std::istream &file,
+void read_csv2_(std::FILE *stream,
                 bool columns_only,
                 size_type starting_row,
                 size_type num_rows);

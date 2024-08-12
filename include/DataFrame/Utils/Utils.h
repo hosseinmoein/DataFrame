@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <iterator>
@@ -381,6 +382,26 @@ private:
     STR             &stream_;
     std::ostream    *tie_;
     const bool      sync_;
+};
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t SIZ = 256 * 1024>
+struct  IOFileOpti  {
+
+    std::FILE   *file;
+
+    explicit
+    IOFileOpti(const char *file_name) : file(std::fopen(file_name, "r"))  {
+
+        std::setvbuf(file, nullptr, _IOFBF, SIZ);
+    }
+
+    ~IOFileOpti ()  { if (file)  std::fclose(file); }
+
+    IOFileOpti () = delete;
+    IOFileOpti (const IOFileOpti &) = delete;
+    IOFileOpti &operator = (const IOFileOpti &) = delete;
 };
 
 } // namespace hmdf

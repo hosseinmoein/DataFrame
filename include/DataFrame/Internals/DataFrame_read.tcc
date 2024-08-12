@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstring>
 #include <sstream>
+#include <string_view>
 
 // ----------------------------------------------------------------------------
 
@@ -625,14 +626,14 @@ struct _col_data_spec_  {
 
 template<typename I, typename H>
 void DataFrame<I, H>::
-read_csv2_(std::istream &stream,
+read_csv2_(std::FILE *stream,
            bool columns_only,
            size_type starting_row,
            size_type num_rows)  {
 
     using SpecVec = StlVecType<_col_data_spec_>;
 
-    std::string line;
+    char        line[64 * 1024];
     std::string value;
     SpecVec     spec_vec;
     bool        header_read { false };
@@ -640,13 +641,13 @@ read_csv2_(std::istream &stream,
     size_type   data_rows_read { 0 };
     size_type   row_cnt { 0 };
 
-    line.reserve(1024);
     value.reserve(64);
     spec_vec.reserve(32);
-    while (! stream.eof()) {
-        std::getline(stream, line);
+    while (! std::feof(stream)) {
+        line[0] = '\0';
+        std::fgets(line, sizeof(line) - 1, stream);
 
-        if (line.size() < 2  || line.empty() || line[0] == '#')  continue;
+        if (line[0] == '\0' || line[0] == '#') [[unlikely]]  continue;
 
         std::stringstream   sstream { line };
 
@@ -1531,17 +1532,25 @@ read (const char *file_name,
       size_type starting_row,
       size_type num_rows)  {
 
-    std::ifstream       stream;
-    const IOStreamOpti  io_opti(stream, file_name, iof == io_format::binary);
+    if (iof == io_format::csv2)  {
+        IOFileOpti  io_opti(file_name);
 
-    if (stream.fail()) [[unlikely]]  {
-        String1K    err;
-
-        err.printf("read(): ERROR: Unable to open file '%s'", file_name);
-        throw DataFrameError(err.c_str());
+        read_csv2_(io_opti.file, columns_only, starting_row, num_rows);
     }
+    else  {
+        std::ifstream       stream;
+        const IOStreamOpti  io_opti(stream,
+                                    file_name, iof == io_format::binary);
 
-    read<std::istream>(stream, iof, columns_only, starting_row, num_rows);
+        if (stream.fail()) [[unlikely]]  {
+            String1K    err;
+
+            err.printf("read(): ERROR: Unable to open file '%s'", file_name);
+            throw DataFrameError(err.c_str());
+        }
+
+        read<std::istream>(stream, iof, columns_only, starting_row, num_rows);
+    }
     return (true);
 }
 
@@ -1568,7 +1577,8 @@ read (S &in_s,
         read_csv_ (in_s, columns_only);
     }
     else if (iof == io_format::csv2)  {
-        read_csv2_ (in_s, columns_only, starting_row, num_rows);
+        throw NotImplemented("read(): You can read a file in io_format::csv2 "
+                             "format only by calling read() with file name");
     }
     else if (iof == io_format::json)  {
         if (starting_row != 0 ||

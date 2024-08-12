@@ -392,7 +392,8 @@ struct  IOFileOpti  {
     std::FILE   *file;
 
     explicit
-    IOFileOpti(const char *file_name) : file(std::fopen(file_name, "r"))  {
+    IOFileOpti(const char *file_name, bool binary = false)
+        : file(std::fopen(file_name, binary ? "rb" : "r"))  {
 
         std::setvbuf(file, nullptr, _IOFBF, SIZ);
     }

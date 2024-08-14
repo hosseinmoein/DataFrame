@@ -32,8 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/RandGen.h>
 
 #include <cassert>
+#include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <ranges>
 #include <string>
 
 using namespace hmdf;
@@ -331,6 +333,77 @@ static void test_valleys()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_apply()  {
+
+    std::cout << "\nTesting apply( ) ..." << std::endl;
+
+    MyDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    StlVecType<double>          dblvec =
+        { 0.0, 15.0, -14.0, 2.0, 1.0, -12.0, 11.0, 8.0, 7.0, 0.0, 5.0, 4.0,
+          3.0, 9.0, -10.0 };
+    StlVecType<double>          dblvec2 =
+        { 1.0, 0.05, 0.28, 0.31, 0.01, 0.68, 0.12, 1, 0.98,
+          0.9, 0.81, 0.82, 0.777, 0.34, 0.25 };
+    StlVecType<std::string>     strvec =
+        { "zz", "bb", "zz", "ww", "ee", "ff", "gg", "hh", "zz", "jj", "kk",
+          "ll", "mm", "nn", "zz" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+
+    auto    softp = [](const unsigned long &, double &val) -> bool  {
+        val = std::log(1.0 + std::exp(val * 0.5)) / 0.5;
+        return (true);
+    };
+
+    df.apply<double>("dbl_col", softp);
+
+    const auto  &dbl_col = df.get_column<double>("dbl_col");
+
+    {
+        StlVecType<double>  out_res =
+            { 1.38629, 15.0011, 0.00182293, 2.62652, 1.94815, 0.00495137,
+              11.0082, 8.0363, 7.0595, 1.38629, 5.15778, 4.25386, 3.40283,
+              9.0221, 0.0134307 };
+
+        for (const auto &[ans, act]
+                 : std::ranges::views::zip(out_res, dbl_col))
+            assert(std::fabs(ans - act) < 0.0001);
+    }
+
+    auto    haphaz =
+        [](const unsigned long &,
+           double &val1,
+           double &val2,
+           std::string &val3) -> bool  {
+            if (val3 == "zz")
+                val1 += val2;
+            return (true);
+        };
+
+    df.apply<double, double, std::string>
+        ("dbl_col", "dbl_col_2", "str_col", haphaz);
+
+    {
+        StlVecType<double>  out_res =
+            { 2.38629, 15.0011, 0.281823, 2.62652, 1.94815, 0.00495137,
+              11.0082, 8.0363, 8.0395, 1.38629, 5.15778, 4.25386, 3.40283,
+              9.0221, 0.263431 };
+
+        for (const auto &[ans, act]
+                 : std::ranges::views::zip(out_res, dbl_col))
+            assert(std::fabs(ans - act) < 0.0001);
+    }
+
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -340,6 +413,7 @@ int main(int, char *[]) {
     test_in_between();
     test_peaks();
     test_valleys();
+    test_apply();
 
     return (0);
 }

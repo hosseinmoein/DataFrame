@@ -1,0 +1,176 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td bgcolor="blue" width = "15%"> <font color="white">
+        <PRE><B>
+template&lt;typename T&gt;
+void
+apply(const char *col_name,
+      std::function&lt;bool(const IndexType &amp;,
+                         T &amp;)&gt; &amp;&amp;func);
+        </B></PRE></font>
+      </td>
+      <td width = "33.3%">
+          apply is a shortcut for a simple visit. It applies the func to every data point in the named column as long as func returns true. As soon as func returns false apply stops. func must receive a const reference to the index data point and a reference to the named column data point.<BR>
+      </td>
+      <td width = "33.3%">
+        <B>T</B>: Type of the named column<BR>
+        <B>col_name</B>: Name of the column<BR>
+        <B>func</B>: Function to be applied to the named column with the specified signature<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td bgcolor="blue" width = "15%"> <font color="white">
+        <PRE><B>
+template&lt;typename T1, typename T2&gt;
+void
+apply(const char *col_name1, const char *col_name2,
+      std::function&lt;bool(const IndexType &amp;,
+                         T1 &amp;,
+                         T2 &amp;)&gt; &amp;&amp;func);
+        </B></PRE></font>
+      </td>
+      <td width = "33.3%">
+        Same as above but applied to two columns<BR>
+      </td>
+      <td width = "33.3%">
+        <B>T1</B>: Type of the first column<BR>
+        <B>T2</B>: Type of the second column<BR>
+        <B>col_name1</B>: Name of the first column<BR>
+        <B>col_name2</B>: Name of the second column<BR>
+        <B>func</B>: Function to be applied to the named column with the specified signature<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td bgcolor="blue" width = "15%"> <font color="white">
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3&gt;
+void
+apply(const char *col_name1, const char *col_name2,
+      const char *col_name3,
+      std::function&lt;bool(const IndexType &amp;,
+                         T1 &amp;,
+                         T2 &amp;,
+                         T3 &amp;)&gt; &amp;&amp;func);
+        </B></PRE></font>
+      </td>
+      <td width = "33.3%">
+        Same as above but applied to three columns<BR>
+      </td>
+      <td width = "33.3%">
+        <B>T1</B>: Type of the first column<BR>
+        <B>T2</B>: Type of the second column<BR>
+        <B>T3</B>: Type of the third column<BR>
+        <B>col_name1</B>: Name of the first column<BR>
+        <B>col_name2</B>: Name of the second column<BR>
+        <B>col_name3</B>: Name of the third column<BR>
+        <B>func</B>: Function to be applied to the named column with the specified signature<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_apply<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing apply( ) ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    MyDataFrame                 df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>   idxvec <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008c00; ">1</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">2</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">3</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">10</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">5</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">7</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">8</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">12</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">9</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">12</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">10</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">13</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">10</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">15</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">14</span><span style="color:#006600; ">UL</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>          dblvec <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">15.0</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">14.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">2.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">12.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">11.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">8.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">7.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">5.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">4.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">3.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">9.0</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">10.0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>          dblvec2 <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.05</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.28</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.31</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.01</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.68</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.12</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.98</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.9</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.81</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.82</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.777</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.34</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.25</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span>     strvec <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">zz</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">bb</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">zz</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">ww</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">ee</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">ff</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">gg</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">hh</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">zz</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">jj</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">kk</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">ll</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">mm</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">nn</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">zz</span><span style="color:#800000; ">"</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>load_data<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>idxvec<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> dblvec<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col_2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> dblvec2<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">str_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> strvec<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>    softp <span style="color:#808030; ">=</span> <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span>val<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">bool</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        val <span style="color:#808030; ">=</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">log</span><span style="color:#808030; ">(</span><span style="color:#008000; ">1.0</span> <span style="color:#808030; ">+</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">exp</span><span style="color:#808030; ">(</span>val <span style="color:#808030; ">*</span> <span style="color:#008000; ">0.5</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">/</span> <span style="color:#008000; ">0.5</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>apply<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> softp<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>dbl_col <span style="color:#808030; ">=</span> df<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>  out_res <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008000; ">1.38629</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">15.0011</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.00182293</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">2.62652</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.94815</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.00495137</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">11.0082</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">8.0363</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">7.0595</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.38629</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">5.15778</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">4.25386</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">3.40283</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">9.0221</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.0134307</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">[</span>ans<span style="color:#808030; ">,</span> act<span style="color:#808030; ">]</span> <span style="color:#800080; ">:</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>ranges<span style="color:#800080; ">::</span>views<span style="color:#800080; ">::</span>zip<span style="color:#808030; ">(</span>out_res<span style="color:#808030; ">,</span> dbl_col<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>ans <span style="color:#808030; ">-</span> act<span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>    haphaz <span style="color:#808030; ">=</span> <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span>val1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span>val2<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span> <span style="color:#808030; ">&amp;</span>val3<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">bool</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">if</span> <span style="color:#808030; ">(</span>val3 <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">zz</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            val1 <span style="color:#808030; ">+</span><span style="color:#808030; ">=</span> val2<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>apply<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col_2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">str_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> haphaz<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>  out_res <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008000; ">2.38629</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">15.0011</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.281823</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">2.62652</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.94815</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.00495137</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">11.0082</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">8.0363</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">8.0395</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.38629</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">5.15778</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">4.25386</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">3.40283</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">9.0221</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.263431</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">[</span>ans<span style="color:#808030; ">,</span> act<span style="color:#808030; ">]</span> <span style="color:#800080; ">:</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>ranges<span style="color:#800080; ">::</span>views<span style="color:#800080; ">::</span>zip<span style="color:#808030; ">(</span>out_res<span style="color:#808030; ">,</span> dbl_col<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>ans <span style="color:#808030; ">-</span> act<span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

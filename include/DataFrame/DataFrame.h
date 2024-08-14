@@ -3583,6 +3583,65 @@ public: // Read/access and slicing interfaces
 
 public:  // Visitors
 
+    // apply is a shortcut for a simple visit. It applies the func to every
+    // data point in the named column as long as func returns true. As soon as
+    // func returns false apply stops.
+    // func must receive a const reference to the index data point and a
+    // reference to the named column data point.
+    //
+    // T:
+    //   Type of the named column
+    // col_name:
+    //   Name of the column
+    // func:
+    //   Function to be applied to the named column with the specified
+    //   signature.
+    //
+    template<typename T>
+    void
+    apply(const char *col_name,
+          std::function<bool(const IndexType &, T &)> &&func);
+
+    // Same as above but applied to two columns
+    //
+    // T1:
+    //   Type of the first column
+    // T2:
+    //   Type of the second column
+    // col_name1:
+    //   Name of the first column
+    // col_name2:
+    //   Name of the second column
+    // func:
+    //   Function to be applied to the named columns with the specified
+    //   signature.
+    template<typename T1, typename T2>
+    void
+    apply(const char *col_name1, const char *col_name2,
+          std::function<bool(const IndexType &, T1 &, T2 &)> &&func);
+
+    // Same as above but applied to three columns
+    //
+    // T1:
+    //   Type of the first column
+    // T2:
+    //   Type of the second column
+    // T3:
+    //   Type of the third column
+    // col_name1:
+    //   Name of the first column
+    // col_name2:
+    //   Name of the second column
+    // col_name3:
+    //   Name of the third column
+    // func:
+    //   Function to be applied to the named columns with the specified
+    //   signature.
+    template<typename T1, typename T2, typename T3>
+    void
+    apply(const char *col_name1, const char *col_name2, const char *col_name3,
+          std::function<bool(const IndexType &, T1 &, T2 &, T3 &)> &&func);
+
     // This is the most generalized visit function. It visits multiple
     // columns with the corresponding function objects sequentially.
     // Each function object is passed every single value of the given

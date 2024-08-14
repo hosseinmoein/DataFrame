@@ -28,12 +28,64 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <future>
+#include <ranges>
 #include <tuple>
 
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
+
+template<typename I, typename H>
+template<typename T>
+void DataFrame<I, H>::
+apply(const char *col_name,
+      std::function<bool(const IndexType &, T &)> &&func)  {
+
+    auto    &col = get_column<T>(col_name);
+
+    for (const auto &[idx, val] : std::ranges::views::zip(indices_, col))
+        if (! func(idx, val)) [[unlikely]]  break;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2>
+void DataFrame<I, H>::
+apply(const char *col_name1, const char *col_name2,
+      std::function<bool(const IndexType &, T1 &, T2 &)> &&func)  {
+
+    SpinGuard   guard (lock_);
+    auto        &col1 = get_column<T1>(col_name1, false);
+    auto        &col2 = get_column<T2>(col_name2, false);
+
+    guard.release();
+    for (const auto &[idx, val1, val2]
+             : std::ranges::views::zip(indices_, col1, col2))
+        if (! func(idx, val1, val2)) [[unlikely]]  break;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename T3>
+void DataFrame<I, H>::
+apply(const char *col_name1, const char *col_name2, const char *col_name3,
+      std::function<bool(const IndexType &, T1 &, T2 &, T3 &)> &&func)  {
+
+    SpinGuard   guard (lock_);
+    auto        &col1 = get_column<T1>(col_name1, false);
+    auto        &col2 = get_column<T2>(col_name2, false);
+    auto        &col3 = get_column<T3>(col_name3, false);
+
+    guard.release();
+    for (const auto &[idx, val1, val2, val3]
+             : std::ranges::views::zip(indices_, col1, col2, col3))
+        if (! func(idx, val1, val2, val3)) [[unlikely]]  break;
+}
+
+// ----------------------------------------------------------------------------
 
 template<typename I, typename H>
 template<typename ... Ts>

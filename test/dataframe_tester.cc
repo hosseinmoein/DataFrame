@@ -2706,13 +2706,13 @@ static void test_replace_1()  {
     count = result2.get();
     assert(count == 3);
     assert(df.get_column<double>("dblcol_5")[0] == 20.0);
-    assert(df.get_column<double>("dblcol_5")[20] == 110.0);
+    assert(df.get_column<double>("dblcol_5")[20] == 40.1);
     assert(df.get_column<double>("dblcol_5")[1] == 10.1);
     assert(df.get_column<double>("dblcol_5")[2] == 300.0);
     assert(df.get_column<double>("dblcol_5")[3] == 18.5);
     assert(df.get_column<double>("dblcol_5")[10] == 210.0);
     assert(df.get_column<double>("dblcol_5")[11] == 11.1);
-    assert(df.get_column<double>("dblcol_5")[17] == 1.2);
+    assert(df.get_column<double>("dblcol_5")[17] == 1200.0);
     assert(df.get_column<double>("dblcol_5")[19] == 23.2);
 }
 

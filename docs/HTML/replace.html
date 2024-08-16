@@ -43,16 +43,16 @@ body {
     <tr bgcolor="Azure">
       <td bgcolor="blue"> <font color="white">
         <PRE><B>
-template&lt;typename T&gt;
+template&lt;hashable_equal T&gt;
 std::size_t
 replace(const char *col_name,
         const std::vector&lt;T&gt; &amp;old_values,
         const std::vector&lt;T&gt; &amp;new_values,
-        int limit = -1);
+        long limit = -1);
         </B></PRE></font>
       </td>
       <td width = "33.3%">
-        It iterates over the column named col_name (or index, if col_name == "INDEX") and replaces all values in old_values with the corresponding values in new_values up to the limit. If limit is omitted, all values will be replaced.<BR>
+        It iterates over the column named col_name (or index, if col_name == DF_INDEX_COL_NAME) and replaces all values in old_values with the corresponding values in new_values up to the limit. If limit is omitted, all values will be replaced.<BR>
         It returns number of items replaced.
       </td>
       <td>
@@ -69,12 +69,12 @@ replace(const char *col_name,
     <tr bgcolor="Azure">
       <td bgcolor="blue"> <font color="white">
         <PRE><B>
-template&lt;typename T&gt;
+template&lt;hashable_equal T&gt;
 std::future&lt;std::size_t&gt;
 replace_async(const char *col_name,
               const std::vector&lt;T&gt; &amp;old_values,
               const std::vector&lt;T&gt; &amp;new_values,
-              int limit = -1);
+              long limit = -1);
         </B></PRE></font>
       </td>
       <td>
@@ -136,7 +136,7 @@ replace_async(const char *col_name, F &amp;functor);
 std::size_t
 replace_index(const std::vector&lt;IndexType&gt; &amp;old_values,
               const std::vector&lt;IndexType&gt; &amp;new_values,
-              int limit = -1);
+              long limit = -1);
         </B></PRE></font>
       </td>
       <td>

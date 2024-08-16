@@ -381,12 +381,12 @@ drop_missing(drop_policy policy, size_type threshold)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T>
+template<hashable_equal T>
 typename DataFrame<I, H>::size_type DataFrame<I, H>::
 replace(const char *col_name,
         const StlVecType<T> &old_values,
         const StlVecType<T> &new_values,
-        int limit)  {
+        long limit)  {
 
     ColumnVecType<T>    &vec = get_column<T>(col_name);
     size_type           count = 0;
@@ -403,7 +403,7 @@ template<typename I, typename H>
 typename DataFrame<I, H>::size_type DataFrame<I, H>::
 replace_index(const StlVecType<IndexType> &old_values,
               const StlVecType<IndexType> &new_values,
-              int limit)  {
+              long limit)  {
 
     size_type   count = 0;
 
@@ -432,12 +432,12 @@ replace(const char *col_name, F &functor)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T>
+template<hashable_equal T>
 std::future<typename DataFrame<I, H>::size_type> DataFrame<I, H>::
 replace_async(const char *col_name,
               const StlVecType<T> &old_values,
               const StlVecType<T> &new_values,
-              int limit)  {
+              long limit)  {
 
     return (thr_pool_.dispatch(
                        true,

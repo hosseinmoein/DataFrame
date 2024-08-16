@@ -1139,24 +1139,24 @@ public:  // Data manipulation
     // limit:
     //   Limit of how many items to replace. Default is to replace all.
     //
-    template<typename T>
+    template<hashable_equal T>
     size_type
     replace(const char *col_name,
             const StlVecType<T> &old_values,
             const StlVecType<T> &new_values,
-            int limit = -1);
+            long limit = -1);
 
     // Same as replace() above, but executed asynchronously
     //
     // NOTE: multiple instances of replace_async() maybe executed for
     //       different columns at the same time with no problem.
     //
-    template<typename T>
+    template<hashable_equal T>
     [[nodiscard]] std::future<size_type>
     replace_async(const char *col_name,
                   const StlVecType<T> &old_values,
                   const StlVecType<T> &new_values,
-                  int limit = -1);
+                  long limit = -1);
 
     // This is similar to replace() above but it lets a functor replace the
     // values in the named column. The functor is passed every value of the
@@ -1203,7 +1203,7 @@ public:  // Data manipulation
     size_type
     replace_index(const StlVecType<IndexType> &old_values,
                   const StlVecType<IndexType> &new_values,
-                  int limit = -1);
+                  long limit = -1);
 
     // Sort the DataFrame by the named column. If name equals "INDEX" or
     // DF_INDEX_COL_NAME, it sorts by index. Otherwise it sorts by the named

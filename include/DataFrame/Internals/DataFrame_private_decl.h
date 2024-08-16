@@ -1039,25 +1039,58 @@ replace_vector_vals_(V &data_vec,
                      const StlVecType<T> &old_values,
                      const StlVecType<T> &new_values,
                      std::size_t &count,
-                     int limit)  {
-
-    const std::size_t   vcnt = old_values.size();
+                     long limit)  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (vcnt != new_values.size())
+    if (old_values.size() != new_values.size())
         throw DataFrameError("replace_vector_vals_(): "
-                             "vector sizes don't match");
+                             "old/new vector sizes don't match");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const std::size_t   vec_s = data_vec.size();
+    using map_t = DFUnorderedMap<T, T>;
 
-    for (std::size_t i = 0; i < vcnt; ++i) [[likely]]  {
-        for (std::size_t j = 0; j < vec_s; ++j) [[likely]]  {
-            if (limit >= 0 && count >= static_cast<std::size_t>(limit))
-                return;
-            if (old_values[i] == data_vec[j])  {
-                data_vec[j] = new_values[i];
-                count += 1;
+    const auto  v_zip = std::ranges::views::zip(old_values, new_values);
+    const map_t v_map (v_zip.begin(), v_zip.end());
+    const auto  thread_level =
+        (data_vec.size() < ThreadPool::MUL_THR_THHOLD || limit >= 0)
+            ? 0L : get_thread_level();
+    auto        lbd =
+        [&v_map = std::as_const(v_map)]
+        (auto begin, auto end) -> std::size_t  {
+            std::size_t count { 0 };
+
+            for (auto iter = begin; iter < end; ++iter)  {
+                const auto  map_iter = v_map.find(*iter);
+
+                if (map_iter != v_map.end())  {
+                    *iter = map_iter->second;
+                    count += 1;
+                }
+            }
+            return (count);
+        };
+
+    if (thread_level > 2)  {
+        auto    futuers = thr_pool_.parallel_loop(data_vec.begin(),
+                                                  data_vec.end(),
+                                                  std::move(lbd));
+
+        for (auto &fut : futuers)  count += fut.get();
+    }
+    else  {
+        if (limit < 0) [[likely]]  {
+            count = lbd(data_vec.begin(), data_vec.end());
+        }
+        else  {
+            for (auto &data : data_vec)  {
+                if (count >= static_cast<std::size_t>(limit))  return;
+
+                const auto  map_iter = v_map.find(data);
+
+                if (map_iter != v_map.end())  {
+                    data = map_iter->second;
+                    count += 1;
+                }
             }
         }
     }

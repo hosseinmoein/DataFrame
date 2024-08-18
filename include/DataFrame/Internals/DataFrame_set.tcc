@@ -1542,6 +1542,54 @@ remove_duplicates (const char *name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename ... Ts>
+void DataFrame<I, H>::
+truncate(IndexType &&before, IndexType &&after)  {
+
+    const auto  begin = indices_.begin();
+    const auto  end = indices_.end();
+    const auto  l_citer = std::lower_bound(begin, end, before);
+    const auto  u_citer = std::upper_bound(begin, end, after);
+    size_type   l_index { 0 };
+    size_type   u_index { indices_.size() };
+
+    if (l_citer > begin)
+        l_index = std::distance(begin, l_citer);
+    if (u_citer != end)
+        u_index = std::distance(begin, u_citer);
+
+    {
+        const auto      thread_level =
+            (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : get_thread_level();
+        auto            lbd =
+            [this, l_index, u_index] (auto begin, auto end) -> void  {
+                truncate_functor_<Ts ...>   functor (l_index, u_index);
+
+                for (auto citer = begin; citer < end; ++citer)
+                    this->data_[citer->second].change(functor);
+            };
+        const SpinGuard guard(lock_);
+
+        if (thread_level > 2)  {
+            auto    futures = thr_pool_.parallel_loop(column_list_.begin(),
+                                                      column_list_.end(),
+                                                      std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else
+            lbd(column_list_.begin(), column_list_.end());
+    }
+
+    indices_.erase(begin + u_index, end);
+    indices_.erase(begin, begin + l_index);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename OLD_T1, typename OLD_T2, typename NEW_T, typename F>
 void DataFrame<I, H>::
 consolidate(const char *old_col_name1,

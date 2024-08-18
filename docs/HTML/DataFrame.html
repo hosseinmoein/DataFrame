@@ -497,6 +497,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Removes data before and after the given index values"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/truncate.html">truncate</a>()</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="These are used to input/output data to/from DataFrame" style="text-align:center;background-color:DarkGrey;color:DarkBlue">Input/Output</td>
     </tr>
 
@@ -1669,17 +1673,19 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     Go to the <I>src</I> subdirectory, and execute build_all.sh. This will build the library and test executables for <I>Linux/Unix flavors only</I><BR><BR>
 
     <font size="+1"><B>Using CMake:</B></font><BR>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    mkdir <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
+<font size="+1">
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">mkdir</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
 <span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cd</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper">    cmake -<span style="color:#797997; ">DCMAKE_BUILD_TYPE</span><span style="color:#808030; ">=</span>Release -<span style="color:#797997; ">DHMDF_BENCHMARKS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_EXAMPLES</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_TESTING</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> <span style="color:#800000; font-weight:bold; ">.</span><span style="color:#800000; font-weight:bold; ">.</span></span>
-<span class="line_wrapper">    cmake -<span style="color:#797997; ">DCMAKE_BUILD_TYPE</span><span style="color:#808030; ">=</span>Debug -<span style="color:#797997; ">DHMDF_SANITY_EXCEPTIONS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_BENCHMARKS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_EXAMPLES</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_TESTING</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> <span style="color:#800000; font-weight:bold; ">.</span><span style="color:#800000; font-weight:bold; ">.</span></span>
+<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cmake</span> -<span style="color:#797997; ">DCMAKE_BUILD_TYPE</span><span style="color:#808030; ">=</span>Release -<span style="color:#797997; ">DHMDF_BENCHMARKS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_EXAMPLES</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_TESTING</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> <span style="color:#800000; font-weight:bold; ">.</span><span style="color:#800000; font-weight:bold; ">.</span></span>
+<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cmake</span> -<span style="color:#797997; ">DCMAKE_BUILD_TYPE</span><span style="color:#808030; ">=</span>Debug -<span style="color:#797997; ">DHMDF_SANITY_EXCEPTIONS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_BENCHMARKS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_EXAMPLES</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_TESTING</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> <span style="color:#800000; font-weight:bold; ">.</span><span style="color:#800000; font-weight:bold; ">.</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper">    make</span>
-<span class="line_wrapper">    make install</span>
+<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">make</span></span>
+<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">make</span> install</span>
 <span class="line_wrapper">    </span>
 <span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cd</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
-<span class="line_wrapper">    make uninstall</span></pre>
+<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">make</span> uninstall</span></pre>
+</font>
 
     <font size="+1"><B>Using Package Managers:</B></font><BR>
       DataFrame is available on <a href="https://conan.io/center/recipes/dataframe"<I>Conan</I></a> platform. See the <a href="https://docs.conan.io/2/"<I>Conan docs</I></a> for more information.<BR>

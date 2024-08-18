@@ -1039,6 +1039,26 @@ public:  // Load/append/remove interfaces
                       bool include_index,
                       remove_dup_spec rds) const;
 
+    // This removes data from the index column and all other data columns
+    // before the index value "before" and after the index value "after".
+    // Before and after values are excluded.
+    //
+    // NOTE: It is assumed that the index column is sorted
+    // NOTE: Index type must have comparison operators (== != < > <= >=)
+    //       well defined
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // before:
+    //   An index value before which all data must be removed
+    // after:
+    //   An index value after which all data must be removed
+    //
+    template<typename ... Ts>
+    void
+    truncate(IndexType &&before, IndexType &&after);
+
 public:  // Data manipulation
 
     // It randomly shuffles the named column(s) non-deterministically.

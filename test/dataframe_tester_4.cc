@@ -404,6 +404,133 @@ static void test_apply()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_truncate()  {
+
+    std::cout << "\nTesting truncate( ) ..." << std::endl;
+
+    MyDataFrame                df;
+    StlVecType<unsigned long>  idxvec =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    StlVecType<double>         dblvec =
+        { 0.0, 15.0, -14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0,
+          3.0, 9.0, 10.0};
+    StlVecType<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 103.9, 106.55, 106.34, 1.8,
+          111.0, 112.0, 111.5, 114.0, 115.0, 116.0};
+    StlVecType<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5 };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col",
+                   std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    {
+        auto    df2 = df;
+
+        StlVecType<unsigned long>  index = { 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        StlVecType<double>         dbl_col = { 2, 1, 12, 11, 8, 7, 6, 5, 4 };
+        StlVecType<double>         dbl_col_2 =
+            { 103, 104, 103.9, 106.55, 106.34, 1.8, 111, 112, 111.5 };
+        StlVecType<std::string>    str_col =
+            { "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk", "ll" };
+        StlVecType<int>            int_col = { 4, 5 };
+
+        df2.truncate<double, std::string, int>(4, 12);
+        assert(df2.get_index() == index);
+        assert(df2.get_column<double>("dbl_col") == dbl_col);
+        assert(df2.get_column<double>("dbl_col_2") == dbl_col_2);
+        assert(df2.get_column<std::string>("str_col") == str_col);
+        assert(df2.get_column<int>("int_col") == int_col);
+    }
+    {
+        auto    df2 = df;
+
+        StlVecType<unsigned long>  index =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        StlVecType<double>         dbl_col =
+            { 0, 15, -14, 2, 1, 12, 11, 8, 7, 6, 5, 4 };
+        StlVecType<double>         dbl_col_2 =
+            { 100, 101, 102, 103, 104, 103.9, 106.55, 106.34, 1.8, 111, 112,
+              111.5 };
+        StlVecType<std::string>    str_col =
+            { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj",
+              "kk", "ll" };
+        StlVecType<int>            int_col = { 1, 2, 3, 4, 5 };
+
+        df2.truncate<double, std::string, int>(1, 12);
+        assert(df2.get_index() == index);
+        assert(df2.get_column<double>("dbl_col") == dbl_col);
+        assert(df2.get_column<double>("dbl_col_2") == dbl_col_2);
+        assert(df2.get_column<std::string>("str_col") == str_col);
+        assert(df2.get_column<int>("int_col") == int_col);
+    }
+    {
+        auto    df2 = df;
+
+        StlVecType<unsigned long>  index =
+            { 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+        StlVecType<double>         dbl_col =
+            { 2, 1, 12, 11, 8, 7, 6, 5, 4, 3, 9, 10 };
+        StlVecType<double>         dbl_col_2 =
+            { 103, 104, 103.9, 106.55, 106.34, 1.8, 111, 112, 111.5, 114,
+              115, 116 };
+        StlVecType<std::string>    str_col =
+            { "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk", "ll", "mm",
+              "nn", "oo" };
+        StlVecType<int>            int_col = { 4, 5 };
+
+        df2.truncate<double, std::string, int>(4, 15);
+        assert(df2.get_index() == index);
+        assert(df2.get_column<double>("dbl_col") == dbl_col);
+        assert(df2.get_column<double>("dbl_col_2") == dbl_col_2);
+        assert(df2.get_column<std::string>("str_col") == str_col);
+        assert(df2.get_column<int>("int_col") == int_col);
+    }
+    {
+        auto    df2 = df;
+
+        StlVecType<unsigned long>  index =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+        StlVecType<double>         dbl_col =
+            { 0, 15, -14, 2, 1, 12, 11, 8, 7, 6, 5, 4, 3, 9, 10 };
+        StlVecType<double>         dbl_col_2 =
+            { 100, 101, 102, 103, 104, 103.9, 106.55, 106.34, 1.8, 111, 112,
+              111.5, 114, 115, 116 };
+        StlVecType<std::string>    str_col =
+            { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj",
+              "kk", "ll", "mm", "nn", "oo" };
+        StlVecType<int>            int_col = { 1, 2, 3, 4, 5 };
+
+        df2.truncate<double, std::string, int>(0, 16);
+    }
+    {
+        auto    df2 = df;
+
+        StlVecType<unsigned long>  index = { 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+        StlVecType<double>         dbl_col = { 11, 8, 7, 6, 5, 4, 3, 9, 10 };
+        StlVecType<double>         dbl_col_2 =
+            { 106.55, 106.34, 1.8, 111, 112, 111.5, 114, 115, 116 };
+        StlVecType<std::string>    str_col =
+            { "gg", "hh", "ii", "jj", "kk", "ll", "mm", "nn", "oo" };
+        StlVecType<int>            int_col = {  };
+
+        df2.truncate<double, std::string, int>(7, 15);
+        assert(df2.get_index() == index);
+        assert(df2.get_column<double>("dbl_col") == dbl_col);
+        assert(df2.get_column<double>("dbl_col_2") == dbl_col_2);
+        assert(df2.get_column<std::string>("str_col") == str_col);
+        assert(df2.get_column<int>("int_col") == int_col);
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -414,6 +541,7 @@ int main(int, char *[]) {
     test_peaks();
     test_valleys();
     test_apply();
+    test_truncate();
 
     return (0);
 }

@@ -172,6 +172,21 @@ struct  remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename ... Ts>
+struct  truncate_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline truncate_functor_ (size_type b, size_type a)
+        : before (b), after (a)  {   }
+
+    const size_type before;
+    const size_type after;
+
+    template<typename T>
+    void operator() (T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename LHS, typename ... Ts>
 struct  view_setup_functor_ : DataVec::template visitor_base<Ts ...>  {
 

@@ -153,6 +153,20 @@ DataFrame<I, H>::remove_functor_<Ts ...>::operator() (T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::truncate_functor_<Ts ...>::operator() (T &vec)  {
+
+    if (after < vec.size())
+        vec.erase(vec.begin() + after, vec.end());
+    if (before < vec.size())
+        vec.erase(vec.begin(), vec.begin() + before);
+    else  vec.clear();
+}
+
+// ----------------------------------------------------------------------------
+template<typename I, typename H>
 template<typename LHS, typename ... Ts>
 template<typename T>
 void

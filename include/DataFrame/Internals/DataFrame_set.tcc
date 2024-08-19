@@ -820,6 +820,27 @@ load_column (const char *name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename NT, typename ET>
+DataFrame<I, H>::size_type DataFrame<I, H>::
+load_column(const char *new_col_name,
+            const char *existing_col_name,
+            std::function<NT(const IndexType &, const ET &)> &&func,
+            nan_policy padding,
+            bool do_lock)  {
+
+    const auto          &e_col = get_column<ET>(existing_col_name);
+    ColumnVecType<NT>   n_col;
+
+    n_col.reserve(padding == nan_policy::pad_with_nans
+                      ? indices_.size() : e_col.size());
+    for (const auto &[idx, val] : std::ranges::views::zip(indices_, e_col))
+        n_col.push_back(func(idx, val));
+    return (load_column<NT>(new_col_name, std::move(n_col), padding, do_lock));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename ITR>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::

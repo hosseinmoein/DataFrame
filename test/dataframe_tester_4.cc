@@ -531,6 +531,44 @@ static void test_truncate()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_load_column()  {
+
+    std::cout << "\nTesting load_column( ) ..." << std::endl;
+
+    MyDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    StlVecType<double>          dblvec =
+        { 0.0, 15.0, -14.0, 2.0, 1.0, -12.0, 11.0, 8.0, 7.0, 0.0, 5.0, 4.0,
+          3.0, 9.0, -10.0 };
+    StlVecType<double>          dblvec2 =
+        { 1.0, 0.05, 0.28, 0.31, 0.01, 0.68, 0.12, 1, 0.98,
+          0.9, 0.81, 0.82, 0.777, 0.34, 0.25 };
+    StlVecType<std::string>     strvec =
+        { "zz", "bb", "zz", "ww", "ee", "ff", "gg", "hh", "zz", "jj", "kk",
+          "ll", "mm", "nn", "zz" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+
+    auto    lbd = [](const unsigned long &, const double &val) -> double  {
+        return (val * 2.0);
+    };
+
+    df.load_column<double, double>("new_dbl_col", "dbl_col", std::move(lbd));
+    {
+        StlVecType<double>  new_dbl_col =
+            { 0, 30, -28, 4, 2, -24, 22, 16, 14, 0, 10, 8, 6, 18, -20 };
+
+        assert((df.get_column<double>("new_dbl_col") == new_dbl_col));
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -542,6 +580,7 @@ int main(int, char *[]) {
     test_valleys();
     test_apply();
     test_truncate();
+    test_load_column();
 
     return (0);
 }

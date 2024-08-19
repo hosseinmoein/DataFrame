@@ -307,7 +307,7 @@ public:  // Load/append/remove interfaces
     // For example, index column is in minutes unit. The data vector is the
     // sum of 5-minute buckets of some column, or some set not even present in
     // DataFrame. The values in data vector will be aligned with the index
-    // column at every 5 minutes. The in-between values will “null_value”.
+    // column at every 5 minutes. The in-between values will be “null_value”.
     //
     // NOTE: The data vector must contain (index size / interval) number of
     //       values or less, if index has values per interval. Otherwise, data
@@ -349,6 +349,28 @@ public:  // Load/append/remove interfaces
                    typename std::size_t  {
                 return (static_cast<std::size_t>(t - t_1));
             });
+
+    // This method feeds an existing column data, along with index data, into
+    // the given functor which for each data point creates a new data point
+    // for a new column with the given name
+    //
+    // NT:
+    //   Type of the new column
+    // ET:
+    //   Type of the existing column
+    // func:
+    //   Functor to create the new column content
+    // padding:
+    //   If true, it pads the data new column with nan, if it is shorter than
+    //   the index column.
+    //
+    template<typename NT, typename ET>
+    size_type
+    load_column(const char *new_col_name,
+                const char *existing_col_name,
+                std::function<NT(const IndexType &, const ET &)> &&func,
+                nan_policy padding = nan_policy::pad_with_nans,
+                bool do_lock = true);
 
     // This method loads the result() of a visitor to the named column.
     // For this method to work:

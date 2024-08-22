@@ -789,6 +789,24 @@ struct  dup_mask_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename ... Ts>
+struct  explode_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline explode_functor_(const char *n,
+                            DataFrame &r,
+                            const StlVecType<size_type> &im)
+        : name (n), res(r), idx_mask(im)  {   }
+
+    const char                  *name;
+    DataFrame                   &res;
+    const StlVecType<size_type> &idx_mask;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

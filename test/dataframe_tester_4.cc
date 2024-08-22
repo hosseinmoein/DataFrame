@@ -569,9 +569,110 @@ static void test_load_column()  {
 
 // ----------------------------------------------------------------------------
 
-int main(int, char *[]) {
+static void test_explode()  {
 
-    MyDataFrame::set_optimum_thread_level();
+    std::cout << "\nTesting load_explode( ) ..." << std::endl;
+
+    using DT_DataFrame = StdDataFrame<DateTime>;
+
+    DT_DataFrame    df;
+
+    try  {
+        df.read("AAPL_10dBucketWithMaps_small.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    df.write<std::ostream,
+             double,
+             long,
+             std::map<std::string, double>,
+             std::unordered_map<std::string, double>,
+             std::vector<std::string>,
+             std::set<double>,
+             std::set<std::string>>
+        (std::cout, io_format::csv2);
+
+    auto exploded1 = df.explode<std::unordered_map<std::string, double>,
+                                double,
+                                long,
+                                std::map<std::string, double>,
+                                std::vector<std::string>,
+                                std::set<double>,
+                                std::set<std::string>>("Unordered Map");
+
+    std::cout << "\n\n";
+    exploded1.write<std::ostream,
+                    std::pair<std::string, double>,
+                    double,
+                    long,
+                    std::map<std::string, double>,
+                    std::vector<std::string>,
+                    std::set<double>,
+                    std::set<std::string>>
+        (std::cout, io_format::csv2);
+
+    auto exploded2 = df.explode<std::map<std::string, double>,
+                                double,
+                                long,
+                                std::vector<std::string>,
+                                std::unordered_map<std::string, double>,
+                                std::set<double>,
+                                std::set<std::string>>("Map 1");
+
+    std::cout << "\n\n";
+    exploded2.write<std::ostream,
+                    std::pair<std::string, double>,
+                    double,
+                    long,
+                    std::unordered_map<std::string, double>,
+                    std::vector<std::string>,
+                    std::set<double>,
+                    std::set<std::string>>
+        (std::cout, io_format::csv2);
+
+    auto exploded3 = df.explode<std::set<double>,
+                                double,
+                                long,
+                                std::vector<std::string>,
+                                std::map<std::string, double>,
+                                std::unordered_map<std::string, double>,
+                                std::set<std::string>>("Double Set");
+
+    std::cout << "\n\n";
+    exploded3.write<std::ostream,
+                    double,
+                    long,
+                    std::map<std::string, double>,
+                    std::unordered_map<std::string, double>,
+                    std::vector<std::string>,
+                    std::set<std::string>>
+        (std::cout, io_format::csv2);
+
+    auto exploded4 = df.explode<std::vector<std::string>,
+                                double,
+                                long,
+                                std::map<std::string, double>,
+                                std::set<double>,
+                                std::unordered_map<std::string, double>,
+                                std::set<std::string>>("Str Vec");
+
+    std::cout << "\n\n";
+    exploded4.write<std::ostream,
+                    std::string,
+                    double,
+                    long,
+                    std::map<std::string, double>,
+                    std::unordered_map<std::string, double>,
+                    std::set<double>,
+                    std::set<std::string>>
+        (std::cout, io_format::csv2);
+}
+
+// ----------------------------------------------------------------------------
+
+int main(int, char *[]) {
 
     test_starts_with();
     test_ends_with();
@@ -581,6 +682,7 @@ int main(int, char *[]) {
     test_apply();
     test_truncate();
     test_load_column();
+    test_explode();
 
     return (0);
 }

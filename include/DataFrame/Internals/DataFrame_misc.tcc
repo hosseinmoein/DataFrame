@@ -1106,7 +1106,8 @@ operator() (const T &vec)  {
     for (const auto &val : vec)  {
         const auto  insert_res =
             table.emplace(
-                std::forward_as_tuple(val, incl_idx ? idx_vec[i++] : dummy_idx),
+                std::forward_as_tuple(val,
+                                      incl_idx ? idx_vec[i++] : dummy_idx),
                 0);
 
         insert_res.first->second += 1;
@@ -1141,6 +1142,31 @@ operator() (const T &vec)  {
                                   std::move(new_vec),
                                   nan_policy::dont_pad_with_nans,
                                   false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::explode_functor_<Ts ...>::
+operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    VecType         new_col;
+    const size_type total_cnt = idx_mask.size();
+
+    new_col.reserve(total_cnt);
+    for (size_type i { 0 }; i < total_cnt; ++i)
+        new_col.push_back(vec[idx_mask[i]]);
+
+    res.template load_column<ValueType>(name,
+                                        std::move(new_col),
+                                        nan_policy::dont_pad_with_nans,
+                                        false);
 }
 
 } // namespace hmdf

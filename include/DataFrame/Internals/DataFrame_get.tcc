@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/Utils/Utils.h>
 
 // ----------------------------------------------------------------------------
 
@@ -3255,6 +3256,48 @@ DataFrame<I, H>::inversion_count(const char *col_name) const  {
 
     return (_inv_merge_sort_(original, temp, 0, col_s - 1, C { },
                              get_thread_level()));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<container T, typename ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+explode(const char *col_name) const  {
+
+    const auto  &col = get_column<T>(col_name);
+    size_type   total_cnt { 0 };
+
+    for (const auto &cont : col)
+        total_cnt += cont.size();
+
+    StlVecType<size_type>   idx_mask;
+
+    idx_mask.reserve(total_cnt);
+    for (size_type i { 0 }; i < col.size(); ++i)
+        idx_mask.insert(idx_mask.end(), col[i].size(), i);
+
+    IndexVecType    new_index;
+
+    new_index.reserve(total_cnt);
+    for (size_type i { 0 }; i < total_cnt; ++i)
+        new_index.push_back(indices_[idx_mask[i]]);
+
+    DataFrame    result;
+
+    result.load_index(std::move(new_index));
+
+    if constexpr (is_mappish<T>::value)
+        explode_helper_<
+            std::pair<typename T::key_type, typename T::mapped_type>,
+            decltype(col),
+            Ts ...>
+            (result, total_cnt, col_name, idx_mask, col);
+    else
+        explode_helper_<typename T::value_type, decltype(col), Ts ...>
+            (result, total_cnt, col_name, idx_mask, col);
+
+    return (result);
 }
 
 } // namespace hmdf

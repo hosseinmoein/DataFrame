@@ -182,6 +182,15 @@ static S &operator << (S &stream, const std::unordered_map<K, V> &data)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename S, typename F, typename L>
+static S &operator << (S &stream, const std::pair<F, L> &data)  {
+
+    stream << '<' << data.first << ':' << data.second << '>';
+    return (stream);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename DF, typename T>
 static inline auto &
 _create_column_from_triple_(DF &df, T &triple) {

@@ -1143,6 +1143,39 @@ col_vector_push_back_cont_func_(V &vec,
 
 // ----------------------------------------------------------------------------
 
+template<typename NEW_COL_T, typename COL_T, typename ... Ts>
+inline void
+explode_helper_(DataFrame &result,
+                size_type total_cnt,
+                const char *col_name,
+                const StlVecType<size_type> &idx_mask,
+                const COL_T &col) const {
+
+    ColumnVecType<NEW_COL_T>    new_col;
+
+    new_col.reserve(total_cnt);
+    for (size_type i { 0 }; i < col.size(); ++i)
+        for (const auto &val : col[i])
+            new_col.push_back(val);
+
+    SpinGuard   guard (lock_);
+
+    result.template load_column<NEW_COL_T>(col_name,
+                                           std::move(new_col),
+                                           nan_policy::dont_pad_with_nans,
+                                           false);
+    for (const auto &[name, idx] : column_list_) [[likely]]
+        if (name != col_name)  {
+            explode_functor_<Ts ...>   functor(name.c_str(), result, idx_mask);
+
+            data_[idx].change(functor);
+        }
+
+    return;
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename V, typename Dummy = void>
 struct  ColVectorPushBack_  {
 

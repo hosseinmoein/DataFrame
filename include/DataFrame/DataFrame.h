@@ -3623,6 +3623,23 @@ public: // Read/access and slicing interfaces
                 F &functor,
                 bool delete_old_cols = true);
 
+    // This transforms a column of containers into column of container’s value
+    // types. For each data point in each container, index and data columns
+    // data points will be repeated.
+    // It returns a new DataFrame. Self will be unchanged.
+    //
+    // T:
+    //   Type of the container column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the container column
+    //
+    template<container T, typename ... Ts>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+    explode(const char *col_name) const;
+
 public:  // Visitors
 
     // apply is a shortcut for a simple visit. It applies the func to every

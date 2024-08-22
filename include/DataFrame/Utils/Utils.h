@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <limits>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 // ----------------------------------------------------------------------------
@@ -253,6 +254,27 @@ template<>
 inline auto
 // abs__<long double>(const long double &val)  { return (std::fabsl(val)); }
 abs__<long double>(const long double &val)  { return (std::fabs(val)); }
+
+// ----------------------------------------------------------------------------
+
+// This should work for both std::map and std::unordered_map
+//
+namespace mappish_detail {
+  template<typename T, typename U = void>
+  struct  is_mappish_impl : std::false_type {  };
+
+  template<typename T>
+  struct  is_mappish_impl<
+      T,
+      std::void_t<typename T::key_type,
+                  typename T::mapped_type,
+                  decltype(std::declval<T &>()
+                           [std::declval<const typename T::key_type &>()])>>
+      : std::true_type {  };
+}  // mappish_detail
+
+template<typename T>
+struct  is_mappish : mappish_detail::is_mappish_impl<T>::type {  };
 
 // ----------------------------------------------------------------------------
 

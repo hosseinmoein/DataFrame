@@ -529,6 +529,39 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                 col_vector_push_back_func_(vec, stream, &::strtol);
             }
 
+            // Pairs
+            //
+            else if (type_str == "str_dbl_pair")  {
+                using val_t = std::pair<std::string, double>;
+
+                StlVecType<val_t>   &vec =
+                    create_column<val_t>(col_name.c_str(), false);
+
+                vec.reserve(::atoi(value.c_str()));
+                col_vector_push_back_cont_func_(
+                    vec, stream, &_get_str_dbl_pair_from_value_);
+            }
+            else if (type_str == "str_str_pair")  {
+                using val_t = std::pair<std::string, std::string>;
+
+                StlVecType<val_t>   &vec =
+                    create_column<val_t>(col_name.c_str(), false);
+
+                vec.reserve(::atoi(value.c_str()));
+                col_vector_push_back_cont_func_(
+                    vec, stream, &_get_str_str_pair_from_value_);
+            }
+            else if (type_str == "dbl_dbl_pair")  {
+                using val_t = std::pair<double, double>;
+
+                StlVecType<val_t>   &vec =
+                    create_column<val_t>(col_name.c_str(), false);
+
+                vec.reserve(::atoi(value.c_str()));
+                col_vector_push_back_cont_func_(
+                    vec, stream, &_get_dbl_dbl_pair_from_value_);
+            }
+
             // Containers
             //
             else if (type_str == "dbl_vec")  {
@@ -755,6 +788,28 @@ read_csv2_(std::FILE *stream,
                                           type_str.c_str(),
                                           col_name.c_str(),
                                           nrows);
+
+                // Pairs
+                //
+                else if (type_str == "str_dbl_pair")
+                    spec_vec.emplace_back(
+                        StlVecType<std::pair<std::string, double>>{ },
+                        type_str.c_str(),
+                        col_name.c_str(),
+                        nrows);
+                else if (type_str == "str_str_pair")
+                    spec_vec.emplace_back(
+                        StlVecType<std::pair<std::string, std::string>>{ },
+                        type_str.c_str(),
+                        col_name.c_str(),
+                        nrows);
+                else if (type_str == "dbl_dbl_pair")
+                    spec_vec.emplace_back(
+                        StlVecType<std::pair<double, double>>{ },
+                        type_str.c_str(),
+                        col_name.c_str(),
+                        nrows);
+
                 // Containers
                 //
                 else if (type_str == "dbl_vec")
@@ -1030,6 +1085,36 @@ read_csv2_(std::FILE *stream,
                     }
                 }
 
+                // Pairs
+                //
+                else if (col_spec.type_spec == "str_dbl_pair")  {
+                    using val_t = std::pair<std::string, double>;
+
+                    StlVecType<val_t>   &vec =
+                        std::any_cast<StlVecType<val_t> &>(col_spec.col_vec);
+
+                    vec.push_back(std::move(_get_str_dbl_pair_from_value_(
+                                                value.c_str())));
+                }
+                else if (col_spec.type_spec == "str_str_pair")  {
+                    using val_t = std::pair<std::string, std::string>;
+
+                    StlVecType<val_t>   &vec =
+                        std::any_cast<StlVecType<val_t> &>(col_spec.col_vec);
+
+                    vec.push_back(std::move(_get_str_str_pair_from_value_(
+                                                value.c_str())));
+                }
+                else if (col_spec.type_spec == "dbl_dbl_pair")  {
+                    using val_t = std::pair<double, double>;
+
+                    StlVecType<val_t>   &vec =
+                        std::any_cast<StlVecType<val_t> &>(col_spec.col_vec);
+
+                    vec.push_back(std::move(_get_dbl_dbl_pair_from_value_(
+                                                value.c_str())));
+                }
+
                 // Containers
                 //
                 else if (col_spec.type_spec == "dbl_vec")  {
@@ -1233,6 +1318,33 @@ read_csv2_(std::FILE *stream,
                     std::move(std::any_cast<StlVecType<bool> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
+
+            // Pairs
+            //
+            else if (col_spec.type_spec == "str_dbl_pair")  {
+                using val_t = std::pair<std::string, double>;
+
+                load_column<val_t>(col_spec.col_name.c_str(),
+                                   std::move(std::any_cast<StlVecType<val_t> &>
+                                       (col_spec.col_vec)),
+                                   nan_policy::dont_pad_with_nans);
+            }
+            else if (col_spec.type_spec == "str_str_pair")  {
+                using val_t = std::pair<std::string, std::string>;
+
+                load_column<val_t>(col_spec.col_name.c_str(),
+                                   std::move(std::any_cast<StlVecType<val_t> &>
+                                       (col_spec.col_vec)),
+                                   nan_policy::dont_pad_with_nans);
+            }
+            else if (col_spec.type_spec == "dbl_dbl_pair")  {
+                using val_t = std::pair<double, double>;
+
+                load_column<val_t>(col_spec.col_name.c_str(),
+                                   std::move(std::any_cast<StlVecType<val_t> &>
+                                       (col_spec.col_vec)),
+                                   nan_policy::dont_pad_with_nans);
+            }
 
             // Containers
             //
@@ -1464,6 +1576,42 @@ read_binary_(std::istream &stream,
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }
+
+        // Pairs
+        //
+        else if ( ! std::strcmp(col_type, "str_dbl_pair"))  {
+            using val_t = std::pair<std::string, double>;
+
+            ColumnVecType<val_t>    vec;
+
+            _read_binary_str_dbl_pair_(stream, vec, needs_flipping,
+                                       starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if ( ! std::strcmp(col_type, "str_str_pair"))  {
+            using val_t = std::pair<std::string, std::string>;
+
+            ColumnVecType<val_t>    vec;
+
+            _read_binary_str_str_pair_(stream, vec, needs_flipping,
+                                       starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if ( ! std::strcmp(col_type, "dbl_dbl_pair"))  {
+            using val_t = std::pair<double, double>;
+
+            ColumnVecType<val_t>    vec;
+
+            _read_binary_dbl_dbl_pair_(stream, vec, needs_flipping,
+                                       starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+
+        // Containers
+        //
         else if ( ! std::strcmp(col_type, "dbl_vec"))  {
             ColumnVecType<std::vector<double>>  vec;
 

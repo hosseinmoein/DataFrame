@@ -123,24 +123,39 @@ DateTime   -- DateTime data in format of
         </PRE>
         In case of io_format::csv2, io_format::csv, and io_format::binary the following additional types are also supported:
         <PRE>
-dbl_vec        -- A vector of double precision values, The vector is printed
-                  as "s[d1|d2|...]" where s is the size of the vector and d's
-                  are the double values.
-str_vec        -- A vector of std::string values, The vector is printed as
-                  "s[str1|str2|...]" where s is the size of the vector and
-                  str's are the strings.
-dbl_set        -- A set of double precision values, The set is printed as
-                  "s[d1|d2|...]" where s is the size of the set and d's
-                  are the double values.
-str_set        -- A set of std::string values, The set is printed as
-                  "s[str1|str2|...]" where s is the size of the set and
-                  str's are the strings.
-str_dbl_map    -- A map of string keys to double precision values, The map is
-                  printed as "s{k1:v1|k2:v2|...}" where s is the size of
-                  the map and k's and v's are keys and values.
-str_dbl_unomap -- An unordered map of string keys to double precision values,
-                  The map is printed as "s{k1:v1|k2:v2|...}" where s is the
-                  size of the map and k's and v's are keys and values.
+str_dbl_pair   -- std::pair&lt;std::string, double&gt;.
+                  The pair is printed as "&lt;s:d&gt;,&lt;s:d&gt;, ...
+                  Where s's are strings and d's are doubles.
+str_str_pair   -- std::pair&lt;std::string, std::string&gt;.
+                  The pair is printed as "&lt;s1:s2&gt;,&lt;s1:s2&gt;, ...
+                  Where s's are strings.
+dbl_dbl_pair   -- std::pair&lt;double, double&gt;.
+                  The pair is printed as "&lt;d1:d2&gt;,&lt;d1:d2&gt;, ...
+                  Where d's are doubles.
+dbl_vec        -- std::vector&lt;double&gt;.
+                  The vector is printed as "s[d1|d2|...]"
+                  where s is the size of the vector and
+                  d's are the double values.
+str_vec        -- std::vector&lt;std::string&gt;.
+                  The vector is printed as "s[str1|str2|...]"
+                  where s is the size of the vector
+                  and str's are the strings.
+dbl_set        -- std::set&lt;double&gt;.
+                  The set is printed as "s[d1|d2|...]"
+                  where s is the size of the set
+                  and d's are the double values.
+str_set        -- std::set&lt;std::string&gt;.
+                  The set is printed as "s[str1|str2|...]"
+                  where s is the size of the set
+                  and str's are the strings.
+str_dbl_map    -- std::map&lt;std::string, double&gt;.
+                  precision values, The map is printed
+                  as "s{k1:v1|k2:v2|...}"
+                  where s is the size of the map
+                  and k's and v's are keys and values.
+str_dbl_unomap -- std::unoredered_map&lt;std::string, double&gt;.
+                  The map is printed as "s{k1:v1|k2:v2|...}"
+                  where s is the size of the map and k's
         </PRE>
 
         In case of io_format::csv2 the following additional types are also supported:

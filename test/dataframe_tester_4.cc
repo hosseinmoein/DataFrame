@@ -672,6 +672,205 @@ static void test_explode()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_read_write_pairs()  {
+
+    std::cout << "\nTesting read_write_pairs ..." << std::endl;
+
+    MyDataFrame df;
+
+    try  {
+        df.read("sample_data_2.csv", io_format::csv);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    df.write<std::ostream,
+             unsigned long,
+             int,
+             std::string,
+             double,
+             bool,
+             std::pair<std::string, std::string>,
+             std::pair<double, double>,
+             std::pair<std::string, double>>
+        (std::cout, io_format::csv);
+
+    df.write<unsigned long,
+             int,
+             std::string,
+             double,
+             bool,
+             std::pair<std::string, std::string>,
+             std::pair<double, double>,
+             std::pair<std::string, double>>
+        ("./tmp_sample_data_2.csv", io_format::csv2);
+    df.write<unsigned long,
+             int,
+             std::string,
+             double,
+             bool,
+             std::pair<std::string, std::string>,
+             std::pair<double, double>,
+             std::pair<std::string, double>>
+        ("./tmp_sample_data_2.dat", io_format::binary);
+
+    MyDataFrame df2;
+
+    df2.read("./tmp_sample_data_2.csv", io_format::csv2);
+    assert(df.get_index() == df2.get_index());
+    assert((df.get_column<int>("xint_col_2") ==
+                df2.get_column<int>("xint_col_2")));
+    assert((df.get_column<std::string>("str_col_2") ==
+                df2.get_column<std::string>("str_col_2")));
+    assert((df.get_column<unsigned long>("ul_col_2") ==
+                df2.get_column<unsigned long>("ul_col_2")));
+    assert((
+ df.get_column<std::pair<std::string, std::string>>("str_str_pair_col")[0] ==
+ df2.get_column<std::pair<std::string, std::string>>("str_str_pair_col")[0]));
+    assert((
+ df.get_column<std::pair<std::string, std::string>>("str_str_pair_col")[1] ==
+ df2.get_column<std::pair<std::string, std::string>>("str_str_pair_col")[1]));
+    assert((
+ df.get_column<std::pair<std::string, std::string>>("str_str_pair_col")[2] ==
+ df2.get_column<std::pair<std::string, std::string>>("str_str_pair_col")[2]));
+    assert((
+ df.get_column<std::pair<std::string, std::string>>("str_str_pair_col")[3] ==
+ df2.get_column<std::pair<std::string, std::string>>("str_str_pair_col")[3]));
+    assert((
+ df.get_column<std::pair<std::string, std::string>>("str_str_pair_col")[4] ==
+ df2.get_column<std::pair<std::string, std::string>>("str_str_pair_col")[4]));
+    assert((
+ df.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[0] ==
+ df2.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[0]));
+    assert((std::isnan(df.get_column<std::pair<double, double>>
+                              ("dbl_dbl_pair_col")[1].first)));
+    assert((std::isnan(df.get_column<std::pair<double, double>>
+                              ("dbl_dbl_pair_col")[1].second)));
+    assert((std::isnan(df2.get_column<std::pair<double, double>>
+                               ("dbl_dbl_pair_col")[1].first)));
+    assert((std::isnan(df2.get_column<std::pair<double, double>>
+                               ("dbl_dbl_pair_col")[1].second)));
+    assert((std::isnan(df.get_column<std::pair<double, double>>
+                              ("dbl_dbl_pair_col")[2].first)));
+    assert((std::isnan(df2.get_column<std::pair<double, double>>
+                               ("dbl_dbl_pair_col")[2].first)));
+    assert((
+ df.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[2].second ==
+ df2.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[2].second));
+    assert((std::isnan(df.get_column<std::pair<double, double>>
+                              ("dbl_dbl_pair_col")[3].second)));
+    assert((std::isnan(df2.get_column<std::pair<double, double>>
+                               ("dbl_dbl_pair_col")[3].second)));
+    assert((
+ df.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[3].first ==
+ df2.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[3].first));
+    assert((
+ df.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[4] ==
+ df2.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[4]));
+
+    assert((
+ df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[0] ==
+ df2.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[0]));
+    assert((
+ df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[1].first ==
+ df2.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[1].first));
+    assert((std::isnan(df.get_column<std::pair<std::string, double>>
+                              ("str_dbl_pair_col")[1].second)));
+    assert((std::isnan(df2.get_column<std::pair<std::string, double>>
+                              ("str_dbl_pair_col")[1].second)));
+    assert((
+ df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[2].first ==
+ df2.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[2].first));
+    assert((
+ df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[2].second ==
+ df2.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[2].second));
+    assert((std::isnan(df.get_column<std::pair<std::string, double>>
+                              ("str_dbl_pair_col")[3].second)));
+    assert((std::isnan(df2.get_column<std::pair<std::string, double>>
+                              ("str_dbl_pair_col")[3].second)));
+    assert((
+ df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[3].first ==
+ df2.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[3].first));
+    assert((
+ df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[4] ==
+ df2.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[4]));
+
+    MyDataFrame df3;
+
+    df3.read("./tmp_sample_data_2.dat", io_format::binary);
+    assert(df.get_index() == df3.get_index());
+    assert((df.get_column<int>("xint_col_2") ==
+                df3.get_column<int>("xint_col_2")));
+    assert((df.get_column<std::string>("str_col_2") ==
+                df3.get_column<std::string>("str_col_2")));
+    assert((df.get_column<unsigned long>("ul_col_2") ==
+                df3.get_column<unsigned long>("ul_col_2")));
+    assert((
+  df.get_column<std::pair<std::string, std::string>>("str_str_pair_col") ==
+  df3.get_column<std::pair<std::string, std::string>>("str_str_pair_col")));
+    assert((
+  df.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[0] ==
+  df3.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[0]));
+    assert((std::isnan(df.get_column<std::pair<double, double>>
+                              ("dbl_dbl_pair_col")[1].first)));
+    assert((std::isnan(df.get_column<std::pair<double, double>>
+                              ("dbl_dbl_pair_col")[1].second)));
+    assert((std::isnan(df3.get_column<std::pair<double, double>>
+                               ("dbl_dbl_pair_col")[1].first)));
+    assert((std::isnan(df3.get_column<std::pair<double, double>>
+                               ("dbl_dbl_pair_col")[1].second)));
+    assert((std::isnan(df.get_column<std::pair<double, double>>
+                              ("dbl_dbl_pair_col")[2].first)));
+    assert((std::isnan(df3.get_column<std::pair<double, double>>
+                               ("dbl_dbl_pair_col")[2].first)));
+    assert((
+  df.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[2].second ==
+  df3.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[2].second));
+    assert((std::isnan(df.get_column<std::pair<double, double>>
+                              ("dbl_dbl_pair_col")[3].second)));
+    assert((std::isnan(df3.get_column<std::pair<double, double>>
+                               ("dbl_dbl_pair_col")[3].second)));
+    assert((
+  df.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[3].first ==
+  df3.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[3].first));
+    assert((
+  df.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[4] ==
+  df3.get_column<std::pair<double, double>>("dbl_dbl_pair_col")[4]));
+
+    assert((
+  df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[0] ==
+  df3.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[0]));
+    assert((
+  df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[1].first ==
+  df3.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[1].first));
+    assert((std::isnan(df.get_column<std::pair<std::string, double>>
+                              ("str_dbl_pair_col")[1].second)));
+    assert((std::isnan(df3.get_column<std::pair<std::string, double>>
+                              ("str_dbl_pair_col")[1].second)));
+    assert((
+  df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[2].first ==
+  df3.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[2].first));
+    assert((
+ df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[2].second ==
+ df3.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[2].second));
+    assert((std::isnan(df.get_column<std::pair<std::string, double>>
+                              ("str_dbl_pair_col")[3].second)));
+    assert((std::isnan(df3.get_column<std::pair<std::string, double>>
+                              ("str_dbl_pair_col")[3].second)));
+    assert((
+ df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[3].first ==
+ df3.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[3].first));
+    assert((
+  df.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[4] ==
+  df3.get_column<std::pair<std::string, double>>("str_dbl_pair_col")[4]));
+
+    std::remove("./tmp_sample_data_2.csv");
+    std::remove("./tmp_sample_data_2.dat");
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -683,6 +882,7 @@ int main(int, char *[]) {
     test_truncate();
     test_load_column();
     test_explode();
+    test_read_write_pairs();
 
     return (0);
 }

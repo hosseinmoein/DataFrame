@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <future>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <ranges>
 #include <set>
@@ -79,6 +80,8 @@ std::unordered_map<_TypeInfoRef_,
                    _TypeinfoHasher_,
                    _TypeinfoEqualTo_>
 _typeinfo_name_  {
+    // Fundamentals
+    //
     { typeid(float), "float" },
     { typeid(double), "double" },
     { typeid(long double), "longdouble" },
@@ -96,7 +99,14 @@ _typeinfo_name_  {
     { typeid(const char *), "string" },
     { typeid(char *), "string" },
     { typeid(bool), "bool" },
+
     { typeid(DateTime), "DateTime" },
+
+    // Pairs
+    //
+    { typeid(std::pair<std::string, double>), "str_dbl_pair" },
+    { typeid(std::pair<std::string, std::string>), "str_str_pair" },
+    { typeid(std::pair<double, double>), "dbl_dbl_pair" },
 
     // Containers
     //
@@ -202,7 +212,8 @@ _create_column_from_triple_(DF &df, T &triple) {
 
 // ----------------------------------------------------------------------------
 
-template<typename SRC_DF, typename DST_DF, typename T, typename I_V, typename V>
+template<typename SRC_DF, typename DST_DF, typename T,
+         typename I_V, typename V>
 static inline void
 _load_groupby_data_1_(
     const SRC_DF &source,
@@ -345,8 +356,10 @@ _load_groupby_data_2_(
                     idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
             idx_visitor.post();
             dst_idx.push_back(idx_visitor.get_result());
-            if (col_vec1) col_vec1->push_back(input_col1[sort_v[vec_size - 1]]);
-            if (col_vec2) col_vec2->push_back(input_col2[sort_v[vec_size - 1]]);
+            if (col_vec1)
+                col_vec1->push_back(input_col1[sort_v[vec_size - 1]]);
+            if (col_vec2)
+                col_vec2->push_back(input_col2[sort_v[vec_size - 1]]);
         }
     }
 
@@ -454,9 +467,12 @@ _load_groupby_data_3_(
                     idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
             idx_visitor.post();
             dst_idx.push_back(idx_visitor.get_result());
-            if (col_vec1) col_vec1->push_back(input_col1[sort_v[vec_size - 1]]);
-            if (col_vec2) col_vec2->push_back(input_col2[sort_v[vec_size - 1]]);
-            if (col_vec3) col_vec3->push_back(input_col3[sort_v[vec_size - 1]]);
+            if (col_vec1)
+                col_vec1->push_back(input_col1[sort_v[vec_size - 1]]);
+            if (col_vec2)
+                col_vec2->push_back(input_col2[sort_v[vec_size - 1]]);
+            if (col_vec3)
+                col_vec3->push_back(input_col3[sort_v[vec_size - 1]]);
         }
     }
 
@@ -699,6 +715,116 @@ _get_dbl_vec_from_value_(const char *value)  {
         data.push_back(std::strtod(buffer, nullptr));
         vcnt += 1;  // skip separator
     }
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
+inline static std::pair<std::string, double>
+_get_str_dbl_pair_from_value_(const char *value)  {
+
+    using val_t = std::pair<std::string, double>;
+
+    std::size_t vcnt { 0 };
+    val_t       data ("", std::numeric_limits<double>::quiet_NaN());
+
+    while (value[vcnt] && value[vcnt] != '<')  ++vcnt;
+    if (! value[vcnt])  return (data);
+    vcnt += 1;  // skip <
+
+    char        buffer[2048];
+    std::size_t bcnt { 0 };
+
+    buffer[0] = '\0';
+    while (value[vcnt] && value[vcnt] != ':')
+        buffer[bcnt++] = value[vcnt++];
+    if (! value[vcnt])  return (data);
+    buffer[bcnt] = '\0';
+    data.first = buffer;
+    vcnt += 1;  // skip :
+
+    bcnt = 0;
+    buffer[0] = '\0';
+    while (value[vcnt] && value[vcnt] != '>')
+        buffer[bcnt++] = value[vcnt++];
+    if (! value[vcnt] || buffer[0] == '\0')  return (data);
+    buffer[bcnt] = '\0';
+    data.second = std::strtod(buffer, nullptr);
+
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
+inline static std::pair<double, double>
+_get_dbl_dbl_pair_from_value_(const char *value)  {
+
+    using val_t = std::pair<double, double>;
+
+    std::size_t vcnt { 0 };
+    val_t       data (std::numeric_limits<double>::quiet_NaN(),
+                      std::numeric_limits<double>::quiet_NaN());
+
+    while (value[vcnt] && value[vcnt] != '<')  ++vcnt;
+    if (! value[vcnt])  return (data);
+    vcnt += 1;  // skip <
+
+    char        buffer[2048];
+    std::size_t bcnt { 0 };
+
+    buffer[0] = '\0';
+    while (value[vcnt] && value[vcnt] != ':')
+        buffer[bcnt++] = value[vcnt++];
+    if (! value[vcnt]) return (data);
+    buffer[bcnt] = '\0';
+    if (buffer[0])
+        data.first = std::strtod(buffer, nullptr);
+    vcnt += 1;  // skip :
+
+    bcnt = 0;
+    buffer[0] = '\0';
+    while (value[vcnt] && value[vcnt] != '>')
+        buffer[bcnt++] = value[vcnt++];
+    if (! value[vcnt] || buffer[0] == '\0')  return (data);
+    buffer[bcnt] = '\0';
+    data.second = std::strtod(buffer, nullptr);
+
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
+inline static std::pair<std::string, std::string>
+_get_str_str_pair_from_value_(const char *value)  {
+
+    using val_t = std::pair<std::string, std::string>;
+
+    std::size_t vcnt { 0 };
+    val_t       data ("", "");
+
+    while (value[vcnt] && value[vcnt] != '<')  ++vcnt;
+    if (! value[vcnt])  return (data);
+    vcnt += 1;  // skip <
+
+    char        buffer[2048];
+    std::size_t bcnt { 0 };
+
+    buffer[0] = '\0';
+    while (value[vcnt] && value[vcnt] != ':')
+        buffer[bcnt++] = value[vcnt++];
+    if (! value[vcnt])  return (data);
+    buffer[bcnt] = '\0';
+    data.first = buffer;
+    vcnt += 1;  // skip :
+
+    bcnt = 0;
+    buffer[0] = '\0';
+    while (value[vcnt] && value[vcnt] != '>')
+        buffer[bcnt++] = value[vcnt++];
+    if (! value[vcnt] || buffer[0] == '\0')  return (data);
+    buffer[bcnt] = '\0';
+    data.second = buffer;
+
     return (data);
 }
 
@@ -1023,6 +1149,87 @@ _write_binary_datetime_(STRM &strm, const V &dt_vec,
 
 // ----------------------------------------------------------------------------
 
+// Vector of std::pair<std::string, double>
+//
+template<typename STRM, typename V>
+inline static STRM &
+_write_binary_str_dbl_pair_(STRM &strm, const V &p_vec,
+                            std::size_t start_row,
+                            std::size_t end_row)  {
+
+    _write_binary_common_(strm, p_vec, start_row, end_row);
+
+    for (uint64_t i = start_row; i < end_row; ++i)  {
+        const uint16_t  str_sz = static_cast<uint16_t>(p_vec[i].first.size());
+
+        strm.write(reinterpret_cast<const char *>(&str_sz), sizeof(str_sz));
+    }
+    for (uint64_t i = start_row; i < end_row; ++i)  {
+        const auto      &str = p_vec[i].first;
+
+        strm.write(str.data(), str.size() * sizeof(char));
+        strm.write(reinterpret_cast<const char *>(&(p_vec[i].second)),
+                   sizeof(double));
+    }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+// Vector of std::pair<std::string, std::string>
+//
+template<typename STRM, typename V>
+inline static STRM &
+_write_binary_str_str_pair_(STRM &strm, const V &p_vec,
+                            std::size_t start_row,
+                            std::size_t end_row)  {
+
+    _write_binary_common_(strm, p_vec, start_row, end_row);
+
+    for (uint64_t i = start_row; i < end_row; ++i)  {
+        const uint16_t  str_sz1 = static_cast<uint16_t>(p_vec[i].first.size());
+        const uint16_t  str_sz2 =
+            static_cast<uint16_t>(p_vec[i].second.size());
+
+        strm.write(reinterpret_cast<const char *>(&str_sz1), sizeof(str_sz1));
+        strm.write(reinterpret_cast<const char *>(&str_sz2), sizeof(str_sz2));
+    }
+    for (uint64_t i = start_row; i < end_row; ++i)  {
+        const auto  &str1 = p_vec[i].first;
+        const auto  &str2 = p_vec[i].second;
+
+        strm.write(str1.data(), str1.size() * sizeof(char));
+        strm.write(str2.data(), str2.size() * sizeof(char));
+    }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+// Vector of std::pair<double, double>
+//
+template<typename STRM, typename V>
+inline static STRM &
+_write_binary_dbl_dbl_pair_(STRM &strm, const V &p_vec,
+                            std::size_t start_row,
+                            std::size_t end_row)  {
+
+    _write_binary_common_(strm, p_vec, start_row, end_row);
+
+    for (uint64_t i = start_row; i < end_row; ++i)  {
+        strm.write(reinterpret_cast<const char *>(&(p_vec[i].first)),
+                   sizeof(double));
+        strm.write(reinterpret_cast<const char *>(&(p_vec[i].second)),
+                   sizeof(double));
+    }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
 // Vector of double vectors
 //
 template<typename STRM, typename V>
@@ -1286,7 +1493,134 @@ _read_binary_datetime_(STRM &strm, V &dt_vec, bool needs_flipping,
 
 // ----------------------------------------------------------------------------
 
-// Vector of double vectors
+// Vector of std::pair<std::string, double>
+//
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_str_dbl_pair_(STRM &strm, V &p_vec, bool needs_flipping,
+                           std::size_t start_row, std::size_t num_rows)  {
+
+    const uint64_t          vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
+    std::vector<uint16_t>   str_sizes (vec_size, 0);
+
+    strm.read(reinterpret_cast<char *>(str_sizes.data()),
+              vec_size * sizeof(uint16_t));
+    if (needs_flipping)  {
+        SwapBytes<uint16_t, sizeof(uint16_t)>   swaper { };
+
+        for (auto &s : str_sizes)
+            s = swaper(s);
+    }
+
+    const uint64_t  read_end =
+        (num_rows == std::numeric_limits<std::size_t>::max() ||
+         (start_row + num_rows) > vec_size)
+            ? vec_size : uint64_t(start_row + num_rows);
+
+    p_vec.reserve(read_end - start_row);
+    for (uint64_t i = 0; i < vec_size; ++i)  {
+        if (i >= start_row && i < read_end) [[likely]]  {
+            std::string str (std::size_t(str_sizes[i]), 0);
+            double      val { 0 };
+
+            strm.read(str.data(), str_sizes[i] * sizeof(char));
+            strm.read(reinterpret_cast<char *>(&val), sizeof(val));
+            if (needs_flipping)
+                val = SwapBytes<double, sizeof(val)> { }(val);
+            p_vec.emplace_back(std::move(str), std::move(val));
+        }
+        else
+            strm.seekg(str_sizes[i] + sizeof(double), std::ios_base::cur);
+    }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+// Vector of std::pair<std::string, std::string>
+//
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_str_str_pair_(STRM &strm, V &p_vec, bool needs_flipping,
+                           std::size_t start_row, std::size_t num_rows)  {
+
+    const uint64_t          vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
+    std::vector<uint16_t>   str_sizes (vec_size * 2, 0);
+
+    strm.read(reinterpret_cast<char *>(str_sizes.data()),
+              vec_size * 2 * sizeof(uint16_t));
+    if (needs_flipping)  {
+        SwapBytes<uint16_t, sizeof(uint16_t)>   swaper { };
+
+        for (auto &s : str_sizes)
+            s = swaper(s);
+    }
+
+    const uint64_t  read_end =
+        (num_rows == std::numeric_limits<std::size_t>::max() ||
+         (start_row + num_rows) > vec_size)
+            ? vec_size : uint64_t(start_row + num_rows);
+	std::size_t     sizes_idx { 0 };
+
+    p_vec.reserve(read_end - start_row);
+    for (uint64_t i = 0; i < vec_size; ++i, sizes_idx += 2)  {
+        if (i >= start_row && i < read_end) [[likely]]  {
+            std::string str1 (std::size_t(str_sizes[sizes_idx]), 0);
+            std::string str2 (std::size_t(str_sizes[sizes_idx + 1]), 0);
+
+            strm.read(str1.data(), str_sizes[sizes_idx] * sizeof(char));
+            strm.read(str2.data(), str_sizes[sizes_idx + 1] * sizeof(char));
+            p_vec.emplace_back(std::move(str1), std::move(str2));
+        }
+        else
+            strm.seekg(str_sizes[sizes_idx] + str_sizes[sizes_idx + 1],
+                       std::ios_base::cur);
+    }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+// Vector of std::pair<double, double>
+//
+template<typename STRM, typename V>
+inline static STRM &
+_read_binary_dbl_dbl_pair_(STRM &strm, V &p_vec, bool needs_flipping,
+                           std::size_t start_row, std::size_t num_rows)  {
+
+    const uint64_t  vec_size =
+        _read_binary_common_(strm, needs_flipping, start_row);
+    const uint64_t  read_end =
+        (num_rows == std::numeric_limits<std::size_t>::max() ||
+         (start_row + num_rows) > vec_size)
+            ? vec_size : uint64_t(start_row + num_rows);
+
+    p_vec.reserve(read_end - start_row);
+    for (uint64_t i = 0; i < vec_size; ++i)  {
+        if (i >= start_row && i < read_end) [[likely]]  {
+            double      val[2];
+
+            strm.read(reinterpret_cast<char *>(val), sizeof(double) * 2);
+            if (needs_flipping)  {
+                val[0] = SwapBytes<double, sizeof(double)> { }(val[0]);
+                val[1] = SwapBytes<double, sizeof(double)> { }(val[1]);
+            }
+            p_vec.emplace_back(val[0], val[1]);
+        }
+        else
+            strm.seekg(sizeof(double) * 2, std::ios_base::cur);
+    }
+
+    return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+// Vector of std::vector<double>
 //
 template<typename STRM, typename V>
 inline static STRM &
@@ -1328,7 +1662,7 @@ _read_binary_dbl_vec_(STRM &strm, V &vec, bool needs_flipping,
 
 // ----------------------------------------------------------------------------
 
-// Vector of string vectors
+// Vector of std::vector<std::string>
 //
 template<typename STRM, typename V>
 inline static STRM &
@@ -1363,7 +1697,7 @@ _read_binary_str_vec_(STRM &strm, V &vec, bool needs_flipping,
 
 // ----------------------------------------------------------------------------
 
-// Vector of double sets
+// Vector of std::set<double>
 //
 template<typename STRM, typename V>
 inline static STRM &
@@ -1410,7 +1744,7 @@ _read_binary_dbl_set_(STRM &strm, V &set_vec, bool needs_flipping,
 
 // ----------------------------------------------------------------------------
 
-// Vector of string sets
+// Vector of std::set<std::string>
 //
 template<typename STRM, typename V>
 inline static STRM &
@@ -1734,7 +2068,8 @@ _inv_merge_sort_(Con &original,
         }
         else  {
             inv_count +=
-                _inv_merge_sort_(original, temp, left, mid, comp, thread_level);
+                _inv_merge_sort_(original, temp, left, mid, comp,
+                                 thread_level);
             inv_count +=
                 _inv_merge_sort_(original, temp, mid + 1, right, comp,
                                  thread_level);
@@ -1770,8 +2105,9 @@ struct _LikeClauseUtil_  {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
         20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
         38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
-        56, 57, 58, 59, 60, 61, 62, 63, 64, 97, 98, 99, 100, 101, 102, 103, 104,
-        105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118,
+        56, 57, 58, 59, 60, 61, 62, 63, 64, 97, 98, 99, 100, 101, 102, 103,
+        104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117,
+        118,
         119, 120, 121, 122, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102,
         103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
         117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130,

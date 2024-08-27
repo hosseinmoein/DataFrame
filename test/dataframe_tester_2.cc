@@ -3304,6 +3304,9 @@ static void test_no_index_reads()  {
                   std::set<double>,
                   std::set<std::string>,
                   std::vector<double>,
+                  std::pair<std::string, double>,
+                  std::pair<std::string, std::string>,
+                  std::pair<double, double>,
                   std::string>(std::cout, io_format::csv2);
 
         std::cout << '\n' << std::endl;

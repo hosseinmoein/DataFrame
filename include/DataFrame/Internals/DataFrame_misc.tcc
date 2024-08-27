@@ -240,26 +240,39 @@ DataFrame<I, H>::print_binary_functor_<Ts ...>::operator() (const T &vec)  {
 
     std::strncpy(col_name, name, sizeof(col_name));
     os.write(col_name, sizeof(col_name));
+
+    const long  local_start_row = std::min (long(vec.size()), start_row);
+    const long  local_end_row = std::min (long(vec.size()), end_row);
+
     if constexpr (std::is_same_v<ValueType, std::string>)
-        _write_binary_string_(os, vec, start_row, end_row);
+        _write_binary_string_(os, vec, local_start_row, local_end_row);
     else if constexpr (std::is_same_v<ValueType, DateTime>)
-        _write_binary_datetime_(os, vec, start_row, end_row);
+        _write_binary_datetime_(os, vec, local_start_row, local_end_row);
     else if constexpr (std::is_same_v<ValueType, std::vector<double>>)
-        _write_binary_dbl_vec_(os, vec, start_row, end_row);
+        _write_binary_dbl_vec_(os, vec, local_start_row, local_end_row);
     else if constexpr (std::is_same_v<ValueType, std::vector<std::string>> ||
                        std::is_same_v<ValueType, std::vector<const char *>>)
-        _write_binary_str_vec_(os, vec, start_row, end_row);
+        _write_binary_str_vec_(os, vec, local_start_row, local_end_row);
     else if constexpr (std::is_same_v<ValueType, std::set<double>>)
-        _write_binary_dbl_set_(os, vec, start_row, end_row);
+        _write_binary_dbl_set_(os, vec, local_start_row, local_end_row);
     else if constexpr (std::is_same_v<ValueType, std::set<std::string>> ||
                        std::is_same_v<ValueType, std::set<const char *>>)
-        _write_binary_str_set_(os, vec, start_row, end_row);
+        _write_binary_str_set_(os, vec, local_start_row, local_end_row);
     else if constexpr (
         std::is_same_v<ValueType, std::map<std::string, double>> ||
         std::is_same_v<ValueType, std::unordered_map<std::string, double>>)
-        _write_binary_str_dbl_map_(os, vec, start_row, end_row);
+        _write_binary_str_dbl_map_(os, vec, local_start_row, local_end_row);
+    else if constexpr (
+         std::is_same_v<ValueType, std::pair<std::string, double>>)
+        _write_binary_str_dbl_pair_(os, vec, local_start_row, local_end_row);
+    else if constexpr (
+        std::is_same_v<ValueType, std::pair<std::string, std::string>>)
+        _write_binary_str_str_pair_(os, vec, local_start_row, local_end_row);
+    else if constexpr (
+         std::is_same_v<ValueType, std::pair<double, double>>)
+        _write_binary_dbl_dbl_pair_(os, vec, local_start_row, local_end_row);
     else
-        _write_binary_data_(os, vec, start_row, end_row);
+        _write_binary_data_(os, vec, local_start_row, local_end_row);
 
     return;
 }

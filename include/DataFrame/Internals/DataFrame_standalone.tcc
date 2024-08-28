@@ -688,38 +688,6 @@ _get_token_from_string_ (std::string &str,
 
 // ----------------------------------------------------------------------------
 
-inline static std::vector<double>
-_get_dbl_vec_from_value_(const char *value)  {
-
-    using vec_t = std::vector<double>;
-
-    std::size_t vcnt = 0;
-    char        buffer[128];
-
-    while (value[vcnt] != '[')  {
-        buffer[vcnt] = value[vcnt];
-        vcnt += 1;
-    }
-    buffer[vcnt] = '\0';
-
-    vec_t       data;
-    std::size_t bcnt;
-
-    data.reserve(std::strtol(buffer, nullptr, 10));
-    vcnt += 1;  // skip [
-    while (value[vcnt] && value[vcnt] != ']')  {
-        bcnt = 0;
-        while (value[vcnt] != '|' && value[vcnt] != ']')
-            buffer[bcnt++] = value[vcnt++];
-        buffer[bcnt] = '\0';
-        data.push_back(std::strtod(buffer, nullptr));
-        vcnt += 1;  // skip separator
-    }
-    return (data);
-}
-
-// ----------------------------------------------------------------------------
-
 inline static std::pair<std::string, double>
 _get_str_dbl_pair_from_value_(const char *value)  {
 
@@ -825,6 +793,38 @@ _get_str_str_pair_from_value_(const char *value)  {
     buffer[bcnt] = '\0';
     data.second = buffer;
 
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
+inline static std::vector<double>
+_get_dbl_vec_from_value_(const char *value)  {
+
+    using vec_t = std::vector<double>;
+
+    std::size_t vcnt = 0;
+    char        buffer[128];
+
+    while (value[vcnt] != '[')  {
+        buffer[vcnt] = value[vcnt];
+        vcnt += 1;
+    }
+    buffer[vcnt] = '\0';
+
+    vec_t       data;
+    std::size_t bcnt;
+
+    data.reserve(std::strtol(buffer, nullptr, 10));
+    vcnt += 1;  // skip [
+    while (value[vcnt] && value[vcnt] != ']')  {
+        bcnt = 0;
+        while (value[vcnt] != '|' && value[vcnt] != ']')
+            buffer[bcnt++] = value[vcnt++];
+        buffer[bcnt] = '\0';
+        data.push_back(std::strtod(buffer, nullptr));
+        vcnt += 1;  // skip separator
+    }
     return (data);
 }
 

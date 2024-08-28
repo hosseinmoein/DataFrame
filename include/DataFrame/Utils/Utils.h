@@ -384,6 +384,16 @@ struct  IOStreamOpti  {
                 stream_.open(file_name);
             else
                 stream_.open(file_name, std::ios::binary);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+            if (stream.fail()) [[unlikely]]  {
+                String1K    err;
+
+                err.printf("IOStreamOpti: ERROR: Unable to open file '%s'",
+                           file_name);
+                throw DataFrameError(err.c_str());
+            }
+#endif // HMDF_SANITY_EXCEPTIONS
         }
     }
 
@@ -417,6 +427,15 @@ struct  IOFileOpti  {
     IOFileOpti(const char *file_name, bool binary = false)
         : file(std::fopen(file_name, binary ? "rb" : "r"))  {
 
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (! file) [[unlikely]]  {
+            String1K    err;
+
+            err.printf("IOFileOpti: ERROR: Unable to open file '%s'",
+                       file_name);
+            throw DataFrameError(err.c_str());
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
         std::setvbuf(file, nullptr, _IOFBF, SIZ);
     }
 

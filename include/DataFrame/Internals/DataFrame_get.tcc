@@ -298,12 +298,12 @@ get_col_unique_values(const char *name) const  {
     auto                    hash_func =
         [](std::reference_wrapper<const T> v) -> std::size_t  {
             return(std::hash<T>{}(v.get()));
-    };
+        };
     auto                    equal_func =
         [](std::reference_wrapper<const T> lhs,
            std::reference_wrapper<const T> rhs) -> bool  {
             return(lhs.get() == rhs.get());
-    };
+       	};
 
     using unset_t = DFUnorderedSet<typename std::reference_wrapper<T>::type,
                                    decltype(hash_func),

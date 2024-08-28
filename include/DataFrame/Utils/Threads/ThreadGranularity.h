@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <atomic>
 #include <cassert>
+#include <cstdlib>
 #include <thread>
 
 // ----------------------------------------------------------------------------
@@ -116,7 +117,7 @@ struct  SpinLock  {
                 lock_.clear(std::memory_order_release);
             }
         }
-        else  assert(0);
+        else  std::abort();
     }
 
     SpinLock (const SpinLock &) = delete;

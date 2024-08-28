@@ -48,12 +48,6 @@ write(const char *file_name,
     std::ofstream       stream;
     const IOStreamOpti  io_opti(stream, file_name, iof == io_format::binary);
 
-    if (stream.fail()) [[unlikely]]  {
-        String1K    err;
-
-        err.printf("write(): ERROR: Unable to open file '%s'", file_name);
-        throw DataFrameError(err.c_str());
-    }
     write<std::ostream, Ts ...>
         (stream, iof, precision, columns_only, max_recs);
     return (true);

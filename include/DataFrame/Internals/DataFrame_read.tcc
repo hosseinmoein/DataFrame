@@ -1687,15 +1687,8 @@ read (const char *file_name,
     }
     else  {
         std::ifstream       stream;
-        const IOStreamOpti  io_opti(stream,
-                                    file_name, iof == io_format::binary);
-
-        if (stream.fail()) [[unlikely]]  {
-            String1K    err;
-
-            err.printf("read(): ERROR: Unable to open file '%s'", file_name);
-            throw DataFrameError(err.c_str());
-        }
+        const IOStreamOpti  io_opti(
+            stream, file_name, iof == io_format::binary);
 
         read<std::istream>(stream, iof, columns_only, starting_row, num_rows);
     }

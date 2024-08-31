@@ -186,6 +186,94 @@ load_pair_(std::pair<T1, T2> &col_name_data, bool do_lock = true)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename ITR>
+inline size_type
+load_column_(const char *name,
+             Index2D<const ITR &> range,
+             nan_policy padding,
+             bool do_lock)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call load_column()");
+
+    using value_t = decltype(ITR::begin);
+
+    const auto          iter = column_tb_.find (name);
+    StlVecType<value_t> *vec_ptr = nullptr;
+
+    {
+        const SpinGuard guard (do_lock ? lock_ : nullptr);
+
+        if (iter == column_tb_.end()) [[likely]]
+            vec_ptr = &(create_column<value_t>(name, false));
+        else  {
+            DataVec &hv = data_[iter->second];
+
+            vec_ptr = &(hv.template get_vector<value_t>());
+        }
+    }
+
+    vec_ptr->clear();
+    vec_ptr->insert (vec_ptr->end(), range.begin, range.end);
+
+    size_type       ret_cnt = std::distance(range.begin, range.end);
+    const size_type idx_s = indices_.size();
+    const size_type s = vec_ptr->size();
+
+    if (padding == nan_policy::pad_with_nans && s < idx_s)  {
+        for (size_type i = 0; i < idx_s - s; ++i)  {
+            vec_ptr->push_back (std::move(get_nan<value_t>()));
+            ret_cnt += 1;
+        }
+    }
+
+    return (ret_cnt);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline size_type
+load_column_(const char *name,
+             StlVecType<T> &&column,
+             nan_policy padding,
+             bool do_lock)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call load_column()");
+
+    const size_type idx_s = indices_.size();
+    const size_type data_s = column.size();
+
+    using value_t = typename StlVecType<T>::value_type;
+
+    size_type   ret_cnt = data_s;
+
+    if (padding == nan_policy::pad_with_nans && data_s < idx_s)  {
+        for (size_type i = 0; i < idx_s - data_s; ++i)  {
+            column.push_back (std::move(get_nan<value_t>()));
+            ret_cnt += 1;
+        }
+    }
+
+    const auto          iter = column_tb_.find (name);
+    StlVecType<value_t> *vec_ptr = nullptr;
+    const SpinGuard     guard (do_lock ? lock_ : nullptr);
+
+    if (iter == column_tb_.end()) [[likely]]
+        vec_ptr = &(create_column<value_t>(name, false));
+    else  {
+        DataVec &hv = data_[iter->second];
+
+        vec_ptr = &(hv.template get_vector<value_t>());
+    }
+
+    *vec_ptr = std::move(column);
+    return (ret_cnt);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 size_type
 append_row_(std::pair<const char *, T> &row_name_data)  {

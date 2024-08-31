@@ -77,6 +77,17 @@ concept comparable = requires (const std::remove_reference_t<T> &a,
 
 // ----------------------------------------------------------------------------
 
+template<class T>
+concept equality_default_construct =
+    requires (const std::remove_reference_t<T> &a,
+              const std::remove_reference_t<T> &b)  {
+        { a == b } -> std::convertible_to<bool>;
+        { a != b } -> std::convertible_to<bool>;
+        requires std::is_default_constructible_v<T>;
+    };
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 concept container = requires(T t)  {
     typename T::value_type;

@@ -1182,6 +1182,73 @@ operator() (const T &vec)  {
                                         false);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::difference_functor_<Ts ...>::
+operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    try  {
+        const auto      &other_vec =
+            other.template get_column<ValueType>(name, false);
+        const size_type col_s = std::min(vec.size(), other_vec.size());
+        size_type       last_idx { 0 };
+        size_type       i { 0 };
+        VecType         self_new_col;
+        VecType         other_new_col;
+
+        self_new_col.reserve(vec.size() / 3);
+        other_new_col.reserve(other_vec.size() / 3);
+        for ( ; i < col_s; ++i) [[likely]]  {
+            if (vec[i] != other_vec[i])  {
+                for ( ; last_idx < i; ++last_idx)  {
+                    self_new_col.push_back(get_nan<ValueType>());
+                    other_new_col.push_back(get_nan<ValueType>());
+                    idx_set.insert(last_idx);
+                }
+                last_idx += 1;
+                self_new_col.push_back(vec[i]);
+                other_new_col.push_back(other_vec[i]);
+                idx_set.insert(i);
+            }
+        }
+        for (size_type j = i; j < vec.size(); ++j) [[unlikely]]  {
+            self_new_col.push_back(vec[j]);
+            idx_set.insert(j);
+        }
+        for (size_type j = i; j < other_vec.size(); ++j) [[unlikely]]  {
+            other_new_col.push_back(other_vec[j]);
+            idx_set.insert(j);
+        }
+
+        ColNameType self_name { "self_" };
+        ColNameType other_name { "other_" };
+
+        self_name += name;
+        other_name += name;
+
+        if (self_new_col.size() > 0 || other_new_col.size() > 0)  {
+            res.template load_column_<ValueType>(
+                self_name.c_str(),
+                std::move(self_new_col),
+                nan_policy::dont_pad_with_nans,
+                false);
+            res.template load_column_<ValueType>(
+                other_name.c_str(),
+                std::move(other_new_col),
+                nan_policy::dont_pad_with_nans,
+                false);
+        }
+    }
+    catch (const ColNotFound &)  {   }
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

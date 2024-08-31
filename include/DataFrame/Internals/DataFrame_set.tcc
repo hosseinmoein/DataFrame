@@ -375,10 +375,7 @@ load_column (const char *name,
              nan_policy padding,
              bool do_lock)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call load_column()");
-
-    size_type       s = std::distance(range.begin, range.end);
+    const size_type s = std::distance(range.begin, range.end);
     const size_type idx_s = indices_.size();
 
     if (s > idx_s) [[unlikely]]  {
@@ -395,37 +392,7 @@ load_column (const char *name,
         throw InconsistentData (buffer);
     }
 
-    using value_t = decltype(ITR::begin);
-
-    const auto          iter = column_tb_.find (name);
-    StlVecType<value_t> *vec_ptr = nullptr;
-
-    {
-        const SpinGuard guard (do_lock ? lock_ : nullptr);
-
-        if (iter == column_tb_.end()) [[likely]]
-            vec_ptr = &(create_column<value_t>(name, false));
-        else  {
-            DataVec &hv = data_[iter->second];
-
-            vec_ptr = &(hv.template get_vector<value_t>());
-        }
-    }
-
-    vec_ptr->clear();
-    vec_ptr->insert (vec_ptr->end(), range.begin, range.end);
-
-    size_type   ret_cnt = s;
-
-    s = vec_ptr->size();
-    if (padding == nan_policy::pad_with_nans && s < idx_s)  {
-        for (size_type i = 0; i < idx_s - s; ++i)  {
-            vec_ptr->push_back (std::move(get_nan<value_t>()));
-            ret_cnt += 1;
-        }
-    }
-
-    return (ret_cnt);
+    return (load_column_<ITR>(name, range, padding, do_lock));
 }
 
 // ----------------------------------------------------------------------------
@@ -688,9 +655,6 @@ load_column (const char *name,
              nan_policy padding,
              bool do_lock)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call load_column()");
-
     const size_type idx_s = indices_.size();
     const size_type data_s = column.size();
 
@@ -708,31 +672,10 @@ load_column (const char *name,
         throw InconsistentData (buffer);
     }
 
-    using value_t = typename StlVecType<T>::value_type;
-
-    size_type   ret_cnt = data_s;
-
-    if (padding == nan_policy::pad_with_nans && data_s < idx_s)  {
-        for (size_type i = 0; i < idx_s - data_s; ++i)  {
-            column.push_back (std::move(get_nan<value_t>()));
-            ret_cnt += 1;
-        }
-    }
-
-    const auto          iter = column_tb_.find (name);
-    StlVecType<value_t> *vec_ptr = nullptr;
-    const SpinGuard     guard (do_lock ? lock_ : nullptr);
-
-    if (iter == column_tb_.end()) [[likely]]
-        vec_ptr = &(create_column<value_t>(name, false));
-    else  {
-        DataVec &hv = data_[iter->second];
-
-        vec_ptr = &(hv.template get_vector<value_t>());
-    }
-
-    *vec_ptr = std::move(column);
-    return (ret_cnt);
+    return (load_column_<T>(name,
+                            std::forward<StlVecType<T>>(column),
+                            padding,
+                            do_lock));
 }
 
 // ----------------------------------------------------------------------------
@@ -751,25 +694,8 @@ load_align_column(
                         const DataFrame::IndexType &,
                         const DataFrame::IndexType &)> diff_func)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call load_align_column()");
-
     const size_type idx_s = indices_.size();
     const size_type data_s = column.size();
-
-    if (data_s > idx_s || data_s == 0)  {
-        char buffer [512];
-
-        snprintf (buffer, sizeof(buffer) - 1,
-                  "DataFrame::load_align_column(): ERROR: "
-#ifdef _MSC_VER
-                  "data size of %zu is larger than index size of %zu",
-#else
-                  "data size of %lu is larger than index size of %lu",
-#endif // _MSC_VER
-                 data_s, idx_s);
-        throw InconsistentData (buffer);
-    }
 
     using value_t = typename StlVecType<T>::value_type;
 

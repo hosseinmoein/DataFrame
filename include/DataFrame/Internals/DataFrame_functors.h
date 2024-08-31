@@ -807,6 +807,27 @@ struct  explode_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename ... Ts>
+struct  difference_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline difference_functor_(const char *n,
+                               const DataFrame &o,
+                               DataFrame &r,
+                               DFSet<size_type> &is)
+        : name (n), other(o), res(r), idx_set(is)  {   }
+
+
+    const char          *name;
+    const DataFrame     &other;
+    DataFrame           &res;
+    DFSet<size_type>    &idx_set;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

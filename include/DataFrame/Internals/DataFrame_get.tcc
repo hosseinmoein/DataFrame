@@ -303,7 +303,7 @@ get_col_unique_values(const char *name) const  {
         [](std::reference_wrapper<const T> lhs,
            std::reference_wrapper<const T> rhs) -> bool  {
             return(lhs.get() == rhs.get());
-       	};
+        };
 
     using unset_t = DFUnorderedSet<typename std::reference_wrapper<T>::type,
                                    decltype(hash_func),
@@ -3262,8 +3262,8 @@ DataFrame<I, H>::inversion_count(const char *col_name) const  {
 
 template<typename I, typename H>
 template<container T, typename ... Ts>
-DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
-explode(const char *col_name) const  {
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::explode(const char *col_name) const  {
 
     const auto  &col = get_column<T>(col_name);
     size_type   total_cnt { 0 };
@@ -3296,6 +3296,43 @@ explode(const char *col_name) const  {
     else
         explode_helper_<typename T::value_type, decltype(col), Ts ...>
             (result, total_cnt, col_name, idx_mask, col);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<equality_default_construct ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::difference(const DataFrame &other) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (indices_ != other.get_index())
+        throw NotFeasible("difference(): "
+                          "Self and other index columns are not identical");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    DataFrame           result;
+    DFSet<size_type>    idx_set;
+
+    {
+        const SpinGuard guard(lock_);
+
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            difference_functor_<Ts ...> functor(
+                name.c_str(), other, result, idx_set);
+
+            data_[idx].change(functor);
+        }
+    }
+
+    IndexVecType    new_index;
+
+    new_index.reserve(idx_set.size());
+    for (const auto idx : idx_set)
+        new_index.push_back(indices_[idx]);
+    result.load_index(std::move(new_index));
 
     return (result);
 }

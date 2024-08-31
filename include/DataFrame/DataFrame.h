@@ -3640,6 +3640,35 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     explode(const char *col_name) const;
 
+    // This returns a DataFrame that is the difference between self and other.
+    // The returned DataFrame has the exact same index column as self.
+    // For each column in self and other with the same name, the returned
+    // column is the difference between them.
+    // For each comparison between pairs of columns, there will be two columns
+    // in the returned DataFrame, if there is a difference between them. Their
+    // names are prepended with "self_" and "other_". The returned column has
+    // the value that is different on spots that there is a difference. In
+    // spots that there is no difference there will be a NaN or default value
+    // for the type. Columns that are in one DataFrame but not the other are
+    // ignored and they are not in the returned DataFrame.
+    //
+    // NOTE: Index type and all data types must have equality (== !=)
+    //       operators well defined.
+    // NOTE: All data column types must have default construction well defined.
+    // NOTE: Columns in self and other with the same name must have the same
+    //       type.
+    // NOTE: The index columns in self and other must be identical.
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // other:
+    //   The other DataFrame to compae with.
+    //
+    template<equality_default_construct ... Ts>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+    difference(const DataFrame &other) const;
+
 public:  // Visitors
 
     // apply is a shortcut for a simple visit. It applies the func to every

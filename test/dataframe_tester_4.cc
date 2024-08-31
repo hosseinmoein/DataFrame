@@ -871,6 +871,67 @@ static void test_read_write_pairs()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_difference()  {
+
+    std::cout << "\nTesting difference( ) ..." << std::endl;
+
+    MyDataFrame                df;
+    StlVecType<unsigned long>  idxvec =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    StlVecType<double>         dblvec =
+        { 0, 15, -14, 2, 1, 12, 11, 8, 7, 6, 5, 4, 3, 9, 10};
+    StlVecType<double>         dblvec2 =
+        { 100, 101, 102, 103, 104, 103.9, 106.55, 106.34, 1.8, 111, 112, 111.5,
+          114, 115, 116};
+    StlVecType<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+
+    MyDataFrame df2 = df;
+
+    df2.get_column<double>("dbl_col")[3] = 1000.0;
+    df2.get_column<double>("dbl_col")[6] = 1001.0;
+    df2.get_column<std::string>("str_col")[1] = "Changed";
+    df2.get_column<std::string>("str_col")[5] = "Changed 2";
+
+    MyDataFrame diff_df = df.difference<double, std::string>(df2);
+
+    assert((diff_df.get_index() ==
+                StlVecType<unsigned long>{ 1, 2, 3, 4, 5, 6, 7 }));
+    assert(diff_df.get_column<double>("self_dbl_col").size() == 7);
+    assert(diff_df.get_column<double>("other_dbl_col").size() == 7);
+    assert(std::isnan(diff_df.get_column<double>("self_dbl_col")[0]));
+    assert(std::isnan(diff_df.get_column<double>("other_dbl_col")[0]));
+    assert(std::isnan(diff_df.get_column<double>("self_dbl_col")[1]));
+    assert(std::isnan(diff_df.get_column<double>("other_dbl_col")[1]));
+    assert(diff_df.get_column<double>("self_dbl_col")[3] == 2.0);
+    assert(diff_df.get_column<double>("other_dbl_col")[3] == 1000.0);
+    assert(std::isnan(diff_df.get_column<double>("self_dbl_col")[4]));
+    assert(std::isnan(diff_df.get_column<double>("other_dbl_col")[4]));
+    assert(diff_df.get_column<double>("self_dbl_col")[6] == 11.0);
+    assert(diff_df.get_column<double>("other_dbl_col")[6] == 1001.0);
+    assert(diff_df.get_column<std::string>("self_str_col").size() == 6);
+    assert(diff_df.get_column<std::string>("other_str_col").size() == 6);
+    assert(diff_df.get_column<std::string>("self_str_col")[0] == "");
+    assert(diff_df.get_column<std::string>("other_str_col")[0] == "");
+    assert(diff_df.get_column<std::string>("self_str_col")[1] == "bb");
+    assert(diff_df.get_column<std::string>("other_str_col")[1] == "Changed");
+    assert(diff_df.get_column<std::string>("self_str_col")[2] == "");
+    assert(diff_df.get_column<std::string>("other_str_col")[2] == "");
+    assert(diff_df.get_column<std::string>("self_str_col")[5] == "ff");
+    assert(diff_df.get_column<std::string>("other_str_col")[5] == "Changed 2");
+    assert(! diff_df.has_column("self_dbl_col_2"));
+    assert(! diff_df.has_column("other_dbl_col_2"));
+    assert(! diff_df.has_column("dbl_col_2"));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -883,6 +944,7 @@ int main(int, char *[]) {
     test_load_column();
     test_explode();
     test_read_write_pairs();
+    test_difference();
 
     return (0);
 }

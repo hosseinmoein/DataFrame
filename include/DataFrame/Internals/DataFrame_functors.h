@@ -83,7 +83,7 @@ struct  sort_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     const StlVecType<size_t>   &sorted_idxs;
     const size_t               idx_s;
-    StlVecType<bool>           done_vec;
+    StlVecType<char>           done_vec;
 
     template<typename T2>
     void operator() (T2 &vec);

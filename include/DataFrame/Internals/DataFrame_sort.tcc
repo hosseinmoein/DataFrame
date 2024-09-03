@@ -154,9 +154,8 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
     else  {
         sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
 
-        for (const auto &citer : column_list_) [[likely]]
-            if (citer.first != name)
-                data_[citer.second].change(functor);
+        for (const auto &[this_name, idx] : column_list_) [[likely]]
+            if (this_name != name)  data_[idx].change(functor);
     }
     return;
 }
@@ -195,131 +194,99 @@ sort(const char *name1, sort_spec dir1,
 
     auto    a_a =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (std::get<0>(lhs) < std::get<0>(rhs))
-                return (true);
-            else if (std::get<0>(lhs) > std::get<0>(rhs))
-                return (false);
-            return (std::get<1>(lhs) < std::get<1>(rhs));
+            if (std::get<0>(lhs) == std::get<0>(rhs))
+                return (std::get<1>(lhs) < std::get<1>(rhs));
+            return (std::get<0>(lhs) < std::get<0>(rhs));
         };
     auto    d_d =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (std::get<0>(lhs) > std::get<0>(rhs))
-                return (true);
-            else if (std::get<0>(lhs) < std::get<0>(rhs))
-                return (false);
-            return (std::get<1>(lhs) > std::get<1>(rhs));
+            if (std::get<0>(lhs) == std::get<0>(rhs))
+                return (std::get<1>(lhs) > std::get<1>(rhs));
+            return (std::get<0>(lhs) > std::get<0>(rhs));
         };
     auto    a_d =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (std::get<0>(lhs) < std::get<0>(rhs))
-                return (true);
-            else if (std::get<0>(lhs) > std::get<0>(rhs))
-                return (false);
-            return (std::get<1>(lhs) > std::get<1>(rhs));
+            if (std::get<0>(lhs) == std::get<0>(rhs))
+                return (std::get<1>(lhs) > std::get<1>(rhs));
+            return (std::get<0>(lhs) < std::get<0>(rhs));
         };
     auto    d_a =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (std::get<0>(lhs) > std::get<0>(rhs))
-                return (true);
-            else if (std::get<0>(lhs) < std::get<0>(rhs))
-                return (false);
-            return (std::get<1>(lhs) < std::get<1>(rhs));
+            if (std::get<0>(lhs) == std::get<0>(rhs))
+                return (std::get<1>(lhs) < std::get<1>(rhs));
+            return (std::get<0>(lhs) > std::get<0>(rhs));
         };
     auto    aa_aa =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
-                return (true);
-            else if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
-                return (false);
-            return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
+            if (abs__(std::get<0>(lhs)) == abs__(std::get<0>(rhs)))
+                return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
+            return (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)));
         };
     auto    ad_ad =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
-                return (true);
-            else if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
-                return (false);
-            return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
+            if (abs__(std::get<0>(lhs)) == abs__(std::get<0>(rhs)))
+                return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
+            return (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)));
         };
     auto    aa_ad =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
-                return (true);
-            else if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
-                return (false);
-            return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
+            if (abs__(std::get<0>(lhs)) == abs__(std::get<0>(rhs)))
+                return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
+            return (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)));
         };
     auto    ad_aa =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
-                return (true);
-            else if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
-                return (false);
-            return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
+            if (abs__(std::get<0>(lhs)) == abs__(std::get<0>(rhs)))
+                return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
+            return (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)));
         };
     auto    a_aa =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (std::get<0>(lhs) < std::get<0>(rhs))
-                return (true);
-            else if (std::get<0>(lhs) > std::get<0>(rhs))
-                return (false);
-            return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
+            if (std::get<0>(lhs) == std::get<0>(rhs))
+                return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
+            return (std::get<0>(lhs) < std::get<0>(rhs));
         };
     auto    a_ad =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (std::get<0>(lhs) < std::get<0>(rhs))
-                return (true);
-            else if (std::get<0>(lhs) > std::get<0>(rhs))
-                return (false);
-            return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
+            if (std::get<0>(lhs) == std::get<0>(rhs))
+                return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
+            return (std::get<0>(lhs) < std::get<0>(rhs));
         };
     auto    d_aa =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (std::get<0>(lhs) > std::get<0>(rhs))
-                return (true);
-            else if (std::get<0>(lhs) < std::get<0>(rhs))
-                return (false);
-            return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
+            if (std::get<0>(lhs) == std::get<0>(rhs))
+                return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
+            return (std::get<0>(lhs) > std::get<0>(rhs));
         };
     auto    d_ad =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (std::get<0>(lhs) > std::get<0>(rhs))
-                return (true);
-            else if (std::get<0>(lhs) < std::get<0>(rhs))
-                return (false);
-            return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
+            if (std::get<0>(lhs) == std::get<0>(rhs))
+                return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
+            return (std::get<0>(lhs) > std::get<0>(rhs));
         };
     auto    aa_a =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
-                return (true);
-            else if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
-                return (false);
-            return (std::get<1>(lhs) < std::get<1>(rhs));
+            if (abs__(std::get<0>(lhs)) == abs__(std::get<0>(rhs)))
+                return (std::get<1>(lhs) < std::get<1>(rhs));
+            return (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)));
         };
     auto    ad_a =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
-                return (true);
-            else if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
-                return (false);
-            return (std::get<1>(lhs) < std::get<1>(rhs));
+            if (abs__(std::get<0>(lhs)) == abs__(std::get<0>(rhs)))
+                return (std::get<1>(lhs) < std::get<1>(rhs));
+            return (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)));
         };
     auto    aa_d =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
-                return (true);
-            else if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
-                return (false);
-            return (std::get<1>(lhs) > std::get<1>(rhs));
+            if (abs__(std::get<0>(lhs)) == abs__(std::get<0>(rhs)))
+                return (std::get<1>(lhs) > std::get<1>(rhs));
+            return (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)));
         };
     auto    ad_d =
         [](const auto &lhs, const auto &rhs) -> bool {
-            if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
-                return (true);
-            else if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
-                return (false);
-            return (std::get<1>(lhs) > std::get<1>(rhs));
+            if (abs__(std::get<0>(lhs)) == abs__(std::get<0>(rhs)))
+                return (std::get<1>(lhs) > std::get<1>(rhs));
+            return (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)));
         };
 
     const size_type         idx_s = indices_.size();
@@ -578,9 +545,9 @@ sort(const char *name1, sort_spec dir1,
     else  {
         sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
 
-        for (const auto &citer : column_list_) [[likely]]
-            if (citer.first != name1 && citer.first != name2)
-                data_[citer.second].change(functor);
+        for (const auto &[name, idx] : column_list_) [[likely]]
+            if (name != name1 && name != name2)
+                data_[idx].change(functor);
     }
     return;
 }

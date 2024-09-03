@@ -114,10 +114,9 @@ public:
     parallel_loop2(I1 begin1, I1 end1, I2 begin2, I2 end2,
                    F &&routine, As && ... args);
 
-    template<std::random_access_iterator I, long TH = MUL_THR_THHOLD>
+    template<std::random_access_iterator I, long TH = 50'000L>
     void parallel_sort(const I begin, const I end);
-    template<std::random_access_iterator I, typename P,
-             long TH = MUL_THR_THHOLD>
+    template<std::random_access_iterator I, typename P, long TH = 25'000L>
     void parallel_sort(const I begin, const I end, P compare);
 
     // If the pool is not shutdown and there is a pending task, run the one

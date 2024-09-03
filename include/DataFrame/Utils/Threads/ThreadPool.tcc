@@ -271,12 +271,12 @@ ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
 
     const size_type data_size = std::distance(begin, end);
 
-    if (data_size > 0)  {
+    if (data_size > 1)  {
         auto                left_iter = begin;
         auto                right_iter = end - 1;
         bool                is_swapped_left = false;
         bool                is_swapped_right = false;
-        const value_type    pivot = *begin;
+        const value_type    pivot = *(begin + (data_size / 2));
         auto                fwd_iter = begin + 1;
 
         while (fwd_iter <= right_iter)  {
@@ -294,23 +294,21 @@ ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
             else ++fwd_iter;
         }
 
-        const bool  do_left =
-            is_swapped_left && std::distance(begin, left_iter) > 0;
-        const bool  do_right =
-            is_swapped_right && std::distance(right_iter, end) > 0;
+        is_swapped_left &= begin < left_iter;
+        is_swapped_right &= right_iter < end;
 
         if (data_size >= TH)  {
             fut_type    left_fut;
             fut_type    right_fut;
 
-            if (do_left)
+            if (is_swapped_left)
                 left_fut = dispatch(false,
                                     &ThreadPool::parallel_sort<I, P, TH>,
                                     this,
                                     begin,
                                     left_iter,
                                     compare);
-            if (do_right)
+            if (is_swapped_right)
                 right_fut = dispatch(false,
                                      &ThreadPool::parallel_sort<I, P, TH>,
                                      this,
@@ -318,21 +316,21 @@ ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
                                      end,
                                      compare);
 
-            if (do_left)
+            if (is_swapped_left)
                 while (left_fut.wait_for(std::chrono::seconds(0)) ==
                            std::future_status::timeout)
                     run_task();
-            if (do_right)
+            if (is_swapped_right)
                 while (right_fut.wait_for(std::chrono::seconds(0)) ==
                            std::future_status::timeout)
                     run_task();
         }
         else  {
-            if (do_left)
-                parallel_sort<I, P, TH>(begin, left_iter, compare);
+            if (is_swapped_left)
+                std::sort(begin, left_iter, compare);
 
-            if (do_right)
-                parallel_sort<I, P, TH>(right_iter + 1, end, compare);
+            if (is_swapped_right)
+                std::sort(right_iter + 1, end, compare);
         }
     }
 }

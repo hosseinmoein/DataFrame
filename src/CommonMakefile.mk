@@ -45,6 +45,7 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_standalone.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_set.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_get.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_slice.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_visit.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_read.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_write.tcc \

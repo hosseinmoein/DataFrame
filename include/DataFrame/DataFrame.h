@@ -3669,6 +3669,53 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     difference(const DataFrame &other) const;
 
+    //
+    // DateTime specific functionalities
+    //
+
+    // This selects the rows using the index column at specified time. It
+    // returns another DataFrame with selected data indexed by DateTime.
+    // Self is unchanged.
+    //
+    // NOTE: The index column type must be DateTime or it won’t compile
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // hr:
+    //   Specified hour
+    // mn:
+    //   Specified minute
+    // sc:
+    //   Specified second
+    // msc:
+    //   Specified milli-second
+    //
+    template<typename ... Ts>
+    [[nodiscard]] DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
+    get_data_at_times(DateTime::HourType hr,  // 24 hour notation
+                      DateTime::MinuteType mn = 0,
+                      DateTime::SecondType sc = 0,
+                      DateTime::MillisecondType msc = 0) const;
+
+    // Same as get_data_at_times() above, but it returns a view
+    //
+    template<typename ... Ts>
+    [[nodiscard]] PtrView
+    get_view_at_times(DateTime::HourType hr,  // 24 hour notation
+                      DateTime::MinuteType mn = 0,
+                      DateTime::SecondType sc = 0,
+                      DateTime::MillisecondType msc = 0);
+
+    // Same as get_data_at_times() above, but it returns a const view
+    //
+    template<typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_view_at_times(DateTime::HourType hr,  // 24 hour notation
+                      DateTime::MinuteType mn = 0,
+                      DateTime::SecondType sc = 0,
+                      DateTime::MillisecondType msc = 0) const;
+
 public:  // Visitors
 
     // apply is a shortcut for a simple visit. It applies the func to every
@@ -4886,6 +4933,7 @@ private:
 #  include <DataFrame/Internals/DataFrame_standalone.tcc>
 #  include <DataFrame/Internals/DataFrame.tcc>
 #  include <DataFrame/Internals/DataFrame_get.tcc>
+#  include <DataFrame/Internals/DataFrame_slice.tcc>
 #  include <DataFrame/Internals/DataFrame_join.tcc>
 #  include <DataFrame/Internals/DataFrame_misc.tcc>
 #  include <DataFrame/Internals/DataFrame_opt.tcc>

@@ -573,9 +573,7 @@ static void test_explode()  {
 
     std::cout << "\nTesting load_explode( ) ..." << std::endl;
 
-    using DT_DataFrame = StdDataFrame<DateTime>;
-
-    DT_DataFrame    df;
+    DTDataFrame    df;
 
     try  {
         df.read("AAPL_10dBucketWithMaps_small.csv", io_format::csv2);
@@ -932,6 +930,40 @@ static void test_difference()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_get_data_at_times()  {
+
+    std::cout << "\nTesting load_get_data_at_times( ) ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("DT_Intraday.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  result = df.get_view_at_times<double, long>(16, 30);
+
+    assert(result.get_index().size() == 7);
+    assert(result.get_index()[0].date() == 19861115);
+    assert(result.get_index()[1].date() == 19861214);
+    assert(result.get_index()[6].date() == 19870613);
+    assert(result.get_index()[5].date() == 19870508);
+    assert(result.get_column<double>("dbl value").size() == 7);
+    assert(result.get_column<double>("dbl value")[0] == 4.0);
+    assert(result.get_column<double>("dbl value")[1] == 655.5);
+    assert(result.get_column<double>("dbl value")[6] == 4767.0);
+    assert(result.get_column<double>("dbl value")[5] == 3935.5);
+    assert(result.get_column<long>("lng value").size() == 7);
+    assert(result.get_column<long>("lng value")[0] == 80);
+    assert(result.get_column<long>("lng value")[1] == 13110);
+    assert(result.get_column<long>("lng value")[6] == 95340);
+    assert(result.get_column<long>("lng value")[5] == 78710);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -945,6 +977,7 @@ int main(int, char *[]) {
     test_explode();
     test_read_write_pairs();
     test_difference();
+    test_get_data_at_times();
 
     return (0);
 }

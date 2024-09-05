@@ -53,9 +53,9 @@ get_data_at_times(DateTime::HourType hour,  // 24 hour
       </td>
       <td>
         This selects the rows using the index column at specified time. It returns another DataFrame with selected data indexed by DateTime. Self is unchanged.<BR><BR>
-        <B>NOTE</B>: The index column type must be DateTime or it won’t compile<BR>
+        <B>NOTE</B>: The index column type must be DateTime or it won't compile<BR>
       </td>
-      <td>
+      <td width="33%">
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>hour</B>: Specified hour<BR>
         <B>minute</B>: Specified minute<BR>
@@ -79,7 +79,7 @@ get_view_at_times(DateTime::HourType hour,  // 24 hour
         It behaves like get_data_at_times(), but it returns a View. A view is a DataFrame that is a reference to the original DataFrame. So if you modify anything in the view the original DataFrame will also be modified.<BR><BR>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
       </td>
-      <td>
+      <td width="33%">
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>hour</B>: Specified hour<BR>
         <B>minute</B>: Specified minute<BR>
@@ -102,7 +102,7 @@ get_view_at_times(DateTime::HourType hour,  // 24 hour
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is reflected in the const view.       
       </td>
-      <td>
+      <td width="33%">
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>hour</B>: Specified hour<BR>
         <B>minute</B>: Specified minute<BR>

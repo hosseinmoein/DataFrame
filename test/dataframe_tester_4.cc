@@ -998,6 +998,40 @@ static void test_get_data_before_times()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_get_data_after_times()  {
+
+    std::cout << "\nTesting load_get_data_after_times( ) ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("DT_Intraday.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  result = df.get_view_after_times<double, long>(23, 40);
+
+    assert(result.get_index().size() == 137);
+    assert(result.get_index()[0].date() == 19861118);
+    assert(result.get_index()[10].date() == 19861203);
+    assert(result.get_index()[100].date() == 19870423);
+    assert(result.get_index()[136].date() == 19870623);
+    assert(result.get_column<double>("dbl value").size() == 137);
+    assert(result.get_column<double>("dbl value")[0] == 78.0);
+    assert(result.get_column<double>("dbl value")[10] == 415.0);
+    assert(result.get_column<double>("dbl value")[100] == 3601.5);
+    assert(result.get_column<double>("dbl value")[136] == 4995.0);
+    assert(result.get_column<long>("lng value").size() == 137);
+    assert(result.get_column<long>("lng value")[0] == 1560);
+    assert(result.get_column<long>("lng value")[10] == 8300);
+    assert(result.get_column<long>("lng value")[100] == 72030);
+    assert(result.get_column<long>("lng value")[136] == 99900);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1013,6 +1047,7 @@ int main(int, char *[]) {
     test_difference();
     test_get_data_at_times();
     test_get_data_before_times();
+    test_get_data_after_times();
 
     return (0);
 }

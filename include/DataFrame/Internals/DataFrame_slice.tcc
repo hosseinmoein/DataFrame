@@ -2647,6 +2647,133 @@ get_view_before_times(DateTime::HourType hr,
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
+get_data_after_times(DateTime::HourType hr,
+                     DateTime::MinuteType mn,
+                     DateTime::SecondType sc,
+                     DateTime::MillisecondType msc) const  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_data_after_time()");
+
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 5);
+    for (size_type i = 0; i < idx_s; ++i)  {
+        if (indices_[i].hour() > hr)  {
+            col_indices.push_back(i);
+        }
+        else if (indices_[i].hour() == hr)  {
+            if (indices_[i].minute() > mn)  {
+                col_indices.push_back(i);
+            }
+            else if (indices_[i].minute() == mn)  {
+                if (indices_[i].sec() > sc)  {
+                    col_indices.push_back(i);
+                }
+                else if (indices_[i].sec() == sc)  {
+                    if (indices_[i].msec() > msc)  {
+                        col_indices.push_back(i);
+                    }
+                }
+            }
+        }
+    }
+
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_view_after_times(DateTime::HourType hr,
+                     DateTime::MinuteType mn,
+                     DateTime::SecondType sc,
+                     DateTime::MillisecondType msc)  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_view_after_times()");
+
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 5);
+    for (size_type i = 0; i < idx_s; ++i)  {
+        if (indices_[i].hour() > hr)  {
+            col_indices.push_back(i);
+        }
+        else if (indices_[i].hour() == hr)  {
+            if (indices_[i].minute() > mn)  {
+                col_indices.push_back(i);
+            }
+            else if (indices_[i].minute() == mn)  {
+                if (indices_[i].sec() > sc)  {
+                    col_indices.push_back(i);
+                }
+                else if (indices_[i].sec() == sc)  {
+                    if (indices_[i].msec() > msc)  {
+                        col_indices.push_back(i);
+                    }
+                }
+            }
+        }
+    }
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
+get_view_after_times(DateTime::HourType hr,
+                     DateTime::MinuteType mn,
+                     DateTime::SecondType sc,
+                     DateTime::MillisecondType msc) const  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_view_after_times()");
+
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 5);
+    for (size_type i = 0; i < idx_s; ++i)  {
+        if (indices_[i].hour() > hr)  {
+            col_indices.push_back(i);
+        }
+        else if (indices_[i].hour() == hr)  {
+            if (indices_[i].minute() > mn)  {
+                col_indices.push_back(i);
+            }
+            else if (indices_[i].minute() == mn)  {
+                if (indices_[i].sec() > sc)  {
+                    col_indices.push_back(i);
+                }
+                else if (indices_[i].sec() == sc)  {
+                    if (indices_[i].msec() > msc)  {
+                        col_indices.push_back(i);
+                    }
+                }
+            }
+        }
+    }
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

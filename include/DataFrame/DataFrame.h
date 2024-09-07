@@ -3802,6 +3802,34 @@ public: // Read/access and slicing interfaces
                          DateTime::SecondType sc = 0,
                          DateTime::MillisecondType msc = 0) const;
 
+    // This selects the rows using the index column that happen the specified
+    // days of the week time. It returns another DataFrame with selected data
+    // indexed by DateTime. The specified times are excluded. Self is unchanged
+    //
+    // NOTE: The index column type must be DateTime or it won’t compile
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // days:
+    //   List of specified days
+    //
+    template<typename ... Ts>
+    [[nodiscard]] DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
+    get_data_on_days(std::vector<DT_WEEKDAY> &&days) const;
+
+    // Same as get_data_on_days() above, but it returns a view
+    //
+    template<typename ... Ts>
+    [[nodiscard]] PtrView
+    get_view_on_days(std::vector<DT_WEEKDAY> &&days);
+
+    // Same as get_view_on_days() above, but it returns a const view
+    //
+    template<typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_view_on_days(std::vector<DT_WEEKDAY> &&days) const;
+
 public:  // Visitors
 
     // apply is a shortcut for a simple visit. It applies the func to every

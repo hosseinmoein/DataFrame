@@ -77,6 +77,7 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeString.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizePriorityQueue.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/AlignedAllocator.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeAllocator.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Endianness.h
 
 LIB_NAME = DataFrame

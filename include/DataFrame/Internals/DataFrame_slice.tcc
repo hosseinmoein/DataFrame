@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/Utils/FixedSizeAllocator.h>
 #include <DataFrame/Utils/Utils.h>
 
 // ----------------------------------------------------------------------------
@@ -113,7 +114,7 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
     new_index.reserve(values_s);
     locations.reserve(values_s);
     for (size_type i = 0; i < idx_s; ++i)
-        if (val_table.find(indices_[i]) != val_table.end())  {
+        if (val_table.contains(indices_[i]))  {
             new_index.push_back(indices_[i]);
             locations.push_back(i);
         }
@@ -270,7 +271,7 @@ get_view_by_idx(const StlVecType<IndexType> &values)  {
     locations.reserve(values_s);
 
     for (size_type i = 0; i < idx_s; ++i) [[likely]]
-        if (val_table.find(indices_[i]) != val_table.end()) [[likely]]  {
+        if (val_table.contains(indices_[i])) [[likely]]  {
             new_index.push_back(&(indices_[i]));
             locations.push_back(i);
         }
@@ -314,7 +315,7 @@ get_view_by_idx(const StlVecType<IndexType> &values) const  {
     locations.reserve(values_s);
 
     for (size_type i = 0; i < idx_s; ++i) [[likely]]
-        if (val_table.find(indices_[i]) != val_table.end()) [[likely]]  {
+        if (val_table.contains(indices_[i])) [[likely]]  {
             new_index.push_back(&(indices_[i]));
             locations.push_back(i);
         }
@@ -2770,6 +2771,92 @@ get_view_after_times(DateTime::HourType hr,
             }
         }
     }
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
+get_data_on_days(std::vector<DT_WEEKDAY> &&days) const  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_data_on_days()");
+
+    using set_t = std::unordered_set<DT_WEEKDAY,
+                                     std::hash<DT_WEEKDAY>,
+                                     std::equal_to<DT_WEEKDAY>,
+                                     StackFirstFitAllocator<DT_WEEKDAY, 20>>;
+
+    const set_t             day_set(days.begin(), days.end());
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 6);
+    for (size_type i = 0; i < idx_s; ++i)
+        if (day_set.contains(indices_[i].dweek()))
+            col_indices.push_back(i);
+
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::PtrView
+DataFrame<I, H>::
+get_view_on_days(std::vector<DT_WEEKDAY> &&days)  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_view_on_days()");
+
+    using set_t = std::unordered_set<DT_WEEKDAY,
+                                     std::hash<DT_WEEKDAY>,
+                                     std::equal_to<DT_WEEKDAY>,
+                                     StackFirstFitAllocator<DT_WEEKDAY, 20>>;
+
+    const set_t             day_set(days.begin(), days.end());
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 6);
+    for (size_type i = 0; i < idx_s; ++i)
+        if (day_set.contains(indices_[i].dweek()))
+            col_indices.push_back(i);
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
+get_view_on_days(std::vector<DT_WEEKDAY> &&days) const  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_view_on_days()");
+
+    using set_t = std::unordered_set<DT_WEEKDAY,
+                                     std::hash<DT_WEEKDAY>,
+                                     std::equal_to<DT_WEEKDAY>,
+                                     StackFirstFitAllocator<DT_WEEKDAY, 20>>;
+
+    const set_t             day_set(days.begin(), days.end());
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 6);
+    for (size_type i = 0; i < idx_s; ++i)
+        if (day_set.contains(indices_[i].dweek()))
+            col_indices.push_back(i);
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }

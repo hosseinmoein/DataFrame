@@ -1,0 +1,143 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+DataFrame&lt;DateTime, H&gt;
+get_data_on_days(std::vector&lt;DT_WEEKDAY&gt; &amp;&amp;days) const;
+        </B></PRE></font>
+      </td>
+      <td>
+        This selects the rows using the index column that happen the specified days of the week time. It returns another DataFrame with selected data indexed by DateTime. The specified times are excluded. Self is unchanged.<BR><BR>
+        <B>NOTE</B>: The index column type must be DateTime or it won't compile<BR>
+      </td>
+      <td width="33%">
+        <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
+        <B>days</B>: List of specified days<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+PtrView
+get_view_on_days(std::vector&lt;DT_WEEKDAY&gt; &amp;&amp;days);
+        </B></PRE></font>
+      </td>
+      <td>
+        It behaves like get_data_on_days(), but it returns a View. A view is a DataFrame that is a reference to the original DataFrame. So if you modify anything in the view the original DataFrame will also be modified.<BR><BR>
+        <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
+      </td>
+      <td width="33%">
+        <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
+        <B>days</B>: List of specified days<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+ConstPtrView
+get_view_on_days(std::vector&lt;DT_WEEKDAY&gt; &amp;&amp;days) const;
+        </B></PRE></font>
+      </td>
+      <td>
+          Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is reflected in the const view.       
+      </td>
+      <td width="33%">
+        <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
+        <B>days</B>: List of specified days<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_get_data_on_days<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing load_get_data_on_days( ) ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    DTDataFrame df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">try</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span><span style="color:#603000; ">read</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">DT_Intraday.csv</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> io_format<span style="color:#800080; ">::</span>csv2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">catch</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DataFrameError <span style="color:#808030; ">&amp;</span>ex<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> ex<span style="color:#808030; ">.</span>what<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  result <span style="color:#808030; ">=</span> df<span style="color:#808030; ">.</span>get_view_on_days<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800080; ">{</span> DT_WEEKDAY<span style="color:#800080; ">::</span>MON<span style="color:#808030; ">,</span> DT_WEEKDAY<span style="color:#800080; ">::</span>FRI <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">2861</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>date<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">19861117</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">100</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>date<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">19861124</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1000</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>date<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">19870202</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">2860</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>date<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">19870622</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl value</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">2861</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl value</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008000; ">32.5</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl value</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">100</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008000; ">195.5</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl value</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1000</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008000; ">1771.5</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl value</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">2860</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008000; ">4973.5</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">lng value</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">2861</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">lng value</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">650</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">lng value</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">100</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">3910</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">lng value</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1000</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">35430</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">lng value</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">2860</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">99470</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

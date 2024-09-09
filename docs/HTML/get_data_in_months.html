@@ -45,7 +45,7 @@ body {
         <PRE><B>
 template&lt;typename ... Ts&gt;
 DataFrame&lt;DateTime, H&gt;
-get_data_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;days) const;
+get_data_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;months) const;
         </B></PRE></font>
       </td>
       <td>
@@ -54,7 +54,7 @@ get_data_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;days) const;
       </td>
       <td width="33%">
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>days</B>: List of specified days<BR>
+        <B>months</B>: List of specified months<BR>
       </td>
     </tr>
 
@@ -63,7 +63,7 @@ get_data_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;days) const;
         <PRE><B>
 template&lt;typename ... Ts&gt;
 PtrView
-get_view_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;days);
+get_view_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;months);
         </B></PRE></font>
       </td>
       <td>
@@ -72,7 +72,7 @@ get_view_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;days);
       </td>
       <td width="33%">
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>days</B>: List of specified days<BR>
+        <B>months</B>: List of specified months<BR>
       </td>
     </tr>
 
@@ -81,7 +81,7 @@ get_view_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;days);
         <PRE><B>
 template&lt;typename ... Ts&gt;
 ConstPtrView
-get_view_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;days) const;
+get_view_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;months) const;
         </B></PRE></font>
       </td>
       <td>
@@ -89,7 +89,7 @@ get_view_in_months(std::vector&lt;DT_MONTH&gt; &amp;&amp;days) const;
       </td>
       <td width="33%">
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>days</B>: List of specified days<BR>
+        <B>months</B>: List of specified months<BR>
       </td>
     </tr>
 

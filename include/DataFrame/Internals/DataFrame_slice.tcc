@@ -2861,6 +2861,92 @@ get_view_on_days(std::vector<DT_WEEKDAY> &&days) const  {
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
+get_data_in_months(std::vector<DT_MONTH> &&months) const  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_data_in_months()");
+
+    using set_t = std::unordered_set<DT_MONTH,
+                                     std::hash<DT_MONTH>,
+                                     std::equal_to<DT_MONTH>,
+                                     StackFirstFitAllocator<DT_MONTH, 30>>;
+
+    const set_t             month_set(months.begin(), months.end());
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 6);
+    for (size_type i = 0; i < idx_s; ++i)
+        if (month_set.contains(indices_[i].month()))
+            col_indices.push_back(i);
+
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::PtrView
+DataFrame<I, H>::
+get_view_in_months(std::vector<DT_MONTH> &&months)  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_view_in_months()");
+
+    using set_t = std::unordered_set<DT_MONTH,
+                                     std::hash<DT_MONTH>,
+                                     std::equal_to<DT_MONTH>,
+                                     StackFirstFitAllocator<DT_MONTH, 30>>;
+
+    const set_t             month_set(months.begin(), months.end());
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 6);
+    for (size_type i = 0; i < idx_s; ++i)
+        if (month_set.contains(indices_[i].month()))
+            col_indices.push_back(i);
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
+get_view_in_months(std::vector<DT_MONTH> &&months) const  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_view_in_months()");
+
+    using set_t = std::unordered_set<DT_MONTH,
+                                     std::hash<DT_MONTH>,
+                                     std::equal_to<DT_MONTH>,
+                                     StackFirstFitAllocator<DT_MONTH, 30>>;
+
+    const set_t             month_set(months.begin(), months.end());
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 6);
+    for (size_type i = 0; i < idx_s; ++i)
+        if (month_set.contains(indices_[i].month()))
+            col_indices.push_back(i);
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

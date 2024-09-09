@@ -3802,7 +3802,7 @@ public: // Read/access and slicing interfaces
                          DateTime::SecondType sc = 0,
                          DateTime::MillisecondType msc = 0) const;
 
-    // This selects the rows using the index column that happen the specified
+    // This selects the rows using the index column that happen on the specified
     // days of the week time. It returns another DataFrame with selected data
     // indexed by DateTime. The specified times are excluded. Self is unchanged
     //
@@ -3829,6 +3829,34 @@ public: // Read/access and slicing interfaces
     template<typename ... Ts>
     [[nodiscard]] ConstPtrView
     get_view_on_days(std::vector<DT_WEEKDAY> &&days) const;
+
+    // This selects the rows using the index column that happen in the
+    // specified months. It returns another DataFrame with selected data
+    // indexed by DateTime. The specified times are excluded. Self is unchanged
+    //
+    // NOTE: The index column type must be DateTime or it won’t compile
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // months:
+    //   List of specified months
+    //
+    template<typename ... Ts>
+    [[nodiscard]] DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
+    get_data_in_months(std::vector<DT_MONTH> &&months) const;
+
+    // Same as get_data_on_months() above, but it returns a view
+    //
+    template<typename ... Ts>
+    [[nodiscard]] PtrView
+    get_view_in_months(std::vector<DT_MONTH> &&months);
+
+    // Same as get_view_on_months() above, but it returns a const view
+    //
+    template<typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_view_in_months(std::vector<DT_MONTH> &&months) const;
 
 public:  // Visitors
 

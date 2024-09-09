@@ -932,7 +932,7 @@ static void test_difference()  {
 
 static void test_get_data_at_times()  {
 
-    std::cout << "\nTesting load_get_data_at_times( ) ..." << std::endl;
+    std::cout << "\nTesting get_data_at_times( ) ..." << std::endl;
 
     DTDataFrame df;
 
@@ -966,7 +966,7 @@ static void test_get_data_at_times()  {
 
 static void test_get_data_before_times()  {
 
-    std::cout << "\nTesting load_get_data_before_times( ) ..." << std::endl;
+    std::cout << "\nTesting get_data_before_times( ) ..." << std::endl;
 
     DTDataFrame df;
 
@@ -1000,7 +1000,7 @@ static void test_get_data_before_times()  {
 
 static void test_get_data_after_times()  {
 
-    std::cout << "\nTesting load_get_data_after_times( ) ..." << std::endl;
+    std::cout << "\nTesting get_data_after_times( ) ..." << std::endl;
 
     DTDataFrame df;
 
@@ -1034,7 +1034,7 @@ static void test_get_data_after_times()  {
 
 static void test_get_data_on_days()  {
 
-    std::cout << "\nTesting load_get_data_on_days( ) ..." << std::endl;
+    std::cout << "\nTesting get_data_on_days( ) ..." << std::endl;
 
     DTDataFrame df;
 
@@ -1067,6 +1067,41 @@ static void test_get_data_on_days()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_get_data_in_months()  {
+
+    std::cout << "\nTesting get_data_in_months( ) ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("DT_Intraday.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  result =
+        df.get_view_in_months<double, long>({ DT_MONTH::JAN, DT_MONTH::NOV });
+
+    assert(result.get_index().size() == 2101);
+    assert(result.get_index()[0].date() == 19861115);
+    assert(result.get_index()[100].date() == 19861117);
+    assert(result.get_index()[1000].date() == 19870107);
+    assert(result.get_index()[2100].date() == 19870131);
+    assert(result.get_column<double>("dbl value").size() == 2101);
+    assert(result.get_column<double>("dbl value")[0] == 0.5);
+    assert(result.get_column<double>("dbl value")[100] == 50.5);
+    assert(result.get_column<double>("dbl value")[1000] == 1198.0);
+    assert(result.get_column<double>("dbl value")[2100] == 1748.0);
+    assert(result.get_column<long>("lng value").size() == 2101);
+    assert(result.get_column<long>("lng value")[0] == 10);
+    assert(result.get_column<long>("lng value")[100] == 1010);
+    assert(result.get_column<long>("lng value")[1000] == 23960);
+    assert(result.get_column<long>("lng value")[2100] == 34960);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1084,6 +1119,7 @@ int main(int, char *[]) {
     test_get_data_before_times();
     test_get_data_after_times();
     test_get_data_on_days();
+    test_get_data_in_months();
 
     return (0);
 }

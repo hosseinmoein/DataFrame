@@ -2523,6 +2523,26 @@ get_view_at_times(DateTime::HourType hr,
 
 // ----------------------------------------------------------------------------
 
+// Benchmark time vs. Data time
+//
+inline static bool
+_DT_before_times_(DateTime::HourType b_hr,
+                  DateTime::MinuteType b_mn,
+                  DateTime::SecondType b_sc,
+                  DateTime::MillisecondType b_msc,
+                  DateTime::HourType d_hr,
+                  DateTime::MinuteType d_mn,
+                  DateTime::SecondType d_sc,
+                  DateTime::MillisecondType d_msc)  {
+
+    return ((d_hr < b_hr) ||
+            (d_hr == b_hr && d_mn < b_mn) ||
+            (d_mn == b_mn && d_sc < b_sc) ||
+            (d_sc == b_sc && d_msc < b_msc));
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
@@ -2541,24 +2561,11 @@ get_data_before_times(DateTime::HourType hr,
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
-        if (indices_[i].hour() < hr)  {
+        const auto  &idx = indices_[i];
+
+        if (_DT_before_times_(hr, mn, sc, msc,
+                              idx.hour(), idx.minute(), idx.sec(), idx.msec()))
             col_indices.push_back(i);
-        }
-        else if (indices_[i].hour() == hr)  {
-            if (indices_[i].minute() < mn)  {
-                col_indices.push_back(i);
-            }
-            else if (indices_[i].minute() == mn)  {
-                if (indices_[i].sec() < sc)  {
-                    col_indices.push_back(i);
-                }
-                else if (indices_[i].sec() == sc)  {
-                    if (indices_[i].msec() < msc)  {
-                        col_indices.push_back(i);
-                    }
-                }
-            }
-        }
     }
 
     return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -2583,24 +2590,11 @@ get_view_before_times(DateTime::HourType hr,
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
-        if (indices_[i].hour() < hr)  {
+        const auto  &idx = indices_[i];
+
+        if (_DT_before_times_(hr, mn, sc, msc,
+                              idx.hour(), idx.minute(), idx.sec(), idx.msec()))
             col_indices.push_back(i);
-        }
-        else if (indices_[i].hour() == hr)  {
-            if (indices_[i].minute() < mn)  {
-                col_indices.push_back(i);
-            }
-            else if (indices_[i].minute() == mn)  {
-                if (indices_[i].sec() < sc)  {
-                    col_indices.push_back(i);
-                }
-                else if (indices_[i].sec() == sc)  {
-                    if (indices_[i].msec() < msc)  {
-                        col_indices.push_back(i);
-                    }
-                }
-            }
-        }
     }
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -2625,27 +2619,34 @@ get_view_before_times(DateTime::HourType hr,
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
-        if (indices_[i].hour() < hr)  {
+        const auto  &idx = indices_[i];
+
+        if (_DT_before_times_(hr, mn, sc, msc,
+                              idx.hour(), idx.minute(), idx.sec(), idx.msec()))
             col_indices.push_back(i);
-        }
-        else if (indices_[i].hour() == hr)  {
-            if (indices_[i].minute() < mn)  {
-                col_indices.push_back(i);
-            }
-            else if (indices_[i].minute() == mn)  {
-                if (indices_[i].sec() < sc)  {
-                    col_indices.push_back(i);
-                }
-                else if (indices_[i].sec() == sc)  {
-                    if (indices_[i].msec() < msc)  {
-                        col_indices.push_back(i);
-                    }
-                }
-            }
-        }
     }
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+// Benchmark time vs. Data time
+//
+inline static bool
+_DT_after_times_(DateTime::HourType b_hr,
+                 DateTime::MinuteType b_mn,
+                 DateTime::SecondType b_sc,
+                 DateTime::MillisecondType b_msc,
+                 DateTime::HourType d_hr,
+                 DateTime::MinuteType d_mn,
+                 DateTime::SecondType d_sc,
+                 DateTime::MillisecondType d_msc)  {
+
+    return ((d_hr > b_hr) ||
+            (d_hr == b_hr && d_mn > b_mn) ||
+            (d_mn == b_mn && d_sc > b_sc) ||
+            (d_sc == b_sc && d_msc > b_msc));
 }
 
 // ----------------------------------------------------------------------------
@@ -2668,24 +2669,11 @@ get_data_after_times(DateTime::HourType hr,
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
-        if (indices_[i].hour() > hr)  {
+        const auto  &idx = indices_[i];
+
+        if (_DT_after_times_(hr, mn, sc, msc,
+                             idx.hour(), idx.minute(), idx.sec(), idx.msec()))
             col_indices.push_back(i);
-        }
-        else if (indices_[i].hour() == hr)  {
-            if (indices_[i].minute() > mn)  {
-                col_indices.push_back(i);
-            }
-            else if (indices_[i].minute() == mn)  {
-                if (indices_[i].sec() > sc)  {
-                    col_indices.push_back(i);
-                }
-                else if (indices_[i].sec() == sc)  {
-                    if (indices_[i].msec() > msc)  {
-                        col_indices.push_back(i);
-                    }
-                }
-            }
-        }
     }
 
     return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -2710,24 +2698,11 @@ get_view_after_times(DateTime::HourType hr,
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
-        if (indices_[i].hour() > hr)  {
+        const auto  &idx = indices_[i];
+
+        if (_DT_after_times_(hr, mn, sc, msc,
+                             idx.hour(), idx.minute(), idx.sec(), idx.msec()))
             col_indices.push_back(i);
-        }
-        else if (indices_[i].hour() == hr)  {
-            if (indices_[i].minute() > mn)  {
-                col_indices.push_back(i);
-            }
-            else if (indices_[i].minute() == mn)  {
-                if (indices_[i].sec() > sc)  {
-                    col_indices.push_back(i);
-                }
-                else if (indices_[i].sec() == sc)  {
-                    if (indices_[i].msec() > msc)  {
-                        col_indices.push_back(i);
-                    }
-                }
-            }
-        }
     }
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -2752,24 +2727,11 @@ get_view_after_times(DateTime::HourType hr,
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
-        if (indices_[i].hour() > hr)  {
+        const auto  &idx = indices_[i];
+
+        if (_DT_after_times_(hr, mn, sc, msc,
+                             idx.hour(), idx.minute(), idx.sec(), idx.msec()))
             col_indices.push_back(i);
-        }
-        else if (indices_[i].hour() == hr)  {
-            if (indices_[i].minute() > mn)  {
-                col_indices.push_back(i);
-            }
-            else if (indices_[i].minute() == mn)  {
-                if (indices_[i].sec() > sc)  {
-                    col_indices.push_back(i);
-                }
-                else if (indices_[i].sec() == sc)  {
-                    if (indices_[i].msec() > msc)  {
-                        col_indices.push_back(i);
-                    }
-                }
-            }
-        }
     }
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));

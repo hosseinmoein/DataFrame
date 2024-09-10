@@ -1102,6 +1102,40 @@ static void test_get_data_in_months()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_get_data_on_days_in_month()  {
+
+    std::cout << "\nTesting get_data_on_days_in_month( ) ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("DT_Intraday.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  result = df.get_view_on_days_in_month<double, long>({ 31, 5 });
+
+    assert(result.get_index().size() == 505);
+    assert(result.get_index()[0].date() == 19861205);
+    assert(result.get_index()[100].date() == 19870105);
+    assert(result.get_index()[300].date() == 19870331);
+    assert(result.get_index()[504].date() == 19870605);
+    assert(result.get_column<double>("dbl value").size() == 505);
+    assert(result.get_column<double>("dbl value")[0] == 439.5);
+    assert(result.get_column<double>("dbl value")[100] == 1145.5);
+    assert(result.get_column<double>("dbl value")[300] == 3071.0);
+    assert(result.get_column<double>("dbl value")[504] == 4594.0);
+    assert(result.get_column<long>("lng value").size() == 505);
+    assert(result.get_column<long>("lng value")[0] == 8790);
+    assert(result.get_column<long>("lng value")[100] == 22910);
+    assert(result.get_column<long>("lng value")[300] == 61420);
+    assert(result.get_column<long>("lng value")[504] == 91880);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1120,6 +1154,7 @@ int main(int, char *[]) {
     test_get_data_after_times();
     test_get_data_on_days();
     test_get_data_in_months();
+    test_get_data_on_days_in_month();
 
     return (0);
 }

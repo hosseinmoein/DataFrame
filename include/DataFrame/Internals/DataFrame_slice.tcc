@@ -2790,7 +2790,7 @@ get_data_on_days(std::vector<DT_WEEKDAY> &&days) const  {
     using set_t = std::unordered_set<DT_WEEKDAY,
                                      std::hash<DT_WEEKDAY>,
                                      std::equal_to<DT_WEEKDAY>,
-                                     StackFirstFitAllocator<DT_WEEKDAY, 20>>;
+                                     StackFirstFitAllocator<DT_WEEKDAY, 32>>;
 
     const set_t             day_set(days.begin(), days.end());
     const size_type         idx_s = indices_.size();
@@ -2819,7 +2819,7 @@ get_view_on_days(std::vector<DT_WEEKDAY> &&days)  {
     using set_t = std::unordered_set<DT_WEEKDAY,
                                      std::hash<DT_WEEKDAY>,
                                      std::equal_to<DT_WEEKDAY>,
-                                     StackFirstFitAllocator<DT_WEEKDAY, 20>>;
+                                     StackFirstFitAllocator<DT_WEEKDAY, 32>>;
 
     const set_t             day_set(days.begin(), days.end());
     const size_type         idx_s = indices_.size();
@@ -2847,7 +2847,7 @@ get_view_on_days(std::vector<DT_WEEKDAY> &&days) const  {
     using set_t = std::unordered_set<DT_WEEKDAY,
                                      std::hash<DT_WEEKDAY>,
                                      std::equal_to<DT_WEEKDAY>,
-                                     StackFirstFitAllocator<DT_WEEKDAY, 20>>;
+                                     StackFirstFitAllocator<DT_WEEKDAY, 32>>;
 
     const set_t             day_set(days.begin(), days.end());
     const size_type         idx_s = indices_.size();
@@ -2856,6 +2856,95 @@ get_view_on_days(std::vector<DT_WEEKDAY> &&days) const  {
     col_indices.reserve(idx_s / 6);
     for (size_type i = 0; i < idx_s; ++i)
         if (day_set.contains(indices_[i].dweek()))
+            col_indices.push_back(i);
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
+get_data_on_days_in_month(std::vector<DateTime::DatePartType> &&days) const  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_data_on_days_in_month()");
+
+    using set_t =
+        std::unordered_set<DateTime::DatePartType,
+                           std::hash<DateTime::DatePartType>,
+                           std::equal_to<DateTime::DatePartType>,
+                           StackFirstFitAllocator<DateTime::DatePartType, 64>>;
+
+    const set_t             day_set(days.begin(), days.end());
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 6);
+    for (size_type i = 0; i < idx_s; ++i)
+        if (day_set.contains(indices_[i].dmonth()))
+            col_indices.push_back(i);
+
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::PtrView
+DataFrame<I, H>::
+get_view_on_days_in_month(std::vector<DateTime::DatePartType> &&days)  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_view_on_days_in_month()");
+
+    using set_t =
+        std::unordered_set<DateTime::DatePartType,
+                           std::hash<DateTime::DatePartType>,
+                           std::equal_to<DateTime::DatePartType>,
+                           StackFirstFitAllocator<DateTime::DatePartType, 64>>;
+
+    const set_t             day_set(days.begin(), days.end());
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 6);
+    for (size_type i = 0; i < idx_s; ++i)
+        if (day_set.contains(indices_[i].dmonth()))
+            col_indices.push_back(i);
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
+get_view_on_days_in_month(std::vector<DateTime::DatePartType> &&days) const  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_view_on_days_in_month()");
+
+    using set_t =
+        std::unordered_set<DateTime::DatePartType,
+                           std::hash<DateTime::DatePartType>,
+                           std::equal_to<DateTime::DatePartType>,
+                           StackFirstFitAllocator<DateTime::DatePartType, 64>>;
+
+    const set_t             day_set(days.begin(), days.end());
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 6);
+    for (size_type i = 0; i < idx_s; ++i)
+        if (day_set.contains(indices_[i].dmonth()))
             col_indices.push_back(i);
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -2876,7 +2965,7 @@ get_data_in_months(std::vector<DT_MONTH> &&months) const  {
     using set_t = std::unordered_set<DT_MONTH,
                                      std::hash<DT_MONTH>,
                                      std::equal_to<DT_MONTH>,
-                                     StackFirstFitAllocator<DT_MONTH, 30>>;
+                                     StackFirstFitAllocator<DT_MONTH, 32>>;
 
     const set_t             month_set(months.begin(), months.end());
     const size_type         idx_s = indices_.size();
@@ -2905,7 +2994,7 @@ get_view_in_months(std::vector<DT_MONTH> &&months)  {
     using set_t = std::unordered_set<DT_MONTH,
                                      std::hash<DT_MONTH>,
                                      std::equal_to<DT_MONTH>,
-                                     StackFirstFitAllocator<DT_MONTH, 30>>;
+                                     StackFirstFitAllocator<DT_MONTH, 32>>;
 
     const set_t             month_set(months.begin(), months.end());
     const size_type         idx_s = indices_.size();
@@ -2933,7 +3022,7 @@ get_view_in_months(std::vector<DT_MONTH> &&months) const  {
     using set_t = std::unordered_set<DT_MONTH,
                                      std::hash<DT_MONTH>,
                                      std::equal_to<DT_MONTH>,
-                                     StackFirstFitAllocator<DT_MONTH, 30>>;
+                                     StackFirstFitAllocator<DT_MONTH, 32>>;
 
     const set_t             month_set(months.begin(), months.end());
     const size_type         idx_s = indices_.size();

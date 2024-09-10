@@ -3803,8 +3803,8 @@ public: // Read/access and slicing interfaces
                          DateTime::MillisecondType msc = 0) const;
 
     // This selects the rows using the index column that happen on the specified
-    // days of the week time. It returns another DataFrame with selected data
-    // indexed by DateTime. The specified times are excluded. Self is unchanged
+    // days of the week. It returns another DataFrame with selected data
+    // indexed by DateTime. Self is unchanged
     //
     // NOTE: The index column type must be DateTime or it won’t compile
     //
@@ -3830,9 +3830,37 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] ConstPtrView
     get_view_on_days(std::vector<DT_WEEKDAY> &&days) const;
 
+    // This selects the rows using the index column that happen on the specified
+    // days of the month. It returns another DataFrame with selected data
+    // indexed by DateTime. Self is unchanged
+    //
+    // NOTE: The index column type must be DateTime or it won’t compile
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // days:
+    //   List of specified days
+    //
+    template<typename ... Ts>
+    [[nodiscard]] DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
+    get_data_on_days_in_month(std::vector<DateTime::DatePartType> &&days) const;
+
+    // Same as get_data_on_days() above, but it returns a view
+    //
+    template<typename ... Ts>
+    [[nodiscard]] PtrView
+    get_view_on_days_in_month(std::vector<DateTime::DatePartType> &&days);
+
+    // Same as get_view_on_days() above, but it returns a const view
+    //
+    template<typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_view_on_days_in_month(std::vector<DateTime::DatePartType> &&days) const;
+
     // This selects the rows using the index column that happen in the
     // specified months. It returns another DataFrame with selected data
-    // indexed by DateTime. The specified times are excluded. Self is unchanged
+    // indexed by DateTime. Self is unchanged
     //
     // NOTE: The index column type must be DateTime or it won’t compile
     //

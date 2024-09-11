@@ -3802,6 +3802,70 @@ public: // Read/access and slicing interfaces
                          DateTime::SecondType sc = 0,
                          DateTime::MillisecondType msc = 0) const;
 
+    // This selects the rows using the index column that happen between the
+    // specified start and end time. It returns another DataFrame with selected
+    // data indexed by DateTime. The specified start/end times are excluded.
+    // Self is unchanged.
+    //
+    // NOTE: The index column type must be DateTime or it won’t compile
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // start_hr:
+    //   Specified start hour
+    // end_hr:
+    //   Specified end hour
+    // start_mn:
+    //   Specified start minute
+    // end_mn:
+    //   Specified end minute
+    // start_sc:
+    //   Specified start second
+    // end_sc:
+    //   Specified end second
+    // start_msc:
+    //   Specified start milli-second
+    // end_msc:
+    //   Specified end milli-second
+    //
+    template<typename ... Ts>
+    [[nodiscard]] DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
+    get_data_between_times(DateTime::HourType start_hr,  // 24 hour notation
+                           DateTime::HourType end_hr,  // 24 hour notation
+                           DateTime::MinuteType start_mn = 0,
+                           DateTime::MinuteType end_mn = 0,
+                           DateTime::SecondType start_sc = 0,
+                           DateTime::SecondType end_sc = 0,
+                           DateTime::MillisecondType start_msc = 0,
+                           DateTime::MillisecondType end_msc = 0) const;
+
+    // Same as get_view_after_times() above, but it returns a view
+    //
+    template<typename ... Ts>
+    [[nodiscard]] PtrView
+    get_view_between_times(DateTime::HourType start_hr,  // 24 hour notation
+                           DateTime::HourType end_hr,  // 24 hour notation
+                           DateTime::MinuteType start_mn = 0,
+                           DateTime::MinuteType end_mn = 0,
+                           DateTime::SecondType start_sc = 0,
+                           DateTime::SecondType end_sc = 0,
+                           DateTime::MillisecondType start_msc = 0,
+                           DateTime::MillisecondType end_msc = 0);
+
+    // Same as get_view_after_times() above, but it returns a const view
+    //
+    template<typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_view_between_times(DateTime::HourType start_hr,  // 24 hour notation
+                           DateTime::HourType end_hr,  // 24 hour notation
+                           DateTime::MinuteType start_mn = 0,
+                           DateTime::MinuteType end_mn = 0,
+                           DateTime::SecondType start_sc = 0,
+                           DateTime::SecondType end_sc = 0,
+                           DateTime::MillisecondType start_msc = 0,
+                           DateTime::MillisecondType end_msc = 0) const;
+
     // This selects the rows using the index column that happen on the specified
     // days of the week. It returns another DataFrame with selected data
     // indexed by DateTime. Self is unchanged

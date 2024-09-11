@@ -2743,6 +2743,118 @@ template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::
+get_data_between_times(DateTime::HourType start_hr,
+                       DateTime::HourType end_hr,
+                       DateTime::MinuteType start_mn,
+                       DateTime::MinuteType end_mn,
+                       DateTime::SecondType start_sc,
+                       DateTime::SecondType end_sc,
+                       DateTime::MillisecondType start_msc,
+                       DateTime::MillisecondType end_msc) const  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_data_between_time()");
+
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 5);
+    for (size_type i = 0; i < idx_s; ++i)  {
+        const auto  &idx = indices_[i];
+
+        if (_DT_after_times_(
+                start_hr, start_mn, start_sc, start_msc,
+                idx.hour(), idx.minute(), idx.sec(), idx.msec()) &&
+            _DT_before_times_(
+                end_hr, end_mn, end_sc, end_msc,
+                idx.hour(), idx.minute(), idx.sec(), idx.msec()))
+            col_indices.push_back(i);
+    }
+
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_view_between_times(DateTime::HourType start_hr,
+                       DateTime::HourType end_hr,
+                       DateTime::MinuteType start_mn,
+                       DateTime::MinuteType end_mn,
+                       DateTime::SecondType start_sc,
+                       DateTime::SecondType end_sc,
+                       DateTime::MillisecondType start_msc,
+                       DateTime::MillisecondType end_msc)  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_view_between_times()");
+
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 5);
+    for (size_type i = 0; i < idx_s; ++i)  {
+        const auto  &idx = indices_[i];
+
+        if (_DT_after_times_(
+                start_hr, start_mn, start_sc, start_msc,
+                idx.hour(), idx.minute(), idx.sec(), idx.msec()) &&
+            _DT_before_times_(
+                end_hr, end_mn, end_sc, end_msc,
+                idx.hour(), idx.minute(), idx.sec(), idx.msec()))
+            col_indices.push_back(i);
+    }
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
+get_view_between_times(DateTime::HourType start_hr,
+                       DateTime::HourType end_hr,
+                       DateTime::MinuteType start_mn,
+                       DateTime::MinuteType end_mn,
+                       DateTime::SecondType start_sc,
+                       DateTime::SecondType end_sc,
+                       DateTime::MillisecondType start_msc,
+                       DateTime::MillisecondType end_msc) const  {
+
+    static_assert(
+        std::is_base_of<DateTime, I>::value,
+        "Index type must be DateTime to call get_view_between_times()");
+
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 5);
+    for (size_type i = 0; i < idx_s; ++i)  {
+        const auto  &idx = indices_[i];
+
+        if (_DT_after_times_(
+                start_hr, start_mn, start_sc, start_msc,
+                idx.hour(), idx.minute(), idx.sec(), idx.msec()) &&
+            _DT_before_times_(
+                end_hr, end_mn, end_sc, end_msc,
+                idx.hour(), idx.minute(), idx.sec(), idx.msec()))
+            col_indices.push_back(i);
+    }
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
 get_data_on_days(std::vector<DT_WEEKDAY> &&days) const  {
 
     static_assert(

@@ -72,10 +72,6 @@ void read_csv2_(std::FILE *stream,
                 size_type starting_row,
                 size_type num_rows);
 
-template<typename T, typename ITR>
-void
-setup_view_column_(const char *name, Index2D<ITR> range);
-
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_join_helper_(const LHS_T &lhs,
@@ -170,6 +166,33 @@ column_left_right_join_(const LHS_T &lhs,
                         const char *col_name,
                         const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
                         const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename ITR>
+void
+setup_view_column_(const char *name, Index2D<ITR> range)  {
+
+    static_assert(
+        std::is_base_of<HeteroView<align_value>, DataVec>::value ||
+        std::is_base_of<HeteroConstView<align_value>, DataVec>::value ||
+        std::is_base_of<HeteroPtrView<align_value>, DataVec>::value ||
+        std::is_base_of<HeteroConstPtrView<align_value>, DataVec>::value,
+        "Only a DataFrameView or DataFramePtrView can "
+        "call setup_view_column_()");
+
+    DataVec dv;
+
+    dv.set_begin_end_special(&*(range.begin), &*(range.end - 1));
+
+    const SpinGuard guard(lock_);
+
+    data_.emplace_back (dv);
+    column_tb_.emplace (name, data_.size() - 1);
+    column_list_.emplace_back (name, data_.size() - 1);
+
+    return;
+}
 
 // ----------------------------------------------------------------------------
 

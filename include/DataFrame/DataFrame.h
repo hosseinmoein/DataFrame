@@ -5173,6 +5173,7 @@ private:
 #  include <DataFrame/Internals/DataFrame_opt.tcc>
 #  include <DataFrame/Internals/DataFrame_read.tcc>
 #  include <DataFrame/Internals/DataFrame_set.tcc>
+#  include <DataFrame/Internals/DataFrame_remove.tcc>
 #  include <DataFrame/Internals/DataFrame_shift.tcc>
 #  include <DataFrame/Internals/DataFrame_sort.tcc>
 #  include <DataFrame/Internals/DataFrame_visit.tcc>

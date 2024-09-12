@@ -867,6 +867,24 @@ public:  // Load/append/remove interfaces
     void
     remove_top_n_data(const char *col_name, size_type n);
 
+    // It removes data rows corresponding to n bottom rows of the named column.
+    //
+    // NOTE: Comparison operators (<, >, ==) must be well defined for type T.
+    //
+    // T:
+    //   Type of column name
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // n:
+    //   Number of bottom rows
+    //
+    template<comparable T, typename ... Ts>
+    void
+    remove_bottom_n_data(const char *col_name, size_type n);
+
     // It removes duplicate rows and returns a new DataFrame. Duplication is
     // determined by the given column. remove_dup_spec determines which
     // of the duplicated rows to keep.

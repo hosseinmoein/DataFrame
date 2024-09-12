@@ -377,6 +377,36 @@ void DataFrame<I, H>::remove_top_n_data(const char *col_name, size_type n)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<comparable T, typename ... Ts>
+void DataFrame<I, H>::
+remove_bottom_n_data(const char *col_name, size_type n)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  "Only a StdDataFrame or a PtrView can call "
+                  "remove_bottom_n_data()");
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    NSmallestVisitor<T, I>  nsv { n };
+
+    nsv.pre();
+    nsv(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    nsv.post();
+    nsv.sort_by_index_idx();
+
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(n);
+    for (const auto &res : nsv.get_result())
+        col_indices.push_back(res.index_idx);
+
+    remove_data_by_sel_common_<Ts ...>(col_indices);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<hashable_equal T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 remove_duplicates (const char *name,

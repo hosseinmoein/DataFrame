@@ -1173,6 +1173,57 @@ static void test_get_data_between_times()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_remove_top_n_data()  {
+
+    std::cout << "\nTesting remove_top_n_data( ) ..." << std::endl;
+
+    StlVecType<unsigned long>   idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123463 };
+    StlVecType<double>          d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double>          d2 =
+        { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
+    StlVecType<double>          d3 =
+        { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 10 };
+    StlVecType<int>             i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    MyDataFrame df2 = df;
+
+    auto    lbd =
+        [](const unsigned long &, const double &val) -> bool {
+            return (val < 100.0);
+        };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, int, std::string>
+            ("col_1", lbd);
+
+    df.remove_top_n_data<double, int, double, std::string>("col_3", 4);
+    view.remove_top_n_data<double, int, double, std::string>("col_3", 4);
+
+    assert(df.get_index().size() == 10);
+    assert(view.get_index().size() == 10);
+    assert(df.get_column<double>("col_2").size() == 10);
+    assert(view.get_column<double>("col_2").size() == 10);
+    assert(df.get_column<int>("col_4").size() == 10);
+    assert(view.get_column<int>("col_4").size() == 10);
+    assert(df.get_index()[4] == 123457);
+    assert(view.get_index()[4] == 123457);
+    assert(df.get_column<double>("col_1")[6] == 10);
+    assert(view.get_column<double>("col_1")[6] == 10);
+    assert(df.get_column<int>("col_4")[2] == 24);
+    assert(view.get_column<int>("col_4")[2] == 24);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1193,6 +1244,7 @@ int main(int, char *[]) {
     test_get_data_in_months();
     test_get_data_on_days_in_month();
     test_get_data_between_times();
+    test_remove_top_n_data();
 
     return (0);
 }

@@ -1060,7 +1060,7 @@ void top_n_common_(const char *col_name, V &&visitor, R &result) const  {
     const SpinGuard guard(lock_);
 
     if constexpr (std::is_same_v<res_t,
-                                  DataFrame<I, HeteroVector<align_value>>>)  {
+                                 DataFrame<I, HeteroVector<align_value>>>)  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
             sel_load_functor_<res_t, size_type, Ts ...> functor(
                 name.c_str(), idxs, 0, result);

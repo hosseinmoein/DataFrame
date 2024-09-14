@@ -3451,7 +3451,7 @@ struct  KthValueVisitor  {
 
     using vec_type = std::vector<T, typename allocator_declare<T, A>::type>;
 
-    template <forward_iterator K, forward_iterator H>
+    template <typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &values_begin, const H &values_end)  {
@@ -3538,7 +3538,7 @@ struct  MedianVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    template <forward_iterator K, forward_iterator H>
+    template <typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -3598,7 +3598,7 @@ struct  QuantileVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    template <forward_iterator K, forward_iterator H>
+    template <typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {

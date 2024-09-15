@@ -48,13 +48,13 @@ body {
 template&lt;comparable T, typename ... Ts&gt;
 void
 remove_above_quantile_data(const char *col_name,
-                           double quantile) const;
+                           double quantile);
         </B></PRE></font>
       </td>
       <td>
         It removes rows greater than the specified quantile of the given column. The row equal to the quantile is not removed.<BR><BR>
         
-        <B>NOTE</B> Comparison operators (<, >, >=, <= ==) must be well defined for type T.<BR>
+        <B>NOTE</B>: Comparison operators (<, >, >=, <= ==) must be well defined for type T.<BR>
       </td>
       <td width="30%">
         <B>T</B>: Type of the named column<BR>
@@ -71,13 +71,13 @@ remove_above_quantile_data(const char *col_name,
 template&lt;comparable T, typename ... Ts&gt;
 void
 remove_below_quantile_data(const char *col_name,
-                           double quantile) const;
+                           double quantile);
         </B></PRE></font>
       </td>
       <td>
         It removes rows smaller than the specified quantile of the given column. The row equal to the quantile is not removed.<BR><BR>
         
-        <B>NOTE</B> Comparison operators (<, >, >=, <= ==) must be well defined for type T.<BR>
+        <B>NOTE</B>: Comparison operators (<, >, >=, <= ==) must be well defined for type T.<BR>
       </td>
       <td width="30%">
         <B>T</B>: Type of the named column<BR>

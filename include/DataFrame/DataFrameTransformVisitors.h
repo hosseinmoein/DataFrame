@@ -59,7 +59,7 @@ struct  EhlersHighPassFilterVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_4
 
-    template <forward_iterator K, forward_iterator H>
+    template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
 
@@ -112,7 +112,7 @@ struct  EhlersBandPassFilterVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_4
 
-    template <forward_iterator K, forward_iterator H>
+    template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
 
@@ -176,7 +176,7 @@ struct  ClipVisitor  {
             count_ += 1;
         }
     }
-    template <forward_iterator K, forward_iterator H>
+    template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
 
@@ -254,8 +254,8 @@ struct  AbsVisitor  {
             count_ += 1;
         }
     }
-    PASS_DATA_ONE_BY_ONE
-    template <forward_iterator K, forward_iterator H>
+    // PASS_DATA_ONE_BY_ONE
+    template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
 

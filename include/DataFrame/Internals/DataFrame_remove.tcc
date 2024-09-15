@@ -457,9 +457,73 @@ remove_below_quantile_data(const char *col_name, double quantile)  {
     StlVecType<size_type>   col_indices;
     const size_type         col_s = vec.size();
 
+    col_indices.reserve(col_s / 3);
     for (size_type i = 0; i < col_s; ++i)
         if (vec[i] < quant.get_result())
             col_indices.push_back(i);
+
+    remove_data_by_sel_common_<Ts ...>(col_indices);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+void DataFrame<I, H>::
+remove_data_by_stdev(const char *col_name, T above_stdev, T below_stdev)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  "Only a StdDataFrame or a PtrView can call "
+                  "remove_data_by_stdev()");
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    const size_type         col_s = vec.size();
+    const auto              thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    auto                    mean_lbd =
+        [&vec = std::as_const(vec), this]() -> T  {
+            MeanVisitor<T, I>   mean { true };
+
+            mean.pre();
+            mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+            mean.post();
+            return (mean.get_result());
+        };
+    auto                    stdev_lbd =
+        [&vec = std::as_const(vec), this]() -> T  {
+            StdVisitor<T, I>    stdev { true, true };
+
+            stdev.pre();
+            stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+            stdev.post();
+            return (stdev.get_result());
+        };
+    T                       stdev;
+    T                       mean;
+
+    if (thread_level > 2)  {
+        auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
+        auto    mean_fut = thr_pool_.dispatch(false, mean_lbd);
+
+        mean = mean_fut.get();
+        stdev = stdev_fut.get();
+    }
+    else  {
+        mean = mean_lbd();
+        stdev = stdev_lbd();
+    }
+
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(col_s / 3);
+    for (size_type i = 0; i < col_s; ++i)  {
+        const T z = (vec[i] - mean) / stdev;
+
+        if (z > above_stdev || z < below_stdev)
+            col_indices.push_back(i);
+    }
 
     remove_data_by_sel_common_<Ts ...>(col_indices);
     return;

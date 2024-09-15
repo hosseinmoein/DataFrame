@@ -519,7 +519,7 @@ public:
         template<typename I>
         inline const_iterator operator + (I step) const noexcept  {
 
-            auto const  ret_node = node_;
+            auto    ret_node = node_;
 
             ret_node += static_cast<difference_type>(step);
             return (const_iterator { ret_node });

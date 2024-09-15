@@ -923,6 +923,25 @@ public:  // Load/append/remove interfaces
     void
     remove_below_quantile_data(const char *col_name, double quantile);
 
+    // This calculates the mean and standard deviation of the named column.
+    // All data rows above and below the thresholds will be removed.
+    //
+    // NOTE: Type T must support arithmetic operations
+    // 
+    // T:
+    //   Type of the named column.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // above_stdev:
+    //   Above standard deviation threshold where data will be removed
+    // below_stdev:
+    //   Below standard deviation threshold where data will be removed
+    //
+    template<arithmetic T, typename ... Ts>
+    void
+    remove_data_by_stdev(const char *col_name, T above_stdev, T below_stdev);
+
     // It removes duplicate rows and returns a new DataFrame. Duplication is
     // determined by the given column. remove_dup_spec determines which
     // of the duplicated rows to keep.

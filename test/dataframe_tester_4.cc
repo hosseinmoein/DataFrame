@@ -1375,6 +1375,46 @@ static void test_remove_below_quantile_data()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_remove_data_by_stdev()  {
+
+    std::cout << "\nTesting remove_data_by_stdev( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    df.remove_data_by_stdev <double, double, long>("IBM_Close", 0.25, -0.5);
+    view.remove_data_by_stdev<double, double, long>("IBM_Close", 0.25, -0.5);
+
+    assert(df.get_index().size() == 570);
+    assert(view.get_index().size() == 570);
+    assert(view.get_column<double>("IBM_Open").size() == 570);
+    assert(view.get_column<long>("IBM_Volume").size() == 570);
+    assert(df.get_column<double>("IBM_Low").size() == 570);
+    assert(df.get_column<long>("IBM_Volume").size() == 570);
+    assert(df.get_index()[500] == "2019-04-08");
+    assert(view.get_index()[101] == "2016-04-26");
+    assert(view.get_column<double>("IBM_Open")[45] == 142.600006);
+    assert(df.get_column<long>("IBM_Volume")[300] == 4300500);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1399,6 +1439,7 @@ int main(int, char *[]) {
     test_remove_bottom_n_data();
     test_remove_above_quantile_data();
     test_remove_below_quantile_data();
+    test_remove_data_by_stdev();
 
     return (0);
 }

@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/Utils.h>
 
+#include <any>
 #include <cstring>
 #include <sstream>
 #include <string_view>

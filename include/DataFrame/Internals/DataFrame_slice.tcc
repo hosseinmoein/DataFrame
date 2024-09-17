@@ -2445,6 +2445,177 @@ get_below_quantile_view(const char *col_name, double quantile) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+get_data_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    const size_type         col_s = vec.size();
+    const auto              thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    auto                    mean_lbd =
+        [&vec = std::as_const(vec), this]() -> T  {
+            MeanVisitor<T, I>   mean { true };
+
+            mean.pre();
+            mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+            mean.post();
+            return (mean.get_result());
+        };
+    auto                    stdev_lbd =
+        [&vec = std::as_const(vec), this]() -> T  {
+            StdVisitor<T, I>    stdev { true, true };
+
+            stdev.pre();
+            stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+            stdev.post();
+            return (stdev.get_result());
+        };
+    T                       stdev;
+    T                       mean;
+
+    if (thread_level > 2)  {
+        auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
+        auto    mean_fut = thr_pool_.dispatch(false, mean_lbd);
+
+        mean = mean_fut.get();
+        stdev = stdev_fut.get();
+    }
+    else  {
+        mean = mean_lbd();
+        stdev = stdev_lbd();
+    }
+
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(col_s / 2);
+    for (size_type i = 0; i < col_s; ++i)  {
+        const T z = (vec[i] - mean) / stdev;
+
+        if (z < high_stdev && z > low_stdev)
+            col_indices.push_back(i);
+    }
+
+    return (data_by_sel_common_<Ts ...>(col_indices, indices_.size()));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev)  {
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    const size_type         col_s = vec.size();
+    const auto              thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    auto                    mean_lbd =
+        [&vec = std::as_const(vec), this]() -> T  {
+            MeanVisitor<T, I>   mean { true };
+
+            mean.pre();
+            mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+            mean.post();
+            return (mean.get_result());
+        };
+    auto                    stdev_lbd =
+        [&vec = std::as_const(vec), this]() -> T  {
+            StdVisitor<T, I>    stdev { true, true };
+
+            stdev.pre();
+            stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+            stdev.post();
+            return (stdev.get_result());
+        };
+    T                       stdev;
+    T                       mean;
+
+    if (thread_level > 2)  {
+        auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
+        auto    mean_fut = thr_pool_.dispatch(false, mean_lbd);
+
+        mean = mean_fut.get();
+        stdev = stdev_fut.get();
+    }
+    else  {
+        mean = mean_lbd();
+        stdev = stdev_lbd();
+    }
+
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(col_s / 2);
+    for (size_type i = 0; i < col_s; ++i)  {
+        const T z = (vec[i] - mean) / stdev;
+
+        if (z < high_stdev && z > low_stdev)
+            col_indices.push_back(i);
+    }
+
+    return (view_by_sel_common_<Ts ...>(col_indices, indices_.size()));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
+get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    const size_type         col_s = vec.size();
+    const auto              thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    auto                    mean_lbd =
+        [&vec = std::as_const(vec), this]() -> T  {
+            MeanVisitor<T, I>   mean { true };
+
+            mean.pre();
+            mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+            mean.post();
+            return (mean.get_result());
+        };
+    auto                    stdev_lbd =
+        [&vec = std::as_const(vec), this]() -> T  {
+            StdVisitor<T, I>    stdev { true, true };
+
+            stdev.pre();
+            stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+            stdev.post();
+            return (stdev.get_result());
+        };
+    T                       stdev;
+    T                       mean;
+
+    if (thread_level > 2)  {
+        auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
+        auto    mean_fut = thr_pool_.dispatch(false, mean_lbd);
+
+        mean = mean_fut.get();
+        stdev = stdev_fut.get();
+    }
+    else  {
+        mean = mean_lbd();
+        stdev = stdev_lbd();
+    }
+
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(col_s / 2);
+    for (size_type i = 0; i < col_s; ++i)  {
+        const T z = (vec[i] - mean) / stdev;
+
+        if (z < high_stdev && z > low_stdev)
+            col_indices.push_back(i);
+    }
+
+    return (view_by_sel_common_<Ts ...>(col_indices, indices_.size()));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::

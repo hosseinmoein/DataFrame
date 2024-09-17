@@ -39,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Utils.h>
 
 #include <algorithm>
-#include <any>
 #include <cctype>
 #include <cmath>
 #include <cstdio>
@@ -3181,6 +3180,41 @@ public: // Read/access and slicing interfaces
     template<comparable T, typename ... Ts>
     [[nodiscard]] ConstPtrView
     get_below_quantile_view(const char *col_name, double quantile) const;
+
+    // This calculates the mean and standard deviation of the named column.
+    // It returns a new DataFrame that contains all the data where named column
+    // data is between high_stdev and low_stdev from the mean.
+    // Self is unchanged.
+    //
+    // NOTE: Type T must support arithmetic operations
+    //
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // high_stdev:
+    //   All data rows below this will be returned.
+    // low_stdev:
+    //   All data rows above this will be returned.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+    get_data_by_stdev(const char *col_name, T high_stdev, T low_stdev) const;
+
+    // Same as above but it returns a View.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]] PtrView
+    get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev);
+
+    // Same as above but it returns a const View.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const;
 
     // This returns a new DataFrame with the same index column as self and an
     // integer column with the same name for each column in self.

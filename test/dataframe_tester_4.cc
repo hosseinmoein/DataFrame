@@ -1415,6 +1415,52 @@ static void test_remove_data_by_stdev()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_get_data_by_stdev()  {
+
+    std::cout << "\nTesting get_data_by_stdev( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.dat", io_format::binary);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    auto    result_df =
+        df.get_data_by_stdev <double, double, long>("IBM_Close", 0.1, -0.4);
+    auto    result_view =
+        view.get_view_by_stdev<double, double, long>("IBM_Close", 0.1, -0.4);
+
+    assert(result_df.get_index().size() == 379);
+    assert(result_view.get_index().size() == 379);
+    assert(result_view.get_column<double>("IBM_Open").size() == 379);
+    assert(result_view.get_column<long>("IBM_Volume").size() == 379);
+    assert(result_df.get_column<double>("IBM_Low").size() == 379);
+    assert(result_df.get_column<long>("IBM_Volume").size() == 379);
+    assert(result_df.get_index()[300] == "2018-08-23");
+    assert(result_view.get_index()[300] == "2018-08-23");
+    assert(result_df.get_index()[101] == "2016-06-13");
+    assert(result_view.get_index()[101] == "2016-06-13");
+    assert(result_view.get_column<double>("IBM_Open")[45] == 141.740005);
+    assert(result_df.get_column<double>("IBM_Open")[45] == 141.740005);
+    assert(result_df.get_column<long>("IBM_Volume")[230] == 4413200);
+    assert(result_view.get_column<long>("IBM_Volume")[230] == 4413200);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1440,6 +1486,7 @@ int main(int, char *[]) {
     test_remove_above_quantile_data();
     test_remove_below_quantile_data();
     test_remove_data_by_stdev();
+    test_get_data_by_stdev();
 
     return (0);
 }

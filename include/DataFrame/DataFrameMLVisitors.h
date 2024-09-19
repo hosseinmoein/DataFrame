@@ -132,6 +132,10 @@ public:
 
     using result_type = std::array<value_type, K>;
     using cluster_type = std::array<VectorConstPtrView<value_type, A>, K>;
+    using order_type =
+        std::array<std::vector<
+                       size_type,
+                       typename allocator_declare<size_type, A>::type>, K>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
     using seed_t = std::random_device::result_type;
@@ -142,8 +146,9 @@ private:
     const bool      cc_;
     const seed_t    seed_;
     distance_func   dfunc_;
-    result_type     result_ { };    // K Means
-    cluster_type    clusters_ { };  // K Clusters
+    result_type     result_ { };         // K Means
+    cluster_type    clusters_ { };       // K Clusters
+    order_type      clusters_idxs_ { };  // K Clusters indices
 
     template<typename H>
     inline void calc_k_means_(const H &column_begin, size_type col_s)  {
@@ -161,9 +166,6 @@ private:
             if (! is_nan__(value)) [[likely]]
                 k_mean = value;
         }
-
-        std::vector<size_type, typename allocator_declare<size_type, A>::type>
-            assignments(col_s, 0);
 
         for (size_type iter = 0; iter < iter_num_; ++iter) [[likely]]  {
             result_type             new_means { value_type() };
@@ -189,14 +191,13 @@ private:
                             best_cluster = cluster;
                         }
                     }
-                    assignments[point] = best_cluster;
 
                     // Sum up and count points for each cluster.
                     //
-                    const size_type cluster = assignments[point];
+                    auto    &nm = new_means[best_cluster];
 
-                    new_means[cluster] = new_means[cluster] + value;
-                    counts[cluster] += 1.0;
+                    nm = nm + value;
+                    counts[best_cluster] += 1.0;
                 }
             }
 
@@ -228,10 +229,12 @@ private:
     calc_clusters_(const H &column_begin, size_type col_s)  {
 
         cluster_type    clusters;
+        order_type      clusters_idxs;
 
         for (size_type i = 0; i < K; ++i) [[likely]]  {
             clusters[i].reserve(col_s / K + 2);
             clusters[i].push_back(&(result_[i]));
+            clusters_idxs[i].reserve(col_s / K + 2);
         }
 
         for (size_type j = 0; j < col_s; ++j) [[likely]]  {
@@ -250,10 +253,12 @@ private:
                     }
                 }
                 clusters[min_idx].push_back(&value);
+                clusters_idxs[min_idx].push_back(j);
             }
         }
 
         clusters_.swap(clusters);
+        clusters_idxs_.swap(clusters_idxs);
     }
 
 public:
@@ -270,12 +275,19 @@ public:
             calc_clusters_(column_begin, col_s);
     }
 
-    inline void pre ()  { for (auto &iter : clusters_) iter.clear();  }
+    inline void pre ()  {
+
+        for (auto &iter : clusters_) iter.clear();
+        for (auto &iter : clusters_idxs_) iter.clear();
+    }
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
     inline const cluster_type &get_clusters () const  { return (clusters_); }
     inline cluster_type &get_clusters ()  { return (clusters_); }
+    inline const order_type &
+    get_clusters_idxs () const  { return (clusters_idxs_); }
+    inline order_type &get_clusters_idxs ()  { return (clusters_idxs_); }
 
     explicit
     KMeansVisitor(

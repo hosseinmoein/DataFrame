@@ -926,7 +926,7 @@ public:  // Load/append/remove interfaces
     // All data rows above and below the thresholds will be removed.
     //
     // NOTE: Type T must support arithmetic operations
-    // 
+    //
     // T:
     //   Type of the named column.
     // Ts:
@@ -3215,6 +3215,69 @@ public: // Read/access and slicing interfaces
     template<arithmetic T, typename ... Ts>
     [[nodiscard]] ConstPtrView
     get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const;
+
+    // This uses k-means clustering algorithm to divide the named columns into
+    // K clusters. It returns an array of K DataFrame's each containing one of
+    // the clusters of data based on the named column.
+    // Self in unchanged.
+    //
+    // NOTE: Type T must support arithmetic operations
+    //
+    // K:
+    //   Number of clusters for k-means clustering algorithm
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // dfunc:
+    //   A function to calculate the distance between two data points in the
+    //   named column
+    // num_of_iter:
+    //   Maximum number of iterations for k-means clustering algorithm before
+    //   converging
+    // seed:
+    //   Seed for random number generator to initialize k-means clustering
+    //   algorithm. Default is a random number for each call.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>, K>
+    get_data_by_kmeans(const char *col_name,
+                       std::function<double(const T &x, const T &y)> &&dfunc =
+                           [](const T &x, const T &y) -> double  {
+                               return ((x - y) * (x - y));
+                           },
+                       size_type num_of_iter = 1000,
+                       seed_t seed = seed_t(-1)) const;
+
+    // Same as above but it returns an array of Views.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<PtrView, K>
+    get_view_by_kmeans(const char *col_name,
+                       std::function<double(const T &x, const T &y)> &&dfunc =
+                           [](const T &x, const T &y) -> double  {
+                               return ((x - y) * (x - y));
+                           },
+                       size_type num_of_iter = 1000,
+                       seed_t seed = seed_t(-1));
+
+    // Same as above but it returns an array of const Views.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<ConstPtrView, K>
+    get_view_by_kmeans(const char *col_name,
+                       std::function<double(const T &x, const T &y)> &&dfunc =
+                           [](const T &x, const T &y) -> double  {
+                               return ((x - y) * (x - y));
+                           },
+                       size_type num_of_iter = 1000,
+                       seed_t seed = seed_t(-1)) const;
 
     // This returns a new DataFrame with the same index column as self and an
     // integer column with the same name for each column in self.

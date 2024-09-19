@@ -69,9 +69,10 @@ KMeansVisitor(std::size_t num_of_iter,
         </I>
         </LI>
         </OL>
-        <I>get_results()</I> returns an array of K means.<BR>
-        There is also a <I>get_clusters()</I> method that returns an array of K <I>VectorPtrView</I>'s which contain the data clustered around the K-Means. The first element in each <I>VectorPtrView</I> is the mean and the reset are the data points belonging to that cluster.<BR>
-      </td>
+        <I>get_results()</I> returns an array of K means.<BR><BR>
+        <I>get_clusters()</I> returns an array of K <I>VectorPtrView</I>'s which contain the data clustered around the K-Means. The first element in each <I>VectorPtrView</I> is the mean and the reset are the data points belonging to that cluster.<BR><BR>
+        <I>get_clusters_idxs()</I> returns an array of K <I>std::vector&lt;size_type&gt;</I>'s which contains indices of the data in each cluster.<BR>
+       </td>
       <td width="30%">
         <B>K</B>: Number of means to find<BR>
         <B>T</B>: Column data type<BR>

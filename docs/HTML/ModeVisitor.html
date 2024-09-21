@@ -64,9 +64,9 @@ using mode_v = ModeVisitor&lt;N, T, I, A&gt;;
         <PRE>
     template&lt;typename U&gt;
     using vec_type = std::vector&lt;U, typename allocator_declare&lt;U, A&gt;::type&gt;;
-			  
+  
     struct  DataItem  {
-        T                               value;    // Value of the column item
+        T                         value;    // Value of the column item
         VectorConstPtrView&lt;I, A&gt;  indices;  // List of indices where value occurred
 
         // Number of times value occurred

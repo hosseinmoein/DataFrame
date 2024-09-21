@@ -4143,9 +4143,9 @@ static void test_affinity_propagation()  {
 
     std::cout << "\nTesting affinity propagation visitor ..." << std::endl;
 
-    const size_t            item_cnt = 50;
-    MyDataFrame             df;
-    RandGenParams<double>   p;
+    const size_t           item_cnt = 50;
+    MyDataFrame            df;
+    RandGenParams<double>  p;
     StlVecType<double>     final_col;
     StlVecType<double>     col_data;
 
@@ -4195,10 +4195,7 @@ static void test_affinity_propagation()  {
 
     // Using the calculated means, separate the given column into clusters
     const auto  k_means = km_visitor.get_result();
-    const auto  &col1 = df.get_column<double>("col1");
-    const auto  results =
-        ap_visitor.get_clusters(df.get_index().begin(), df.get_index().end(),
-                                col1.begin(), col1.end());
+    const auto  results = ap_visitor.get_clusters();
 
     for (auto iter : k_means)  {
         std::cout << iter << ", ";

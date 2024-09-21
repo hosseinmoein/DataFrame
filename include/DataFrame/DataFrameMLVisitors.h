@@ -287,7 +287,6 @@ public:
     inline cluster_type &get_clusters ()  { return (clusters_); }
     inline const order_type &
     get_clusters_idxs () const  { return (clusters_idxs_); }
-    inline order_type &get_clusters_idxs ()  { return (clusters_idxs_); }
 
     explicit
     KMeansVisitor(
@@ -306,6 +305,9 @@ public:
 
 // ----------------------------------------------------------------------------
 
+// Time complexity is O(I*n^2) where I is number of iterations
+// Space complexity is O(n^2)
+//
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AffinityPropVisitor  {
 
@@ -318,117 +320,162 @@ public:
 
     using result_type = VectorConstPtrView<value_type, A>;
     using cluster_type = vec_t<VectorConstPtrView<value_type, A>>;
+    using order_type =
+        std::vector<std::vector<
+                        long,
+                        typename allocator_declare<long, A>::type>>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
 
 private:
 
     const size_type iter_num_;
-    distance_func   dfunc_;
+    const bool      cc_;
     const double    dfactor_;
-    result_type     result_ { };  // Centers
+    distance_func   dfunc_;
+    result_type     result_ { };         // Centers
+    cluster_type    clusters_ { };       // Clusters
+    order_type      clusters_idxs_ { };  // Clusters indices
 
     template<typename H>
     inline vec_t<double>
-    get_similarity_(const H &column_begin, size_type csize)  {
+    get_similarity_(const H &column_begin, long col_s)  {
 
-        vec_t<double>   simil((csize * (csize + 1)) / 2, 0.0);
+        vec_t<double>   simil((col_s * (col_s + 1)) / 2, 0.0);
         double          min_dist = std::numeric_limits<double>::max();
 
         // Compute similarity between distinct data points i and j
         //
-        for (size_type i = 0; i < csize - 1; ++i) [[likely]]  {
+        for (long i = 0; i < col_s - 1; ++i) [[likely]]  {
             const value_type    &i_val = *(column_begin + i);
+            const long          i_idx = (i * col_s) - ((i * (i + 1)) >> 1);
 
-            for (size_type j = i + 1; j < csize; ++j)  [[likely]]  {
+            for (long j = i + 1; j < col_s; ++j)  [[likely]]  {
                 const double    dist = -dfunc_(i_val, *(column_begin + j));
 
-                simil[(i * csize) + j - ((i * (i + 1)) >> 1)] = dist;
+                simil[i_idx + j] = dist;
                 if (dist < min_dist)  min_dist = dist;
             }
         }
 
         // Assign min to diagonals
         //
-        for (size_type i = 0; i < csize; ++i)
-            simil[(i * csize) + i - ((i * (i + 1)) >> 1)] = min_dist;
+        for (long i = 0; i < col_s; ++i)
+            simil[(i * col_s) + i - ((i * (i + 1)) >> 1)] = min_dist;
 
         return (simil);
     }
 
     inline void
-    get_avail_and_respon(const vec_t<double> &simil,
-                         size_type csize,
-                         vec_t<double> &avail,
-                         vec_t<double> &respon)  {
+    get_avail_and_respon_(const vec_t<double> &simil,
+                          long col_s,
+                          vec_t<double> &avail,
+                          vec_t<double> &respon)  {
 
-        avail.resize(csize * csize, 0.0);
-        respon.resize(csize * csize, 0.0);
+        avail.resize(col_s * col_s, 0.0);
+        respon.resize(col_s * col_s, 0.0);
+
+        const double    one_df = 1.0 - dfactor_;
 
         for (size_type m = 0; m < iter_num_; ++m) [[likely]]  {
             // Update responsibility
             //
-            for (size_type i = 0; i < csize; ++i) [[likely]]  {
-                for (size_type j = 0; j < csize; ++j) [[likely]]  {
+            for (long i = 0; i < col_s; ++i) [[likely]]  {
+                const long  i_idx = (i * col_s) - ((i * (i + 1)) >> 1);
+
+                for (long j = 0; j < col_s; ++j) [[likely]]  {
                     double  max_diff = -std::numeric_limits<double>::max();
 
-                    for (size_type jj = 0; jj < csize; ++jj)  {
+                    for (long jj = 0; jj < col_s; ++jj)  {
                         if (jj ^ j) [[likely]]   {
                             const double    value =
-                               simil[(i * csize) + jj - ((i * (i + 1)) >> 1)] +
-                               avail[jj * csize + i];
+                               simil[i_idx + jj] + avail[jj * col_s + i];
 
                             if (value > max_diff)
                                 max_diff = value;
                         }
                     }
 
-                    respon[j * csize + i] =
-                        (1.0 - dfactor_) *
-                        (simil[(i * csize) + j - ((i * (i + 1)) >> 1)] -
-                        max_diff) +
-                        dfactor_ * respon[j * csize + i];
+                    const long j_idx = j * col_s + i;
+
+                    respon[j_idx] = one_df * (simil[i_idx + j] - max_diff) +
+                                    dfactor_ * respon[j_idx];
                 }
             }
 
             // Update availability
             // Do diagonals first
             //
-            for (size_type i = 0; i < csize; ++i) [[likely]]  {
-                const size_type s1 = i * csize;
-                double          sum = 0.0;
+            for (long i = 0; i < col_s; ++i) [[likely]]  {
+                const long  s1 = i * col_s;
+                const long  s2 = i * col_s + i;
+                double      sum = 0.0;
 
-                for (size_type ii = 0; ii < csize; ++ii) [[likely]]
+                for (long ii = 0; ii < col_s; ++ii) [[likely]]
                     if (ii ^ i)
                         sum += std::max(0.0, respon[s1 + ii]);
 
-                avail[s1 + i] =
-                    (1.0 - dfactor_) * sum + dfactor_ * avail[s1 + i];
+                avail[s2] = one_df * sum + dfactor_ * avail[s2];
             }
-            for (size_type i = 0; i < csize; ++i) [[likely]]  {
-                for (size_type j = 0; j < csize; ++j)  [[likely]] {
+            for (long i = 0; i < col_s; ++i) [[likely]]  {
+                for (long j = 0; j < col_s; ++j)  [[likely]] {
                     if (i ^ j) [[likely]]  {  // Not equal
-                        const size_type s1 = j * csize;
-                        double          sum = 0.0;
-                        const size_type max_i_j = std::max(i, j);
-                        const size_type min_i_j = std::min(i, j);
+                        const long  s1 = j * col_s;
+                        const long  s2 = j * col_s + i;
+                        double      sum = 0.0;
+                        const long  max_i_j = std::max(i, j);
+                        const long  min_i_j = std::min(i, j);
 
-                        for (size_type ii = 0; ii < min_i_j; ++ii)
+                        for (long ii = 0; ii < min_i_j; ++ii)
                             sum += std::max(0.0, respon[s1 + ii]);
-                        for (size_type ii = min_i_j + 1; ii < max_i_j; ++ii)
+                        for (long ii = min_i_j + 1; ii < max_i_j; ++ii)
                             sum += std::max(0.0, respon[s1 + ii]);
-                        for (size_type ii = max_i_j + 1; ii < csize; ++ii)
+                        for (long ii = max_i_j + 1; ii < col_s; ++ii)
                             sum += std::max(0.0, respon[s1 + ii]);
 
-                        avail[s1 + i] =
-                            (1.0 - dfactor_) *
+                        avail[s2] =
+                            one_df *
                             std::min(0.0, respon[s1 + j] + sum) + dfactor_ *
-                            avail[s1 + i];
+                            avail[s2];
                     }
                 }
             }
         }
+    }
 
+    // Using the calculated means, separate the given column into clusters
+    //
+    template<typename H>
+    inline void
+    calc_clusters_(const H &column_begin, long col_s)  {
+
+        const long  centers_size = result_.size();
+
+        clusters_.resize(centers_size);
+        clusters_idxs_.resize(centers_size);
+        for (long i = 0; i < centers_size; ++i)  {
+            const auto  resv = col_s / centers_size;
+
+            clusters_[i].reserve(resv);
+            clusters_idxs_[i].reserve(resv);
+        }
+
+        for (long j = 0; j < col_s; ++j) [[likely]]  {
+            double              min_dist = std::numeric_limits<double>::max();
+            long                min_idx;
+            const value_type    &j_val = *(column_begin + j);
+
+            for (long i = 0; i < centers_size; ++i)  {
+                const double    dist = dfunc_(j_val, result_[i]);
+
+                if (dist < min_dist)  {
+                    min_dist = dist;
+                    min_idx = i;
+                }
+            }
+            clusters_[min_idx].push_back(&j_val);
+            clusters_idxs_[min_idx].push_back(j);
+        }
     }
 
 public:
@@ -438,73 +485,53 @@ public:
     operator() (const IV &idx_begin, const IV &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        const long  col_s = std::min(std::distance(idx_begin, idx_end),
+                                     std::distance(column_begin, column_end));
 
         const vec_t<double> simil =
             std::move(get_similarity_(column_begin, col_s));
         vec_t<double>       avail;
         vec_t<double>       respon;
 
-        get_avail_and_respon(simil, col_s, avail, respon);
+        get_avail_and_respon_(simil, col_s, avail, respon);
 
-        result_.reserve(std::min(col_s / 100, size_type(16)));
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            if (respon[i * col_s + i] + avail[i * col_s + i] > 0.0)
+        result_.reserve(std::min(col_s / 100, long(16)));
+        for (long i = 0; i < col_s; ++i) [[likely]]  {
+            const long  idx = i * col_s + i;
+
+            if (respon[idx] + avail[idx] > 0.0)
                 result_.push_back(&*(column_begin + i));
         }
+
+        if (cc_)  calc_clusters_(column_begin,  col_s);
     }
 
-    // Using the calculated means, separate the given column into clusters
-    //
-    template<typename IV, typename H>
-    inline cluster_type
-    get_clusters(const IV &idx_begin,
-                 const IV &idx_end,
-                 const H &column_begin,
-                 const H &column_end)  {
+    inline void pre ()  {
 
-        GET_COL_SIZE
-        const size_type centers_size = result_.size();
-        cluster_type    clusters;
-
-        if (centers_size > 0)  {
-            clusters.resize(centers_size);
-            for (size_type i = 0; i < centers_size; ++i)
-                clusters[i].reserve(col_s / centers_size);
-
-            for (size_type j = 0; j < col_s; ++j) [[likely]]  {
-                double              min_dist =
-                    std::numeric_limits<double>::max();
-                size_type           min_idx;
-                const value_type    &j_val = *(column_begin + j);
-
-                for (size_type i = 0; i < centers_size; ++i)  {
-                    const double    dist = dfunc_(j_val, result_[i]);
-
-                    if (dist < min_dist)  {
-                        min_dist = dist;
-                        min_idx = i;
-                    }
-                }
-                clusters[min_idx].push_back(&j_val);
-            }
-        }
-
-        return (clusters);
+        result_.clear();
+        clusters_.clear();
+        clusters_idxs_.clear();
     }
-
-    DEFINE_PRE_POST
-    DEFINE_RESULT
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+    inline const cluster_type &get_clusters () const  { return (clusters_); }
+    inline cluster_type &get_clusters ()  { return (clusters_); }
+    inline const order_type &
+    get_clusters_idxs () const  { return (clusters_idxs_); }
 
     explicit
     AffinityPropVisitor(
         size_type num_of_iter,
+        bool calc_clusters = true,
         distance_func f =
             [](const value_type &x, const value_type &y) -> double  {
                 return ((x - y) * (x - y));
             },
         double damping_factor = 0.9)
-        : iter_num_(num_of_iter), dfunc_(f), dfactor_(damping_factor)  {   }
+        : iter_num_(num_of_iter),
+          cc_(calc_clusters),
+          dfactor_(damping_factor), dfunc_(f)  {   }
 };
 
 // ----------------------------------------------------------------------------

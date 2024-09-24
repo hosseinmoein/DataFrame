@@ -1559,6 +1559,70 @@ static void test_get_data_by_kmeans()  {
 
 // ----------------------------------------------------------------------------
 
+void test_get_data_by_affin()  {
+
+    std::cout << "\nTesting get_data_by_affin( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.dat", io_format::binary);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    auto    views =
+        view.get_view_by_affin<double, double, long>
+            ("IBM_Close",
+             [](const double &x, const double &y) -> double  {
+                 return (std::fabs(x - y));
+             },
+             25);  //  Number of iterations
+
+    assert(views.size() == 4);
+
+    assert(views[0].get_index().size() == 157);
+    assert(views[0].get_column<double>("IBM_Open").size() == 157);
+    assert(views[0].get_index()[0] == "2014-10-21");
+    assert(views[0].get_index()[156] == "2018-02-01");
+    assert(views[0].get_column<double>("IBM_High")[140] == 162.899994);
+    assert(views[0].get_column<long>("IBM_Volume")[100] == 2543100);
+
+    assert(views[1].get_index().size() == 309);
+    assert(views[1].get_column<double>("IBM_Open").size() == 309);
+    assert(views[1].get_index()[0] == "2014-01-02");
+    assert(views[1].get_index()[308] == "2018-01-18");
+    assert(views[1].get_column<double>("IBM_High")[200] == 182.839996);
+    assert(views[1].get_column<long>("IBM_Volume")[100] == 3721600);
+
+    assert(views[2].get_index().size() == 256);
+    assert(views[2].get_column<double>("IBM_Open").size() == 256);
+    assert(views[2].get_index()[0] == "2014-11-20");
+    assert(views[2].get_index()[255] == "2020-02-13");
+    assert(views[2].get_column<double>("IBM_High")[200] == 156.800003);
+    assert(views[2].get_column<long>("IBM_Volume")[100] == 2838100);
+
+    assert(views[3].get_index().size() == 999);
+    assert(views[3].get_column<double>("IBM_Open").size() == 999);
+    assert(views[3].get_index()[0] == "2014-12-15");
+    assert(views[3].get_index()[998] == "2020-10-30");
+    assert(views[3].get_column<double>("IBM_High")[200] == 152.929993);
+    assert(views[3].get_column<long>("IBM_Volume")[100] == 3924800);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1586,6 +1650,7 @@ int main(int, char *[]) {
     test_remove_data_by_stdev();
     test_get_data_by_stdev();
     test_get_data_by_kmeans();
+    // test_get_data_by_affin();
 
     return (0);
 }

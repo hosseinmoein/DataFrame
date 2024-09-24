@@ -2713,6 +2713,105 @@ get_view_by_kmeans(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
+DataFrame<I, H>::
+get_data_by_affin(const char *col_name,
+                  std::function<double(const T &x, const T &y)> &&dfunc,
+                  size_type num_of_iter,
+                  double damping_factor) const  {
+
+    using df_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+    using res_t = std::vector<df_t>;
+    using ap_t = AffinityPropVisitor<T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    ap_t                    affin { num_of_iter, true, dfunc, damping_factor };
+
+    affin.pre();
+    affin(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    affin.post();
+
+    const auto      &idxs = affin.get_clusters_idxs();
+    const size_type &res_s = idxs.size();
+    res_t           result (res_s);
+
+    for (size_type i = 0; i < res_s; ++i)
+        result[i] =
+            std::move(data_by_sel_common_<Ts ...>(idxs[i], indices_.size()));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+std::vector<typename DataFrame<I, H>::PtrView>
+DataFrame<I, H>::
+get_view_by_affin(const char *col_name,
+                  std::function<double(const T &x, const T &y)> &&dfunc,
+                  size_type num_of_iter,
+                  double damping_factor)  {
+
+    using df_t = typename DataFrame<I, H>::PtrView;
+    using res_t = std::vector<df_t>;
+    using ap_t = AffinityPropVisitor<T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    ap_t                    affin { num_of_iter, true, dfunc, damping_factor };
+
+    affin.pre();
+    affin(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    affin.post();
+
+    const auto      &idxs = affin.get_clusters_idxs();
+    const size_type &res_s = idxs.size();
+    res_t           result (res_s);
+
+    for (size_type i = 0; i < res_s; ++i)
+        result[i] =
+            std::move(view_by_sel_common_<Ts ...>(idxs[i], indices_.size()));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+std::vector<typename DataFrame<I, H>::ConstPtrView>
+DataFrame<I, H>::
+get_view_by_affin(const char *col_name,
+                  std::function<double(const T &x, const T &y)> &&dfunc,
+                  size_type num_of_iter,
+                  double damping_factor) const  {
+
+    using df_t = typename DataFrame<I, H>::ConstPtrView;
+    using res_t = std::vector<df_t>;
+    using ap_t = AffinityPropVisitor<T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    ap_t                    affin { num_of_iter, true, dfunc, damping_factor };
+
+    affin.pre();
+    affin(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    affin.post();
+
+    const auto      &idxs = affin.get_clusters_idxs();
+    const size_type &res_s = idxs.size();
+    res_t           result (res_s);
+
+    for (size_type i = 0; i < res_s; ++i)
+        result[i] =
+            std::move(view_by_sel_common_<Ts ...>(idxs[i], indices_.size()));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::

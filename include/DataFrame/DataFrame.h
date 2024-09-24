@@ -3279,6 +3279,75 @@ public: // Read/access and slicing interfaces
                        size_type num_of_iter = 1000,
                        seed_t seed = seed_t(-1)) const;
 
+    // This uses Affinity Propagation algorithm to divide the named columns
+    // into clusters. It returns an array of DataFrame's each containing one
+    // of the clusters of data based on the named column. Unlike K-Means
+    // clustering, you do not have to specify the number of clusters.
+    // The algorithm determines that.
+    // Self in unchanged.
+    //
+    // NOTE: This is a resource consuming and relatively slow algorithm.
+    //       Its time complexity is O(I * n^2) where I is number of
+    //       iterations. Its space complexity is O(2 * n^2).
+    // NOTE: Type T must support arithmetic operations
+    // NOTE: This algorithm might be too slow for large datasets.
+    //       Also, see get_[data|view]_by_kmeans().
+    // NOTE: If this returns zero centroids (zero DataFrames) it is probably
+    //       because number of iterations is too small to converge.
+    //
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // dfunc:
+    //   A function to calculate the distance between two data points in the
+    //   named column
+    // num_of_iter:
+    //   Maximum number of iterations for AP clustering algorithm to converge
+    // damping_factor:
+    //   It is used in the algorithm. The default is 0.9. (1 – damping factor)
+    //   prevents numerical oscillations.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
+    get_data_by_affin(const char *col_name,
+                      std::function<double(const T &x, const T &y)> &&dfunc =
+                          [](const T &x, const T &y) -> double  {
+                              return ((x - y) * (x - y));
+                          },
+                      size_type num_of_iter = 20,
+                      double damping_factor = 0.9) const;
+
+    // Same as above but it returns a vector of Views.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<PtrView>
+    get_view_by_affin(const char *col_name,
+                      std::function<double(const T &x, const T &y)> &&dfunc =
+                          [](const T &x, const T &y) -> double  {
+                              return ((x - y) * (x - y));
+                          },
+                      size_type num_of_iter = 20,
+                      double damping_factor = 0.9);
+
+    // Same as above but it returns a vector of const Views.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<ConstPtrView>
+    get_view_by_affin(const char *col_name,
+                      std::function<double(const T &x, const T &y)> &&dfunc =
+                          [](const T &x, const T &y) -> double  {
+                              return ((x - y) * (x - y));
+                          },
+                      size_type num_of_iter = 20,
+                      double damping_factor = 0.9) const;
+
     // This returns a new DataFrame with the same index column as self and an
     // integer column with the same name for each column in self.
     // The integer columns in returned DataFrame show a duplication mask for

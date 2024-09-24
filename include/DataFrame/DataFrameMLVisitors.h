@@ -322,8 +322,8 @@ public:
     using cluster_type = vec_t<VectorConstPtrView<value_type, A>>;
     using order_type =
         std::vector<std::vector<
-                        long,
-                        typename allocator_declare<long, A>::type>>;
+                        size_type,
+                        typename allocator_declare<size_type, A>::type>>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
 
@@ -451,6 +451,8 @@ private:
 
         const long  centers_size = result_.size();
 
+        if (! centers_size)  return;
+
         clusters_.resize(centers_size);
         clusters_idxs_.resize(centers_size);
         for (long i = 0; i < centers_size; ++i)  {
@@ -461,11 +463,11 @@ private:
         }
 
         for (long j = 0; j < col_s; ++j) [[likely]]  {
-            double              min_dist = std::numeric_limits<double>::max();
-            long                min_idx;
             const value_type    &j_val = *(column_begin + j);
+            double              min_dist = dfunc_(j_val, result_[0]);
+            long                min_idx = 0;
 
-            for (long i = 0; i < centers_size; ++i)  {
+            for (long i = 1; i < centers_size; ++i)  {
                 const double    dist = dfunc_(j_val, result_[i]);
 
                 if (dist < min_dist)  {
@@ -474,7 +476,7 @@ private:
                 }
             }
             clusters_[min_idx].push_back(&j_val);
-            clusters_idxs_[min_idx].push_back(j);
+            clusters_idxs_[min_idx].push_back(size_type(j));
         }
     }
 

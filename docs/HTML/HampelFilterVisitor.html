@@ -68,7 +68,8 @@ enum class hampel_type : unsigned char  {
       <td bgcolor="blue"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameTransformVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename T, typename I = unsigned long
+         std::size_t A = 0&gt;
 struct HampelFilterVisitor;
 
 // -------------------------------------
@@ -85,13 +86,18 @@ using hamf_v = HampelFilterVisitor&lt;T, I&gt;;
     explicit
     HampelFilterVisitor(std::size_t window_size,
                         hampel_type ht = hampel_type::median,
-                        T num_of_std = 3);
+                        T num_of_std = 3,
+                        bool populate_idxs = false);
         </PRE>
 		</I>
+        If <I>populate_idxs</I> is true, the input data column will be unchanged. Instead, a vector of indices to datapoints affected will be populated and can be accessed by calling <I>get_idxs()</I>.<BR><BR>
+        <I>get_result()</I> returns number of data points affected<BR>
+		<I>get_idxs()</I> returns a std::vector of indices of datapoints affected<BR>
       </td>
       <td width="30%">
         <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

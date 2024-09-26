@@ -932,6 +932,8 @@ public:  // Load/append/remove interfaces
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
+    // col_name:
+    //   Name of the given column
     // above_stdev:
     //   Above standard deviation threshold where data will be removed
     // below_stdev:
@@ -940,6 +942,32 @@ public:  // Load/append/remove interfaces
     template<arithmetic T, typename ... Ts>
     void
     remove_data_by_stdev(const char *col_name, T above_stdev, T below_stdev);
+
+    // This uses an Hampel filter to detect and remove outliers in the named
+    // column and all rows corresponding to those outliers in the DataFrame.
+    //
+    // NOTE: Type T must support arithmetic operations
+    //
+    // T:
+    //   Type of the named column.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // window_size:
+    //   Size of the sliding window for MAD calculations
+    // htype:
+    //   Use either Median or Mean of Absolute Deviation (MAD)
+    // num_of_stdev:
+    //   Number of stdev used in the filter
+    //
+    template<arithmetic T, typename ... Ts>
+    void
+    remove_data_by_hampel(const char *col_name,
+                          size_type window_size,
+                          hampel_type htype = hampel_type::median,
+                          T num_of_stdev = 3);
 
     // It removes duplicate rows and returns a new DataFrame. Duplication is
     // determined by the given column. remove_dup_spec determines which

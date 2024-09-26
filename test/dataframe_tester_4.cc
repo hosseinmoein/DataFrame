@@ -1623,6 +1623,49 @@ void test_get_data_by_affin()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_remove_data_by_hampel()  {
+
+    std::cout << "\nTesting remove_data_by_hampel( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+        assert(df.get_index().size() == 1721);
+        assert(df.get_column<double>("IBM_Open").size() == 1721);
+        assert(df.get_column<double>("IBM_Close").size() == 1721);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    df.remove_data_by_hampel <double, double, long>("IBM_Close", 10);
+    view.remove_data_by_hampel<double, double, long>("IBM_Close", 10);
+
+    assert(df.get_index().size() == 1644);
+    assert(view.get_index().size() == 1644);
+    assert(view.get_column<double>("IBM_Open").size() == 1644);
+    assert(view.get_column<long>("IBM_Volume").size() == 1644);
+    assert(df.get_column<double>("IBM_Low").size() == 1644);
+    assert(df.get_column<long>("IBM_Volume").size() == 1644);
+    assert(df.get_index()[500] == "2016-01-25");
+    assert(view.get_index()[101] == "2014-05-30");
+    assert(view.get_column<double>("IBM_Open")[45] == 187.550003);
+    assert(df.get_column<long>("IBM_Volume")[300] == 4255400);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1651,6 +1694,7 @@ int main(int, char *[]) {
     test_get_data_by_stdev();
     test_get_data_by_kmeans();
     // test_get_data_by_affin();
+    test_remove_data_by_hampel();
 
     return (0);
 }

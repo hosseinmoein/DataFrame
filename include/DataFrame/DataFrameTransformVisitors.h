@@ -400,7 +400,7 @@ private:
         else  {
             const auto  &aggr_res = aggr.get_result();
 
-            idxs_.reserve(col_s / 20);
+            idxs_.reserve(col_s / 10);
             for (size_type i = 0; i < col_s; ++i)  {
                 if (diff[i] > (aggr_res[i] * factor))  {
                     idxs_.push_back(i);

@@ -82,6 +82,9 @@ using hamf_v = HampelFilterVisitor&lt;T, I&gt;;
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This is a transformer visitor. It means the column(s) passed to this visitor is not read-only and its values may change<BR><BR>
         This functor class applies Hampel filter to weed out outliers. It replaces the outliers with NaN. The functor result is number of items replaced. The filter is done by using either mean absolute deviation or median absolute deviation<BR><BR>
+
+        The Hampel filter is used to detect anomalies in data with a timeseries structure. It consists of a sliding window of a parameterizable size. For each window, each observation will be compared with the Median or Mean Absolute Deviation (MAD). The observation will be considered an outlier in the case in which it exceeds the MAD by n standard deviation * <I>1.4826</I> times.<BR><BR>
+		
         <I><PRE>
     explicit
     HampelFilterVisitor(std::size_t window_size,

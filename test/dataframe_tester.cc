@@ -3993,7 +3993,6 @@ static void test_k_means()  {
         std::cout << citer << ", ";
     std::cout << std::endl;
 
-
 /*
     // Using the calculated means, separate the given column into clusters
     const auto  &clusters = km_visitor.get_clusters();

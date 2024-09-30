@@ -453,11 +453,11 @@ private:
 
         if (! centers_size)  return;
 
+        const auto  resv = col_s / centers_size;
+
         clusters_.resize(centers_size);
         clusters_idxs_.resize(centers_size);
         for (long i = 0; i < centers_size; ++i)  {
-            const auto  resv = col_s / centers_size;
-
             clusters_[i].reserve(resv);
             clusters_idxs_[i].reserve(resv);
         }
@@ -534,6 +534,187 @@ public:
         : iter_num_(num_of_iter),
           cc_(calc_clusters),
           dfactor_(damping_factor), dfunc_(f)  {   }
+};
+
+// ----------------------------------------------------------------------------
+
+// Density-Based Spatial Clustering of Applications with Noise
+// Average runtime complexity is O(n log n). The worst case is O(n^2).
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  DBSCANVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using result_type = vec_t<VectorConstPtrView<value_type, A>>;
+    using order_type =
+        std::vector<std::vector<
+                        long,
+                        typename allocator_declare<long, A>::type>>;
+    using distance_func =
+        std::function<double(const value_type &x, const value_type &y)>;
+
+private:
+
+    using id_t = long;
+
+    static constexpr id_t   UNCLASSIFIED { -1 };
+    static constexpr id_t   NOISE { -2 };
+
+    template<typename H>
+    inline void
+    calculate_cluster_(const H &column_begin,
+                       const id_t column_idx,
+                       const id_t col_s,
+                       vec_t<id_t> &cluster_index)  {
+
+        const value_type    &value = *(column_begin + column_idx);
+
+        cluster_index.clear();
+        for (id_t i = 0; i < col_s; ++i)  {
+            if (dfunc_(value, *(column_begin + i)) <= max_dist_)
+                cluster_index.push_back(i);
+        }
+    }
+
+    template<typename H>
+    inline bool
+    expand_cluster_(const H &column_begin,
+                    const id_t column_idx,
+                    vec_t<id_t> &cluster_ids,
+                    const id_t col_s,
+                    const id_t cluster_id,
+                    vec_t<id_t> &seeds,
+                    vec_t<id_t> &cluster_neighors)  {
+
+        calculate_cluster_(column_begin, column_idx, col_s, seeds);
+
+        const id_t          seeds_s = id_t(seeds.size());
+        const value_type    &value = *(column_begin + column_idx);
+
+        if (seeds_s < min_mems_)  {
+            cluster_ids[column_idx] = NOISE;
+            return (false);
+        }
+
+        id_t    core_index { 0 };
+
+        for (id_t i = 0; i < seeds_s; ++i)  {
+            const auto  seed_val = seeds[i];
+
+            cluster_ids[seed_val] = cluster_id;
+            if (*(column_begin + seed_val) == value) [[unlikely]]
+                core_index = i;
+        }
+
+        seeds.erase(seeds.begin() + core_index);
+        for (id_t i = 0, n = seeds_s; i < n; ++i)  {
+            calculate_cluster_(column_begin, seeds[i], col_s, cluster_neighors);
+
+            if (id_t(cluster_neighors.size()) >= min_mems_)  {
+                for (id_t j = 0; j < id_t(cluster_neighors.size()); ++j)  {
+                    auto    &cluster_val = cluster_ids[j];
+
+                    if (cluster_val < 0)  {  // NOISE or UNCLASSIFIED
+                        if (cluster_val == UNCLASSIFIED )  {
+                            seeds.push_back(cluster_neighors[j]);
+                            n = id_t(seeds.size());
+                        }
+                        cluster_val = cluster_id;
+                    }
+                }
+            }
+        }
+
+        return (true);
+    }
+
+public:
+
+    template<typename IV, typename H>
+    inline void
+    operator() (const IV &idx_begin, const IV &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        const id_t  col_s = std::min(std::distance(idx_begin, idx_end),
+                                     std::distance(column_begin, column_end));
+        vec_t<id_t> cluster_ids (col_s, UNCLASSIFIED);
+        vec_t<id_t> seeds;
+        vec_t<id_t> cluster_neighors;
+        id_t        cluster_id { 0 };
+
+        seeds.reserve(col_s / 20);
+        cluster_neighors.reserve(col_s / 20);
+        for (id_t i = 0; i < col_s; ++i)  {
+            if (cluster_ids[i] == UNCLASSIFIED &&
+                expand_cluster_(column_begin,
+                                i,
+                                cluster_ids,
+                                col_s,
+                                cluster_id,
+                                seeds,
+                                cluster_neighors))  {
+                cluster_id += 1;
+            }
+        }
+
+        const auto  resv = col_s / cluster_id;
+
+        clusters_.resize(cluster_id);
+        clusters_idxs_.resize(cluster_id);
+        noisey_idxs_.reserve(std::max(id_t(8), id_t(col_s / 500)));
+        for (long i = 0; i < cluster_id; ++i)  {
+            clusters_[i].reserve(resv);
+            clusters_idxs_[i].reserve(resv);
+        }
+        for (id_t i = 0; i < col_s; ++i)  {
+            const auto  this_id = cluster_ids[i];
+
+            if (this_id >= 0) [[likely]]  {
+                clusters_[this_id].push_back(&(*(column_begin + i)));
+                clusters_idxs_[this_id].push_back(i);
+            }
+            else [[unlikely]]  { noisey_idxs_.push_back(i); }
+        }
+    }
+
+    inline void pre ()  {
+
+        clusters_.clear();
+        clusters_idxs_.clear();
+        noisey_idxs_.clear();
+    }
+    inline void post ()  {  }
+
+    inline const result_type &get_result () const  { return (clusters_); }
+    inline const order_type &
+    get_clusters_idxs () const  { return (clusters_idxs_); }
+    inline const vec_t<id_t> &
+    get_noisey_idxs () const  { return (noisey_idxs_); }
+
+    DBSCANVisitor(id_t min_mems,
+                  double max_dist,
+                  distance_func &&f =
+                      [](const value_type &x, const value_type &y) -> double  {
+                          return ((x - y) * (x - y));
+                      })
+        : min_mems_(min_mems),
+          max_dist_(max_dist),
+          dfunc_(std::forward<distance_func>(f))  {   }
+
+private:
+
+    const id_t      min_mems_;
+    const double    max_dist_;
+    distance_func   dfunc_;
+    result_type     clusters_ { };       // Clusters
+    order_type      clusters_idxs_ { };  // Clusters indices
+    vec_t<id_t>     noisey_idxs_ { };    // Indices of noisey elements
 };
 
 // ----------------------------------------------------------------------------

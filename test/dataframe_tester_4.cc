@@ -1666,6 +1666,52 @@ static void test_remove_data_by_hampel()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_DBSCANVisitor()  {
+
+    std::cout << "\nTesting DBSCANVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    DBSCANVisitor<double, std::string, 64>  dbscan(
+        10,
+        4,
+        [](const double &x, const double &y)  { return (std::fabs(x - y)); });
+
+    view.single_act_visit<double>("IBM_Close", dbscan);
+
+    assert(dbscan.get_noisey_idxs().size() == 2);
+    assert(dbscan.get_noisey_idxs()[0] == 1564);
+    assert(dbscan.get_noisey_idxs()[1] == 1565);
+
+    assert(dbscan.get_result().size() == 19);
+    assert(dbscan.get_result()[0].size() == 11);
+    assert(dbscan.get_result()[4].size() == 31);
+    assert(dbscan.get_result()[10].size() == 294);
+    assert(dbscan.get_result()[14].size() == 82);
+    assert(dbscan.get_result()[18].size() == 10);
+    assert(dbscan.get_result()[0][6] == 185.679993);
+    assert(dbscan.get_result()[4][18] == 167.330002);
+    assert(dbscan.get_result()[10][135] == 145.160004);
+    assert(dbscan.get_result()[18][3] == 103.550003);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1695,6 +1741,7 @@ int main(int, char *[]) {
     test_get_data_by_kmeans();
     // test_get_data_by_affin();
     test_remove_data_by_hampel();
+    test_DBSCANVisitor();
 
     return (0);
 }

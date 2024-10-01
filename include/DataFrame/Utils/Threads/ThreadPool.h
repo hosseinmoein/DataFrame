@@ -116,7 +116,7 @@ public:
 
     template<std::random_access_iterator I, long TH = 50'000L>
     void parallel_sort(const I begin, const I end);
-    template<std::random_access_iterator I, typename P, long TH = 25'000L>
+    template<std::random_access_iterator I, typename P, long TH = 50'000L>
     void parallel_sort(const I begin, const I end, P compare);
 
     // If the pool is not shutdown and there is a pending task, run the one

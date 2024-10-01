@@ -367,33 +367,43 @@ private:
 
         const value_type    factor = num_of_std_ * unbiased_factor_;
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
-                    size_type(0),
-                    col_s,
-                    [&column_begin, &diff = std::as_const(diff), factor,
-                     &aggr = std::as_const(aggr.get_result())]
-                    (auto begin, auto end) -> result_type  {
-                        result_type count { 0 };
+        if (! populate_idxs_)  {
+            auto    lbd =
+                [&column_begin, &diff = std::as_const(diff), factor,
+                 &aggr = std::as_const(aggr.get_result())]
+                (size_type begin, size_type end) -> result_type  {
+                    result_type count { 0 };
 
-                        for (size_type i = begin; i < end; ++i)  {
-                            if (diff[i] > (aggr[i] * factor))  {
-                                *(column_begin + i) =
-                                    std::numeric_limits<T>::quiet_NaN();
-                                count += 1;
-                            }
+                    for (size_type i = begin; i < end; ++i)  {
+                        if (diff[i] > (aggr[i] * factor))  {
+                            *(column_begin + i) =
+                                std::numeric_limits<T>::quiet_NaN();
+                            count += 1;
                         }
-                        return (count);
-                    });
+                    }
+                    return (count);
+                };
 
-            for (auto &fut : futures)  count_ += fut.get();
+            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(size_type(0),
+                                                               col_s,
+                                                               lbd);
+
+                for (auto &fut : futures)  count_ += fut.get();
+            }
+            else  {
+                count_ = lbd(0, col_s);
+            }
         }
         else  {
+            const auto  &aggr_res = aggr.get_result();
+
+            idxs_.reserve(col_s / 10);
             for (size_type i = 0; i < col_s; ++i)  {
-                if (diff[i] > (aggr.get_result()[i] * factor))  {
-                    *(column_begin + i) = std::numeric_limits<T>::quiet_NaN();
+                if (diff[i] > (aggr_res[i] * factor))  {
+                    idxs_.push_back(i);
                     count_ += 1;
                 }
             }
@@ -401,6 +411,9 @@ private:
     }
 
 public:
+
+    using idxs_vec_t =
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
 
     template<typename K, typename H>
     inline void
@@ -416,15 +429,20 @@ public:
                         (MeanVisitor<T, I> { true }, window_size_));
     }
 
-    DEFINE_PRE_POST_2
+    inline void pre ()  { count_ = 0; idxs_.clear(); }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (count_); }
+    inline const idxs_vec_t &get_idxs () const  { return (idxs_); }
 
     explicit
     HampelFilterVisitor(size_type window_size,
                         hampel_type ht = hampel_type::median,
-                        value_type num_of_std = 3)
+                        value_type num_of_std = 3,
+                        bool populate_idxs = false)
         : window_size_(window_size),
           type_(ht),
-          num_of_std_(num_of_std)  {   }
+          num_of_std_(num_of_std),
+          populate_idxs_(populate_idxs)  {   }
 
 private:
 
@@ -434,7 +452,9 @@ private:
     const size_type             window_size_;
     const hampel_type           type_;
     const value_type            num_of_std_;
+    const bool                  populate_idxs_;
     result_type                 count_ { 0 };
+    idxs_vec_t                  idxs_;
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

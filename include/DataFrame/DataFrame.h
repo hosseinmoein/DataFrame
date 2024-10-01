@@ -926,12 +926,14 @@ public:  // Load/append/remove interfaces
     // All data rows above and below the thresholds will be removed.
     //
     // NOTE: Type T must support arithmetic operations
-    // 
+    //
     // T:
     //   Type of the named column.
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
+    // col_name:
+    //   Name of the given column
     // above_stdev:
     //   Above standard deviation threshold where data will be removed
     // below_stdev:
@@ -940,6 +942,32 @@ public:  // Load/append/remove interfaces
     template<arithmetic T, typename ... Ts>
     void
     remove_data_by_stdev(const char *col_name, T above_stdev, T below_stdev);
+
+    // This uses an Hampel filter to detect and remove outliers in the named
+    // column and all rows corresponding to those outliers in the DataFrame.
+    //
+    // NOTE: Type T must support arithmetic operations
+    //
+    // T:
+    //   Type of the named column.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // window_size:
+    //   Size of the sliding window for MAD calculations
+    // htype:
+    //   Use either Median or Mean of Absolute Deviation (MAD)
+    // num_of_stdev:
+    //   Number of stdev used in the filter
+    //
+    template<arithmetic T, typename ... Ts>
+    void
+    remove_data_by_hampel(const char *col_name,
+                          size_type window_size,
+                          hampel_type htype = hampel_type::median,
+                          T num_of_stdev = 3);
 
     // It removes duplicate rows and returns a new DataFrame. Duplication is
     // determined by the given column. remove_dup_spec determines which
@@ -3215,6 +3243,138 @@ public: // Read/access and slicing interfaces
     template<arithmetic T, typename ... Ts>
     [[nodiscard]] ConstPtrView
     get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const;
+
+    // This uses k-means clustering algorithm to divide the named columns into
+    // K clusters. It returns an array of K DataFrame's each containing one of
+    // the clusters of data based on the named column.
+    // Self in unchanged.
+    //
+    // NOTE: Type T must support arithmetic operations
+    //
+    // K:
+    //   Number of clusters for k-means clustering algorithm
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // dfunc:
+    //   A function to calculate the distance between two data points in the
+    //   named column
+    // num_of_iter:
+    //   Maximum number of iterations for k-means clustering algorithm before
+    //   converging
+    // seed:
+    //   Seed for random number generator to initialize k-means clustering
+    //   algorithm. Default is a random number for each call.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>, K>
+    get_data_by_kmeans(const char *col_name,
+                       std::function<double(const T &x, const T &y)> &&dfunc =
+                           [](const T &x, const T &y) -> double  {
+                               return ((x - y) * (x - y));
+                           },
+                       size_type num_of_iter = 1000,
+                       seed_t seed = seed_t(-1)) const;
+
+    // Same as above but it returns an array of Views.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<PtrView, K>
+    get_view_by_kmeans(const char *col_name,
+                       std::function<double(const T &x, const T &y)> &&dfunc =
+                           [](const T &x, const T &y) -> double  {
+                               return ((x - y) * (x - y));
+                           },
+                       size_type num_of_iter = 1000,
+                       seed_t seed = seed_t(-1));
+
+    // Same as above but it returns an array of const Views.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<ConstPtrView, K>
+    get_view_by_kmeans(const char *col_name,
+                       std::function<double(const T &x, const T &y)> &&dfunc =
+                           [](const T &x, const T &y) -> double  {
+                               return ((x - y) * (x - y));
+                           },
+                       size_type num_of_iter = 1000,
+                       seed_t seed = seed_t(-1)) const;
+
+    // This uses Affinity Propagation algorithm to divide the named columns
+    // into clusters. It returns an array of DataFrame's each containing one
+    // of the clusters of data based on the named column. Unlike K-Means
+    // clustering, you do not have to specify the number of clusters.
+    // The algorithm determines that.
+    // Self in unchanged.
+    //
+    // NOTE: This is a resource consuming and relatively slow algorithm.
+    //       Its time complexity is O(I * n^2) where I is number of
+    //       iterations. Its space complexity is O(2 * n^2).
+    // NOTE: Type T must support arithmetic operations
+    // NOTE: This algorithm might be too slow for large datasets.
+    //       Also, see get_[data|view]_by_kmeans().
+    // NOTE: If this returns zero centroids (zero DataFrames) it is probably
+    //       because number of iterations is too small to converge.
+    //
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // dfunc:
+    //   A function to calculate the distance between two data points in the
+    //   named column
+    // num_of_iter:
+    //   Maximum number of iterations for AP clustering algorithm to converge
+    // damping_factor:
+    //   It is used in the algorithm. The default is 0.9. (1 – damping factor)
+    //   prevents numerical oscillations.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
+    get_data_by_affin(const char *col_name,
+                      std::function<double(const T &x, const T &y)> &&dfunc =
+                          [](const T &x, const T &y) -> double  {
+                              return ((x - y) * (x - y));
+                          },
+                      size_type num_of_iter = 20,
+                      double damping_factor = 0.9) const;
+
+    // Same as above but it returns a vector of Views.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<PtrView>
+    get_view_by_affin(const char *col_name,
+                      std::function<double(const T &x, const T &y)> &&dfunc =
+                          [](const T &x, const T &y) -> double  {
+                              return ((x - y) * (x - y));
+                          },
+                      size_type num_of_iter = 20,
+                      double damping_factor = 0.9);
+
+    // Same as above but it returns a vector of const Views.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<ConstPtrView>
+    get_view_by_affin(const char *col_name,
+                      std::function<double(const T &x, const T &y)> &&dfunc =
+                          [](const T &x, const T &y) -> double  {
+                              return ((x - y) * (x - y));
+                          },
+                      size_type num_of_iter = 20,
+                      double damping_factor = 0.9) const;
 
     // This returns a new DataFrame with the same index column as self and an
     // integer column with the same name for each column in self.

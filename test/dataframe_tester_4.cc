@@ -1461,6 +1461,257 @@ static void test_get_data_by_stdev()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_get_data_by_kmeans()  {
+
+    std::cout << "\nTesting get_data_by_kmeans( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.dat", io_format::binary);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    auto    result_df =
+        df.get_data_by_kmeans <4, double, double, long>
+            ("IBM_Close",
+             [](const double &x, const double &y) -> double  {
+                 return (std::fabs(x - y));
+             },
+             1000,  // Number of iterations
+             1234); // Random number seed
+    auto    result_view =
+        view.get_view_by_kmeans<4, double, double, long>
+            ("IBM_Close",
+             [](const double &x, const double &y) -> double  {
+                 return (std::fabs(x - y));
+             },
+             1000,  //  Number of iterations
+             1234); // Random number seed
+
+    assert(result_df.size() == 4);
+    assert(result_df.size() == result_view.size());
+
+    assert(result_df[0].get_index().size() == 272);
+    assert(result_df[0].get_column<double>("IBM_Open").size() == 272);
+    assert(result_df[0].get_index()[0] == "2014-01-02");
+    assert(result_df[0].get_index()[271] == "2017-04-07");
+    assert(result_df[0].get_column<double>("IBM_High")[200] == 182.839996);
+    assert(result_df[0].get_column<long>("IBM_Volume")[100] == 3721600);
+    assert(result_view[0].get_index().size() == 272);
+    assert(result_view[0].get_column<double>("IBM_Open").size() == 272);
+    assert(result_view[0].get_index()[0] == "2014-01-02");
+    assert(result_view[0].get_index()[271] == "2017-04-07");
+    assert(result_view[0].get_column<double>("IBM_High")[200] == 182.839996);
+    assert(result_view[0].get_column<long>("IBM_Volume")[100] == 3721600);
+
+    assert(result_df[1].get_index().size() == 585);
+    assert(result_df[1].get_column<double>("IBM_Open").size() == 585);
+    assert(result_df[1].get_index()[0] == "2014-10-20");
+    assert(result_df[1].get_index()[584] == "2020-02-21");
+    assert(result_df[1].get_column<double>("IBM_High")[200] == 153.100006);
+    assert(result_df[1].get_column<long>("IBM_Volume")[100] == 3749600);
+    assert(result_view[1].get_index().size() == 585);
+    assert(result_view[1].get_column<double>("IBM_Open").size() == 585);
+    assert(result_view[1].get_index()[0] == "2014-10-20");
+    assert(result_view[1].get_index()[584] == "2020-02-21");
+    assert(result_view[1].get_column<double>("IBM_High")[200] == 153.100006);
+    assert(result_view[1].get_column<long>("IBM_Volume")[100] == 3749600);
+
+    assert(result_df[2].get_index().size() == 258);
+    assert(result_df[2].get_column<double>("IBM_Open").size() == 258);
+    assert(result_df[2].get_index()[0] == "2016-01-15");
+    assert(result_df[2].get_index()[257] == "2020-10-30");
+    assert(result_df[2].get_column<double>("IBM_High")[200] == 127.239998);
+    assert(result_df[2].get_column<long>("IBM_Volume")[100] == 12502100);
+    assert(result_view[2].get_index().size() == 258);
+    assert(result_view[2].get_column<double>("IBM_Open").size() == 258);
+    assert(result_view[2].get_index()[0] == "2016-01-15");
+    assert(result_view[2].get_index()[257] == "2020-10-30");
+    assert(result_view[2].get_column<double>("IBM_High")[200] == 127.239998);
+    assert(result_view[2].get_column<long>("IBM_Volume")[100] == 12502100);
+
+    assert(result_df[3].get_index().size() == 606);
+    assert(result_df[3].get_column<double>("IBM_Open").size() == 606);
+    assert(result_df[3].get_index()[0] == "2015-08-21");
+    assert(result_df[3].get_index()[605] == "2020-10-08");
+    assert(result_df[3].get_column<double>("IBM_High")[200] == 145.880005);
+    assert(result_df[3].get_column<long>("IBM_Volume")[100] == 4386200);
+    assert(result_view[3].get_index().size() == 606);
+    assert(result_view[3].get_column<double>("IBM_Open").size() == 606);
+    assert(result_view[3].get_index()[0] == "2015-08-21");
+    assert(result_view[3].get_index()[605] == "2020-10-08");
+    assert(result_view[3].get_column<double>("IBM_High")[200] == 145.880005);
+    assert(result_view[3].get_column<long>("IBM_Volume")[100] == 4386200);
+}
+
+// ----------------------------------------------------------------------------
+
+void test_get_data_by_affin()  {
+
+    std::cout << "\nTesting get_data_by_affin( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.dat", io_format::binary);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    auto    views =
+        view.get_view_by_affin<double, double, long>
+            ("IBM_Close",
+             [](const double &x, const double &y) -> double  {
+                 return (std::fabs(x - y));
+             },
+             25);  //  Number of iterations
+
+    assert(views.size() == 4);
+
+    assert(views[0].get_index().size() == 157);
+    assert(views[0].get_column<double>("IBM_Open").size() == 157);
+    assert(views[0].get_index()[0] == "2014-10-21");
+    assert(views[0].get_index()[156] == "2018-02-01");
+    assert(views[0].get_column<double>("IBM_High")[140] == 162.899994);
+    assert(views[0].get_column<long>("IBM_Volume")[100] == 2543100);
+
+    assert(views[1].get_index().size() == 309);
+    assert(views[1].get_column<double>("IBM_Open").size() == 309);
+    assert(views[1].get_index()[0] == "2014-01-02");
+    assert(views[1].get_index()[308] == "2018-01-18");
+    assert(views[1].get_column<double>("IBM_High")[200] == 182.839996);
+    assert(views[1].get_column<long>("IBM_Volume")[100] == 3721600);
+
+    assert(views[2].get_index().size() == 256);
+    assert(views[2].get_column<double>("IBM_Open").size() == 256);
+    assert(views[2].get_index()[0] == "2014-11-20");
+    assert(views[2].get_index()[255] == "2020-02-13");
+    assert(views[2].get_column<double>("IBM_High")[200] == 156.800003);
+    assert(views[2].get_column<long>("IBM_Volume")[100] == 2838100);
+
+    assert(views[3].get_index().size() == 999);
+    assert(views[3].get_column<double>("IBM_Open").size() == 999);
+    assert(views[3].get_index()[0] == "2014-12-15");
+    assert(views[3].get_index()[998] == "2020-10-30");
+    assert(views[3].get_column<double>("IBM_High")[200] == 152.929993);
+    assert(views[3].get_column<long>("IBM_Volume")[100] == 3924800);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_remove_data_by_hampel()  {
+
+    std::cout << "\nTesting remove_data_by_hampel( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+        assert(df.get_index().size() == 1721);
+        assert(df.get_column<double>("IBM_Open").size() == 1721);
+        assert(df.get_column<double>("IBM_Close").size() == 1721);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    df.remove_data_by_hampel <double, double, long>("IBM_Close", 10);
+    view.remove_data_by_hampel<double, double, long>("IBM_Close", 10);
+
+    assert(df.get_index().size() == 1644);
+    assert(view.get_index().size() == 1644);
+    assert(view.get_column<double>("IBM_Open").size() == 1644);
+    assert(view.get_column<long>("IBM_Volume").size() == 1644);
+    assert(df.get_column<double>("IBM_Low").size() == 1644);
+    assert(df.get_column<long>("IBM_Volume").size() == 1644);
+    assert(df.get_index()[500] == "2016-01-25");
+    assert(view.get_index()[101] == "2014-05-30");
+    assert(view.get_column<double>("IBM_Open")[45] == 187.550003);
+    assert(df.get_column<long>("IBM_Volume")[300] == 4255400);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_DBSCANVisitor()  {
+
+    std::cout << "\nTesting DBSCANVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    DBSCANVisitor<double, std::string, 64>  dbscan(
+        10,
+        4,
+        [](const double &x, const double &y)  { return (std::fabs(x - y)); });
+
+    view.single_act_visit<double>("IBM_Close", dbscan);
+
+    assert(dbscan.get_noisey_idxs().size() == 2);
+    assert(dbscan.get_noisey_idxs()[0] == 1564);
+    assert(dbscan.get_noisey_idxs()[1] == 1565);
+
+    assert(dbscan.get_result().size() == 19);
+    assert(dbscan.get_result()[0].size() == 11);
+    assert(dbscan.get_result()[4].size() == 31);
+    assert(dbscan.get_result()[10].size() == 294);
+    assert(dbscan.get_result()[14].size() == 82);
+    assert(dbscan.get_result()[18].size() == 10);
+    assert(dbscan.get_result()[0][6] == 185.679993);
+    assert(dbscan.get_result()[4][18] == 167.330002);
+    assert(dbscan.get_result()[10][135] == 145.160004);
+    assert(dbscan.get_result()[18][3] == 103.550003);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1487,6 +1738,10 @@ int main(int, char *[]) {
     test_remove_below_quantile_data();
     test_remove_data_by_stdev();
     test_get_data_by_stdev();
+    test_get_data_by_kmeans();
+    // test_get_data_by_affin();
+    test_remove_data_by_hampel();
+    test_DBSCANVisitor();
 
     return (0);
 }

@@ -73,7 +73,7 @@ ThreadPool::add_thread(size_type thr_num)  {
         if (shutys > capacity_threads())  {
             char    err[1024];
 
-            ::snprintf(err, 1023,
+            ::snprintf(err, sizeof(err) - 1,
                        "ThreadPool::add_thread(): Cannot subtract "
                        "'%ld' threads from the pool with capacity '%ld'",
                        shutys, capacity_threads());
@@ -167,7 +167,7 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
         ret.reserve(n);
         for (size_type i = 0; i < n; ++i)
             ret.emplace_back(dispatch(false,
-                                      routine,
+                                      std::forward<F>(routine),
                                           begin + i,
                                           begin + (i + 1),
                                           std::forward<As>(args) ...));
@@ -180,7 +180,7 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
             };
 
             ret.emplace_back(dispatch(false,
-                                      routine,
+                                      std::forward<F>(routine),
                                           begin + i,
                                           begin + block_end,
                                           std::forward<As>(args) ...));
@@ -220,7 +220,7 @@ ThreadPool::parallel_loop2(I1 begin1, I1 end1, I2 begin2, I2 end2,
         ret.reserve(n);
         for (size_type i = 0; i < n; ++i)
             ret.emplace_back(dispatch(false,
-                                      routine,
+                                      std::forward<F>(routine),
                                           begin1 + i,
                                           begin1 + (i + 1),
                                           begin2 + i,
@@ -234,7 +234,7 @@ ThreadPool::parallel_loop2(I1 begin1, I1 end1, I2 begin2, I2 end2,
             };
 
             ret.emplace_back(dispatch(false,
-                                      routine,
+                                      std::forward<F>(routine),
                                           begin1 + i,
                                           begin1 + block_end,
                                           begin2 + i,

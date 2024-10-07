@@ -719,6 +719,243 @@ private:
 
 // ----------------------------------------------------------------------------
 
+// Runtime complexity is O(I * n^2) where I is number of iterations.
+//
+// Type T must have arithmetic operators and default constructor well defined
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  MeanShiftVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using inner_ptr_view_t = VectorConstPtrView<value_type, A>;
+    using result_type = vec_t<inner_ptr_view_t>;
+    using inner_order_t =
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
+    using order_type = std::vector<inner_order_t>;
+    using distance_func =
+        std::function<double(const value_type &x, const value_type &y)>;
+
+private:
+
+    inline static double uniform_kernel_(double d)  {
+
+        return (d <= 1.0 ? 1.0 : 0.0);
+    }
+
+    inline static double triangular_kernel_(double d)  {
+
+        return (d <= 1.0 ? 1.0 - std::fabs(d) : 0.0);
+    }
+
+    inline static double parabolic_kernel_(double d)  {
+
+        return (d <= 1.0 ? 1.0 - d * d : 0.0);
+    }
+
+    inline static double biweight_kernel_(double d)  {
+
+        const auto  x = 1.0 - d * d;
+
+        return (d <= 1.0 ? x * x : 0.0);
+    }
+
+    inline static double triweight_kernel_(double d)  {
+
+        const auto  x = 1.0 - d * d;
+
+        return (d <= 1.0 ? x * x * x : 0.0);
+    }
+
+    inline static double tricube_kernel_(double d)  {
+
+        const auto  x = 1.0 - d * d * d;
+
+        return (d <= 1.0 ? x * x * x : 0.0);
+    }
+
+    inline static double gaussian_kernel_(double d)  {
+
+        return (std::exp(-0.5 * d * d));
+    }
+
+    inline static double cosin_kernel_(double d)  {
+
+        return (d <= 1.0 ? std::cos(M_PI_2 * d) : 0.0);
+    }
+
+    inline static double logistic_kernel_(double d)  {
+
+        return (1.0 / (2.0 + std::exp(d) + std::exp(-d)));
+    }
+
+    inline static double sigmoid_kernel_(double d)  {
+
+        return (1.0 / (std::exp(d) + std::exp(-d)));
+    }
+
+    inline static double silverman_kernel_(double d)  {
+
+        const auto  x = M_SQRT1_2 * std::abs(d);
+
+        return (std::exp(-x) * std::sin(x + M_PI_4));
+    }
+
+    template<typename H>
+    inline void shift_(const H &column_begin,
+                       size_type index,
+                       const value_type &val,
+                       vec_t<value_type> &shifted,
+                       vec_t<bool> &shifting)  {
+
+        if (d_func_(val, *(column_begin + index)) <= max_dist_)
+            shifting[index] = false;
+        else
+            shifted[index] = val;
+    }
+
+    template<typename H>
+    inline void
+    build_cluster_(const H &column_begin,
+                   size_type col_s,
+                   vec_t<value_type> &shifted)  {
+
+        vec_t<value_type>   centriods;
+
+        // Shifted points with distance <= max_dist_ go in the same cluster
+        //
+        centriods.reserve(32);
+        clusters_.reserve(32);
+        clusters_idxs_.reserve(32);
+        for (size_type i = 0; i < shifted.size(); ++i)  {
+            const auto  &shifted_val = shifted[i];
+            auto        cbegin = clusters_.begin();
+            auto        cend = clusters_.end();
+            size_type   cnt_idx { 0 };
+
+            while (cbegin != cend)  {
+                if (d_func_(centriods[cnt_idx], shifted_val) <= max_dist_)  {
+                    // The point belongs to a cluster already created
+                    //
+                    cbegin->push_back(&(*(column_begin + i)));
+                    break;
+                }
+                ++cbegin;
+                ++cnt_idx;
+            }
+            if (cbegin == cend)  {  // create a new cluster
+                clusters_.push_back(inner_ptr_view_t { });
+                clusters_idxs_.push_back(inner_order_t { });
+                clusters_.back().reserve(std::max(8UL, col_s / 32));
+                clusters_idxs_.back().reserve(std::max(8UL, col_s / 32));
+                clusters_.back().push_back(&(*(column_begin + i)));
+                clusters_idxs_.back().push_back(i);
+                centriods.push_back(shifted_val);
+            }
+        }
+    }
+
+public:
+
+    template<typename IV, typename H>
+    inline void
+    operator() (const IV &idx_begin, const IV &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        const id_t          col_s =
+            std::min(std::distance(idx_begin, idx_end),
+                     std::distance(column_begin, column_end));
+        auto                k_func =
+            (kernel_ == mean_shift_kernel::uniform) ? &uniform_kernel_
+            : (kernel_ == mean_shift_kernel::triangular) ? &triangular_kernel_
+            : (kernel_ == mean_shift_kernel::parabolic) ? &parabolic_kernel_
+            : (kernel_ == mean_shift_kernel::biweight) ? &biweight_kernel_
+            : (kernel_ == mean_shift_kernel::triweight) ? &triweight_kernel_
+            : (kernel_ == mean_shift_kernel::tricube) ? &tricube_kernel_
+            : (kernel_ == mean_shift_kernel::gaussian) ? &gaussian_kernel_
+            : (kernel_ == mean_shift_kernel::cosin) ? &cosin_kernel_
+            : (kernel_ == mean_shift_kernel::logistic) ? &logistic_kernel_
+            : (kernel_ == mean_shift_kernel::sigmoid) ? &sigmoid_kernel_
+            : &silverman_kernel_;
+        vec_t<value_type>   shifted (column_begin, column_end);
+        vec_t<bool>         shifting (col_s, true);
+        size_type           iterations { 0 };
+        const double        radius { kband_ * 3.0 };
+        const double        dbl_sq_bw { 2.0 * kband_ * kband_ };
+
+        while (iterations++ < max_iter_ &&
+               std::any_of(shifting.begin(), shifting.end(),
+                           [](bool v) -> bool { return (v); }))  {
+            for (size_type i = 0; i < col_s; ++i)  {
+                if (! shifting[i])  continue;
+
+                value_type          new_val { };
+                const value_type    &val_to_shift { shifted[i] };
+                double              total_w { 0 };
+
+                for (size_type j = 0; j < col_s; ++j)  {
+                    const value_type    &this_val = *(column_begin + j);
+                    const double        dist = d_func_(val_to_shift, this_val);
+
+                    if (dist <= radius)  {
+                        const double    weight = k_func(dist) / dbl_sq_bw;
+
+                        new_val = new_val + this_val * weight;
+                        total_w += weight;
+                    }
+                }
+
+                // The new position of value is the weighted average of
+                // its neighbors
+                //
+                new_val = new_val / total_w;
+                shift_(column_begin, i, new_val, shifted, shifting);
+            }
+        }
+
+        build_cluster_(column_begin, col_s, shifted);
+    }
+
+    inline void pre ()  { clusters_.clear(); clusters_idxs_.clear(); }
+    inline void post ()  {  }
+
+    inline const result_type &get_result () const  { return (clusters_); }
+    inline const order_type &
+    get_clusters_idxs () const  { return (clusters_idxs_); }
+
+    MeanShiftVisitor(
+        double kernel_bandwidth,
+        double max_dist,
+        mean_shift_kernel kernel = mean_shift_kernel::gaussian,
+        distance_func &&f =
+            [](const value_type &x, const value_type &y) -> double  {
+                return ((x - y) * (x - y));
+            },
+        size_type max_iteration = 50)
+        : kband_(kernel_bandwidth),
+          kernel_(kernel),
+          max_iter_(max_iteration),
+          max_dist_(max_dist),
+          d_func_(std::forward<distance_func>(f))  {  }
+
+private:
+
+    const double            kband_; // Kernel is fancy name for distance weight
+    const mean_shift_kernel kernel_;
+    const size_type         max_iter_;
+    const double            max_dist_;
+    distance_func           d_func_;
+    result_type             clusters_ { };       // Clusters
+    order_type              clusters_idxs_ { };  // Clusters indices
+};
+
+// ----------------------------------------------------------------------------
+
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  FastFourierTransVisitor  {
 

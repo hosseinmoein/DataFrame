@@ -42,9 +42,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 
 #include <cmath>
+
+// PI
+//
 #ifndef M_PI
 #  define M_PI 3.14159265358979323846264338327950288
 #endif // M_PI
+
+// PI/2
+//
+#ifndef M_PI_2
+#  define M_PI_2 1.57079632679489661923132169163975144
+#endif // M_PI_2
+
+// PI/4
+//
+#ifndef M_PI_4
+#  define M_PI_4 0.785398163397448309615660845819875721
+#endif // M_PI_4
+
+// 2PI
+//
+#ifndef TAU
+#  define TAU 6.28318530717958647692528676655900576
+#endif // TAU
+
+// 1/sqrt(2)
+//
+#ifndef M_SQRT1_2
+#  define M_SQRT1_2 0.707106781186547524400844362104849039
+#endif // M_SQRT1_2
+
 #include <cstddef>
 #include <functional>
 #include <future>
@@ -58,12 +86,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-// 2PI
-//
-#ifndef TAU
-#  define TAU 6.28318530717958647692528676655900576
-#endif // TAU
 
 // ----------------------------------------------------------------------------
 

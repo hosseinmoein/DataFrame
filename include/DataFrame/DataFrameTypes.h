@@ -606,6 +606,23 @@ enum class  vector_sim_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class  mean_shift_kernel : unsigned char  {
+
+    uniform = 1,
+    triangular = 2,
+    parabolic = 3,
+    biweight = 4,
+    triweight = 5,
+    tricube = 6,
+    gaussian = 7,
+    cosin = 8,
+    logistic = 9,
+    sigmoid = 10,
+    silverman = 11,
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
 

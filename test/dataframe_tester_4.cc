@@ -1712,6 +1712,46 @@ static void test_DBSCANVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_MeanShiftVisitor()  {
+
+    std::cout << "\nTesting MeanShiftVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    MeanShiftVisitor<double, std::string, 64>   mshift(
+        1.0,
+        4,
+        mean_shift_kernel::gaussian,
+        // mean_shift_kernel::triweight,
+        [](const double &x, const double &y)  { return (std::fabs(x - y)); });
+
+    df.single_act_visit<double>("IBM_Close", mshift);
+
+    assert(mshift.get_result().size() == 19);
+    assert(mshift.get_result()[0].size() == 106);
+    assert(mshift.get_result()[4].size() == 19);
+    assert(mshift.get_result()[6].size() == 274);
+    assert(mshift.get_result()[10].size() == 180);
+    assert(mshift.get_result()[14].size() == 29);
+    assert(mshift.get_result()[18].size() == 2);
+    assert(std::fabs(mshift.get_result()[0][6] - 184.16) < 0.001);
+    assert(std::fabs(mshift.get_result()[4][18] - 194.0) < 0.001);
+    assert(std::fabs(mshift.get_result()[6][273] - 154.31) < 0.001);
+    assert(std::fabs(mshift.get_result()[10][135] - 137.61) < 0.001);
+    assert(std::fabs(mshift.get_result()[18][1] - 94.77) < 0.001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1742,6 +1782,7 @@ int main(int, char *[]) {
     // test_get_data_by_affin();
     test_remove_data_by_hampel();
     test_DBSCANVisitor();
+    test_MeanShiftVisitor();
 
     return (0);
 }

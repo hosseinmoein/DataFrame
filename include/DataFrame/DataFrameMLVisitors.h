@@ -867,7 +867,7 @@ public:
     operator() (const IV &idx_begin, const IV &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        const id_t          col_s =
+        const size_type     col_s =
             std::min(std::distance(idx_begin, idx_end),
                      std::distance(column_begin, column_end));
         auto                k_func =

@@ -851,8 +851,10 @@ private:
             if (cbegin == cend)  {  // create a new cluster
                 clusters_.push_back(inner_ptr_view_t { });
                 clusters_idxs_.push_back(inner_order_t { });
-                clusters_.back().reserve(std::max(8UL, col_s / 32));
-                clusters_idxs_.back().reserve(std::max(8UL, col_s / 32));
+                clusters_.back().reserve(
+                    std::max(size_type(8), col_s / size_type(32)));
+                clusters_idxs_.back().reserve(
+                    std::max(size_type(8), col_s / size_type(32)));
                 clusters_.back().push_back(&(*(column_begin + i)));
                 clusters_idxs_.back().push_back(i);
                 centriods.push_back(shifted_val);

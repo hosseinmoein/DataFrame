@@ -1775,8 +1775,7 @@ void test_get_data_by_dbscan()  {
         df2.get_view_by_sel<double, decltype(lbd), double, long>
             ("IBM_Open", lbd);
 
-    // The only reason I am using a view here is to make sure it compiles and
-    // functions properly
+    // I am using both views and dataframes to make sure both work
     //
     auto    views =
         view.get_view_by_dbscan<double, double, long>
@@ -1784,7 +1783,7 @@ void test_get_data_by_dbscan()  {
              [](const double &x, const double &y) -> double  {
                  return (std::fabs(x - y));
              });
-    auto    dfs [[maybe_unused]] =
+    auto    dfs =
         df.get_data_by_dbscan<double, double, long>
             ("IBM_Close", 10, 4,
              [](const double &x, const double &y) -> double  {
@@ -1796,8 +1795,8 @@ void test_get_data_by_dbscan()  {
     assert(views[0].get_index().size() == 11);
     assert(views[0].get_column<double>("IBM_Close")[7] == 184.779999);
 
-    assert(views[5].get_index().size() == 127);
-    assert(views[5].get_column<double>("IBM_Open")[15] == 162.0);
+    assert(dfs[5].get_index().size() == 127);
+    assert(dfs[5].get_column<double>("IBM_Open")[15] == 162.0);
 
     assert(views[16].get_index().size() == 29);
     assert(views[16].get_column<double>("IBM_High")[3] == 117.75);

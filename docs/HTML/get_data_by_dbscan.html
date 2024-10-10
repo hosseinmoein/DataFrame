@@ -47,31 +47,30 @@ body {
         <PRE><B>
 template&lt;arithmetic T, typename ... Ts&gt;
 std::vector&lt;DataFrame&gt;
-get_data_by_affin(const char *col_name,
-                  std::function&lt;double(const T &x, const T &y)&gt; &amp;&amp;dfunc =
-                      [](const T &amp;x, const T &amp;y) -> double  {
-                          return ((x - y) * (x - y));
-                      },
-                  size_type num_of_iter = 20,
-                  double damping_factor = 0.9) const;
+get_data_by_dbscan(const char *col_name,
+                   long min_members,
+                   double max_distance,
+                   std::function<double(const T &x, const T &y)> &&dfunc =
+                       [](const T &x, const T &y) -> double  {
+                           return ((x - y) * (x - y));
+                       }) const;
+
         </B></PRE></font>
       </td>
       <td>
-        This uses <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/AffinityPropVisitor.html">Affinity Propagation algorithm</a> to divide the named column into clusters. It returns an array of DataFrame's each containing one of the clusters of data based on the named column. Unlike K-Means clustering, you do not have to specify the number of clusters.<BR>
+        This uses <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DBSCANVisitor.html">DBSCAN algorithm</a> to divide the named column into clusters. It returns an array of DataFrame's each containing one of the clusters of data based on the named column. The last DataFrame in the array contains noisy data. It contains datapoints that could not be placed into any cluster. Ideally, you want the last DataFrame to be empty. Unlike K-Means clustering, you do not have to specify the number of clusters.<BR>
         Self is unchanged.<BR><BR>
 
-        <B>NOTE</B>: This is a resource consuming and relatively slow algorithm. Its time complexity is O(I * n<sup>2</sup>) where I is number of iterations. Its space complexity is O(2 * n<sup>2</sup>).<BR>
         <B>NOTE</B>: Type T must support arithmetic operations<BR>
-        <B>NOTE</B>: This algorithm might be too slow for large datasets. Also, see <I>get_[data|view]_by_kmeans()</I>.<BR>
         <B>NOTE</B>: If this returns zero centroids (zero DataFrames) it is probably because number of iterations is too small to converge.<BR>
       </td>
       <td width="30%">
         <B>T</B>: Type of the named column<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
         <B>col_name</B>: Name of the data column<BR>
+        <B>min_members</B>: Minimum number of datapoints to constitute a cluster<BR>
+        <B>max_distance</B>: Maximum distance between two data points in the same cluster<BR>
         <B>dfunc</B>: A function to calculate the distance between two data points in the named column<BR>
-        <B>num_of_iter</B>: Number of iterations for AP clustering algorithm to converge<BR>
-        <B>damping_factor</B>: It is used in the algorithm. The default is 0.9. (1 – damping factor) prevents numerical oscillations<BR>
       </td>
     </tr>
 
@@ -81,17 +80,17 @@ get_data_by_affin(const char *col_name,
         <PRE><B>
 template&lt;arithmetic T, typename ... Ts&gt;
 std::vector&lt;PtrView&gt;
-get_view_by_affin(const char *col_name,
-                  std::function&lt;double(const T &x, const T &y)&gt; &amp;&amp;dfunc =
-                      [](const T &amp;x, const T &amp;y) -> double  {
-                          return ((x - y) * (x - y));
-                      },
-                  size_type num_of_iter = 20,
-                  double damping_factor = 0.9);
+get_view_by_dbscan(const char *col_name,
+                   long min_members,
+                   double max_distance,
+                   std::function<double(const T &x, const T &y)> &&dfunc =
+                       [](const T &x, const T &y) -> double  {
+                           return ((x - y) * (x - y));
+                       });
         </B></PRE></font>
       </td>
       <td>
-        This is identical to above <I>get_data_by_affin()</I>, but:<BR>
+        This is identical to above <I>get_data_by_dbscan()</I>, but:<BR>
         <OL>
         <LI>The result is a std::vector of views</LI>
         <LI>Since the result is a view, you cannot call make_consistent() on the result.</LI>
@@ -102,9 +101,9 @@ get_view_by_affin(const char *col_name,
         <B>T</B>: Type of the named column<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
         <B>col_name</B>: Name of the data column<BR>
+        <B>min_members</B>: Minimum number of datapoints to constitute a cluster<BR>
+        <B>max_distance</B>: Maximum distance between two data points in the same cluster<BR>
         <B>dfunc</B>: A function to calculate the distance between two data points in the named column<BR>
-        <B>num_of_iter</B>: Number of iterations for AP clustering algorithm to converge<BR>
-        <B>damping_factor</B>: It is used in the algorithm. The default is 0.9. (1 – damping factor) prevents numerical oscillations<BR>
       </td>
     </tr>
 
@@ -114,13 +113,13 @@ get_view_by_affin(const char *col_name,
         <PRE><B>
 template&lt;arithmetic T, typename ... Ts&gt;
 std::vector&lt;ConstPtrView&gt;
-get_view_by_affin(const char *col_name,
-                  std::function&lt;double(const T &x, const T &y)&gt; &amp;&amp;dfunc =
-                      [](const T &amp;x, const T &amp;y) -> double  {
-                          return ((x - y) * (x - y));
-                      },
-                  size_type num_of_iter = 20,
-                  double damping_factor = 0.9) const;
+get_view_by_dbscan(const char *col_name,
+                   long min_members,
+                   double max_distance,
+                   std::function<double(const T &x, const T &y)> &&dfunc =
+                       [](const T &x, const T &y) -> double  {
+                           return ((x - y) * (x - y));
+                       }) const;
         </B></PRE></font>
       </td>
       <td>
@@ -130,9 +129,9 @@ get_view_by_affin(const char *col_name,
         <B>T</B>: Type of the named column<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
         <B>col_name</B>: Name of the data column<BR>
+        <B>min_members</B>: Minimum number of datapoints to constitute a cluster<BR>
+        <B>max_distance</B>: Maximum distance between two data points in the same cluster<BR>
         <B>dfunc</B>: A function to calculate the distance between two data points in the named column<BR>
-        <B>num_of_iter</B>: Number of iterations for AP clustering algorithm to converge<BR>
-        <B>damping_factor</B>: It is used in the algorithm. The default is 0.9. (1 – damping factor) prevents numerical oscillations<BR>
       </td>
     </tr>
 

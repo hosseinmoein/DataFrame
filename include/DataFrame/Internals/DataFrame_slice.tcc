@@ -2812,6 +2812,123 @@ get_view_by_affin(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
+DataFrame<I, H>::
+get_data_by_dbscan(
+    const char *col_name,
+    long min_members,
+    double max_distance,
+    std::function<double(const T &x, const T &y)> &&dfunc) const  {
+
+    using df_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+    using res_t = std::vector<df_t>;
+    using dbs_t = DBSCANVisitor<T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    dbs_t                   dbscan { min_members, max_distance,
+                                     std::forward<decltype(dfunc)>(dfunc) };
+
+    dbscan.pre();
+    dbscan(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    dbscan.post();
+
+    const auto      &idxs = dbscan.get_clusters_idxs();
+    const size_type &res_s = idxs.size();
+    res_t           result (res_s + 1);
+
+    for (size_type i = 0; i < res_s; ++i)
+        result[i] =
+            std::move(data_by_sel_common_<Ts ...>(idxs[i], indices_.size()));
+    if (! dbscan.get_noisey_idxs().empty())
+        result[res_s] =
+            std::move(data_by_sel_common_<Ts ...>(dbscan.get_noisey_idxs(),
+                                                  indices_.size()));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+std::vector<typename DataFrame<I, H>::PtrView>
+DataFrame<I, H>::
+get_view_by_dbscan(
+    const char *col_name,
+    long min_members,
+    double max_distance,
+    std::function<double(const T &x, const T &y)> &&dfunc)  {
+
+    using df_t = typename DataFrame<I, H>::PtrView;
+    using res_t = std::vector<df_t>;
+    using dbs_t = DBSCANVisitor<T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    dbs_t                   dbscan { min_members, max_distance,
+                                     std::forward<decltype(dfunc)>(dfunc) };
+
+    dbscan.pre();
+    dbscan(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    dbscan.post();
+
+    const auto      &idxs = dbscan.get_clusters_idxs();
+    const size_type &res_s = idxs.size();
+    res_t           result (res_s + 1);
+
+    for (size_type i = 0; i < res_s; ++i)
+        result[i] =
+            std::move(view_by_sel_common_<Ts ...>(idxs[i], indices_.size()));
+    if (! dbscan.get_noisey_idxs().empty())
+        result[res_s] =
+            std::move(view_by_sel_common_<Ts ...>(dbscan.get_noisey_idxs(),
+                                                  indices_.size()));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+std::vector<typename DataFrame<I, H>::ConstPtrView>
+DataFrame<I, H>::
+get_view_by_dbscan(
+    const char *col_name,
+    long min_members,
+    double max_distance,
+    std::function<double(const T &x, const T &y)> &&dfunc) const  {
+
+    using df_t = typename DataFrame<I, H>::ConstPtrView;
+    using res_t = std::vector<df_t>;
+    using dbs_t = DBSCANVisitor<T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    dbs_t                   dbscan { min_members, max_distance,
+                                     std::forward<decltype(dfunc)>(dfunc) };
+
+    dbscan.pre();
+    dbscan(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    dbscan.post();
+
+    const auto      &idxs = dbscan.get_clusters_idxs();
+    const size_type &res_s = idxs.size();
+    res_t           result (res_s + 1);
+
+    for (size_type i = 0; i < res_s; ++i)
+        result[i] =
+            std::move(view_by_sel_common_<Ts ...>(idxs[i], indices_.size()));
+    if (! dbscan.get_noisey_idxs().empty())
+        result[res_s] =
+            std::move(view_by_sel_common_<Ts ...>(dbscan.get_noisey_idxs(),
+                                                  indices_.size()));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::

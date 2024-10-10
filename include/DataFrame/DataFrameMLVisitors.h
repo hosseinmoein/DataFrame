@@ -554,8 +554,8 @@ public:
     using result_type = vec_t<VectorConstPtrView<value_type, A>>;
     using order_type =
         std::vector<std::vector<
-                        long,
-                        typename allocator_declare<long, A>::type>>;
+                        size_type,
+                        typename allocator_declare<size_type, A>::type>>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
 
@@ -679,7 +679,7 @@ public:
                 clusters_[this_id].push_back(&(*(column_begin + i)));
                 clusters_idxs_[this_id].push_back(i);
             }
-            else [[unlikely]]  { noisey_idxs_.push_back(i); }
+            else [[unlikely]]  { noisey_idxs_.push_back(size_type(i)); }
         }
     }
 
@@ -694,7 +694,7 @@ public:
     inline const result_type &get_result () const  { return (clusters_); }
     inline const order_type &
     get_clusters_idxs () const  { return (clusters_idxs_); }
-    inline const vec_t<id_t> &
+    inline const vec_t<size_type> &
     get_noisey_idxs () const  { return (noisey_idxs_); }
 
     DBSCANVisitor(id_t min_mems,
@@ -709,12 +709,12 @@ public:
 
 private:
 
-    const id_t      min_mems_;
-    const double    max_dist_;
-    distance_func   dfunc_;
-    result_type     clusters_ { };       // Clusters
-    order_type      clusters_idxs_ { };  // Clusters indices
-    vec_t<id_t>     noisey_idxs_ { };    // Indices of noisey elements
+    const id_t          min_mems_;
+    const double        max_dist_;
+    distance_func       dfunc_;
+    result_type         clusters_ { };       // Clusters
+    order_type          clusters_idxs_ { };  // Clusters indices
+    vec_t<size_type>    noisey_idxs_ { };    // Indices of noisey elements
 };
 
 // ----------------------------------------------------------------------------

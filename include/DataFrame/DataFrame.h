@@ -3244,7 +3244,7 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] ConstPtrView
     get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const;
 
-    // This uses k-means clustering algorithm to divide the named columns into
+    // This uses k-means clustering algorithm to divide the named column into
     // K clusters. It returns an array of K DataFrame's each containing one of
     // the clusters of data based on the named column.
     // Self in unchanged.
@@ -3307,7 +3307,7 @@ public: // Read/access and slicing interfaces
                        size_type num_of_iter = 1000,
                        seed_t seed = seed_t(-1)) const;
 
-    // This uses Affinity Propagation algorithm to divide the named columns
+    // This uses Affinity Propagation algorithm to divide the named column
     // into clusters. It returns an array of DataFrame's each containing one
     // of the clusters of data based on the named column. Unlike K-Means
     // clustering, you do not have to specify the number of clusters.
@@ -3375,6 +3375,72 @@ public: // Read/access and slicing interfaces
                           },
                       size_type num_of_iter = 20,
                       double damping_factor = 0.9) const;
+
+    // This uses DBSCAN algorithm to divide the named columninto clusters.
+    // It returns an array of DataFrame's each containing one of the clusters
+    // of data based on the named column. The last DataFrame in the array
+    // contains noisy data. It contains datapoints that could not be placed
+    // into any cluster. Ideally, you want the last DataFrame to be empty.
+    // Unlike K-Means clustering, you do not have to specify the number of
+    // clusters. The algorithm determines that.
+    // Self in unchanged.
+    //
+    // NOTE: Type T must support arithmetic operations
+    // NOTE: If this returns zero centroids (zero DataFrames) or there are too
+    //       many noisy datapoints, it is probably because number of iterations
+    //       is too small to converge.
+    //
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // min_members:
+    //   Minimum number of datapoints to constitute a cluster
+    // max_distance:
+    //   Maximum distance between two data points in the same cluster
+    // dfunc:
+    //   A function to calculate the distance between two data points in the
+    //   named column
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
+    get_data_by_dbscan(const char *col_name,
+                       long min_members,
+                       double max_distance,
+                       std::function<double(const T &x, const T &y)> &&dfunc =
+                           [](const T &x, const T &y) -> double  {
+                               return ((x - y) * (x - y));
+                           }) const;
+
+    // Same as above but it returns a vector of Views.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<PtrView>
+    get_view_by_dbscan(const char *col_name,
+                       long min_members,
+                       double max_distance,
+                       std::function<double(const T &x, const T &y)> &&dfunc =
+                           [](const T &x, const T &y) -> double  {
+                               return ((x - y) * (x - y));
+                           });
+
+    // Same as above but it returns a vector of const Views.
+    //
+    template<arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<ConstPtrView>
+    get_view_by_dbscan(const char *col_name,
+                       long min_members,
+                       double max_distance,
+                       std::function<double(const T &x, const T &y)> &&dfunc =
+                           [](const T &x, const T &y) -> double  {
+                               return ((x - y) * (x - y));
+                           }) const;
 
     // This returns a new DataFrame with the same index column as self and an
     // integer column with the same name for each column in self.

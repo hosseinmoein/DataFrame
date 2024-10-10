@@ -1752,6 +1752,66 @@ static void test_MeanShiftVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+void test_get_data_by_dbscan()  {
+
+    std::cout << "\nTesting get_data_by_dbscan( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.dat", io_format::binary);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    // The only reason I am using a view here is to make sure it compiles and
+    // functions properly
+    //
+    auto    views =
+        view.get_view_by_dbscan<double, double, long>
+            ("IBM_Close", 10, 4,
+             [](const double &x, const double &y) -> double  {
+                 return (std::fabs(x - y));
+             });
+    auto    dfs [[maybe_unused]] =
+        df.get_data_by_dbscan<double, double, long>
+            ("IBM_Close", 10, 4,
+             [](const double &x, const double &y) -> double  {
+                 return (std::fabs(x - y));
+             });
+
+    assert(views.size() == 20);
+
+    assert(views[0].get_index().size() == 11);
+    assert(views[0].get_column<double>("IBM_Close")[7] == 184.779999);
+
+    assert(views[5].get_index().size() == 127);
+    assert(views[5].get_column<double>("IBM_Open")[15] == 162.0);
+
+    assert(views[16].get_index().size() == 29);
+    assert(views[16].get_column<double>("IBM_High")[3] == 117.75);
+
+    // This is the last DataFrame which contains the data corresponding to
+    // noisy close prices
+    //
+    assert(views[19].get_index().size() == 2);
+    assert(views[19].get_column<long>("IBM_Volume")[0] == 10546500);
+    assert(views[19].get_index()[1] == "2020-03-23");
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1783,6 +1843,7 @@ int main(int, char *[]) {
     test_remove_data_by_hampel();
     test_DBSCANVisitor();
     test_MeanShiftVisitor();
+    test_get_data_by_dbscan();
 
     return (0);
 }

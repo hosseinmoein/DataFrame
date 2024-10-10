@@ -57,7 +57,7 @@ get_data_by_kmeans(const char *col_name,
         </B></PRE></font>
       </td>
       <td>
-        This uses k-means clustering algorithm to divide the named columns into <I>K</I> clusters. It returns a std::array of <I>K</I> DataFrame's each containing one of the clusters of data based on the named column.<BR>
+        This uses <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/KMeansVisitor.html">k-means clustering algorithm</a> to divide the named column into <I>K</I> clusters. It returns a std::array of <I>K</I> DataFrame's each containing one of the clusters of data based on the named column.<BR>
         Self is unchanged.<BR><BR>
         
         <B>NOTE</B> Type T must support arithmetic operations<BR>
@@ -112,7 +112,6 @@ get_view_by_kmeans(const char *col_name,
       <td bgcolor="blue"> <font color="white">
         <PRE><B>
 template&lt;std::size_t K, arithmetic T, typename ... Ts&gt;
-ConstPtrView
 std::array&lt;ConstPtrView, K&gt;
 get_view_by_kmeans(const char *col_name,
                    std::function&lt;double(const T &x, const T &y)&gt; &amp;&amp;dfunc =

@@ -836,6 +836,7 @@ private:
             const auto  &shifted_val = shifted[i];
             auto        cbegin = clusters_.begin();
             auto        cend = clusters_.end();
+            auto        ibegin = clusters_idxs_.begin();
             size_type   cnt_idx { 0 };
 
             while (cbegin != cend)  {
@@ -843,9 +844,11 @@ private:
                     // The point belongs to a cluster already created
                     //
                     cbegin->push_back(&(*(column_begin + i)));
+                    ibegin->push_back(i);
                     break;
                 }
                 ++cbegin;
+                ++ibegin;
                 ++cnt_idx;
             }
             if (cbegin == cend)  {  // create a new cluster

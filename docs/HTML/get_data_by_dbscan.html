@@ -50,7 +50,7 @@ std::vector&lt;DataFrame&gt;
 get_data_by_dbscan(const char *col_name,
                    long min_members,
                    double max_distance,
-                   std::function<double(const T &x, const T &y)> &&dfunc =
+                   std::function&lt;double(const T &x, const T &y)&gt; &amp;&amp;dfunc =
                        [](const T &x, const T &y) -> double  {
                            return ((x - y) * (x - y));
                        }) const;
@@ -83,7 +83,7 @@ std::vector&lt;PtrView&gt;
 get_view_by_dbscan(const char *col_name,
                    long min_members,
                    double max_distance,
-                   std::function<double(const T &x, const T &y)> &&dfunc =
+                   std::function&lt;double(const T &x, const T &y)&gt; &amp;&amp;dfunc =
                        [](const T &x, const T &y) -> double  {
                            return ((x - y) * (x - y));
                        });
@@ -116,7 +116,7 @@ std::vector&lt;ConstPtrView&gt;
 get_view_by_dbscan(const char *col_name,
                    long min_members,
                    double max_distance,
-                   std::function<double(const T &x, const T &y)> &&dfunc =
+                   std::function&lt;double(const T &x, const T &y)&gt; &amp;&amp;dfunc =
                        [](const T &x, const T &y) -> double  {
                            return ((x - y) * (x - y));
                        }) const;

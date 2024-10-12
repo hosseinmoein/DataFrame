@@ -1,0 +1,212 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html style="margin:0; padding:0; height:100%;">
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif; margin:0; padding:0; height:100%;">
+  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+
+    </tr>
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>
+template&lt;arithmetic T, typename ... Ts&gt;
+std::vector&lt;DataFrame&gt;
+get_data_by_mshift(const char *col_name,
+                   double kernel_bandwidth,
+                   double max_distance,
+                   mean_shift_kernel kernel = mean_shift_kernel::gaussian,
+                   std::function&lt;double(const T &amp;x, const T &amp;y)&gt; &amp;&amp;dfunc =
+                       [](const T &amp;x, const T &amp;y) -> double  {
+                           return ((x - y) * (x - y));
+                       },
+                   size_type num_of_iter = 50) const;
+        </B></PRE></font>
+      </td>
+      <td>
+        This uses <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MeanShiftVisitor.html">Mean-Shift algorithm</a> to divide the named column into clusters. It returns an array of DataFrame's each containing one of the clusters of data based on the named column. Unlike K-Means clustering, you do not have to specify the number of clusters.<BR>
+        Self is unchanged.<BR><BR>
+
+        <B>NOTE</B>: Type T must support arithmetic operations<BR>
+      </td>
+      <td width="30%">
+        <B>T</B>: Type of the named column<BR>
+        <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
+        <B>col_name</B>: Name of the data column<BR>
+        <B>kernel_bandwidth</B>: The width or spread of the kernel function used<BR>
+        <B>max_distance</B>: Maximum distance between two data points in the same cluster<BR>
+        <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MeanShiftVisitor.html"><B>mean_shift_kernel</B></a>: Kernel type used<BR>
+        <B>dfunc</B>: A function to calculate the distance between two data points in the named column<BR>
+        <B>num_of_iter</B>: Maximum number of iterations for AP clustering algorithm to converge<BR>
+      </td>
+    </tr>
+
+    </tr>
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>
+template&lt;arithmetic T, typename ... Ts&gt;
+std::vector&lt;PtrView&gt;
+get_view_by_mshift(const char *col_name,
+                   double kernel_bandwidth,
+                   double max_distance,
+                   mean_shift_kernel kernel = mean_shift_kernel::gaussian,
+                   std::function&lt;double(const T &amp;x, const T &amp;y)&gt; &amp;&amp;dfunc =
+                       [](const T &amp;x, const T &amp;y) -> double  {
+                           return ((x - y) * (x - y));
+                       },
+                   size_type num_of_iter = 50);
+        </B></PRE></font>
+      </td>
+      <td>
+        This is identical to above <I>get_data_by_mshift()</I>, but:<BR>
+        <OL>
+        <LI>The result is a std::vector of views</LI>
+        <LI>Since the result is a view, you cannot call make_consistent() on the result.</LI>
+        </OL>
+        <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
+      </td>
+      <td width="30%">
+        <B>T</B>: Type of the named column<BR>
+        <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
+        <B>col_name</B>: Name of the data column<BR>
+        <B>kernel_bandwidth</B>: The width or spread of the kernel function used<BR>
+        <B>max_distance</B>: Maximum distance between two data points in the same cluster<BR>
+        <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MeanShiftVisitor.html"><B>mean_shift_kernel</B></a>: Kernel type used<BR>
+        <B>dfunc</B>: A function to calculate the distance between two data points in the named column<BR>
+        <B>num_of_iter</B>: Maximum number of iterations for AP clustering algorithm to converge<BR>
+      </td>
+    </tr>
+
+    </tr>
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>
+template&lt;arithmetic T, typename ... Ts&gt;
+std::vector&lt;ConstPtrView&gt;
+get_view_by_mshift(const char *col_name,
+                   double kernel_bandwidth,
+                   double max_distance,
+                   mean_shift_kernel kernel = mean_shift_kernel::gaussian,
+                   std::function&lt;double(const T &amp;x, const T &amp;y)&gt; &amp;&amp;dfunc =
+                       [](const T &amp;x, const T &amp;y) -> double  {
+                           return ((x - y) * (x - y));
+                       },
+                   size_type num_of_iter = 50) const;
+        </B></PRE></font>
+      </td>
+      <td>
+          Same as above view, but it returns a std::vector of <I>const</I> views. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is reflected in the const view.       
+      </td>
+      <td width="30"%>
+        <B>T</B>: Type of the named column<BR>
+        <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
+        <B>col_name</B>: Name of the data column<BR>
+        <B>kernel_bandwidth</B>: The width or spread of the kernel function used<BR>
+        <B>max_distance</B>: Maximum distance between two data points in the same cluster<BR>
+        <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MeanShiftVisitor.html"><B>mean_shift_kernel</B></a>: Kernel type used<BR>
+        <B>dfunc</B>: A function to calculate the distance between two data points in the named column<BR>
+        <B>num_of_iter</B>: Maximum number of iterations for AP clustering algorithm to converge<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span> test_get_data_by_mshift<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing get_data_by_mshift( ) ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">typedef</span> StdDataFrame64<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span> StrDataFrame<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    StrDataFrame    df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">try</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span><span style="color:#603000; ">read</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">SHORT_IBM.dat</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> io_format<span style="color:#800080; ">::</span>binary<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">catch</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DataFrameError <span style="color:#808030; ">&amp;</span>ex<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> ex<span style="color:#808030; ">.</span>what<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    StrDataFrame    df2 <span style="color:#808030; ">=</span> df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>    lbd <span style="color:#808030; ">=</span> <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">bool</span> <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>    view <span style="color:#808030; ">=</span> df2<span style="color:#808030; ">.</span>get_view_by_sel<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">decltype</span><span style="color:#808030; ">(</span>lbd<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Open</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> lbd<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// I am using both views and dataframes to make sure both work</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>    views <span style="color:#808030; ">=</span> view<span style="color:#808030; ">.</span>get_view_by_mshift<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span> mean_shift_kernel<span style="color:#800080; ">::</span>gaussian<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                                                  <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">double</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                                                                      <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                                                                  <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>    dfs <span style="color:#808030; ">=</span> df<span style="color:#808030; ">.</span>get_data_by_mshift<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span> mean_shift_kernel<span style="color:#800080; ">::</span>gaussian<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                                              <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">double</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                                                                  <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                                                              <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>views<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">19</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>dfs<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">19</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>views<span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">106</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>dfs<span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">106</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>views<span style="color:#808030; ">[</span><span style="color:#008c00; ">4</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">19</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>views<span style="color:#808030; ">[</span><span style="color:#008c00; ">6</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">274</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>views<span style="color:#808030; ">[</span><span style="color:#008c00; ">10</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">180</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>views<span style="color:#808030; ">[</span><span style="color:#008c00; ">14</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">29</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>views<span style="color:#808030; ">[</span><span style="color:#008c00; ">18</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>dfs<span style="color:#808030; ">[</span><span style="color:#008c00; ">18</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>views<span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">7</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">185.92</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>dfs<span style="color:#808030; ">[</span><span style="color:#008c00; ">5</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Open</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">15</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">163.7</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>views<span style="color:#808030; ">[</span><span style="color:#008c00; ">16</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_High</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">3</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">106.04</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>dfs<span style="color:#808030; ">[</span><span style="color:#008c00; ">18</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Volume</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">10546500</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>views<span style="color:#808030; ">[</span><span style="color:#008c00; ">18</span><span style="color:#808030; ">]</span><span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">2020-03-23</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

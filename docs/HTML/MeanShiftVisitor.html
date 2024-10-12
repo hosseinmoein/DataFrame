@@ -49,7 +49,7 @@ enum class  mean_shift_kernel : unsigned char  {
     // if d <= 1 then 1 else 0
     uniform = 1,
 
-    // if d <= 1 then 1 - fabs(d) else 0
+    // if d <= 1 then 1 - abs(d) else 0
     triangular = 2,
 
     // if d <= 1 then 1 - d * d else 0
@@ -79,7 +79,7 @@ enum class  mean_shift_kernel : unsigned char  {
     // 1.0 / (e<sup>d</sup> + e<sup>-d</sup>)
     sigmoid = 10,
 
-    // x = M_SQRT1_2 * std::abs(d)
+    // x = M_SQRT1_2 * abs(d)
     // e<sup>-x</sup> * sin(x + M_PI_4)
     silverman = 11,
 };

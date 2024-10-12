@@ -1811,6 +1811,67 @@ void test_get_data_by_dbscan()  {
 
 // ----------------------------------------------------------------------------
 
+void test_get_data_by_mshift()  {
+
+    std::cout << "\nTesting get_data_by_mshift( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.dat", io_format::binary);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    // I am using both views and dataframes to make sure both work
+    //
+    auto    views =
+        view.get_view_by_mshift<double, double, long>
+            ("IBM_Close", 1, 4, mean_shift_kernel::gaussian,
+             [](const double &x, const double &y) -> double  {
+                 return (std::fabs(x - y));
+             });
+    auto    dfs =
+        df.get_data_by_mshift<double, double, long>
+            ("IBM_Close", 1, 4, mean_shift_kernel::gaussian,
+             [](const double &x, const double &y) -> double  {
+                 return (std::fabs(x - y));
+             });
+
+    assert(views.size() == 19);
+    assert(dfs.size() == 19);
+    assert(views[0].get_index().size() == 106);
+    assert(dfs[0].get_index().size() == 106);
+    assert(views[4].get_index().size() == 19);
+    assert(views[6].get_index().size() == 274);
+    assert(views[10].get_index().size() == 180);
+    assert(views[14].get_index().size() == 29);
+    assert(views[18].get_index().size() == 2);
+    assert(dfs[18].get_index().size() == 2);
+
+    assert(
+    (std::fabs(views[0].get_column<double>("IBM_Close")[7] - 185.92) < 0.001));
+    assert(
+    (std::fabs(dfs[5].get_column<double>("IBM_Open")[15] - 163.7) < 0.001));
+    assert(
+    (std::fabs(views[16].get_column<double>("IBM_High")[3] - 106.04) < 0.001));
+    assert(dfs[18].get_column<long>("IBM_Volume")[0] == 10546500);
+    assert(views[18].get_index()[1] == "2020-03-23");
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1843,6 +1904,7 @@ int main(int, char *[]) {
     test_DBSCANVisitor();
     test_MeanShiftVisitor();
     test_get_data_by_dbscan();
+    test_get_data_by_mshift();
 
     return (0);
 }

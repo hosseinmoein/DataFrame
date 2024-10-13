@@ -52,7 +52,7 @@ namespace hmdf
 //       OF THE PROGRAMMER TO TAKE CARE OF THAT.
 //
 
-class VirtualString {
+class   VirtualString {
 
 public:
 
@@ -388,6 +388,8 @@ inline S &operator << (S &lhs, const VirtualString &rhs)  {
 
 // ----------------------------------------------------------------------------
 
+// Convenient typedefs
+//
 using String32 = FixedSizeString<31>;
 using String64 = FixedSizeString<63>;
 using String128 = FixedSizeString<127>;

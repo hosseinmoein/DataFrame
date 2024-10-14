@@ -808,26 +808,21 @@ remove_dups_common_(const DataFrame &s_df,
     rows_to_del.reserve(512);
     if (rds == remove_dup_spec::keep_first)  {
         for (const auto &[val_tuple, idx_vec] : row_table)  {
-            if (idx_vec.size() > 1)  {
-                for (size_type i = 1; i < idx_vec.size(); ++i)
-                    rows_to_del.push_back(idx_vec[i]);
-            }
+            rows_to_del.insert(rows_to_del.end(),
+                               idx_vec.begin() + 1, idx_vec.end());
         }
     }
     else if (rds == remove_dup_spec::keep_last)  {
         for (const auto &[val_tuple, idx_vec] : row_table)  {
-            if (idx_vec.size() > 1)  {
-                for (size_type i = 0; i < idx_vec.size() - 1; ++i)
-                    rows_to_del.push_back(idx_vec[i]);
-            }
+            rows_to_del.insert(rows_to_del.end(),
+                               idx_vec.begin(), idx_vec.end() - 1);
         }
     }
     else  {  // remove_dup_spec::keep_none
         for (const auto &[val_tuple, idx_vec] : row_table)  {
-            if (idx_vec.size() > 1)  {
-                for (size_type i = 0; i < idx_vec.size(); ++i)
-                    rows_to_del.push_back(idx_vec[i]);
-            }
+            if (idx_vec.size() > 1)
+                rows_to_del.insert(rows_to_del.end(),
+                                   idx_vec.begin(), idx_vec.end());
         }
     }
 
@@ -837,13 +832,12 @@ remove_dups_common_(const DataFrame &s_df,
 
     // Load the index
     //
-    _remove_copy_if_(index.begin(), index.end(), new_index.begin(),
-                     [&rows_to_del = std::as_const(rows_to_del)]
-                     (std::size_t n) -> bool  {
-                         return (std::find(rows_to_del.begin(),
-                                           rows_to_del.end(),
-                                           n) != rows_to_del.end());
-                     });
+    std::sort(rows_to_del.begin(), rows_to_del.end());
+    for (size_type i = 0, n = 0; i < index.size(); ++i)  {
+        if (! std::binary_search(rows_to_del.begin(), rows_to_del.end(), i))
+            new_index[n++] = index[i];
+    }
+
     new_df.load_index(std::move(new_index));
 
     // Create the columns, so loading can proceed in parallel

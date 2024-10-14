@@ -923,12 +923,11 @@ operator() (const T &vec)  {
 
     NewVecType  new_vec (vec.size() - to_delete.size());
 
-    _remove_copy_if_(vec.begin(), vec.end(), new_vec.begin(),
-                     [this] (std::size_t n) -> bool  {
-                         return (std::find(this->to_delete.begin(),
-                                           this->to_delete.end(),
-                                           n) != this->to_delete.end());
-                     });
+    for (size_type i = 0, n = 0; i < vec.size(); ++i)  {
+        if (! std::binary_search(to_delete.begin(), to_delete.end(), i))
+            new_vec[n++] = vec[i];
+    }
+
     df.template load_column<ValueType>(name,
                                        std::move(new_vec),
                                        nan_policy::dont_pad_with_nans,

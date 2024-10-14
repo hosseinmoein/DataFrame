@@ -572,20 +572,21 @@ remove_duplicates (const char *name,
     using map_t = DFUnorderedMap<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T>  *vec { nullptr };
+    const auto              &index = get_index();
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
-        vec = (const ColumnVecType<T> *) &(get_index());
+        vec = (const ColumnVecType<T> *) &index;
         include_index = false;
     }
     else
-        vec = (const ColumnVecType<T> *) &(get_column<T>(name, false));
+        vec = (const ColumnVecType<T> *) &(get_column<T>(name));
 
-    const auto      &index = get_index();
     const size_type col_s = std::min(vec->size(), index.size());
     map_t           row_table;
     count_vec       dummy_vec;
     const IndexType dummy_idx { };
 
+    row_table.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
             row_table.emplace(
@@ -627,6 +628,7 @@ remove_duplicates (const char *name1,
     count_vec       dummy_vec;
     const IndexType dummy_idx { };
 
+    row_table.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
             row_table.emplace(
@@ -674,6 +676,7 @@ remove_duplicates (const char *name1,
     count_vec       dummy_vec;
     const IndexType dummy_idx { };
 
+    row_table.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
             row_table.emplace(
@@ -726,6 +729,7 @@ remove_duplicates (const char *name1,
     count_vec       dummy_vec;
     const IndexType dummy_idx { };
 
+    row_table.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
             row_table.emplace(
@@ -780,6 +784,7 @@ remove_duplicates (const char *name1,
     count_vec       dummy_vec;
     const IndexType dummy_idx { };
 
+    row_table.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
             row_table.emplace(
@@ -839,6 +844,7 @@ remove_duplicates (const char *name1,
     count_vec       dummy_vec;
     const IndexType dummy_idx { };
 
+    row_table.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
             row_table.emplace(

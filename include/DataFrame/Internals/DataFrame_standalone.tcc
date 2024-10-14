@@ -1902,21 +1902,6 @@ struct  TupleHash  {
 
 // ----------------------------------------------------------------------------
 
-// Specialized version of std::remove_copy
-//
-
-template<typename I, typename O, typename PRE>
-inline static void
-_remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
-
-    for (I i = first; i != last; ++i) [[likely]]
-        if (! predicate (std::distance(first, i)))
-            *d_first++ = *i;
-
-}
-
-// ----------------------------------------------------------------------------
-
 template<typename T, typename V, typename BV>
 static inline void
 _sort_by_sorted_index_(T &to_be_sorted,

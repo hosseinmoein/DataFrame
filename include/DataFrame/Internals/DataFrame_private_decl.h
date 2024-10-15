@@ -800,41 +800,35 @@ remove_dups_common_(const DataFrame &s_df,
                     const MAP &row_table,
                     const IndexVecType &index)  {
 
-    using count_vec = StlVecType<size_type>;
+    using count_set = DFUnorderedSet<size_type>;
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
-    count_vec   rows_to_del;
+    const size_type idx_s = index.size();
+    count_set       rows_to_del;
 
-    rows_to_del.reserve(512);
+    rows_to_del.reserve(idx_s / 100);
     if (rds == remove_dup_spec::keep_first)  {
-        for (const auto &[val_tuple, idx_vec] : row_table)  {
-            rows_to_del.insert(rows_to_del.end(),
-                               idx_vec.begin() + 1, idx_vec.end());
-        }
+        for (const auto &[val_tuple, idx_vec] : row_table)
+            rows_to_del.insert(idx_vec.begin() + 1, idx_vec.end());
     }
     else if (rds == remove_dup_spec::keep_last)  {
-        for (const auto &[val_tuple, idx_vec] : row_table)  {
-            rows_to_del.insert(rows_to_del.end(),
-                               idx_vec.begin(), idx_vec.end() - 1);
-        }
+        for (const auto &[val_tuple, idx_vec] : row_table)
+            rows_to_del.insert(idx_vec.begin(), idx_vec.end() - 1);
     }
     else  {  // remove_dup_spec::keep_none
-        for (const auto &[val_tuple, idx_vec] : row_table)  {
+        for (const auto &[val_tuple, idx_vec] : row_table)
             if (idx_vec.size() > 1)
-                rows_to_del.insert(rows_to_del.end(),
-                                   idx_vec.begin(), idx_vec.end());
-        }
+                rows_to_del.insert(idx_vec.begin(), idx_vec.end());
     }
 
     res_t                        new_df;
-    typename res_t::IndexVecType new_index (index.size() - rows_to_del.size());
+    typename res_t::IndexVecType new_index (idx_s - rows_to_del.size());
     const SpinGuard              guard(lock_);
 
     // Load the index
     //
-    std::sort(rows_to_del.begin(), rows_to_del.end());
-    for (size_type i = 0, n = 0; i < index.size(); ++i)  {
-        if (! std::binary_search(rows_to_del.begin(), rows_to_del.end(), i))
+    for (size_type i = 0, n = 0; i < idx_s; ++i)  {
+        if (! rows_to_del.contains(i))
             new_index[n++] = index[i];
     }
 

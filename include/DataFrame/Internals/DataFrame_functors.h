@@ -699,13 +699,13 @@ template<typename DF, typename ... Ts>
 struct  copy_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline copy_remove_functor_ (const char *n,
-                                 const StlVecType<std::size_t>  &td,
+                                 const DFUnorderedSet<std::size_t>  &td,
                                  DF &d)
         : name(n), to_delete (td), df(d)  {   }
 
-    const char                      *name;
-    const StlVecType<std::size_t>   &to_delete;
-    DF                              &df;
+    const char                          *name;
+    const DFUnorderedSet<std::size_t>   &to_delete;
+    DF                                  &df;
 
     template<typename T>
     void operator() (const T &vec);

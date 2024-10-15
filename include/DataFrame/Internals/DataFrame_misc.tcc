@@ -924,7 +924,7 @@ operator() (const T &vec)  {
     NewVecType  new_vec (vec.size() - to_delete.size());
 
     for (size_type i = 0, n = 0; i < vec.size(); ++i)  {
-        if (! std::binary_search(to_delete.begin(), to_delete.end(), i))
+        if (! to_delete.contains(i))
             new_vec[n++] = vec[i];
     }
 

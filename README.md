@@ -67,8 +67,8 @@ I ran each test 4 times and took the best time. Polars numbers varied a lot from
 |                          | [<B>C++ DataFrame</B>](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/dataframe_performance.cc) | [<B>Polars</B>](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/polars_performance.py) | [<B>Pandas</B>](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/pandas_performance.py) |
 |            :--           |        :---:         |     :--:      |     :--:      |
 | Data generation/load time | 26.945900 secs | 28.468640 secs | 36.678976 secs |
-| Calculation time | 1.260150 secs | 4.876561 secs | 40.326350 secs |
-| Selection time | 0.742493 secs | 3.876561 secs | 8.326350 secs |
+| Calculation time | &nbsp;&nbsp; 1.260150 secs | &nbsp;&nbsp; 4.876561 secs | 40.326350 secs |
+| Selection time | &nbsp;&nbsp; 0.742493 secs | &nbsp;&nbsp; 3.876561 secs | &nbsp;&nbsp; 8.326350 secs |
 | Overall time: | 28.948600 secs | 36.876345 secs | 85.845114 secs | 
 
 ---

@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/Endianness.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
 #include <cctype>
@@ -80,7 +81,8 @@ std::unordered_map<_TypeInfoRef_,
                    _TypeinfoHasher_,
                    _TypeinfoEqualTo_>
 _typeinfo_name_  {
-    // Fundamentals
+
+    // Numerics
     //
     { typeid(float), "float" },
     { typeid(double), "double" },
@@ -95,11 +97,22 @@ _typeinfo_name_  {
     { typeid(unsigned long long int), "ulonglong" },
     { typeid(char), "char" },
     { typeid(unsigned char), "uchar" },
+    { typeid(bool), "bool" },
+
+    // Strings
+    //
     { typeid(std::string), "string" },
     { typeid(const char *), "string" },
     { typeid(char *), "string" },
-    { typeid(bool), "bool" },
+    { typeid(String32), "vstr32" },
+    { typeid(String64), "vstr64" },
+    { typeid(String128), "vstr128" },
+    { typeid(String512), "vstr512" },
+    { typeid(String1K), "vstr1K" },
+    { typeid(String2K), "vstr2K" },
 
+    // DateTime
+    //
     { typeid(DateTime), "DateTime" },
 
     // Pairs
@@ -1370,7 +1383,7 @@ _read_binary_common_(STRM &strm, bool needs_flipping, std::size_t start_row)  {
 }
 // ----------------------------------------------------------------------------
 
-template<typename STRM, typename V>
+template<typename STR_T, typename STRM, typename V>
 inline static STRM &
 _read_binary_string_(STRM &strm, V &str_vec, bool needs_flipping,
                      std::size_t start_row, std::size_t num_rows)  {
@@ -1399,7 +1412,7 @@ _read_binary_string_(STRM &strm, V &str_vec, bool needs_flipping,
                         ? vec_size - start_row : read_end - start_row);
     for (uint64_t i = 0; i < vec_size; ++i)  {
         if (i >= start_row && i < read_end) [[likely]]  {
-            std::string str (std::size_t(sizes[i]), 0);
+            STR_T   str (std::size_t(sizes[i]), 0);
 
             strm.read(str.data(), sizes[i] * sizeof(char));
             str_vec.emplace_back(std::move(str));
@@ -1563,7 +1576,7 @@ _read_binary_str_str_pair_(STRM &strm, V &p_vec, bool needs_flipping,
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
             ? vec_size : uint64_t(start_row + num_rows);
-	std::size_t     sizes_idx { 0 };
+    std::size_t     sizes_idx { 0 };
 
     p_vec.reserve(read_end - start_row);
     for (uint64_t i = 0; i < vec_size; ++i, sizes_idx += 2)  {
@@ -1687,8 +1700,9 @@ _read_binary_str_vec_(STRM &strm, V &vec, bool needs_flipping,
         strm.seekg(32 * sizeof(char), std::ios_base::cur);
 
         str_vec.clear();
-        _read_binary_string_(strm, str_vec, needs_flipping,
-                             0, std::numeric_limits<std::size_t>::max());
+        _read_binary_string_<std::string>(
+            strm, str_vec, needs_flipping, 0,
+            std::numeric_limits<std::size_t>::max());
         if (i >= start_row && i < read_end) [[likely]]
             vec.push_back(std::move(str_vec));
     }

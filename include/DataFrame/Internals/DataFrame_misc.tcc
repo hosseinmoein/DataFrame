@@ -244,7 +244,13 @@ DataFrame<I, H>::print_binary_functor_<Ts ...>::operator() (const T &vec)  {
     const long  local_start_row = std::min (long(vec.size()), start_row);
     const long  local_end_row = std::min (long(vec.size()), end_row);
 
-    if constexpr (std::is_same_v<ValueType, std::string>)
+    if constexpr (std::is_same_v<ValueType, std::string> ||
+                  std::is_same_v<ValueType, String32> ||
+                  std::is_same_v<ValueType, String64> ||
+                  std::is_same_v<ValueType, String128> ||
+                  std::is_same_v<ValueType, String512> ||
+                  std::is_same_v<ValueType, String1K> ||
+                  std::is_same_v<ValueType, String2K>)
         _write_binary_string_(os, vec, local_start_row, local_end_row);
     else if constexpr (std::is_same_v<ValueType, DateTime>)
         _write_binary_datetime_(os, vec, local_start_row, local_end_row);

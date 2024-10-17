@@ -1373,8 +1373,9 @@ struct  ColVectorPushBack_<DateTime, StlVecType<DateTime>, Dummy>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename STR>
 inline static void
-json_str_col_vector_push_back_(StlVecType<std::string> &vec,
+json_str_col_vector_push_back_(StlVecType<STR> &vec,
                                std::istream &file)  {
 
     char    value[2048];

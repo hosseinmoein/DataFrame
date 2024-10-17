@@ -301,6 +301,48 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 vec.reserve(col_size);
                 json_str_col_vector_push_back_(vec, stream);
             }
+            else if (col_type == "vstr32")  {
+                StlVecType<String32>    &vec =
+                    create_column<String32>(col_name.c_str(), false);
+
+                vec.reserve(col_size);
+                json_str_col_vector_push_back_(vec, stream);
+            }
+            else if (col_type == "vstr64")  {
+                StlVecType<String64>    &vec =
+                    create_column<String64>(col_name.c_str(), false);
+
+                vec.reserve(col_size);
+                json_str_col_vector_push_back_(vec, stream);
+            }
+            else if (col_type == "vstr128")  {
+                StlVecType<String128>   &vec =
+                    create_column<String128>(col_name.c_str(), false);
+
+                vec.reserve(col_size);
+                json_str_col_vector_push_back_(vec, stream);
+            }
+            else if (col_type == "vstr512")  {
+                StlVecType<String512>   &vec =
+                    create_column<String512>(col_name.c_str(), false);
+
+                vec.reserve(col_size);
+                json_str_col_vector_push_back_(vec, stream);
+            }
+            else if (col_type == "vstr1K")  {
+                StlVecType<String1K>    &vec =
+                    create_column<String1K>(col_name.c_str(), false);
+
+                vec.reserve(col_size);
+                json_str_col_vector_push_back_(vec, stream);
+            }
+            else if (col_type == "vstr2K")  {
+                StlVecType<String2K>    &vec =
+                    create_column<String2K>(col_name.c_str(), false);
+
+                vec.reserve(col_size);
+                json_str_col_vector_push_back_(vec, stream);
+            }
             else if (col_type == "DateTime")  {
                 StlVecType<DateTime>    &vec =
                     create_column<DateTime>(col_name.c_str(), false);
@@ -500,12 +542,78 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                 col_vector_push_back_func_(vec, stream, &::strtoull);
             }
             else if (type_str == "string")  {
-                StlVecType<std::string>                     &vec =
+                StlVecType<std::string> &vec =
                     create_column<std::string>(col_name.c_str(), false);
-                auto                                        converter =
+                auto                    converter =
                     [](const char *s, char **)-> const char * { return s; };
                 const ColVectorPushBack_
                     <const char *, StlVecType<std::string>> slug;
+
+                vec.reserve(::atoi(value.c_str()));
+                slug(vec, stream, converter);
+            }
+            else if (type_str == "vstr32")  {
+                StlVecType<String32>    &vec =
+                    create_column<String32>(col_name.c_str(), false);
+                auto                    converter =
+                    [](const char *s, char **)-> const char * { return s; };
+                const ColVectorPushBack_
+                    <const char *, StlVecType<String32>> slug;
+
+                vec.reserve(::atoi(value.c_str()));
+                slug(vec, stream, converter);
+            }
+            else if (type_str == "vstr64")  {
+                StlVecType<String64>    &vec =
+                    create_column<String64>(col_name.c_str(), false);
+                auto                    converter =
+                    [](const char *s, char **)-> const char * { return s; };
+                const ColVectorPushBack_
+                    <const char *, StlVecType<String64>> slug;
+
+                vec.reserve(::atoi(value.c_str()));
+                slug(vec, stream, converter);
+            }
+            else if (type_str == "vstr128")  {
+                StlVecType<String128>   &vec =
+                    create_column<String128>(col_name.c_str(), false);
+                auto                    converter =
+                    [](const char *s, char **)-> const char * { return s; };
+                const ColVectorPushBack_
+                    <const char *, StlVecType<String128>> slug;
+
+                vec.reserve(::atoi(value.c_str()));
+                slug(vec, stream, converter);
+            }
+            else if (type_str == "vstr512")  {
+                StlVecType<String512>   &vec =
+                    create_column<String512>(col_name.c_str(), false);
+                auto                    converter =
+                    [](const char *s, char **)-> const char * { return s; };
+                const ColVectorPushBack_
+                    <const char *, StlVecType<String512>> slug;
+
+                vec.reserve(::atoi(value.c_str()));
+                slug(vec, stream, converter);
+            }
+            else if (type_str == "vstr1K")  {
+                StlVecType<String1K>    &vec =
+                    create_column<String1K>(col_name.c_str(), false);
+                auto                    converter =
+                    [](const char *s, char **)-> const char * { return s; };
+                const ColVectorPushBack_
+                    <const char *, StlVecType<String1K>> slug;
+
+                vec.reserve(::atoi(value.c_str()));
+                slug(vec, stream, converter);
+            }
+            else if (type_str == "vstr2K")  {
+                StlVecType<String2K>    &vec =
+                    create_column<String2K>(col_name.c_str(), false);
+                auto                    converter =
+                    [](const char *s, char **)-> const char * { return s; };
+                const ColVectorPushBack_
+                    <const char *, StlVecType<String2K>> slug;
 
                 vec.reserve(::atoi(value.c_str()));
                 slug(vec, stream, converter);
@@ -776,6 +884,37 @@ read_csv2_(std::FILE *stream,
                                           type_str.c_str(),
                                           col_name.c_str(),
                                           nrows);
+                else if (type_str == "vstr32")
+                    spec_vec.emplace_back(StlVecType<String32>(),
+                                          type_str.c_str(),
+                                          col_name.c_str(),
+                                          nrows);
+                else if (type_str == "vstr64")
+                    spec_vec.emplace_back(StlVecType<String64>(),
+                                          type_str.c_str(),
+                                          col_name.c_str(),
+                                          nrows);
+                else if (type_str == "vstr128")
+                    spec_vec.emplace_back(StlVecType<String128>(),
+                                          type_str.c_str(),
+                                          col_name.c_str(),
+                                          nrows);
+                else if (type_str == "vstr512")
+                    spec_vec.emplace_back(StlVecType<String512>(),
+                                          type_str.c_str(),
+                                          col_name.c_str(),
+                                          nrows);
+                else if (type_str == "vstr1K")
+                    spec_vec.emplace_back(StlVecType<String1K>(),
+                                          type_str.c_str(),
+                                          col_name.c_str(),
+                                          nrows);
+                else if (type_str == "vstr2K")
+                    spec_vec.emplace_back(StlVecType<String2K>(),
+                                          type_str.c_str(),
+                                          col_name.c_str(),
+                                          nrows);
+
                 // This includes DateTime, DateTimeAME, DateTimeEUR,
                 // DateTimeISO
                 //
@@ -1016,6 +1155,30 @@ read_csv2_(std::FILE *stream,
                 else if (col_spec.type_spec == "string")  {
                     std::any_cast<StlVecType<std::string> &>
                         (col_spec.col_vec).emplace_back(value);
+                }
+                else if (col_spec.type_spec == "vstr32")  {
+                    std::any_cast<StlVecType<String32> &>
+                        (col_spec.col_vec).emplace_back(value.c_str());
+                }
+                else if (col_spec.type_spec == "vstr64")  {
+                    std::any_cast<StlVecType<String64> &>
+                        (col_spec.col_vec).emplace_back(value.c_str());
+                }
+                else if (col_spec.type_spec == "vstr128")  {
+                    std::any_cast<StlVecType<String128> &>
+                        (col_spec.col_vec).emplace_back(value.c_str());
+                }
+                else if (col_spec.type_spec == "vstr512")  {
+                    std::any_cast<StlVecType<String512> &>
+                        (col_spec.col_vec).emplace_back(value.c_str());
+                }
+                else if (col_spec.type_spec == "vstr1K")  {
+                    std::any_cast<StlVecType<String1K> &>
+                        (col_spec.col_vec).emplace_back(value.c_str());
+                }
+                else if (col_spec.type_spec == "vstr2K")  {
+                    std::any_cast<StlVecType<String2K> &>
+                        (col_spec.col_vec).emplace_back(value.c_str());
                 }
                 else if (col_spec.type_spec == "DateTime")  {
                     if (! value.empty()) [[likely]]  {
@@ -1307,6 +1470,42 @@ read_csv2_(std::FILE *stream,
                     std::move(std::any_cast<StlVecType<std::string> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "vstr32")
+                load_column<String32>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<String32> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "vstr64")
+                load_column<String64>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<String64> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "vstr128")
+                load_column<String128>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<String128> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "vstr512")
+                load_column<String512>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<String512> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "vstr1K")
+                load_column<String1K>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<String1K> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "vstr2K")
+                load_column<String2K>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<String2K> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (! ::strncmp(col_spec.type_spec.c_str(), "DateTime", 8))
                 load_column<DateTime>(
                     col_spec.col_name.c_str(),
@@ -1442,8 +1641,26 @@ read_binary_(std::istream &stream,
         IndexVecType    idx_vec;
 
         if constexpr (std::is_same_v<IndexType, std::string>)
-            _read_binary_string_(stream, idx_vec, needs_flipping,
-                                 starting_row, num_rows);
+            _read_binary_string_<std::string>(stream, idx_vec, needs_flipping,
+                                              starting_row, num_rows);
+        else if constexpr (std::is_same_v<IndexType, String32>)
+            _read_binary_string_<String32>(stream, idx_vec, needs_flipping,
+                                           starting_row, num_rows);
+        else if constexpr (std::is_same_v<IndexType, String64>)
+            _read_binary_string_<String64>(stream, idx_vec, needs_flipping,
+                                           starting_row, num_rows);
+        else if constexpr (std::is_same_v<IndexType, String128>)
+            _read_binary_string_<String128>(stream, idx_vec, needs_flipping,
+                                            starting_row, num_rows);
+        else if constexpr (std::is_same_v<IndexType, String512>)
+            _read_binary_string_<String512>(stream, idx_vec, needs_flipping,
+                                            starting_row, num_rows);
+        else if constexpr (std::is_same_v<IndexType, String1K>)
+            _read_binary_string_<String1K>(stream, idx_vec, needs_flipping,
+                                           starting_row, num_rows);
+        else if constexpr (std::is_same_v<IndexType, String2K>)
+            _read_binary_string_<String2K>(stream, idx_vec, needs_flipping,
+                                           starting_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, DateTime>)
             _read_binary_datetime_(stream, idx_vec, needs_flipping,
                                    starting_row, num_rows);
@@ -1460,8 +1677,56 @@ read_binary_(std::istream &stream,
         if (! std::strcmp(col_type, "string"))  {
             ColumnVecType<std::string>  vec;
 
-            _read_binary_string_(stream, vec, needs_flipping,
-                                 starting_row, num_rows);
+            _read_binary_string_<std::string>(stream, vec, needs_flipping,
+                                              starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if (! std::strcmp(col_type, "vstr32"))  {
+            ColumnVecType<String32> vec;
+
+            _read_binary_string_<String32>(stream, vec, needs_flipping,
+                                           starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if (! std::strcmp(col_type, "vstr64"))  {
+            ColumnVecType<String64> vec;
+
+            _read_binary_string_<String64>(stream, vec, needs_flipping,
+                                           starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if (! std::strcmp(col_type, "vstr128"))  {
+            ColumnVecType<String128>    vec;
+
+            _read_binary_string_<String128>(stream, vec, needs_flipping,
+                                            starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if (! std::strcmp(col_type, "vstr512"))  {
+            ColumnVecType<String512>    vec;
+
+            _read_binary_string_<String512>(stream, vec, needs_flipping,
+                                            starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if (! std::strcmp(col_type, "vstr1K"))  {
+            ColumnVecType<String1K> vec;
+
+            _read_binary_string_<String1K>(stream, vec, needs_flipping,
+                                           starting_row, num_rows);
+            load_column(col_name, std::move(vec),
+                        nan_policy::dont_pad_with_nans);
+        }
+        else if (! std::strcmp(col_type, "vstr2K"))  {
+            ColumnVecType<String2K> vec;
+
+            _read_binary_string_<String2K>(stream, vec, needs_flipping,
+                                           starting_row, num_rows);
             load_column(col_name, std::move(vec),
                         nan_policy::dont_pad_with_nans);
         }

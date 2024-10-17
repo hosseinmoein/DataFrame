@@ -353,6 +353,16 @@ public:
     inline FixedSizeString (const VirtualString &that) noexcept
         : VirtualString (buffer_)  { *this = that; }
 
+    // This is a constructor with the same signature as std::string
+    // but here the size is ignored
+    //
+    inline FixedSizeString (size_type , value_type v) noexcept
+        : VirtualString (buffer_)  {
+
+        std::memset(buffer_, v, S);
+        buffer_[S] = 0;
+    }
+
     // Assignment methods which cannot be inherited or virtual.
     //
     inline FixedSizeString &operator = (const FixedSizeString &rhs) noexcept  {

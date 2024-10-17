@@ -118,10 +118,16 @@ uchar      -- unsigned char
 string     -- std::string
 string     -- const char *
 string     -- char *
+vstr32     -- Fixed-size string of 31 char length
+vstr64     -- Fixed-size string of 63 char length
+vstr128    -- Fixed-size string of 127 char length
+vstr512    -- Fixed-size string of 511 char length
+vstr1K     -- Fixed-size string of 1023 char length
+vstr2K     -- Fixed-size string of 2047 char length
 bool       -- bool
 DateTime   -- DateTime data in format of
-    &lt;Epoch seconds&gt;.&lt;nanoseconds&gt;
-    (1516179600.874123908)
+              &lt;Epoch seconds&gt;.&lt;nanoseconds&gt;
+              (1516179600.874123908)
         </PRE>
         In case of io_format::csv2, io_format::csv, and io_format::binary the following additional types are also supported:
         <PRE>

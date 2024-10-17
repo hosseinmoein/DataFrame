@@ -61,8 +61,8 @@ using String2K  = FixedSizeString<2047>;
       </td>
       <td>
         <I>FixedSizeString</I> is a fixed-size and null-terminated string. Since the size is a template parameter, each different size is a different object type. But since <I>FixedSizeString</I> is derived from <I>VirtualString</I> (which is not a templated object), different size instances can be interchanged through references to <I>VirtualString</I>. <I>VirtualString</I> implements almost all of std::string functionalities.<BR>
-There is no dynamic memory allocation and deallocation involved here.<BR>
-<I>FixedSizeString</I> is the type of column names in DataFrame and could be used by users for their other purposes.
+<I>FixedSizeString</I> does not do any dynamic memory allocation/deallocation.<BR>
+<I>FixedSizeString</I> "Convenient typedefs"  are among  the types that <I>DataFrame</I> library can read/write from/to files and serialization<BR>
 
       </td>
     </tr>

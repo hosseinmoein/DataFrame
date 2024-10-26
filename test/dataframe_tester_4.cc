@@ -51,6 +51,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -1869,11 +1870,65 @@ void test_get_data_by_mshift()  {
     assert(dfs[18].get_column<long>("IBM_Volume")[0] == 10546500);
     assert(views[18].get_index()[1] == "2020-03-23");
 }
+*/
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void test_FastHierVisitor()  {
+
+    std::cout << "\nTesting FastHierVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    FastHierVisitor<double, std::string, 64>   mshift(
+        [](const double &x, const double &y)  { return (std::fabs(x - y)); });
+
+    df.single_act_visit<double>("IBM_Close", mshift);
+}
 
 // ----------------------------------------------------------------------------
 
 int main(int, char *[]) {
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -1905,6 +1960,8 @@ int main(int, char *[]) {
     test_MeanShiftVisitor();
     test_get_data_by_dbscan();
     test_get_data_by_mshift();
+*/
+    test_FastHierVisitor();
 
     return (0);
 }

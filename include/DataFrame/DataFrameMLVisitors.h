@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/Internals/fastcluster.h>
 #include <DataFrame/Vectors/VectorPtrView.h>
 
 #include <algorithm>
@@ -718,6 +719,221 @@ private:
 };
 
 // ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Fast Hierarchical Agglomerative Clustering
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  FastHierVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using result_type = vec_t<VectorConstPtrView<value_type, A>>;
+    using order_type =
+        std::vector<std::vector<
+                        size_type,
+                        typename allocator_declare<size_type, A>::type>>;
+    using distance_func =
+        std::function<double(const value_type &x, const value_type &y)>;
+
+private:
+
+    template<typename H>
+    inline vec_t<double>
+    calc_dissimilarity_(const H &column_begin, size_type col_s)  {
+
+        vec_t<double>   diss_vec;
+
+        diss_vec.reserve((col_s * (col_s - 1)) / 2);
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    &i_val = *(column_begin + i);
+
+            for (size_type j = i + 1; j < col_s; ++j)
+                diss_vec.push_back(dfunc_(i_val, *(column_begin + j)));
+        }
+        return (diss_vec);
+    }
+
+
+public:
+
+    template<typename IV, typename H>
+    inline void
+    operator() (const IV &idx_begin, const IV &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        const size_type     col_s =
+            std::min(std::distance(idx_begin, idx_end),
+                     std::distance(column_begin, column_end));
+        auto                diss_vec =
+            std::move(calc_dissimilarity_(column_begin, col_s));
+        vec_t<size_type>    members(2 * col_s - 1, 1);
+        Dissimilarity       diss(diss_vec.data(),
+                                 1, col_s,
+                                 members.data(),
+                                 method_codes::METHOD_METR_COMPLETE,
+                                 metric_codes::METRIC_USER,
+                                 false);
+        ClusterResult       clus_res(col_s - 1);
+
+        generic_linkage_vector<method_codes_vector::METHOD_VECTOR_WARD>
+            (col_s, diss, clus_res);
+        // diss.postprocess(clus_res);
+
+        vec_t<double>   Z((col_s - 1) * 4, 0);
+
+        GenerateDenrogram<false>(Z.data(), clus_res, col_s);
+        for (const auto &node : clus_res.Z)
+            std::cout << node.node1 << ", "
+                      << node.node2 << ", " << node.dist << '\n';
+        std::cout << std::endl;
+        for (const auto &val : Z)
+            std::cout << val << ", ";
+        std::cout << std::endl;
+
+    }
+
+    inline void pre ()  {
+
+        clusters_.clear();
+        clusters_idxs_.clear();
+        noisey_idxs_.clear();
+    }
+    inline void post ()  {  }
+
+    inline const result_type &get_result () const  { return (clusters_); }
+    inline const order_type &
+    get_clusters_idxs () const  { return (clusters_idxs_); }
+    inline const vec_t<size_type> &
+    get_noisey_idxs () const  { return (noisey_idxs_); }
+
+    FastHierVisitor(distance_func &&f =
+                        [](const value_type &x,
+                           const value_type &y) -> double  {
+                            return ((x - y) * (x - y));
+                        })
+        : dfunc_(std::forward<distance_func>(f))  {   }
+
+private:
+
+    const size_type     min_mems_ { 0 };
+    const double        max_dist_ { 0 };
+    distance_func       dfunc_;
+    result_type         clusters_ { };       // Clusters
+    order_type          clusters_idxs_ { };  // Clusters indices
+    vec_t<size_type>    noisey_idxs_ { };    // Indices of noisey elements
+};
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Runtime complexity is O(I * n^2) where I is number of iterations.
 //

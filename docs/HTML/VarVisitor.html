@@ -46,15 +46,15 @@ body {
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
 template&lt;typename T, typename I = unsigned long&gt;
-struct CovVisitor;
+struct VarVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This functor class calculates the covariance of two given columns. In addition, it provides the variances of both columns.<BR>
+        This functor class calculates the variance of a given column.<BR>
         <I>
         <PRE>
           explicit
-          CovVisitor(bool bias = false,
+          VarVisitor(bool bias = false,
                      bool skipnan = false,
                      bool stable_algo = false);
         </PRE>
@@ -64,22 +64,12 @@ struct CovVisitor;
         <B>stable_algo</B>: If true, it uses a version of Kahan summation that is numerically stable for data with very large values. Kahan summation is slower than regular summation, so only use it, if your data contains very large values.<BR>
       </td>
       <td width="30%">
-        <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>
+        <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>
     </tr>
 
   </table>
-
-  <pre style='color:#000000;background:#ffffff00;'>    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing Covariance Visitor ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
-
-    CovVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span> cov_visitor<span style='color:#800080; '>;</span>
-    <span style='color:#800000; font-weight:bold; '>auto</span>                fut10 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>visit_async<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> cov_visitor<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>double</span>        cov <span style='color:#808030; '>=</span> fut10<span style='color:#808030; '>.</span>get<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-
-    assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>cov <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.358381</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.000001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-</pre>
-  <!--Created using ToHtml.com on 2020-05-07 15:50:30 UTC -->
 
   <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
        width="200" height="200" style="float:right"/>

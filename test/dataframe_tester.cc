@@ -2477,7 +2477,7 @@ static void test_beta()  {
         df.single_act_visit<double>("dblcol_5", return_visit).get_result(),
         nan_policy::dont_pad_with_nans);
 
-    BetaVisitor<double> beta_visit;
+    BetaVisitor<double> beta_visit(false, true);
     double              result =
         df.visit<double, double>("dblcol_1_return",
                                  "dblcol_2_return",

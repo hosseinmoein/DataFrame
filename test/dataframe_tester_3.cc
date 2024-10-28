@@ -1367,7 +1367,7 @@ static void test_FixedAutoCorrVisitor()  {
         assert(std::abs(fac.get_result()[0] - -0.5436) < 0.0001);
         assert(std::abs(fac.get_result()[12] - 0.1328) < 0.001);
         assert(std::abs(fac.get_result()[14] - -0.594) < 0.0001);
-        assert(std::abs(fac.get_result()[161] - -0.4582) < 0.0001);
+        assert(std::abs(fac.get_result()[161] - -0.1109) < 0.0001);
         assert(std::abs(fac.get_result()[160] - -0.231) < 0.0001);
         assert(std::abs(fac.get_result()[159] - 0.075) < 0.0001);
 
@@ -1380,9 +1380,9 @@ static void test_FixedAutoCorrVisitor()  {
         assert(std::abs(fac2.get_result()[0] - -0.5436) < 0.0001);
         assert(std::abs(fac2.get_result()[12] - -0.7213) < 0.001);
         assert(std::abs(fac2.get_result()[14] - -0.6657) < 0.0001);
-        assert(std::isnan(fac2.get_result()[4999]));
-        assert(std::abs(fac2.get_result()[4998] - 1.0) < 0.0001);
-        assert(std::abs(fac2.get_result()[4997] - 0.9545) < 0.0001);
+        assert(std::abs(fac2.get_result()[4999] - 0.1446) < 0.0001);
+        assert(std::abs(fac2.get_result()[4998] - 0.1809) < 0.0001);
+        assert(std::abs(fac2.get_result()[4997] - 0.1732) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

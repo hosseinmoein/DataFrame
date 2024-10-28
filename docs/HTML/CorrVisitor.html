@@ -100,10 +100,17 @@ struct CorrVisitor;
         This functor class calculates the correlation of two given columns.<BR>
         <I>
         <PRE>
-  explicit CorrVisitor(correlation_type t = correlation_type::pearson,
-                       bool bias = true);
+          explicit
+          CorrVisitor(correlation_type t = correlation_type::pearson,
+                      bool bias = false,
+                      bool skipnan = false,
+                      bool stable_algo = false);
         </PRE>
         </I>
+        <B>correlation_type</B>: Correlation type from above.<BR>
+        <B>bias</B>: If true it divides by n - 1, otherwise by n.<BR>
+        <B>skip_nan</B>: If true it skips over nan numbers as if they didn't exist.<BR>
+        <B>stable_algo</B>: If true, it uses a version of Kahan summation that is numerically stable for data with very large values. Kahan summation is slower than regular summation, so only use it, if your data contains very large values.<BR>
       </td>
       <td>
         <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>

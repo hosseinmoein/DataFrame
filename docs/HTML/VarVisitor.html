@@ -46,15 +46,15 @@ body {
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
 template&lt;typename T, typename I = unsigned long&gt;
-struct StdVisitor;
+struct VarVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This functor class calculates the standard deviation of a given column.<BR>
+        This functor class calculates the variance of a given column.<BR>
         <I>
         <PRE>
           explicit
-          StdVisitor(bool bias = false,
+          VarVisitor(bool bias = false,
                      bool skipnan = false,
                      bool stable_algo = false);
         </PRE>

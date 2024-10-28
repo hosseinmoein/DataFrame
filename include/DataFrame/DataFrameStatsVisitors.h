@@ -914,6 +914,171 @@ struct  CovVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
+private:
+
+    struct  InterResults  {
+        value_type  total1 { 0 };
+        value_type  total2 { 0 };
+        value_type  dot_prod { 0 };
+        value_type  dot_prod1 { 0 };
+        value_type  dot_prod2 { 0 };
+        size_type   cnt { 0 };
+
+        inline void clear()  {
+            total1 = total2 = dot_prod = dot_prod1 = dot_prod2 = 0;
+            cnt = 0;
+        }
+    };
+
+    // Kahan summation algorithm, also known as compensated summation
+    // This is numerically stable for very large numbers
+    //
+    template <typename H>
+    inline static InterResults
+    get_kahan_sum_(const H &begin1, const H &end1, const H &begin2,
+                   bool skip_nan)  {
+
+        InterResults    result { };
+        auto            iter2 = begin2;
+        value_type      total1_c { 0 };
+        value_type      total2_c { 0 };
+        value_type      dot_prod_c { 0 };
+        value_type      dot_prod1_c { 0 };
+        value_type      dot_prod2_c { 0 };
+
+
+        if (! skip_nan)  {
+            for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2) {
+                const value_type    &val1 = *iter1;
+                const value_type    total1_y = val1 - total1_c;
+                const value_type    total1_t = result.total1 + total1_y;
+
+                const value_type    &val2 = *iter2;
+                const value_type    total2_y = val2 - total2_c;
+                const value_type    total2_t = result.total2 + total2_y;
+
+                const value_type    dot_prod_y = (val1 * val2) - dot_prod_c;
+                const value_type    dot_prod_t = result.dot_prod + dot_prod_y;
+
+                const value_type    dot_prod1_y = (val1 * val1) - dot_prod1_c;
+                const value_type    dot_prod1_t =
+                    result.dot_prod1 + dot_prod1_y;
+
+                const value_type    dot_prod2_y = (val2 * val2) - dot_prod2_c;
+                const value_type    dot_prod2_t =
+                    result.dot_prod2 + dot_prod2_y;
+
+                total1_c = (total1_t - result.total1) - total1_y;
+                result.total1 = total1_t;
+
+                total2_c = (total2_t - result.total2) - total2_y;
+                result.total2 = total2_t;
+
+                dot_prod_c = (dot_prod_t - result.dot_prod) - dot_prod_y;
+                result.dot_prod = dot_prod_t;
+
+                dot_prod1_c = (dot_prod1_t - result.dot_prod1) - dot_prod1_y;
+                result.dot_prod1 = dot_prod1_t;
+
+                dot_prod2_c = (dot_prod2_t - result.dot_prod2) - dot_prod2_y;
+                result.dot_prod2 = dot_prod2_t;
+
+                result.cnt += 1;
+            }
+        }
+        else  {
+            for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2) {
+                const value_type    &val1 = *iter1;
+                const value_type    &val2 = *iter2;
+
+                if (! is_nan__(val1) && ! is_nan__(val2)) [[unlikely]]  {
+                    const value_type    total1_y = val1 - total1_c;
+                    const value_type    total1_t = result.total1 + total1_y;
+
+                    const value_type    total2_y = val2 - total2_c;
+                    const value_type    total2_t = result.total2 + total2_y;
+
+                    const value_type    dot_prod_y = (val1 * val2) - dot_prod_c;
+                    const value_type    dot_prod_t =
+                        result.dot_prod + dot_prod_y;
+
+                    const value_type    dot_prod1_y =
+                        (val1 * val1) - dot_prod1_c;
+                    const value_type    dot_prod1_t =
+                        result.dot_prod1 + dot_prod1_y;
+
+                    const value_type    dot_prod2_y =
+                        (val2 * val2) - dot_prod2_c;
+                    const value_type    dot_prod2_t =
+                        result.dot_prod2 + dot_prod2_y;
+
+                    total1_c = (total1_t - result.total1) - total1_y;
+                    result.total1 = total1_t;
+
+                    total2_c = (total2_t - result.total2) - total2_y;
+                    result.total2 = total2_t;
+
+                    dot_prod_c = (dot_prod_t - result.dot_prod) - dot_prod_y;
+                    result.dot_prod = dot_prod_t;
+
+                    dot_prod1_c =
+                        (dot_prod1_t - result.dot_prod1) - dot_prod1_y;
+                    result.dot_prod1 = dot_prod1_t;
+
+                    dot_prod2_c =
+                        (dot_prod2_t - result.dot_prod2) - dot_prod2_y;
+                    result.dot_prod2 = dot_prod2_t;
+
+                    result.cnt += 1;
+                }
+            }
+        }
+
+        return (result);
+    }
+
+    template <typename H>
+    inline static InterResults
+    get_regular_sum_(const H &begin1, const H &end1, const H &begin2,
+                     bool skip_nan)  {
+
+        InterResults    result { };
+        auto            iter2 = begin2;
+
+        if (! skip_nan)  {
+            for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2) {
+                const value_type    &val1 = *iter1;
+                const value_type    &val2 = *iter2;
+
+                result.total1 += val1;
+                result.total2 += val2;
+                result.dot_prod += (val1 * val2);
+                result.dot_prod1 += (val1 * val1);
+                result.dot_prod2 += (val2 * val2);
+                result.cnt += 1;
+            }
+        }
+        else  {
+            for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2) {
+                const value_type    &val1 = *iter1;
+                const value_type    &val2 = *iter2;
+
+                if (! is_nan__(val1) && ! is_nan__(val2)) [[unlikely]]  {
+                    result.total1 += val1;
+                    result.total2 += val2;
+                    result.dot_prod += (val1 * val2);
+                    result.dot_prod1 += (val1 * val1);
+                    result.dot_prod2 += (val2 * val2);
+                    result.cnt += 1;
+                }
+            }
+        }
+
+        return (result);
+    }
+
+public:
+
     inline void operator() (const index_type &,
                             const value_type &val1, const value_type &val2)  {
 
@@ -933,49 +1098,18 @@ struct  CovVisitor  {
                 const H &column_begin1, const H &column_end1,
                 const H &column_begin2, const H &column_end2)  {
 
+        auto    lbd =
+            [this]
+            (const auto &begin1, const auto &end1,
+             const auto &begin2) -> InterResults  {
+                if (stable_algo_)
+                    return (get_kahan_sum_(begin1, end1, begin2, skip_nan_));
+                return (get_regular_sum_(begin1, end1, begin2, skip_nan_));
+            };
+
         if (std::distance(column_begin1, column_end1) >=
                 ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    lbd =
-                [this]
-                (const auto &begin1, const auto &end1,
-                 const auto &begin2) -> InterResults  {
-                    InterResults    result { };
-                    auto            iter2 = begin2;
-
-                    if (! this->skip_nan_)  {
-                        for (auto iter1 = begin1;
-                             iter1 < end1; ++iter1, ++iter2) {
-                            const value_type    &val1 = *iter1;
-                            const value_type    &val2 = *iter2;
-
-                            result.total1 += val1;
-                            result.total2 += val2;
-                            result.dot_prod += (val1 * val2);
-                            result.dot_prod1 += (val1 * val1);
-                            result.dot_prod2 += (val2 * val2);
-                            result.cnt += 1;
-                        }
-                    }
-                    else  {
-                        for (auto iter1 = begin1;
-                             iter1 < end1; ++iter1, ++iter2) {
-                            const value_type    &val1 = *iter1;
-                            const value_type    &val2 = *iter2;
-
-                            if (! is_nan__(val1) && ! is_nan__(val2))  {
-                                result.total1 += val1;
-                                result.total2 += val2;
-                                result.dot_prod += (val1 * val2);
-                                result.dot_prod1 += (val1 * val1);
-                                result.dot_prod2 += (val2 * val2);
-                                result.cnt += 1;
-                            }
-                        }
-                    }
-
-                    return (result);
-                };
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop2(column_begin1,
                                                             column_end1,
@@ -995,37 +1129,7 @@ struct  CovVisitor  {
             }
         }
         else  {
-            const size_type col_s1 = std::distance(column_begin1, column_end1);
-            const size_type col_s2 = std::distance(column_begin2, column_end2);
-
-            if (! skip_nan_)  {
-                for (size_type i = 0; i < col_s1 && i < col_s2; ++i)  {
-                    const value_type    &val1 = *(column_begin1 + i);
-                    const value_type    &val2 = *(column_begin2 + i);
-
-                    inter_result_.total1 += val1;
-                    inter_result_.total2 += val2;
-                    inter_result_.dot_prod += (val1 * val2);
-                    inter_result_.dot_prod1 += (val1 * val1);
-                    inter_result_.dot_prod2 += (val2 * val2);
-                    inter_result_.cnt += 1;
-                }
-            }
-            else  {
-                for (size_type i = 0; i < col_s1 && i < col_s2; ++i)  {
-                    const value_type    &val1 = *(column_begin1 + i);
-                    const value_type    &val2 = *(column_begin2 + i);
-
-                    if (! is_nan__(val1) && ! is_nan__(val2))  {
-                        inter_result_.total1 += val1;
-                        inter_result_.total2 += val2;
-                        inter_result_.dot_prod += (val1 * val2);
-                        inter_result_.dot_prod1 += (val1 * val1);
-                        inter_result_.dot_prod2 += (val2 * val2);
-                        inter_result_.cnt += 1;
-                    }
-                }
-            }
+            inter_result_ = lbd(column_begin1, column_end1, column_begin2);
         }
     }
 
@@ -1038,12 +1142,13 @@ struct  CovVisitor  {
 
         const value_type    d = value_type(inter_result_.cnt) - b_;
 
-        if (d != 0) [[likely]]
+        if (d != 0) [[likely]]  {
             result_ = (inter_result_.dot_prod -
                        (inter_result_.total1 * inter_result_.total2) /
                        value_type(inter_result_.cnt)) /
                       d;
-        else  result_ = std::numeric_limits<value_type>::quiet_NaN();
+        }
+        else  { result_ = std::numeric_limits<value_type>::quiet_NaN(); }
     }
 
     inline result_type get_result () const  { return (result_); }
@@ -1051,49 +1156,42 @@ struct  CovVisitor  {
 
         const value_type    d = value_type(inter_result_.cnt) - b_;
 
-        if (d != 0) [[likely]]
+        if (d != 0) [[likely]]  {
             return ((inter_result_.dot_prod1 -
                      (inter_result_.total1 * inter_result_.total1) /
                      value_type(inter_result_.cnt)) /
                     d);
-        else  return (std::numeric_limits<value_type>::quiet_NaN());
+        }
+        else { return (std::numeric_limits<value_type>::quiet_NaN()); }
     }
     inline value_type get_var2 () const  {
 
         const value_type    d = value_type(inter_result_.cnt) - b_;
 
-        if (d != 0) [[likely]]
+        if (d != 0) [[likely]]  {
             return ((inter_result_.dot_prod2 -
                      (inter_result_.total2 * inter_result_.total2) /
                      value_type(inter_result_.cnt)) /
                     d);
-        else  return (std::numeric_limits<value_type>::quiet_NaN());
+        }
+        else { return (std::numeric_limits<value_type>::quiet_NaN()); }
     }
     inline size_type get_count() const  { return (inter_result_.cnt); }
 
-    explicit CovVisitor (bool biased = false, bool skipnan = false)
-        : b_ (biased ? 0 : 1), skip_nan_(skipnan)  {  }
+    explicit CovVisitor (bool biased = false,
+                         bool skipnan = false,
+                         bool stable_algo = false)
+        : b_ (biased ? 0 : 1),
+          skip_nan_(skipnan),
+          stable_algo_(stable_algo)  {  }
 
 private:
-
-    struct  InterResults  {
-        value_type  total1 { 0 };
-        value_type  total2 { 0 };
-        value_type  dot_prod { 0 };
-        value_type  dot_prod1 { 0 };
-        value_type  dot_prod2 { 0 };
-        size_type   cnt { 0 };
-
-        inline void clear()  {
-            total1 = total2 = dot_prod = dot_prod1 = dot_prod2 = 0;
-            cnt = 0;
-        }
-    };
 
     InterResults        inter_result_ { };
     result_type         result_ { 0 };
     const value_type    b_;
     const bool          skip_nan_;
+    const bool          stable_algo_;
 };
 
 // ----------------------------------------------------------------------------
@@ -1121,8 +1219,9 @@ struct  VarVisitor  {
     inline result_type get_result () const  { return (cov_.get_result()); }
     inline size_type get_count() const  { return (cov_.get_count()); }
 
-    explicit VarVisitor (bool biased = false, bool skip_nan = false)
-        : cov_ (biased, skip_nan)  {   }
+    explicit VarVisitor (bool biased = false, bool skip_nan = false,
+                         bool stable_algo = false)
+        : cov_ (biased, skip_nan, stable_algo)  {   }
 
 private:
 
@@ -1165,7 +1264,10 @@ struct  BetaVisitor  {
     inline result_type get_result () const  { return (result_); }
     inline size_type get_count() const  { return (cov_.get_count()); }
 
-    explicit BetaVisitor (bool biased = false) : cov_ (biased, true)  {   }
+    explicit
+    BetaVisitor (bool biased = false, bool skip_nan = false,
+                 bool stable_algo = false)
+        : cov_ (biased, skip_nan, stable_algo)  {   }
 
 private:
 
@@ -1197,8 +1299,9 @@ struct  StdVisitor   {
     inline result_type get_result () const  { return (result_); }
     inline size_type get_count() const  { return (var_.get_count()); }
 
-    explicit StdVisitor (bool biased = false, bool skip_nan = false)
-        : var_ (biased, skip_nan)  {   }
+    explicit StdVisitor (bool biased = false, bool skip_nan = false,
+                         bool stable_algo = false)
+        : var_ (biased, skip_nan, stable_algo)  {   }
 
 private:
 
@@ -1529,8 +1632,11 @@ public:
     }
     inline result_type get_result () const  { return (result_); }
 
-    explicit CorrVisitor (correlation_type t = correlation_type::pearson,
-                          bool biased = false) : cov_ (biased), type_(t)  {  }
+    explicit
+    CorrVisitor (correlation_type t = correlation_type::pearson,
+                 bool biased = false, bool skip_nan = false,
+                 bool stable_algo = false)
+        : cov_ (biased, skip_nan, stable_algo), type_(t)  {  }
 
 private:
 

@@ -1759,7 +1759,9 @@ static void generic_linkage(std::size_t N,
 */
 
 inline static void
-MST_linkage_core_vector(std::size_t N, Dissimilarity &dist, ClusterResult &Z2) {
+MST_linkage_core_vector(std::size_t N,
+                        Dissimilarity &dist,
+                        ClusterResult &Z2) {
 
 /*
     N: integer, number of data points

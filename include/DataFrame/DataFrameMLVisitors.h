@@ -847,10 +847,13 @@ public:
         vec_t<double>   Z((col_s - 1) * 4, 0);
 
         GenerateDenrogram<false>(Z.data(), clus_res, col_s);
+
+
+
         for (const auto &node : clus_res.Z)
             std::cout << node.node1 << ", "
                       << node.node2 << ", " << node.dist << '\n';
-        std::cout << std::endl;
+        std::cout << '\n' << std::endl;
         for (const auto &val : Z)
             std::cout << val << ", ";
         std::cout << std::endl;

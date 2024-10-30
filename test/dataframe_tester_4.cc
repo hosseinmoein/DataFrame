@@ -1918,10 +1918,10 @@ static void test_FastHierVisitor()  {
         std::cout << ex.what() << std::endl;
     }
 
-    FastHierVisitor<double, std::string, 64>   mshift(
+    FastHierVisitor<double, std::string, 64>   fhv(
         [](const double &x, const double &y)  { return (std::fabs(x - y)); });
 
-    df.single_act_visit<double>("IBM_Close", mshift);
+    df.single_act_visit<double>("IBM_Close", fhv);
 }
 
 // ----------------------------------------------------------------------------

@@ -73,10 +73,10 @@ struct FixedAutoCorrVisitor;
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This functor class calculates the auto correlation of given column. The calculation lag is fixed with the given lag parameter. See <I>roll_policy</I> for how the calculations are done<BR>
+        This functor class calculates the auto correlation of given column. The calculation lag is fixed with the given lag parameter. See <I><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/roll_policy.html">roll_policy</a></I> for how the calculations are done<BR>
 
 <PRE><I>
-    FixedAutoCorrVisitor (size_type lag_period, roll_policy rp);
+    FixedAutoCorrVisitor (size_type lag_period, <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/roll_policy.html">roll_policy</a> rp);
 
     <B>lag_period</B>: Period to offset the correlation calculations
     <B>rp</B>: How to roll over the input with the lagged period. See roll_policy

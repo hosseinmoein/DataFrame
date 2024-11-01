@@ -126,6 +126,8 @@ public:  // Construction and public types
     //
     template<typename OTHER, typename ... Ts>
     DataFrame &assign(const OTHER &rhs);
+    template<typename OTHER, typename ... Ts>
+    DataFrame &assign(OTHER &rhs);
 
 public:  // Load/append/remove interfaces
 

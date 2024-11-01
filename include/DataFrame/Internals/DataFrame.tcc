@@ -61,6 +61,53 @@ DataFrame<I, H>::operator= (const DataFrame &that)  {
 }
 
 // ----------------------------------------------------------------------------
+template<typename I, typename H>
+template<typename OTHER, typename ... Ts>
+DataFrame<I, H> &
+DataFrame<I, H>::assign(OTHER &rhs)  {
+
+    indices_.clear();
+    indices_.reserve(rhs.indices_.size());
+    if constexpr (std::is_base_of<HeteroView<align_value>, H>::value)  {
+        indices_.set_begin_end_special(&(rhs.indices_.front()),
+                                       &(rhs.indices_.back()));
+    }
+    else if constexpr (std::is_base_of<HeteroPtrView<align_value>, H>::value) {
+        for (auto &val : rhs.indices_)
+            indices_.push_back(&val);
+    }
+    else  {
+        for (const auto &val : rhs.indices_)  indices_.push_back(val);
+    }
+
+    column_tb_.clear();
+    column_list_.clear();
+
+    const SpinGuard guard(lock_);
+
+    data_.clear();
+    if constexpr (std::is_base_of<HeteroView<align_value>, H>::value ||
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value)  {
+        for (const auto &[name, idx] : rhs.column_list_) [[likely]]  {
+            view_setup_functor_<DataFrame, Ts ...>   functor(
+                name.c_str(), 0, indices_.size(), *this);
+
+            rhs.data_[idx].change(functor);
+        }
+    }
+    else  {
+        for (const auto &[rhs_name, rhs_idx] : rhs.column_list_)  {
+            load_all_functor_<DataFrame, Ts ...> functor(
+                rhs_name.c_str(), *this);
+
+            rhs.data_[rhs_idx].change(functor);
+        }
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
 
 template<typename I, typename H>
 template<typename OTHER, typename ... Ts>
@@ -69,7 +116,17 @@ DataFrame<I, H>::assign(const OTHER &rhs)  {
 
     indices_.clear();
     indices_.reserve(rhs.indices_.size());
-    for (const auto &val : rhs.indices_)  indices_.push_back(val);
+    if constexpr (std::is_base_of<HeteroView<align_value>, H>::value)  {
+        indices_.set_begin_end_special(&(rhs.indices_.front()),
+                                       &(rhs.indices_.back()));
+    }
+    else if constexpr (std::is_base_of<HeteroPtrView<align_value>, H>::value) {
+        for (auto &val : rhs.indices_)
+            indices_.push_back(&val);
+    }
+    else  {
+        for (const auto &val : rhs.indices_)  indices_.push_back(val);
+    }
 
     column_tb_.clear();
     column_list_.clear();
@@ -77,11 +134,22 @@ DataFrame<I, H>::assign(const OTHER &rhs)  {
     const SpinGuard guard(lock_);
 
     data_.clear();
-    for (const auto &[rhs_name, rhs_idx] : rhs.column_list_)  {
-        load_all_functor_<DataFrame, Ts ...>    functor (rhs_name.c_str(),
-                                                         *this);
+    if constexpr (std::is_base_of<HeteroView<align_value>, H>::value ||
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value)  {
+        for (const auto &[name, idx] : rhs.column_list_) [[likely]]  {
+            view_setup_functor_<DataFrame, Ts ...>   functor(
+                name.c_str(), 0, indices_.size(), *this);
 
-        rhs.data_[rhs_idx].change(functor);
+            rhs.data_[idx].change(functor);
+        }
+    }
+    else  {
+        for (const auto &[rhs_name, rhs_idx] : rhs.column_list_)  {
+            load_all_functor_<DataFrame, Ts ...> functor(
+                rhs_name.c_str(), *this);
+
+            rhs.data_[rhs_idx].change(functor);
+        }
     }
 
     return (*this);
@@ -1085,7 +1153,7 @@ DataFrame<I, H>::peaks(const char *col_name, size_type n) const  {
         };
 
     if (thread_level > 2)  {
-		std::vector<std::future<void>>  futures;
+        std::vector<std::future<void>>  futures;
 
         if (n == 1)
             futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbd1));
@@ -1174,7 +1242,7 @@ DataFrame<I, H>::valleys(const char *col_name, size_type n) const  {
         };
 
     if (thread_level > 2)  {
-		std::vector<std::future<void>>  futures;
+        std::vector<std::future<void>>  futures;
 
         if (n == 1)
             futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbd1));

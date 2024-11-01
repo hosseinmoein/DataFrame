@@ -1926,6 +1926,63 @@ static void test_FastHierVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_view_assign()  {
+
+    std::cout << "\nTesting view_assign( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    ptr_view =
+        df.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+    auto    view = df.get_view_by_loc<double, long>(Index2D<long>{ 100, 500 });
+
+    StrDataFrame    df2;
+    StrDataFrame    df3;
+
+    df2.assign<decltype(ptr_view), double, long>(ptr_view);
+    df3.assign<decltype(view), double, long>(view);
+
+    assert(df2.get_index().size() == 1721);
+    assert(df3.get_index().size() == 400);
+    assert(std::fabs(df2.get_column<double>("IBM_Open")[100] - 184.48) < 0.001);
+    assert(df3.get_column<long>("IBM_Volume")[100] == 4350200);
+
+    StrDataFrame::View      dfv;
+    StrDataFrame::PtrView   dfpv;
+
+    dfv.assign<StrDataFrame, double, long>(df2);
+    dfpv.assign<StrDataFrame, double, long>(df3);
+    assert(dfv.get_index().size() == 1721);
+    assert(dfpv.get_index().size() == 400);
+    assert(std::fabs(dfv.get_column<double>("IBM_Open")[100] - 184.48) < 0.001);
+    assert(dfpv.get_column<long>("IBM_Volume")[100] == 4350200);
+
+    StrDataFrame::View      dfv2;
+    StrDataFrame::PtrView   dfpv2;
+
+    dfv2.assign<decltype(dfpv), double, long>(dfpv);
+    dfpv2.assign<decltype(dfv), double, long>(dfv);
+    assert(dfv2.get_index().size() == 400);
+    assert(dfpv2.get_index().size() == 1721);
+    assert((
+        std::fabs(dfv2.get_column<double>("IBM_Open")[100] - 181.24) < 0.001));
+    assert(dfpv2.get_column<long>("IBM_Volume")[100] == 3721600);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
 /*
@@ -1962,6 +2019,7 @@ int main(int, char *[]) {
     test_get_data_by_mshift();
 */
     test_FastHierVisitor();
+    test_view_assign();
 
     return (0);
 }

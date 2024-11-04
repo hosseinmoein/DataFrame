@@ -842,7 +842,9 @@ public:
 
         generic_linkage_vector<method_codes_vector::METHOD_VECTOR_WARD>
             (col_s, diss, clus_res);
-        // diss.postprocess(clus_res);
+        // generic_linkage<method_codes::METHOD_METR_WARD>
+        //     (col_s, diss_vec.data(), members.data(), clus_res);
+        diss.postprocess(clus_res);
 
         vec_t<double>   Z((col_s - 1) * 4, 0);
 

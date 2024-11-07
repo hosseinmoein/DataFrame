@@ -1,3 +1,5 @@
+set (CMAKE_CXX_STANDARD 23)
+find_package(Threads REQUIRED)
 add_executable(dataframe_tester dataframe_tester.cc)
 target_link_libraries(dataframe_tester PRIVATE DataFrame Threads::Threads)
 target_compile_options(dataframe_tester

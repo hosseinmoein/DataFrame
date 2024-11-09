@@ -1,6 +1,7 @@
-<!--
+/*
 Copyright (c) 2019-2026, Hossein Moein
 All rights reserved.
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 * Redistributions of source code must retain the above copyright
@@ -11,6 +12,7 @@ modification, are permitted provided that the following conditions are met:
 * Neither the name of Hossein Moein and/or the DataFrame nor the
   names of its contributors may be used to endorse or promote products
   derived from this software without specific prior written permission.
+
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -21,53 +23,57 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
--->
-<!DOCTYPE html>
-<html>
-<head>
-<style>
-* {
-  box-sizing: border-box;
+*/
+
+#include <DataFrame/Utils/Matrix.h>
+
+#include <cassert>
+#include <iostream>
+
+using namespace hmdf;
+
+// -----------------------------------------------------------------------------
+
+using row_mat_t = Matrix<std::size_t, matrix_orient::row_major>;
+using col_mat_t = Matrix<std::size_t, matrix_orient::column_major>;
+
+static constexpr std::size_t    ROWS = 5;
+static constexpr std::size_t    COLS = 6;
+
+// -----------------------------------------------------------------------------
+
+int main(int, char *[]) {
+
+    row_mat_t   row_mat { ROWS, COLS };
+    col_mat_t   col_mat { ROWS, COLS };
+    std::size_t value { 0 };
+
+    for (std::size_t r = 0; r < row_mat.rows(); ++r)
+        for (std::size_t c = 0; c < row_mat.cols(); ++c)
+            row_mat(r, c) = value++;
+
+    value = 0;
+    for (std::size_t c = 0; c < col_mat.cols(); ++c)
+        for (std::size_t r = 0; r < col_mat.rows(); ++r)
+            col_mat(r, c) = value++;
+
+    value = 0;
+    for (std::size_t r = 0; r < row_mat.rows(); ++r)
+        for (std::size_t c = 0; c < row_mat.cols(); ++c)
+            assert(row_mat(r, c) == value++);
+
+    value = 0;
+    for (std::size_t c = 0; c < col_mat.cols(); ++c)
+        for (std::size_t r = 0; r < col_mat.rows(); ++r)
+            assert(col_mat(r, c) == value++);
+
+    return (0);
 }
 
-body {
-  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
-}
+// -----------------------------------------------------------------------------
 
-</style>
-</head>
-
-<body style="font-family: Georgia, serif">
-
-  Not allowing third-party libraries in your software package has many advantages:
-  <UL>
-    <LI>You are not worried (your reputation is not tarnished) about other people’s bugs which are out of your control</LI>
-    <LI>Releasing, deploying, and versioning become simpler to <I>a lot simpler</I></LI>
-    <LI>Debugging becomes simpler to <I>a lot simpler</I></LI>
-    <LI>Backward compatibility comes under your control</LI>
-    <LI>You have a free hand to revise your design and code</LI>
-  </UL>
-
-  It also has some disadvantages:
-  <UL>
-    <LI>There might be functionalities that are hard/time-consuming to implement that are already there</LI>
-	<LI>If you find a battle-tested library, the debugging is already done for you</LI>
-	<LI>There might be industry-wide standards/trends that you want to follow by using a reputed library</LI>
-  </UL>
-  <BR>
-  <BR>
-  <BR>
-
-  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
-       width="200" height="200" style="float:right"/>
-
-</body>
-</html>
-
-<!--
-Local Variables:
-mode:HTML
-tab-width:4
-c-basic-offset:4
-End:
--->
+// Local Variables:
+// mode:C++
+// tab-width:4
+// c-basic-offset:4
+// End:

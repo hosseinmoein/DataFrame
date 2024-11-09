@@ -63,7 +63,7 @@ Matrix<T, MO>::swap(Matrix &rhs) noexcept  {
 
 template<typename T,  matrix_orient MO>
 bool
-Matrix<T, MO>::empty() noexcept  {
+Matrix<T, MO>::empty() const noexcept  {
 
     return (rows_ == 0 && cols_ == 0);
 }
@@ -160,9 +160,15 @@ template<typename I>
 void
 Matrix<T, MO>::set_row(I row_data, size_type row)  {
 
-    for (size_type c = 0; c < columns(); ++c)
+    for (size_type c = 0; c < cols(); ++c)
         at(row, c) = *row_data++;
 }
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO>
+constexpr matrix_orient
+Matrix<T, MO>::orientation()  { return (MO); }
 
 } // namespace hmdf
 

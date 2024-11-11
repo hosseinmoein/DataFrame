@@ -170,6 +170,50 @@ template<typename T,  matrix_orient MO>
 constexpr matrix_orient
 Matrix<T, MO>::orientation()  { return (MO); }
 
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO>
+Matrix<T, MO>::trans_result_t
+Matrix<T, MO>::transpose() const noexcept  {
+
+    trans_result_t  result { cols(), rows() };
+
+    if constexpr (MO == matrix_orient::column_major)  {
+        for (size_type c = 0; c < cols(); ++c)
+            for (size_type r = 0; r < rows(); ++r)
+                result(c, r) = at(r, c);
+    }
+    else  {
+        for (size_type r = 0; r < rows(); ++r)
+            for (size_type c = 0; c < cols(); ++c)
+                result(c, r) = at(r, c);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO>
+Matrix<T, MO>
+Matrix<T, MO>::transpose2() const noexcept  {
+
+    Matrix  result { cols(), rows() };
+
+    if constexpr (MO == matrix_orient::column_major)  {
+        for (size_type c = 0; c < cols(); ++c)
+            for (size_type r = 0; r < rows(); ++r)
+                result(c, r) = at(r, c);
+    }
+    else  {
+        for (size_type r = 0; r < rows(); ++r)
+            for (size_type c = 0; c < cols(); ++c)
+                result(c, r) = at(r, c);
+    }
+
+    return (result);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

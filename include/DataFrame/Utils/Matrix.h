@@ -53,14 +53,19 @@ class   Matrix  {
 
 public:
 
-    using size_type = std::size_t;
+    using size_type = long;
     using value_type = T;
     using reference = value_type &;
     using const_reference = const value_type &;
     using pointer = value_type *;
     using const_pointer = const value_type *;
-
     using self_t = Matrix<value_type, MO>;
+
+    using trans_result_t =
+        typename std::conditional<
+            MO == matrix_orient::column_major,
+            Matrix<T, matrix_orient::row_major>,
+            Matrix<T, matrix_orient::column_major>>::type;
 
     Matrix() = default;
     Matrix(size_type rows, size_type cols, const_reference def_v = T());
@@ -99,6 +104,9 @@ public:
     template<typename I>
     void set_row(I row_data, size_type row);
 
+    trans_result_t transpose() const noexcept;
+    Matrix transpose2() const noexcept;
+
 private:
 
     using storage_t = std::vector<value_type>;
@@ -114,7 +122,7 @@ private:
 public:
 
     class   row_iterator;
-    class   row_const_iterator  : public std::random_access_iterator_tag  {
+    class   row_const_iterator : public std::random_access_iterator_tag  {
 
     public:
 
@@ -126,8 +134,6 @@ public:
         using reference = value_type &;
         using const_reference = const value_type &;
         using difference_type = typename std::vector<T>::difference_type;
-
-    public:
 
         inline row_const_iterator () = default;
 
@@ -189,6 +195,10 @@ public:
 
             col_ += 1;
             if (col_ >= mptr_->cols())  { col_ = 0; row_ += 1; }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (*this);
         }
         inline row_const_iterator operator ++ (int) noexcept  {  // Postfix++
@@ -198,6 +208,10 @@ public:
 
             col_ += 1;
             if (col_ >= mptr_->cols())  { col_ = 0; row_ += 1; }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (row_const_iterator (mptr_, row, col));
         }
 
@@ -207,6 +221,10 @@ public:
             if (col_ >= mptr_->cols())  {
                 row_ += col_ / mptr_->cols();
                 col_ %= mptr_->cols();
+            }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
             }
             return (*this);
         }
@@ -247,6 +265,10 @@ public:
                 row_ += col_ / mptr_->cols();
                 col_ %= mptr_->cols();
             }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (row_const_iterator (mptr_, row, col));
         }
 
@@ -279,7 +301,7 @@ public:
             const size_type row_diff = lhs.row_ - rhs.row_;
             const size_type col_diff = lhs.col_ - rhs.col_;
 
-            assert(lhs.mptr_ == rhs.mptr);
+            assert(lhs.mptr_ == rhs.mptr_);
             return (difference_type(
                         std::abs(row_diff) * rhs.mptr_->cols() - col_diff));
         }
@@ -293,7 +315,7 @@ public:
 
     // It goes through the matrix row-by-row starting at [0, 0]
     //
-    class   row_iterator  : public std::random_access_iterator_tag  {
+    class   row_iterator : public std::random_access_iterator_tag  {
 
     public:
 
@@ -362,6 +384,10 @@ public:
 
             col_ += 1;
             if (col_ >= mptr_->cols())  { col_ = 0; row_ += 1; }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (*this);
         }
         inline row_iterator operator ++ (int) noexcept  {  // Postfix++
@@ -371,6 +397,10 @@ public:
 
             col_ += 1;
             if (col_ >= mptr_->cols())  { col_ = 0; row_ += 1; }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (row_iterator (mptr_, row, col));
         }
 
@@ -380,6 +410,10 @@ public:
             if (col_ >= mptr_->cols())  {
                 row_ += col_ / mptr_->cols();
                 col_ %= mptr_->cols();
+            }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
             }
             return (*this);
         }
@@ -420,6 +454,10 @@ public:
                 row_ += col_ / mptr_->cols();
                 col_ %= mptr_->cols();
             }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (row_iterator (mptr_, row, col));
         }
 
@@ -449,10 +487,11 @@ public:
         friend difference_type
         operator - (row_iterator lhs, row_iterator rhs) noexcept  {
 
+            assert(lhs.mptr_ == rhs.mptr_);
+
             const size_type row_diff = lhs.row_ - rhs.row_;
             const size_type col_diff = lhs.col_ - rhs.col_;
 
-            assert(lhs.mptr_ == rhs.mptr);
             return (difference_type(
                         std::abs(row_diff) * rhs.mptr_->cols() - col_diff));
         }
@@ -465,7 +504,7 @@ public:
     };
 
     class   col_iterator;
-    class   col_const_iterator  : public std::random_access_iterator_tag  {
+    class   col_const_iterator : public std::random_access_iterator_tag  {
 
     public:
 
@@ -540,6 +579,10 @@ public:
 
             row_ += 1;
             if (row_ >= mptr_->rows())  { row_ = 0; col_ += 1; }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (*this);
         }
         inline col_const_iterator operator ++ (int) noexcept  {  // Postfix++
@@ -549,6 +592,10 @@ public:
 
             row_ += 1;
             if (row_ >= mptr_->rows())  { row_ = 0; col_ += 1; }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (col_const_iterator (mptr_, row, col));
         }
 
@@ -558,6 +605,10 @@ public:
             if (row_ >= mptr_->rows())  {
                 col_ += row_ / mptr_->rows();
                 row_ %= mptr_->rows();
+            }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
             }
             return (*this);
         }
@@ -598,6 +649,10 @@ public:
                 col_ += row_ / mptr_->rows();
                 row_ %= mptr_->rows();
             }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (col_const_iterator (mptr_, row, col));
         }
 
@@ -627,12 +682,13 @@ public:
         friend difference_type
         operator - (col_const_iterator lhs, col_const_iterator rhs) noexcept  {
 
+            assert(lhs.mptr_ == rhs.mptr_);
+
             const size_type row_diff = lhs.row_ - rhs.row_;
             const size_type col_diff = lhs.col_ - rhs.col_;
 
-            assert(lhs.mptr_ == rhs.mptr);
             return (difference_type(
-                        std::abs(row_diff) * rhs.mptr_->cols() - col_diff));
+                        std::abs(col_diff) * rhs.mptr_->rows() - row_diff));
         }
 
     private:
@@ -644,7 +700,7 @@ public:
 
     // It goes through the matrix row-by-row starting at [0, 0]
     //
-    class   col_iterator  : public std::random_access_iterator_tag  {
+    class   col_iterator : public std::random_access_iterator_tag  {
 
     public:
 
@@ -713,6 +769,10 @@ public:
 
             row_ += 1;
             if (row_ >= mptr_->rows())  { row_ = 0; col_ += 1; }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (*this);
         }
         inline col_iterator operator ++ (int) noexcept  {  // Postfix++
@@ -722,6 +782,10 @@ public:
 
             row_ += 1;
             if (row_ >= mptr_->rows())  { row_ = 0; col_ += 1; }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (col_iterator (mptr_, row, col));
         }
 
@@ -731,6 +795,10 @@ public:
             if (row_ >= mptr_->rows())  {
                 col_ += row_ / mptr_->rows();
                 row_ %= mptr_->rows();
+            }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
             }
             return (*this);
         }
@@ -771,6 +839,10 @@ public:
                 col_ += row_ / mptr_->rows();
                 row_ %= mptr_->rows();
             }
+            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
+                col_ = mptr_->cols();
+                row_ = mptr_->rows();
+            }
             return (col_iterator (mptr_, row, col));
         }
 
@@ -803,9 +875,9 @@ public:
             const size_type row_diff = lhs.row_ - rhs.row_;
             const size_type col_diff = lhs.col_ - rhs.col_;
 
-            assert(lhs.mptr_ == rhs.mptr);
+            assert(lhs.mptr_ == rhs.mptr_);
             return (difference_type(
-                        std::abs(row_diff) * rhs.mptr_->cols() - col_diff));
+                        std::abs(col_diff) * rhs.mptr_->rows() - row_diff));
         }
 
     private:

@@ -59,6 +59,7 @@ int main(int, char *[]) {
 
     // Print the stuff out
     //
+    std::cout << "Row matrix\n";
     for (long r = 0; r < row_mat.rows(); ++r)  {
         for (long c = 0; c < row_mat.cols(); ++c)  {
             std::cout << row_mat(r, c) << ", ";
@@ -66,6 +67,7 @@ int main(int, char *[]) {
         std::cout << '\n';
     }
     std::cout << "\n\n";
+    std::cout << "Column matrix\n";
     for (long r = 0; r < col_mat.rows(); ++r)  {
         for (long c = 0; c < col_mat.cols(); ++c)  {
             std::cout << col_mat(r, c) << ", ";
@@ -117,6 +119,71 @@ int main(int, char *[]) {
 
     assert(((col_iter1 - col_iter2) == 7));
     assert(((row_iter1 - row_iter2) == 7));
+
+    const auto  col_mat2 = col_mat;
+
+    assert(col_mat != row_mat);
+    assert(col_mat == col_mat2);
+
+    auto    tran_mat = col_mat.transpose();
+    auto    tran_mat2 = col_mat.transpose2();
+
+    assert(tran_mat == tran_mat2);
+    for (long r = 0; r < tran_mat.rows(); ++r)
+        for (long c = 0; c < tran_mat.cols(); ++c)
+            assert(tran_mat(r, c) == col_mat(c, r));
+
+    //
+    // Test arithmetic functions
+    //
+
+    auto    sum_mat = col_mat + row_mat;
+
+    assert(sum_mat(0, 0) == 0);
+    assert(sum_mat(4, 5) == 58);
+    assert(sum_mat(1, 1) == 13);
+    assert(sum_mat(3, 4) == 45);
+
+	sum_mat += col_mat;
+    assert(sum_mat(0, 0) == 0);
+    assert(sum_mat(4, 5) == 87);
+    assert(sum_mat(1, 1) == 19);
+    assert(sum_mat(3, 4) == 68);
+
+    row_mat_t   lhs_mat { ROWS, COLS };
+    col_mat_t   rhs_mat { COLS, COLS };
+
+    value = 0;
+    for (long r = 0; r < lhs_mat.rows(); ++r)
+        for (long c = 0; c < lhs_mat.cols(); ++c)
+            lhs_mat(r, c) = value++;
+    value = 0;
+    for (long c = 0; c < rhs_mat.cols(); ++c)
+        for (long r = 0; r < rhs_mat.rows(); ++r)
+            rhs_mat(r, c) = value++;
+
+    auto    multi_mat = lhs_mat * rhs_mat;
+
+    assert(multi_mat(0, 0) == 55);
+    assert(multi_mat(4, 5) == 5185);
+    assert(multi_mat(1, 1) == 451);
+    assert(multi_mat(3, 4) == 3277);
+
+    col_mat_t   big_lhs_mat { 100, 100 };
+    col_mat_t   big_rhs_mat { 100, 100 };
+
+    for (long c = 0; c < 100; ++c)
+        for (long r = 0; r < 100; ++r)  {
+            big_lhs_mat(r, c) = c + 1;
+            big_rhs_mat(r, c) = c + 1;
+        }
+
+    auto    big_multi_mat = big_lhs_mat * big_rhs_mat;
+
+    assert(big_multi_mat(0, 0) == 5050);
+    assert(big_multi_mat(99, 99) == 505000);
+    assert(big_multi_mat(98, 2) == 499950);
+    assert(big_multi_mat(2, 5) == 15150);
 
     return (0);
 }

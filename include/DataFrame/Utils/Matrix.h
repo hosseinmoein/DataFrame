@@ -48,7 +48,7 @@ enum class  matrix_orient : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO = matrix_orient::column_major>
+template<typename T, matrix_orient MO = matrix_orient::column_major>
 class   Matrix  {
 
 public:
@@ -968,6 +968,206 @@ public:
         return (std::make_reverse_iterator(col_cbegin()));
     }
 };
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2>
+static inline bool
+operator != (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+
+    if (lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols())  {
+        if constexpr (MO1 == matrix_orient::column_major)  {
+            for (long c = 0; c < lhs.cols(); ++c)
+                for (long r = 0; r < lhs.rows(); ++r)
+                    if (lhs(r, c) != rhs(r, c))
+                        return (true);
+        }
+        else  {
+            for (long r = 0; r < lhs.rows(); ++r)
+                for (long c = 0; c < lhs.cols(); ++c)
+                    if (lhs(r, c) != rhs(r, c))
+                        return (true);
+        }
+    }
+    else  return (true);
+
+    return (false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2>
+static inline bool
+operator == (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+
+    return (! (lhs != rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2>
+static inline Matrix<T, MO1>
+operator + (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+
+    assert(lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols());
+
+    auto    result = lhs;
+
+    if constexpr (MO1 == matrix_orient::column_major)  {
+        for (long c = 0; c < lhs.cols(); ++c)
+            for (long r = 0; r < lhs.rows(); ++r)
+                result(r, c) += rhs(r, c);
+    }
+    else  {
+        for (long r = 0; r < lhs.rows(); ++r)
+            for (long c = 0; c < lhs.cols(); ++c)
+                result(r, c) += rhs(r, c);
+    }
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2>
+static inline Matrix<T, MO1>
+operator - (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+
+    assert(lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols());
+
+    auto    result = lhs;
+
+    if constexpr (MO1 == matrix_orient::column_major)  {
+        for (long c = 0; c < lhs.cols(); ++c)
+            for (long r = 0; r < lhs.rows(); ++r)
+                result(r, c) -= rhs(r, c);
+    }
+    else  {
+        for (long r = 0; r < lhs.rows(); ++r)
+            for (long c = 0; c < lhs.cols(); ++c)
+                result(r, c) -= rhs(r, c);
+    }
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2>
+static inline Matrix<T, MO1> &
+operator += (Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+
+    assert(lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols());
+
+    if constexpr (MO1 == matrix_orient::column_major)  {
+        for (long c = 0; c < lhs.cols(); ++c)
+            for (long r = 0; r < lhs.rows(); ++r)
+                lhs(r, c) += rhs(r, c);
+    }
+    else  {
+        for (long r = 0; r < lhs.rows(); ++r)
+            for (long c = 0; c < lhs.cols(); ++c)
+                lhs(r, c) += rhs(r, c);
+    }
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2>
+static inline Matrix<T, MO1> &
+operator -= (Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+
+    assert(lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols());
+
+    if constexpr (MO1 == matrix_orient::column_major)  {
+        for (long c = 0; c < lhs.cols(); ++c)
+            for (long r = 0; r < lhs.rows(); ++r)
+                lhs(r, c) -= rhs(r, c);
+    }
+    else  {
+        for (long r = 0; r < lhs.rows(); ++r)
+            for (long c = 0; c < lhs.cols(); ++c)
+                lhs(r, c) -= rhs(r, c);
+    }
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+// Naïve but cache friendly O(n^3) algorithm
+//
+template<typename T, matrix_orient MO1, matrix_orient MO2>
+static Matrix<T, MO1>
+operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+
+    assert(lhs.cols() == rhs.rows());
+
+    const long      lhs_rows { lhs.rows() };
+    const long      lhs_cols { lhs.cols() };
+    const long      rhs_cols { rhs.cols() };
+    Matrix<T, MO1>  result { lhs_rows, rhs_cols };
+
+    constexpr long  large_dim = 100;
+
+    // Using SIMD for large matrixes
+    //
+    if (lhs_cols >= large_dim && rhs_cols >= large_dim)  {
+        constexpr long  block = 8;
+
+        if constexpr (MO1 == matrix_orient::column_major)  {
+            for (long c = 0; c < rhs_cols; ++c)  {
+                for (long r = 0; r < lhs_rows; ++r)  {
+                    for (long k = 0; k < lhs_cols; k += block)  {
+                        const long  min_s = std::min(block, lhs_cols);
+
+#pragma unroll(block)
+                        // This loop should be optimized/unrolled by the
+                        // compiler and use SIMD to execute in parallel
+                        //
+                        for (long w = 0; w < min_s; ++w) {
+                            result(r, c) += lhs(k + w, r) * rhs(c, k + w);
+                        }
+                    }
+                }
+            }
+        }
+        else  {  // matrix_orient::row_major
+            for (long r = 0; r < lhs_rows; ++r)  {
+                for (long c = 0; c < rhs_cols; ++c)  {
+                    for (long k = 0; k < lhs_cols; k += block)  {
+                        const long  min_s = std::min(block, lhs_cols);
+
+#pragma unroll(block)
+                        // This loop should be optimized/unrolled by the
+                        // compiler and use SIMD to execute in parallel
+                        //
+                        for (long w = 0; w < min_s; ++w) {
+                            result(r, c) += lhs(r, k + w) * rhs(k + w, c);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Naïve but cache friendly O(n^3) algorithm for smaller matrixes
+    //
+    else  {
+        if constexpr (MO1 == matrix_orient::column_major)  {
+            for (long c = 0; c < rhs_cols; ++c)
+                for (long r = 0; r < lhs_rows; ++r)
+                    for (long k = 0; k < lhs_cols; ++k)
+                        result(r, c) += lhs(k, r) * rhs(c, k);
+        }
+        else  {  // matrix_orient::row_major
+            for (long r = 0; r < lhs_rows; ++r)
+                for (long c = 0; c < rhs_cols; ++c)
+                    for (long k = 0; k < lhs_cols; ++k)
+                        result(r, c) += lhs(r, k) * rhs(k, c);
+        }
+     }
+
+    return (result);
+}
 
 } // namespace hmdf
 

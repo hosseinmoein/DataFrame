@@ -6382,15 +6382,11 @@ struct  LinearFitVisitor  {
                 const H &x_begin, const H &x_end,
                 const H &y_begin, const H &y_end)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
+        const size_type col_s =
+            std::min(std::distance(x_begin, x_end),
+                     std::distance(y_begin, y_end));
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
-
-#ifdef HMDF_SANITY_EXCEPTIONS
-        if (col_s != size_type(std::distance(y_begin, y_end)))
-            throw DataFrameError("LinearFitVisitor: two columns must be "
-                                 "of equal sizes");
-#endif // HMDF_SANITY_EXCEPTIONS
 
         value_type  sum_x { 0 };   // Sum of all observed x
         value_type  sum_y { 0 };   // Sum of all observed y
@@ -7543,30 +7539,32 @@ is_normal(const V &column, double epsl, bool check_for_standard)  {
     svisit.post();
 
     const value_type    mean = static_cast<value_type>(svisit.get_mean());
-    const value_type    std = static_cast<value_type>(svisit.get_std());
-    const value_type    high_band_1 = static_cast<value_type>(mean + std);
-    const value_type    low_band_1 = static_cast<value_type>(mean - std);
+    const value_type    stdev = static_cast<value_type>(svisit.get_std());
+    const value_type    high_band_1 = static_cast<value_type>(mean + stdev);
+    const value_type    low_band_1 = static_cast<value_type>(mean - stdev);
     double              count_1 = 0.0;
     const value_type    high_band_2 =
-        static_cast<value_type>(mean + std * 2.0);
-    const value_type    low_band_2 = static_cast<value_type>(mean - std * 2.0);
+        static_cast<value_type>(mean + stdev * 2.0);
+    const value_type    low_band_2 =
+        static_cast<value_type>(mean - stdev * 2.0);
     double              count_2 = 0.0;
     const value_type    high_band_3 =
-        static_cast<value_type>(mean + std * 3.0);
-    const value_type    low_band_3 = static_cast<value_type>(mean - std * 3.0);
+        static_cast<value_type>(mean + stdev * 3.0);
+    const value_type    low_band_3 =
+        static_cast<value_type>(mean - stdev * 3.0);
     double              count_3 = 0.0;
 
-    for (auto citer : column) [[likely]]  {
-        if (citer >= low_band_1 && citer < high_band_1)  {
+    for (const auto &val : column) [[likely]]  {
+        if (val >= low_band_1 && val < high_band_1)  {
             count_3 += 1;
             count_2 += 1;
             count_1 += 1;
         }
-        else if (citer >= low_band_2 && citer < high_band_2)  {
+        else if (val >= low_band_2 && val < high_band_2)  {
             count_3 += 1;
             count_2 += 1;
         }
-        else if (citer >= low_band_3 && citer < high_band_3)  {
+        else if (val >= low_band_3 && val < high_band_3)  {
             count_3 += 1;
         }
     }
@@ -7578,7 +7576,7 @@ is_normal(const V &column, double epsl, bool check_for_standard)  {
         std::fabs((count_3 / col_s) - 0.997) <= epsl)  {
         if (check_for_standard)
             return (std::fabs(mean - 0) <= epsl &&
-                    std::fabs(std - 1.0) <= epsl);
+                    std::fabs(stdev - 1.0) <= epsl);
         return (true);
     }
     return (false);
@@ -7597,28 +7595,30 @@ is_lognormal(const V &column, double epsl)  {
     StatsVisitor<value_type, int>   log_visit;
 
     svisit.pre();
-    for (auto citer : column) [[likely]]  {
-        svisit(dummy_idx, static_cast<value_type>(std::log(citer)));
-        log_visit(dummy_idx, citer);
+    for (auto val : column) [[likely]]  {
+        svisit(dummy_idx, static_cast<value_type>(std::log(val)));
+        log_visit(dummy_idx, val);
     }
     svisit.post();
 
     const value_type    mean = static_cast<value_type>(svisit.get_mean());
-    const value_type    std = static_cast<value_type>(svisit.get_std());
-    const value_type    high_band_1 = static_cast<value_type>(mean + std);
-    const value_type    low_band_1 = static_cast<value_type>(mean - std);
+    const value_type    stdev = static_cast<value_type>(svisit.get_std());
+    const value_type    high_band_1 = static_cast<value_type>(mean + stdev);
+    const value_type    low_band_1 = static_cast<value_type>(mean - stdev);
     double              count_1 = 0.0;
     const value_type    high_band_2 =
-        static_cast<value_type>(mean + std * 2.0);
-    const value_type    low_band_2 = static_cast<value_type>(mean - std * 2.0);
+        static_cast<value_type>(mean + stdev * 2.0);
+    const value_type    low_band_2 =
+        static_cast<value_type>(mean - stdev * 2.0);
     double              count_2 = 0.0;
     const value_type    high_band_3 =
-        static_cast<value_type>(mean + std * 3.0);
-    const value_type    low_band_3 = static_cast<value_type>(mean - std * 3.0);
+        static_cast<value_type>(mean + stdev * 3.0);
+    const value_type    low_band_3 =
+        static_cast<value_type>(mean - stdev * 3.0);
     double              count_3 = 0.0;
 
-    for (auto citer : column) [[likely]]  {
-        const auto  log_val = std::log(citer);
+    for (const auto &val : column) [[likely]]  {
+        const auto  log_val = std::log(val);
 
         if (log_val >= low_band_1 && log_val < high_band_1)  {
             count_3 += 1;

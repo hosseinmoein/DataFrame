@@ -52,6 +52,13 @@ if(MSVC)
     set_tests_properties(vectors_tester PROPERTIES DISABLED TRUE)
 endif()
 
+add_executable(matrix_tester matrix_tester.cc)
+target_link_libraries(matrix_tester PRIVATE DataFrame)
+target_compile_options(matrix_tester
+    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+)
+add_test(NAME matrix_tester COMMAND matrix_tester)
+
 if(NOT MSVC)
     # MSVC compiler craps out on immediately executing lambdas
     add_executable(allocator_tester allocator_tester.cc)

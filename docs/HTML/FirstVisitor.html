@@ -1,0 +1,168 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long&gt;
+struct FirstVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        This functor class chooses the first item in the given column.<BR>
+        The result is the first dataitem in the given column<BR>
+        <PRE>
+    explicit
+    FirstVisitor(bool skipnan = false);
+        </PRE>
+      </td>
+      <td width="30%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long&gt;
+struct LastVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        This functor class chooses the last item in the given column.<BR>
+        The result is the last dataitem in the given column<BR>
+        <PRE>
+    explicit
+    LastVisitor(bool skipnan = false);
+        </PRE>
+      </td>
+      <td width="30%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#696969; ">// Now let’s declare two DataFrames with index type of DateTime which is a handy object for date/time manipulations.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    DTDataFrame ibm_dt_df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    DTDataFrame aapl_dt_df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Let’s read the AAPL and IBM market data from their files. The data for these two stocks start and end at different</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// dates. But there is overlapping data between them.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    ibm_dt_df<span style="color:#808030; ">.</span><span style="color:#603000; ">read</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">DT_IBM.csv</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> io_format<span style="color:#800080; ">::</span>csv2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    aapl_dt_df<span style="color:#808030; ">.</span><span style="color:#603000; ">read</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">DT_AAPL.csv</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> io_format<span style="color:#800080; ">::</span>csv2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// First let’s make sure if there are missing data in our important columns, we fill them up.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    ibm_dt_df<span style="color:#808030; ">.</span>fill_missing<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Open</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_High</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Low</span><span style="color:#800000; ">"</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span> fill_policy<span style="color:#800080; ">::</span>linear_interpolate<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Now we join the AAPL and IBM DataFrames using their indices and applying inner-join policy.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    DTDataFrame aapl_ibm <span style="color:#808030; ">=</span> ibm_dt_df<span style="color:#808030; ">.</span>join_by_index<span style="color:#800080; ">&lt;</span>DTDataFrame<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>aapl_dt_df<span style="color:#808030; ">,</span> join_policy<span style="color:#800080; ">::</span>inner_join<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Now we calculate the Pearson correlation coefficient between AAPL and IBM close prices. The visitor's data columns are</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// of type double and its index column is of type DateTime.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    CorrVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> DateTime<span style="color:#800080; ">&gt;</span>   corrl_v<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Correlation between AAPL and IBM close prices: </span><span style="color:#800000; ">"</span></span>
+<span class="line_wrapper">              <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> aapl_ibm<span style="color:#808030; ">.</span>visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> corrl_v<span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">              <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Now let’s do something more sophisticated and calculate rolling exponentially weighted correlations between IBM and</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Apple close prices. Since this is a rolling -- moving -- analysis the result is a vector of exponentially weighted</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// correlations for each date in the data stream.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    ewm_corr_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>  ewmcorr <span style="color:#800080; ">{</span> exponential_decay_spec<span style="color:#800080; ">::</span>span<span style="color:#808030; ">,</span> <span style="color:#008c00; ">3</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>          <span style="color:#808030; ">&amp;</span>ewmcorr_result <span style="color:#808030; ">=</span> aapl_ibm<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> ewmcorr<span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">The last exponentailly weighted correlation between AAPL and IBM close prices: </span><span style="color:#800000; ">"</span></span>
+<span class="line_wrapper">              <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> ewmcorr_result<span style="color:#808030; ">.</span>back<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> dt_idx_t <span style="color:#808030; ">=</span> DTDataFrame<span style="color:#800080; ">::</span>IndexType<span style="color:#800080; ">;</span>  <span style="color:#696969; ">// This is just DateTime.</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Appel data are daily. Let’s create 10-day OHLC (plus a bunch of other stats) for close prices.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    DTDataFrame aapl_ohlc <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">        aapl_dt_df<span style="color:#808030; ">.</span>bucketize<span style="color:#808030; ">(</span>bucket_type<span style="color:#800080; ">::</span>by_count<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             LastVisitor<span style="color:#800080; ">&lt;</span>dt_idx_t<span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// How to bucketize the index column</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Open</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>          FirstVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">High</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>          MaxVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Low</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>           MinVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>         LastVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Mean</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>          MeanVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Median</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>        MedianVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">25% Quantile</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  QuantileVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#008000; ">0.25</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Std</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>           StdVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#696969; ">// "Mode" column is a column of std::array&lt;ModeVisitor::DataItem, 2&gt;'s</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Mode</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>          ModeVisitor<span style="color:#800080; ">&lt;</span><span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">MAD</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>           MADVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>mad_type<span style="color:#800080; ">::</span>mean_abs_dev_around_mean<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#696969; ">// "Z Score" column is a column of std::vector&lt;double&gt;'s</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Z Score</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>       ZScoreVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#696969; ">// "Return Vector" column is a column of std::vector&lt;double&gt;'s</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>  <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Return Vector</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> ReturnVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>return_policy<span style="color:#800080; ">::</span><span style="color:#603000; ">log</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_tuple<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">AAPL_Volume</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Volume</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span>        SumVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span> dt_idx_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

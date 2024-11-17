@@ -97,7 +97,7 @@ Matrix<T, MO>::resize(size_type rows, size_type cols, const_reference def_v) {
 
     rows_ = rows;
     cols_ = cols;
-    matrix_.resize(rows, cols, def_v);
+    matrix_.resize(rows * cols, def_v);
 }
 
 // ----------------------------------------------------------------------------

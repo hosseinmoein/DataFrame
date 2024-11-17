@@ -1098,11 +1098,13 @@ template<typename T, matrix_orient MO1, matrix_orient MO2>
 static Matrix<T, MO1>
 operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
-    assert(lhs.cols() == rhs.rows());
 
-    const long      lhs_rows { lhs.rows() };
-    const long      lhs_cols { lhs.cols() };
-    const long      rhs_cols { rhs.cols() };
+    const long  lhs_rows { lhs.rows() };
+    const long  lhs_cols { lhs.cols() };
+    const long  rhs_cols { rhs.cols() };
+
+    assert(lhs_cols == rhs.rows());
+
     Matrix<T, MO1>  result { lhs_rows, rhs_cols };
     const long      thread_level =
         (lhs_cols >= 500L && rhs_cols >= 500L)

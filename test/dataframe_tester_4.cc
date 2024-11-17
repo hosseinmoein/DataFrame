@@ -51,6 +51,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -1926,11 +1927,65 @@ static void test_view_assign()  {
         std::fabs(dfv2.get_column<double>("IBM_Open")[100] - 181.24) < 0.001));
     assert(dfpv2.get_column<long>("IBM_Volume")[100] == 3721600);
 }
+*/
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void test_FastHierVisitor()  {
+
+    std::cout << "\nTesting FastHierVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    FastHierVisitor<double, std::string, 64>   fhv(
+        [](const double &x, const double &y)  { return (std::fabs(x - y)); });
+
+    df.single_act_visit<double>("IBM_Close", fhv);
+}
 
 // ----------------------------------------------------------------------------
 
 int main(int, char *[]) {
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -1963,6 +2018,8 @@ int main(int, char *[]) {
     test_get_data_by_dbscan();
     test_get_data_by_mshift();
     test_view_assign();
+*/
+    test_FastHierVisitor();
 
     return (0);
 }

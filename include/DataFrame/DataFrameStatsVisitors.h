@@ -1800,16 +1800,16 @@ struct  ExtremumSubArrayVisitor  {
 
         best_sum_ = cmp_(-std::numeric_limits<value_type>::max(),
                          std::numeric_limits<value_type>::max())
-                        ? -std::numeric_limits<value_type>::max()
-                        : std::numeric_limits<value_type>::max();
+                             ? -std::numeric_limits<value_type>::max()
+                             : std::numeric_limits<value_type>::max();
         best_begin_idx_ = 0;
         best_end_idx_ = 0;
         current_begin_idx_ = 0;
         current_end_idx_ = 0;
         current_sum_ = cmp_(-std::numeric_limits<value_type>::max(),
                             std::numeric_limits<value_type>::max())
-                           ? -std::numeric_limits<value_type>::max()
-                           : std::numeric_limits<value_type>::max();
+                                ? -std::numeric_limits<value_type>::max()
+                                : std::numeric_limits<value_type>::max();
     }
     inline void post ()  {  }
     inline result_type get_result () const  { return (best_sum_); }
@@ -1830,8 +1830,8 @@ private:
     result_type         best_sum_ {
         cmp_(-std::numeric_limits<value_type>::max(),
              std::numeric_limits<value_type>::max())
-            ? -std::numeric_limits<value_type>::max()
-            : std::numeric_limits<value_type>::max()
+                 ? -std::numeric_limits<value_type>::max()
+                 : std::numeric_limits<value_type>::max()
     };
     size_type           best_begin_idx_ { 0 };
     size_type           best_end_idx_ { 0 };
@@ -1840,8 +1840,8 @@ private:
     result_type         current_sum_ {
         cmp_(-std::numeric_limits<value_type>::max(),
              std::numeric_limits<value_type>::max())
-            ? -std::numeric_limits<value_type>::max()
-            : std::numeric_limits<value_type>::max()
+                 ? -std::numeric_limits<value_type>::max()
+                 : std::numeric_limits<value_type>::max()
     };
 };
 

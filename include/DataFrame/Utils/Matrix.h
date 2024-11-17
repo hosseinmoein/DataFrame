@@ -29,8 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <DataFrame/Vectors/VectorPtrView.h>
-#include <DataFrame/Vectors/VectorView.h>
+#include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
 #include <cassert>
 #include <vector>
@@ -1099,72 +1098,55 @@ template<typename T, matrix_orient MO1, matrix_orient MO2>
 static Matrix<T, MO1>
 operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
-    assert(lhs.cols() == rhs.rows());
 
-    const long      lhs_rows { lhs.rows() };
-    const long      lhs_cols { lhs.cols() };
-    const long      rhs_cols { rhs.cols() };
+    const long  lhs_rows { lhs.rows() };
+    const long  lhs_cols { lhs.cols() };
+    const long  rhs_cols { rhs.cols() };
+
+    assert(lhs_cols == rhs.rows());
+
     Matrix<T, MO1>  result { lhs_rows, rhs_cols };
+    const long      thread_level =
+        (lhs_cols >= 500L && rhs_cols >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
 
-    constexpr long  large_dim = 100;
-
-    // Using SIMD for large matrixes
-    //
-    if (lhs_cols >= large_dim && rhs_cols >= large_dim)  {
-        constexpr long  block = 8;
-
-        if constexpr (MO1 == matrix_orient::column_major)  {
-            for (long c = 0; c < rhs_cols; ++c)  {
-                for (long r = 0; r < lhs_rows; ++r)  {
-                    for (long k = 0; k < lhs_cols; k += block)  {
-                        const long  min_s = std::min(block, lhs_cols);
-
-#pragma unroll(block)
-                        // This loop should be optimized/unrolled by the
-                        // compiler and use SIMD to execute in parallel
-                        //
-                        for (long w = 0; w < min_s; ++w) {
-                            result(r, c) += lhs(k + w, r) * rhs(c, k + w);
-                        }
-                    }
-                }
-            }
-        }
-        else  {  // matrix_orient::row_major
-            for (long r = 0; r < lhs_rows; ++r)  {
-                for (long c = 0; c < rhs_cols; ++c)  {
-                    for (long k = 0; k < lhs_cols; k += block)  {
-                        const long  min_s = std::min(block, lhs_cols);
-
-#pragma unroll(block)
-                        // This loop should be optimized/unrolled by the
-                        // compiler and use SIMD to execute in parallel
-                        //
-                        for (long w = 0; w < min_s; ++w) {
-                            result(r, c) += lhs(r, k + w) * rhs(k + w, c);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Naïve but cache friendly O(n^3) algorithm for smaller matrixes
-    //
-    else  {
-        if constexpr (MO1 == matrix_orient::column_major)  {
-            for (long c = 0; c < rhs_cols; ++c)
+    auto    col_lbd =
+        [lhs_rows, lhs_cols, &result,
+         &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long c = begin; c < end; ++c)
                 for (long r = 0; r < lhs_rows; ++r)
                     for (long k = 0; k < lhs_cols; ++k)
                         result(r, c) += lhs(k, r) * rhs(c, k);
-        }
-        else  {  // matrix_orient::row_major
-            for (long r = 0; r < lhs_rows; ++r)
+        };
+    auto    row_lbd =
+        [lhs_cols, rhs_cols, &result,
+         &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long r = begin; r < end; ++r)
                 for (long c = 0; c < rhs_cols; ++c)
                     for (long k = 0; k < lhs_cols; ++k)
                         result(r, c) += lhs(r, k) * rhs(k, c);
-        }
-     }
+        };
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, rhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, rhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
+    }
 
     return (result);
 }

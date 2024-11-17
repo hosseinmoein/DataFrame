@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/Threads/ThreadPool.h>
 
+#include <algorithm>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf

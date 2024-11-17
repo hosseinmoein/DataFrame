@@ -44,6 +44,8 @@ static constexpr long   COLS = 6;
 
 int main(int, char *[]) {
 
+    // ThreadGranularity::set_optimum_thread_level();
+
     row_mat_t   row_mat { ROWS, COLS };
     col_mat_t   col_mat { ROWS, COLS };
     std::size_t value { 0 };
@@ -144,7 +146,7 @@ int main(int, char *[]) {
     assert(sum_mat(1, 1) == 13);
     assert(sum_mat(3, 4) == 45);
 
-	sum_mat += col_mat;
+    sum_mat += col_mat;
     assert(sum_mat(0, 0) == 0);
     assert(sum_mat(4, 5) == 87);
     assert(sum_mat(1, 1) == 19);

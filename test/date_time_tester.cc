@@ -40,50 +40,7 @@ using namespace hmdf;
 
 using date_t = DateTime::DateType;
 
-// ----------------------------------------------------------------------------
-
-static void test_priority_queue()  {
-
-    FixedSizePriorityQueue<double, 5>   q;
-
-    q.push(3);
-    assert(q.top() == 3);
-    assert(q.size() == 1);
-    assert((q.data() == std::vector<double> { 3 }));
-    q.push(7);
-    assert(q.top() == 7);
-    assert(q.size() == 2);
-    assert((q.data() == std::vector<double> { 3, 7 }));
-    q.push(5);
-    assert(q.top() == 7);
-    assert(q.size() == 3);
-    assert((q.data() == std::vector<double> { 3, 5, 7 }));
-
-    q.push(10);
-    q.push(12);
-    q.push(15);
-    assert(q.top() == 15);
-    assert(q.size() == 5);
-    assert((q.data() == std::vector<double> { 5, 7, 10, 12, 15 }));
-
-    q.pop();
-    assert(q.top() == 12);
-    assert(q.size() == 4);
-    assert((q.data() == std::vector<double> { 5, 7, 10, 12 }));
-    q.pop();
-    assert(q.top() == 10);
-    assert(q.size() == 3);
-    assert((q.data() == std::vector<double> { 5, 7, 10 }));
-    q.pop();
-    q.pop();
-    q.pop();
-    q.pop();
-    q.pop();
-    q.pop();
-    assert(q.size() == 0);
-    assert(q.empty());
-    assert((q.data() == std::vector<double> {  }));
-}
+static void test_priority_queue();
 
 // ----------------------------------------------------------------------------
 
@@ -997,6 +954,51 @@ int main (int, char *[])  {
 
     test_priority_queue();
     return (EXIT_SUCCESS);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_priority_queue()  {
+
+    FixedSizePriorityQueue<double, 5>   q;
+
+    q.push(3);
+    assert(q.top() == 3);
+    assert(q.size() == 1);
+    assert((q.data() == std::vector<double> { 3 }));
+    q.push(7);
+    assert(q.top() == 7);
+    assert(q.size() == 2);
+    assert((q.data() == std::vector<double> { 3, 7 }));
+    q.push(5);
+    assert(q.top() == 7);
+    assert(q.size() == 3);
+    assert((q.data() == std::vector<double> { 3, 5, 7 }));
+
+    q.push(10);
+    q.push(12);
+    q.push(15);
+    assert(q.top() == 15);
+    assert(q.size() == 5);
+    assert((q.data() == std::vector<double> { 5, 7, 10, 12, 15 }));
+
+    q.pop();
+    assert(q.top() == 12);
+    assert(q.size() == 4);
+    assert((q.data() == std::vector<double> { 5, 7, 10, 12 }));
+    q.pop();
+    assert(q.top() == 10);
+    assert(q.size() == 3);
+    assert((q.data() == std::vector<double> { 5, 7, 10 }));
+    q.pop();
+    q.pop();
+    q.pop();
+    q.pop();
+    q.pop();
+    q.pop();
+    assert(q.size() == 0);
+    assert(q.empty());
+    assert((q.data() == std::vector<double> {  }));
 }
 
 // ----------------------------------------------------------------------------

@@ -1929,6 +1929,36 @@ static void test_view_assign()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_CrossCorrVisitor()  {
+
+    std::cout << "\nTesting CrossCorrVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    CrossCorrVisitor<double, std::string>   cc(-16, 16);
+
+    df.single_act_visit<double, double>("IBM_Close", "IBM_Open", cc);
+
+    assert(cc.get_result().size() == 32);
+    assert(std::fabs(cc.get_result()[0] - 0.906) < 0.0001);
+    assert(std::fabs(cc.get_result()[1] - 0.9117) < 0.0001);
+    assert(std::fabs(cc.get_result()[15] - 0.9919) < 0.0001);
+    assert(std::fabs(cc.get_result()[16] - 0.9971) < 0.0001);
+    assert(std::fabs(cc.get_result()[30] - 0.9239) < 0.0001);
+    assert(std::fabs(cc.get_result()[31] - 0.9179) < 0.0001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_starts_with();
@@ -1963,6 +1993,7 @@ int main(int, char *[]) {
     test_get_data_by_dbscan();
     test_get_data_by_mshift();
     test_view_assign();
+    test_CrossCorrVisitor();
 
     return (0);
 }

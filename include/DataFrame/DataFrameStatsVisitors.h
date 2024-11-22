@@ -1647,6 +1647,69 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  CrossCorrVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin1, const H &column_end1,
+                const H &column_begin2, const H &column_end2)  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        {
+        const long  col_s1 = long(std::distance(column_begin1, column_end1));
+        const long  col_s2 = long(std::distance(column_begin2, column_end2));
+
+        if (std::abs(min_lag_) >= (col_s1 - 3) ||
+            std::abs(max_lag_) >= (col_s2 - 3))
+            throw DataFrameError("CrossCorrVisitor: Timeseries are too short");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        result_.reserve(max_lag_ - min_lag_);
+        for (long i = min_lag_; i < max_lag_; ++i)  {
+            corr_.pre();
+            if (i < 0)
+                corr_(idx_begin, idx_end,
+                      column_begin1 + std::abs(i), column_end1,
+                      column_begin2, column_end2 + i);
+            else
+                corr_(idx_begin, idx_end,
+                      column_begin1, column_end1 - i,
+                      column_begin2 + i, column_end2);
+            corr_.post();
+            result_.push_back(corr_.get_result());
+        }
+    }
+
+    CrossCorrVisitor (long min_lag, long max_lag,
+                      correlation_type t = correlation_type::pearson,
+                      bool biased = false,
+                      bool skip_nan = false,
+                      bool stable_algo = false)
+        : corr_ (t, biased, skip_nan, stable_algo),
+          min_lag_(min_lag),
+          max_lag_(max_lag)  {  }
+
+    inline void pre()  { result_.clear(); }
+    inline void post ()  {  }
+
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+private:
+
+    CorrVisitor<value_type, index_type> corr_;
+    result_type                         result_ { };
+    const long                          min_lag_;
+    const long                          max_lag_;
+};
+
+// ----------------------------------------------------------------------------
+
 template<arithmetic T, typename I = unsigned long>
 struct  DotProdVisitor  {
 

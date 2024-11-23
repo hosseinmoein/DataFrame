@@ -53,7 +53,7 @@ struct AutoCorrVisitor;
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This functor class calculates the auto correlation of given column. The result is a vector of auto correlations with lags of 0 up to length of column – 4.<BR>
+        This functor class calculates the auto correlation of given column. The result is a vector of auto correlations with lags of <I>0</I> up to <I>column length - 4</I>. <I>result[0]</I> is always 1 which is lag of 0. Lags are the indices of the result vector.<BR>
       </td>
       <td width="30%">
         <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>

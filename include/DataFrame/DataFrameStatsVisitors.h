@@ -2793,6 +2793,7 @@ struct  AutoCorrVisitor  {
 public:
 
     DEFINE_VISIT_BASIC_TYPES_3
+
     template <typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
@@ -2806,8 +2807,8 @@ public:
         size_type               lag = 1;
 
         tmp_result[0] = 1.0;
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
+        if ((col_s >= (ThreadPool::MUL_THR_THHOLD / 3)) &&
+            (ThreadGranularity::get_thread_level() > 2))  {
             vec_type<std::future<CorrResult>>   futures;
 
             futures.reserve((col_s - 4) - lag);
@@ -2815,7 +2816,9 @@ public:
                 futures.emplace_back(
                     ThreadGranularity::thr_pool_.dispatch(
                         false,
-                        &AutoCorrVisitor::get_auto_corr_<H>,
+                        &AutoCorrVisitor::get_auto_corr_<K, H>,
+                            std::cref(idx_begin),
+                            std::cref(idx_end),
                             col_s,
                             lag,
                             std::cref(column_begin)));
@@ -2829,7 +2832,9 @@ public:
         }
         else  {
             while (lag < col_s - 4)  {
-                const auto  result = get_auto_corr_(col_s, lag, column_begin);
+                const auto  result =
+                    get_auto_corr_(idx_begin, idx_end,
+                                   col_s, lag, column_begin);
 
                 tmp_result[result.first] = result.second;
                 lag += 1;
@@ -2850,16 +2855,17 @@ private:
 
     using CorrResult = std::pair<size_type, value_type>;
 
-    template<typename H>
+    template<typename K, typename H>
     inline static CorrResult
-    get_auto_corr_(size_type col_s, size_type lag, const H &column_begin)  {
+    get_auto_corr_(const K &idx_begin, const K &idx_end,
+                   size_type col_s, size_type lag, const H &column_begin)  {
 
         CorrVisitor<value_type, index_type> corr {  };
-        constexpr I                         dummy = I();
 
         corr.pre();
-        for (size_type i = 0; i < col_s - lag; ++i)
-            corr (dummy, *(column_begin + i), *(column_begin + (i + lag)));
+        corr (idx_begin, idx_end,
+              column_begin, column_begin + (col_s - lag),
+              column_begin + lag, column_begin + col_s);
         corr.post();
 
         return (CorrResult(lag, corr.get_result()));

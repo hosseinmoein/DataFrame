@@ -106,9 +106,15 @@ public:
     trans_result_t transpose() const noexcept;
     Matrix transpose2() const noexcept;
 
+    Matrix inverse() const;
+
 private:
 
+    static constexpr size_type  NOPOS_ = static_cast<size_type>(-9);
+
     using storage_t = std::vector<value_type>;
+
+    size_type ppivot_(size_type pivot_row) noexcept;
 
     size_type   rows_ { 0 };
     size_type   cols_ { 0 };

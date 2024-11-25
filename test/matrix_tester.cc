@@ -187,6 +187,41 @@ int main(int, char *[]) {
     assert(big_multi_mat(98, 2) == 499950);
     assert(big_multi_mat(2, 5) == 15150);
 
+    //
+    // Test inverse
+    //
+
+    using row_dmat_t = Matrix<double, matrix_orient::row_major>;
+
+    row_dmat_t  mat2 { 3, 3 };
+
+    mat2(0, 0) = 2.0;
+    mat2(0, 1) = 3.0;
+    mat2(0, 2) = 2.0;
+
+    mat2(1, 0) = 3.0;
+    mat2(1, 1) = 2.0;
+    mat2(1, 2) = 3.0;
+
+    mat2(2, 0) = 4.0;
+    mat2(2, 1) = 2.0;
+    mat2(2, 2) = 2.0;
+
+    row_dmat_t  mat2_inv = mat2.inverse();
+    auto        mat3 = mat2 * mat2_inv;
+
+    // It must result to identity matrix
+    //
+    assert((std::fabs(mat3(0, 0) - 1.0) < 0.00000001));
+    assert((std::fabs(mat3(1, 1) - 1.0) < 0.00000001));
+    assert((std::fabs(mat3(2, 2) - 1.0) < 0.00000001));
+    assert((std::fabs(mat3(0, 1) - 0.0) < 0.00000001));
+    assert((std::fabs(mat3(0, 2) - 0.0) < 0.00000001));
+    assert((std::fabs(mat3(1, 0) - 0.0) < 0.00000001));
+    assert((std::fabs(mat3(1, 2) - 0.0) < 0.00000001));
+    assert((std::fabs(mat3(2, 0) - 0.0) < 0.00000001));
+    assert((std::fabs(mat3(2, 1) - 0.0) < 0.00000001));
+
     return (0);
 }
 

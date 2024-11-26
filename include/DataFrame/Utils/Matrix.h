@@ -1109,11 +1109,13 @@ operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
     const long  lhs_cols { lhs.cols() };
     const long  rhs_cols { rhs.cols() };
 
+#ifdef HMDF_SANITY_EXCEPTIONS
     assert(lhs_cols == rhs.rows());
+#endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix<T, MO1>  result { lhs_rows, rhs_cols };
     const long      thread_level =
-        (lhs_cols >= 500L && rhs_cols >= 500L)
+        (lhs_cols >= 250L || rhs_cols >= 250L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     auto    col_lbd =

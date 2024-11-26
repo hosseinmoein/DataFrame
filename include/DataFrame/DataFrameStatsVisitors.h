@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Utils/Concepts.h>
 #include <DataFrame/Utils/FixedSizePriorityQueue.h>
+#include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
 
@@ -2801,9 +2802,12 @@ public:
 
         GET_COL_SIZE
 
-        if (col_s <= 4)  return;
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 5 || col_s < (max_lag_ + 4))
+            throw DataFrameError("AutoCorrVisitor: Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
 
-        vec_type<value_type>    tmp_result(col_s - 4);
+        vec_type<value_type>    tmp_result(max_lag_);
         size_type               lag = 1;
 
         tmp_result[0] = 1.0;
@@ -2811,8 +2815,8 @@ public:
             (ThreadGranularity::get_thread_level() > 2))  {
             vec_type<std::future<CorrResult>>   futures;
 
-            futures.reserve((col_s - 4) - lag);
-            while (lag < col_s - 4)  {
+            futures.reserve((max_lag_) - lag);
+            while (lag < max_lag_)  {
                 futures.emplace_back(
                     ThreadGranularity::thr_pool_.dispatch(
                         false,
@@ -2831,7 +2835,7 @@ public:
             }
         }
         else  {
-            while (lag < col_s - 4)  {
+            while (lag < max_lag_)  {
                 const auto  result =
                     get_auto_corr_(idx_begin, idx_end,
                                    col_s, lag, column_begin);
@@ -2847,11 +2851,13 @@ public:
     DEFINE_PRE_POST
     DEFINE_RESULT
 
-    AutoCorrVisitor () = default;
+    explicit
+    AutoCorrVisitor(size_type max_lag) : max_lag_(max_lag)  {   }
 
 private:
 
-    result_type result_ {  };
+    result_type     result_ {  };
+    const size_type max_lag_;
 
     using CorrResult = std::pair<size_type, value_type>;
 
@@ -2871,6 +2877,79 @@ private:
         return (CorrResult(lag, corr.get_result()));
     }
 };
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using acf_v = AutoCorrVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  PartialAutoCorrVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 10 || col_s < (max_lag_ + 4))
+            throw DataFrameError(
+                "PartialAutoCorrVisitor: Time-series is too short");
+        if (max_lag_ > 375)
+            throw DataFrameError("PartialAutoCorrVisitor: Maximum lag is 375");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        using matrix_t = Matrix<T, matrix_orient::row_major>;
+
+        result_type result (max_lag_, 0);
+        matrix_t    x;
+        matrix_t    y;
+
+        result[0] = 1;
+        x.reserve(max_lag_, max_lag_);
+        y.reserve(max_lag_, 1);
+        for (size_type k = 1; k <= max_lag_; ++k)  {
+            x.clear();
+            x.resize(col_s - k, k);
+            y.clear();
+            y.resize(col_s - k, 1);
+
+            for (size_type i = 0; i < col_s - k; ++i)  {
+                y(i, 0) = *(column_begin + (i + k));
+                for (size_type j = 0; j < k; ++j)  {
+                    x(i, j) = *(column_begin + (i + j));
+                }
+            }
+
+            const auto  x_trans = x.transpose();
+            const auto  phi = (x_trans * x).inverse() * x_trans * y;
+
+            result[k] = phi(k - 1, 0);
+        }
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    PartialAutoCorrVisitor(size_type max_lag) : max_lag_(max_lag)  {   }
+
+private:
+
+    result_type     result_ {  };
+    const size_type max_lag_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using pacf_v = PartialAutoCorrVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
@@ -2951,6 +3030,9 @@ private:
     const roll_policy   policy_;
     result_type         result_ {  };
 };
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using facf_v = FixedAutoCorrVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 

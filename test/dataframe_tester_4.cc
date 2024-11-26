@@ -1959,7 +1959,37 @@ static void test_CrossCorrVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_PartialAutoCorrVisitor()  {
+
+    std::cout << "\nTesting PartialAutoCorrVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    PartialAutoCorrVisitor<double, std::string> pacf { 50 };
+
+    df.single_act_visit<double> ("IBM_Close", pacf);
+
+    assert(pacf.get_result().size() == 50);
+    assert(std::fabs(pacf.get_result()[0] - 1.0) < 0.000001);
+    assert(std::fabs(pacf.get_result()[1] - 0.999915) < 0.000001);
+    assert(std::fabs(pacf.get_result()[10] - 0.094446) < 0.000001);
+    assert(std::fabs(pacf.get_result()[30] - 0.004907) < 0.000001);
+    assert(std::fabs(pacf.get_result()[48] - 0.004338) < 0.000001);
+    assert(std::fabs(pacf.get_result()[49] - 0.045952) < 0.000001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
+
+    MyDataFrame::set_optimum_thread_level();
 
     test_starts_with();
     test_ends_with();
@@ -1994,6 +2024,7 @@ int main(int, char *[]) {
     test_get_data_by_mshift();
     test_view_assign();
     test_CrossCorrVisitor();
+    test_PartialAutoCorrVisitor();
 
     return (0);
 }

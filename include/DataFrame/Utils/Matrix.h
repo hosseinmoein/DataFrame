@@ -1115,7 +1115,7 @@ operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
     Matrix<T, MO1>  result { lhs_rows, rhs_cols };
     const long      thread_level =
-        (lhs_cols >= 250L || rhs_cols >= 250L)
+        (lhs_cols >= 400L || rhs_cols >= 400L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     auto    col_lbd =

@@ -46,10 +46,29 @@ int main(int, char *[]) {
 
     // ThreadGranularity::set_optimum_thread_level();
 
-    row_mat_t   row_mat { ROWS, COLS };
-    col_mat_t   col_mat { ROWS, COLS };
+    row_mat_t   row_mata { 3, 3 };
+    col_mat_t   col_mata { 3, 3 };
     std::size_t value { 0 };
 
+    for (long r = 0; r < row_mata.rows(); ++r)
+        for (long c = 0; c < row_mata.cols(); ++c)  {
+            row_mata(r, c) = ++value;
+            col_mata(r, c) = value;
+        }
+
+    row_mat_t   row_matb  = row_mata * row_mata;
+    col_mat_t   col_matb  = col_mata * col_mata;
+
+    assert((row_matb(0, 0) == col_matb(0, 0) && row_matb(0, 0) == 30));
+    assert((row_matb(0, 2) == col_matb(0, 2) && row_matb(0, 2) == 42));
+    assert((row_matb(1, 1) == col_matb(1, 1) && row_matb(1, 1) == 81));
+    assert((row_matb(2, 1) == col_matb(2, 1) && row_matb(2, 1) == 126));
+    assert((row_matb(2, 2) == col_matb(2, 2) && row_matb(2, 2) == 150));
+	
+    row_mat_t   row_mat { ROWS, COLS };
+    col_mat_t   col_mat { ROWS, COLS };
+
+    value = 0;
     for (long r = 0; r < row_mat.rows(); ++r)
         for (long c = 0; c < row_mat.cols(); ++c)
             row_mat(r, c) = value++;
@@ -184,8 +203,8 @@ int main(int, char *[]) {
 
     assert(big_multi_mat(0, 0) == 5050);
     assert(big_multi_mat(99, 99) == 505000);
-    assert(big_multi_mat(98, 2) == 499950);
-    assert(big_multi_mat(2, 5) == 15150);
+    assert(big_multi_mat(98, 2) == 15150);
+    assert(big_multi_mat(2, 5) == 30300);
 
     //
     // Test inverse

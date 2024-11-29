@@ -1979,10 +1979,10 @@ static void test_PartialAutoCorrVisitor()  {
     assert(pacf.get_result().size() == 50);
     assert(std::fabs(pacf.get_result()[0] - 1.0) < 0.000001);
     assert(std::fabs(pacf.get_result()[1] - 0.999915) < 0.000001);
-    assert(std::fabs(pacf.get_result()[10] - 0.094446) < 0.000001);
-    assert(std::fabs(pacf.get_result()[30] - 0.004907) < 0.000001);
-    assert(std::fabs(pacf.get_result()[48] - 0.004338) < 0.000001);
-    assert(std::fabs(pacf.get_result()[49] - 0.045952) < 0.000001);
+    assert(std::fabs(pacf.get_result()[10] - 0.982959) < 0.000001);
+    assert(std::fabs(pacf.get_result()[30] - 0.983226) < 0.000001);
+    assert(std::fabs(pacf.get_result()[48] - 0.98751) < 0.000001);
+    assert(std::fabs(pacf.get_result()[49] - 0.987886) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

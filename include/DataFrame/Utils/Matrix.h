@@ -1113,7 +1113,7 @@ operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
     assert(lhs_cols == rhs.rows());
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    Matrix<T, MO1>  result { lhs_rows, rhs_cols };
+    Matrix<T, MO1>  result { lhs_rows, rhs_cols, 0 };
     const long      thread_level =
         (lhs_cols >= 400L || rhs_cols >= 400L)
             ? ThreadGranularity::get_thread_level() : 0;
@@ -1125,7 +1125,7 @@ operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
             for (long c = begin; c < end; ++c)
                 for (long r = 0; r < lhs_rows; ++r)
                     for (long k = 0; k < lhs_cols; ++k)
-                        result(r, c) += lhs(k, r) * rhs(c, k);
+                        result(r, c) += lhs(r, k) * rhs(k, c);
         };
     auto    row_lbd =
         [lhs_cols, rhs_cols, &result,

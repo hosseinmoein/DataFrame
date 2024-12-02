@@ -1203,6 +1203,27 @@ public:  // Load/append/remove interfaces
     void
     truncate(IndexType &&before, IndexType &&after);
 
+    // This function assumes the named column is a time-series.
+    // It attempts to make the time-series stationary by the specified method.
+    // In cases of <I>differencing</I> and <I>smoothing</I> methods, the first
+    // datapoint in the column remains unchanged.
+    //
+    // T:
+    //   Type of the named column
+    // col_name:
+    //   Name of the column
+    // method:
+    //   The method by which it makes the column staionary
+    // params:
+    //   Parameters necessary for some of the above methods.
+    //   Please see stationary_params.
+    //
+    template<typename T>
+    void
+    make_stationary(const char *col_name,
+                    stationary_method method,
+                    const StationaryParams params = { });
+
 public:  // Data manipulation
 
     // It randomly shuffles the named column(s) non-deterministically.

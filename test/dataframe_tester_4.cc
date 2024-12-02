@@ -1987,6 +1987,114 @@ static void test_PartialAutoCorrVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_make_stationary()  {
+
+    std::cout << "\nTesting make_stationary( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    auto    df2 = df;
+    auto    df3 = df;
+    auto    df4 = df;
+    auto    df5 = df;
+    auto    df6 = df;
+
+    df.make_stationary<double>("IBM_Close", stationary_method::differencing);
+
+    const auto  &close = df.get_column<double>("IBM_Close");
+
+    assert(close.size() == 5031);
+    assert(std::fabs(close[0] - 3.375) < 0.001);
+    assert(std::fabs(close[1] - 3.375) < 0.001);
+    assert(std::fabs(close[702] - 0.120003) < 0.0001);
+    assert(std::fabs(close[1695] - -1.34) < 0.001);
+    assert(std::fabs(close[5029] - 2.26) < 0.001);
+    assert(std::fabs(close[5030] - 2.75) < 0.001);
+
+    df2.make_stationary<double>("IBM_Close", stationary_method::log_trans);
+
+    const auto  &close2 = df2.get_column<double>("IBM_Close");
+
+    assert(close2.size() == 5031);
+    assert(std::fabs(close2[0] - 4.59069) < 0.0001);
+    assert(std::fabs(close2[1] - 4.62436) < 0.0001);
+    assert(std::fabs(close2[702] - 4.41848) < 0.0001);
+    assert(std::fabs(close2[1695] - 4.71752) < 0.0001);
+    assert(std::fabs(close2[5029] - 4.69052) < 0.0001);
+    assert(std::fabs(close2[5030] - 4.71546) < 0.0001);
+
+    df3.make_stationary<double>("IBM_Close", stationary_method::sqrt_trans);
+
+    const auto  &close3 = df3.get_column<double>("IBM_Close");
+
+    assert(close3.size() == 5031);
+    assert(std::fabs(close3[0] - 9.92786) < 0.0001);
+    assert(std::fabs(close3[1] - 10.0964) < 0.0001);
+    assert(std::fabs(close3[702] - 9.10879) < 0.0001);
+    assert(std::fabs(close3[1695] - 10.5778) < 0.0001);
+    assert(std::fabs(close3[5029] - 10.436) < 0.001);
+    assert(std::fabs(close3[5030] - 10.5669) < 0.0001);
+
+    df4.make_stationary<double>("IBM_Close",
+                                stationary_method::boxcox_trans,
+                                { .bc_type = box_cox_type::original,
+                                  .lambda = 1.5,
+                                  .is_all_positive = true });
+
+    const auto  &close4 = df4.get_column<double>("IBM_Close");
+
+    assert(close4.size() == 5031);
+    assert(std::fabs(close4[0] - 651.677) < 0.001);
+    assert(std::fabs(close4[1] - 685.469) < 0.001);
+    assert(std::fabs(close4[702] - 503.171) < 0.001);
+    assert(std::fabs(close4[1695] - 788.367) < 0.001);
+    assert(std::fabs(close4[5029] - 757.056) < 0.001);
+    assert(std::fabs(close4[5030] - 785.936) < 0.001);
+
+    df5.make_stationary<double>(
+        "IBM_Close",
+        stationary_method::decomposition,
+        { .season_period = 132,
+          .dcom_fraction = 0.6667,
+          .dcom_delta = 0,
+          .dcom_type = decompose_type::multiplicative });
+
+    const auto  &close5 = df5.get_column<double>("IBM_Close");
+
+    assert(close5.size() == 5031);
+    assert(std::fabs(close5[0] - 1.20614) < 0.0001);
+    assert(std::fabs(close5[1] - 1.2488) < 0.0001);
+    assert(std::fabs(close5[702] - 0.926802) < 0.0001);
+    assert(std::fabs(close5[1695] - 1.04238) < 0.0001);
+    assert(std::fabs(close5[5029] - 0.817188) < 0.001);
+    assert(std::fabs(close5[5030] - 0.836598) < 0.0001);
+
+    df6.make_stationary<double>("IBM_Close",
+                                stationary_method::smoothing,
+                                { .decay_spec = exponential_decay_spec::span,
+                                  .decay_alpha = 1.5,
+                                  .finite_adjust = true });
+
+    const auto  &close6 = df6.get_column<double>("IBM_Close");
+
+    assert(close6.size() == 5031);
+    assert(std::fabs(close6[0] - 98.5625) < 0.0001);
+    assert(std::fabs(close6[1] - 101.375) < 0.0001);
+    assert(std::fabs(close6[702] - 82.9529) < 0.0001);
+    assert(std::fabs(close6[1695] - 112.106) < 0.001);
+    assert(std::fabs(close6[5029] - 108.634) < 0.001);
+    assert(std::fabs(close6[5030] - 111.055) < 0.001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2025,6 +2133,7 @@ int main(int, char *[]) {
     test_view_assign();
     test_CrossCorrVisitor();
     test_PartialAutoCorrVisitor();
+    test_make_stationary();
 
     return (0);
 }

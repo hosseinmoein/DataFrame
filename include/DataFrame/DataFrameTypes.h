@@ -623,6 +623,40 @@ enum class  mean_shift_kernel : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class  stationary_method : unsigned char  {
+
+    differencing = 1,  // Xt = Yt - Yt-1
+    log_trans = 2,     // Xt = ln(Yt)
+    sqrt_trans = 3,    // Xt = sqrt(Yt)
+    boxcox_trans = 4,  // See BoxCoxVisitor
+    decomposition = 5, // See DecomposeVisitor
+    smoothing = 6,     // See ExponentiallyWeightedMeanVisitor
+};
+
+struct  StationaryParams  {
+
+    // Only considered in case of BoxCox transformation method
+    //
+    box_cox_type            bc_type { box_cox_type::original };
+    double                  lambda { 0 };
+    bool                    is_all_positive { true };
+
+    // Only considered in case of Decomposition method
+    //
+    std::size_t             season_period { 0 };
+    double                  dcom_fraction { 0 };
+    double                  dcom_delta { 0 };
+    decompose_type          dcom_type { decompose_type::additive };
+
+    // Only considered in case of Smoothing method
+    //
+    exponential_decay_spec  decay_spec { exponential_decay_spec::span };
+    double                  decay_alpha { 0 };
+    bool                    finite_adjust { true };
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
 

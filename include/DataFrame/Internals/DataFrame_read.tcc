@@ -1153,6 +1153,12 @@ read_csv2_(std::FILE *stream,
                     }
                 }
                 else if (col_spec.type_spec == "string")  {
+                    if (!value.empty() && value.back() == '\n') {
+                        value.pop_back();
+                    }
+                    if (!value.empty() && value.back() == '\r') {
+                        value.pop_back();
+                    }
                     std::any_cast<StlVecType<std::string> &>
                         (col_spec.col_vec).emplace_back(value);
                 }

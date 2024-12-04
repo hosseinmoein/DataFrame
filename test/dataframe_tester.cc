@@ -5284,6 +5284,46 @@ static void test_concat()  {
     assert((result2.is_equal<int, double, std::string>(result3)));
 }
 
+
+static void test_data_frame_newlines() {
+
+    std::cout << "\nTesting data frame parsing csv2..." << std::endl;
+
+    StrDataFrame df2;
+
+    try  {
+        df2.read("strings2.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+    assert(df2.get_index().size() == 8);
+    assert(df2.get_column<int>("n1")[0] == 68);
+    assert(df2.get_column<std::string>("s1")[0] == "string11");
+    assert(df2.get_column<std::string>("s1")[1] == "'string12'");
+    assert(df2.get_column<std::string>("s1")[2] == "\"string13\"");
+
+    assert(df2.get_column<std::string>("s2")[0] == "string21");
+    assert(df2.get_column<std::string>("s2")[1] == "string22");
+    assert(df2.get_column<std::string>("s2")[2] == "string23");
+
+
+    std::cout << "\nTesting data frame parsing csv..." << std::endl;
+    StrDataFrame df1;
+
+    try  {
+        df1.read("strings.csv", io_format::csv);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+    assert(df1.get_index().size() == 8);
+    assert(df1.get_column<std::string>("abc")[0] == "A");
+    assert(df1.get_column<int>("ott")[2] == 3);
+    assert(df1.get_column<std::string>("str")[0] == "\"str1\"");
+    assert(df1.get_column<std::string>("str")[4] == "str5");
+}
+
 // -----------------------------------------------------------------------------
 
 int main(int, char *[]) {
@@ -5363,6 +5403,7 @@ int main(int, char *[]) {
     test_VWBAS();
     test_self_concat();
     test_concat();
+    test_data_frame_newlines();
 
     return (0);
 }

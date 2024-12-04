@@ -657,6 +657,22 @@ struct  StationaryParams  {
 
 // ----------------------------------------------------------------------------
 
+enum class  stationary_test : unsigned char  {
+
+    kpss = 1,  // Kwiatkowski-Phillips-Schmidt–Shin test
+    adf = 2,   // Augmented Dickey-Fuller test
+};
+
+struct  StationaryTestParams  {
+
+    // Only considered for ADF test
+    //
+    std::size_t adf_lag { 1 };
+    bool        adf_with_trend { false };
+};
+	
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
 

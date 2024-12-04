@@ -221,13 +221,15 @@ Matrix<T, MO>::transpose2() const noexcept  {
 // ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO>
-Matrix<T, MO>::size_type
-Matrix<T, MO>::ppivot_(size_type pivot_row) noexcept  {
+inline Matrix<T, MO>::size_type
+Matrix<T, MO>::ppivot_(size_type pivot_row,
+                       size_type self_rows,
+                       size_type self_cols) noexcept  {
 
     size_type   max_row { pivot_row };
     value_type  max_value { value_type(std::fabs(at(pivot_row, pivot_row))) };
 
-    for (size_type r = pivot_row + 1; r < rows(); ++r)  {
+    for (size_type r = pivot_row + 1; r < self_rows; ++r)  {
         const value_type    tmp { value_type(std::fabs(at(r, pivot_row))) };
 
         if (tmp > max_value && tmp != value_type(0))  {
@@ -240,7 +242,7 @@ Matrix<T, MO>::ppivot_(size_type pivot_row) noexcept  {
         return (NOPOS_);
 
     if (max_row != pivot_row)  {
-        for (size_type c = 0; c < cols(); ++c)
+        for (size_type c = 0; c < self_cols; ++c)
             std::swap(at(pivot_row, c), at(max_row, c));
         return (max_row);
     }
@@ -257,38 +259,40 @@ Matrix<T, MO>::inverse() const  {
     if (rows() != cols())
         throw DataFrameError("Matrix::inverse(): Matrix must be squared");
 
-    Matrix  aux_mat = *this;
-    Matrix  result { rows(), cols(), 0 };
+    const size_type self_rows = rows();
+    const size_type self_cols = cols();
+    Matrix          aux_mat { *this };
+    Matrix          result { self_rows, self_cols, 0 };
 
     // First make identity matrix
     //
-    for (size_type d = 0; d < result.cols(); ++d)
-        result(d, d) = value_type(1);
+    for (size_type d = 0; d < self_cols; ++d)
+        result.at(d, d) = value_type(1);
 
-    for (size_type r = 0; r < aux_mat.rows (); ++r)  {
-        const size_type idx = aux_mat.ppivot_(r);
+    for (size_type r = 0; r < self_rows; ++r)  {
+        const size_type idx = aux_mat.ppivot_(r, self_rows, self_cols);
 
         if (idx == NOPOS_)
             throw DataFrameError("Matrix::inverse(): Singular matrix");
 
         if (idx != 0)
-            for (size_type c = 0; c < aux_mat.cols(); ++c)
-                std::swap(result(r, c), result(idx, c));
+            for (size_type c = 0; c < self_cols; ++c)
+                std::swap(result.at(r, c), result.at(idx, c));
 
         const value_type    diag = aux_mat.at(r, r);
 
-        for (size_type c = 0; c < aux_mat.cols(); ++c)  {
+        for (size_type c = 0; c < self_cols; ++c)  {
             aux_mat.at(r, c) /= diag;
-            result(r, c) /= diag;
+            result.at(r, c) /= diag;
         }
 
-        for (size_type rr = 0; rr < aux_mat.rows (); ++rr)  {
-            if (rr != r)  {
-                const value_type    off_diag = aux_mat.at(rr, r);
+        for (size_type r2 = 0; r2 < self_rows; ++r2)  {
+            if (r2 != r)  {
+                const value_type    off_diag = aux_mat.at(r2, r);
 
-                for (size_type c = 0; c < aux_mat.cols(); ++c)  {
-                    aux_mat.at(rr, c) -= off_diag * aux_mat.at(r, c);
-                    result(rr, c) -= off_diag * result(r, c);
+                for (size_type c = 0; c < self_cols; ++c)  {
+                    aux_mat.at(r2, c) -= off_diag * aux_mat.at(r, c);
+                    result.at(r2, c) -= off_diag * result.at(r, c);
                 }
             }
         }

@@ -114,7 +114,10 @@ private:
 
     using storage_t = std::vector<value_type>;
 
-    size_type ppivot_(size_type pivot_row) noexcept;
+    inline size_type
+    ppivot_(size_type pivot_row,
+            size_type self_rows,
+            size_type self_cols) noexcept;
 
     size_type   rows_ { 0 };
     size_type   cols_ { 0 };
@@ -1014,20 +1017,51 @@ template<typename T, matrix_orient MO1, matrix_orient MO2>
 static inline Matrix<T, MO1>
 operator + (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
-    assert(lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols());
+    const long  lhs_rows = lhs.rows();
+    const long  lhs_cols = lhs.cols();
 
-    auto    result = lhs;
+#ifdef HMDF_SANITY_EXCEPTIONS
+    assert(lhs_rows == rhs.rows() && lhs_cols == rhs.cols());
+#endif // HMDF_SANITY_EXCEPTIONS
 
-    if constexpr (MO1 == matrix_orient::column_major)  {
-        for (long c = 0; c < lhs.cols(); ++c)
-            for (long r = 0; r < lhs.rows(); ++r)
-                result(r, c) += rhs(r, c);
+    auto        result = lhs;
+    auto        col_lbd =
+        [lhs_rows, &result, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long c = begin; c < end; ++c)
+                for (long r = 0; r < lhs_rows; ++r)
+                    result(r, c) += rhs(r, c);
+        };
+    auto        row_lbd =
+        [lhs_cols, &result, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long r = begin; r < end; ++r)
+                for (long c = 0; c < lhs_cols; ++c)
+                    result(r, c) += rhs(r, c);
+        };
+    const long  thread_level =
+        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
     }
     else  {
-        for (long r = 0; r < lhs.rows(); ++r)
-            for (long c = 0; c < lhs.cols(); ++c)
-                result(r, c) += rhs(r, c);
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, lhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
     }
+
     return (result);
 }
 
@@ -1037,20 +1071,51 @@ template<typename T, matrix_orient MO1, matrix_orient MO2>
 static inline Matrix<T, MO1>
 operator - (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
-    assert(lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols());
+    const long  lhs_rows = lhs.rows();
+    const long  lhs_cols = lhs.cols();
 
-    auto    result = lhs;
+#ifdef HMDF_SANITY_EXCEPTIONS
+    assert(lhs_rows == rhs.rows() && lhs_cols == rhs.cols());
+#endif // HMDF_SANITY_EXCEPTIONS
 
-    if constexpr (MO1 == matrix_orient::column_major)  {
-        for (long c = 0; c < lhs.cols(); ++c)
-            for (long r = 0; r < lhs.rows(); ++r)
-                result(r, c) -= rhs(r, c);
+    auto        result = lhs;
+    auto        col_lbd =
+        [lhs_rows, &result, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long c = begin; c < end; ++c)
+                for (long r = 0; r < lhs_rows; ++r)
+                    result(r, c) -= rhs(r, c);
+        };
+    auto        row_lbd =
+        [lhs_cols, &result, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long r = begin; r < end; ++r)
+                for (long c = 0; c < lhs_cols; ++c)
+                    result(r, c) -= rhs(r, c);
+        };
+    const long  thread_level =
+        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
     }
     else  {
-        for (long r = 0; r < lhs.rows(); ++r)
-            for (long c = 0; c < lhs.cols(); ++c)
-                result(r, c) -= rhs(r, c);
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, lhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
     }
+
     return (result);
 }
 
@@ -1060,18 +1125,50 @@ template<typename T, matrix_orient MO1, matrix_orient MO2>
 static inline Matrix<T, MO1> &
 operator += (Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
-    assert(lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols());
+    const long  lhs_rows = lhs.rows();
+    const long  lhs_cols = lhs.cols();
 
-    if constexpr (MO1 == matrix_orient::column_major)  {
-        for (long c = 0; c < lhs.cols(); ++c)
-            for (long r = 0; r < lhs.rows(); ++r)
-                lhs(r, c) += rhs(r, c);
+#ifdef HMDF_SANITY_EXCEPTIONS
+    assert(lhs_rows == rhs.rows() && lhs_cols == rhs.cols());
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    auto        col_lbd =
+        [lhs_rows, &lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long c = begin; c < end; ++c)
+                for (long r = 0; r < lhs_rows; ++r)
+                    lhs(r, c) += rhs(r, c);
+        };
+    auto        row_lbd =
+        [lhs_cols, &lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long r = begin; r < end; ++r)
+                for (long c = 0; c < lhs_cols; ++c)
+                    lhs(r, c) += rhs(r, c);
+        };
+    const long  thread_level =
+        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
     }
     else  {
-        for (long r = 0; r < lhs.rows(); ++r)
-            for (long c = 0; c < lhs.cols(); ++c)
-                lhs(r, c) += rhs(r, c);
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, lhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
     }
+
     return (lhs);
 }
 
@@ -1081,18 +1178,50 @@ template<typename T, matrix_orient MO1, matrix_orient MO2>
 static inline Matrix<T, MO1> &
 operator -= (Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
-    assert(lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols());
+    const long  lhs_rows = lhs.rows();
+    const long  lhs_cols = lhs.cols();
 
-    if constexpr (MO1 == matrix_orient::column_major)  {
-        for (long c = 0; c < lhs.cols(); ++c)
-            for (long r = 0; r < lhs.rows(); ++r)
-                lhs(r, c) -= rhs(r, c);
+#ifdef HMDF_SANITY_EXCEPTIONS
+    assert(lhs_rows == rhs.rows() && lhs_cols == rhs.cols());
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    auto        col_lbd =
+        [lhs_rows, &lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long c = begin; c < end; ++c)
+                for (long r = 0; r < lhs_rows; ++r)
+                    lhs(r, c) -= rhs(r, c);
+        };
+    auto        row_lbd =
+        [lhs_cols, &lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long r = begin; r < end; ++r)
+                for (long c = 0; c < lhs_cols; ++c)
+                    lhs(r, c) -= rhs(r, c);
+        };
+    const long  thread_level =
+        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
     }
     else  {
-        for (long r = 0; r < lhs.rows(); ++r)
-            for (long c = 0; c < lhs.cols(); ++c)
-                lhs(r, c) -= rhs(r, c);
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, lhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
     }
+
     return (lhs);
 }
 
@@ -1103,7 +1232,6 @@ operator -= (Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 template<typename T, matrix_orient MO1, matrix_orient MO2>
 static Matrix<T, MO1>
 operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
-
 
     const long  lhs_rows { lhs.rows() };
     const long  lhs_cols { lhs.cols() };

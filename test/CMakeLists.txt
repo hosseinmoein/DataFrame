@@ -16,12 +16,7 @@ target_link_libraries(dataframe_tester_2 PRIVATE DataFrame)
 target_compile_options(dataframe_tester_2
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
 )
-
 add_test(NAME dataframe_tester_2 COMMAND dataframe_tester_2)
-# if(MSVC)
-#     # For some unknown reason to me, this test sigfaults in AppVeyor
-#     set_tests_properties(dataframe_tester_2 PROPERTIES DISABLED TRUE)
-# endif()
 
 add_executable(dataframe_tester_3 dataframe_tester_3.cc)
 target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)
@@ -31,7 +26,7 @@ target_compile_options(dataframe_tester_3
 add_test(NAME dataframe_tester_3 COMMAND dataframe_tester_3)
 
 add_executable(dataframe_tester_4 dataframe_tester_4.cc)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set_tests_properties(dataframe_tester_4 PROPERTIES DISABLED TRUE)
 endif()
 target_link_libraries(dataframe_tester_4 PRIVATE DataFrame)

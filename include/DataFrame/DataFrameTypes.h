@@ -659,18 +659,47 @@ struct  StationaryParams  {
 
 enum class  stationary_test : unsigned char  {
 
-    kpss = 1,  // Kwiatkowski-Phillips-Schmidt–Shin test
-    adf = 2,   // Augmented Dickey-Fuller test
+    // Kwiatkowski-Phillips-Schmidt–Shin test
+    // In econometrics, Kwiatkowski–Phillips–Schmidt–Shin (KPSS) tests are
+    // used for testing a null hypothesis that an observable time series is
+    // stationary around a deterministic trend (i.e. trend-stationary) against
+    // the alternative of a unit root.
+    // Contrary to most unit root tests, the presence of a unit root is not
+    // the null hypothesis but the alternative. Additionally, in the KPSS test,
+    // the absence of a unit root is not a proof of stationarity but, by
+    // design, of trend-stationarity. This is an important distinction since it
+    // is possible for a time series to be non-stationary, have no unit root
+    // yet be trend-stationary.
+    //
+    kpss = 1,
+
+    // Augmented Dickey-Fuller test
+    // In statistics, an augmented Dickey–Fuller test (ADF) tests the null
+    // hypothesis that a unit root is present in a time series sample. The
+    // alternative hypothesis depends on which version of the test is used,
+    // but is usually stationarity or trend-stationarity. It is an augmented
+    // version of the Dickey–Fuller test for a larger and more complicated set
+    // of time series models.
+    // The augmented Dickey–Fuller (ADF) statistic, used in the test, is a
+    // negative number. The more negative it is, the stronger the rejection of
+    // the hypothesis that there is a unit root at some level of confidence.
+    //
+    adf = 2,
 };
 
 struct  StationaryTestParams  {
+
+    // Only considered for KPSS test
+    //
+    double  significance_levels[3] = { 0.1, 0.05, 0.01 };
+    double  critical_values[3] { 0.347, 0.463, 0.739 };
 
     // Only considered for ADF test
     //
     std::size_t adf_lag { 1 };
     bool        adf_with_trend { false };
 };
-	
+
 // ----------------------------------------------------------------------------
 
 template<typename T>

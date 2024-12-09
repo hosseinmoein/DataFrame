@@ -659,7 +659,7 @@ struct  StationaryParams  {
 
 enum class  stationary_test : unsigned char  {
 
-    // Kwiatkowski-Phillips-Schmidt–Shin test
+    // Kwiatkowski-Phillips-Schmidt–Shin (KPSS)
     // In econometrics, Kwiatkowski–Phillips–Schmidt–Shin (KPSS) tests are
     // used for testing a null hypothesis that an observable time series is
     // stationary around a deterministic trend (i.e. trend-stationary) against
@@ -671,9 +671,15 @@ enum class  stationary_test : unsigned char  {
     // is possible for a time series to be non-stationary, have no unit root
     // yet be trend-stationary.
     //
+    // In a KPSS test, a higher test statistic value (meaning a larger
+    // calculated KPSS statistic) indicates a greater likelihood that the time
+    // series is not stationary around a deterministic trend, while a lower
+    // value suggests stationarity; essentially, you want a low KPSS test value
+    // to conclude stationarity.
+    //
     kpss = 1,
 
-    // Augmented Dickey-Fuller test
+    // Augmented Dickey-Fuller (ADF)
     // In statistics, an augmented Dickey–Fuller test (ADF) tests the null
     // hypothesis that a unit root is present in a time series sample. The
     // alternative hypothesis depends on which version of the test is used,
@@ -684,6 +690,15 @@ enum class  stationary_test : unsigned char  {
     // negative number. The more negative it is, the stronger the rejection of
     // the hypothesis that there is a unit root at some level of confidence.
     //
+    // To interpret an ADF test statistic, compare its value to the critical
+    // value at a chosen significance level (usually 0.05): if the test
+    // statistic is less than the critical value, you reject the null
+    // hypothesis and conclude that the time series is stationary; if it's
+    // greater than the critical value, you fail to reject the null hypothesis,
+    // indicating non-stationarity; a more negative ADF statistic signifies
+    // stronger evidence against the null hypothesis (i.e., more likely
+    // stationary).
+    //
     adf = 2,
 };
 
@@ -691,8 +706,7 @@ struct  StationaryTestParams  {
 
     // Only considered for KPSS test
     //
-    double  significance_levels[3] = { 0.1, 0.05, 0.01 };
-    double  critical_values[3] { 0.347, 0.463, 0.739 };
+    double  critical_values[4] { 0.347, 0.463, 0.574, 0.739 };
 
     // Only considered for ADF test
     //

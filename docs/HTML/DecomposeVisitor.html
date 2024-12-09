@@ -47,8 +47,11 @@ body {
         <PRE><B>
 enum class decompose_type : unsigned char  {
     // Y<sub>t</sub> = Trend + Seasonal + Residual
+    //
     additive = 1,
+
     // Y<sub>t</sub> = Trend * Seasonal * Residual
+    //
     multiplicative = 2,
 };</B></PRE> </font>
       </td>
@@ -90,7 +93,6 @@ using decom_v = DecomposeVisitor&lt;T, I, A&gt;;
         <I>get_result()</I> returns the <B>Trend</B> vector. There are 3 get result methods: <I>get_trend(), get_seasonal(), get_residual()</I>. They return the corresponding vectors
         <I>
         <PRE>
-    explicit
     DecomposeVisitor(std::size_t s_period,
                      T frac,
                      T delta,

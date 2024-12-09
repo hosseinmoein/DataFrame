@@ -6527,11 +6527,11 @@ struct  LinearFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template<typename K, typename H>
+    template<typename K, typename H1, typename H2>
     inline void
     operator() (const K &, const K &,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+                const H1 &x_begin, const H1 &x_end,
+                const H2 &y_begin, const H2 &y_end)  {
 
         const size_type col_s =
             std::min(std::distance(x_begin, x_end),
@@ -7964,6 +7964,218 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using nzr_v = NonZeroRangeVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long>
+struct  StationaryCheckVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 5)
+            throw DataFrameError("StationaryCheckVisitor: "
+                                 "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (method_ == stationary_test::kpss)
+            do_kpss_(idx_begin, idx_end, column_begin, column_end, col_s);
+        else
+            do_adf_(idx_begin, idx_end, column_begin, column_end, col_s);
+    }
+
+    inline void pre()  { kpss_val_ = 0; kpss_stat_ = -1; adf_stat_ = 0; }
+    inline void post()  {  }
+    inline result_type get_kpss_value() const  { return (kpss_val_); }
+    inline result_type get_kpss_statistic() const  { return (kpss_stat_); }
+    inline result_type get_adf_statistic() const  { return (adf_stat_); }
+
+    explicit
+    StationaryCheckVisitor(stationary_test method,
+                           const StationaryTestParams params = { })
+        : method_(method), params_(params)  {   }
+
+private:
+
+    template<typename K, typename H>
+    inline void
+    do_kpss_(const K &idx_begin, const K &idx_end,
+             const H &column_begin, const H &column_end,
+             size_type col_s)  {
+
+        // Fit a linear trend line
+        //
+        linfit_v<T, I>          linfit;
+        std::vector<value_type> times(col_s);
+
+        std::iota (times.begin(), times.end(), T(1));
+        linfit.pre();
+        linfit(idx_begin, idx_end,
+               times.begin(), times.end(), column_begin, column_end);
+        linfit.post();
+
+        // Calculate residuals
+        //
+        std::vector<value_type> residuals(col_s);
+
+        for (size_type i = 0; i < col_s; ++i)
+            residuals[i] = *(column_begin + i) - linfit.get_result()[i];
+
+        // Calculate cumulative sum of residuals
+        //
+        std::vector<value_type> cum_sum(col_s);
+
+        cum_sum[0] = residuals[0];
+        for (size_type i = 1; i < col_s; ++i)
+            cum_sum[i] = cum_sum[i - 1] + residuals[i];
+
+        // Calculate to squared norm
+        //
+        value_type  norm_sq { 0 };
+
+        for (size_type i = 0; i < col_s; ++i)
+            norm_sq += cum_sum[i] * cum_sum[i];
+
+        // Calculate variance
+        //
+        VarVisitor<T, I>    var { true };
+
+        var.pre();
+        var(idx_begin, idx_end, residuals.begin(), residuals.end());
+        var.post();
+
+        // Calculate KPSS value and statistic
+        //
+        kpss_val_ = norm_sq / (T(col_s) * T(col_s) * var.get_result());
+        if (kpss_val_ < params_.critical_values[0])
+            kpss_stat_ = 0.1;
+        else if (kpss_val_ < params_.critical_values[1])
+            kpss_stat_ = 0.05;
+        else if (kpss_val_ < params_.critical_values[2])
+            kpss_stat_ = 0.025;
+        else if (kpss_val_ < params_.critical_values[3])
+            kpss_stat_ = 0.01;
+        else
+            kpss_stat_ = 0;
+    }
+
+    template<typename K, typename H>
+    inline void
+    do_adf_(const K &idx_begin, const K &idx_end,
+            const H &column_begin, const H &column_end,
+            size_type col_s)  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s <= (params_.adf_lag + 1))
+            throw DataFrameError("StationaryCheckVisitor(ADF): "
+                                 "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        std::vector<value_type> detrended_data;
+
+        if (params_.adf_with_trend)  {
+            std::vector<value_type> times(col_s);
+
+            for (size_type i = 0; i < col_s; ++i)
+                times[i] = value_type(i + 1);
+
+            const value_type    sum_t =
+                std::accumulate(times.begin(), times.end(), T(0));
+            const value_type    sum_y =
+                std::accumulate(column_begin, column_end, T(0));
+            value_type          sum_t2 { 0 };
+            value_type          sum_ty { 0 };
+
+            for (size_type i = 0; i < col_s; i++) {
+                sum_ty += times[i] * *(column_begin + i);
+                sum_t2 += times[i] * times[i];
+            }
+
+            const value_type    slope = (T(col_s) * sum_ty - sum_t * sum_y) /
+                                        (T(col_s) * sum_t2 - sum_t * sum_t);
+            const value_type    intercept = (sum_y - slope * sum_t) / T(col_s);
+
+            // Detrend the data
+            //
+            detrended_data.resize(col_s, 0);
+            for (size_type i = 0; i < col_s; i++)
+                detrended_data[i] =
+                    *(column_begin + i) - (intercept + slope * times[i]);
+        }
+
+        MeanVisitor<T, I>   mean;
+
+        mean.pre();
+        if (params_.adf_with_trend)
+            mean(idx_begin, idx_end,
+                 detrended_data.begin(), detrended_data.end());
+        else
+            mean(idx_begin, idx_end, column_begin, column_end);
+        mean.post();
+
+        VarVisitor<T, I>    variance { true };
+
+        variance.pre();
+        if (params_.adf_with_trend)
+            variance(idx_begin, idx_end,
+                     detrended_data.begin(), detrended_data.end());
+        else
+            variance(idx_begin, idx_end, column_begin, column_end);
+        variance.post();
+
+        // Calculate Auto Covariance of lag
+        //
+        value_type  autocovar { 0 };
+
+        if (params_.adf_with_trend)
+            for (size_type i = params_.adf_lag; i < col_s; ++i)
+                autocovar +=
+                    (detrended_data[i] - mean.get_result()) *
+                    (detrended_data[i - params_.adf_lag] - mean.get_result());
+        else
+            for (size_type i = params_.adf_lag; i < col_s; ++i)
+                autocovar +=
+                    (*(column_begin + i) - mean.get_result()) *
+                    (*(column_begin + (i - params_.adf_lag)) -
+                     mean.get_result());
+        autocovar /= T(col_s - params_.adf_lag - 1);
+
+        adf_stat_ = autocovar / variance.get_result();
+    }
+
+    const stationary_test       method_;
+    const StationaryTestParams  params_;
+
+    // In a KPSS test, a higher test statistic value (meaning a larger
+    // calculated KPSS statistic) indicates a greater likelihood that the time
+    // series is not stationary around a deterministic trend, while a lower
+    // value suggests stationarity; essentially, you want a low KPSS test value
+    // to conclude stationarity.
+    //
+    value_type                  kpss_val_ { 0 };
+    value_type                  kpss_stat_ { -1 };
+
+    // To interpret an ADF test statistic, compare its value to the critical
+    // value at a chosen significance level (usually 0.05): if the test
+    // statistic is less than the critical value, you reject the null
+    // hypothesis and conclude that the time series is stationary; if it's
+    // greater than the critical value, you fail to reject the null hypothesis,
+    // indicating non-stationarity; a more negative ADF statistic signifies
+    // stronger evidence against the null hypothesis (i.e., more likely
+    // stationary).
+    //
+    value_type                  adf_stat_ { 0 };
+};
+
+template<typename T, typename I = unsigned long>
+using stac_v = StationaryCheckVisitor<T, I>;
 
 } // namespace hmdf
 

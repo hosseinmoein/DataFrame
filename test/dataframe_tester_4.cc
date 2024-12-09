@@ -2096,6 +2096,136 @@ static void test_make_stationary()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_StationaryCheckVisitor()  {
+
+    std::cout << "\nTesting StationaryCheckVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    RandGenParams<double>   p;
+
+    p.mean = 0;
+    p.std = 1;
+    p.seed = 123;
+
+    df.load_column("normal_col",
+                   gen_normal_dist<double>(df.get_index().size(), p));
+
+    p.max_value = 1000;
+    p.min_value = -1000;
+    df.load_column("uniform col",
+                   gen_uniform_real_dist<double>(df.get_index().size(), p));
+
+    std::vector<double> log_close;
+
+    log_close.reserve(df.get_index().size());
+    for (const auto val : df.get_column<double>("IBM_Close"))
+        log_close.push_back(std::log(val));
+    df.load_column("log close", std::move(log_close));
+
+    DecomposeVisitor<double, std::string>   d_v (280, 0.6, 0.01);
+
+    df.single_act_visit<double>("IBM_Close", d_v);
+    df.load_column("residual close", std::move(d_v.get_residual()));
+
+    // KPSS tests
+    //
+    StationaryCheckVisitor<double, std::string> sc { stationary_test::kpss };
+
+    df.single_act_visit<double>("IBM_Close", sc);
+    assert(std::fabs(sc.get_kpss_value() - 63.5831) < 0.0001);
+    assert(sc.get_kpss_statistic() == 0);
+
+    df.single_act_visit<double>("normal_col", sc);
+    assert(sc.get_kpss_value() < 0.078);
+    assert(sc.get_kpss_statistic() == 0.1);
+
+    df.single_act_visit<double>("uniform col", sc);
+    assert(sc.get_kpss_value() < 0.08);
+    assert(sc.get_kpss_statistic() == 0.1);
+
+    df.single_act_visit<double>("log close", sc);
+    assert(sc.get_kpss_value() < 62.7013);
+    assert(sc.get_kpss_statistic() == 0);
+
+    df.single_act_visit<double>("residual close", sc);
+    assert(sc.get_kpss_value() < 46.41);
+    assert(sc.get_kpss_statistic() == 0);
+
+    // ADF tests
+    //
+    StationaryCheckVisitor<double, std::string> sc2 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = false } };
+
+    df.single_act_visit<double>("IBM_Close", sc2);
+    assert(std::fabs(sc2.get_adf_statistic() - 0.989687) < 0.00001);
+
+    StationaryCheckVisitor<double, std::string> sc3 {
+        stationary_test::adf, { .adf_lag = 25, .adf_with_trend = false } };
+
+    df.single_act_visit<double>("IBM_Close", sc3);
+    assert(std::fabs(sc3.get_adf_statistic() - 0.974531) < 0.0000001);
+
+    StationaryCheckVisitor<double, std::string> sc4 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = false } };
+
+    df.single_act_visit<double>("normal_col", sc4);
+    assert(std::fabs(sc4.get_adf_statistic() - 0.0286854) < 0.0000001);
+
+    StationaryCheckVisitor<double, std::string> sc5 {
+        stationary_test::adf, { .adf_lag = 25, .adf_with_trend = false } };
+
+    df.single_act_visit<double>("normal_col", sc5);
+    assert(std::fabs(sc5.get_adf_statistic() - -0.0017814) < 0.0000001);
+
+    // ADF tests with trend
+    //
+    StationaryCheckVisitor<double, std::string> sc6 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("IBM_Close", sc6);
+    assert(std::fabs(sc6.get_adf_statistic() - 0.977705) < 0.000001);
+
+    StationaryCheckVisitor<double, std::string> sc7 {
+        stationary_test::adf, { .adf_lag = 25, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("IBM_Close", sc7);
+    assert(std::fabs(sc7.get_adf_statistic() - 0.946614) < 0.000001);
+
+    StationaryCheckVisitor<double, std::string> sc8 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("normal_col", sc8);
+    assert(std::fabs(sc8.get_adf_statistic() - 0.0286834) < 0.0000001);
+
+    StationaryCheckVisitor<double, std::string> sc9 {
+        stationary_test::adf, { .adf_lag = 25, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("normal_col", sc9);
+    assert(std::fabs(sc9.get_adf_statistic() - -0.00178569) < 0.0000001);
+
+    StationaryCheckVisitor<double, std::string> sc10 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("log close", sc10);
+    assert(std::fabs(sc10.get_adf_statistic() - 0.972062) < 0.000001);
+
+    StationaryCheckVisitor<double, std::string> sc11 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("residual close", sc11);
+    assert(std::fabs(sc11.get_adf_statistic() - 0.679027) < 0.000001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2135,6 +2265,7 @@ int main(int, char *[]) {
     test_CrossCorrVisitor();
     test_PartialAutoCorrVisitor();
     test_make_stationary();
+    test_StationaryCheckVisitor();
 
     return (0);
 }

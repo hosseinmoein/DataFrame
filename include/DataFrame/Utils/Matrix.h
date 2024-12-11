@@ -103,10 +103,91 @@ public:
     template<typename I>
     void set_row(I row_data, size_type row);
 
+    bool is_square() const noexcept;
+    bool is_symmetric() const noexcept;
+
     trans_result_t transpose() const noexcept;
     Matrix transpose2() const noexcept;
 
+    // Inverse(A) * A = A * Inverse(A) = I
+    //
+    // Also:
+    //                       1
+    //   Inverse(A) = ---------------- * Adjoint(A)
+    //                 Determinant(A)
+    //
     Matrix inverse() const;
+
+    // Let A be an nXn matrix. The number l is an eigenvalue of A if there
+    // exists a non-zero vector v such that
+    //     Av = lv
+    // In this case, vector v is called an eigenvector of A corresponding
+    // to l. For each eigenvalue l, the set of all vectors v satisfying
+    // Av = lv is called the eigenspace of A corresponding to l.
+    //
+    // Putting it in more laymen's term:
+    //
+    // Place a coin on its side and set it spinning. Take some butter and
+    // spread it over a slice of bread. Pick up an elastic band and stretch
+    // it. In each of these cases we do something that affects the shape or
+    // orientation of the object in question. The elastic band and butter
+    // have been deformed and the coin has been rotated.
+    // When we investigate transformations mathematically we find that there
+    // are directions that remain the same after the deformation has
+    // occurred. In the case of the stretching of the elastic band, if you
+    // had drawn an arrow on the band before you stretched it, would it
+    // point in the same direction afterwards? The answer depends on how
+    // you drew the original arrow. The transformation preserves the
+    // direction in which you stretch the band but some other arrows have
+    // their direction changed. The preserved direction is called an
+    // EIGENVECTOR of the transformation and the associated amount by which
+    // it has been stretched is an EIGENVALUE.
+    // Eigenvalues are multipliers. They are numbers that represent how much
+    // stretching has taken place or, in other words, how much something has
+    // been scaled up by. In the sentence 'I am 3.2 times taller than when
+    // I was born' the number 3.2 is acting as an eigenvalue.
+    // To make sense of an eigenvalue it must have an associated 'operation'
+    // (the transformation that has occurred) and an associated 'direction'
+    // (the eigenvector). It doesn't mean anything by itself to say that 3.2
+    // is an eigenvalue. You need to know the operation 'enlarged' and the
+    // direction 'up' to say that I am now 3.2 times bigger in the
+    // up-direction!
+    // If you rotate a coin by 360 degrees you preserve all directions and
+    // so each direction is an eigenvector. Because no stretching has
+    // occurred, all of these eigenvectors have eigenvalue 1. Rotating the
+    // coin by 60 degrees destroys all directions and this transformation
+    // has no eigenvectors or eigenvalues at all. Careful spreading of
+    // butter on bread, by moving the knife in one direction only, is a
+    // transformation with an eigenvector in the direction of spreading.
+    // The associated eigenvalue depends on how far the butter is spread.
+    // The elastic band has an eigenvector in the left-right direction
+    // because that arrow still points in that direction after the
+    // transformation. The band has been stretched by approximately the same
+    // amount that I have grown since I was born - so the eigenvector has
+    // eigenvalue 3.2!
+    // The idea of eigenvalues and eigenvectors can be extended to any
+    // operator H. (H might be 'rotate by 360 degrees' or 'stretch in
+    // direction of y-axis' or operators in Quantum theory or elsewhere).
+    // We write H(x) to mean 'the action of H on x'. (So x might be a
+    // particular vector that we are rotating or stretching or it might be a
+    // quantum state or some other object). If we can find an object x and a
+    // number k so that the following equation is true:
+    //     H(x) = k * x
+    // Then we know that x has been preserved by H apart from a scalar
+    // multiplier k. It is k times bigger than what it was before H acted
+    // upon it. Therefore we call x an eigenvector of H with eigenvalue k.
+    //
+    //
+    // This method finds all the eigenvalues and eigenvectors.
+    // If matrix is symmetric:
+    //     first tridiagonalize, then diagonalize.
+    // else:
+    //     reduce to Hessenberg form, then reduce to real Schur form.
+    //
+    template<typename MA1, typename MA2>
+    void eigen_space(MA1 &eigenvalues,
+                     MA2 &eigenvectors,
+                     bool sort_values) const;
 
 private:
 
@@ -114,10 +195,75 @@ private:
 
     using storage_t = std::vector<value_type>;
 
+    inline static constexpr value_type  EPSILON_ { 2.220446e-16 };
+
+    // Partial pivoting for Gaussian elimination:
+    //
+    // Pivoting is a process performed on a matrix in order to improve
+    // numerical stability. Partial pivoting of an nXn matrix is the
+    // sorting of the rows of the matrix so that row r contains the maximum
+    // absolute column value for column c, among all rows r ... n.
+    //
     inline size_type
     ppivot_(size_type pivot_row,
             size_type self_rows,
             size_type self_cols) noexcept;
+
+    // Symmetric Householder reduction to tridiagonal form.
+    //
+    // This is derived from the Algol procedures tred2 by Bowdler, Martin,
+    // Reinsch, and Wilkinson, Handbook for Auto. Comp., Vol.ii-Linear
+    // Algebra, and the corresponding Fortran subroutine in EISPACK.
+    //
+    template<typename MA1, typename MA2, typename MA3>
+    static inline void
+    tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept;
+
+    // Symmetric tridiagonal QL algorithm.
+    //
+    // This is derived from the Algol procedures tql2 by Bowdler, Martin,
+    // Reinsch, and Wilkinson, Handbook for Auto. Comp., Vol.ii-Linear
+    // Algebra, and the corresponding Fortran subroutine in EISPACK.
+    //
+    template<typename MA1, typename MA2, typename MA3>
+    static inline void
+    diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept;
+
+    // Nonsymmetric reduction to Hessenberg form.
+    //
+    // This is derived from the Algol procedures orthes and ortran, by
+    // Martin and Wilkinson, Handbook for Auto. Comp., Vol.ii-Linear
+    // Algebra, and the corresponding Fortran subroutines in EISPACK.
+    //
+    template<typename MA1, typename MA2>
+    static inline void
+    red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept;
+
+    // Nonsymmetric reduction from Hessenberg to real Schur form.
+    //
+    // This is derived from the Algol procedure hqr2, by Martin and
+    // Wilkinson, Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the
+    // corresponding Fortran subroutines in EISPACK.
+    //
+    template<typename MA1, typename MA2, typename MA3, typename MA4>
+    static inline void
+    hessenberg_to_schur_(MA1 &e_vecs,
+                         MA2 &e_vals,
+                         MA3 &imagi,
+                         MA4 &hess_form) noexcept;
+
+     // It returns the quotient of two complex numbers:
+     // (a + ib) / (c + id)
+     //
+     // Admittedly this method doesn't belong here
+     //
+     static inline void
+     cdiv_(value_type xr,
+           value_type xi,
+           value_type yr,
+           value_type yi,
+           value_type &cdivr,
+           value_type &cdivi) noexcept;
 
     size_type   rows_ { 0 };
     size_type   cols_ { 0 };

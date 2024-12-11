@@ -241,6 +241,62 @@ int main(int, char *[]) {
     assert((std::fabs(mat3(2, 0) - 0.0) < 0.00000001));
     assert((std::fabs(mat3(2, 1) - 0.0) < 0.00000001));
 
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  col_mat { 10, 10 };
+        col_dmat_t  eigenvals;
+        col_dmat_t  eigenvecs;
+		std::size_t value { 0 };
+
+        // Symmetric matrix
+        //
+        for (long r = 0; r < col_mat.rows(); ++r)
+            for (long c = 0; c < col_mat.cols(); ++c)
+                col_mat(r, c) = col_mat(c, r) = double(++value);
+
+        col_mat.eigen_space (eigenvals, eigenvecs, true);
+
+        assert(eigenvals.cols() == 10);
+        assert(eigenvals.rows() == 1);
+        assert((std::fabs(eigenvals(0, 0) - -124.177) < 0.001));
+        assert((std::fabs(eigenvals(0, 1) - -24.5492) < 0.0001));
+        assert((std::fabs(eigenvals(0, 5) - -3.4454) < 0.0001));
+        assert((std::fabs(eigenvals(0, 9) - 687.09) < 0.01));
+
+        assert(eigenvecs.cols() == 10);
+        assert(eigenvecs.rows() == 10);
+        assert((std::fabs(eigenvecs(0, 0) - -0.477637) < 0.000001));
+        assert((std::fabs(eigenvecs(2, 4) - -0.320417) < 0.000001));
+        assert((std::fabs(eigenvecs(5, 6) - 0.396209) < 0.000001));
+        assert((std::fabs(eigenvecs(8, 2) - -0.027937) < 0.000001));
+        assert((std::fabs(eigenvecs(9, 9) - 0.432927) < 0.000001));
+
+        // non-symmetric matrix
+        //
+        value = 0;
+        for (long r = 0; r < col_mat.rows(); ++r)
+            for (long c = 0; c < col_mat.cols(); ++c)
+                col_mat(r, c) = double(++value);
+
+        col_mat.eigen_space (eigenvals, eigenvecs, true);
+
+        assert(eigenvals.cols() == 10);
+        assert(eigenvals.rows() == 1);
+        assert((std::fabs(eigenvals(0, 0) - -15.8398) < 0.0001));
+        assert(eigenvals(0, 1) > -0.00000000001); // -8.34036e-15
+        assert(eigenvals(0, 5) < 0.00000000001);  // 4.83968e-15
+        assert((std::fabs(eigenvals(0, 9) - 520.84) < 0.01));
+
+        assert(eigenvecs.cols() == 10);
+        assert(eigenvecs.rows() == 10);
+        assert((std::fabs(eigenvecs(0, 0) - 0.568403) < 0.000001));
+        assert((std::fabs(eigenvecs(2, 4) - 0.088418) < 0.000001));
+        assert((std::fabs(eigenvecs(5, 6) - 0.199127) < 0.000001));
+        assert((std::fabs(eigenvecs(8, 2) - 9.34286) < 0.00001));
+        assert((std::fabs(eigenvecs(9, 9) - -0.51616) < 0.00001));
+    }
+
     return (0);
 }
 

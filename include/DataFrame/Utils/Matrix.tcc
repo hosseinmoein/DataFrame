@@ -1215,6 +1215,46 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
     return;
 }
 
+	
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO>
+Matrix<T, MO> Matrix<T, MO>::
+covariance(bool is_unbiased) const  {
+
+    const value_type    denom = is_unbiased ? rows() - 1 : rows();
+
+    if (denom <= value_type(0))
+        throw DataFrameError("Matrix::covariance(): Not solvable");
+
+    Matrix          result (cols(), cols());
+    row_iterator    res_iter = result.row_begin ();
+
+    // I don't know how I can take advantage of the fact this is a
+    // symmetric matrix by definition
+    //
+    for (size_type c = 0; c < cols(); ++c)  {
+        value_type  col_mean { 0 };
+        size_type   counter { 0 };
+
+        for (auto cciter = col_begin() + c * rows();
+             counter != rows(); ++cciter, ++counter)
+            col_mean += *cciter;
+
+        col_mean /= value_type(rows());
+
+        for (size_type cc = 0; cc < cols(); ++cc)  {
+            value_type  var_covar { 0 };
+
+            for (size_type r = 0; r < rows(); ++r)
+                var_covar += (at(r, c) - col_mean) * (at(r, cc) - col_mean);
+
+            *res_iter++ = var_covar / denom;
+        }
+    }
+
+    return (result);
+}
 
 } // namespace hmdf
 

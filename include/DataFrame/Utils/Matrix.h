@@ -118,6 +118,26 @@ public:
     //
     Matrix inverse() const;
 
+    // Variance/Covariance matrix.
+    // The columns of the matrix are assumed to be observations of some
+    // random variable. So the covariance matrix is a square matrix
+    // containing the covariances of the above random variables.
+    //
+    // If it is unbiased the estimate is divided by n - 1, otherwise by n,
+    // n being the number of rows.
+    //
+    // The reason for dividing by n - 1 is because we are dividing by
+    // degrees of freedom (i.e. number of independent observations).
+    // For example, if we have two observations, when calculating the mean
+    // we have two independent observations; however, when calculating the
+    // variance, we have only one independent observation, since the two
+    // observations are equally distant from the mean.
+    //
+    // For a nXm matrix, you will get a mXm covariance matrix
+    //
+    Matrix
+    covariance(bool is_unbiased = true) const;
+	
     // Let A be an nXn matrix. The number l is an eigenvalue of A if there
     // exists a non-zero vector v such that
     //     Av = lv
@@ -195,7 +215,7 @@ private:
 
     using storage_t = std::vector<value_type>;
 
-    inline static constexpr value_type  EPSILON_ { 2.220446e-16 };
+    inline static constexpr value_type  EPSILON_ { value_type(2.220446e-16) };
 
     // Partial pivoting for Gaussian elimination:
     //

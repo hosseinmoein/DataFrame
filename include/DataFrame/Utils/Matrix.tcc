@@ -331,7 +331,7 @@ template<typename MA1, typename MA2>
 void Matrix<T, MO>::
 red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
 
-    Matrix<T, matrix_orient::row_major>	ortho { 1, e_vecs.cols() };
+    Matrix<T, matrix_orient::row_major> ortho { 1, e_vecs.cols() };
 
     for (size_type c = 1; c <= e_vecs.cols() - 2; ++c)  {
         value_type  scale { 0 };
@@ -1215,7 +1215,6 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
     return;
 }
 
-	
 // ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO>
@@ -1227,29 +1226,22 @@ covariance(bool is_unbiased) const  {
     if (denom <= value_type(0))
         throw DataFrameError("Matrix::covariance(): Not solvable");
 
-    Matrix          result (cols(), cols());
-    row_iterator    res_iter = result.row_begin ();
+    Matrix  result (cols(), cols(), T(0));
 
-    // I don't know how I can take advantage of the fact this is a
-    // symmetric matrix by definition
-    //
-    for (size_type c = 0; c < cols(); ++c)  {
+    for (size_type cr = 0; cr < cols(); ++cr)  {
         value_type  col_mean { 0 };
-        size_type   counter { 0 };
 
-        for (auto cciter = col_begin() + c * rows();
-             counter != rows(); ++cciter, ++counter)
-            col_mean += *cciter;
-
+       for (size_type r = 0; r < rows(); ++r)
+           col_mean += at(r, cr);
         col_mean /= value_type(rows());
 
-        for (size_type cc = 0; cc < cols(); ++cc)  {
+        for (size_type c = 0; c < cols(); ++c)  {
             value_type  var_covar { 0 };
 
             for (size_type r = 0; r < rows(); ++r)
-                var_covar += (at(r, c) - col_mean) * (at(r, cc) - col_mean);
+                var_covar += (at(r, cr) - col_mean) * (at(r, c) - col_mean);
 
-            *res_iter++ = var_covar / denom;
+            result(cr, c) = var_covar / denom;
         }
     }
 

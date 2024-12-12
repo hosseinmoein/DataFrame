@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace hmdf;
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 using row_mat_t = Matrix<std::size_t, matrix_orient::row_major>;
 using col_mat_t = Matrix<std::size_t, matrix_orient::column_major>;
@@ -40,7 +40,7 @@ using col_mat_t = Matrix<std::size_t, matrix_orient::column_major>;
 static constexpr long   ROWS = 5;
 static constexpr long   COLS = 6;
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 int main(int, char *[]) {
 
@@ -64,7 +64,7 @@ int main(int, char *[]) {
     assert((row_matb(1, 1) == col_matb(1, 1) && row_matb(1, 1) == 81));
     assert((row_matb(2, 1) == col_matb(2, 1) && row_matb(2, 1) == 126));
     assert((row_matb(2, 2) == col_matb(2, 2) && row_matb(2, 2) == 150));
-	
+
     row_mat_t   row_mat { ROWS, COLS };
     col_mat_t   col_mat { ROWS, COLS };
 
@@ -247,7 +247,7 @@ int main(int, char *[]) {
         col_dmat_t  col_mat { 10, 10 };
         col_dmat_t  eigenvals;
         col_dmat_t  eigenvecs;
-		std::size_t value { 0 };
+        std::size_t value { 0 };
 
         // Symmetric matrix
         //
@@ -297,10 +297,51 @@ int main(int, char *[]) {
         assert((std::fabs(eigenvecs(9, 9) - -0.51616) < 0.00001));
     }
 
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  col_mat { 5, 4 };
+
+        col_mat(0, 0) = 4.0;
+        col_mat(0, 1) = 2.0;
+        col_mat(0, 2) = 0.6;
+        col_mat(0, 3) = 3.0;
+
+        col_mat(1, 0) = 4.2;
+        col_mat(1, 1) = 2.1;
+        col_mat(1, 2) = 0.59;
+        col_mat(1, 3) = 3.2;
+
+        col_mat(2, 0) = 3.9;
+        col_mat(2, 1) = 2.0;
+        col_mat(2, 2) = 0.58;
+        col_mat(2, 3) = 2.89;
+
+        col_mat(3, 0) = 4.3;
+        col_mat(3, 1) = 2.1;
+        col_mat(3, 2) = 0.62;
+        col_mat(3, 3) = 3.298;
+
+        col_mat(4, 0) = 4.1;
+        col_mat(4, 1) = 2.2;
+        col_mat(4, 2) = 0.63;
+        col_mat(4, 3) = 3.098;
+
+        const auto  cov = col_mat.covariance(true);
+
+        assert(cov.cols() == 4);
+        assert(cov.rows() == 4);
+        assert((std::fabs(cov(0, 0) - 0.025) < 0.001));
+        assert((std::fabs(cov(0, 3) - 0.0254) < 0.0001));
+        assert((std::fabs(cov(2, 3) - 0.001789) < 0.000001));
+        assert((std::fabs(cov(3, 1) - 0.00763) < 0.00001));
+        assert((std::fabs(cov(3, 3) - 0.0258172) < 0.0000001));
+    }
+
     return (0);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 // Local Variables:
 // mode:C++

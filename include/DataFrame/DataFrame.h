@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Concepts.h>
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
+#include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
 
@@ -3738,7 +3739,25 @@ public: // Read/access and slicing interfaces
     //   Name of the column
     //
     template<typename T, typename C = std::less<T>>
-    size_type inversion_count(const char *col_name) const;
+    size_type
+    inversion_count(const char *col_name) const;
+
+    // This calculates and returns the variance/covariance matrix of the
+    // specified columns, optionally normalizing the columns first.
+    //
+    // T:
+    //   Type of the named columns
+    // col_names:
+    //    Vector of column names
+    // norm_type:
+    //   The method to normalize the columns first before calculations.
+    //   Default is not normalizing
+    //
+    template<typename T>
+    Matrix<T, matrix_orient::column_major>
+    covariance_matrix(
+        std::vector<const char *> &&col_names,
+        normalization_type norm_type = normalization_type::none) const;
 
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.

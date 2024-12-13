@@ -1189,22 +1189,22 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
 
     if (sort_values)  {
         for (size_type c = 0; c < cols() - 1; ++c)  {
-            size_type   tmp_c { c };
-            value_type  p { tmp_evals(0, c) };
+            size_type   min_col { c };
+            value_type  min_val { tmp_evals(0, c) };
 
             for (size_type cc = c + 1; cc < cols(); ++cc)
-                if (tmp_evals(0, cc) < p)  {
-                    tmp_c = cc;
-                    p = tmp_evals(0, cc);
+                if (tmp_evals(0, cc) < min_val)  {
+                    min_col = cc;
+                    min_val = tmp_evals(0, cc);
                 }
 
-            if (tmp_c != c)  {
-                tmp_evals(0, tmp_c) = tmp_evals(0, c);
-                tmp_evals(0, c) = p;
+            if (min_col != c)  {
+                tmp_evals(0, min_col) = tmp_evals(0, c);
+                tmp_evals(0, c) = min_val;
                 for (size_type r = 0; r < rows(); ++r)  {
-                    p = tmp_evecs(r, c);
-                    tmp_evecs(r, c) = tmp_evecs(r, tmp_c);
-                    tmp_evecs(r, tmp_c) = p;
+                    min_val = tmp_evecs(r, c);
+                    tmp_evecs(r, c) = tmp_evecs(r, min_col);
+                    tmp_evecs(r, min_col) = min_val;
                 }
             }
         }

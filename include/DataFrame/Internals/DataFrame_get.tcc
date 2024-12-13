@@ -177,7 +177,7 @@ DataFrame<I, H>::get_column (const char *name, bool do_lock) const  {
 template<typename I, typename H>
 template<typename T>
 const typename DataFrame<I, H>::template ColumnVecType<typename T::type> &
-DataFrame<I, H>::get_column () const  {
+DataFrame<I, H>::get_column() const  {
 
     return (const_cast<DataFrame *>(this)->get_column<typename T::type>(
                 T::name));
@@ -928,6 +928,55 @@ DataFrame<I, H>::difference(const DataFrame &other) const  {
     result.load_index(std::move(new_index));
 
     return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+covariance_matrix(std::vector<const char *> &&col_names,
+                  normalization_type norm_type) const  {
+
+    const size_type col_num = col_names.size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (col_num < 2)
+        throw NotFeasible("covariance_matrix(): "
+                          "You must specify at least two columns");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    size_type                               min_col_s { indices_.size() };
+    std::vector<const ColumnVecType<T> *>   columns(col_num, nullptr);
+    SpinGuard                               guard (lock_);
+
+    for (size_type i { 0 }; i < col_num; ++i)  {
+        columns[i] = &get_column<T>(col_names[i], false);
+        if (columns[i]->size() < min_col_s)
+            min_col_s = columns[i]->size();
+    }
+    guard.release();
+
+    Matrix<T, matrix_orient::column_major>  data_mat {
+        long(min_col_s), long(col_num) };
+
+    if (norm_type > normalization_type::none)  {
+        for (size_type i { 0 }; i < col_num; ++i)  {
+            NormalizeVisitor<T, I>  norm_v { norm_type };
+
+            norm_v.pre();
+            norm_v(indices_.begin(), indices_.end(),
+                   columns[i]->begin(), columns[i]->end());
+            norm_v.post();
+            data_mat.set_column(norm_v.get_result().begin(), i);
+        }
+    }
+    else  {
+        for (size_type i { 0 }; i < col_num; ++i)
+            data_mat.set_column(columns[i]->begin(), i);
+    }
+
+    return (data_mat.covariance());
 }
 
 } // namespace hmdf

@@ -2226,6 +2226,49 @@ static void test_StationaryCheckVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_covariance_matrix()  {
+
+    std::cout << "\nTesting covariance_matrix( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  cov_mat =
+        df.covariance_matrix<double>({ "IBM_Close", "IBM_Open",
+                                       "IBM_High", "IBM_Low" });
+
+    assert(cov_mat.rows() == 4);
+    assert(cov_mat.cols() == 4);
+    assert(std::fabs(cov_mat(0, 0) - 1467.58) < 0.01);
+    assert(std::fabs(cov_mat(0, 2) - 1469.69) < 0.01);
+    assert(std::fabs(cov_mat(2, 1) - 1469.48) < 0.01);
+    assert(std::fabs(cov_mat(2, 2) - 1472.86) < 0.01);
+    assert(std::fabs(cov_mat(3, 2) - 1466.15) < 0.01);
+    assert(std::fabs(cov_mat(3, 3) - 1461.0) < 0.01);
+
+    const auto  cov_mat2 =
+        df.covariance_matrix<double>({ "IBM_Close", "IBM_Open",
+                                       "IBM_High", "IBM_Low" },
+                                     normalization_type::z_score);
+
+    assert(cov_mat2.rows() == 4);
+    assert(cov_mat2.cols() == 4);
+    assert(std::fabs(cov_mat2(0, 0) - 1.0) < 0.01);
+    assert(std::fabs(cov_mat2(0, 2) - 0.99964) < 0.00001);
+    assert(std::fabs(cov_mat2(2, 1) - 0.99963) < 0.00001);
+    assert(std::fabs(cov_mat2(2, 2) - 1.0) < 0.01);
+    assert(std::fabs(cov_mat2(3, 2) - 0.99948) < 0.00001);
+    assert(std::fabs(cov_mat2(3, 3) - 1.0) < 0.01);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2266,6 +2309,7 @@ int main(int, char *[]) {
     test_PartialAutoCorrVisitor();
     test_make_stationary();
     test_StationaryCheckVisitor();
+    test_covariance_matrix();
 
     return (0);
 }

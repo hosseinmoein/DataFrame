@@ -530,6 +530,7 @@ enum class  prob_dist_type : unsigned char  {
 
 enum class  normalization_type : unsigned char  {
 
+    none = 0,
     simple = 1,           // V / sum(xi)
     euclidean = 2,        // V / sqrt(sum(xi^2))
     maxi = 3,             // V / max(xi)

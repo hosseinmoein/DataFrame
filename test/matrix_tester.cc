@@ -154,93 +154,95 @@ int main(int, char *[]) {
         for (long c = 0; c < tran_mat.cols(); ++c)
             assert(tran_mat(r, c) == col_mat(c, r));
 
-    //
     // Test arithmetic functions
     //
+    {
+        auto    sum_mat = col_mat + row_mat;
 
-    auto    sum_mat = col_mat + row_mat;
+        assert(sum_mat(0, 0) == 0);
+        assert(sum_mat(4, 5) == 58);
+        assert(sum_mat(1, 1) == 13);
+        assert(sum_mat(3, 4) == 45);
 
-    assert(sum_mat(0, 0) == 0);
-    assert(sum_mat(4, 5) == 58);
-    assert(sum_mat(1, 1) == 13);
-    assert(sum_mat(3, 4) == 45);
+        sum_mat += col_mat;
+        assert(sum_mat(0, 0) == 0);
+        assert(sum_mat(4, 5) == 87);
+        assert(sum_mat(1, 1) == 19);
+        assert(sum_mat(3, 4) == 68);
 
-    sum_mat += col_mat;
-    assert(sum_mat(0, 0) == 0);
-    assert(sum_mat(4, 5) == 87);
-    assert(sum_mat(1, 1) == 19);
-    assert(sum_mat(3, 4) == 68);
+        row_mat_t   lhs_mat { ROWS, COLS };
+        col_mat_t   rhs_mat { COLS, COLS };
 
-    row_mat_t   lhs_mat { ROWS, COLS };
-    col_mat_t   rhs_mat { COLS, COLS };
+        value = 0;
+        for (long r = 0; r < lhs_mat.rows(); ++r)
+            for (long c = 0; c < lhs_mat.cols(); ++c)
+                lhs_mat(r, c) = value++;
+        value = 0;
+        for (long c = 0; c < rhs_mat.cols(); ++c)
+            for (long r = 0; r < rhs_mat.rows(); ++r)
+                rhs_mat(r, c) = value++;
 
-    value = 0;
-    for (long r = 0; r < lhs_mat.rows(); ++r)
-        for (long c = 0; c < lhs_mat.cols(); ++c)
-            lhs_mat(r, c) = value++;
-    value = 0;
-    for (long c = 0; c < rhs_mat.cols(); ++c)
-        for (long r = 0; r < rhs_mat.rows(); ++r)
-            rhs_mat(r, c) = value++;
+        auto    multi_mat = lhs_mat * rhs_mat;
 
-    auto    multi_mat = lhs_mat * rhs_mat;
+        assert(multi_mat(0, 0) == 55);
+        assert(multi_mat(4, 5) == 5185);
+        assert(multi_mat(1, 1) == 451);
+        assert(multi_mat(3, 4) == 3277);
 
-    assert(multi_mat(0, 0) == 55);
-    assert(multi_mat(4, 5) == 5185);
-    assert(multi_mat(1, 1) == 451);
-    assert(multi_mat(3, 4) == 3277);
+        col_mat_t   big_lhs_mat { 100, 100 };
+        col_mat_t   big_rhs_mat { 100, 100 };
 
-    col_mat_t   big_lhs_mat { 100, 100 };
-    col_mat_t   big_rhs_mat { 100, 100 };
+        for (long c = 0; c < 100; ++c)
+            for (long r = 0; r < 100; ++r)  {
+                big_lhs_mat(r, c) = c + 1;
+                big_rhs_mat(r, c) = c + 1;
+            }
 
-    for (long c = 0; c < 100; ++c)
-        for (long r = 0; r < 100; ++r)  {
-            big_lhs_mat(r, c) = c + 1;
-            big_rhs_mat(r, c) = c + 1;
-        }
+        auto    big_multi_mat = big_lhs_mat * big_rhs_mat;
 
-    auto    big_multi_mat = big_lhs_mat * big_rhs_mat;
+        assert(big_multi_mat(0, 0) == 5050);
+        assert(big_multi_mat(99, 99) == 505000);
+        assert(big_multi_mat(98, 2) == 15150);
+        assert(big_multi_mat(2, 5) == 30300);
+    }
 
-    assert(big_multi_mat(0, 0) == 5050);
-    assert(big_multi_mat(99, 99) == 505000);
-    assert(big_multi_mat(98, 2) == 15150);
-    assert(big_multi_mat(2, 5) == 30300);
-
+    // Test Inverse
     //
-    // Test inverse
+    {
+        using row_dmat_t = Matrix<double, matrix_orient::row_major>;
+
+        row_dmat_t  mat2 { 3, 3 };
+
+        mat2(0, 0) = 2.0;
+        mat2(0, 1) = 3.0;
+        mat2(0, 2) = 2.0;
+
+        mat2(1, 0) = 3.0;
+        mat2(1, 1) = 2.0;
+        mat2(1, 2) = 3.0;
+
+        mat2(2, 0) = 4.0;
+        mat2(2, 1) = 2.0;
+        mat2(2, 2) = 2.0;
+
+        row_dmat_t  mat2_inv = mat2.inverse();
+        auto        mat3 = mat2 * mat2_inv;
+
+        // It must result to identity matrix
+        //
+        assert((std::fabs(mat3(0, 0) - 1.0) < 0.00000001));
+        assert((std::fabs(mat3(1, 1) - 1.0) < 0.00000001));
+        assert((std::fabs(mat3(2, 2) - 1.0) < 0.00000001));
+        assert((std::fabs(mat3(0, 1) - 0.0) < 0.00000001));
+        assert((std::fabs(mat3(0, 2) - 0.0) < 0.00000001));
+        assert((std::fabs(mat3(1, 0) - 0.0) < 0.00000001));
+        assert((std::fabs(mat3(1, 2) - 0.0) < 0.00000001));
+        assert((std::fabs(mat3(2, 0) - 0.0) < 0.00000001));
+        assert((std::fabs(mat3(2, 1) - 0.0) < 0.00000001));
+    }
+
+    // Test Eigen space
     //
-
-    using row_dmat_t = Matrix<double, matrix_orient::row_major>;
-
-    row_dmat_t  mat2 { 3, 3 };
-
-    mat2(0, 0) = 2.0;
-    mat2(0, 1) = 3.0;
-    mat2(0, 2) = 2.0;
-
-    mat2(1, 0) = 3.0;
-    mat2(1, 1) = 2.0;
-    mat2(1, 2) = 3.0;
-
-    mat2(2, 0) = 4.0;
-    mat2(2, 1) = 2.0;
-    mat2(2, 2) = 2.0;
-
-    row_dmat_t  mat2_inv = mat2.inverse();
-    auto        mat3 = mat2 * mat2_inv;
-
-    // It must result to identity matrix
-    //
-    assert((std::fabs(mat3(0, 0) - 1.0) < 0.00000001));
-    assert((std::fabs(mat3(1, 1) - 1.0) < 0.00000001));
-    assert((std::fabs(mat3(2, 2) - 1.0) < 0.00000001));
-    assert((std::fabs(mat3(0, 1) - 0.0) < 0.00000001));
-    assert((std::fabs(mat3(0, 2) - 0.0) < 0.00000001));
-    assert((std::fabs(mat3(1, 0) - 0.0) < 0.00000001));
-    assert((std::fabs(mat3(1, 2) - 0.0) < 0.00000001));
-    assert((std::fabs(mat3(2, 0) - 0.0) < 0.00000001));
-    assert((std::fabs(mat3(2, 1) - 0.0) < 0.00000001));
-
     {
         using col_dmat_t = Matrix<double, matrix_orient::column_major>;
 
@@ -297,6 +299,8 @@ int main(int, char *[]) {
         assert((std::fabs(eigenvecs(9, 9) - -0.51616) < 0.00001));
     }
 
+    // Test Covariance matrix
+    //
     {
         using col_dmat_t = Matrix<double, matrix_orient::column_major>;
 
@@ -336,6 +340,31 @@ int main(int, char *[]) {
         assert((std::fabs(cov(2, 3) - 0.001789) < 0.000001));
         assert((std::fabs(cov(3, 1) - 0.00763) < 0.00001));
         assert((std::fabs(cov(3, 3) - 0.0258172) < 0.0000001));
+    }
+
+    // Test SVD decomposition
+    //
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  col_mat { 8, 4 };
+        std::size_t value { 0 };
+
+        for (long r = 0; r < col_mat.rows(); ++r)
+            for (long c = 0; c < col_mat.cols(); ++c)
+                col_mat(r, c) = double(++value);
+
+        col_dmat_t  U;
+        col_dmat_t  S;
+        col_dmat_t  V;
+
+        col_mat.svd (U, S, V);
+
+        const auto  col_mat2 = U * S * V.transpose();
+
+        for (long r = 0; r < col_mat2.rows(); ++r)
+            for (long c = 0; c < col_mat2.cols(); ++c)
+                assert((std::fabs(col_mat(r, c) - col_mat2(r, c)) < 0.0001));
     }
 
     return (0);

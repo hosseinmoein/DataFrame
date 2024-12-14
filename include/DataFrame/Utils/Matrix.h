@@ -137,7 +137,7 @@ public:
     //
     Matrix
     covariance(bool is_unbiased = true) const;
-	
+
     // Let A be an nXn matrix. The number l is an eigenvalue of A if there
     // exists a non-zero vector v such that
     //     Av = lv
@@ -208,6 +208,40 @@ public:
     void eigen_space(MA1 &eigenvalues,
                      MA2 &eigenvectors,
                      bool sort_values) const;
+
+    // In linear algebra, the Singular Value Decomposition (SVD) is an
+    // important factorization of a rectangular real or complex matrix,
+    // with several applications in signal processing and statistics.
+    // Applications which employ the SVD include computing the
+    // pseudoinverse, matrix approximation, and determining the rank,
+    // range and null space of a matrix.
+    //
+    // Suppose M is an mXn matrix whose entries come from the field K,
+    // which is either the field of real numbers or the field of complex
+    // numbers. Then there exists a factorization of the form
+    //     M = U*Σ*~V
+    //
+    // where U is an mXm unitary matrix over K, the matrix Σ is mXn
+    // with nonnegative numbers on the diagonal (as defined for a
+    // rectangular matrix) and zeros off the diagonal, and ~V denotes the
+    // conjugate transpose of V (transpose of V in case of real matrices),
+    // an nXn unitary matrix over K. Such a factorization is called a
+    // Singular Value Decomposition of M.
+    //
+    //  -- The matrix V thus contains a set of orthonormal "input" or
+    //     "analysing" basis vector directions for M
+    //  -- The matrix U contains a set of orthonormal "output" basis vector
+    //     directions for M
+    //  -- The matrix Σ contains the singular values, which can be thought
+    //     of as scalar "gain controls" by which each corresponding input
+    //     is multiplied to give a corresponding output.
+    //
+    // A common convention is to order the values Σi,i in non-increasing
+    // fashion. In this case, the diagonal matrix Σ is uniquely determined
+    // by M (though the matrices U and V are not).
+    //
+    template<typename MA1, typename MA2, typename MA3>
+    inline void svd(MA1 &U, MA2 &S, MA3 &V, bool full_size = true) const;
 
 private:
 
@@ -1452,6 +1486,15 @@ operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
     return (result);
 }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+struct  EigenSpace  {
+
+    Matrix<T, matrix_orient::row_major>     eigen_vals { };
+    Matrix<T, matrix_orient::column_major>  eigen_vecs { };
+};
 
 } // namespace hmdf
 

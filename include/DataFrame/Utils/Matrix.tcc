@@ -1262,6 +1262,454 @@ covariance(bool is_unbiased) const  {
     return (result);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO>
+template<typename MA1, typename MA2, typename MA3>
+void Matrix<T, MO>::
+svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
+
+    const size_type min_dem = std::min(rows(), cols());
+
+    if (min_dem < 3)
+        throw DataFrameError("Matrix::svd(): MAtrix is too small");
+
+    Matrix                  self_tmp = *this;
+    MA1                     u_tmp(rows(), min_dem);
+    std::vector<value_type> s_tmp(std::min(rows() + 1, cols()));
+    MA3                     v_tmp(cols(), cols());
+    Matrix                  imagi(1, cols()); // Imaginary part
+    std::vector<value_type> sandbox(rows());
+    const size_type         min_col_cnt { std::min(rows() - 1, cols()) };
+    const size_type         max_row_cnt {
+        std::max(0L, std::min(cols() - 2, rows())) };
+
+    // Reduce A to bidiagonal form, storing the diagonal elements
+    // in s and the super-diagonal elements in e.
+    //
+    for (size_type c = 0; c < std::max(min_col_cnt, max_row_cnt); ++c)  {
+        if (c < min_col_cnt)  {
+           // Compute the transformation for the k-th column and
+           // place the k-th diagonal in S (0, c).
+           // Compute 2-norm of k-th column without under / overflow.
+           //
+            s_tmp[c] = 0;
+            for (size_type r = c; r < rows(); ++r)
+                s_tmp [c] = hypot(s_tmp[c], self_tmp(r, c));
+
+            if (s_tmp [c] != value_type(0))  {
+                if (self_tmp(c, c) < value_type(0))
+                    s_tmp[c] = -s_tmp[c];
+
+                for (size_type r = c; r < rows(); ++r)
+                    self_tmp(r, c) /= s_tmp[c];
+
+                self_tmp(c, c) += 1;
+            }
+            s_tmp[c] = -s_tmp[c];
+        }
+        for (size_type cc = c + 1; cc < cols(); ++cc)  {
+            if (c < min_col_cnt && s_tmp [c] != value_type(0))  {
+                // Apply the transformation.
+                //
+                value_type  t { 0 };
+
+                for (size_type r = c; r < rows(); ++r)
+                    t += self_tmp(r, c) * self_tmp(r, cc);
+
+                t /= -self_tmp(c, c);
+                for (size_type r = c; r < rows(); ++r)
+                    self_tmp(r, cc) += t * self_tmp(r, c);
+
+            }
+
+            // Place the k-th row of A into e for the
+            // subsequent calculation of the row transformation.
+            //
+            imagi(0, cc) = self_tmp(c, cc);
+        }
+        if (c < min_col_cnt)
+            // Place the transformation in U for subsequent back
+            // multiplication.
+            //
+            for (size_type r = c; r < rows(); ++r)
+                u_tmp(r, c) = self_tmp(r, c);
+
+        if (c < max_row_cnt)  {
+
+            // Compute the k-th row transformation and place the
+            // k-th super-diagonal in imagi (0, c).
+            // Compute 2-norm without under / overflow.
+            //
+            imagi(0, c) = 0;
+            for (size_type cc = c + 1; cc < cols(); ++cc)
+                imagi(0, c) = hypot(imagi(0, c), imagi(0, cc));
+
+            if (imagi(0, c) != value_type(0))  {
+                if (imagi(0, c + 1) < value_type(0))
+                    imagi(0, c) = -imagi(0, c);
+
+                for (size_type cc = c + 1; cc < cols(); ++cc)
+                    imagi(0, cc) /= imagi(0, c);
+
+                imagi(0, c + 1) += value_type(1);
+            }
+            imagi(0, c) = -imagi(0, c);
+
+            if (c + 1 < rows() && imagi(0, c) != value_type(0))  {
+
+                // Apply the transformation.
+                //
+                for (size_type r = c + 1; r < rows(); ++r)
+                    sandbox[r] = 0;
+
+                for (size_type cc = c + 1; cc < cols(); ++cc)
+                    for (size_type r = c + 1; r < rows(); ++r)
+                        sandbox[r] += imagi(0, cc) * self_tmp(r, cc);
+
+                for (size_type cc = c + 1; cc < cols(); ++cc)  {
+                    const value_type    t { -imagi(0, cc) / imagi(0, c + 1) };
+
+                    for (size_type r = c + 1; r < rows(); ++r)
+                        self_tmp(r, cc) += t * sandbox[r];
+                }
+            }
+
+            // Place the transformation in V for subsequent
+            // back multiplication.
+            //
+            for (size_type cc = c + 1; cc < cols(); ++cc)
+                v_tmp(cc, c) = imagi(0, cc);
+        }
+    }
+
+    // Set up the final bidiagonal matrix of order p.
+    //
+    size_type   p { std::min(cols(), rows() + 1) };
+
+    if (min_col_cnt < cols())
+        s_tmp[min_col_cnt] = self_tmp(min_col_cnt, min_col_cnt);
+
+    if (rows() < p)
+        s_tmp[p - 1] = 0;
+
+    if ((max_row_cnt + 1) < p)
+        imagi(0, max_row_cnt) = self_tmp(max_row_cnt, p - 1);
+
+    imagi(0, p - 1) = 0;
+
+    for (size_type c = min_col_cnt; c < min_dem; ++c)  {
+        for (size_type r = 0; r < rows(); ++r)
+            u_tmp(r, c) = 0;
+        u_tmp(c, c) = 1;
+    }
+
+    for (size_type c = min_col_cnt - 1; c >= 0; --c)  {
+        if (s_tmp[c] != value_type(0))  {
+            for (size_type cc = c + 1; cc < min_dem; ++cc)  {
+                value_type  t { 0 };
+
+                for (size_type r = c; r < rows(); ++r)
+                    t += u_tmp(r, c) * u_tmp(r, cc);
+
+                t /= -u_tmp(c, c);
+                for (size_type r = c; r < rows(); ++r)
+                    u_tmp(r, cc) += t * u_tmp(r, c);
+            }
+            for (size_type r = c; r < rows(); ++r )
+                u_tmp(r, c) = -u_tmp(r, c);
+
+            u_tmp(c, c) += value_type(1);
+            for (size_type r = 0; r < c - 1; ++r)
+                u_tmp (r, c) = 0;
+        }
+        else  {
+            for (size_type r = 0; r < rows(); ++r)
+                u_tmp(r, c) = 0;
+            u_tmp(c, c) = 1;
+        }
+    }
+
+    for (size_type c = cols() - 1; c >= 0; --c)  {
+        if ((c < max_row_cnt) && (imagi(0, c) != value_type(0)))
+            for (size_type cc = c + 1; cc < min_dem; ++cc)  {
+                value_type  t { 0 };
+
+                for (size_type r = c + 1; r < cols(); ++r)
+                    t += v_tmp(r, c) * v_tmp(r, cc);
+
+                t /= -v_tmp(c + 1, c);
+                for (size_type r = c + 1; r < cols(); ++r)
+                    v_tmp(r, cc) += t * v_tmp(r, c);
+            }
+
+        for (size_type r = 0; r < cols(); ++r)
+            v_tmp(r, c) = 0;
+        v_tmp(c, c) = 1;
+    }
+
+    const size_type pp { p - 1 };
+
+    // Main iteration loop for the singular values.
+    //
+    while (p > value_type(0))  {
+        size_type   c;
+        size_type   kase;
+
+        // Here is where a test for too many iterations would go.
+        //
+        // This section of the routine inspects for
+        // negligible elements in the s and imagi arrays.  On
+        // completion the variables kase and c are set as follows.
+        //
+        // case == 1 --> if s (p) and imagi (0, c - 1) are negligible and k < p
+        // case == 2 --> if s (c) is negligible and c < p
+        // case == 3 --> if imagi (0, c - 1) is negligible, c < p, and
+        //               s (c), ..., s (p) are not negligible (qr step).
+        // case == 4 --> if e (p - 1) is negligible (convergence).
+        //
+        for (c = p - 2; c >= -1; --c)  {
+            if (c == -1)
+                break;
+
+            if (std::fabs(imagi (0, c)) <=
+                    EPSILON_ * (std::fabs(s_tmp[c]) +
+                                std::fabs(s_tmp[c + 1])))  {
+                imagi(0, c) = 0;
+                break;
+            }
+        }
+        if (c == p - 2)
+            kase = 4;
+
+        else  {
+            size_type ks;
+
+            for (ks = p - 1; ks >= c; --ks)  {
+                if (ks == c)
+                    break;
+
+                const value_type    t {
+                    ks != p ? std::fabs(imagi (0, ks)) : value_type(0) +
+                    ks != c + value_type(1)
+                        ? std::fabs(imagi(0, ks - 1))
+                        : value_type(0) };
+
+                if (std::fabs(s_tmp[ks]) <= (EPSILON_ * t))  {
+                    s_tmp[ks] = 0;
+                    break;
+                }
+            }
+            if (ks == c)
+                kase = 3;
+            else if (ks == p - 1)
+                kase = 1;
+            else  {
+                kase = 2;
+                c = ks;
+            }
+        }
+        c += 1;
+
+        // Perform the task indicated by kase.
+        //
+        switch (kase)  {
+            // Deflate negligible s (p).
+            //
+            case 1:
+            {
+                value_type  f { imagi(0, p - 2) };
+
+                imagi(0, p - 2) = 0;
+                for (size_type cc = p - 2; cc >= c; --cc)  {
+                    value_type  t { hypot(s_tmp[cc], f) };
+                    value_type  cs { s_tmp[cc] / t };
+                    value_type  sn { f / t };
+
+                    s_tmp [cc] = t;
+                    if (cc != c)  {
+                        f = -sn * imagi(0, cc - 1);
+                        imagi(0, cc - 1) *= cs;
+                    }
+
+                    for (size_type r = 0; r < cols(); ++r)  {
+                        t = cs * v_tmp(r, cc) + sn * v_tmp(r, p - 1);
+                        v_tmp(r, p - 1) =
+                            -sn * v_tmp(r, cc) + cs * v_tmp(r, p - 1);
+                        v_tmp(r, cc) = t;
+                    }
+                }
+            }
+            break;
+
+            // Split at negligible s (c).
+            //
+            case 2:
+            {
+                value_type  f { imagi(0, c - 1) };
+
+                imagi (0, c - 1) = value_type(0.0);
+                for (size_type cc = c; cc < p; ++cc)  {
+                    value_type  t { hypot(s_tmp[cc], f) };
+                    value_type  cs { s_tmp[cc] / t };
+                    value_type  sn { f / t };
+
+                    s_tmp[cc] = t;
+                    f = -sn * imagi(0, cc);
+                    imagi(0, cc) *= cs;
+
+                    for (size_type r = 0; r < rows(); ++r)  {
+                        t = cs * u_tmp(r, cc) + sn * u_tmp(r, c - 1);
+                        u_tmp(r, c - 1) =
+                            -sn * u_tmp(r, cc) + cs * u_tmp(r, c - 1);
+                        u_tmp(r, cc) = t;
+                    }
+                }
+            }
+            break;
+
+            // Perform one qr step.
+            //
+            case 3:
+            {
+
+                // Calculate the shift.
+                //
+                const value_type    scale {
+                    std::max (
+                        std::max (
+                            std::max (
+                                std::max (std::fabs(s_tmp [p - 1]),
+                                          std::fabs(s_tmp [p - 2])),
+                                std::fabs(imagi(0, p - 2))),
+                            std::fabs(s_tmp[c])),
+                        std::fabs(imagi(0, c))) };
+                const value_type    sp { s_tmp[p - 1] / scale };
+                const value_type    spm1 { s_tmp[p - 2] / scale };
+                const value_type    epm1 { imagi(0, p - 2) / scale };
+                const value_type    sk { s_tmp[c] / scale };
+                const value_type    ek { imagi(0, c) / scale };
+                const value_type    b {
+                    ((spm1 + sp) * (spm1 - sp) + epm1 * epm1) / value_type(2) };
+                const value_type    dd { (sp * epm1) * (sp * epm1) };
+                value_type          shift { 0 };
+
+                if (b != value_type(0) || dd != value_type(0))  {
+                    shift = b < value_type(0)
+                                ? -std::sqrt(b * b + dd)
+                                :  std::sqrt(b * b + dd);
+                    shift = dd / (b + shift);
+                }
+
+                value_type  f { (sk + sp) * (sk - sp) + shift };
+                value_type  g { sk * ek };
+
+                // Chase zeros.
+                //
+                for (size_type cc = c; cc < p - 1; ++cc)  {
+                    value_type  t { hypot(f, g) };
+                    value_type  cs { f / t };
+                    value_type  sn { g / t };
+
+                    if (cc != c)
+                        imagi(0, cc - 1) = t;
+
+                    f = cs * s_tmp[cc] + sn * imagi(0, cc);
+                    imagi(0, cc) = cs * imagi(0, cc) - sn * s_tmp[cc];
+                    g = sn * s_tmp[cc + 1];
+                    s_tmp[cc + 1] *= cs;
+
+                    for (size_type r = 0; r < cols(); ++r)  {
+                        t = cs * v_tmp(r, cc) + sn * v_tmp(r, cc + 1);
+                        v_tmp (r, cc + 1) =
+                            -sn * v_tmp(r, cc) + cs * v_tmp(r, cc + 1);
+                        v_tmp(r, cc) = t;
+                    }
+
+                    t = hypot(f, g);
+                    cs = f / t;
+                    sn = g / t;
+                    s_tmp[cc] = t;
+                    f = cs * imagi(0, cc) + sn * s_tmp[cc + 1];
+                    s_tmp[cc + 1] = -sn * imagi(0, cc) + cs * s_tmp[cc + 1];
+                    g = sn * imagi(0, cc + 1);
+                    imagi(0, cc + 1) = cs * imagi(0, cc + 1);
+
+                    if (cc < rows () - 1)
+                        for (size_type r = 0; r < rows (); ++r)  {
+                            t = cs * u_tmp(r, cc) + sn * u_tmp(r, cc + 1);
+                            u_tmp (r, cc + 1) =
+                                -sn * u_tmp(r, cc) + cs * u_tmp(r, cc + 1);
+                            u_tmp(r, cc) = t;
+                        }
+                }
+
+                imagi(0, p - 2) = f;
+            }
+            break;
+
+            // Convergence.
+            //
+            case 4:
+            {
+               // Make the singular values positive.
+               //
+                if (s_tmp[c] <= value_type(0))  {
+                    s_tmp[c] =
+                        s_tmp [c] < value_type(0) ? -s_tmp[c] : value_type(0);
+
+                    for (size_type r = 0; r <= pp; ++r)
+                        v_tmp(r, c) = -v_tmp(r, c);
+                }
+
+                // Order the singular values.
+                //
+                while (c < pp)  {
+                    if (s_tmp[c] >= s_tmp[c + 1])
+                        break;
+
+                    value_type  t { s_tmp[c] };
+
+                    s_tmp[c] = s_tmp[c + 1];
+                    s_tmp[c + 1] = t;
+
+                    if (c < cols() - 1)
+                        for (size_type r = 0; r < cols(); ++r) {
+                            t = v_tmp(r, c + 1);
+                            v_tmp(r, c + 1) = v_tmp(r, c);
+                            v_tmp(r, c) = t;
+                        }
+
+                    if (c < rows() - 1)
+                        for (size_type r = 0; r < rows(); ++r)  {
+                            t = u_tmp(r, c + 1);
+                            u_tmp(r, c + 1) = u_tmp(r, c);
+                            u_tmp(r, c) = t;
+                        }
+
+                    c += 1;
+                }
+
+                p -= 1;
+            }
+            break;
+        }
+    }
+
+    U.swap(u_tmp);
+
+    S.resize(s_tmp.size(), full_size ? s_tmp.size() : 1);
+
+    size_type   row_count = 0;
+
+    for (auto citer = s_tmp.begin(); citer != s_tmp.end(); ++citer, ++row_count)
+        S(row_count, full_size ? row_count : 0) = *citer;
+
+    V.swap(v_tmp);
+
+    return;
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

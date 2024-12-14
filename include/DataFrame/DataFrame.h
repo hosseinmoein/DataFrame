@@ -3759,6 +3759,34 @@ public: // Read/access and slicing interfaces
         std::vector<const char *> &&col_names,
         normalization_type norm_type = normalization_type::none) const;
 
+
+
+
+
+
+
+
+
+
+
+    // Principal Component Analysis (PCA)
+    //
+    template<typename T>
+    EigenSpace<T>
+    prin_comp_analysis(std::vector<const char *> &&col_names,
+                       const PCAParams params = { }) const;
+
+
+
+
+
+
+
+
+
+
+
+
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.
     // The statistics are:

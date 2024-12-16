@@ -261,17 +261,18 @@ int main(int, char *[]) {
 
         assert(eigenvals.cols() == 10);
         assert(eigenvals.rows() == 1);
-        assert((std::fabs(eigenvals(0, 0) - -124.177) < 0.001));
-        assert((std::fabs(eigenvals(0, 1) - -24.5492) < 0.0001));
-        assert((std::fabs(eigenvals(0, 5) - -3.4454) < 0.0001));
+
+        assert((std::fabs(eigenvals(0, 0) - -2.30681) < 0.001));
+        assert((std::fabs(eigenvals(0, 1) - -2.48865) < 0.0001));
+        assert((std::fabs(eigenvals(0, 5) - -6.56515) < 0.0001));
         assert((std::fabs(eigenvals(0, 9) - 687.09) < 0.01));
 
         assert(eigenvecs.cols() == 10);
         assert(eigenvecs.rows() == 10);
-        assert((std::fabs(eigenvecs(0, 0) - -0.477637) < 0.000001));
+        assert((std::fabs(eigenvecs(0, 0) - 0.0698916) < 0.000001));
         assert((std::fabs(eigenvecs(2, 4) - -0.320417) < 0.000001));
-        assert((std::fabs(eigenvecs(5, 6) - 0.396209) < 0.000001));
-        assert((std::fabs(eigenvecs(8, 2) - -0.027937) < 0.000001));
+        assert((std::fabs(eigenvecs(5, 6) - 0.181206) < 0.000001));
+        assert((std::fabs(eigenvecs(8, 2) - 0.44074) < 0.00001));
         assert((std::fabs(eigenvecs(9, 9) - 0.432927) < 0.000001));
 
         // non-symmetric matrix
@@ -285,16 +286,16 @@ int main(int, char *[]) {
 
         assert(eigenvals.cols() == 10);
         assert(eigenvals.rows() == 1);
-        assert((std::fabs(eigenvals(0, 0) - -15.8398) < 0.0001));
-        assert(eigenvals(0, 1) > -0.00000000001); // -8.34036e-15
-        assert(eigenvals(0, 5) < 0.00000000001);  // 4.83968e-15
+        assert(eigenvals(0, 0) > -0.00000000001); // -2.87473e-15
+        assert(eigenvals(0, 1) > -0.00000000001); // -2.87473e-15
+        assert(eigenvals(0, 5) < 0.00000000001);  // 6.12134e-15
         assert((std::fabs(eigenvals(0, 9) - 520.84) < 0.01));
 
         assert(eigenvecs.cols() == 10);
         assert(eigenvecs.rows() == 10);
-        assert((std::fabs(eigenvecs(0, 0) - 0.568403) < 0.000001));
-        assert((std::fabs(eigenvecs(2, 4) - 0.088418) < 0.000001));
-        assert((std::fabs(eigenvecs(5, 6) - 0.199127) < 0.000001));
+        assert((std::fabs(eigenvecs(0, 0) - -0.0833988) < 0.000001));
+        assert((std::fabs(eigenvecs(2, 4) - 0.32935) < 0.00001));
+        assert((std::fabs(eigenvecs(5, 6) - -0.410279) < 0.000001));
         assert((std::fabs(eigenvecs(8, 2) - 9.34286) < 0.00001));
         assert((std::fabs(eigenvecs(9, 9) - -0.51616) < 0.00001));
     }

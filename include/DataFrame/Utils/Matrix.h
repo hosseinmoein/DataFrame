@@ -1487,15 +1487,6 @@ operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
     return (result);
 }
 
-// ----------------------------------------------------------------------------
-
-template<typename T>
-struct  EigenSpace  {
-
-    Matrix<T, matrix_orient::row_major>     eigen_vals { };
-    Matrix<T, matrix_orient::column_major>  eigen_vecs { };
-};
-
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

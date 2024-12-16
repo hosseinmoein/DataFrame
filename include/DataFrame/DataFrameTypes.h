@@ -717,24 +717,18 @@ struct  StationaryTestParams  {
 
 // ----------------------------------------------------------------------------
 
-enum class  pca_method : unsigned char  {
-
-    eigen = 1,  // Eigen decomposition of the covariance matrix
-    svd = 2,    // Singular Value Decomposition of the data matrix
-};
-
 struct  PCAParams  {
 
-    pca_method          method { pca_method::eigen };
     normalization_type  norm_type { normalization_type::z_score };
 
-    // if populated, number of eigen components kept.
+    // If populated (set above zero), number of top eigen values to keep.
     //
-    std::size_t         num_comp_kept { 0 };
+    long                num_comp_to_keep { 0 };
 
-    // if populated, percentage of eigen components kept -- 0.9 means 90%.
+    // If populated (num_comp_is 0), percentage of eigen values to keep.
+    // 0.9 means 90%.
     //
-    double              pct_comp_kept { 0.9 };
+    double              pct_comp_to_keep { 0.9 };
 };
 
 // ----------------------------------------------------------------------------

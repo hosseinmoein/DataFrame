@@ -2269,6 +2269,77 @@ static void test_covariance_matrix()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_pca_by_eigen()  {
+
+    std::cout << "\nTesting pca_by_eigen( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  pca_mat = df.pca_by_eigen<double>(
+        { "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" });
+
+    // Dimensions were reduced to 1 containing at least 90% of the information.
+    // This makes sense, since these 4 columns are highly correlated.
+    //
+    assert(pca_mat.cols() == 1);
+    assert(pca_mat.rows() == 5031);
+    assert(std::fabs(pca_mat(0, 0) - 197.063) < 0.001);
+    assert(std::fabs(pca_mat(1, 0) - 200.875) < 0.001);
+    assert(std::fabs(pca_mat(491, 0) - 149.02) < 0.01);
+    assert(std::fabs(pca_mat(1348, 0) - 166.44) < 0.01);
+    assert(std::fabs(pca_mat(2677, 0) - 333.405) < 0.001);
+    assert(std::fabs(pca_mat(5029, 0) - 216.175) < 0.001);
+    assert(std::fabs(pca_mat(5030, 0) - 219.555) < 0.001);
+
+    const auto  pca_mat2 = df.pca_by_eigen<double>(
+        { "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" },
+        { .num_comp_to_keep = 3 });
+
+    // 3 most significant dimensions are kept.
+    // As you can see the first column is unchanged and clearly contains
+    // almost all of the information.
+    //
+    assert(pca_mat2.cols() == 3);
+    assert(pca_mat2.rows() == 5031);
+
+    assert(std::fabs(pca_mat2(0, 0) - 197.063) < 0.001);
+    assert(std::fabs(pca_mat2(0, 1) - -0.0951913) < 0.001);
+    assert(std::fabs(pca_mat2(0, 2) - 1.85473) < 0.001);
+
+    assert(std::fabs(pca_mat2(1, 0) - 200.875) < 0.001);
+    assert(std::fabs(pca_mat2(1, 1) - -2.08604) < 0.001);
+    assert(std::fabs(pca_mat2(1, 2) - 2.68895) < 0.001);
+
+    assert(std::fabs(pca_mat2(491, 0) - 149.02) < 0.01);
+    assert(std::fabs(pca_mat2(491, 1) - -1.34957) < 0.01);
+    assert(std::fabs(pca_mat2(491, 2) - 2.09026) < 0.01);
+
+    assert(std::fabs(pca_mat2(1348, 0) - 166.44) < 0.01);
+    assert(std::fabs(pca_mat2(1348, 1) - 0.0354559) < 0.01);
+    assert(std::fabs(pca_mat2(1348, 2) - 0.41972) < 0.01);
+
+    assert(std::fabs(pca_mat2(2677, 0) - 333.405) < 0.001);
+    assert(std::fabs(pca_mat2(2677, 1) - -1.33686) < 0.001);
+    assert(std::fabs(pca_mat2(2677, 2) - 2.13684) < 0.001);
+
+    assert(std::fabs(pca_mat2(5029, 0) - 216.175) < 0.001);
+    assert(std::fabs(pca_mat2(5029, 1) - -1.18141) < 0.001);
+    assert(std::fabs(pca_mat2(5029, 2) - 2.18029) < 0.001);
+
+    assert(std::fabs(pca_mat2(5030, 0) - 219.555) < 0.001);
+    assert(std::fabs(pca_mat2(5030, 1) - -2.66858) < 0.001);
+    assert(std::fabs(pca_mat2(5030, 2) - 2.85412) < 0.001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2310,6 +2381,7 @@ int main(int, char *[]) {
     test_make_stationary();
     test_StationaryCheckVisitor();
     test_covariance_matrix();
+    test_pca_by_eigen();
 
     return (0);
 }

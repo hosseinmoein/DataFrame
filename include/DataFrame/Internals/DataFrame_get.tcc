@@ -979,6 +979,105 @@ covariance_matrix(std::vector<const char *> &&col_names,
     return (data_mat.covariance());
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+pca_by_eigen(std::vector<const char *> &&col_names,
+             const PCAParams params) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (params.num_comp_to_keep == 0 && params.pct_comp_to_keep < 0.01)
+        throw NotFeasible("pca_by_eigen(): Parameters don't make sense");
+    if (params.num_comp_to_keep > long(col_names.size()))
+        throw NotFeasible("pca_by_eigen(): num_comp_to_keep > #input columns");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    // Get the covariance matrix of normalized data
+    //
+    const auto  var_cov =
+        covariance_matrix<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            params.norm_type);
+
+    // Calculate Eigen space
+    //
+    Matrix<T, matrix_orient::row_major>     eigenvals;
+    Matrix<T, matrix_orient::column_major>  eigenvecs;
+
+    var_cov.eigen_space(eigenvals, eigenvecs, true);
+
+    // Keep the most significant columns
+    //
+    Matrix<T, matrix_orient::column_major>  mod_evecs { };
+    long                                    col_count { 0 };
+
+    if (params.num_comp_to_keep > 0)  {
+        col_count = params.num_comp_to_keep;
+    }
+    else  {
+        T   ev_sum { 0 };
+
+        for (long c = 0; c < eigenvals.cols(); ++c)
+            ev_sum += std::fabs(eigenvals(0, c));
+
+        T   kept_sum { 0 };
+
+        for (long c = eigenvals.cols() - 1; c >= 0; --c)  {
+            kept_sum += std::fabs(eigenvals(0, c));
+            col_count += 1;
+            if ((kept_sum / ev_sum) >= params.pct_comp_to_keep)
+                break;
+        }
+    }
+    mod_evecs.resize(eigenvecs.rows(), col_count);
+    for (long c = 0; c < col_count; ++c)  {
+        const long  col = eigenvecs.cols() - c - 1;
+
+        for (long r = 0; r < eigenvecs.rows(); ++r)
+            mod_evecs(r, c) = eigenvecs(r, col);
+    }
+
+    // Copy the data matrix
+    //
+    const size_type                         col_num = col_names.size();
+    size_type                               min_col_s { indices_.size() };
+    std::vector<const ColumnVecType<T> *>   columns(col_num, nullptr);
+    SpinGuard                               guard { lock_ };
+
+    for (size_type i { 0 }; i < col_num; ++i)  {
+        columns[i] = &get_column<T>(col_names[i], false);
+        if (columns[i]->size() < min_col_s)
+            min_col_s = columns[i]->size();
+    }
+    guard.release();
+
+    Matrix<T, matrix_orient::column_major>  data_mat {
+        long(min_col_s), long(col_num) };
+    auto                                    lbd =
+        [&data_mat, &columns = std::as_const(columns)]
+        (auto begin, auto end) -> void  {
+            for (auto i { begin }; i < end; ++i)
+                data_mat.set_column(columns[i]->begin(), long(i));
+        };
+    const auto                              thread_level =
+        (min_col_s >= ThreadPool::MUL_THR_THHOLD || col_num >= 20 )
+            ? get_thread_level() : 0L;
+
+    if (thread_level > 2)  {
+        auto    futuers =
+            thr_pool_.parallel_loop(size_type(0), col_num, std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  lbd(size_type(0), col_num);
+
+    // Return PCA
+    //
+    return (data_mat * mod_evecs);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

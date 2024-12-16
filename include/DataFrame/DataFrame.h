@@ -3739,7 +3739,7 @@ public: // Read/access and slicing interfaces
     //   Name of the column
     //
     template<typename T, typename C = std::less<T>>
-    size_type
+    [[nodiscard]] size_type
     inversion_count(const char *col_name) const;
 
     // This calculates and returns the variance/covariance matrix of the
@@ -3748,44 +3748,43 @@ public: // Read/access and slicing interfaces
     // T:
     //   Type of the named columns
     // col_names:
-    //    Vector of column names
+    //   Vector of column names
     // norm_type:
     //   The method to normalize the columns first before calculations.
     //   Default is not normalizing
     //
     template<typename T>
-    Matrix<T, matrix_orient::column_major>
+    [[nodiscard]] Matrix<T, matrix_orient::column_major>
     covariance_matrix(
         std::vector<const char *> &&col_names,
         normalization_type norm_type = normalization_type::none) const;
 
-
-
-
-
-
-
-
-
-
-
-    // Principal Component Analysis (PCA)
+    // This uses Eigenspace evaluation to calculate Principal Component
+    // Analysis (PCA).
+    // It returns a matrix whose columns are the reduced dimensions with most
+    // significant information.
+    // PCA is a dimensionality reduction method that is often used to reduce
+    // the dimensionality of large data sets, by transforming a large set of
+    // variables into a smaller one that still contains most of the information
+    // in the large set.
+    // Reducing the number of variables of a data set naturally comes at the
+    // expense of accuracy, but the trick in dimensionality reduction is to
+    // trade a little accuracy for simplicity. Because smaller data sets are
+    // easier to explore and visualize, and thus make analyzing data points
+    // much easier and faster for machine learning algorithms without
+    // extraneous variables to process.
+    //
+    // T:
+    //   Type of the named columns
+    // col_names:
+    //   Vector of column names
+    // params:
+    //   Parameters necessary for for this operation
     //
     template<typename T>
-    EigenSpace<T>
-    prin_comp_analysis(std::vector<const char *> &&col_names,
-                       const PCAParams params = { }) const;
-
-
-
-
-
-
-
-
-
-
-
+    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    pca_by_eigen(std::vector<const char *> &&col_names,
+                 const PCAParams params = { }) const;
 
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.

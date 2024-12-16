@@ -1190,11 +1190,13 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
     if (sort_values)  {
         for (size_type c = 0; c < cols() - 1; ++c)  {
             size_type   min_col { c };
+            value_type  abs_min_val { std::fabs(tmp_evals(0, c)) };
             value_type  min_val { tmp_evals(0, c) };
 
             for (size_type cc = c + 1; cc < cols(); ++cc)
-                if (tmp_evals(0, cc) < min_val)  {
+                if (std::fabs(tmp_evals(0, cc)) < abs_min_val)  {
                     min_col = cc;
+                    abs_min_val = std::fabs(tmp_evals(0, cc));
                     min_val = tmp_evals(0, cc);
                 }
 

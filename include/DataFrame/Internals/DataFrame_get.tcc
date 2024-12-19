@@ -938,43 +938,16 @@ Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
 covariance_matrix(std::vector<const char *> &&col_names,
                   normalization_type norm_type) const  {
 
-    const size_type col_num = col_names.size();
-
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (col_num < 2)
+    if (col_names.size() < 2)
         throw NotFeasible("covariance_matrix(): "
                           "You must specify at least two columns");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    size_type                               min_col_s { indices_.size() };
-    std::vector<const ColumnVecType<T> *>   columns(col_num, nullptr);
-    SpinGuard                               guard (lock_);
-
-    for (size_type i { 0 }; i < col_num; ++i)  {
-        columns[i] = &get_column<T>(col_names[i], false);
-        if (columns[i]->size() < min_col_s)
-            min_col_s = columns[i]->size();
-    }
-    guard.release();
-
-    Matrix<T, matrix_orient::column_major>  data_mat {
-        long(min_col_s), long(col_num) };
-
-    if (norm_type > normalization_type::none)  {
-        for (size_type i { 0 }; i < col_num; ++i)  {
-            NormalizeVisitor<T, I>  norm_v { norm_type };
-
-            norm_v.pre();
-            norm_v(indices_.begin(), indices_.end(),
-                   columns[i]->begin(), columns[i]->end());
-            norm_v.post();
-            data_mat.set_column(norm_v.get_result().begin(), i);
-        }
-    }
-    else  {
-        for (size_type i { 0 }; i < col_num; ++i)
-            data_mat.set_column(columns[i]->begin(), i);
-    }
+    const auto  data_mat =
+        get_scaled_data_matrix_<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            norm_type);
 
     return (data_mat.covariance());
 }
@@ -1041,41 +1014,42 @@ pca_by_eigen(std::vector<const char *> &&col_names,
 
     // Copy the data matrix
     //
-    const size_type                         col_num = col_names.size();
-    size_type                               min_col_s { indices_.size() };
-    std::vector<const ColumnVecType<T> *>   columns(col_num, nullptr);
-    SpinGuard                               guard { lock_ };
-
-    for (size_type i { 0 }; i < col_num; ++i)  {
-        columns[i] = &get_column<T>(col_names[i], false);
-        if (columns[i]->size() < min_col_s)
-            min_col_s = columns[i]->size();
-    }
-    guard.release();
-
-    Matrix<T, matrix_orient::column_major>  data_mat {
-        long(min_col_s), long(col_num) };
-    auto                                    lbd =
-        [&data_mat, &columns = std::as_const(columns)]
-        (auto begin, auto end) -> void  {
-            for (auto i { begin }; i < end; ++i)
-                data_mat.set_column(columns[i]->begin(), long(i));
-        };
-    const auto                              thread_level =
-        (min_col_s >= ThreadPool::MUL_THR_THHOLD || col_num >= 20 )
-            ? get_thread_level() : 0L;
-
-    if (thread_level > 2)  {
-        auto    futuers =
-            thr_pool_.parallel_loop(size_type(0), col_num, std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  lbd(size_type(0), col_num);
+    const auto  data_mat =
+        get_scaled_data_matrix_<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            normalization_type::none);
 
     // Return PCA
     //
     return (data_mat * mod_evecs);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+std::tuple<Matrix<T, matrix_orient::column_major>,  // U
+           Matrix<T, matrix_orient::column_major>,  // S
+           Matrix<T, matrix_orient::column_major>>  // V
+DataFrame<I, H>::
+compact_svd(std::vector<const char *> &&col_names,
+            normalization_type norm_type) const  {
+
+    using col_mat_t = Matrix<T, matrix_orient::column_major>;
+
+    // Copy the data matrix
+    //
+    const auto  scaled_data_mat =
+        get_scaled_data_matrix_<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            norm_type);
+    col_mat_t   U;
+    col_mat_t   S;
+    col_mat_t   V;
+
+    scaled_data_mat.svd(U, S, V, true);
+
+    return (std::make_tuple(U, S, V));
 }
 
 } // namespace hmdf

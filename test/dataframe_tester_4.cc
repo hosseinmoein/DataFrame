@@ -2340,6 +2340,56 @@ static void test_pca_by_eigen()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_compact_svd()  {
+
+    std::cout << "\nTesting compact_svd( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  [U, S, V] =
+        df.compact_svd<double>(
+            { "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" });
+
+    assert(U.rows() == 5031);
+    // Compact version has the same column # as the original matrix
+    //
+    assert(U.cols() == 4);
+    assert(std::fabs(U(0, 0) - -0.0115747) < 0.000001);
+    assert(std::fabs(U(2, 3) - -0.0110622) < 0.000001);
+    assert(std::fabs(U(4040, 2) - -0.0147074) < 0.000001);
+    assert(std::fabs(U(4994, 1) - 0.0194639) < 0.000001);
+    assert(std::fabs(U(5030, 3) - -0.000878688) < 0.000001);
+
+    // In compact version zero rows at the end are omitted
+    //
+    assert(S.rows() == 4);
+    assert(S.cols() == 4);
+    assert(std::fabs(S(0, 0) - 141.821) < 0.001);
+    assert(std::fabs(S(1, 1) - 1.91734) < 0.00001);
+    assert(std::fabs(S(2, 2) - 1.62214) < 0.00001);
+    assert(std::fabs(S(3, 3) - 0.73194) < 0.00001);
+    assert(S(0, 2) == 0.0);
+    assert(S(1, 2) == 0.0);
+    assert(S(3, 0) == 0.0);
+
+    assert(V.rows() == 4);
+    assert(V.cols() == 4);
+    assert(std::fabs(V(0, 0) - 0.499988) < 0.000001);
+    assert(std::fabs(V(0, 2) - 0.003710) < 0.000001);
+    assert(std::fabs(V(2, 2) - 0.700869) < 0.000001);
+    assert(std::fabs(V(3, 1) - -0.00079) < 0.000001);
+    assert(std::fabs(V(3, 3) - 0.491216) < 0.000001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2382,6 +2432,7 @@ int main(int, char *[]) {
     test_StationaryCheckVisitor();
     test_covariance_matrix();
     test_pca_by_eigen();
+    test_compact_svd();
 
     return (0);
 }

@@ -341,7 +341,7 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
         for (size_type r = c; r <= e_vecs.rows() - 1; ++r)
             scale += std::fabs(hess_form (r, c - 1));
 
-        if (scale != value_type(0))  {
+        if (scale != T(0))  {
             value_type  h { 0 };
 
             // Compute Householder transformation.
@@ -354,7 +354,7 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
             }
 
             const value_type    g =
-                ortho(0, c) > value_type(0) ? -std::sqrt(h) : std::sqrt(h);
+                ortho(0, c) > T(0) ? -std::sqrt(h) : std::sqrt(h);
 
             h -= ortho(0, c) * g;
             ortho(0, c) -= g;
@@ -393,10 +393,10 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
     //
     for (size_type r = 0; r < e_vecs.rows(); ++r)
         for (size_type c = 0; c < e_vecs.cols(); ++c)
-            e_vecs(r, c) = r == c ? value_type(1) : value_type(0);
+            e_vecs(r, c) = r == c ? T(1) : T(0);
 
     for (size_type c = e_vecs.cols() - 2; c >= 1; --c)
-        if (hess_form(c, c - 1) != value_type(0))  {
+        if (hess_form(c, c - 1) != T(0))  {
             for (size_type r = c + 1; r <= e_vecs.rows() - 1; ++r)
                 ortho(0, r) = hess_form(r, c - 1);
 
@@ -458,7 +458,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
             s = std::fabs(hess_form(l - 1, l - 1)) +
                 std::fabs(hess_form(l, l));
 
-            if (s == value_type(0))
+            if (s == T(0))
                 s = norm;
             if (std::fabs(hess_form(l, l - 1)) < (EPSILON_ * s))
                 break;
@@ -471,12 +471,12 @@ hessenberg_to_schur_(MA1 &e_vecs,
         if (l == n)  {  // One root found
             hess_form(n, n) += exshift;
             e_vals(0, n) = hess_form(n, n);
-            imagi (0, n--) = value_type(0);
+            imagi (0, n--) = T(0);
             iter = 0;
         }
         else if (l == n - 1)  {  // Two roots found
             w = hess_form(n, n - 1) * hess_form(n - 1, n);
-            p = (hess_form(n - 1, n - 1) - hess_form(n, n)) / value_type(2);
+            p = (hess_form(n - 1, n - 1) - hess_form(n, n)) / T(2);
             q = p * p + w;
             z = std::sqrt(std::fabs(q));
 
@@ -485,12 +485,11 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
             const value_type    &xx { hess_form(n, n) };
 
-            if (q >= value_type(0))  {  // Real pair
-                z = p >= value_type(0) ? p + z : p - z;
+            if (q >= T(0))  {  // Real pair
+                z = p >= T(0) ? p + z : p - z;
 
                 e_vals(0, n - 1) = xx + z;
-                e_vals(0, n) =
-                    z != value_type(0) ? xx - w / z : e_vals (0, n - 1);
+                e_vals(0, n) = z != T(0) ? xx - w / z : e_vals (0, n - 1);
 
                 imagi(0, n - 1) = 0;
                 imagi(0, n) = 0;
@@ -562,25 +561,25 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
                 s = std::fabs(hess_form(n, n - 1)) +
                     std::fabs(hess_form(n - 1, n - 2));
-                x = y = value_type(0.75) * s;
-                w = value_type(-0.4375) * s * s;
+                x = y = T(0.75) * s;
+                w = T(-0.4375) * s * s;
             }
 
             // MATLAB's new ad hoc shift
             //
             if (iter == 30)  {
-                s = (y - x) / value_type(2);
+                s = (y - x) / T(2);
                 s = s * s + w;
 
                 if (s > 0)  {
                     s = y < x ? -std::sqrt(s) : std::sqrt(s);
-                    s = x - w / ((y - x) / value_type(2) + s);
+                    s = x - w / ((y - x) / T(2) + s);
 
                     for (size_type r = 0; r <= n; ++r)
                         hess_form(r, r) -= s;
 
                     exshift += s;
-                    x = y = w = value_type(0.964);
+                    x = y = w = T(0.964);
                 }
             }
 
@@ -634,22 +633,22 @@ hessenberg_to_schur_(MA1 &e_vecs,
                 if (k != m)  {
                     p = hess_form(k, k - 1);
                     q = hess_form(k + 1, k - 1);
-                    oo = notlast ? hess_form(k + 2, k - 1) : value_type(0);
+                    oo = notlast ? hess_form(k + 2, k - 1) : T(0);
                     x = std::fabs(p) + std::fabs(q) + std::fabs(oo);
 
-                    if (x != value_type(0))  {
+                    if (x != T(0))  {
                         p /= x;
                         q /= x;
                         oo /= x;
                     }
                 }
-                if (x == value_type(0))
+                if (x == T(0))
                     break;
 
-                s = p < value_type(0) ? -std::sqrt(p * p + q * q + oo * oo)
-                                      :  std::sqrt(p * p + q * q + oo * oo);
+                s = p < T(0) ? -std::sqrt(p * p + q * q + oo * oo)
+                             :  std::sqrt(p * p + q * q + oo * oo);
 
-                if (s != value_type(0))  {
+                if (s != T(0))  {
                     if (k != m)
                         hess_form(k, k - 1) = -s * x;
                     else if (l != m)
@@ -710,7 +709,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
         }
     }
 
-    if (norm == value_type(0))
+    if (norm == T(0))
         return;
 
     // Backsubstitute to find vectors of upper triangular form
@@ -719,7 +718,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
         p = e_vals(0, c);
         q = imagi(0, c);
 
-        if (q == value_type(0))  {  // Real vector
+        if (q == T(0))  {  // Real vector
             size_type   l { c };
 
             hess_form(c, c) = 1;
@@ -731,17 +730,16 @@ hessenberg_to_schur_(MA1 &e_vecs,
                 for (size_type cc = l; cc <= c; ++cc)
                     oo += hess_form(r, cc) * hess_form(cc, c);
 
-                if (imagi(0, r) < value_type(0))  {
+                if (imagi(0, r) < T(0))  {
                     z = ww;
                     s = oo;
                 }
                 else  {
                     l = r;
 
-                    if (imagi(0, r) == value_type(0))
+                    if (imagi(0, r) == T(0))
                         hess_form(r, c) =
-                            ww != value_type(0) ? -oo / ww
-                                                : -oo / (EPSILON_ * norm);
+                            ww != T(0) ? -oo / ww : -oo / (EPSILON_ * norm);
                     else  {  // Solve real equations
                         q = (e_vals(0, r) - p) * (e_vals(0, r) - p) +
                             imagi(0, r) * imagi(0, r);
@@ -761,13 +759,13 @@ hessenberg_to_schur_(MA1 &e_vecs,
                     //
                     const value_type    t { std::fabs(hess_form(r, c)) };
 
-                    if ((EPSILON_ * t * t) > value_type(1))
+                    if ((EPSILON_ * t * t) > T(1))
                         for (size_type rr = r; rr <= c; ++rr)
                             hess_form(rr, c) /= t;
                 }
             }
         }
-        else if (q < value_type(0))  {  // Complex vector
+        else if (q < T(0))  {  // Complex vector
             size_type   l { c - 1 };
             value_type  cdivr;
             value_type  cdivi;
@@ -805,7 +803,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
                 const value_type    ww { hess_form(r, r) - p };
 
-                if (imagi(0, r) < value_type(0))  {
+                if (imagi(0, r) < T(0))  {
                     z = ww;
                     oo = ra;
                     s = sa;
@@ -813,7 +811,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
                 else  {
                     l = r;
 
-                    if (imagi(0, r) == value_type(0))  {
+                    if (imagi(0, r) == T(0))  {
                         cdiv_(-ra, -sa, ww, q, cdivr, cdivi);
                         hess_form(r, c - 1) = cdivr;
                         hess_form(r, c) = cdivi;
@@ -822,13 +820,13 @@ hessenberg_to_schur_(MA1 &e_vecs,
                         const value_type    &xx { hess_form(r, r + 1) };
                         const value_type    &yy { hess_form(r + 1, r) };
                         const value_type    vi {
-                            (e_vals (0, r) - p) * value_type(2.0) * q };
+                            (e_vals (0, r) - p) * T(2.0) * q };
                         value_type          vr {
                             (e_vals (0, r) - p) * (e_vals (0, r) - p) +
                             imagi (0, r) * imagi (0, r) -
                             q * q };
 
-                        if (vr == value_type(0) && vi == value_type(0))
+                        if (vr == T(0) && vi == T(0))
                             vr = EPSILON_ *
                                  norm *
                                  (std::fabs(ww) +
@@ -944,7 +942,7 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
         value_type  h { 0 };
 
-        if (scale == value_type(0))  {
+        if (scale == T(0))  {
             imagi(0, r) = e_vals(0, r - 1);
             for (size_type c = 0; c < r; ++c)  {
                 e_vals(0, c) = e_vecs(r - 1, c);
@@ -961,8 +959,7 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
             }
 
             const value_type    &f { e_vals(0, r - 1) };
-            value_type          g {
-                f > value_type(0) ? -std::sqrt(h) : std::sqrt(h) };
+            value_type          g { f > T(0) ? -std::sqrt(h) : std::sqrt(h) };
 
             imagi(0, r) = scale * g;
             h -= f * g;
@@ -1019,7 +1016,7 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
         const value_type    &h = e_vals(0, r + 1);
 
-        if (h != value_type(0))  {
+        if (h != T(0))  {
             for (size_type c = 0; c <= r; ++c)
                 e_vals(0, c) = e_vecs(c, r + 1) / h;
 
@@ -1082,14 +1079,12 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
                // Compute implicit shift
                //
                 value_type  g { e_vals (0, c) };
-                value_type  p { (e_vals(0, c + 1) - g) /
-                                (value_type(2) * imagi(0, c)) };
+                value_type  p { (e_vals(0, c + 1) - g) / (T(2) * imagi(0, c)) };
 
                 // Euclidean distance func
                 //
                 value_type  dis =
-                    { p < value_type(0) ? -hypot(p, value_type(1))
-                                        : hypot(p, value_type(1)) };
+                    { p < T(0) ? -hypot(p, T(1)) : hypot(p, T(1)) };
 
                 e_vals(0, c) = imagi(0, c) / (p + dis);
                 e_vals(0, c + 1) = imagi(0, c) * (p + dis);
@@ -1249,7 +1244,7 @@ covariance(bool is_unbiased) const  {
             }
         };
     const long  thread_level =
-        (cols() >= 50L || rows() >= 100'000L)
+        (cols() >= 20L || rows() >= 100'000L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     if (thread_level > 2)  {
@@ -1297,10 +1292,10 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
            //
             s_tmp[c] = 0;
             for (size_type r = c; r < rows(); ++r)
-                s_tmp [c] = hypot(s_tmp[c], self_tmp(r, c));
+                s_tmp[c] = hypot(s_tmp[c], self_tmp(r, c));
 
-            if (s_tmp [c] != value_type(0))  {
-                if (self_tmp(c, c) < value_type(0))
+            if (s_tmp[c] != T(0))  {
+                if (self_tmp(c, c) < T(0))
                     s_tmp[c] = -s_tmp[c];
 
                 for (size_type r = c; r < rows(); ++r)
@@ -1311,7 +1306,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
             s_tmp[c] = -s_tmp[c];
         }
         for (size_type cc = c + 1; cc < cols(); ++cc)  {
-            if (c < min_col_cnt && s_tmp [c] != value_type(0))  {
+            if (c < min_col_cnt && s_tmp[c] != T(0))  {
                 // Apply the transformation.
                 //
                 value_type  t { 0 };
@@ -1340,25 +1335,25 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
         if (c < max_row_cnt)  {
 
             // Compute the k-th row transformation and place the
-            // k-th super-diagonal in imagi (0, c).
+            // k-th super-diagonal in imagi(0, c).
             // Compute 2-norm without under / overflow.
             //
             imagi(0, c) = 0;
             for (size_type cc = c + 1; cc < cols(); ++cc)
                 imagi(0, c) = hypot(imagi(0, c), imagi(0, cc));
 
-            if (imagi(0, c) != value_type(0))  {
-                if (imagi(0, c + 1) < value_type(0))
+            if (imagi(0, c) != T(0))  {
+                if (imagi(0, c + 1) < T(0))
                     imagi(0, c) = -imagi(0, c);
 
                 for (size_type cc = c + 1; cc < cols(); ++cc)
                     imagi(0, cc) /= imagi(0, c);
 
-                imagi(0, c + 1) += value_type(1);
+                imagi(0, c + 1) += T(1);
             }
             imagi(0, c) = -imagi(0, c);
 
-            if (c + 1 < rows() && imagi(0, c) != value_type(0))  {
+            if (c + 1 < rows() && imagi(0, c) != T(0))  {
 
                 // Apply the transformation.
                 //
@@ -1407,7 +1402,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
     }
 
     for (size_type c = min_col_cnt - 1; c >= 0; --c)  {
-        if (s_tmp[c] != value_type(0))  {
+        if (s_tmp[c] != T(0))  {
             for (size_type cc = c + 1; cc < min_dem; ++cc)  {
                 value_type  t { 0 };
 
@@ -1421,9 +1416,9 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
             for (size_type r = c; r < rows(); ++r )
                 u_tmp(r, c) = -u_tmp(r, c);
 
-            u_tmp(c, c) += value_type(1);
+            u_tmp(c, c) += T(1);
             for (size_type r = 0; r < c - 1; ++r)
-                u_tmp (r, c) = 0;
+                u_tmp(r, c) = 0;
         }
         else  {
             for (size_type r = 0; r < rows(); ++r)
@@ -1433,7 +1428,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
     }
 
     for (size_type c = cols() - 1; c >= 0; --c)  {
-        if ((c < max_row_cnt) && (imagi(0, c) != value_type(0)))
+        if ((c < max_row_cnt) && (imagi(0, c) != T(0)))
             for (size_type cc = c + 1; cc < min_dem; ++cc)  {
                 value_type  t { 0 };
 
@@ -1454,7 +1449,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
     // Main iteration loop for the singular values.
     //
-    while (p > value_type(0))  {
+    while (p > T(0))  {
         size_type   c;
         size_type   kase;
 
@@ -1464,17 +1459,17 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
         // negligible elements in the s and imagi arrays.  On
         // completion the variables kase and c are set as follows.
         //
-        // case == 1 --> if s (p) and imagi (0, c - 1) are negligible and k < p
-        // case == 2 --> if s (c) is negligible and c < p
-        // case == 3 --> if imagi (0, c - 1) is negligible, c < p, and
-        //               s (c), ..., s (p) are not negligible (qr step).
-        // case == 4 --> if e (p - 1) is negligible (convergence).
+        // case == 1 --> if s(p) and imagi(0, c - 1) are negligible and k < p
+        // case == 2 --> if s(c) is negligible and c < p
+        // case == 3 --> if imagi(0, c - 1) is negligible, c < p, and
+        //               s(c), ..., s(p) are not negligible (qr step).
+        // case == 4 --> if e(p - 1) is negligible (convergence).
         //
         for (c = p - 2; c >= -1; --c)  {
             if (c == -1)
                 break;
 
-            if (std::fabs(imagi (0, c)) <=
+            if (std::fabs(imagi(0, c)) <=
                     EPSILON_ * (std::fabs(s_tmp[c]) +
                                 std::fabs(s_tmp[c + 1])))  {
                 imagi(0, c) = 0;
@@ -1492,10 +1487,8 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                     break;
 
                 const value_type    t {
-                    ks != p ? std::fabs(imagi (0, ks)) : value_type(0) +
-                    ks != c + value_type(1)
-                        ? std::fabs(imagi(0, ks - 1))
-                        : value_type(0) };
+                    ks != p ? std::fabs(imagi(0, ks)) : T(0) +
+                    ks != c + T(1) ? std::fabs(imagi(0, ks - 1)) : T(0) };
 
                 if (std::fabs(s_tmp[ks]) <= (EPSILON_ * t))  {
                     s_tmp[ks] = 0;
@@ -1516,7 +1509,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
         // Perform the task indicated by kase.
         //
         switch (kase)  {
-            // Deflate negligible s (p).
+            // Deflate negligible s(p).
             //
             case 1:
             {
@@ -1544,13 +1537,13 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
             }
             break;
 
-            // Split at negligible s (c).
+            // Split at negligible s(c).
             //
             case 2:
             {
                 value_type  f { imagi(0, c - 1) };
 
-                imagi (0, c - 1) = value_type(0.0);
+                imagi(0, c - 1) = T(0.0);
                 for (size_type cc = c; cc < p; ++cc)  {
                     value_type  t { hypot(s_tmp[cc], f) };
                     value_type  cs { s_tmp[cc] / t };
@@ -1578,11 +1571,11 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                 // Calculate the shift.
                 //
                 const value_type    scale {
-                    std::max (
-                        std::max (
-                            std::max (
-                                std::max (std::fabs(s_tmp [p - 1]),
-                                          std::fabs(s_tmp [p - 2])),
+                    std::max(
+                        std::max(
+                            std::max(
+                                std::max(std::fabs(s_tmp [p - 1]),
+                                         std::fabs(s_tmp [p - 2])),
                                 std::fabs(imagi(0, p - 2))),
                             std::fabs(s_tmp[c])),
                         std::fabs(imagi(0, c))) };
@@ -1592,12 +1585,12 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                 const value_type    sk { s_tmp[c] / scale };
                 const value_type    ek { imagi(0, c) / scale };
                 const value_type    b {
-                    ((spm1 + sp) * (spm1 - sp) + epm1 * epm1) / value_type(2) };
+                    ((spm1 + sp) * (spm1 - sp) + epm1 * epm1) / T(2) };
                 const value_type    dd { (sp * epm1) * (sp * epm1) };
                 value_type          shift { 0 };
 
-                if (b != value_type(0) || dd != value_type(0))  {
-                    shift = b < value_type(0)
+                if (b != T(0) || dd != T(0))  {
+                    shift = b < T(0)
                                 ? -std::sqrt(b * b + dd)
                                 :  std::sqrt(b * b + dd);
                     shift = dd / (b + shift);
@@ -1623,7 +1616,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
                     for (size_type r = 0; r < cols(); ++r)  {
                         t = cs * v_tmp(r, cc) + sn * v_tmp(r, cc + 1);
-                        v_tmp (r, cc + 1) =
+                        v_tmp(r, cc + 1) =
                             -sn * v_tmp(r, cc) + cs * v_tmp(r, cc + 1);
                         v_tmp(r, cc) = t;
                     }
@@ -1637,10 +1630,10 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                     g = sn * imagi(0, cc + 1);
                     imagi(0, cc + 1) = cs * imagi(0, cc + 1);
 
-                    if (cc < rows () - 1)
-                        for (size_type r = 0; r < rows (); ++r)  {
+                    if (cc < rows() - 1)
+                        for (size_type r = 0; r < rows(); ++r)  {
                             t = cs * u_tmp(r, cc) + sn * u_tmp(r, cc + 1);
-                            u_tmp (r, cc + 1) =
+                            u_tmp(r, cc + 1) =
                                 -sn * u_tmp(r, cc) + cs * u_tmp(r, cc + 1);
                             u_tmp(r, cc) = t;
                         }
@@ -1656,9 +1649,8 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
             {
                // Make the singular values positive.
                //
-                if (s_tmp[c] <= value_type(0))  {
-                    s_tmp[c] =
-                        s_tmp [c] < value_type(0) ? -s_tmp[c] : value_type(0);
+                if (s_tmp[c] <= T(0))  {
+                    s_tmp[c] = s_tmp [c] < T(0) ? -s_tmp[c] : T(0);
 
                     for (size_type r = 0; r <= pp; ++r)
                         v_tmp(r, c) = -v_tmp(r, c);
@@ -1700,12 +1692,13 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
     U.swap(u_tmp);
 
-    S.resize(s_tmp.size(), full_size ? s_tmp.size() : 1);
-
-    size_type   row_count = 0;
-
-    for (auto citer = s_tmp.begin(); citer != s_tmp.end(); ++citer, ++row_count)
-        S(row_count, full_size ? row_count : 0) = *citer;
+    S.resize(s_tmp.size(), full_size ? s_tmp.size() : 1, T(0));
+    if (full_size)
+        for (size_type i = 0; i < size_type(s_tmp.size()); ++i)
+            S(i, i) = s_tmp[i];
+    else
+        for (size_type i = 0; i < size_type(s_tmp.size()); ++i)
+            S(i, 0) = s_tmp[i];
 
     V.swap(v_tmp);
 

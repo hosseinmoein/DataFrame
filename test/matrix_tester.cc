@@ -359,13 +359,20 @@ int main(int, char *[]) {
         col_dmat_t  S;
         col_dmat_t  V;
 
-        col_mat.svd (U, S, V);
+        col_mat.svd (U, S, V, true);
+
+        assert(U.rows() == 8);
+        assert(U.cols() == 4);
+        assert(S.rows() == 4);  // All the zeros at the end are eliminated
+        assert(S.cols() == 4);
+        assert(V.rows() == 4);
+        assert(V.cols() == 4);
 
         const auto  col_mat2 = U * S * V.transpose();
 
         for (long r = 0; r < col_mat2.rows(); ++r)
             for (long c = 0; c < col_mat2.cols(); ++c)
-                assert((std::fabs(col_mat(r, c) - col_mat2(r, c)) < 0.0001));
+                assert((std::fabs(col_mat(r, c) - col_mat2(r, c)) < 0.000001));
     }
 
     return (0);

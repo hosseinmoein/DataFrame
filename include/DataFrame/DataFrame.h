@@ -3786,6 +3786,36 @@ public: // Read/access and slicing interfaces
     pca_by_eigen(std::vector<const char *> &&col_names,
                  const PCAParams params = { }) const;
 
+    // This calculates Singular Value Decomposition (SVD). Optionaly it may
+    // normalize the original matrix first.
+    // In linear algebra, SVD is a factorization of a real or complex matrix
+    // into a rotation, followed by a rescaling followed by another rotation.
+    // It generalizes the eigen-decomposition of a square normal matrix with
+    // an orthonormal eigenbasis to any ⁠mXn matrix.
+    //
+    // It returns the 3 metrices U, S, and V inside a std::tuple.
+    // U contains the left singular vectors of the original matrix, meaning
+    // its columns are orthonormal vectors that span the row space of the
+    // matrix.
+    // S is a diagonal matrix that contains sqrt of eigenvalues of the original
+    // matrix's covariance matrix, arranged in descending order.
+    // V contains the right singular vectors of the original matrix,
+    // represented as its columns.
+    // Original matrix (A) = U * S * VT
+    //
+    // T:
+    //   Type of the named columns
+    // norm_type:
+    //   Type of normalization applied to raw data first
+    //
+    template<typename T>
+    [[nodiscard]] std::tuple<Matrix<T, matrix_orient::column_major>,  // U
+                             Matrix<T, matrix_orient::column_major>,  // S
+                             Matrix<T, matrix_orient::column_major>>  // V
+    compact_svd(std::vector<const char *> &&col_names,
+                normalization_type norm_type =
+                    normalization_type::z_score) const;
+
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.
     // The statistics are:

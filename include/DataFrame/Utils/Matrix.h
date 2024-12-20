@@ -61,10 +61,9 @@ public:
     using self_t = Matrix<value_type, MO>;
 
     using trans_result_t =
-        typename std::conditional<
-            MO == matrix_orient::column_major,
-            Matrix<T, matrix_orient::row_major>,
-            Matrix<T, matrix_orient::column_major>>::type;
+        typename std::conditional<MO == matrix_orient::column_major,
+                                  Matrix<T, matrix_orient::row_major>,
+                                  Matrix<T, matrix_orient::column_major>>::type;
 
     Matrix() = default;
     Matrix(size_type rows, size_type cols, const_reference def_v = T());
@@ -117,6 +116,32 @@ public:
     //                 Determinant(A)
     //
     Matrix inverse() const;
+
+    // Degree matrix is a square diagonal matrix where each diagonal value
+    // represents the number of connections in a row of an adjacency matrix.
+    //
+    // Adjacency matrix (ADJ) is a square matrix that represents a connected
+    // graph. A none zero value at i, j in an ADJ means there is an edge
+    // between vertices i and j. ADJ may contain only 0s and 1s indicating
+    // absence or presence of edges between vertices. Or it may contain real
+    // numbers which are the weights of edges between vertices. A 0 weight
+    // means there is no edge.
+    //
+    // degree_matrix() assumes self is an Adjacency matrix.
+    //
+    Matrix degree_matrix() const;
+
+    // A Laplacian matrix is a square matrix that represents a graph, where
+    // each entry signifies the relationship between vertices based on their
+    // connections, essentially showing how much a vertex differs from its
+    // neighbors, and is calculated by subtracting the adjacency matrix from
+    // the degree matrix of the graph; it's often used in graph theory and
+    // related fields like machine learning to analyze graph properties and
+    // structure based on its eigenvalues and eigenvectors.
+    //
+    // laplacian_matrix() assumes self is an Adjacency matrix.
+    //
+    Matrix laplacian_matrix() const;
 
     // Variance/Covariance matrix.
     // The columns of the matrix are assumed to be observations of some

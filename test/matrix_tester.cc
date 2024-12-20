@@ -375,6 +375,67 @@ int main(int, char *[]) {
                 assert((std::fabs(col_mat(r, c) - col_mat2(r, c)) < 0.000001));
     }
 
+    // Test degree matrix and Laplacian matrix
+    //
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  adj_mat { 5, 5 };
+
+        adj_mat(0, 0) = 0;
+        adj_mat(0, 1) = 1;
+        adj_mat(0, 2) = 0;
+        adj_mat(0, 3) = 1;
+        adj_mat(0, 4) = 0;
+
+        adj_mat(1, 0) = 0;
+        adj_mat(1, 1) = 0;
+        adj_mat(1, 2) = 0;
+        adj_mat(1, 3) = 0;
+        adj_mat(1, 4) = 1;
+
+        adj_mat(2, 0) = 0;
+        adj_mat(2, 1) = 1;
+        adj_mat(2, 2) = 0;
+        adj_mat(2, 3) = 0;
+        adj_mat(2, 4) = 0;
+
+        adj_mat(3, 0) = 1;
+        adj_mat(3, 1) = 0;
+        adj_mat(3, 2) = 1;
+        adj_mat(3, 3) = 1;
+        adj_mat(3, 4) = 1;
+
+        adj_mat(4, 0) = 0;
+        adj_mat(4, 1) = 0;
+        adj_mat(4, 2) = 1;
+        adj_mat(4, 3) = 1;
+        adj_mat(4, 4) = 0;
+
+        const auto  degree_mat = adj_mat.degree_matrix();
+
+        assert(degree_mat.rows() == 5);
+        assert(degree_mat.cols() == 5);
+        assert(degree_mat(0, 0) == 2.0);
+        assert(degree_mat(1, 1) == 1.0);
+        assert(degree_mat(2, 2) == 1.0);
+        assert(degree_mat(3, 3) == 4.0);
+        assert(degree_mat(4, 4) == 2.0);
+        assert(degree_mat(0, 1) == 0.0);
+        assert(degree_mat(4, 3) == 0.0);
+
+        const auto  laplacian_mat = adj_mat.laplacian_matrix();
+
+        assert(laplacian_mat.rows() == 5);
+        assert(laplacian_mat.cols() == 5);
+        assert(laplacian_mat(0, 0) == 2.0);
+        assert(laplacian_mat(0, 1) == -1.0);
+        assert(laplacian_mat(1, 3) == 0.0);
+        assert(laplacian_mat(3, 3) == 3.0);
+        assert(laplacian_mat(4, 2) == -1.0);
+        assert(laplacian_mat(4, 4) == 2.0);
+    }
+
     return (0);
 }
 

@@ -279,8 +279,10 @@ template<typename T,  matrix_orient MO>
 Matrix<T, MO>
 Matrix<T, MO>::inverse() const  {
 
+#ifdef HMDF_SANITY_EXCEPTIONS
     if (rows() != cols())
         throw DataFrameError("Matrix::inverse(): Matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
 
     const size_type self_rows = rows();
     const size_type self_cols = cols();
@@ -322,6 +324,39 @@ Matrix<T, MO>::inverse() const  {
     }
 
     return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO>
+Matrix<T, MO>
+Matrix<T, MO>::degree_matrix() const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (rows() != cols())
+        throw DataFrameError("Matrix::degree_matrix(): Matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    Matrix  result { cols(), cols(), T(0) };
+
+    for (size_type r = 0; r < rows(); ++r)  {
+        value_type  connections { 0 };
+
+        for (size_type c = 0; c < cols(); ++c)
+            connections += at(r, c);
+        result(r, r) = connections;
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO>
+Matrix<T, MO>
+Matrix<T, MO>::laplacian_matrix() const  {
+
+    return (degree_matrix() - *this);
 }
 
 // ----------------------------------------------------------------------------
@@ -1153,8 +1188,11 @@ template<typename MA1, typename MA2>
 void Matrix<T, MO>::
 eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
 
+#ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square() || cols() < 2)
         throw DataFrameError("Matrix::eigen_space(): Matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+
 
     MA1     tmp_evals { 1, cols() };
     MA2     tmp_evecs { rows(), cols() };
@@ -1220,8 +1258,10 @@ covariance(bool is_unbiased) const  {
 
     const value_type    denom = is_unbiased ? rows() - 1 : rows();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
     if (denom <= value_type(0))
         throw DataFrameError("Matrix::covariance(): Not solvable");
+#endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix      result (cols(), cols(), T(0));
     auto        lbd =
@@ -1268,8 +1308,10 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
     const size_type min_dem = std::min(rows(), cols());
 
+#ifdef HMDF_SANITY_EXCEPTIONS
     if (min_dem < 3)
         throw DataFrameError("Matrix::svd(): MAtrix is too small");
+#endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix                  self_tmp = *this;
     MA1                     u_tmp(rows(), min_dem);

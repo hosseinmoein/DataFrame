@@ -473,14 +473,14 @@ hessenberg_to_schur_(MA1 &e_vecs,
     size_type   iter { 0 };
     size_type   n { e_vecs.cols() - 1 };
     value_type  exshift { 0 };
-    value_type  p;
-    value_type  q;
-    value_type  oo;
-    value_type  s;
-    value_type  z;
-    value_type  w;
-    value_type  x;
-    value_type  y;
+    value_type  p { 0 };
+    value_type  q { 0 };
+    value_type  oo { 0 };
+    value_type  s { 0 };
+    value_type  z { 0 };
+    value_type  w { 0 };
+    value_type  x { 0 };
+    value_type  y { 0 };
 
     // Outer loop over eigenvalue index
     //

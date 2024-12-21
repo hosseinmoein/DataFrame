@@ -787,7 +787,8 @@ read_csv2_(std::FILE *stream,
     spec_vec.reserve(32);
     while (! std::feof(stream)) {
         line[0] = '\0';
-        std::fgets(line, sizeof(line) - 1, stream);
+        if (std::fgets(line, sizeof(line) - 1, stream) == nullptr)
+            continue;
 
         if (line[0] == '\0' || line[0] == '#') [[unlikely]]  continue;
 

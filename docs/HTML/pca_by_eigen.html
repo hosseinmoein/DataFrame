@@ -98,19 +98,6 @@ pca_by_eigen(std::vector&lt;const char *&gt; &amp;&amp;col_names,
       </td>
     </tr>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     <tr bgcolor="Azure">
       <td bgcolor="blue"> <font color="white">
 <PRE><B>
@@ -129,7 +116,7 @@ compact_svd(std::vector&lt;const char *&gt; &amp;&amp;col_names,
         In linear algebra, SVD is a factorization of a real or complex matrix into a rotation, followed by a rescaling followed by another rotation. It generalizes the eigen-decomposition of a square normal matrix with an orthonormal eigenbasis to any ⁠mXn matrix.<BR>
         It returns the 3 metrices U, &Sigma;, and V inside a std::tuple.<BR><BR>
         <I>U</I> contains the left singular vectors of the original matrix, meaning its columns are orthonormal vectors that span the row space of the matrix.<BR>
-        <I>S</I> is a diagonal matrix that contains sqrt of eigenvalues of the original matrix, arranged in descending order.<BR>
+        <I>&Sigma;</I> is a diagonal matrix that contains sqrt of eigenvalues of the original matrix, arranged in descending order.<BR>
         <I>V</I> contains the right singular vectors of the original matrix, represented as its columns.<BR>
         Original matrix (A) = U * &Sigma; * V<sup>T</sup><BR>
       </td>

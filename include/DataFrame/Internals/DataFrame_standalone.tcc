@@ -1067,9 +1067,9 @@ _write_binary_common_(STRM &strm, [[maybe_unused]] const V &vec,
     const auto  &citer = _typeinfo_name_.find(typeid(ValueType));
 
     if (citer != _typeinfo_name_.end()) [[likely]]
-        std::strncpy(buffer, citer->second, sizeof(buffer));
+        std::strncpy(buffer, citer->second, sizeof(buffer) - 1);
     else
-        std::strncpy(buffer, "N/A", sizeof(buffer));
+        std::strncpy(buffer, "N/A", sizeof(buffer) - 1);
     strm.write(buffer, sizeof(buffer));
 
     const uint64_t  vec_size = end_row - start_row;

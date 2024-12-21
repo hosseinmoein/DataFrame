@@ -490,8 +490,7 @@ public:
         const long  col_s = std::min(std::distance(idx_begin, idx_end),
                                      std::distance(column_begin, column_end));
 
-        const vec_t<double> simil =
-            std::move(get_similarity_(column_begin, col_s));
+        const vec_t<double> simil = get_similarity_(column_begin, col_s);
         vec_t<double>       avail;
         vec_t<double>       respon;
 

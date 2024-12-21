@@ -3689,7 +3689,7 @@ struct  SymmTriangleMovingMeanVisitor  {
                 break;
 
         const auto  triangle =
-            std::move(gen_sym_triangle<value_type>(roll_period_, 1, true));
+            gen_sym_triangle<value_type>(roll_period_, 1, true);
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
         for (size_type i { starting + roll_period_ };

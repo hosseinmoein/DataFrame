@@ -96,6 +96,66 @@ int main(int, char *[]) {
         std::cout << '\n';
     }
 
+    // Testing symmetrix matrices
+    //
+    {
+        using scm_mat_t =
+            Matrix<std::size_t, matrix_orient::column_major, true>;
+        using srm_mat_t =
+            Matrix<std::size_t, matrix_orient::column_major, true>;
+
+        scm_mat_t   sym_col_mat { 5, 5 };
+
+        value = 0;
+        for (long c = 0; c < sym_col_mat.cols(); ++c)
+            for (long r = c; r < sym_col_mat.rows(); ++r)
+                sym_col_mat(r, c) = value++;
+
+        assert(sym_col_mat.is_symmetric());
+        assert(sym_col_mat(2, 3) == sym_col_mat(3, 2));
+        assert(sym_col_mat(2, 3) == 10);
+        assert(sym_col_mat(3, 4) == sym_col_mat(4, 3));
+        assert(sym_col_mat(3, 4) == 13);
+
+        srm_mat_t   sym_row_mat { 5, 5 };
+
+        value = 0;
+        for (long r = 0; r < sym_row_mat.rows(); ++r)
+            for (long c = r; c < sym_row_mat.cols(); ++c)
+                sym_row_mat(r, c) = value++;
+
+        assert(sym_row_mat.is_symmetric());
+        assert(sym_row_mat(2, 3) == sym_row_mat(3, 2));
+        assert(sym_row_mat(2, 3) == 10);
+        assert(sym_row_mat(3, 4) == sym_row_mat(4, 3));
+        assert(sym_row_mat(3, 4) == 13);
+
+        auto    plus_mat = sym_row_mat + sym_col_mat;
+
+        assert(plus_mat.is_symmetric());
+        assert(plus_mat(2, 3) == plus_mat(3, 2));
+        assert(plus_mat(2, 3) == 20);
+        assert(plus_mat(3, 4) == plus_mat(4, 3));
+        assert(plus_mat(3, 4) == 26);
+
+        col_mat_t   col_mat { 5, 5 };
+
+        value = 0;
+        for (long c = 0; c < col_mat.cols(); ++c)
+            for (long r = 0; r < col_mat.rows(); ++r)
+                col_mat(r, c) = value++;
+
+        auto    plus_mat2 = sym_row_mat + col_mat;
+
+        assert((! plus_mat2.is_symmetric()));
+        assert(plus_mat2(2, 3) == 27);
+        assert(plus_mat2(3, 4) == 36);
+
+        auto    plus_mat3 = col_mat + sym_row_mat;
+
+        assert(plus_mat3 == plus_mat2);
+    }
+
     value = 0;
     for (long r = 0; r < row_mat.rows(); ++r)
         for (long c = 0; c < row_mat.cols(); ++c)

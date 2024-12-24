@@ -29,9 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
-#include <cassert>
 #include <vector>
 
 // ----------------------------------------------------------------------------
@@ -47,7 +47,9 @@ enum class  matrix_orient : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, matrix_orient MO = matrix_orient::column_major>
+template<typename T,
+         matrix_orient MO = matrix_orient::column_major,
+         bool IS_SYM = false>
 class   Matrix  {
 
 public:
@@ -103,6 +105,10 @@ public:
     void set_row(I row_data, size_type row);
 
     bool is_square() const noexcept;
+
+    // A matrix is either structurally symmetric (IS_SYM is true) or the data
+    // in the matrix is symmetric. In both cases this returns true.
+    //
     bool is_symmetric() const noexcept;
 
     trans_result_t transpose() const noexcept;
@@ -529,12 +535,15 @@ public:
         }
 
         friend difference_type
-        operator - (row_const_iterator lhs, row_const_iterator rhs) noexcept  {
+        operator - (row_const_iterator lhs, row_const_iterator rhs)  {
+
+            if (lhs.mptr_ != rhs.mptr_)
+                throw DataFrameError(
+                    "- operation in iterator is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
             const size_type col_diff = lhs.col_ - rhs.col_;
 
-            assert(lhs.mptr_ == rhs.mptr_);
             return (difference_type(
                         std::abs(row_diff) * rhs.mptr_->cols() - col_diff));
         }
@@ -718,9 +727,11 @@ public:
         }
 
         friend difference_type
-        operator - (row_iterator lhs, row_iterator rhs) noexcept  {
+        operator - (row_iterator lhs, row_iterator rhs)  {
 
-            assert(lhs.mptr_ == rhs.mptr_);
+            if (lhs.mptr_ != rhs.mptr_)
+                throw DataFrameError(
+                    "- operation between iterators is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
             const size_type col_diff = lhs.col_ - rhs.col_;
@@ -915,7 +926,9 @@ public:
         friend difference_type
         operator - (col_const_iterator lhs, col_const_iterator rhs) noexcept  {
 
-            assert(lhs.mptr_ == rhs.mptr_);
+            if (lhs.mptr_ != rhs.mptr_)
+                throw DataFrameError(
+                    "- operation between iterators is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
             const size_type col_diff = lhs.col_ - rhs.col_;
@@ -1103,12 +1116,15 @@ public:
         }
 
         friend difference_type
-        operator - (col_iterator lhs, col_iterator rhs) noexcept  {
+        operator - (col_iterator lhs, col_iterator rhs)  {
+
+            if (lhs.mptr_ != rhs.mptr_)
+                throw DataFrameError(
+                    "- operation between iterators is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
             const size_type col_diff = lhs.col_ - rhs.col_;
 
-            assert(lhs.mptr_ == rhs.mptr_);
             return (difference_type(
                         std::abs(col_diff) * rhs.mptr_->rows() - row_diff));
         }
@@ -1204,22 +1220,40 @@ public:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, matrix_orient MO1, matrix_orient MO2>
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
 static inline bool
-operator != (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+operator != (const Matrix<T, MO1, IS_SYM1> &lhs,
+             const Matrix<T, MO2, IS_SYM2> &rhs)  {
 
     if (lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols())  {
-        if constexpr (MO1 == matrix_orient::column_major)  {
-            for (long c = 0; c < lhs.cols(); ++c)
+        if constexpr (IS_SYM1 && IS_SYM2)  {
+            if constexpr (MO1 == matrix_orient::column_major)  {
+                for (long c = 0; c < lhs.cols(); ++c)
+                    for (long r = c; r < lhs.rows(); ++r)
+                        if (lhs(r, c) != rhs(r, c))
+                            return (true);
+            }
+            else  {
                 for (long r = 0; r < lhs.rows(); ++r)
-                    if (lhs(r, c) != rhs(r, c))
-                        return (true);
+                    for (long c = r; c < lhs.cols(); ++c)
+                        if (lhs(r, c) != rhs(r, c))
+                            return (true);
+            }
         }
         else  {
-            for (long r = 0; r < lhs.rows(); ++r)
+            if constexpr (MO1 == matrix_orient::column_major)  {
                 for (long c = 0; c < lhs.cols(); ++c)
-                    if (lhs(r, c) != rhs(r, c))
-                        return (true);
+                    for (long r = 0; r < lhs.rows(); ++r)
+                        if (lhs(r, c) != rhs(r, c))
+                            return (true);
+            }
+            else  {
+                for (long r = 0; r < lhs.rows(); ++r)
+                    for (long c = 0; c < lhs.cols(); ++c)
+                        if (lhs(r, c) != rhs(r, c))
+                            return (true);
+            }
         }
     }
     else  return (true);
@@ -1229,40 +1263,78 @@ operator != (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, matrix_orient MO1, matrix_orient MO2>
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
 static inline bool
-operator == (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+operator == (const Matrix<T, MO1, IS_SYM1> &lhs,
+             const Matrix<T, MO2, IS_SYM2> &rhs)  {
 
     return (! (lhs != rhs));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename T, matrix_orient MO1, matrix_orient MO2>
-static inline Matrix<T, MO1>
-operator + (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+static inline typename std::conditional<IS_SYM1 && IS_SYM2,
+                                        Matrix<T, MO1, true>,
+                                        Matrix<T, MO1, false>>::type
+operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
+            const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    using result_t =
+        typename std::conditional<IS_SYM1 && IS_SYM2,
+                                  Matrix<T, MO1, true>,
+                                  Matrix<T, MO1, false>>::type;
 
     const long  lhs_rows = lhs.rows();
     const long  lhs_cols = lhs.cols();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    assert(lhs_rows == rhs.rows() && lhs_cols == rhs.cols());
+    if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
+        throw DataFrameError(
+            "+ operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    auto        result = lhs;
+    result_t    result;
+
+    if constexpr (IS_SYM1 && (! IS_SYM2))  {
+        result.resize(lhs.rows(), lhs.cols());
+        for (long r = 0; r < lhs.rows(); ++r)
+            for (long c = 0; c < lhs.cols(); ++c)
+                result(r, c) = lhs(r, c);
+    }
+    else  {
+        result = lhs;
+    }
+
     auto        col_lbd =
         [lhs_rows, &result, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long c = begin; c < end; ++c)
-                for (long r = 0; r < lhs_rows; ++r)
-                    result(r, c) += rhs(r, c);
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = c; r < lhs_rows; ++r)
+                        result(r, c) += rhs(r, c);
+            }
+            else  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = 0; r < lhs_rows; ++r)
+                        result(r, c) += rhs(r, c);
+            }
         };
     auto        row_lbd =
         [lhs_cols, &result, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; ++r)
-                for (long c = 0; c < lhs_cols; ++c)
-                    result(r, c) += rhs(r, c);
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = r; c < lhs_cols; ++c)
+                        result(r, c) += rhs(r, c);
+            }
+            else  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = 0; c < lhs_cols; ++c)
+                        result(r, c) += rhs(r, c);
+            }
         };
     const long  thread_level =
         (lhs_cols >= 20000L || lhs_rows >= 20000L)
@@ -1292,31 +1364,67 @@ operator + (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, matrix_orient MO1, matrix_orient MO2>
-static inline Matrix<T, MO1>
-operator - (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+static inline typename std::conditional<IS_SYM1 && IS_SYM2,
+                                        Matrix<T, MO1, true>,
+                                        Matrix<T, MO1, false>>::type
+operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
+            const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    using result_t =
+        typename std::conditional<IS_SYM1 && IS_SYM2,
+                                  Matrix<T, MO1, true>,
+                                  Matrix<T, MO1, false>>::type;
 
     const long  lhs_rows = lhs.rows();
     const long  lhs_cols = lhs.cols();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    assert(lhs_rows == rhs.rows() && lhs_cols == rhs.cols());
+    if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
+        throw DataFrameError(
+            "- operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    auto        result = lhs;
+    result_t    result;
+
+    if constexpr (IS_SYM1 && (! IS_SYM2))  {
+        result.resize(lhs.rows(), lhs.cols());
+        for (long r = 0; r < lhs.rows(); ++r)
+            for (long c = 0; c < lhs.cols(); ++c)
+                result(r, c) = lhs(r, c);
+    }
+    else  {
+        result = lhs;
+    }
+
     auto        col_lbd =
         [lhs_rows, &result, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long c = begin; c < end; ++c)
-                for (long r = 0; r < lhs_rows; ++r)
-                    result(r, c) -= rhs(r, c);
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = c; r < lhs_rows; ++r)
+                        result(r, c) -= rhs(r, c);
+            }
+            else  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = 0; r < lhs_rows; ++r)
+                        result(r, c) -= rhs(r, c);
+            }
         };
     auto        row_lbd =
         [lhs_cols, &result, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; ++r)
-                for (long c = 0; c < lhs_cols; ++c)
-                    result(r, c) -= rhs(r, c);
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = r; c < lhs_cols; ++c)
+                        result(r, c) -= rhs(r, c);
+            }
+            else  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = 0; c < lhs_cols; ++c)
+                        result(r, c) -= rhs(r, c);
+            }
         };
     const long  thread_level =
         (lhs_cols >= 20000L || lhs_rows >= 20000L)
@@ -1346,30 +1454,53 @@ operator - (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, matrix_orient MO1, matrix_orient MO2>
-static inline Matrix<T, MO1> &
-operator += (Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+Matrix<T, MO1, IS_SYM1> &
+operator += (Matrix<T, MO1, IS_SYM1> &lhs,
+             const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    static_assert((IS_SYM1 && IS_SYM2) ||
+                  ((! IS_SYM1) && IS_SYM2) ||
+                  ((! IS_SYM1) && (! IS_SYM2)),
+                  "+= operation between these two metrices is not feasible");
 
     const long  lhs_rows = lhs.rows();
     const long  lhs_cols = lhs.cols();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    assert(lhs_rows == rhs.rows() && lhs_cols == rhs.cols());
+    if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
+        throw DataFrameError(
+            "+= operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     auto        col_lbd =
         [lhs_rows, &lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long c = begin; c < end; ++c)
-                for (long r = 0; r < lhs_rows; ++r)
-                    lhs(r, c) += rhs(r, c);
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = c; r < lhs_rows; ++r)
+                        lhs(r, c) += rhs(r, c);
+            }
+            else  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = 0; r < lhs_rows; ++r)
+                        lhs(r, c) += rhs(r, c);
+            }
         };
     auto        row_lbd =
         [lhs_cols, &lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; ++r)
-                for (long c = 0; c < lhs_cols; ++c)
-                    lhs(r, c) += rhs(r, c);
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = r; c < lhs_cols; ++c)
+                        lhs(r, c) += rhs(r, c);
+            }
+            else  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = 0; c < lhs_cols; ++c)
+                        lhs(r, c) += rhs(r, c);
+            }
         };
     const long  thread_level =
         (lhs_cols >= 20000L || lhs_rows >= 20000L)
@@ -1399,30 +1530,53 @@ operator += (Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, matrix_orient MO1, matrix_orient MO2>
-static inline Matrix<T, MO1> &
-operator -= (Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+Matrix<T, MO1, IS_SYM1> &
+operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
+             const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    static_assert((IS_SYM1 && IS_SYM2) ||
+                  ((! IS_SYM1) && IS_SYM2) ||
+                  ((! IS_SYM1) && (! IS_SYM2)),
+                  "-= operation between these two metrices is not feasible");
 
     const long  lhs_rows = lhs.rows();
     const long  lhs_cols = lhs.cols();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    assert(lhs_rows == rhs.rows() && lhs_cols == rhs.cols());
+    if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
+        throw DataFrameError(
+            "-= operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     auto        col_lbd =
         [lhs_rows, &lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long c = begin; c < end; ++c)
-                for (long r = 0; r < lhs_rows; ++r)
-                    lhs(r, c) -= rhs(r, c);
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = c; r < lhs_rows; ++r)
+                        lhs(r, c) -= rhs(r, c);
+            }
+            else  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = 0; r < lhs_rows; ++r)
+                        lhs(r, c) -= rhs(r, c);
+            }
         };
     auto        row_lbd =
         [lhs_cols, &lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; ++r)
-                for (long c = 0; c < lhs_cols; ++c)
-                    lhs(r, c) -= rhs(r, c);
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = r; c < lhs_cols; ++c)
+                        lhs(r, c) -= rhs(r, c);
+            }
+            else  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = 0; c < lhs_cols; ++c)
+                        lhs(r, c) -= rhs(r, c);
+            }
         };
     const long  thread_level =
         (lhs_cols >= 20000L || lhs_rows >= 20000L)
@@ -1454,20 +1608,24 @@ operator -= (Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
 
 // Naïve but cache friendly O(n^3) algorithm
 //
-template<typename T, matrix_orient MO1, matrix_orient MO2>
-static Matrix<T, MO1>
-operator * (const Matrix<T, MO1> &lhs, const Matrix<T, MO2> &rhs)  {
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+static Matrix<T, MO1, false>
+operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
+            const Matrix<T, MO2, IS_SYM2> &rhs)  {
 
     const long  lhs_rows { lhs.rows() };
     const long  lhs_cols { lhs.cols() };
     const long  rhs_cols { rhs.cols() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    assert(lhs_cols == rhs.rows());
+    if (lhs_cols != rhs.rows())
+        throw DataFrameError(
+            "* operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    Matrix<T, MO1>  result { lhs_rows, rhs_cols, 0 };
-    const long      thread_level =
+    Matrix<T, MO1, false>   result { lhs_rows, rhs_cols, 0 };
+    const long              thread_level =
         (lhs_cols >= 400L || rhs_cols >= 400L)
             ? ThreadGranularity::get_thread_level() : 0;
 

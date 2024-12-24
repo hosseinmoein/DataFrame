@@ -27,7 +27,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Utils/Matrix.h>
 
 #include <cmath>
@@ -38,15 +37,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>::Matrix(size_type rows, size_type cols, const_reference def_v)
-    : rows_(rows), cols_(cols), matrix_(rows * cols, def_v)  {   }
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::
+Matrix(size_type rows, size_type cols, const_reference def_v)
+    : rows_(rows),
+      cols_(cols),
+      matrix_((! IS_SYM) ? rows * cols : (cols * (cols + 1L)) / 2L, def_v)  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if constexpr (IS_SYM)  {
+        if (cols != rows)
+            throw DataFrameError("Matrix::Matrix(): "
+                                 "Symmetric matrix must be squared");
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+}
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 void
-Matrix<T, MO>::clear() noexcept  {
+Matrix<T, MO, IS_SYM>::clear() noexcept  {
 
     rows_ = cols_ = 0;
     matrix_.clear();
@@ -54,9 +65,9 @@ Matrix<T, MO>::clear() noexcept  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 void
-Matrix<T, MO>::swap(Matrix &rhs) noexcept  {
+Matrix<T, MO, IS_SYM>::swap(Matrix &rhs) noexcept  {
 
     std::swap(rows_, rhs.rows_);
     std::swap(cols_, rhs.cols_);
@@ -65,83 +76,129 @@ Matrix<T, MO>::swap(Matrix &rhs) noexcept  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 bool
-Matrix<T, MO>::empty() const noexcept  {
+Matrix<T, MO, IS_SYM>::empty() const noexcept  {
 
     return (rows_ == 0 && cols_ == 0);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 void
-Matrix<T, MO>::reserve(size_type rows, size_type cols)  {
+Matrix<T, MO, IS_SYM>::reserve(size_type rows, size_type cols)  {
 
-    matrix_.reserve(rows * cols);
+    if constexpr (IS_SYM)  {
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (cols != rows)
+            throw DataFrameError("Matrix::reserve(): "
+                                 "Symmetric matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+        matrix_.reserve((cols * (cols + 1L)) / 2L);
+    }
+    else  {
+        matrix_.reserve(rows * cols);
+    }
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>::size_type
-Matrix<T, MO>::rows() const noexcept  { return (rows_); }
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::size_type
+Matrix<T, MO, IS_SYM>::rows() const noexcept  { return (rows_); }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>::size_type
-Matrix<T, MO>::cols() const noexcept  { return (cols_); }
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::size_type
+Matrix<T, MO, IS_SYM>::cols() const noexcept  { return (cols_); }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-void
-Matrix<T, MO>::resize(size_type rows, size_type cols, const_reference def_v) {
+template<typename T,  matrix_orient MO, bool IS_SYM>
+void Matrix<T, MO, IS_SYM>::
+resize(size_type rows, size_type cols, const_reference def_v) {
 
+    if constexpr (IS_SYM)  {
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (cols != rows)
+            throw DataFrameError("Matrix::resize(): "
+                                 "Symmetric matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+        matrix_.resize((cols * (cols + 1L)) / 2L, def_v);
+    }
+    else
+        matrix_.resize(rows * cols, def_v);
     rows_ = rows;
     cols_ = cols;
-    matrix_.resize(rows * cols, def_v);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>::reference
-Matrix<T, MO>::at(size_type row, size_type col)  {
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::reference
+Matrix<T, MO, IS_SYM>::at(size_type row, size_type col)  {
 
-    if constexpr (MO == matrix_orient::column_major)
-        return (matrix_[col * rows_ + row]);
-    else
-        return (matrix_[row * cols_ + col]);
+    if constexpr (IS_SYM)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            if (row > col)  std::swap (row, col);
+            return (matrix_[(row * cols_) + col - ((row * (row + 1)) >> 1)]);
+        }
+        else  {
+            if (col > row)  std::swap (row, col);
+            return (matrix_[(col * rows_) + row - ((col * (col + 1)) >> 1)]);
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            return (matrix_[col * rows_ + row]);
+        else
+            return (matrix_[row * cols_ + col]);
+    }
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>::const_reference
-Matrix<T, MO>::at(size_type row, size_type col) const  {
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::const_reference
+Matrix<T, MO, IS_SYM>::at(size_type row, size_type col) const  {
 
-    if constexpr (MO == matrix_orient::column_major)
-        return (matrix_[col * rows_ + row]);
-    else
-        return (matrix_[row * cols_ + col]);
+    if constexpr (IS_SYM)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            if (row > col)  std::swap (row, col);
+            return (matrix_[(row * cols_) + col - ((row * (row + 1)) >> 1)]);
+        }
+        else  {
+            if (col > row)  std::swap (row, col);
+            return (matrix_[(col * rows_) + row - ((col * (col + 1)) >> 1)]);
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            return (matrix_[col * rows_ + row]);
+        else
+            return (matrix_[row * cols_ + col]);
+    }
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 bool
-Matrix<T, MO>::is_square() const noexcept  { return (rows() == cols()); }
+Matrix<T, MO, IS_SYM>::is_square() const noexcept  {
+
+    return (rows() == cols());
+}
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 bool
-Matrix<T, MO>::is_symmetric() const noexcept  {
+Matrix<T, MO, IS_SYM>::is_symmetric() const noexcept  {
 
-    if (! is_square ())
-        return (false);
+    if constexpr (IS_SYM)  return (true);
+    if (! is_square())  return (false);
 
     for (size_type r = 1; r < rows(); ++r)
         for (size_type c = 0; c < r; ++c)
@@ -153,28 +210,28 @@ Matrix<T, MO>::is_symmetric() const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>::reference
-Matrix<T, MO>::operator() (size_type row, size_type col)  {
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::reference
+Matrix<T, MO, IS_SYM>::operator() (size_type row, size_type col)  {
 
     return (at(row, col));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>::const_reference
-Matrix<T, MO>::operator() (size_type row, size_type col) const  {
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::const_reference
+Matrix<T, MO, IS_SYM>::operator() (size_type row, size_type col) const  {
 
     return (at(row, col));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename I>
 void
-Matrix<T, MO>::set_column(I col_data, size_type col)  {
+Matrix<T, MO, IS_SYM>::set_column(I col_data, size_type col)  {
 
     for (size_type r = 0; r < rows(); ++r)
         at(r, col) = *col_data++;
@@ -182,10 +239,10 @@ Matrix<T, MO>::set_column(I col_data, size_type col)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename I>
 void
-Matrix<T, MO>::set_row(I row_data, size_type row)  {
+Matrix<T, MO, IS_SYM>::set_row(I row_data, size_type row)  {
 
     for (size_type c = 0; c < cols(); ++c)
         at(row, c) = *row_data++;
@@ -193,27 +250,41 @@ Matrix<T, MO>::set_row(I row_data, size_type row)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 constexpr matrix_orient
-Matrix<T, MO>::orientation()  { return (MO); }
+Matrix<T, MO, IS_SYM>::orientation()  { return (MO); }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>::trans_result_t
-Matrix<T, MO>::transpose() const noexcept  {
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::trans_result_t
+Matrix<T, MO, IS_SYM>::transpose() const noexcept  {
 
     trans_result_t  result { cols(), rows() };
 
-    if constexpr (MO == matrix_orient::column_major)  {
-        for (size_type c = 0; c < cols(); ++c)
+    if constexpr (IS_SYM)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            for (size_type c = 0; c < cols(); ++c)
+                for (size_type r = c; r < rows(); ++r)
+                    result(r, c) = at(r, c);
+        }
+        else  {
             for (size_type r = 0; r < rows(); ++r)
-                result(c, r) = at(r, c);
+                for (size_type c = r; c < cols(); ++c)
+                    result(r, c) = at(r, c);
+        }
     }
     else  {
-        for (size_type r = 0; r < rows(); ++r)
+        if constexpr (MO == matrix_orient::column_major)  {
             for (size_type c = 0; c < cols(); ++c)
-                result(c, r) = at(r, c);
+                for (size_type r = 0; r < rows(); ++r)
+                    result(c, r) = at(r, c);
+        }
+        else  {
+            for (size_type r = 0; r < rows(); ++r)
+                for (size_type c = 0; c < cols(); ++c)
+                    result(c, r) = at(r, c);
+        }
     }
 
     return (result);
@@ -221,21 +292,26 @@ Matrix<T, MO>::transpose() const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>
-Matrix<T, MO>::transpose2() const noexcept  {
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>
+Matrix<T, MO, IS_SYM>::transpose2() const noexcept  {
 
     Matrix  result { cols(), rows() };
 
-    if constexpr (MO == matrix_orient::column_major)  {
-        for (size_type c = 0; c < cols(); ++c)
-            for (size_type r = 0; r < rows(); ++r)
-                result(c, r) = at(r, c);
+    if constexpr (IS_SYM)  {
+        result = *this;
     }
     else  {
-        for (size_type r = 0; r < rows(); ++r)
+        if constexpr (MO == matrix_orient::column_major)  {
             for (size_type c = 0; c < cols(); ++c)
-                result(c, r) = at(r, c);
+                for (size_type r = 0; r < rows(); ++r)
+                    result(c, r) = at(r, c);
+        }
+        else  {
+            for (size_type r = 0; r < rows(); ++r)
+                for (size_type c = 0; c < cols(); ++c)
+                    result(c, r) = at(r, c);
+        }
     }
 
     return (result);
@@ -243,9 +319,9 @@ Matrix<T, MO>::transpose2() const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-inline Matrix<T, MO>::size_type
-Matrix<T, MO>::ppivot_(size_type pivot_row,
+template<typename T,  matrix_orient MO, bool IS_SYM>
+inline Matrix<T, MO, IS_SYM>::size_type
+Matrix<T, MO, IS_SYM>::ppivot_(size_type pivot_row,
                        size_type self_rows,
                        size_type self_cols) noexcept  {
 
@@ -275,9 +351,9 @@ Matrix<T, MO>::ppivot_(size_type pivot_row,
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>
-Matrix<T, MO>::inverse() const  {
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>
+Matrix<T, MO, IS_SYM>::inverse() const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (rows() != cols())
@@ -328,13 +404,14 @@ Matrix<T, MO>::inverse() const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>
-Matrix<T, MO>::degree_matrix() const  {
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>
+Matrix<T, MO, IS_SYM>::degree_matrix() const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (rows() != cols())
-        throw DataFrameError("Matrix::degree_matrix(): Matrix must be squared");
+        throw DataFrameError("Matrix::degree_matrix(): "
+                             "Matrix must be squared");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix  result { cols(), cols(), T(0) };
@@ -352,18 +429,18 @@ Matrix<T, MO>::degree_matrix() const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO>
-Matrix<T, MO>::laplacian_matrix() const  {
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>
+Matrix<T, MO, IS_SYM>::laplacian_matrix() const  {
 
     return (degree_matrix() - *this);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA1, typename MA2>
-void Matrix<T, MO>::
+void Matrix<T, MO, IS_SYM>::
 red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
 
     Matrix<T, matrix_orient::row_major> ortho { 1, e_vecs.cols() };
@@ -454,9 +531,9 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA1, typename MA2, typename MA3, typename MA4>
-void Matrix<T, MO>::
+void Matrix<T, MO, IS_SYM>::
 hessenberg_to_schur_(MA1 &e_vecs,
                      MA2 &e_vals,
                      MA3 &imagi,
@@ -933,8 +1010,8 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-void Matrix<T, MO>::
+template<typename T,  matrix_orient MO, bool IS_SYM>
+void Matrix<T, MO, IS_SYM>::
 cdiv_(value_type xr,
       value_type xi,
       value_type yr,
@@ -962,9 +1039,9 @@ cdiv_(value_type xr,
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA1, typename MA2, typename MA3>
-void Matrix<T, MO>::
+void Matrix<T, MO, IS_SYM>::
 tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
     for (size_type r = e_vecs.rows() - 1; r > 0; --r)  {
@@ -1081,9 +1158,9 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA1, typename MA2, typename MA3>
-void Matrix<T, MO>::
+void Matrix<T, MO, IS_SYM>::
 diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
     for (size_type c = 1; c < e_vecs.cols(); ++c)
@@ -1096,7 +1173,8 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
     for (size_type c = 0; c < e_vecs.cols(); ++c)  {
         // Find small subdiagonal element
         //
-        tst1 = std::max(tst1, std::fabs(e_vals(0, c)) + std::fabs(imagi(0, c)));
+        tst1 =
+            std::max(tst1, std::fabs(e_vals(0, c)) + std::fabs(imagi(0, c)));
 
         size_type   m { c };
 
@@ -1114,7 +1192,8 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
                // Compute implicit shift
                //
                 value_type  g { e_vals (0, c) };
-                value_type  p { (e_vals(0, c + 1) - g) / (T(2) * imagi(0, c)) };
+                value_type  p { (e_vals(0, c + 1) - g) /
+                                (T(2) * imagi(0, c)) };
 
                 // Euclidean distance func
                 //
@@ -1154,7 +1233,8 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
                     s = imagi(0, cc) / dis;
                     cunit = p / dis;
                     p = cunit * e_vals(0, cc) - s * g;
-                    e_vals(0, cc + 1) = h + s * (cunit * g + s * e_vals(0, cc));
+                    e_vals(0, cc + 1) =
+                        h + s * (cunit * g + s * e_vals(0, cc));
 
                     // Accumulate transformation.
                     //
@@ -1183,9 +1263,9 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA1, typename MA2>
-void Matrix<T, MO>::
+void Matrix<T, MO, IS_SYM>::
 eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
@@ -1252,8 +1332,8 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
-Matrix<T, MO> Matrix<T, MO>::
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> Matrix<T, MO, IS_SYM>::
 covariance(bool is_unbiased) const  {
 
     const value_type    denom = is_unbiased ? rows() - 1 : rows();
@@ -1301,9 +1381,9 @@ covariance(bool is_unbiased) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T,  matrix_orient MO>
+template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA1, typename MA2, typename MA3>
-void Matrix<T, MO>::
+void Matrix<T, MO, IS_SYM>::
 svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
     const size_type min_dem = std::min(rows(), cols());

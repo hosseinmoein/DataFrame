@@ -405,6 +405,65 @@ Matrix<T, MO, IS_SYM>::inverse() const  {
 // ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::value_type
+Matrix<T, MO, IS_SYM>::norm() const noexcept  {
+
+    value_type  result { 0 };
+
+    if constexpr (IS_SYM)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            for (size_type c = 0; c < cols(); ++c)  {
+                for (size_type r = c + 1; r < rows(); ++r)  {
+                    const auto  val = at(r, c);
+
+                    result += val * val;
+                }
+            }
+        }
+        else  {
+            for (size_type r = 0; r < rows(); ++r)  {
+                for (size_type c = r + 1; c < cols(); ++c)  {
+                    const auto  val = at(r, c);
+
+                    result += val * val;
+                }
+            }
+        }
+
+        result *= T(2);
+        for (size_type c = 0; c < cols(); ++c)  {
+            const auto  val = at(c, c);
+
+            result += val * val;
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            for (size_type c = 0; c < cols(); ++c)  {
+                for (size_type r = 0; r < rows(); ++r)  {
+                    const auto  val = at(r, c);
+
+                    result += val * val;
+                }
+            }
+        }
+        else  {
+            for (size_type r = 0; r < rows(); ++r)  {
+                for (size_type c = 0; c < cols(); ++c)  {
+                    const auto  val = at(r, c);
+
+                    result += val * val;
+                }
+            }
+        }
+    }
+
+    return (std::sqrt(result));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM>
 Matrix<T, MO, IS_SYM>::degree_matrix() const  {
 

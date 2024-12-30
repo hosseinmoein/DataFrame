@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Vectors/VectorPtrView.h>
 
 #include <algorithm>
@@ -2698,6 +2699,244 @@ private:
 
 template<vector_sim_type TYP, typename T, typename I = unsigned long>
 using vs_v = VectorSimilarityVisitor<TYP, T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t K,
+         typename T, typename I = unsigned long, std::size_t A = 0>
+struct  SpectralClusteringVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using similarity_func =
+        std::function<double(const value_type &x,
+                             const value_type &y,
+                             double sigma)>;
+    using seed_t = std::random_device::result_type;
+    using cluster_type = std::array<VectorConstPtrView<value_type, A>, K>;
+    using order_type =
+        std::array<std::vector<
+                       size_type,
+                       typename allocator_declare<size_type, A>::type>, K>;
+
+private:
+
+    using sym_mat_t = Matrix<T, matrix_orient::row_major, true>;
+    using mat_t = Matrix<T, matrix_orient::row_major, false>;
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    const size_type iter_num_;
+    const seed_t    seed_;
+    const double    sigma_;
+    similarity_func sfunc_;
+    cluster_type    clusters_ { };       // K Clusters
+    order_type      clusters_idxs_ { };  // K Clusters indices
+
+    template<typename H>
+    inline sym_mat_t
+    calc_similarity_(const H &column_begin, size_type col_s)  {
+
+        sym_mat_t   sim_mat(col_s, col_s);
+
+        for (long r = 0; r < sim_mat.rows(); ++r)
+            for (long c = r; c < sim_mat.cols(); ++c)
+                sim_mat(r, c) =
+                    sfunc_(*(column_begin + c), *(column_begin + r), sigma_);
+
+        return (sim_mat);
+    }
+
+    inline vec_t<T>
+    calc_degree_(const sym_mat_t &sim_mat)  {
+
+        vec_t<T>    deg_mat(sim_mat.rows());
+
+        for (long r = 0; r < sim_mat.rows(); ++r)  {
+            value_type  sum { 0 };
+
+            for (long c = 0; c < sim_mat.cols(); ++c)
+                sum += sim_mat(r, c);
+            deg_mat[r] = sum;
+            // deg_mat[r] = T(1) / std::sqrt(sum); // needs I - D * W * D
+        }
+
+        return (deg_mat);
+    }
+
+    inline mat_t
+    calc_laplacian_(const vec_t<T> &deg_mat, const sym_mat_t &sim_mat)  {
+
+        mat_t   lap_mat(sim_mat.rows(), sim_mat.cols());
+
+        for (long r = 0; r < sim_mat.rows(); ++r)
+            for (long c = 0; c < sim_mat.cols(); ++c)
+                if (r == c)
+                    lap_mat(r, r) = deg_mat[r] - sim_mat(r, r);
+                else
+                    lap_mat(r, c) = -sim_mat(r, c);
+
+        return (lap_mat);
+    }
+
+    inline double
+    distance_func_(const mat_t &x, const mat_t &y,
+                   long xr, long yr, long cols)  {
+
+        value_type  val { 0 };
+
+        for (long c = 0; c < cols; ++c) {
+            const value_type    diff = x(xr, c) - y(yr, c);
+
+            val += diff * diff;
+        }
+        return (val);
+    }
+
+    inline vec_t<long>
+    do_kmeans_(const mat_t &eigenvecs)  {
+
+        const long      rows = eigenvecs.rows();  // Samples
+        const long      cols = eigenvecs.cols();  // dimensions
+        vec_t<long>     cluster_idxs (rows, -1L);
+        constexpr long  k = long(K);
+
+        std::random_device                  rd;
+        std::mt19937                        gen (
+            (seed_ != seed_t(-1)) ? seed_ : rd());
+        std::uniform_int_distribution<long> rd_gen (0, rows - 1);
+
+        // Copy the top k rows of eigen vector.
+        //
+        mat_t   means { k, cols };
+
+        for (long r = 0; r < k; ++r)
+            for (long c = 0; c < cols; ++c)
+                means(r, c) = eigenvecs(r, c);
+
+        for (size_type iter = 0; iter < iter_num_; ++iter)  {
+             // Assign cluster_idxs based on closest means
+             //
+             for (long r = 0; r < rows; ++r) {
+                 double best_distance = std::numeric_limits<double>::max();
+
+                 for (long rr = 0; rr < k; ++rr) {
+                     const double   distance =
+                         distance_func_(eigenvecs, means, r, rr, cols);
+
+                     if (distance < best_distance) {
+                         best_distance = distance;
+                         cluster_idxs[r] = rr;
+                     }
+                 }
+             }
+
+             // Update means
+             //
+             mat_t          new_means { k, cols };
+             vec_t<long>    counts (k, 0L);
+
+             for (long r = 0; r < rows; ++r) {
+                 for (long c = 0; c < cols; ++c)
+                     new_means(cluster_idxs[r], c) += eigenvecs(r, c);
+                 counts[cluster_idxs[r]]++;
+             }
+
+             for (int r = 0; r < k; ++r) {
+                 if (counts[r] > 0)  {
+                     for (long c = 0; c < cols; ++c)
+                         new_means(r, c) /= T(counts[r]);
+                 }
+                 else  { // Reinitialize centroid if no points assigned
+                     const auto rr = rd_gen(gen);
+
+                     for (long c = 0; c < cols; ++c)
+                         new_means(r, c) = eigenvecs(rr, c);
+                 }
+             }
+             if ((means - new_means).norm() <= 0.0000001)  break;
+
+             means = new_means;
+        }
+
+        return (cluster_idxs);
+    }
+
+public:
+
+    template<typename IV, typename H>
+    inline void
+    operator() (const IV &idx_begin, const IV &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s <= K)
+           throw DataFrameError("SpectralClusteringVisitor: "
+                                "Data size must be bigger than K");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        mat_t   eigenvecs;
+
+        {
+            const auto  sim_mat = calc_similarity_(column_begin, col_s);
+            const auto  deg_mat = calc_degree_(sim_mat);
+            const auto  lap_mat = calc_laplacian_(deg_mat, sim_mat);
+            mat_t       eigenvals;
+
+            lap_mat.eigen_space(eigenvals, eigenvecs, true);
+        }  // Getting rid of the big things we don't need anymore
+
+        const auto  cluster_idxs = do_kmeans_(eigenvecs);
+
+        // Update the accessible data
+        //
+        for (size_type i = 0; i < K; ++i)  {
+            const auto  val  = col_s / K + 10;
+
+            clusters_[i].reserve(val);
+            clusters_idxs_[i].reserve(val);
+        }
+        for (size_type i = 0; i < cluster_idxs.size(); ++i)  {
+            clusters_[cluster_idxs[i]].push_back(&(*(column_begin + i)));
+            clusters_idxs_[cluster_idxs[i]].push_back(i);
+        }
+    }
+
+    inline void pre()  {
+
+        for (auto &iter : clusters_) iter.clear();
+        for (auto &iter : clusters_idxs_) iter.clear();
+    }
+    inline void post()  {  }
+    inline const cluster_type &get_result() const  { return (clusters_); }
+    inline cluster_type &get_result()  { return (clusters_); }
+    inline const order_type &
+    get_clusters_idxs() const  { return (clusters_idxs_); }
+
+    explicit
+    SpectralClusteringVisitor(
+        size_type num_of_iter,
+        double sigma,
+        similarity_func sf =
+            [](const value_type &x,
+               const value_type &y,
+               double sigma) -> double  {
+                return (std::exp(-((x - y) * (x - y)) / (2 * sigma * sigma)));
+            },
+        seed_t seed = seed_t(-1))
+        : iter_num_(num_of_iter),
+          seed_(seed),
+          sigma_(sigma),
+          sfunc_(sf)  {  }
+};
+
+template<std::size_t K, typename T,
+         typename I = unsigned long, std::size_t A = 0>
+using spect_v = SpectralClusteringVisitor<K, T, I, A>;
 
 } // namespace hmdf
 

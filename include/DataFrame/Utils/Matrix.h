@@ -63,9 +63,10 @@ public:
     using self_t = Matrix<value_type, MO>;
 
     using trans_result_t =
-        typename std::conditional<MO == matrix_orient::column_major,
-                                  Matrix<T, matrix_orient::row_major>,
-                                  Matrix<T, matrix_orient::column_major>>::type;
+        typename std::conditional<
+            MO == matrix_orient::column_major,
+            Matrix<T, matrix_orient::row_major>,
+            Matrix<T, matrix_orient::column_major>>::type;
 
     Matrix() = default;
     Matrix(size_type rows, size_type cols, const_reference def_v = T());
@@ -122,6 +123,12 @@ public:
     //                 Determinant(A)
     //
     Matrix inverse() const;
+
+    // Frobenius Norm:
+    // The Frobenius norm of a matrix is the square root of the sum of
+    // the squares of the values of the elements of the matrix.
+    //
+    value_type norm() const noexcept;
 
     // Degree matrix is a square diagonal matrix where each diagonal value
     // represents the number of connections in a row of an adjacency matrix.

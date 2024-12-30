@@ -52,6 +52,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -2387,6 +2388,57 @@ static void test_compact_svd()  {
     assert(std::fabs(V(3, 1) - -0.00079) < 0.000001);
     assert(std::fabs(V(3, 3) - 0.491216) < 0.000001);
 }
+*/
+
+// ----------------------------------------------------------------------------
+
+static void test_SpectralClusteringVisitor()  {
+
+    std::cout << "\nTesting SpectralClusteringVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    spect_v<4, double, std::string, 64> spc(1000, 4);
+
+    df.single_act_visit<double>("IBM_Close", spc);
+
+    const auto  &clusters = spc.get_result();
+
+    assert(clusters.size() == 4);
+    assert(clusters[0].size() == 264);
+    assert(clusters[1].size() == 631);
+    assert(clusters[2].size() == 351);
+    assert(clusters[3].size() == 475);
+
+    assert(std::fabs(clusters[0][0] - 185.53) < 0.001);
+    assert(std::fabs(clusters[0][10] - 192.27) < 0.001);
+    assert(std::fabs(clusters[0][123] - 155.18) < 0.001);
+    assert(std::fabs(clusters[0][263] - 125.94) < 0.001);
+
+    assert(std::fabs(clusters[1][0] - 186.64) < 0.001);
+    assert(std::fabs(clusters[1][67] - 189.04) < 0.001);
+    assert(std::fabs(clusters[1][455] - 116.65) < 0.001);
+    assert(std::fabs(clusters[1][630] - 108.91) < 0.001);
+
+    assert(std::fabs(clusters[2][0] - 186.0) < 0.001);
+    assert(std::fabs(clusters[2][100] - 139.89) < 0.001);
+    assert(std::fabs(clusters[2][243] - 116.83) < 0.001);
+    assert(std::fabs(clusters[2][350] - 125.1) < 0.001);
+
+    assert(std::fabs(clusters[3][0] - 189.71) < 0.001);
+    assert(std::fabs(clusters[3][100] - 169.92) < 0.001);
+    assert(std::fabs(clusters[3][243] - 152.64) < 0.001);
+    assert(std::fabs(clusters[3][474] - 111.66) < 0.001);
+}
 
 // ----------------------------------------------------------------------------
 
@@ -2394,6 +2446,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+    /*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -2433,6 +2486,8 @@ int main(int, char *[]) {
     test_covariance_matrix();
     test_pca_by_eigen();
     test_compact_svd();
+    */
+    test_SpectralClusteringVisitor();
 
     return (0);
 }

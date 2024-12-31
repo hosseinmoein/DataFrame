@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 #include <chrono>
 #include <iostream>
-#include <unistd.h>
 
 using namespace hmdf;
 
@@ -510,7 +509,9 @@ void test_thread_pool()  {
 
     ThreadGranularity::set_thread_level(3);
 
-    ::sleep(2);  // Let threads start
+    // Let threads start
+    //
+    std::this_thread::sleep_for(std::chrono::seconds(2));
     {
         std::vector<int>    values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         auto                lbd = [&values] (auto begin, auto end) -> void  {

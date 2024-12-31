@@ -52,7 +52,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -2388,7 +2387,6 @@ static void test_compact_svd()  {
     assert(std::fabs(V(3, 1) - -0.00079) < 0.000001);
     assert(std::fabs(V(3, 3) - 0.491216) < 0.000001);
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -2446,7 +2444,6 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
-    /*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -2486,7 +2483,6 @@ int main(int, char *[]) {
     test_covariance_matrix();
     test_pca_by_eigen();
     test_compact_svd();
-    */
     test_SpectralClusteringVisitor();
 
     return (0);

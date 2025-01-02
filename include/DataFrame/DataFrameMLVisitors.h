@@ -2917,7 +2917,6 @@ public:
     inline const order_type &
     get_clusters_idxs() const  { return (clusters_idxs_); }
 
-    explicit
     SpectralClusteringVisitor(
         size_type num_of_iter,
         double sigma,

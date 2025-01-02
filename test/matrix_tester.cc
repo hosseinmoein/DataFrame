@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Matrix.h>
 
 #include <cassert>
+#include <chrono>
 #include <iostream>
 
 using namespace hmdf;
@@ -39,6 +40,8 @@ using col_mat_t = Matrix<std::size_t, matrix_orient::column_major>;
 
 static constexpr long   ROWS = 5;
 static constexpr long   COLS = 6;
+
+void test_thread_pool();
 
 // ----------------------------------------------------------------------------
 
@@ -496,7 +499,100 @@ int main(int, char *[]) {
         assert(laplacian_mat(4, 4) == 2.0);
     }
 
+    test_thread_pool();
     return (0);
+}
+
+// ----------------------------------------------------------------------------
+
+void test_thread_pool()  {
+
+    ThreadGranularity::set_thread_level(3);
+
+    // Let threads start
+    //
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    {
+        std::vector<int>    values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        auto                lbd = [&values] (auto begin, auto end) -> void  {
+            for (auto i = begin; i < end; ++i)
+                values[i] += 1;
+        };
+        auto                futures =
+            ThreadGranularity::thr_pool_.parallel_loop(0, int(values.size()),
+                                                       std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+        for (int i = 0; i < int(values.size()); ++i)
+            assert((values[i] == i + 2));
+
+        std::vector<int>    values2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        auto                lbd2 = [&values2] (auto begin, auto end) -> void  {
+            for (auto i = begin; i < end; ++i)
+                values2[i] += 1;
+        };
+        auto                futures2 =
+            ThreadGranularity::thr_pool_.parallel_loop(0, int(values2.size()),
+                                                       std::move(lbd2));
+
+        for (auto &fut : futures2)  fut.get();
+        for (int i = 0; i < int(values2.size()); ++i)
+            assert((values2[i] == i + 2));
+
+        std::vector<int>    values3 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        auto                lbd3 = [&values3] (auto begin, auto end) -> void  {
+            for (auto i = begin; i < end; ++i)
+                values3[i] += 1;
+        };
+        auto                futures3 =
+            ThreadGranularity::thr_pool_.parallel_loop(0, int(values3.size()),
+                                                       std::move(lbd3));
+
+        for (auto &fut : futures3)  fut.get();
+        for (int i = 0; i < int(values3.size()); ++i)
+            assert((values3[i] == i + 2));
+    }
+
+    {
+        std::vector<int>    values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        auto                lbd = [&values] (auto begin, auto end) -> void  {
+            for (auto i = end; i >= begin; --i)
+                values[i] += 1;
+        };
+        auto                futures =
+            ThreadGranularity::thr_pool_.parallel_loop(
+                int(values.size()) - 1, 0, std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+        for (int i = 0; i < int(values.size()); ++i)
+            assert((values[i] == i + 2));
+
+        std::vector<int>    values2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        auto                lbd2 = [&values2] (auto begin, auto end) -> void  {
+            for (auto i = end; i >= begin; --i)
+                values2[i] += 1;
+        };
+        auto                futures2 =
+            ThreadGranularity::thr_pool_.parallel_loop(
+                int(values2.size()) - 1, 0, std::move(lbd2));
+
+        for (auto &fut : futures2)  fut.get();
+        for (int i = 0; i < int(values2.size()); ++i)
+            assert((values2[i] == i + 2));
+
+        std::vector<int>    values3 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        auto                lbd3 = [&values3] (auto begin, auto end) -> void  {
+            for (auto i = end; i >= begin; --i)
+                values3[i] += 1;
+        };
+        auto                futures3 =
+            ThreadGranularity::thr_pool_.parallel_loop(
+                int(values3.size()) - 1, 0, std::move(lbd3));
+
+        for (auto &fut : futures3)  fut.get();
+        for (int i = 0; i < int(values3.size()); ++i)
+            assert((values3[i] == i + 2));
+    }
 }
 
 // ----------------------------------------------------------------------------

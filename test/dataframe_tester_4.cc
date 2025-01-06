@@ -2399,43 +2399,112 @@ static void test_SpectralClusteringVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2, false, 0, 1000);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
     }
 
-    spect_v<4, double, std::string, 64> spc(1000, 4);
+    spect_v<4, double, std::string, 64> spc(1000, 7, 123);
 
     df.single_act_visit<double>("IBM_Close", spc);
 
     const auto  &clusters = spc.get_result();
 
     assert(clusters.size() == 4);
-    assert(clusters[0].size() == 264);
-    assert(clusters[1].size() == 631);
-    assert(clusters[2].size() == 351);
-    assert(clusters[3].size() == 475);
 
-    assert(std::fabs(clusters[0][0] - 185.53) < 0.001);
-    assert(std::fabs(clusters[0][10] - 192.27) < 0.001);
-    assert(std::fabs(clusters[0][123] - 155.18) < 0.001);
-    assert(std::fabs(clusters[0][263] - 125.94) < 0.001);
+    assert(clusters[0].size() == 16);
+    assert(clusters[1].size() == 89);
+    assert(clusters[2].size() == 207);
+    assert(clusters[3].size() == 688);
 
-    assert(std::fabs(clusters[1][0] - 186.64) < 0.001);
-    assert(std::fabs(clusters[1][67] - 189.04) < 0.001);
-    assert(std::fabs(clusters[1][455] - 116.65) < 0.001);
-    assert(std::fabs(clusters[1][630] - 108.91) < 0.001);
+    assert(std::fabs(clusters[0][0] - 121.86) < 0.001);
+    assert(std::fabs(clusters[0][8] - 124.83) < 0.001);
+    assert(std::fabs(clusters[0][12] - 120.19) < 0.001);
+    assert(std::fabs(clusters[0][15] - 122.74) < 0.001);
 
-    assert(std::fabs(clusters[2][0] - 186.0) < 0.001);
-    assert(std::fabs(clusters[2][100] - 139.89) < 0.001);
-    assert(std::fabs(clusters[2][243] - 116.83) < 0.001);
-    assert(std::fabs(clusters[2][350] - 125.1) < 0.001);
+    assert(std::fabs(clusters[1][0] - 177.9) < 0.001);
+    assert(std::fabs(clusters[1][23] - 171.12) < 0.001);
+    assert(std::fabs(clusters[1][61] - 177.18) < 0.001);
+    assert(std::fabs(clusters[1][88] - 170.05) < 0.001);
 
-    assert(std::fabs(clusters[3][0] - 189.71) < 0.001);
-    assert(std::fabs(clusters[3][100] - 169.92) < 0.001);
-    assert(std::fabs(clusters[3][243] - 152.64) < 0.001);
-    assert(std::fabs(clusters[3][474] - 111.66) < 0.001);
+    assert(std::fabs(clusters[2][0] - 185.53) < 0.001);
+    assert(std::fabs(clusters[2][100] - 181.22) < 0.001);
+    assert(std::fabs(clusters[2][200] - 179.82) < 0.001);
+    assert(std::fabs(clusters[2][206] - 179.45) < 0.001);
+
+    assert(std::fabs(clusters[3][0] - 169.1) < 0.001);
+    assert(std::fabs(clusters[3][300] - 140.19) < 0.001);
+    assert(std::fabs(clusters[3][542] - 152.51) < 0.001);
+    assert(std::fabs(clusters[3][687] - 153.23) < 0.001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_get_data_by_spectral()  {
+
+    std::cout << "\nTesting get_data_by_spectral( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2, false, 1000, 500);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    auto    result_df =
+        df.get_data_by_spectral <3, double, double, long>("IBM_Close", 8, 89);
+    auto    result_view =
+        view.get_view_by_spectral<3, double, double, long>("IBM_Close", 8, 89);
+
+    assert(result_df.size() == 3);
+    assert(result_df.size() == result_view.size());
+
+    assert(result_df[0].get_index().size() == 1);
+    assert(result_df[0].get_column<double>("IBM_Open").size() == 1);
+    assert(result_df[0].get_index()[0] == "2018-12-24");
+    assert(result_df[0].get_column<double>("IBM_High")[0] == 111.0);
+    assert(result_df[0].get_column<long>("IBM_Volume")[0] == 3821400);
+    assert(result_view[0].get_column<double>("IBM_High")[0] == 111.0);
+    assert(result_view[0].get_column<long>("IBM_Volume")[0] == 3821400);
+
+    assert(result_df[1].get_index().size() == 47);
+    assert(result_df[1].get_column<double>("IBM_Open").size() == 47);
+    assert(result_df[1].get_index()[0] == "2018-10-29");
+    assert(result_df[1].get_index()[46] == "2019-01-22");
+    assert(result_df[1].get_column<double>("IBM_High")[20] == 121.68);
+    assert(result_df[1].get_column<long>("IBM_Volume")[35] == 4346700);
+    assert(result_view[1].get_index().size() == 47);
+    assert(result_view[1].get_column<double>("IBM_Open").size() == 47);
+    assert(result_view[1].get_index()[0] == "2018-10-29");
+    assert(result_view[1].get_index()[46] == "2019-01-22");
+    assert(result_view[1].get_column<double>("IBM_High")[20] == 121.68);
+    assert(result_view[1].get_column<long>("IBM_Volume")[35] == 4346700);
+	
+    assert(result_df[2].get_index().size() == 452);
+    assert(result_df[2].get_column<double>("IBM_Open").size() == 452);
+    assert(result_df[2].get_index()[0] == "2017-12-20");
+    assert(result_df[2].get_index()[451] == "2019-12-16");
+    assert(result_df[2].get_column<double>("IBM_High")[200] == 149.070007);
+    assert(result_df[2].get_column<long>("IBM_Volume")[300] == 4958000);
+    assert(result_view[2].get_index().size() == 452);
+    assert(result_view[2].get_column<double>("IBM_Open").size() == 452);
+    assert(result_view[2].get_index()[0] == "2017-12-20");
+    assert(result_view[2].get_index()[451] == "2019-12-16");
+    assert(result_view[2].get_column<double>("IBM_High")[200] == 149.070007);
+    assert(result_view[2].get_column<long>("IBM_Volume")[300] == 4958000);
 }
 
 // ----------------------------------------------------------------------------
@@ -2484,6 +2553,7 @@ int main(int, char *[]) {
     test_pca_by_eigen();
     test_compact_svd();
     test_SpectralClusteringVisitor();
+    test_get_data_by_spectral();
 
     return (0);
 }

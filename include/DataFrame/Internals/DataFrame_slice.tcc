@@ -2713,6 +2713,105 @@ get_view_by_kmeans(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<std::size_t K, arithmetic T, typename ... Ts>
+std::array<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>, K>
+DataFrame<I, H>::
+get_data_by_spectral(const char *col_name,
+                     double sigma,
+                     seed_t seed,
+                     std::function<double(const T &x, const T &y,
+                                          double sigma)>  &&sfunc,
+                     size_type num_of_iter) const  {
+
+    using df_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+    using res_t = std::array<df_t, K>;
+    using scv_t = spect_v<K, T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    scv_t                   spectral { num_of_iter, sigma, seed, sfunc };
+
+    spectral.pre();
+    spectral(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    spectral.post();
+
+    const auto  &idxs_arr = spectral.get_clusters_idxs();
+    res_t       result;
+
+    for (size_type i = 0; i < K; ++i)
+        result[i] = data_by_sel_common_<Ts ...>(idxs_arr[i], indices_.size());
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<std::size_t K, arithmetic T, typename ... Ts>
+std::array<typename DataFrame<I, H>::PtrView, K>
+DataFrame<I, H>::
+get_view_by_spectral(const char *col_name,
+                     double sigma,
+                     seed_t seed,
+                     std::function<double(const T &x, const T &y,
+                                          double sigma)>  &&sfunc,
+                     size_type num_of_iter)  {
+
+    using df_t = typename DataFrame<I, H>::PtrView;
+    using res_t = std::array<df_t, K>;
+    using scv_t = spect_v<K, T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    scv_t                   spectral { num_of_iter, sigma, seed, sfunc };
+
+    spectral.pre();
+    spectral(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    spectral.post();
+
+    const auto  &idxs_arr = spectral.get_clusters_idxs();
+    res_t       result;
+
+    for (size_type i = 0; i < K; ++i)
+        result[i] = view_by_sel_common_<Ts ...>(idxs_arr[i], indices_.size());
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<std::size_t K, arithmetic T, typename ... Ts>
+std::array<typename DataFrame<I, H>::ConstPtrView, K>
+DataFrame<I, H>::
+get_view_by_spectral(const char *col_name,
+                     double sigma,
+                     seed_t seed,
+                     std::function<double(const T &x, const T &y,
+                                          double sigma)>  &&sfunc,
+                     size_type num_of_iter) const  {
+
+    using df_t = typename DataFrame<I, H>::ConstPtrView;
+    using res_t = std::array<df_t, K>;
+    using scv_t = spect_v<K, T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    scv_t                   spectral { num_of_iter, sigma, seed, sfunc };
+
+    spectral.pre();
+    spectral(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    spectral.post();
+
+    const auto  &idxs_arr = spectral.get_clusters_idxs();
+    res_t       result;
+
+    for (size_type i = 0; i < K; ++i)
+        result[i] = view_by_sel_common_<Ts ...>(idxs_arr[i], indices_.size());
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<arithmetic T, typename ... Ts>
 std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
 DataFrame<I, H>::

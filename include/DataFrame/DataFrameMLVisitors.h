@@ -2799,7 +2799,6 @@ private:
     do_kmeans_(const mat_t &eigenvecs)  {
 
         const long      rows = eigenvecs.rows();  // Samples
-        const long      cols = eigenvecs.cols();  // dimensions
         vec_t<long>     cluster_idxs (rows, -1L);
         constexpr long  k = long(K);
 
@@ -2810,11 +2809,14 @@ private:
 
         // Copy the top k rows of eigen vector.
         //
-        mat_t   means { k, cols };
+        mat_t   means { k, k };
 
-        for (long r = 0; r < k; ++r)
-            for (long c = 0; c < cols; ++c)
-                means(r, c) = eigenvecs(r, c);
+        for (long r = 0; r < k; ++r)  {
+            const auto rr = rd_gen(gen);
+
+            for (long c = 0; c < k; ++c)
+                means(r, c) = eigenvecs(rr, c);
+        }
 
         for (size_type iter = 0; iter < iter_num_; ++iter)  {
              // Assign cluster_idxs based on closest means
@@ -2824,7 +2826,7 @@ private:
 
                  for (long rr = 0; rr < k; ++rr) {
                      const double   distance =
-                         distance_func_(eigenvecs, means, r, rr, cols);
+                         distance_func_(eigenvecs, means, r, rr, k);
 
                      if (distance < best_distance) {
                          best_distance = distance;
@@ -2835,24 +2837,24 @@ private:
 
              // Update means
              //
-             mat_t          new_means { k, cols };
+             mat_t          new_means { k, k };
              vec_t<long>    counts (k, 0L);
 
              for (long r = 0; r < rows; ++r) {
-                 for (long c = 0; c < cols; ++c)
+                 for (long c = 0; c < k; ++c)
                      new_means(cluster_idxs[r], c) += eigenvecs(r, c);
                  counts[cluster_idxs[r]]++;
              }
 
              for (int r = 0; r < k; ++r) {
                  if (counts[r] > 0)  {
-                     for (long c = 0; c < cols; ++c)
+                     for (long c = 0; c < k; ++c)
                          new_means(r, c) /= T(counts[r]);
                  }
                  else  { // Reinitialize centroid if no points assigned
                      const auto rr = rd_gen(gen);
 
-                     for (long c = 0; c < cols; ++c)
+                     for (long c = 0; c < k; ++c)
                          new_means(r, c) = eigenvecs(rr, c);
                  }
              }
@@ -2920,13 +2922,13 @@ public:
     SpectralClusteringVisitor(
         size_type num_of_iter,
         double sigma,
+        seed_t seed = seed_t(-1),
         similarity_func sf =
             [](const value_type &x,
                const value_type &y,
                double sigma) -> double  {
                 return (std::exp(-((x - y) * (x - y)) / (2 * sigma * sigma)));
-            },
-        seed_t seed = seed_t(-1))
+            })
         : iter_num_(num_of_iter),
           seed_(seed),
           sigma_(sigma),

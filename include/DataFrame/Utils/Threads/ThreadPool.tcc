@@ -201,7 +201,8 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
                     ((i - block_size) <= 0) ? 0 : i - block_size
                 };
 
-                if (((end + i) - (end + block_end + 1)) < (block_size - 1))
+                if (size_type((end + i) - (end + block_end + 1)) <
+                        (block_size - 1))
                     block_end = -1;
                 ret.emplace_back(dispatch(false,
                                           std::forward<F>(routine),

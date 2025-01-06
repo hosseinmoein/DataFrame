@@ -3331,6 +3331,81 @@ public: // Read/access and slicing interfaces
                        size_type num_of_iter = 1000,
                        seed_t seed = seed_t(-1)) const;
 
+    // This uses spectral clustering algorithm to divide the named column into
+    // K clusters. It returns an array of K DataFrame's each containing one of
+    // the clusters of data based on the named column.
+    // Self in unchanged.
+    //
+    // NOTE: Type T must support arithmetic operations
+    //
+    // K:
+    //   Number of clusters for k-means clustering algorithm
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // sfunc:
+    //   A function to calculate the similarity matrix between data points in
+    //   the named column
+    // num_of_iter:
+    //   Maximum number of iterations for k-means clustering algorithm before
+    //   converging
+    // seed:
+    //   Seed for random number generator to initialize k-means clustering
+    //   algorithm. Default is a random numbers for each call.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>, K>
+    get_data_by_spectral(const char *col_name,
+                         double sigma,
+                         seed_t seed = seed_t(-1),
+                         std::function<double(const T &x, const T &y,
+                                              double sigma)>  &&sfunc =
+                             [](const T &x, const T &y,
+                                double sigma) -> double  {
+                                 return (std::exp(-((x - y) * (x - y)) /
+                                                  (2 * sigma * sigma)));
+                             },
+                         size_type num_of_iter = 1000) const;
+
+    // Same as above but it returns an array of Views.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<PtrView, K>
+    get_view_by_spectral(const char *col_name,
+                         double sigma,
+                         seed_t seed = seed_t(-1),
+                         std::function<double(const T &x, const T &y,
+                                              double sigma)>  &&sfunc =
+                             [](const T &x, const T &y,
+                                double sigma) -> double  {
+                                 return (std::exp(-((x - y) * (x - y)) /
+                                                  (2 * sigma * sigma)));
+                             },
+                         size_type num_of_iter = 1000);
+
+    // Same as above but it returns an array of const Views.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<ConstPtrView, K>
+    get_view_by_spectral(const char *col_name,
+                         double sigma,
+                         seed_t seed = seed_t(-1),
+                         std::function<double(const T &x, const T &y,
+                                              double sigma)>  &&sfunc =
+                             [](const T &x, const T &y,
+                                double sigma) -> double  {
+                                 return (std::exp(-((x - y) * (x - y)) /
+                                                  (2 * sigma * sigma)));
+                             },
+                         size_type num_of_iter = 1000) const;
+
     // This uses Affinity Propagation algorithm to divide the named column
     // into clusters. It returns an array of DataFrame's each containing one
     // of the clusters of data based on the named column. Unlike K-Means

@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html" target="_blank"><B>DataFrame documentation with code samples</B></a>
 This is a C++ analytical library designed for data analysis similar to libraries in Python and R. For example, you would compare this to [Pandas](https://pandas.pydata.org) or [R data.frame](https://www.w3schools.com/r/r_data_frames.asp)<BR>
 You can slice the data in many different ways. You can join, merge, group-by the data. You can run various statistical, summarization, financial, and ML algorithms on the data. You can add your custom algorithms easily. You can multi-column sort, custom pick and delete the data. And more …<BR>
-DataFrame also includes a large collection of analytical algorithms in form of visitors. These are from basic stats such as <I>Mean</I>, <I>Std Deviation</I>, <I>Return</I>, … to more involved analysis such as <I>Affinity Propagation</I>, <I>Polynomial Fit</I>, <I>Fast Fourier transform of arbitrary length</I> … including a good collection of trading indicators. You can also easily add your own algorithms.<BR>
+DataFrame also includes a large collection of analytical algorithms in form of visitors. These are from basic stats such as <I>Mean</I>, <I>Std Deviation</I>, <I>Return</I>, … to more involved analysis such as <I>PCA</I>, <I>Polynomial Fit</I>, <I>Fast Fourier transform of arbitrary length</I> … including a good collection of trading indicators. You can also easily add your own algorithms.<BR>
 DataFrame also employs extensive multithreading in almost all its API’s, for large datasets. That makes DataFrame especially suitable for analyzing large datasets.<BR>
 For basic operations to start you off, see [Hello World](examples/hello_world.cc). For a complete list of features with code samples, see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html" target="_blank">documentation</a>.
 
@@ -64,12 +64,12 @@ Each program has three identical parts. First it generates and populates 3 colum
 The maximum dataset I could load into Polars was 300m rows per column. Any bigger dataset blew up the memory and caused OS to kill it. I ran C++ DataFrame with 10b rows per column and I am sure it would have run with bigger datasets too. So, I was forced to run both with 300m rows to compare.
 I ran each test 4 times and took the best time. Polars numbers varied a lot from one run to another, especially calculation and selection times. C++ DataFrame numbers were significantly more consistent.
 
-|                          | [<B>C++ DataFrame</B>](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/dataframe_performance.cc) | [<B>Polars</B>](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/polars_performance.py) | [<B>Pandas</B>](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/pandas_performance.py) |
-|            :--           |        :---:         |     :--:      |     :--:      |
-| Data generation/load time | 26.945900 secs | 28.468640 secs | 36.678976 secs |
-| Calculation time | &nbsp;&nbsp; 1.260150 secs | &nbsp;&nbsp; 4.876561 secs | 40.326350 secs |
-| Selection time | &nbsp;&nbsp; 0.742493 secs | &nbsp;&nbsp; 3.876561 secs | &nbsp;&nbsp; 8.326350 secs |
-| Overall time: | 28.948600 secs | 36.876345 secs | 85.845114 secs | 
+|                          | [<B>C++ DataFrame</B>](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/dataframe_performance.cc) | [<B>Polars</B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/polars_performance.py) | [<B>Pandas</B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/pandas_performance.py) |
+|            :--           |        ---:         |     ---:      |     ---:      |
+| Data generation/load time | 26.9459 secs | 28.4686 secs | 36.6799 secs |
+| Calculation time | 1.2602 secs | 4.8766 secs | 40.3264 secs |
+| Selection time | 0.7425 secs | 3.8766 secs | 8.3264 secs |
+| Overall time: | 28.9486 secs | 36.8763 secs | 85.8451 secs | 
 
 ---
 

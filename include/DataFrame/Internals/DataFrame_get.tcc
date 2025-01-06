@@ -177,7 +177,7 @@ DataFrame<I, H>::get_column (const char *name, bool do_lock) const  {
 template<typename I, typename H>
 template<typename T>
 const typename DataFrame<I, H>::template ColumnVecType<typename T::type> &
-DataFrame<I, H>::get_column () const  {
+DataFrame<I, H>::get_column() const  {
 
     return (const_cast<DataFrame *>(this)->get_column<typename T::type>(
                 T::name));
@@ -928,6 +928,128 @@ DataFrame<I, H>::difference(const DataFrame &other) const  {
     result.load_index(std::move(new_index));
 
     return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+covariance_matrix(std::vector<const char *> &&col_names,
+                  normalization_type norm_type) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (col_names.size() < 2)
+        throw NotFeasible("covariance_matrix(): "
+                          "You must specify at least two columns");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const auto  data_mat =
+        get_scaled_data_matrix_<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            norm_type);
+
+    return (data_mat.covariance());
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+pca_by_eigen(std::vector<const char *> &&col_names,
+             const PCAParams params) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (params.num_comp_to_keep == 0 && params.pct_comp_to_keep < 0.01)
+        throw NotFeasible("pca_by_eigen(): Parameters don't make sense");
+    if (params.num_comp_to_keep > long(col_names.size()))
+        throw NotFeasible("pca_by_eigen(): num_comp_to_keep > #input columns");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    // Get the covariance matrix of normalized data
+    //
+    const auto  var_cov =
+        covariance_matrix<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            params.norm_type);
+
+    // Calculate Eigen space
+    //
+    Matrix<T, matrix_orient::row_major>     eigenvals;
+    Matrix<T, matrix_orient::column_major>  eigenvecs;
+
+    var_cov.eigen_space(eigenvals, eigenvecs, true);
+
+    // Keep the most significant columns
+    //
+    Matrix<T, matrix_orient::column_major>  mod_evecs { };
+    long                                    col_count { 0 };
+
+    if (params.num_comp_to_keep > 0)  {
+        col_count = params.num_comp_to_keep;
+    }
+    else  {
+        T   ev_sum { 0 };
+
+        for (long c = 0; c < eigenvals.cols(); ++c)
+            ev_sum += std::fabs(eigenvals(0, c));
+
+        T   kept_sum { 0 };
+
+        for (long c = eigenvals.cols() - 1; c >= 0; --c)  {
+            kept_sum += std::fabs(eigenvals(0, c));
+            col_count += 1;
+            if ((kept_sum / ev_sum) >= params.pct_comp_to_keep)
+                break;
+        }
+    }
+    mod_evecs.resize(eigenvecs.rows(), col_count);
+    for (long c = 0; c < col_count; ++c)  {
+        const long  col = eigenvecs.cols() - c - 1;
+
+        for (long r = 0; r < eigenvecs.rows(); ++r)
+            mod_evecs(r, c) = eigenvecs(r, col);
+    }
+
+    // Copy the data matrix
+    //
+    const auto  data_mat =
+        get_scaled_data_matrix_<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            normalization_type::none);
+
+    // Return PCA
+    //
+    return (data_mat * mod_evecs);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+std::tuple<Matrix<T, matrix_orient::column_major>,  // U
+           Matrix<T, matrix_orient::column_major>,  // S
+           Matrix<T, matrix_orient::column_major>>  // V
+DataFrame<I, H>::
+compact_svd(std::vector<const char *> &&col_names,
+            normalization_type norm_type) const  {
+
+    using col_mat_t = Matrix<T, matrix_orient::column_major>;
+
+    // Copy the data matrix
+    //
+    const auto  scaled_data_mat =
+        get_scaled_data_matrix_<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            norm_type);
+    col_mat_t   U;
+    col_mat_t   S;
+    col_mat_t   V;
+
+    scaled_data_mat.svd(U, S, V, true);
+
+    return (std::make_tuple(U, S, V));
 }
 
 } // namespace hmdf

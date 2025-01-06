@@ -530,6 +530,7 @@ enum class  prob_dist_type : unsigned char  {
 
 enum class  normalization_type : unsigned char  {
 
+    none = 0,
     simple = 1,           // V / sum(xi)
     euclidean = 2,        // V / sqrt(sum(xi^2))
     maxi = 3,             // V / max(xi)
@@ -619,6 +620,115 @@ enum class  mean_shift_kernel : unsigned char  {
     logistic = 9,
     sigmoid = 10,
     silverman = 11,
+};
+
+// ----------------------------------------------------------------------------
+
+enum class  stationary_method : unsigned char  {
+
+    differencing = 1,  // Xt = Yt - Yt-1
+    log_trans = 2,     // Xt = ln(Yt)
+    sqrt_trans = 3,    // Xt = sqrt(Yt)
+    boxcox_trans = 4,  // See BoxCoxVisitor
+    decomposition = 5, // See DecomposeVisitor
+    smoothing = 6,     // See ExponentiallyWeightedMeanVisitor
+};
+
+struct  StationaryParams  {
+
+    // Only considered in case of BoxCox transformation method
+    //
+    box_cox_type            bc_type { box_cox_type::original };
+    double                  lambda { 0 };
+    bool                    is_all_positive { true };
+
+    // Only considered in case of Decomposition method
+    //
+    std::size_t             season_period { 0 };
+    double                  dcom_fraction { 0 };
+    double                  dcom_delta { 0 };
+    decompose_type          dcom_type { decompose_type::additive };
+
+    // Only considered in case of Smoothing method
+    //
+    exponential_decay_spec  decay_spec { exponential_decay_spec::span };
+    double                  decay_alpha { 0 };
+    bool                    finite_adjust { true };
+};
+
+// ----------------------------------------------------------------------------
+
+enum class  stationary_test : unsigned char  {
+
+    // Kwiatkowski-Phillips-Schmidt–Shin (KPSS)
+    // In econometrics, Kwiatkowski–Phillips–Schmidt–Shin (KPSS) tests are
+    // used for testing a null hypothesis that an observable time series is
+    // stationary around a deterministic trend (i.e. trend-stationary) against
+    // the alternative of a unit root.
+    // Contrary to most unit root tests, the presence of a unit root is not
+    // the null hypothesis but the alternative. Additionally, in the KPSS test,
+    // the absence of a unit root is not a proof of stationarity but, by
+    // design, of trend-stationarity. This is an important distinction since it
+    // is possible for a time series to be non-stationary, have no unit root
+    // yet be trend-stationary.
+    //
+    // In a KPSS test, a higher test statistic value (meaning a larger
+    // calculated KPSS statistic) indicates a greater likelihood that the time
+    // series is not stationary around a deterministic trend, while a lower
+    // value suggests stationarity; essentially, you want a low KPSS test value
+    // to conclude stationarity.
+    //
+    kpss = 1,
+
+    // Augmented Dickey-Fuller (ADF)
+    // In statistics, an augmented Dickey–Fuller test (ADF) tests the null
+    // hypothesis that a unit root is present in a time series sample. The
+    // alternative hypothesis depends on which version of the test is used,
+    // but is usually stationarity or trend-stationarity. It is an augmented
+    // version of the Dickey–Fuller test for a larger and more complicated set
+    // of time series models.
+    // The augmented Dickey–Fuller (ADF) statistic, used in the test, is a
+    // negative number. The more negative it is, the stronger the rejection of
+    // the hypothesis that there is a unit root at some level of confidence.
+    //
+    // To interpret an ADF test statistic, compare its value to the critical
+    // value at a chosen significance level (usually 0.05): if the test
+    // statistic is less than the critical value, you reject the null
+    // hypothesis and conclude that the time series is stationary; if it's
+    // greater than the critical value, you fail to reject the null hypothesis,
+    // indicating non-stationarity; a more negative ADF statistic signifies
+    // stronger evidence against the null hypothesis (i.e., more likely
+    // stationary).
+    //
+    adf = 2,
+};
+
+struct  StationaryTestParams  {
+
+    // Only considered for KPSS test
+    //
+    double  critical_values[4] { 0.347, 0.463, 0.574, 0.739 };
+
+    // Only considered for ADF test
+    //
+    std::size_t adf_lag { 1 };
+    bool        adf_with_trend { false };
+};
+
+// ----------------------------------------------------------------------------
+
+struct  PCAParams  {
+
+    normalization_type  norm_type { normalization_type::z_score };
+
+    // If populated (set above zero), number of top eigen values to keep.
+    //
+    long                num_comp_to_keep { 0 };
+
+    // If populated (num_comp_is 0), percentage of eigen values to keep.
+    // 0.9 means 90%.
+    //
+    double              pct_comp_to_keep { 0.9 };
 };
 
 // ----------------------------------------------------------------------------

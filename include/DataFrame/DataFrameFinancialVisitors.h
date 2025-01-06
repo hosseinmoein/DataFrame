@@ -1,5 +1,4 @@
 // Hossein Moein
-
 // January 08, 2020
 /*
 Copyright (c) 2019-2026, Hossein Moein
@@ -1133,12 +1132,14 @@ struct  SharpeRatioVisitor  {
         const size_type col_s = std::distance(asset_ret_begin, asset_ret_end);
 
 #ifdef HMDF_SANITY_EXCEPTIONS
+        {
         const size_type b_s =
             std::distance(benchmark_ret_begin, benchmark_ret_end);
 
         if (col_s != b_s || col_s <= 3)
             throw DataFrameError("SharpeRatioVisitor: column size must be > 3 "
                                  "and two column sizes must be equal");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
         value_type  cum_ret { 0.0 };
@@ -6809,12 +6810,14 @@ struct  TreynorRatioVisitor  {
         const size_type col_s = std::distance(asset_ret_begin, asset_ret_end);
 
 #ifdef HMDF_SANITY_EXCEPTIONS
+        {
         const size_type b_s =
             std::distance(benchmark_ret_begin, benchmark_ret_end);
 
         if (col_s != b_s || col_s <= 3)
             throw DataFrameError("TreynorRatioVisitor: All columns must be of "
                                  "equal sizes and column size > 3");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
         value_type          cum_return { 0.0 };
@@ -6896,6 +6899,7 @@ struct  InertiaVisitor  {
                 const H &low_begin, const H &low_end)  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
+        {
         const size_type col_s = std::distance(close_begin, close_end);
 
         if (col_s != size_type(std::distance(high_begin, high_end)) ||
@@ -6905,6 +6909,7 @@ struct  InertiaVisitor  {
             throw DataFrameError("InertiaVisitor: All columns must be of "
                                  "equal sizes and roll period < column size "
                                  "and roll period > RVI roll period");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
         rvi_v<T, I> rvi { rvi_rp_ };

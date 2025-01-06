@@ -2123,10 +2123,10 @@ static void test_LinearFitVisitor()  {
                            { 1, 3, 4, 5, 6 },
                            nan_policy::dont_pad_with_nans);
 
-    LinearFitVisitor<double, unsigned long, 64>    lin_v1;
-    auto                        result1 =
+    LinearFitVisitor<double, unsigned long, 64> lin_v1;
+    auto                                        &result1 =
         df.single_act_visit<double, double>("X1", "Y1", lin_v1).get_result();
-    auto                        actual1 =
+    const auto                                  actual1 =
         StlVecType<double> { 7.4, 7, 6.6, 6.2, 5.8 };
 
     assert(std::fabs(lin_v1.get_residual() - 19.6) < 0.01);

@@ -567,11 +567,10 @@ void DataFrame<I, H>::shrink_to_fit ()  {
                 for (auto citer = begin; citer < end; ++citer)
                     citer->change(functor);
             };
-            auto    futures =
-                thr_pool_.parallel_loop(data_.begin(), data_.end(),
-                                        std::move(lbd));
+        auto    futures =
+            thr_pool_.parallel_loop(data_.begin(), data_.end(), std::move(lbd));
 
-            for (auto &fut : futures)  fut.get();
+        for (auto &fut : futures)  fut.get();
     }
     else  {
         for (const auto &citer : data_) [[likely]]
@@ -1331,6 +1330,105 @@ bucketize_async(bucket_type bt,
                         std::forward<I_V>(idx_visitor),
                         std::forward<Ts>(args) ...));
         }));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+void
+DataFrame<I, H>::make_stationary(const char *col_name,
+                                 stationary_method method,
+                                 const StationaryParams params)  {
+
+    ColumnVecType<T>    &vec = get_column<T>(col_name);
+    const size_type     col_s = vec.size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (col_s < 3)
+        throw DataFrameError("make_stationary: Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const auto  thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (method == stationary_method::differencing)  {
+        ColumnVecType<T>    result(col_s);
+        auto                lbd = [&result, &vec = std::as_const(vec)]
+                                  (auto begin, auto end) -> void  {
+            for (auto i = begin; i < end; ++i)
+                result[i] = vec[i] - vec[i - 1];
+        };
+
+        if (thread_level > 2)  {
+            auto    futures =
+                thr_pool_.parallel_loop(size_type(1), col_s, std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  lbd(size_type(1), col_s);
+        vec = std::move(result);
+        vec[0] = vec[1];
+    }
+    else if (method == stationary_method::log_trans)  {
+        auto    lbd = [](auto begin, auto end) -> void  {
+            for (auto citer = begin; citer < end; ++citer)
+                *citer = std::log(*citer);
+        };
+
+        if (thread_level > 2)  {
+            auto    futures =
+                thr_pool_.parallel_loop(vec.begin(), vec.end(), std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  lbd(vec.begin(), vec.end());
+    }
+    else if (method == stationary_method::sqrt_trans)  {
+        auto    lbd = [](auto begin, auto end) -> void  {
+            for (auto citer = begin; citer < end; ++citer)
+                *citer = std::sqrt(*citer);
+        };
+
+        if (thread_level > 2)  {
+            auto    futures =
+                thr_pool_.parallel_loop(vec.begin(), vec.end(), std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  lbd(vec.begin(), vec.end());
+    }
+    else if (method == stationary_method::boxcox_trans)  {
+        bcox_v<T, I, align_value>   boxcox { params.bc_type,
+                                             params.lambda,
+                                             params.is_all_positive };
+
+        boxcox.pre();
+        boxcox(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+        boxcox.post();
+        vec = std::move(boxcox.get_result());
+    }
+    else if (method == stationary_method::decomposition)  {
+        decom_v<T, I, align_value>  decom { params.season_period,
+                                            params.dcom_fraction,
+                                            params.dcom_delta,
+                                            params.dcom_type };
+
+        decom.pre();
+        decom(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+        decom.post();
+        vec = std::move(decom.get_residual());
+    }
+    else if (method == stationary_method::smoothing)  {
+        ewm_v<T, I, align_value>    ewm { params.decay_spec,
+                                          params.decay_alpha,
+                                          params.finite_adjust };
+
+        ewm.pre();
+        ewm(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+        ewm.post();
+        vec = std::move(ewm.get_result());
+    }
 }
 
 // ----------------------------------------------------------------------------

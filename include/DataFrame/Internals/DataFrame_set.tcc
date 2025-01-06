@@ -74,7 +74,7 @@ void DataFrame<I, H>::remove_column (const char *name)  {
 
     // Free the memory space
     //
-    vec = std::move(ColumnVecType<T>{ });
+    vec = ColumnVecType<T>{ };
 
     // I do not erase the column from the data_ vector, because it will mess up
     // indices in the hash table column_tb_
@@ -213,8 +213,7 @@ DataFrame<I, H>::load_data (IndexVecType &&indices, Ts&& ... args)  {
                   "Only a StdDataFrame can call load_data()");
 
     size_type   cnt = load_index(std::forward<IndexVecType>(indices));
-    auto        args_tuple =
-        std::move(std::tuple<Ts ...>(std::forward<Ts>(args) ...));
+    auto        args_tuple = std::tuple<Ts ...>(std::forward<Ts>(args) ...);
     // const size_type tuple_size =
     //     std::tuple_size<decltype(args_tuple)>::value;
     auto        fc = [this, &cnt](auto &pa) mutable -> void {
@@ -837,8 +836,7 @@ DataFrame<I, H>::append_row (IndexType *idx_val, Ts&& ... args)  {
         indices_.push_back(*idx_val);
 
     size_type   cnt = 1;
-    auto        args_tuple =
-        std::move(std::tuple<Ts ...>(std::forward<Ts>(args) ...));
+    auto        args_tuple = std::tuple<Ts ...>(std::forward<Ts>(args) ...);
     auto        fc = [this, &cnt](auto &pa) mutable -> void {
                          cnt += this->append_row_(pa);
                      };

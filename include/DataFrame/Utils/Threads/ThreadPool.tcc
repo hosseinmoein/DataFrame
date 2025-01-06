@@ -155,9 +155,16 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
     using future_t = std::future<task_return_t>;
 
     size_type   n { 0 };
+    bool        backward { false };
 
-    if constexpr (std::is_integral<I>::value)
-        n = end - begin;
+    if constexpr (std::is_integral_v<I>)  {
+        if (begin > end)  {
+            n = begin - end;
+            backward = true;
+        }
+        else
+            n = end - begin;
+    }
     else
         n = std::distance(begin, end);
 
@@ -167,25 +174,55 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
 
     if (block_size == n)  {
         ret.reserve(n);
-        for (size_type i = 0; i < n; ++i)
-            ret.emplace_back(dispatch(false,
-                                      std::forward<F>(routine),
-                                          begin + i,
-                                          begin + (i + 1),
-                                          std::forward<As>(args) ...));
+        if (backward)  {
+            for (size_type i = n - 1; i >= 0; --i)  {
+                ret.emplace_back(dispatch(false,
+                                          std::forward<F>(routine),
+                                              end + i,
+                                              end + i,
+                                              std::forward<As>(args) ...));
+            }
+        }
+        else  {
+            for (size_type i = 0; i < n; ++i)  {
+                ret.emplace_back(dispatch(false,
+                                          std::forward<F>(routine),
+                                              begin + i,
+                                              begin + (i + 1),
+                                              std::forward<As>(args) ...));
+            }
+        }
     }
     else  {
         ret.reserve(cap_thrs + 1);
-        for (size_type i = 0; i < n; i += block_size)  {
-            const size_type block_end {
-                ((i + block_size) > n) ? n : i + block_size
-            };
+        if (backward)  {
+            for (size_type i = n; i >= 0; i -= block_size)  {
+                size_type   block_end {
+                    ((i - block_size) <= 0) ? 0 : i - block_size
+                };
 
-            ret.emplace_back(dispatch(false,
-                                      std::forward<F>(routine),
-                                          begin + i,
-                                          begin + block_end,
-                                          std::forward<As>(args) ...));
+                if (size_type((end + i) - (end + block_end + 1)) <
+                        (block_size - 1))
+                    block_end = -1;
+                ret.emplace_back(dispatch(false,
+                                          std::forward<F>(routine),
+                                              end + block_end + 1,
+                                              end + i,
+                                              std::forward<As>(args) ...));
+            }
+        }
+        else  {
+            for (size_type i = 0; i < n; i += block_size)  {
+                const size_type block_end {
+                    ((i + block_size) > n) ? n : i + block_size
+                };
+
+                ret.emplace_back(dispatch(false,
+                                          std::forward<F>(routine),
+                                              begin + i,
+                                              begin + block_end,
+                                              std::forward<As>(args) ...));
+            }
         }
     }
 

@@ -1,0 +1,94 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Public Member Functions</th>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>
+enum class  matrix_orient : unsigned char  {
+
+    column_major = 1, // Data is laid out col by col
+    row_major = 2,    // Data is laid out row by row
+};
+
+// -----------------------
+
+template&lt;typename T,
+         matrix_orient MO = matrix_orient::column_major,
+         IS_SYM = false&gt;
+class   Matrix;
+		</B></PRE> </font>
+      </td>
+      <td>
+        <I>Matrix</I> is an efficient and flat-memory implementation of matrix. It implements many numerical analysis and algorithms. It is used internally by <I>DataFrame</I> library to implement few of its algorithms. Also, some of <I>DataFrame</I> analysis results are in <I>Matrix</I> format.<BR>
+        A structurally symmetric matrix (IS_SYM is true) requires almost half the memory size of a normal matrix.
+        <BR><BR>
+        <B>T</B>: Matrix data type<BR>
+        <B>MO</B>: Matrix memory orientation<BR>
+        <B>IS_SYM</B>: Is matrix <I>structurally</I> symmetric<BR>
+      </td>
+
+      <td width="20%">
+        <a href="https://github.com/hosseinmoein/DataFrame/blob/master/include//DataFrame/Utils/Matrix.h">Matrix Header File</a><BR><BR>
+      </td>
+    </tr>
+
+  </table>
+
+  <BR><BR>
+  <a href="https://github.com/hosseinmoein/DataFrame/blob/master/test//matrix_tester.cc">Matrix Test File</a><BR><BR>
+  <BR>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

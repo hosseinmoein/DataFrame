@@ -2150,25 +2150,23 @@ static void test_auto_correlation()  {
                  std::make_pair("col_2", d2),
                  std::make_pair("col_3", i1));
 
-    AutoCorrVisitor<double> auto_corr;
+    AutoCorrVisitor<double> auto_corr { 15 };
     auto                    fut =
         df.single_act_visit_async<double>("col_1", auto_corr);
     const auto              &result = fut.get().get_result();
 
-    assert(result.size() == 17);
+    assert(result.size() == 15);
     assert(result[0] == 1.0);
     assert(fabs(result[1] - 0.562001) < 0.00001);
-    assert(fabs(result[16] - -0.265228) < 0.00001);
     assert(fabs(result[6] - 0.388131) < 0.00001);
     assert(fabs(result[10] - 0.125514) < 0.00001);
 
     const auto  &result2 =
         df.single_act_visit<double>("col_2", auto_corr).get_result();
 
-    assert(result2.size() == 17);
+    assert(result2.size() == 15);
     assert(result2[0] == 1.0);
     assert(fabs(result2[1] - 0.903754) < 0.00001);
-    assert(fabs(result2[16] - 0.183254) < 0.00001);
     assert(fabs(result2[6] - -0.263385) < 0.00001);
     assert(fabs(result2[10] - -0.712274) < 0.00001);
 
@@ -2177,10 +2175,9 @@ static void test_auto_correlation()  {
     const auto  &result3 =
         df_c.single_act_visit<double>("col_2", auto_corr).get_result();
 
-    assert(result3.size() == 17);
+    assert(result3.size() == 15);
     assert(result3[0] == 1.0);
     assert(fabs(result3[1] - 0.903754) < 0.00001);
-    assert(fabs(result3[16] - 0.183254) < 0.00001);
     assert(fabs(result3[6] - -0.263385) < 0.00001);
     assert(fabs(result3[10] - -0.712274) < 0.00001);
 }
@@ -3889,7 +3886,7 @@ static void test_view_visitors()  {
     MyDataFrameView dfv2 =
         df.get_view_by_idx<double>(Index2D<unsigned long> { 2, 9 });
 
-    AutoCorrVisitor<double> ac_visitor;
+    AutoCorrVisitor<double> ac_visitor { 3 };
     const auto &res_ac =
         dfv2.single_act_visit<double>("dbl_col5", ac_visitor).get_result();
     assert(fabs(res_ac[1] - -0.36855) < 0.00001);
@@ -5287,6 +5284,46 @@ static void test_concat()  {
     assert((result2.is_equal<int, double, std::string>(result3)));
 }
 
+
+static void test_data_frame_newlines() {
+
+    std::cout << "\nTesting data frame parsing csv2..." << std::endl;
+
+    StrDataFrame df2;
+
+    try  {
+        df2.read("strings2.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+    assert(df2.get_index().size() == 8);
+    assert(df2.get_column<int>("n1")[0] == 68);
+    assert(df2.get_column<std::string>("s1")[0] == "string11");
+    assert(df2.get_column<std::string>("s1")[1] == "'string12'");
+    assert(df2.get_column<std::string>("s1")[2] == "\"string13\"");
+
+    assert(df2.get_column<std::string>("s2")[0] == "string21");
+    assert(df2.get_column<std::string>("s2")[1] == "string22");
+    assert(df2.get_column<std::string>("s2")[2] == "string23");
+
+
+    std::cout << "\nTesting data frame parsing csv..." << std::endl;
+    StrDataFrame df1;
+
+    try  {
+        df1.read("strings.csv", io_format::csv);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+    assert(df1.get_index().size() == 8);
+    assert(df1.get_column<std::string>("abc")[0] == "A");
+    assert(df1.get_column<int>("ott")[2] == 3);
+    assert(df1.get_column<std::string>("str")[0] == "\"str1\"");
+    assert(df1.get_column<std::string>("str")[4] == "str5");
+}
+
 // -----------------------------------------------------------------------------
 
 int main(int, char *[]) {
@@ -5366,6 +5403,7 @@ int main(int, char *[]) {
     test_VWBAS();
     test_self_concat();
     test_concat();
+    test_data_frame_newlines();
 
     return (0);
 }

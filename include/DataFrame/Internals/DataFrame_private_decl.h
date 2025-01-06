@@ -1271,7 +1271,7 @@ explode_helper_(DataFrame &result,
         }
 
     return;
-};
+}
 
 // ----------------------------------------------------------------------------
 
@@ -1797,6 +1797,61 @@ get_mem_numbers_(const StlVecType<T> &container,
 
     used_mem = container.size() * sizeof(T);
     capacity_mem = container.capacity() * sizeof(T);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline Matrix<T, matrix_orient::column_major>
+get_scaled_data_matrix_(std::vector<const char *> &&col_names,
+                        normalization_type norm_type) const  {
+
+    const size_type                         col_num = col_names.size();
+    size_type                               min_col_s { indices_.size() };
+    std::vector<const ColumnVecType<T> *>   columns(col_num, nullptr);
+    SpinGuard                               guard (lock_);
+
+    for (size_type i { 0 }; i < col_num; ++i)  {
+        columns[i] = &get_column<T>(col_names[i], false);
+        if (columns[i]->size() < min_col_s)
+            min_col_s = columns[i]->size();
+    }
+    guard.release();
+
+    Matrix<T, matrix_orient::column_major>  data_mat {
+        long(min_col_s), long(col_num) };
+    auto                                    lbd =
+        [norm_type, &data_mat, &columns = std::as_const(columns), this]
+        (auto begin, auto end) -> void  {
+            if (norm_type > normalization_type::none)  {
+                for (size_type c { begin }; c < end; ++c)  {
+                    NormalizeVisitor<T, I>  norm_v { norm_type };
+
+                    norm_v.pre();
+                    norm_v(indices_.begin(), indices_.end(),
+                           columns[c]->begin(), columns[c]->end());
+                    norm_v.post();
+                    data_mat.set_column(norm_v.get_result().begin(), c);
+                }
+            }
+            else  {
+                for (size_type c { begin }; c < end; ++c)
+                    data_mat.set_column(columns[c]->begin(), c);
+            }
+        };
+    const auto                              thread_level =
+        (min_col_s >= ThreadPool::MUL_THR_THHOLD || col_num >= 20 )
+            ? get_thread_level() : 0L;
+
+    if (thread_level > 2)  {
+        auto    futuers =
+            thr_pool_.parallel_loop(size_type(0), col_num, std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  lbd(size_type(0), col_num);
+
+    return (data_mat);
 }
 
 // ----------------------------------------------------------------------------

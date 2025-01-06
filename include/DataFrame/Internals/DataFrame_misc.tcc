@@ -238,7 +238,7 @@ DataFrame<I, H>::print_binary_functor_<Ts ...>::operator() (const T &vec)  {
 
     char    col_name[64];
 
-    std::strncpy(col_name, name, sizeof(col_name));
+    std::strncpy(col_name, name, sizeof(col_name) - 1);
     os.write(col_name, sizeof(col_name));
 
     const long  local_start_row = std::min (long(vec.size()), start_row);

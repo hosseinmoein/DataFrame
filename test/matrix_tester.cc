@@ -28,11 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Matrix.h>
 
 #include <cassert>
+#include <chrono>
 #include <iostream>
 
 using namespace hmdf;
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 using row_mat_t = Matrix<std::size_t, matrix_orient::row_major>;
 using col_mat_t = Matrix<std::size_t, matrix_orient::column_major>;
@@ -40,16 +41,37 @@ using col_mat_t = Matrix<std::size_t, matrix_orient::column_major>;
 static constexpr long   ROWS = 5;
 static constexpr long   COLS = 6;
 
-// -----------------------------------------------------------------------------
+void test_thread_pool();
+
+// ----------------------------------------------------------------------------
 
 int main(int, char *[]) {
 
     // ThreadGranularity::set_optimum_thread_level();
 
-    row_mat_t   row_mat { ROWS, COLS };
-    col_mat_t   col_mat { ROWS, COLS };
+    row_mat_t   row_mata { 3, 3 };
+    col_mat_t   col_mata { 3, 3 };
     std::size_t value { 0 };
 
+    for (long r = 0; r < row_mata.rows(); ++r)
+        for (long c = 0; c < row_mata.cols(); ++c)  {
+            row_mata(r, c) = ++value;
+            col_mata(r, c) = value;
+        }
+
+    row_mat_t   row_matb  = row_mata * row_mata;
+    col_mat_t   col_matb  = col_mata * col_mata;
+
+    assert((row_matb(0, 0) == col_matb(0, 0) && row_matb(0, 0) == 30));
+    assert((row_matb(0, 2) == col_matb(0, 2) && row_matb(0, 2) == 42));
+    assert((row_matb(1, 1) == col_matb(1, 1) && row_matb(1, 1) == 81));
+    assert((row_matb(2, 1) == col_matb(2, 1) && row_matb(2, 1) == 126));
+    assert((row_matb(2, 2) == col_matb(2, 2) && row_matb(2, 2) == 150));
+
+    row_mat_t   row_mat { ROWS, COLS };
+    col_mat_t   col_mat { ROWS, COLS };
+
+    value = 0;
     for (long r = 0; r < row_mat.rows(); ++r)
         for (long c = 0; c < row_mat.cols(); ++c)
             row_mat(r, c) = value++;
@@ -75,6 +97,66 @@ int main(int, char *[]) {
             std::cout << col_mat(r, c) << ", ";
         }
         std::cout << '\n';
+    }
+
+    // Testing symmetrix matrices
+    //
+    {
+        using scm_mat_t =
+            Matrix<std::size_t, matrix_orient::column_major, true>;
+        using srm_mat_t =
+            Matrix<std::size_t, matrix_orient::column_major, true>;
+
+        scm_mat_t   sym_col_mat { 5, 5 };
+
+        value = 0;
+        for (long c = 0; c < sym_col_mat.cols(); ++c)
+            for (long r = c; r < sym_col_mat.rows(); ++r)
+                sym_col_mat(r, c) = value++;
+
+        assert(sym_col_mat.is_symmetric());
+        assert(sym_col_mat(2, 3) == sym_col_mat(3, 2));
+        assert(sym_col_mat(2, 3) == 10);
+        assert(sym_col_mat(3, 4) == sym_col_mat(4, 3));
+        assert(sym_col_mat(3, 4) == 13);
+
+        srm_mat_t   sym_row_mat { 5, 5 };
+
+        value = 0;
+        for (long r = 0; r < sym_row_mat.rows(); ++r)
+            for (long c = r; c < sym_row_mat.cols(); ++c)
+                sym_row_mat(r, c) = value++;
+
+        assert(sym_row_mat.is_symmetric());
+        assert(sym_row_mat(2, 3) == sym_row_mat(3, 2));
+        assert(sym_row_mat(2, 3) == 10);
+        assert(sym_row_mat(3, 4) == sym_row_mat(4, 3));
+        assert(sym_row_mat(3, 4) == 13);
+
+        auto    plus_mat = sym_row_mat + sym_col_mat;
+
+        assert(plus_mat.is_symmetric());
+        assert(plus_mat(2, 3) == plus_mat(3, 2));
+        assert(plus_mat(2, 3) == 20);
+        assert(plus_mat(3, 4) == plus_mat(4, 3));
+        assert(plus_mat(3, 4) == 26);
+
+        col_mat_t   col_mat { 5, 5 };
+
+        value = 0;
+        for (long c = 0; c < col_mat.cols(); ++c)
+            for (long r = 0; r < col_mat.rows(); ++r)
+                col_mat(r, c) = value++;
+
+        auto    plus_mat2 = sym_row_mat + col_mat;
+
+        assert((! plus_mat2.is_symmetric()));
+        assert(plus_mat2(2, 3) == 27);
+        assert(plus_mat2(3, 4) == 36);
+
+        auto    plus_mat3 = col_mat + sym_row_mat;
+
+        assert(plus_mat3 == plus_mat2);
     }
 
     value = 0;
@@ -135,62 +217,385 @@ int main(int, char *[]) {
         for (long c = 0; c < tran_mat.cols(); ++c)
             assert(tran_mat(r, c) == col_mat(c, r));
 
-    //
     // Test arithmetic functions
     //
+    {
+        auto    sum_mat = col_mat + row_mat;
 
-    auto    sum_mat = col_mat + row_mat;
+        assert(sum_mat(0, 0) == 0);
+        assert(sum_mat(4, 5) == 58);
+        assert(sum_mat(1, 1) == 13);
+        assert(sum_mat(3, 4) == 45);
 
-    assert(sum_mat(0, 0) == 0);
-    assert(sum_mat(4, 5) == 58);
-    assert(sum_mat(1, 1) == 13);
-    assert(sum_mat(3, 4) == 45);
+        sum_mat += col_mat;
+        assert(sum_mat(0, 0) == 0);
+        assert(sum_mat(4, 5) == 87);
+        assert(sum_mat(1, 1) == 19);
+        assert(sum_mat(3, 4) == 68);
 
-    sum_mat += col_mat;
-    assert(sum_mat(0, 0) == 0);
-    assert(sum_mat(4, 5) == 87);
-    assert(sum_mat(1, 1) == 19);
-    assert(sum_mat(3, 4) == 68);
+        row_mat_t   lhs_mat { ROWS, COLS };
+        col_mat_t   rhs_mat { COLS, COLS };
 
-    row_mat_t   lhs_mat { ROWS, COLS };
-    col_mat_t   rhs_mat { COLS, COLS };
+        value = 0;
+        for (long r = 0; r < lhs_mat.rows(); ++r)
+            for (long c = 0; c < lhs_mat.cols(); ++c)
+                lhs_mat(r, c) = value++;
+        value = 0;
+        for (long c = 0; c < rhs_mat.cols(); ++c)
+            for (long r = 0; r < rhs_mat.rows(); ++r)
+                rhs_mat(r, c) = value++;
 
-    value = 0;
-    for (long r = 0; r < lhs_mat.rows(); ++r)
-        for (long c = 0; c < lhs_mat.cols(); ++c)
-            lhs_mat(r, c) = value++;
-    value = 0;
-    for (long c = 0; c < rhs_mat.cols(); ++c)
-        for (long r = 0; r < rhs_mat.rows(); ++r)
-            rhs_mat(r, c) = value++;
+        auto    multi_mat = lhs_mat * rhs_mat;
 
-    auto    multi_mat = lhs_mat * rhs_mat;
+        assert(multi_mat(0, 0) == 55);
+        assert(multi_mat(4, 5) == 5185);
+        assert(multi_mat(1, 1) == 451);
+        assert(multi_mat(3, 4) == 3277);
 
-    assert(multi_mat(0, 0) == 55);
-    assert(multi_mat(4, 5) == 5185);
-    assert(multi_mat(1, 1) == 451);
-    assert(multi_mat(3, 4) == 3277);
+        col_mat_t   big_lhs_mat { 100, 100 };
+        col_mat_t   big_rhs_mat { 100, 100 };
 
-    col_mat_t   big_lhs_mat { 100, 100 };
-    col_mat_t   big_rhs_mat { 100, 100 };
+        for (long c = 0; c < 100; ++c)
+            for (long r = 0; r < 100; ++r)  {
+                big_lhs_mat(r, c) = c + 1;
+                big_rhs_mat(r, c) = c + 1;
+            }
 
-    for (long c = 0; c < 100; ++c)
-        for (long r = 0; r < 100; ++r)  {
-            big_lhs_mat(r, c) = c + 1;
-            big_rhs_mat(r, c) = c + 1;
-        }
+        auto    big_multi_mat = big_lhs_mat * big_rhs_mat;
 
-    auto    big_multi_mat = big_lhs_mat * big_rhs_mat;
+        assert(big_multi_mat(0, 0) == 5050);
+        assert(big_multi_mat(99, 99) == 505000);
+        assert(big_multi_mat(98, 2) == 15150);
+        assert(big_multi_mat(2, 5) == 30300);
+    }
 
-    assert(big_multi_mat(0, 0) == 5050);
-    assert(big_multi_mat(99, 99) == 505000);
-    assert(big_multi_mat(98, 2) == 499950);
-    assert(big_multi_mat(2, 5) == 15150);
+    // Test Inverse
+    //
+    {
+        using row_dmat_t = Matrix<double, matrix_orient::row_major>;
 
+        row_dmat_t  mat2 { 3, 3 };
+
+        mat2(0, 0) = 2.0;
+        mat2(0, 1) = 3.0;
+        mat2(0, 2) = 2.0;
+
+        mat2(1, 0) = 3.0;
+        mat2(1, 1) = 2.0;
+        mat2(1, 2) = 3.0;
+
+        mat2(2, 0) = 4.0;
+        mat2(2, 1) = 2.0;
+        mat2(2, 2) = 2.0;
+
+        row_dmat_t  mat2_inv = mat2.inverse();
+        auto        mat3 = mat2 * mat2_inv;
+
+        // It must result to identity matrix
+        //
+        assert((std::fabs(mat3(0, 0) - 1.0) < 0.00000001));
+        assert((std::fabs(mat3(1, 1) - 1.0) < 0.00000001));
+        assert((std::fabs(mat3(2, 2) - 1.0) < 0.00000001));
+        assert((std::fabs(mat3(0, 1) - 0.0) < 0.00000001));
+        assert((std::fabs(mat3(0, 2) - 0.0) < 0.00000001));
+        assert((std::fabs(mat3(1, 0) - 0.0) < 0.00000001));
+        assert((std::fabs(mat3(1, 2) - 0.0) < 0.00000001));
+        assert((std::fabs(mat3(2, 0) - 0.0) < 0.00000001));
+        assert((std::fabs(mat3(2, 1) - 0.0) < 0.00000001));
+    }
+
+    // Test Eigen space
+    //
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  col_mat { 10, 10 };
+        col_dmat_t  eigenvals;
+        col_dmat_t  eigenvecs;
+        std::size_t value { 0 };
+
+        // Symmetric matrix
+        //
+        for (long r = 0; r < col_mat.rows(); ++r)
+            for (long c = 0; c < col_mat.cols(); ++c)
+                col_mat(r, c) = col_mat(c, r) = double(++value);
+
+        col_mat.eigen_space (eigenvals, eigenvecs, true);
+
+        assert(eigenvals.cols() == 10);
+        assert(eigenvals.rows() == 1);
+
+        assert((std::fabs(eigenvals(0, 0) - -2.30681) < 0.001));
+        assert((std::fabs(eigenvals(0, 1) - -2.48865) < 0.0001));
+        assert((std::fabs(eigenvals(0, 5) - -6.56515) < 0.0001));
+        assert((std::fabs(eigenvals(0, 9) - 687.09) < 0.01));
+
+        assert(eigenvecs.cols() == 10);
+        assert(eigenvecs.rows() == 10);
+        assert((std::fabs(eigenvecs(0, 0) - 0.0698916) < 0.000001));
+        assert((std::fabs(eigenvecs(2, 4) - -0.320417) < 0.000001));
+        assert((std::fabs(eigenvecs(5, 6) - 0.181206) < 0.000001));
+        assert((std::fabs(eigenvecs(8, 2) - 0.44074) < 0.00001));
+        assert((std::fabs(eigenvecs(9, 9) - 0.432927) < 0.000001));
+
+        // non-symmetric matrix
+        //
+        value = 0;
+        for (long r = 0; r < col_mat.rows(); ++r)
+            for (long c = 0; c < col_mat.cols(); ++c)
+                col_mat(r, c) = double(++value);
+
+        col_mat.eigen_space (eigenvals, eigenvecs, true);
+
+        assert(eigenvals.cols() == 10);
+        assert(eigenvals.rows() == 1);
+        assert(eigenvals(0, 0) > -0.00000000001); // -2.87473e-15
+        assert(eigenvals(0, 1) > -0.00000000001); // -2.87473e-15
+        assert(eigenvals(0, 5) < 0.00000000001);  // 6.12134e-15
+        assert((std::fabs(eigenvals(0, 9) - 520.84) < 0.01));
+
+        assert(eigenvecs.cols() == 10);
+        assert(eigenvecs.rows() == 10);
+        assert((std::fabs(eigenvecs(0, 0) - -0.0833988) < 0.000001));
+        assert((std::fabs(eigenvecs(2, 4) - 0.32935) < 0.00001));
+        assert((std::fabs(eigenvecs(5, 6) - -0.410279) < 0.000001));
+        assert((std::fabs(eigenvecs(8, 2) - 9.34286) < 0.00001));
+        assert((std::fabs(eigenvecs(9, 9) - -0.51616) < 0.00001));
+    }
+
+    // Test Covariance matrix
+    //
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  col_mat { 5, 4 };
+
+        col_mat(0, 0) = 4.0;
+        col_mat(0, 1) = 2.0;
+        col_mat(0, 2) = 0.6;
+        col_mat(0, 3) = 3.0;
+
+        col_mat(1, 0) = 4.2;
+        col_mat(1, 1) = 2.1;
+        col_mat(1, 2) = 0.59;
+        col_mat(1, 3) = 3.2;
+
+        col_mat(2, 0) = 3.9;
+        col_mat(2, 1) = 2.0;
+        col_mat(2, 2) = 0.58;
+        col_mat(2, 3) = 2.89;
+
+        col_mat(3, 0) = 4.3;
+        col_mat(3, 1) = 2.1;
+        col_mat(3, 2) = 0.62;
+        col_mat(3, 3) = 3.298;
+
+        col_mat(4, 0) = 4.1;
+        col_mat(4, 1) = 2.2;
+        col_mat(4, 2) = 0.63;
+        col_mat(4, 3) = 3.098;
+
+        const auto  cov = col_mat.covariance(true);
+
+        assert(cov.cols() == 4);
+        assert(cov.rows() == 4);
+        assert((std::fabs(cov(0, 0) - 0.025) < 0.001));
+        assert((std::fabs(cov(0, 3) - 0.0254) < 0.0001));
+        assert((std::fabs(cov(2, 3) - 0.001789) < 0.000001));
+        assert((std::fabs(cov(3, 1) - 0.00763) < 0.00001));
+        assert((std::fabs(cov(3, 3) - 0.0258172) < 0.0000001));
+    }
+
+    // Test SVD decomposition
+    //
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  col_mat { 8, 4 };
+        std::size_t value { 0 };
+
+        for (long r = 0; r < col_mat.rows(); ++r)
+            for (long c = 0; c < col_mat.cols(); ++c)
+                col_mat(r, c) = double(++value);
+
+        col_dmat_t  U;
+        col_dmat_t  S;
+        col_dmat_t  V;
+
+        col_mat.svd (U, S, V, true);
+
+        assert(U.rows() == 8);
+        assert(U.cols() == 4);
+        assert(S.rows() == 4);  // All the zeros at the end are eliminated
+        assert(S.cols() == 4);
+        assert(V.rows() == 4);
+        assert(V.cols() == 4);
+
+        const auto  col_mat2 = U * S * V.transpose();
+
+        for (long r = 0; r < col_mat2.rows(); ++r)
+            for (long c = 0; c < col_mat2.cols(); ++c)
+                assert((std::fabs(col_mat(r, c) - col_mat2(r, c)) < 0.000001));
+    }
+
+    // Test degree matrix and Laplacian matrix
+    //
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  adj_mat { 5, 5 };
+
+        adj_mat(0, 0) = 0;
+        adj_mat(0, 1) = 1;
+        adj_mat(0, 2) = 0;
+        adj_mat(0, 3) = 1;
+        adj_mat(0, 4) = 0;
+
+        adj_mat(1, 0) = 0;
+        adj_mat(1, 1) = 0;
+        adj_mat(1, 2) = 0;
+        adj_mat(1, 3) = 0;
+        adj_mat(1, 4) = 1;
+
+        adj_mat(2, 0) = 0;
+        adj_mat(2, 1) = 1;
+        adj_mat(2, 2) = 0;
+        adj_mat(2, 3) = 0;
+        adj_mat(2, 4) = 0;
+
+        adj_mat(3, 0) = 1;
+        adj_mat(3, 1) = 0;
+        adj_mat(3, 2) = 1;
+        adj_mat(3, 3) = 1;
+        adj_mat(3, 4) = 1;
+
+        adj_mat(4, 0) = 0;
+        adj_mat(4, 1) = 0;
+        adj_mat(4, 2) = 1;
+        adj_mat(4, 3) = 1;
+        adj_mat(4, 4) = 0;
+
+        const auto  degree_mat = adj_mat.degree_matrix();
+
+        assert(degree_mat.rows() == 5);
+        assert(degree_mat.cols() == 5);
+        assert(degree_mat(0, 0) == 2.0);
+        assert(degree_mat(1, 1) == 1.0);
+        assert(degree_mat(2, 2) == 1.0);
+        assert(degree_mat(3, 3) == 4.0);
+        assert(degree_mat(4, 4) == 2.0);
+        assert(degree_mat(0, 1) == 0.0);
+        assert(degree_mat(4, 3) == 0.0);
+
+        const auto  laplacian_mat = adj_mat.laplacian_matrix();
+
+        assert(laplacian_mat.rows() == 5);
+        assert(laplacian_mat.cols() == 5);
+        assert(laplacian_mat(0, 0) == 2.0);
+        assert(laplacian_mat(0, 1) == -1.0);
+        assert(laplacian_mat(1, 3) == 0.0);
+        assert(laplacian_mat(3, 3) == 3.0);
+        assert(laplacian_mat(4, 2) == -1.0);
+        assert(laplacian_mat(4, 4) == 2.0);
+    }
+
+    test_thread_pool();
     return (0);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+void test_thread_pool()  {
+
+    ThreadGranularity::set_thread_level(3);
+
+    // Let threads start
+    //
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    {
+        std::vector<int>    values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        auto                lbd = [&values] (auto begin, auto end) -> void  {
+            for (auto i = begin; i < end; ++i)
+                values[i] += 1;
+        };
+        auto                futures =
+            ThreadGranularity::thr_pool_.parallel_loop(0, int(values.size()),
+                                                       std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+        for (int i = 0; i < int(values.size()); ++i)
+            assert((values[i] == i + 2));
+
+        std::vector<int>    values2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        auto                lbd2 = [&values2] (auto begin, auto end) -> void  {
+            for (auto i = begin; i < end; ++i)
+                values2[i] += 1;
+        };
+        auto                futures2 =
+            ThreadGranularity::thr_pool_.parallel_loop(0, int(values2.size()),
+                                                       std::move(lbd2));
+
+        for (auto &fut : futures2)  fut.get();
+        for (int i = 0; i < int(values2.size()); ++i)
+            assert((values2[i] == i + 2));
+
+        std::vector<int>    values3 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        auto                lbd3 = [&values3] (auto begin, auto end) -> void  {
+            for (auto i = begin; i < end; ++i)
+                values3[i] += 1;
+        };
+        auto                futures3 =
+            ThreadGranularity::thr_pool_.parallel_loop(0, int(values3.size()),
+                                                       std::move(lbd3));
+
+        for (auto &fut : futures3)  fut.get();
+        for (int i = 0; i < int(values3.size()); ++i)
+            assert((values3[i] == i + 2));
+    }
+
+    {
+        std::vector<int>    values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        auto                lbd = [&values] (auto begin, auto end) -> void  {
+            for (auto i = end; i >= begin; --i)
+                values[i] += 1;
+        };
+        auto                futures =
+            ThreadGranularity::thr_pool_.parallel_loop(
+                int(values.size()) - 1, 0, std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+        for (int i = 0; i < int(values.size()); ++i)
+            assert((values[i] == i + 2));
+
+        std::vector<int>    values2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        auto                lbd2 = [&values2] (auto begin, auto end) -> void  {
+            for (auto i = end; i >= begin; --i)
+                values2[i] += 1;
+        };
+        auto                futures2 =
+            ThreadGranularity::thr_pool_.parallel_loop(
+                int(values2.size()) - 1, 0, std::move(lbd2));
+
+        for (auto &fut : futures2)  fut.get();
+        for (int i = 0; i < int(values2.size()); ++i)
+            assert((values2[i] == i + 2));
+
+        std::vector<int>    values3 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        auto                lbd3 = [&values3] (auto begin, auto end) -> void  {
+            for (auto i = end; i >= begin; --i)
+                values3[i] += 1;
+        };
+        auto                futures3 =
+            ThreadGranularity::thr_pool_.parallel_loop(
+                int(values3.size()) - 1, 0, std::move(lbd3));
+
+        for (auto &fut : futures3)  fut.get();
+        for (int i = 0; i < int(values3.size()); ++i)
+            assert((values3[i] == i + 2));
+    }
+}
+
+// ----------------------------------------------------------------------------
 
 // Local Variables:
 // mode:C++

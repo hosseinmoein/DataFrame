@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Utils/Concepts.h>
 #include <DataFrame/Utils/FixedSizePriorityQueue.h>
+#include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
 
@@ -1647,6 +1648,69 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  CrossCorrVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin1, const H &column_end1,
+                const H &column_begin2, const H &column_end2)  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        {
+        const long  col_s1 = long(std::distance(column_begin1, column_end1));
+        const long  col_s2 = long(std::distance(column_begin2, column_end2));
+
+        if (std::abs(min_lag_) >= (col_s1 - 3) ||
+            std::abs(max_lag_) >= (col_s2 - 3))
+            throw DataFrameError("CrossCorrVisitor: Timeseries are too short");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        result_.reserve(max_lag_ - min_lag_);
+        for (long i = min_lag_; i < max_lag_; ++i)  {
+            corr_.pre();
+            if (i < 0)
+                corr_(idx_begin, idx_end,
+                      column_begin1 + std::abs(i), column_end1,
+                      column_begin2, column_end2 + i);
+            else
+                corr_(idx_begin, idx_end,
+                      column_begin1, column_end1 - i,
+                      column_begin2 + i, column_end2);
+            corr_.post();
+            result_.push_back(corr_.get_result());
+        }
+    }
+
+    CrossCorrVisitor (long min_lag, long max_lag,
+                      correlation_type t = correlation_type::pearson,
+                      bool biased = false,
+                      bool skip_nan = false,
+                      bool stable_algo = false)
+        : corr_ (t, biased, skip_nan, stable_algo),
+          min_lag_(min_lag),
+          max_lag_(max_lag)  {  }
+
+    inline void pre()  { result_.clear(); }
+    inline void post ()  {  }
+
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+private:
+
+    CorrVisitor<value_type, index_type> corr_;
+    result_type                         result_ { };
+    const long                          min_lag_;
+    const long                          max_lag_;
+};
+
+// ----------------------------------------------------------------------------
+
 template<arithmetic T, typename I = unsigned long>
 struct  DotProdVisitor  {
 
@@ -2730,6 +2794,7 @@ struct  AutoCorrVisitor  {
 public:
 
     DEFINE_VISIT_BASIC_TYPES_3
+
     template <typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
@@ -2737,22 +2802,27 @@ public:
 
         GET_COL_SIZE
 
-        if (col_s <= 4)  return;
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 5 || col_s < (max_lag_ + 4))
+            throw DataFrameError("AutoCorrVisitor: Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
 
-        vec_type<value_type>    tmp_result(col_s - 4);
+        vec_type<value_type>    tmp_result(max_lag_);
         size_type               lag = 1;
 
         tmp_result[0] = 1.0;
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
+        if ((col_s >= (ThreadPool::MUL_THR_THHOLD / 3)) &&
+            (ThreadGranularity::get_thread_level() > 2))  {
             vec_type<std::future<CorrResult>>   futures;
 
-            futures.reserve((col_s - 4) - lag);
-            while (lag < col_s - 4)  {
+            futures.reserve((max_lag_) - lag);
+            while (lag < max_lag_)  {
                 futures.emplace_back(
                     ThreadGranularity::thr_pool_.dispatch(
                         false,
-                        &AutoCorrVisitor::get_auto_corr_<H>,
+                        &AutoCorrVisitor::get_auto_corr_<K, H>,
+                            std::cref(idx_begin),
+                            std::cref(idx_end),
                             col_s,
                             lag,
                             std::cref(column_begin)));
@@ -2765,8 +2835,10 @@ public:
             }
         }
         else  {
-            while (lag < col_s - 4)  {
-                const auto  result = get_auto_corr_(col_s, lag, column_begin);
+            while (lag < max_lag_)  {
+                const auto  result =
+                    get_auto_corr_(idx_begin, idx_end,
+                                   col_s, lag, column_begin);
 
                 tmp_result[result.first] = result.second;
                 lag += 1;
@@ -2779,29 +2851,105 @@ public:
     DEFINE_PRE_POST
     DEFINE_RESULT
 
-    AutoCorrVisitor () = default;
+    explicit
+    AutoCorrVisitor(size_type max_lag) : max_lag_(max_lag)  {   }
 
 private:
 
-    result_type result_ {  };
+    result_type     result_ {  };
+    const size_type max_lag_;
 
     using CorrResult = std::pair<size_type, value_type>;
 
-    template<typename H>
+    template<typename K, typename H>
     inline static CorrResult
-    get_auto_corr_(size_type col_s, size_type lag, const H &column_begin)  {
+    get_auto_corr_(const K &idx_begin, const K &idx_end,
+                   size_type col_s, size_type lag, const H &column_begin)  {
 
         CorrVisitor<value_type, index_type> corr {  };
-        constexpr I                         dummy = I();
 
         corr.pre();
-        for (size_type i = 0; i < col_s - lag; ++i)
-            corr (dummy, *(column_begin + i), *(column_begin + (i + lag)));
+        corr (idx_begin, idx_end,
+              column_begin, column_begin + (col_s - lag),
+              column_begin + lag, column_begin + col_s);
         corr.post();
 
         return (CorrResult(lag, corr.get_result()));
     }
 };
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using acf_v = AutoCorrVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  PartialAutoCorrVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 10 || col_s < (max_lag_ + 4))
+            throw DataFrameError(
+                "PartialAutoCorrVisitor: Time-series is too short");
+        if (max_lag_ > 375)
+            throw DataFrameError("PartialAutoCorrVisitor: Maximum lag is 375");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        using matrix_t = Matrix<T, matrix_orient::row_major>;
+
+        result_type result (max_lag_, 0);
+        matrix_t    x;
+        matrix_t    y;
+
+        result[0] = 1;
+        x.reserve(max_lag_, max_lag_);
+        y.reserve(max_lag_, 1);
+        for (size_type k = 1; k <= max_lag_; ++k)  {
+            x.clear();
+            x.resize(col_s - k, k);
+            y.clear();
+            y.resize(col_s - k, 1);
+
+            for (size_type i = 0; i < col_s - k; ++i)  {
+                y(i, 0) = *(column_begin + (i + k));
+                for (size_type j = 0; j < k; ++j)  {
+                    x(i, j) = *(column_begin + (i + j));
+                }
+            }
+
+            const auto  x_trans = x.transpose();
+            const auto  phi = (x_trans * x).inverse() * x_trans * y;
+
+            result[k] = phi(k - 1, 0);
+        }
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    PartialAutoCorrVisitor(size_type max_lag) : max_lag_(max_lag)  {   }
+
+private:
+
+    result_type     result_ {  };
+    const size_type max_lag_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using pacf_v = PartialAutoCorrVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
@@ -2882,6 +3030,9 @@ private:
     const roll_policy   policy_;
     result_type         result_ {  };
 };
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using facf_v = FixedAutoCorrVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
@@ -3538,7 +3689,7 @@ struct  SymmTriangleMovingMeanVisitor  {
                 break;
 
         const auto  triangle =
-            std::move(gen_sym_triangle<value_type>(roll_period_, 1, true));
+            gen_sym_triangle<value_type>(roll_period_, 1, true);
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
         for (size_type i { starting + roll_period_ };
@@ -6376,11 +6527,11 @@ struct  LinearFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template<typename K, typename H>
+    template<typename K, typename H1, typename H2>
     inline void
     operator() (const K &, const K &,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+                const H1 &x_begin, const H1 &x_end,
+                const H2 &y_begin, const H2 &y_end)  {
 
         const size_type col_s =
             std::min(std::distance(x_begin, x_end),
@@ -7813,6 +7964,218 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using nzr_v = NonZeroRangeVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long>
+struct  StationaryCheckVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 5)
+            throw DataFrameError("StationaryCheckVisitor: "
+                                 "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (method_ == stationary_test::kpss)
+            do_kpss_(idx_begin, idx_end, column_begin, column_end, col_s);
+        else
+            do_adf_(idx_begin, idx_end, column_begin, column_end, col_s);
+    }
+
+    inline void pre()  { kpss_val_ = 0; kpss_stat_ = -1; adf_stat_ = 0; }
+    inline void post()  {  }
+    inline result_type get_kpss_value() const  { return (kpss_val_); }
+    inline result_type get_kpss_statistic() const  { return (kpss_stat_); }
+    inline result_type get_adf_statistic() const  { return (adf_stat_); }
+
+    explicit
+    StationaryCheckVisitor(stationary_test method,
+                           const StationaryTestParams params = { })
+        : method_(method), params_(params)  {   }
+
+private:
+
+    template<typename K, typename H>
+    inline void
+    do_kpss_(const K &idx_begin, const K &idx_end,
+             const H &column_begin, const H &column_end,
+             size_type col_s)  {
+
+        // Fit a linear trend line
+        //
+        linfit_v<T, I>          linfit;
+        std::vector<value_type> times(col_s);
+
+        std::iota (times.begin(), times.end(), T(1));
+        linfit.pre();
+        linfit(idx_begin, idx_end,
+               times.begin(), times.end(), column_begin, column_end);
+        linfit.post();
+
+        // Calculate residuals
+        //
+        std::vector<value_type> residuals(col_s);
+
+        for (size_type i = 0; i < col_s; ++i)
+            residuals[i] = *(column_begin + i) - linfit.get_result()[i];
+
+        // Calculate cumulative sum of residuals
+        //
+        std::vector<value_type> cum_sum(col_s);
+
+        cum_sum[0] = residuals[0];
+        for (size_type i = 1; i < col_s; ++i)
+            cum_sum[i] = cum_sum[i - 1] + residuals[i];
+
+        // Calculate to squared norm
+        //
+        value_type  norm_sq { 0 };
+
+        for (size_type i = 0; i < col_s; ++i)
+            norm_sq += cum_sum[i] * cum_sum[i];
+
+        // Calculate variance
+        //
+        VarVisitor<T, I>    var { true };
+
+        var.pre();
+        var(idx_begin, idx_end, residuals.begin(), residuals.end());
+        var.post();
+
+        // Calculate KPSS value and statistic
+        //
+        kpss_val_ = norm_sq / (T(col_s) * T(col_s) * var.get_result());
+        if (kpss_val_ < params_.critical_values[0])
+            kpss_stat_ = 0.1;
+        else if (kpss_val_ < params_.critical_values[1])
+            kpss_stat_ = 0.05;
+        else if (kpss_val_ < params_.critical_values[2])
+            kpss_stat_ = 0.025;
+        else if (kpss_val_ < params_.critical_values[3])
+            kpss_stat_ = 0.01;
+        else
+            kpss_stat_ = 0;
+    }
+
+    template<typename K, typename H>
+    inline void
+    do_adf_(const K &idx_begin, const K &idx_end,
+            const H &column_begin, const H &column_end,
+            size_type col_s)  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s <= (params_.adf_lag + 1))
+            throw DataFrameError("StationaryCheckVisitor(ADF): "
+                                 "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        std::vector<value_type> detrended_data;
+
+        if (params_.adf_with_trend)  {
+            std::vector<value_type> times(col_s);
+
+            for (size_type i = 0; i < col_s; ++i)
+                times[i] = value_type(i + 1);
+
+            const value_type    sum_t =
+                std::accumulate(times.begin(), times.end(), T(0));
+            const value_type    sum_y =
+                std::accumulate(column_begin, column_end, T(0));
+            value_type          sum_t2 { 0 };
+            value_type          sum_ty { 0 };
+
+            for (size_type i = 0; i < col_s; i++) {
+                sum_ty += times[i] * *(column_begin + i);
+                sum_t2 += times[i] * times[i];
+            }
+
+            const value_type    slope = (T(col_s) * sum_ty - sum_t * sum_y) /
+                                        (T(col_s) * sum_t2 - sum_t * sum_t);
+            const value_type    intercept = (sum_y - slope * sum_t) / T(col_s);
+
+            // Detrend the data
+            //
+            detrended_data.resize(col_s, 0);
+            for (size_type i = 0; i < col_s; i++)
+                detrended_data[i] =
+                    *(column_begin + i) - (intercept + slope * times[i]);
+        }
+
+        MeanVisitor<T, I>   mean;
+
+        mean.pre();
+        if (params_.adf_with_trend)
+            mean(idx_begin, idx_end,
+                 detrended_data.begin(), detrended_data.end());
+        else
+            mean(idx_begin, idx_end, column_begin, column_end);
+        mean.post();
+
+        VarVisitor<T, I>    variance { true };
+
+        variance.pre();
+        if (params_.adf_with_trend)
+            variance(idx_begin, idx_end,
+                     detrended_data.begin(), detrended_data.end());
+        else
+            variance(idx_begin, idx_end, column_begin, column_end);
+        variance.post();
+
+        // Calculate Auto Covariance of lag
+        //
+        value_type  autocovar { 0 };
+
+        if (params_.adf_with_trend)
+            for (size_type i = params_.adf_lag; i < col_s; ++i)
+                autocovar +=
+                    (detrended_data[i] - mean.get_result()) *
+                    (detrended_data[i - params_.adf_lag] - mean.get_result());
+        else
+            for (size_type i = params_.adf_lag; i < col_s; ++i)
+                autocovar +=
+                    (*(column_begin + i) - mean.get_result()) *
+                    (*(column_begin + (i - params_.adf_lag)) -
+                     mean.get_result());
+        autocovar /= T(col_s - params_.adf_lag - 1);
+
+        adf_stat_ = autocovar / variance.get_result();
+    }
+
+    const stationary_test       method_;
+    const StationaryTestParams  params_;
+
+    // In a KPSS test, a higher test statistic value (meaning a larger
+    // calculated KPSS statistic) indicates a greater likelihood that the time
+    // series is not stationary around a deterministic trend, while a lower
+    // value suggests stationarity; essentially, you want a low KPSS test value
+    // to conclude stationarity.
+    //
+    value_type                  kpss_val_ { 0 };
+    value_type                  kpss_stat_ { -1 };
+
+    // To interpret an ADF test statistic, compare its value to the critical
+    // value at a chosen significance level (usually 0.05): if the test
+    // statistic is less than the critical value, you reject the null
+    // hypothesis and conclude that the time series is stationary; if it's
+    // greater than the critical value, you fail to reject the null hypothesis,
+    // indicating non-stationarity; a more negative ADF statistic signifies
+    // stronger evidence against the null hypothesis (i.e., more likely
+    // stationary).
+    //
+    value_type                  adf_stat_ { 0 };
+};
+
+template<typename T, typename I = unsigned long>
+using stac_v = StationaryCheckVisitor<T, I>;
 
 } // namespace hmdf
 

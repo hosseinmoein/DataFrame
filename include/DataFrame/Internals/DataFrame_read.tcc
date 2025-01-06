@@ -787,7 +787,8 @@ read_csv2_(std::FILE *stream,
     spec_vec.reserve(32);
     while (! std::feof(stream)) {
         line[0] = '\0';
-        std::fgets(line, sizeof(line) - 1, stream);
+        if (std::fgets(line, sizeof(line) - 1, stream) == nullptr)
+            continue;
 
         if (line[0] == '\0' || line[0] == '#') [[unlikely]]  continue;
 
@@ -1153,6 +1154,12 @@ read_csv2_(std::FILE *stream,
                     }
                 }
                 else if (col_spec.type_spec == "string")  {
+                    if (!value.empty() && value.back() == '\n') {
+                        value.pop_back();
+                    }
+                    if (!value.empty() && value.back() == '\r') {
+                        value.pop_back();
+                    }
                     std::any_cast<StlVecType<std::string> &>
                         (col_spec.col_vec).emplace_back(value);
                 }

@@ -24,6 +24,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameFinancialVisitors.h>
 #include <DataFrame/DataFrameMLVisitors.h>
@@ -1927,9 +1928,589 @@ static void test_view_assign()  {
         std::fabs(dfv2.get_column<double>("IBM_Open")[100] - 181.24) < 0.001));
     assert(dfpv2.get_column<long>("IBM_Volume")[100] == 3721600);
 }
+
+// ----------------------------------------------------------------------------
+
+static void test_CrossCorrVisitor()  {
+
+    std::cout << "\nTesting CrossCorrVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    CrossCorrVisitor<double, std::string>   cc(-16, 16);
+
+    df.single_act_visit<double, double>("IBM_Close", "IBM_Open", cc);
+
+    assert(cc.get_result().size() == 32);
+    assert(std::fabs(cc.get_result()[0] - 0.906) < 0.0001);
+    assert(std::fabs(cc.get_result()[1] - 0.9117) < 0.0001);
+    assert(std::fabs(cc.get_result()[15] - 0.9919) < 0.0001);
+    assert(std::fabs(cc.get_result()[16] - 0.9971) < 0.0001);
+    assert(std::fabs(cc.get_result()[30] - 0.9239) < 0.0001);
+    assert(std::fabs(cc.get_result()[31] - 0.9179) < 0.0001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_PartialAutoCorrVisitor()  {
+
+    std::cout << "\nTesting PartialAutoCorrVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    PartialAutoCorrVisitor<double, std::string> pacf { 50 };
+
+    df.single_act_visit<double> ("IBM_Close", pacf);
+
+    assert(pacf.get_result().size() == 50);
+    assert(std::fabs(pacf.get_result()[0] - 1.0) < 0.000001);
+    assert(std::fabs(pacf.get_result()[1] - 0.999915) < 0.000001);
+    assert(std::fabs(pacf.get_result()[10] - 0.982959) < 0.000001);
+    assert(std::fabs(pacf.get_result()[30] - 0.983226) < 0.000001);
+    assert(std::fabs(pacf.get_result()[48] - 0.98751) < 0.000001);
+    assert(std::fabs(pacf.get_result()[49] - 0.987886) < 0.000001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_make_stationary()  {
+
+    std::cout << "\nTesting make_stationary( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    auto    df2 = df;
+    auto    df3 = df;
+    auto    df4 = df;
+    auto    df5 = df;
+    auto    df6 = df;
+
+    df.make_stationary<double>("IBM_Close", stationary_method::differencing);
+
+    const auto  &close = df.get_column<double>("IBM_Close");
+
+    assert(close.size() == 5031);
+    assert(std::fabs(close[0] - 3.375) < 0.001);
+    assert(std::fabs(close[1] - 3.375) < 0.001);
+    assert(std::fabs(close[702] - 0.120003) < 0.0001);
+    assert(std::fabs(close[1695] - -1.34) < 0.001);
+    assert(std::fabs(close[5029] - 2.26) < 0.001);
+    assert(std::fabs(close[5030] - 2.75) < 0.001);
+
+    df2.make_stationary<double>("IBM_Close", stationary_method::log_trans);
+
+    const auto  &close2 = df2.get_column<double>("IBM_Close");
+
+    assert(close2.size() == 5031);
+    assert(std::fabs(close2[0] - 4.59069) < 0.0001);
+    assert(std::fabs(close2[1] - 4.62436) < 0.0001);
+    assert(std::fabs(close2[702] - 4.41848) < 0.0001);
+    assert(std::fabs(close2[1695] - 4.71752) < 0.0001);
+    assert(std::fabs(close2[5029] - 4.69052) < 0.0001);
+    assert(std::fabs(close2[5030] - 4.71546) < 0.0001);
+
+    df3.make_stationary<double>("IBM_Close", stationary_method::sqrt_trans);
+
+    const auto  &close3 = df3.get_column<double>("IBM_Close");
+
+    assert(close3.size() == 5031);
+    assert(std::fabs(close3[0] - 9.92786) < 0.0001);
+    assert(std::fabs(close3[1] - 10.0964) < 0.0001);
+    assert(std::fabs(close3[702] - 9.10879) < 0.0001);
+    assert(std::fabs(close3[1695] - 10.5778) < 0.0001);
+    assert(std::fabs(close3[5029] - 10.436) < 0.001);
+    assert(std::fabs(close3[5030] - 10.5669) < 0.0001);
+
+    df4.make_stationary<double>("IBM_Close",
+                                stationary_method::boxcox_trans,
+                                { .bc_type = box_cox_type::original,
+                                  .lambda = 1.5,
+                                  .is_all_positive = true });
+
+    const auto  &close4 = df4.get_column<double>("IBM_Close");
+
+    assert(close4.size() == 5031);
+    assert(std::fabs(close4[0] - 651.677) < 0.001);
+    assert(std::fabs(close4[1] - 685.469) < 0.001);
+    assert(std::fabs(close4[702] - 503.171) < 0.001);
+    assert(std::fabs(close4[1695] - 788.367) < 0.001);
+    assert(std::fabs(close4[5029] - 757.056) < 0.001);
+    assert(std::fabs(close4[5030] - 785.936) < 0.001);
+
+    df5.make_stationary<double>(
+        "IBM_Close",
+        stationary_method::decomposition,
+        { .season_period = 132,
+          .dcom_fraction = 0.6667,
+          .dcom_delta = 0,
+          .dcom_type = decompose_type::multiplicative });
+
+    const auto  &close5 = df5.get_column<double>("IBM_Close");
+
+    assert(close5.size() == 5031);
+    assert(std::fabs(close5[0] - 1.20614) < 0.0001);
+    assert(std::fabs(close5[1] - 1.2488) < 0.0001);
+    assert(std::fabs(close5[702] - 0.926802) < 0.0001);
+    assert(std::fabs(close5[1695] - 1.04238) < 0.0001);
+    assert(std::fabs(close5[5029] - 0.817188) < 0.001);
+    assert(std::fabs(close5[5030] - 0.836598) < 0.0001);
+
+    df6.make_stationary<double>("IBM_Close",
+                                stationary_method::smoothing,
+                                { .decay_spec = exponential_decay_spec::span,
+                                  .decay_alpha = 1.5,
+                                  .finite_adjust = true });
+
+    const auto  &close6 = df6.get_column<double>("IBM_Close");
+
+    assert(close6.size() == 5031);
+    assert(std::fabs(close6[0] - 98.5625) < 0.0001);
+    assert(std::fabs(close6[1] - 101.375) < 0.0001);
+    assert(std::fabs(close6[702] - 82.9529) < 0.0001);
+    assert(std::fabs(close6[1695] - 112.106) < 0.001);
+    assert(std::fabs(close6[5029] - 108.634) < 0.001);
+    assert(std::fabs(close6[5030] - 111.055) < 0.001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_StationaryCheckVisitor()  {
+
+    std::cout << "\nTesting StationaryCheckVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    RandGenParams<double>   p;
+
+    p.mean = 0;
+    p.std = 1;
+    p.seed = 123;
+
+    df.load_column("normal_col",
+                   gen_normal_dist<double>(df.get_index().size(), p));
+
+    p.max_value = 1000;
+    p.min_value = -1000;
+    df.load_column("uniform col",
+                   gen_uniform_real_dist<double>(df.get_index().size(), p));
+
+    std::vector<double> log_close;
+
+    log_close.reserve(df.get_index().size());
+    for (const auto val : df.get_column<double>("IBM_Close"))
+        log_close.push_back(std::log(val));
+    df.load_column("log close", std::move(log_close));
+
+    DecomposeVisitor<double, std::string>   d_v (280, 0.6, 0.01);
+
+    df.single_act_visit<double>("IBM_Close", d_v);
+    df.load_column("residual close", std::move(d_v.get_residual()));
+
+    // KPSS tests
+    //
+    StationaryCheckVisitor<double, std::string> sc { stationary_test::kpss };
+
+    df.single_act_visit<double>("IBM_Close", sc);
+    assert(std::fabs(sc.get_kpss_value() - 63.5831) < 0.0001);
+    assert(sc.get_kpss_statistic() == 0);
+
+    df.single_act_visit<double>("normal_col", sc);
+    assert(sc.get_kpss_value() < 0.078);
+    assert(sc.get_kpss_statistic() == 0.1);
+
+    df.single_act_visit<double>("uniform col", sc);
+    assert(sc.get_kpss_value() < 0.08);
+    assert(sc.get_kpss_statistic() == 0.1);
+
+    df.single_act_visit<double>("log close", sc);
+    assert(sc.get_kpss_value() < 62.7013);
+    assert(sc.get_kpss_statistic() == 0);
+
+    df.single_act_visit<double>("residual close", sc);
+    assert(sc.get_kpss_value() < 46.41);
+    assert(sc.get_kpss_statistic() == 0);
+
+    // ADF tests
+    //
+    StationaryCheckVisitor<double, std::string> sc2 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = false } };
+
+    df.single_act_visit<double>("IBM_Close", sc2);
+    assert(std::fabs(sc2.get_adf_statistic() - 0.989687) < 0.00001);
+
+    StationaryCheckVisitor<double, std::string> sc3 {
+        stationary_test::adf, { .adf_lag = 25, .adf_with_trend = false } };
+
+    df.single_act_visit<double>("IBM_Close", sc3);
+    assert(std::fabs(sc3.get_adf_statistic() - 0.974531) < 0.0000001);
+
+    StationaryCheckVisitor<double, std::string> sc4 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = false } };
+
+    df.single_act_visit<double>("normal_col", sc4);
+    assert(std::fabs(sc4.get_adf_statistic() - 0.0286854) < 0.0000001);
+
+    StationaryCheckVisitor<double, std::string> sc5 {
+        stationary_test::adf, { .adf_lag = 25, .adf_with_trend = false } };
+
+    df.single_act_visit<double>("normal_col", sc5);
+    assert(std::fabs(sc5.get_adf_statistic() - -0.0017814) < 0.0000001);
+
+    // ADF tests with trend
+    //
+    StationaryCheckVisitor<double, std::string> sc6 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("IBM_Close", sc6);
+    assert(std::fabs(sc6.get_adf_statistic() - 0.977705) < 0.000001);
+
+    StationaryCheckVisitor<double, std::string> sc7 {
+        stationary_test::adf, { .adf_lag = 25, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("IBM_Close", sc7);
+    assert(std::fabs(sc7.get_adf_statistic() - 0.946614) < 0.000001);
+
+    StationaryCheckVisitor<double, std::string> sc8 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("normal_col", sc8);
+    assert(std::fabs(sc8.get_adf_statistic() - 0.0286834) < 0.0000001);
+
+    StationaryCheckVisitor<double, std::string> sc9 {
+        stationary_test::adf, { .adf_lag = 25, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("normal_col", sc9);
+    assert(std::fabs(sc9.get_adf_statistic() - -0.00178569) < 0.0000001);
+
+    StationaryCheckVisitor<double, std::string> sc10 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("log close", sc10);
+    assert(std::fabs(sc10.get_adf_statistic() - 0.972062) < 0.000001);
+
+    StationaryCheckVisitor<double, std::string> sc11 {
+        stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
+
+    df.single_act_visit<double>("residual close", sc11);
+    assert(std::fabs(sc11.get_adf_statistic() - 0.679027) < 0.000001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_covariance_matrix()  {
+
+    std::cout << "\nTesting covariance_matrix( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  cov_mat =
+        df.covariance_matrix<double>({ "IBM_Close", "IBM_Open",
+                                       "IBM_High", "IBM_Low" });
+
+    assert(cov_mat.rows() == 4);
+    assert(cov_mat.cols() == 4);
+    assert(std::fabs(cov_mat(0, 0) - 1467.58) < 0.01);
+    assert(std::fabs(cov_mat(0, 2) - 1469.69) < 0.01);
+    assert(std::fabs(cov_mat(2, 1) - 1469.48) < 0.01);
+    assert(std::fabs(cov_mat(2, 2) - 1472.86) < 0.01);
+    assert(std::fabs(cov_mat(3, 2) - 1466.15) < 0.01);
+    assert(std::fabs(cov_mat(3, 3) - 1461.0) < 0.01);
+
+    const auto  cov_mat2 =
+        df.covariance_matrix<double>({ "IBM_Close", "IBM_Open",
+                                       "IBM_High", "IBM_Low" },
+                                     normalization_type::z_score);
+
+    assert(cov_mat2.rows() == 4);
+    assert(cov_mat2.cols() == 4);
+    assert(std::fabs(cov_mat2(0, 0) - 1.0) < 0.01);
+    assert(std::fabs(cov_mat2(0, 2) - 0.99964) < 0.00001);
+    assert(std::fabs(cov_mat2(2, 1) - 0.99963) < 0.00001);
+    assert(std::fabs(cov_mat2(2, 2) - 1.0) < 0.01);
+    assert(std::fabs(cov_mat2(3, 2) - 0.99948) < 0.00001);
+    assert(std::fabs(cov_mat2(3, 3) - 1.0) < 0.01);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_pca_by_eigen()  {
+
+    std::cout << "\nTesting pca_by_eigen( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  pca_mat = df.pca_by_eigen<double>(
+        { "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" });
+
+    // Dimensions were reduced to 1 containing at least 90% of the information.
+    // This makes sense, since these 4 columns are highly correlated.
+    //
+    assert(pca_mat.cols() == 1);
+    assert(pca_mat.rows() == 5031);
+    assert(std::fabs(pca_mat(0, 0) - 197.063) < 0.001);
+    assert(std::fabs(pca_mat(1, 0) - 200.875) < 0.001);
+    assert(std::fabs(pca_mat(491, 0) - 149.02) < 0.01);
+    assert(std::fabs(pca_mat(1348, 0) - 166.44) < 0.01);
+    assert(std::fabs(pca_mat(2677, 0) - 333.405) < 0.001);
+    assert(std::fabs(pca_mat(5029, 0) - 216.175) < 0.001);
+    assert(std::fabs(pca_mat(5030, 0) - 219.555) < 0.001);
+
+    const auto  pca_mat2 = df.pca_by_eigen<double>(
+        { "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" },
+        { .num_comp_to_keep = 3 });
+
+    // 3 most significant dimensions are kept.
+    // As you can see the first column is unchanged and clearly contains
+    // almost all of the information.
+    //
+    assert(pca_mat2.cols() == 3);
+    assert(pca_mat2.rows() == 5031);
+
+    assert(std::fabs(pca_mat2(0, 0) - 197.063) < 0.001);
+    assert(std::fabs(pca_mat2(0, 1) - -0.0951913) < 0.001);
+    assert(std::fabs(pca_mat2(0, 2) - 1.85473) < 0.001);
+
+    assert(std::fabs(pca_mat2(1, 0) - 200.875) < 0.001);
+    assert(std::fabs(pca_mat2(1, 1) - -2.08604) < 0.001);
+    assert(std::fabs(pca_mat2(1, 2) - 2.68895) < 0.001);
+
+    assert(std::fabs(pca_mat2(491, 0) - 149.02) < 0.01);
+    assert(std::fabs(pca_mat2(491, 1) - -1.34957) < 0.01);
+    assert(std::fabs(pca_mat2(491, 2) - 2.09026) < 0.01);
+
+    assert(std::fabs(pca_mat2(1348, 0) - 166.44) < 0.01);
+    assert(std::fabs(pca_mat2(1348, 1) - 0.0354559) < 0.01);
+    assert(std::fabs(pca_mat2(1348, 2) - 0.41972) < 0.01);
+
+    assert(std::fabs(pca_mat2(2677, 0) - 333.405) < 0.001);
+    assert(std::fabs(pca_mat2(2677, 1) - -1.33686) < 0.001);
+    assert(std::fabs(pca_mat2(2677, 2) - 2.13684) < 0.001);
+
+    assert(std::fabs(pca_mat2(5029, 0) - 216.175) < 0.001);
+    assert(std::fabs(pca_mat2(5029, 1) - -1.18141) < 0.001);
+    assert(std::fabs(pca_mat2(5029, 2) - 2.18029) < 0.001);
+
+    assert(std::fabs(pca_mat2(5030, 0) - 219.555) < 0.001);
+    assert(std::fabs(pca_mat2(5030, 1) - -2.66858) < 0.001);
+    assert(std::fabs(pca_mat2(5030, 2) - 2.85412) < 0.001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_compact_svd()  {
+
+    std::cout << "\nTesting compact_svd( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  [U, S, V] =
+        df.compact_svd<double>(
+            { "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" });
+
+    assert(U.rows() == 5031);
+    // Compact version has the same column # as the original matrix
+    //
+    assert(U.cols() == 4);
+    assert(std::fabs(U(0, 0) - -0.0115747) < 0.000001);
+    assert(std::fabs(U(2, 3) - -0.0110622) < 0.000001);
+    assert(std::fabs(U(4040, 2) - -0.0147074) < 0.000001);
+    assert(std::fabs(U(4994, 1) - 0.0194639) < 0.000001);
+    assert(std::fabs(U(5030, 3) - -0.000878688) < 0.000001);
+
+    // In compact version zero rows at the end are omitted
+    //
+    assert(S.rows() == 4);
+    assert(S.cols() == 4);
+    assert(std::fabs(S(0, 0) - 141.821) < 0.001);
+    assert(std::fabs(S(1, 1) - 1.91734) < 0.00001);
+    assert(std::fabs(S(2, 2) - 1.62214) < 0.00001);
+    assert(std::fabs(S(3, 3) - 0.73194) < 0.00001);
+    assert(S(0, 2) == 0.0);
+    assert(S(1, 2) == 0.0);
+    assert(S(3, 0) == 0.0);
+
+    assert(V.rows() == 4);
+    assert(V.cols() == 4);
+    assert(std::fabs(V(0, 0) - 0.499988) < 0.000001);
+    assert(std::fabs(V(0, 2) - 0.003710) < 0.000001);
+    assert(std::fabs(V(2, 2) - 0.700869) < 0.000001);
+    assert(std::fabs(V(3, 1) - -0.00079) < 0.000001);
+    assert(std::fabs(V(3, 3) - 0.491216) < 0.000001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_SpectralClusteringVisitor()  {
+
+    std::cout << "\nTesting SpectralClusteringVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2, false, 0, 1000);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    spect_v<4, double, std::string, 64> spc(1000, 7, 123);
+
+    df.single_act_visit<double>("IBM_Close", spc);
+
+    const auto  &clusters = spc.get_result();
+
+    assert(clusters.size() == 4);
+
+    assert(clusters[0].size() == 16);
+    assert(clusters[1].size() == 89);
+    assert(clusters[2].size() == 207);
+    assert(clusters[3].size() == 688);
+
+    assert(std::fabs(clusters[0][0] - 121.86) < 0.001);
+    assert(std::fabs(clusters[0][8] - 124.83) < 0.001);
+    assert(std::fabs(clusters[0][12] - 120.19) < 0.001);
+    assert(std::fabs(clusters[0][15] - 122.74) < 0.001);
+
+    assert(std::fabs(clusters[1][0] - 177.9) < 0.001);
+    assert(std::fabs(clusters[1][23] - 171.12) < 0.001);
+    assert(std::fabs(clusters[1][61] - 177.18) < 0.001);
+    assert(std::fabs(clusters[1][88] - 170.05) < 0.001);
+
+    assert(std::fabs(clusters[2][0] - 185.53) < 0.001);
+    assert(std::fabs(clusters[2][100] - 181.22) < 0.001);
+    assert(std::fabs(clusters[2][200] - 179.82) < 0.001);
+    assert(std::fabs(clusters[2][206] - 179.45) < 0.001);
+
+    assert(std::fabs(clusters[3][0] - 169.1) < 0.001);
+    assert(std::fabs(clusters[3][300] - 140.19) < 0.001);
+    assert(std::fabs(clusters[3][542] - 152.51) < 0.001);
+    assert(std::fabs(clusters[3][687] - 153.23) < 0.001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_get_data_by_spectral()  {
+
+    std::cout << "\nTesting get_data_by_spectral( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2, false, 1000, 500);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    StrDataFrame    df2 = df;
+
+    auto    lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double, long>
+            ("IBM_Open", lbd);
+
+    auto    result_df =
+        df.get_data_by_spectral <3, double, double, long>("IBM_Close", 8, 89);
+    auto    result_view =
+        view.get_view_by_spectral<3, double, double, long>("IBM_Close", 8, 89);
+
+    assert(result_df.size() == 3);
+    assert(result_df.size() == result_view.size());
+
+    assert(result_df[0].get_index().size() == 1);
+    assert(result_df[0].get_column<double>("IBM_Open").size() == 1);
+    assert(result_df[0].get_index()[0] == "2018-12-24");
+    assert(result_df[0].get_column<double>("IBM_High")[0] == 111.0);
+    assert(result_df[0].get_column<long>("IBM_Volume")[0] == 3821400);
+    assert(result_view[0].get_column<double>("IBM_High")[0] == 111.0);
+    assert(result_view[0].get_column<long>("IBM_Volume")[0] == 3821400);
+
+    assert(result_df[1].get_index().size() == 47);
+    assert(result_df[1].get_column<double>("IBM_Open").size() == 47);
+    assert(result_df[1].get_index()[0] == "2018-10-29");
+    assert(result_df[1].get_index()[46] == "2019-01-22");
+    assert(result_df[1].get_column<double>("IBM_High")[20] == 121.68);
+    assert(result_df[1].get_column<long>("IBM_Volume")[35] == 4346700);
+    assert(result_view[1].get_index().size() == 47);
+    assert(result_view[1].get_column<double>("IBM_Open").size() == 47);
+    assert(result_view[1].get_index()[0] == "2018-10-29");
+    assert(result_view[1].get_index()[46] == "2019-01-22");
+    assert(result_view[1].get_column<double>("IBM_High")[20] == 121.68);
+    assert(result_view[1].get_column<long>("IBM_Volume")[35] == 4346700);
+	
+    assert(result_df[2].get_index().size() == 452);
+    assert(result_df[2].get_column<double>("IBM_Open").size() == 452);
+    assert(result_df[2].get_index()[0] == "2017-12-20");
+    assert(result_df[2].get_index()[451] == "2019-12-16");
+    assert(result_df[2].get_column<double>("IBM_High")[200] == 149.070007);
+    assert(result_df[2].get_column<long>("IBM_Volume")[300] == 4958000);
+    assert(result_view[2].get_index().size() == 452);
+    assert(result_view[2].get_column<double>("IBM_Open").size() == 452);
+    assert(result_view[2].get_index()[0] == "2017-12-20");
+    assert(result_view[2].get_index()[451] == "2019-12-16");
+    assert(result_view[2].get_column<double>("IBM_High")[200] == 149.070007);
+    assert(result_view[2].get_column<long>("IBM_Volume")[300] == 4958000);
+}
 */
 
 // ----------------------------------------------------------------------------
+
 
 
 
@@ -1985,6 +2566,8 @@ static void test_FastHierVisitor()  {
 
 int main(int, char *[]) {
 
+    MyDataFrame::set_optimum_thread_level();
+
 /*
     test_starts_with();
     test_ends_with();
@@ -2018,6 +2601,15 @@ int main(int, char *[]) {
     test_get_data_by_dbscan();
     test_get_data_by_mshift();
     test_view_assign();
+    test_CrossCorrVisitor();
+    test_PartialAutoCorrVisitor();
+    test_make_stationary();
+    test_StationaryCheckVisitor();
+    test_covariance_matrix();
+    test_pca_by_eigen();
+    test_compact_svd();
+    test_SpectralClusteringVisitor();
+    test_get_data_by_spectral();
 */
     test_FastHierVisitor();
 

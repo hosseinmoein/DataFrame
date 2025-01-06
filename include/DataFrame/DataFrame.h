@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Concepts.h>
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
+#include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
 
@@ -1202,6 +1203,27 @@ public:  // Load/append/remove interfaces
     template<typename ... Ts>
     void
     truncate(IndexType &&before, IndexType &&after);
+
+    // This function assumes the named column is a time-series.
+    // It attempts to make the time-series stationary by the specified method.
+    // In cases of <I>differencing</I> and <I>smoothing</I> methods, the first
+    // datapoint in the column remains unchanged.
+    //
+    // T:
+    //   Type of the named column
+    // col_name:
+    //   Name of the column
+    // method:
+    //   The method by which it makes the column staionary
+    // params:
+    //   Parameters necessary for some of the above methods.
+    //   Please see stationary_params.
+    //
+    template<typename T>
+    void
+    make_stationary(const char *col_name,
+                    stationary_method method,
+                    const StationaryParams params = { });
 
 public:  // Data manipulation
 
@@ -3309,6 +3331,81 @@ public: // Read/access and slicing interfaces
                        size_type num_of_iter = 1000,
                        seed_t seed = seed_t(-1)) const;
 
+    // This uses spectral clustering algorithm to divide the named column into
+    // K clusters. It returns an array of K DataFrame's each containing one of
+    // the clusters of data based on the named column.
+    // Self in unchanged.
+    //
+    // NOTE: Type T must support arithmetic operations
+    //
+    // K:
+    //   Number of clusters for k-means clustering algorithm
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // sfunc:
+    //   A function to calculate the similarity matrix between data points in
+    //   the named column
+    // num_of_iter:
+    //   Maximum number of iterations for k-means clustering algorithm before
+    //   converging
+    // seed:
+    //   Seed for random number generator to initialize k-means clustering
+    //   algorithm. Default is a random numbers for each call.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>, K>
+    get_data_by_spectral(const char *col_name,
+                         double sigma,
+                         seed_t seed = seed_t(-1),
+                         std::function<double(const T &x, const T &y,
+                                              double sigma)>  &&sfunc =
+                             [](const T &x, const T &y,
+                                double sigma) -> double  {
+                                 return (std::exp(-((x - y) * (x - y)) /
+                                                  (2 * sigma * sigma)));
+                             },
+                         size_type num_of_iter = 1000) const;
+
+    // Same as above but it returns an array of Views.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<PtrView, K>
+    get_view_by_spectral(const char *col_name,
+                         double sigma,
+                         seed_t seed = seed_t(-1),
+                         std::function<double(const T &x, const T &y,
+                                              double sigma)>  &&sfunc =
+                             [](const T &x, const T &y,
+                                double sigma) -> double  {
+                                 return (std::exp(-((x - y) * (x - y)) /
+                                                  (2 * sigma * sigma)));
+                             },
+                         size_type num_of_iter = 1000);
+
+    // Same as above but it returns an array of const Views.
+    //
+    template<std::size_t K, arithmetic T, typename ... Ts>
+    [[nodiscard]]
+    std::array<ConstPtrView, K>
+    get_view_by_spectral(const char *col_name,
+                         double sigma,
+                         seed_t seed = seed_t(-1),
+                         std::function<double(const T &x, const T &y,
+                                              double sigma)>  &&sfunc =
+                             [](const T &x, const T &y,
+                                double sigma) -> double  {
+                                 return (std::exp(-((x - y) * (x - y)) /
+                                                  (2 * sigma * sigma)));
+                             },
+                         size_type num_of_iter = 1000) const;
+
     // This uses Affinity Propagation algorithm to divide the named column
     // into clusters. It returns an array of DataFrame's each containing one
     // of the clusters of data based on the named column. Unlike K-Means
@@ -3717,7 +3814,82 @@ public: // Read/access and slicing interfaces
     //   Name of the column
     //
     template<typename T, typename C = std::less<T>>
-    size_type inversion_count(const char *col_name) const;
+    [[nodiscard]] size_type
+    inversion_count(const char *col_name) const;
+
+    // This calculates and returns the variance/covariance matrix of the
+    // specified columns, optionally normalizing the columns first.
+    //
+    // T:
+    //   Type of the named columns
+    // col_names:
+    //   Vector of column names
+    // norm_type:
+    //   The method to normalize the columns first before calculations.
+    //   Default is not normalizing
+    //
+    template<typename T>
+    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    covariance_matrix(
+        std::vector<const char *> &&col_names,
+        normalization_type norm_type = normalization_type::none) const;
+
+    // This uses Eigenspace evaluation to calculate Principal Component
+    // Analysis (PCA).
+    // It returns a matrix whose columns are the reduced dimensions with most
+    // significant information.
+    // PCA is a dimensionality reduction method that is often used to reduce
+    // the dimensionality of large data sets, by transforming a large set of
+    // variables into a smaller one that still contains most of the information
+    // in the large set.
+    // Reducing the number of variables of a data set naturally comes at the
+    // expense of accuracy, but the trick in dimensionality reduction is to
+    // trade a little accuracy for simplicity. Because smaller data sets are
+    // easier to explore and visualize, and thus make analyzing data points
+    // much easier and faster for machine learning algorithms without
+    // extraneous variables to process.
+    //
+    // T:
+    //   Type of the named columns
+    // col_names:
+    //   Vector of column names
+    // params:
+    //   Parameters necessary for for this operation
+    //
+    template<typename T>
+    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    pca_by_eigen(std::vector<const char *> &&col_names,
+                 const PCAParams params = { }) const;
+
+    // This calculates Singular Value Decomposition (SVD). Optionaly it may
+    // normalize the original matrix first.
+    // In linear algebra, SVD is a factorization of a real or complex matrix
+    // into a rotation, followed by a rescaling followed by another rotation.
+    // It generalizes the eigen-decomposition of a square normal matrix with
+    // an orthonormal eigenbasis to any ⁠mXn matrix.
+    //
+    // It returns the 3 metrices U, S, and V inside a std::tuple.
+    // U contains the left singular vectors of the original matrix, meaning
+    // its columns are orthonormal vectors that span the row space of the
+    // matrix.
+    // S is a diagonal matrix that contains sqrt of eigenvalues of the original
+    // matrix's covariance matrix, arranged in descending order.
+    // V contains the right singular vectors of the original matrix,
+    // represented as its columns.
+    // Original matrix (A) = U * S * VT
+    //
+    // T:
+    //   Type of the named columns
+    // norm_type:
+    //   Type of normalization applied to raw data first
+    //
+    template<typename T>
+    [[nodiscard]] std::tuple<Matrix<T, matrix_orient::column_major>,  // U
+                             Matrix<T, matrix_orient::column_major>,  // S
+                             Matrix<T, matrix_orient::column_major>>  // V
+    compact_svd(std::vector<const char *> &&col_names,
+                normalization_type norm_type =
+                    normalization_type::z_score) const;
 
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.

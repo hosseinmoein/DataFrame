@@ -52,6 +52,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -2506,6 +2507,60 @@ static void test_get_data_by_spectral()  {
     assert(result_view[2].get_column<double>("IBM_High")[200] == 149.070007);
     assert(result_view[2].get_column<long>("IBM_Volume")[300] == 4958000);
 }
+*/
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void test_FastHierVisitor()  {
+
+    std::cout << "\nTesting FastHierVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    FastHierVisitor<double, std::string, 64>   fhv(
+        [](const double &x, const double &y)  { return (std::fabs(x - y)); });
+
+    df.single_act_visit<double>("IBM_Close", fhv);
+}
 
 // ----------------------------------------------------------------------------
 
@@ -2513,6 +2568,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -2554,6 +2610,8 @@ int main(int, char *[]) {
     test_compact_svd();
     test_SpectralClusteringVisitor();
     test_get_data_by_spectral();
+*/
+    test_FastHierVisitor();
 
     return (0);
 }

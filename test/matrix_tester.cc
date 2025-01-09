@@ -499,6 +499,41 @@ int main(int, char *[]) {
         assert(laplacian_mat(4, 4) == 2.0);
     }
 
+    // Test Determinant and get_centered
+    //
+    {
+        using row_dmat_t = Matrix<double, matrix_orient::row_major>;
+
+        row_dmat_t  mat1 { 2, 2 };
+        long        value { 0 };
+
+        for (long r = 0; r < mat1.rows(); ++r)
+            for (long c = 0; c < mat1.cols(); ++c)
+                mat1(r, c) = double(++value);
+        assert(mat1.determinant() == -2.0);
+
+        row_dmat_t          mat2 { 5, 5 };
+        std::vector<double> row0 = { 3.2, 11, 4.4, 3.3, 11 };
+        std::vector<double> row1 = { 4.5, 10.8, 8.3, 3.4, 12 };
+        std::vector<double> row2 = { 4.8, 9.1, 7.1, 3.6, 10.8 };
+        std::vector<double> row3 = { 5.1, 2, 7.8, 4.1, 1.1 };
+        std::vector<double> row4 = { 5.5, 0.5, 1.1, 4.12, 8 };
+
+        mat2.set_row(row0.begin(), 0);
+        mat2.set_row(row1.begin(), 1);
+        mat2.set_row(row2.begin(), 2);
+        mat2.set_row(row3.begin(), 3);
+        mat2.set_row(row4.begin(), 4);
+        assert((std::fabs(mat2.determinant() - 288.973) < 0.001));
+
+        row_dmat_t  centered;
+
+        mat2.get_centered(centered);
+        assert((std::fabs(centered(0, 0) - 2.56) < 0.01));
+        assert((std::fabs(centered(2, 0) - -0.64) < 0.01));
+        assert((std::fabs(centered(4, 0) - -0.64) < 0.01));
+    }
+
     test_thread_pool();
     return (0);
 }

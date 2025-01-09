@@ -320,10 +320,10 @@ Matrix<T, MO, IS_SYM>::transpose2() const noexcept  {
 // ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
-inline Matrix<T, MO, IS_SYM>::size_type
-Matrix<T, MO, IS_SYM>::ppivot_(size_type pivot_row,
-                       size_type self_rows,
-                       size_type self_cols) noexcept  {
+inline Matrix<T, MO, IS_SYM>::size_type Matrix<T, MO, IS_SYM>::
+ppivot_(size_type pivot_row,
+        size_type self_rows,
+        size_type self_cols) noexcept  {
 
     size_type   max_row { pivot_row };
     value_type  max_value { value_type(std::fabs(at(pivot_row, pivot_row))) };
@@ -1332,7 +1332,6 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
         throw DataFrameError("Matrix::eigen_space(): Matrix must be squared");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-
     MA1     tmp_evals { 1, cols() };
     MA2     tmp_evecs { rows(), cols() };
     Matrix  imagi { 1, cols() }; // Imaginary part
@@ -1882,6 +1881,228 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
             S(i, 0) = s_tmp[i];
 
     V.swap(v_tmp);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+template<typename MA1, typename MA2>
+void Matrix<T, MO, IS_SYM>::
+lud(MA1 &L, MA2 &U) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (! is_square())
+        throw DataFrameError("Matrix::lud(): Matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    Matrix  tmp = *this;
+
+    for (size_type c = 0; c < cols(); ++c)  {
+        // Find pivot.
+        //
+        size_type   p { c };
+
+        for (size_type r = c + 1; r < rows(); ++r)
+            if (tmp(r, c) < tmp(p, c))
+                p = r;
+
+        // Exchange if necessary.
+        //
+        if (p != c)
+            for (size_type cc = 0; cc < cols(); ++cc)
+                std::swap(tmp(p, cc), tmp(c, cc));
+
+        // Compute multipliers and eliminate c-th column.
+        //
+        if (tmp(c, c) != value_type(0))
+            for (size_type r = c + 1; r < rows(); ++r)  {
+                tmp(r, c) /= tmp(c, c);
+
+                for (size_type cc = c + 1; cc < cols(); ++cc)
+                    tmp(r, cc) -= tmp(r, c) * tmp(c, cc);
+            }
+    }
+
+    MA1 l_tmp { rows(), cols(), 0 };
+
+    for (size_type r = 0; r < rows(); ++r)  {
+        for (size_type c = 0; c < cols(); ++c)  {
+            if (r > c)
+                l_tmp(r, c) = tmp(r, c);
+            else if (r == c)
+                l_tmp(r, c) = value_type(1);
+        }
+    }
+
+    MA2 u_tmp { rows(), cols(), 0 };
+
+    for (size_type c = 0; c < cols(); ++c)  {
+        for (size_type r = 0; r < rows(); ++r)  {
+            if (c <= r)
+                u_tmp(c, r) = tmp(c, r);
+        }
+    }
+
+    L.swap(l_tmp);
+    U.swap(u_tmp);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::value_type
+Matrix<T, MO, IS_SYM>::determinant() const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (! is_square())
+        throw DataFrameError("Matrix::determinant(): Matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const size_type sz = rows();
+    value_type      result { 1 };
+
+    if (sz == 2)  {
+        result = at(0, 0) * at(1, 1) - at(0, 1) * at(1, 0);
+    }
+    else if (sz < 8)  {  // Cofacter way
+        Matrix  tmp = *this;
+
+        for (size_type r = 0; r < sz; ++r)  {
+            const size_type indx = tmp.ppivot_(r, sz, sz);
+
+            if (indx == NOPOS_)
+                return (value_type(0));
+
+            if (indx != 0)
+                result = -result;
+
+            const value_type    diag = tmp (r, r);
+
+            result *= diag;
+            for (size_type rr = r + 1; rr < sz; ++rr)  {
+                const value_type    piv = tmp (rr, r) / diag;
+
+                for (size_type c = r + 1; c < sz; ++c)
+                    tmp (rr, c) -= piv * tmp (r, c);
+            }
+        }
+    }
+    else  {  // LUD way
+        Matrix<T, matrix_orient::row_major>     L { sz, sz, 0 };
+        Matrix<T, matrix_orient::column_major>  U { sz, sz, 0 };
+
+        lud(L, U);
+        for (size_type r = 0; r < sz; ++r)
+            result *= U(r, r);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+template<typename MA>
+void Matrix<T, MO, IS_SYM>::
+get_minor (MA &mmatrix, size_type drow, size_type dcol) const noexcept  {
+
+    mmatrix.resize(rows() - 1, cols() - 1, 0);
+
+    size_type   mrow = 0;
+
+    for (size_type r = 0; r < rows(); ++r)  {
+        if (r != drow)  {
+            size_type   mcol = 0;
+
+            for (size_type c = 0; c < cols(); ++c)  {
+                if (c != dcol)
+                    mmatrix(mrow, mcol++) = at(r, c);
+            }
+
+            mrow += 1;  // Increase minor row-count
+        }
+    }
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+inline typename Matrix<T, MO, IS_SYM>::value_type
+Matrix<T, MO, IS_SYM>::cofactor (size_type row, size_type column) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (! is_square())
+        throw DataFrameError("Matrix::cofactor(): Matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    Matrix<T, matrix_orient::row_major, IS_SYM> tmp;
+
+    get_minor(tmp, row, column);
+    return ((row + column) % 2 ? -tmp.determinant() : tmp.determinant());
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+template<typename MA>
+inline void Matrix<T, MO, IS_SYM>::adjoint (MA &that) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (! is_square())
+        throw DataFrameError("Matrix::adjoint(): Matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    that.resize(rows(), cols());
+    for (size_type r = 0; r < rows(); ++r)
+        for (size_type c = 0; c < cols(); ++c)
+            that(c, r) = cofactor(r, c);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+void Matrix<T, MO, IS_SYM>::center() noexcept  {
+
+    for (size_type c = 0; c < cols(); ++c)  {
+        value_type  mean { 0 };
+
+        for (size_type r = 0; r < rows(); ++r)
+            mean += at(r, c);
+        mean /= value_type(rows());
+
+        for (size_type r = 0; r < rows(); ++r)
+            at(r, c) -= mean;
+    }
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+template<typename MA>
+void Matrix<T, MO, IS_SYM>::get_centered(MA &cmatrix) const noexcept  {
+
+    cmatrix.resize(rows(), cols(), 0);
+    if constexpr (MO == matrix_orient::column_major)  {
+        for (size_type c = 0; c < cols(); ++c)
+            for (size_type r = c; r < rows(); ++r)
+                cmatrix(r, c) = at(r, c);
+    }
+    else  {
+        for (size_type r = 0; r < rows(); ++r)
+            for (size_type c = r; c < cols(); ++c)
+                cmatrix(r, c) = at(r, c);
+    }
+    cmatrix.center();
 
     return;
 }

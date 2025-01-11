@@ -2492,7 +2492,7 @@ static void test_get_data_by_spectral()  {
     assert(result_view[1].get_index()[46] == "2019-01-22");
     assert(result_view[1].get_column<double>("IBM_High")[20] == 121.68);
     assert(result_view[1].get_column<long>("IBM_Volume")[35] == 4346700);
-	
+
     assert(result_df[2].get_index().size() == 452);
     assert(result_df[2].get_column<double>("IBM_Open").size() == 452);
     assert(result_df[2].get_index()[0] == "2017-12-20");
@@ -2505,6 +2505,31 @@ static void test_get_data_by_spectral()  {
     assert(result_view[2].get_index()[451] == "2019-12-16");
     assert(result_view[2].get_column<double>("IBM_High")[200] == 149.070007);
     assert(result_view[2].get_column<long>("IBM_Volume")[300] == 4958000);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_canon_corr()  {
+
+    std::cout << "\nTesting canon_corr( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  result = df.canon_corr<double>({ "IBM_Close", "IBM_Open" },
+                                               { "IBM_High", "IBM_Low" });
+
+    assert(result.coeffs.size() == 2);
+    assert(std::fabs(result.coeffs[0] - 0.999944) < 0.000001);
+    assert(std::fabs(result.coeffs[1] - 0.262927) < 0.000001);
+    assert(std::fabs(result.x_red_idx - 0.534073) < 0.000001);
+    assert(std::fabs(result.y_red_idx - 0.535897) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------
@@ -2554,6 +2579,7 @@ int main(int, char *[]) {
     test_compact_svd();
     test_SpectralClusteringVisitor();
     test_get_data_by_spectral();
+    test_canon_corr();
 
     return (0);
 }

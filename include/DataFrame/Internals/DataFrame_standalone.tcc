@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/Endianness.h>
 #include <DataFrame/Utils/FixedSizeString.h>
+#include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
 #include <cctype>
@@ -1864,6 +1865,37 @@ _read_binary_str_dbl_map_(STRM &strm, V &map_vec, bool needs_flipping,
         map_vec.push_back(std::move(str_dbl_map));
     }
     return (strm);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename MA>
+inline static typename std::remove_reference<MA>::type
+_calc_centered_cov_(const MA &mat1, const MA &mat2)  {
+
+    using mat_t = typename std::remove_reference<MA>::type;
+
+    mat_t   X;
+    mat_t   Y;
+
+    mat1.get_centered(X);
+    mat2.get_centered(Y);
+
+	mat_t                               result = X.transpose2() * Y;
+    const typename mat_t::value_type    denom = X.rows() - 1;
+
+    if constexpr (result.orientation() == matrix_orient::column_major)  {
+        for (long c = 0; c < result.cols(); ++c)
+            for (long r = 0; r < result.rows(); ++r)
+                result(r, c) /= denom;
+    }
+    else  {
+        for (long r = 0; r < result.rows(); ++r)
+            for (long c = 0; c < result.cols(); ++c)
+                result(r, c) /= denom;
+    }
+
+    return (result);
 }
 
 // ----------------------------------------------------------------------------

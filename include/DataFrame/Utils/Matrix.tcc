@@ -1447,8 +1447,8 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
     const size_type min_dem = std::min(rows(), cols());
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (min_dem < 3)
-        throw DataFrameError("Matrix::svd(): MAtrix is too small");
+    if (min_dem < 2)
+        throw DataFrameError("Matrix::svd(): Matrix is too small");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix                  self_tmp = *this;
@@ -2059,9 +2059,24 @@ inline void Matrix<T, MO, IS_SYM>::adjoint (MA &that) const  {
 #endif // HMDF_SANITY_EXCEPTIONS
 
     that.resize(rows(), cols());
-    for (size_type r = 0; r < rows(); ++r)
-        for (size_type c = 0; c < cols(); ++c)
-            that(c, r) = cofactor(r, c);
+
+    auto        lbd =
+        [&that, this](auto begin, auto end) -> void  {
+            for (size_type r = begin; r < end; ++r)
+                for (size_type c = begin; c < end; ++c)
+                    that(c, r) = cofactor(r, c);
+        };
+    const long  thread_level =
+        (cols() >= 10L) ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        auto    futures =
+            ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                       std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  lbd(0L, cols());
 
     return;
 }

@@ -3891,6 +3891,30 @@ public: // Read/access and slicing interfaces
                 normalization_type norm_type =
                     normalization_type::z_score) const;
 
+    // This performs Canonical Correlation Analysis (CCA) between two sets of
+    // columns // X and Y. It returns the result in a struct defined above.
+    //
+    // CCA is a statistical method for examining and measuring correlations
+    // between two sets of variables. Fundamentally, CCA looks for linear
+    // combinations of variables, also referred to as canonical variables,
+    // within each set so that the correlation between them is maximized.
+    // Finding relationships and patterns of linkage between the two groups
+    // is the main objective.
+    //
+    // NOTE: Number of columns in each set must be the same
+    //
+    // T:
+    //   Type of the named columns
+    // X_col_names:
+    //   Names of the first set of columns
+    // Y_col_names:
+    //   Names of the second set of columns
+    //
+    template<typename T>
+    [[nodiscard]] CanonCorrResult<T>
+    canon_corr(std::vector<const char *> &&X_col_names,
+               std::vector<const char *> &&Y_col_names) const;
+
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.
     // The statistics are:

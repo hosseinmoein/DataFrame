@@ -364,7 +364,7 @@ DateTime &DateTime::operator = (const char *s)  {
 
     while (::isspace (*str)) ++str;
 
-	std::size_t str_len = std::strlen (str);
+    std::size_t str_len = std::strlen (str);
 
     assert(str_len > 3);
 
@@ -590,6 +590,10 @@ bool DateTime::is_us_business_day () const noexcept  {
                //
                (w_day == DT_WEEKDAY::THU &&
                 (m_day >= 22 && m_day <= 28) && mon == DT_MONTH::NOV) ||
+
+               // President Jimmy Carter day of mourning (Jan 9, 2025)
+               //
+               (date_part == 20250109) ||
 
                is_xmas ()));
 }

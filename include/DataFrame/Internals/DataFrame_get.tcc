@@ -1052,6 +1052,96 @@ compact_svd(std::vector<const char *> &&col_names,
     return (std::make_tuple(U, S, V));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+CanonCorrResult<T> DataFrame<I, H>::
+canon_corr(std::vector<const char *> &&X_col_names,
+           std::vector<const char *> &&Y_col_names) const  {
+
+    using col_mat_t = Matrix<T, matrix_orient::column_major>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (X_col_names.size() != Y_col_names.size())
+        throw NotFeasible("canon_corr(): "
+                          "Two sets must have same number of variables");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    size_type                               min_col_s { indices_.size() };
+    std::vector<const ColumnVecType<T> *>   columns
+        (X_col_names.size() + Y_col_names.size(), nullptr);
+    SpinGuard                               guard { lock_ };
+
+    for (size_type i { 0 }; i < X_col_names.size(); ++i)  {
+        columns[i] = &get_column<T>(X_col_names[i], false);
+        if (columns[i]->size() < min_col_s)
+            min_col_s = columns[i]->size();
+    }
+    for (size_type i { 0 }; i < Y_col_names.size(); ++i)  {
+        const size_type idx = i + X_col_names.size();
+
+        columns[idx] = &get_column<T>(Y_col_names[i], false);
+        if (columns[idx]->size() < min_col_s)
+            min_col_s = columns[idx]->size();
+    }
+    guard.release();
+
+    col_mat_t   X { long(min_col_s), long(X_col_names.size()) };
+
+    for (size_type i { 0 }; i < X_col_names.size(); ++i)
+        X.set_column(columns[i]->begin(), i);
+
+    col_mat_t   Y { long(min_col_s), long(Y_col_names.size()) };
+
+    for (size_type i { 0 }; i < Y_col_names.size(); ++i)
+        Y.set_column(columns[i + X_col_names.size()]->begin(), i);
+
+    const auto  XY_cov = _calc_centered_cov_(X, Y);
+    const auto  X_cov = _calc_centered_cov_(X, X);
+    const auto  Y_cov = _calc_centered_cov_(Y, Y);
+    const auto  sq_root_mat =
+        X_cov.inverse() * XY_cov * Y_cov.inverse() * XY_cov.transpose();
+    col_mat_t   U;
+    col_mat_t   S;
+    col_mat_t   V;
+
+    sq_root_mat.svd(U, S, V, false);
+
+    CanonCorrResult<T>  result;
+
+    result.coeffs.reserve(S.rows());
+    for (long i { 0 }; i < S.rows(); ++i)
+        result.coeffs.push_back(S(i, 0));
+
+    T   X_cov_diag_sum { 0 };
+    T   Y_cov_diag_sum { 0 };
+
+    for (long i { 0 }; i < X_cov.rows(); ++i)  {
+        X_cov_diag_sum += X_cov(i, i);
+        Y_cov_diag_sum += Y_cov(i, i);
+    }
+
+    T   redun { 0 };
+
+    for (long i { 0 }; i < X_cov.rows(); ++i)  {
+        const T S_val = S(i, 0);
+
+        redun += S_val * S_val * X_cov(i, i);
+    }
+    result.x_red_idx = redun / X_cov_diag_sum;
+
+    redun = 0;
+    for (long i { 0 }; i < Y_cov.rows(); ++i)  {
+        const T S_val = S(i, 0);
+
+        redun += S_val * S_val * Y_cov(i, i);
+    }
+    result.y_red_idx = redun / Y_cov_diag_sum;
+
+    return (result);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

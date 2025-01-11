@@ -733,6 +733,27 @@ struct  PCAParams  {
 
 // ----------------------------------------------------------------------------
 
+// Canonical correlation analysis result
+//
+template<typename T>
+struct  CanonCorrResult  {
+
+    // These values represent the strength of the linear relationship between
+    // each pair of canonical variates, ranging from -1 to 1, with higher
+    // absolute values signifying a stronger association.
+    //
+    std::vector<T>  coeffs { };     // Canonical correlation coefficients
+
+    // The Redundancy Index is a measure that indicates how much variance in
+    // one set of variables is explained by the linear combination of the other
+    // set of variables. This was proposed by Stewart and Love (1968).
+    //
+    T               x_red_idx { };  // Redundancy index for X
+    T               y_red_idx { };  // Redundancy index for Y
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
 

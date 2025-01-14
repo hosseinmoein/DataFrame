@@ -2534,6 +2534,41 @@ static void test_canon_corr()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_MC_station_dist()  {
+
+    std::cout << "\nTesting MC_station_dist( ) ..." << std::endl;
+
+    const std::size_t   item_cnt = 20;
+    MyDataFrame         df;
+
+    df.load_index(MyDataFrame::gen_sequence_index(0, item_cnt, 1));
+
+    RandGenParams<double>       p;
+    std::vector<const char *>   col_names (item_cnt, nullptr);
+
+    p.seed = 0;
+    df.load_column("0_col_name", gen_normal_dist<double, 256>(item_cnt, p));
+    for (std::size_t i = 1; i < item_cnt; ++i)  {
+        p.seed = i;
+        df.load_column((std::to_string(i) + "_col_name").c_str(),
+                       gen_normal_dist<double, 256>(item_cnt, p));
+    }
+    for (std::size_t i = 0; i < item_cnt; ++i)
+        col_names[i] = df.col_idx_to_name(i);
+
+    const auto  result =
+        df.MC_station_dist<double>(
+            std::forward<std::vector<const char *>>(col_names));
+
+    assert(result.size() == 20);
+    assert(std::fabs(result[0] - -0.705967) < 0.000001);
+    assert(std::fabs(result[5] - 0.121566) < 0.000001);
+    assert(std::fabs(result[15] - -0.639604) < 0.000001);
+    assert(std::fabs(result[19] - -0.692765) < 0.000001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2580,6 +2615,7 @@ int main(int, char *[]) {
     test_SpectralClusteringVisitor();
     test_get_data_by_spectral();
     test_canon_corr();
+    test_MC_station_dist();
 
     return (0);
 }

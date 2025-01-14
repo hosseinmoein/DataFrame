@@ -634,8 +634,7 @@ public:
         operator - (row_const_iterator lhs, row_const_iterator rhs)  {
 
             if (lhs.mptr_ != rhs.mptr_)
-                throw DataFrameError(
-                    "- operation in iterator is not feasible");
+                throw NotFeasible("- operation in iterator is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
             const size_type col_diff = lhs.col_ - rhs.col_;
@@ -826,7 +825,7 @@ public:
         operator - (row_iterator lhs, row_iterator rhs)  {
 
             if (lhs.mptr_ != rhs.mptr_)
-                throw DataFrameError(
+                throw NotFeasible(
                     "- operation between iterators is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
@@ -1023,7 +1022,7 @@ public:
         operator - (col_const_iterator lhs, col_const_iterator rhs) noexcept  {
 
             if (lhs.mptr_ != rhs.mptr_)
-                throw DataFrameError(
+                throw NotFeasible(
                     "- operation between iterators is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
@@ -1215,7 +1214,7 @@ public:
         operator - (col_iterator lhs, col_iterator rhs)  {
 
             if (lhs.mptr_ != rhs.mptr_)
-                throw DataFrameError(
+                throw NotFeasible(
                     "- operation between iterators is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
@@ -1388,7 +1387,7 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw DataFrameError(
+        throw NotFeasible(
             "+ operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -1433,7 +1432,7 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
             }
         };
     const long  thread_level =
-        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     if (thread_level > 2)  {
@@ -1478,7 +1477,7 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw DataFrameError(
+        throw NotFeasible(
             "- operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -1523,7 +1522,7 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
             }
         };
     const long  thread_level =
-        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     if (thread_level > 2)  {
@@ -1566,7 +1565,7 @@ operator += (Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw DataFrameError(
+        throw NotFeasible(
             "+= operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -1599,7 +1598,7 @@ operator += (Matrix<T, MO1, IS_SYM1> &lhs,
             }
         };
     const long  thread_level =
-        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     if (thread_level > 2)  {
@@ -1642,7 +1641,7 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw DataFrameError(
+        throw NotFeasible(
             "-= operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -1675,7 +1674,7 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
             }
         };
     const long  thread_level =
-        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     if (thread_level > 2)  {
@@ -1716,7 +1715,7 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_cols != rhs.rows())
-        throw DataFrameError(
+        throw NotFeasible(
             "* operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 

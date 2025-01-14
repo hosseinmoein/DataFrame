@@ -357,7 +357,7 @@ Matrix<T, MO, IS_SYM>::inverse() const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (rows() != cols())
-        throw DataFrameError("Matrix::inverse(): Matrix must be squared");
+        throw NotFeasible("Matrix::inverse(): Matrix must be squared");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     const size_type self_rows = rows();
@@ -374,7 +374,7 @@ Matrix<T, MO, IS_SYM>::inverse() const  {
         const size_type idx = aux_mat.ppivot_(r, self_rows, self_cols);
 
         if (idx == NOPOS_)
-            throw DataFrameError("Matrix::inverse(): Singular matrix");
+            throw NotFeasible("Matrix::inverse(): Singular matrix");
 
         if (idx != 0)
             for (size_type c = 0; c < self_cols; ++c)
@@ -408,54 +408,84 @@ template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM>::value_type
 Matrix<T, MO, IS_SYM>::norm() const noexcept  {
 
-    value_type  result { 0 };
+    auto        lbd = [this](auto begin, auto end) -> value_type  {
+        value_type  result { 0 };
 
-    if constexpr (IS_SYM)  {
-        if constexpr (MO == matrix_orient::column_major)  {
-            for (size_type c = 0; c < cols(); ++c)  {
-                for (size_type r = c + 1; r < rows(); ++r)  {
-                    const auto  val = at(r, c);
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = c + 1; r < rows(); ++r)  {
+                        const auto  val = at(r, c);
 
-                    result += val * val;
+                        result += val * val;
+                    }
                 }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = r + 1; c < cols(); ++c)  {
+                        const auto  val = at(r, c);
+
+                        result += val * val;
+                    }
+                }
+            }
+
+            result *= T(2);
+            for (size_type c = begin; c < end; ++c)  {
+                const auto  val = at(c, c);
+
+                result += val * val;
             }
         }
         else  {
-            for (size_type r = 0; r < rows(); ++r)  {
-                for (size_type c = r + 1; c < cols(); ++c)  {
-                    const auto  val = at(r, c);
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = 0; r < rows(); ++r)  {
+                        const auto  val = at(r, c);
 
-                    result += val * val;
+                        result += val * val;
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = 0; c < cols(); ++c)  {
+                        const auto  val = at(r, c);
+
+                        result += val * val;
+                    }
                 }
             }
         }
+        return (result);
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+    value_type  result { 0 };
 
-        result *= T(2);
-        for (size_type c = 0; c < cols(); ++c)  {
-            const auto  val = at(c, c);
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
 
-            result += val * val;
+            for (auto &fut : futures)  result += fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  result += fut.get();
         }
     }
     else  {
-        if constexpr (MO == matrix_orient::column_major)  {
-            for (size_type c = 0; c < cols(); ++c)  {
-                for (size_type r = 0; r < rows(); ++r)  {
-                    const auto  val = at(r, c);
-
-                    result += val * val;
-                }
-            }
-        }
-        else  {
-            for (size_type r = 0; r < rows(); ++r)  {
-                for (size_type c = 0; c < cols(); ++c)  {
-                    const auto  val = at(r, c);
-
-                    result += val * val;
-                }
-            }
-        }
+        if constexpr (MO == matrix_orient::column_major)
+            result = lbd(0L, cols());
+        else
+            result = lbd(0L, rows());
     }
 
     return (std::sqrt(result));
@@ -469,8 +499,7 @@ Matrix<T, MO, IS_SYM>::degree_matrix() const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (rows() != cols())
-        throw DataFrameError("Matrix::degree_matrix(): "
-                             "Matrix must be squared");
+        throw NotFeasible("Matrix::degree_matrix(): Matrix must be squared");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix  result { cols(), cols(), T(0) };
@@ -1329,7 +1358,7 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square() || cols() < 2)
-        throw DataFrameError("Matrix::eigen_space(): Matrix must be squared");
+        throw NotFeasible("Matrix::eigen_space(): Matrix must be squared");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     MA1     tmp_evals { 1, cols() };
@@ -1398,7 +1427,7 @@ covariance(bool is_unbiased) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (denom <= value_type(0))
-        throw DataFrameError("Matrix::covariance(): Not solvable");
+        throw NotFeasible("Matrix::covariance(): Not solvable");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix      result (cols(), cols(), T(0));
@@ -1448,7 +1477,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (min_dem < 2)
-        throw DataFrameError("Matrix::svd(): Matrix is too small");
+        throw NotFeasible("Matrix::svd(): Matrix is too small");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix                  self_tmp = *this;
@@ -1894,7 +1923,7 @@ lud(MA1 &L, MA2 &U) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square())
-        throw DataFrameError("Matrix::lud(): Matrix must be squared");
+        throw NotFeasible("Matrix::lud(): Matrix must be squared");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix  tmp = *this;
@@ -1959,7 +1988,7 @@ Matrix<T, MO, IS_SYM>::determinant() const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square())
-        throw DataFrameError("Matrix::determinant(): Matrix must be squared");
+        throw NotFeasible("Matrix::determinant(): Matrix must be squared");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     const size_type sz = rows();
@@ -2038,7 +2067,7 @@ Matrix<T, MO, IS_SYM>::cofactor (size_type row, size_type column) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square())
-        throw DataFrameError("Matrix::cofactor(): Matrix must be squared");
+        throw NotFeasible("Matrix::cofactor(): Matrix must be squared");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix<T, matrix_orient::row_major, IS_SYM> tmp;
@@ -2055,7 +2084,7 @@ inline void Matrix<T, MO, IS_SYM>::adjoint (MA &that) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square())
-        throw DataFrameError("Matrix::adjoint(): Matrix must be squared");
+        throw NotFeasible("Matrix::adjoint(): Matrix must be squared");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     that.resize(rows(), cols());

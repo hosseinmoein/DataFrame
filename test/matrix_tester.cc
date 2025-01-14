@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cassert>
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 
 using namespace hmdf;
@@ -532,6 +533,23 @@ int main(int, char *[]) {
         assert((std::fabs(centered(0, 0) - 2.56) < 0.01));
         assert((std::fabs(centered(2, 0) - -0.64) < 0.01));
         assert((std::fabs(centered(4, 0) - -0.64) < 0.01));
+    }
+
+    // Test norm
+    //
+    {
+        using row_dmat_t = Matrix<double, matrix_orient::row_major>;
+
+        row_dmat_t  mat { 100, 100 };
+        long        value { 0 };
+
+        for (long r = 0; r < mat.rows(); ++r)
+            for (long c = 0; c < mat.cols(); ++c)
+                mat(r, c) = double(++value);
+
+        const auto  norm = mat.norm();
+
+        assert((std::fabs(norm - 577393.5703) < 0.0001));
     }
 
     test_thread_pool();

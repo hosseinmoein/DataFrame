@@ -1142,6 +1142,66 @@ canon_corr(std::vector<const char *> &&X_col_names,
     return (result);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+std::vector<T> DataFrame<I, H>::
+MC_station_dist(std::vector<const char *> &&trans_col_names,
+                size_type max_iter,
+                T epsilon) const  {
+
+    using col_mat_t = Matrix<T, matrix_orient::column_major>;
+
+    const size_type                         cols_s { trans_col_names.size() };
+    size_type                               min_col_s { indices_.size() };
+    std::vector<const ColumnVecType<T> *>   columns (cols_s, nullptr);
+    SpinGuard                               guard { lock_ };
+
+    for (size_type i { 0 }; i < cols_s; ++i)  {
+        columns[i] = &get_column<T>(trans_col_names[i], false);
+        if (columns[i]->size() < min_col_s)
+            min_col_s = columns[i]->size();
+    }
+    guard.release();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (cols_s != min_col_s)
+        throw NotFeasible("MC_station_dist(): The matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    col_mat_t   mat { long(cols_s), long(cols_s) };
+
+    for (size_type i { 0 }; i < cols_s; ++i)
+        mat.set_column(columns[i]->begin(), i);
+
+    std::vector<T>  result;
+    col_mat_t       pi { 1L, long(cols_s), T(1) / T(cols_s) };
+    auto            normalize = [](auto &mat) -> void  {
+        T   sum { 0 };
+
+        for (long c { 0 }; c < mat.cols(); ++c)
+            sum += mat(0, c);
+        for (long c { 0 }; c < mat.cols(); ++c)
+            mat(0, c) /= sum;
+    };
+
+    for (size_type i { 0 }; i < max_iter; ++i)  {
+        auto    new_pi = pi * mat;
+
+        normalize(new_pi);
+        if ((new_pi - pi).norm() < epsilon)  {
+            result.reserve(pi.cols());
+            for (long c { 0 }; c < pi.cols(); ++c)
+                result.push_back(pi(0, c));
+            break;
+        }
+        pi = std::move(new_pi);
+    }
+
+    return (result);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

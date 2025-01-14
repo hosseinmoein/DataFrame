@@ -3915,6 +3915,37 @@ public: // Read/access and slicing interfaces
     canon_corr(std::vector<const char *> &&X_col_names,
                std::vector<const char *> &&Y_col_names) const;
 
+    // Markov Chains Stationary Distributions
+    // A stationary distribution in the context of Markov Chains refers to a
+    // probability distribution that remains unchanged over time, meaning if a
+    // Markov chain starts in this distribution, it will always stay in that
+    // same distribution regardless of how many steps are taken; essentially,
+    // it represents a stable state of the chain where the probabilities of
+    // being in each state do not fluctuate further.
+    // In probability theory and statistics, a Markov chain or Markov process
+    // is a stochastic process describing a sequence of possible events in
+    // which the probability of each event depends only on the state attained
+    // in the previous event. Informally, this may be thought of as;
+    // <I>What happens next depends only on the state of affairs now.</I>
+    //
+    // NOTE: This method solves the problem iteratively. If the returned vector
+    //       is empty, it means the algorithm did not converge.
+    //
+    // T:
+    //   Type of the named columns
+    // trans_col_names:
+    //   Transition column names specifying the transition matrix
+    // max_iter:
+    //   Maximum number of iterations
+    // epsilon:
+    //   Threshold for convergence
+    //
+    template<typename T>
+    [[nodiscard]] std::vector<T>
+    MC_station_dist(std::vector<const char *> &&trans_col_name,
+                    size_type max_iter = 1000,
+                    T epsilon = T(1e-8)) const;
+
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.
     // The statistics are:

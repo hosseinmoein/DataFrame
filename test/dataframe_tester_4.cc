@@ -2569,6 +2569,32 @@ static void test_MC_station_dist()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_SeasonalPeriodVisitor()  {
+
+    std::cout << "\nTesting SeasonalPeriodVisitor{ } ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("IcecreamProduction.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    ssp_v<double, DateTime> ssp({ .de_serial_corr = true});
+
+    df.single_act_visit<double>("IceCreamProduction", ssp);
+
+    assert(std::fabs(ssp.get_max_magnitude() - 4073.55) < 0.01);
+    assert(ssp.get_dominant_index() == 53);
+    assert(std::fabs(ssp.get_dominant_frequency() - 0.08346) < 0.00001);
+    assert(std::fabs(ssp.get_period() - 11.9811) < 0.0001);
+    assert(ssp.get_period() == ssp.get_result());
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2616,6 +2642,7 @@ int main(int, char *[]) {
     test_get_data_by_spectral();
     test_canon_corr();
     test_MC_station_dist();
+    test_SeasonalPeriodVisitor();
 
     return (0);
 }

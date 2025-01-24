@@ -89,7 +89,7 @@ using decom_v = DecomposeVisitor&lt;T, I, A&gt;;
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This visitor creates a seasonal-trend (with Lowess, aka "STL") decomposition of observed time series data. This implementation is modeled after the <I>statsmodels.tsa.seasonal_decompose</I> method but substitutes a Lowess regression for a convolution in its trend estimation.<BR>
+        This visitor creates a seasonal-trend (with <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LowessVisitor.html">LOWESS</a> aka "STL") decomposition of observed time series data. This implementation is modeled after the <I>statsmodels.tsa.seasonal_decompose</I> method but substitutes a Lowess regression for a convolution in its trend estimation.<BR>
         <I>get_result()</I> returns the <B>Trend</B> vector. There are 3 get result methods: <I>get_trend(), get_seasonal(), get_residual()</I>. They return the corresponding vectors
         <I>
         <PRE>

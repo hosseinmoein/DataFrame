@@ -2939,6 +2939,129 @@ template<std::size_t K, typename T,
          typename I = unsigned long, std::size_t A = 0>
 using spect_v = SpectralClusteringVisitor<K, T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  SeasonalPeriodVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type = T;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        const size_type         col_s = std::distance(column_begin, column_end);
+        std::vector<value_type> data (column_begin, column_end);
+
+        if (params_.detrend)  {
+            std::vector<value_type> xvals (col_s);
+            value_type              xvalue { 0 };
+
+            for (auto &val : xvals)  {
+                val = xvalue;
+                xvalue += T(params_.sampling_rate);
+            }
+
+            LowessVisitor<T, I> l_v {
+                params_.num_loops,
+                params_.frac,
+                params_.delta, //  * value_type(col_s),
+                true
+            };
+
+            l_v.pre();
+            l_v (idx_begin, idx_end,
+                 data.begin(), data.end(), xvals.begin(), xvals.end());
+            l_v.post();
+
+            auto    lbd =
+                [&data, &l_v = std::as_const(l_v)]
+                (auto begin, auto end) -> void  {
+
+                for (size_type i { begin }; i < end; ++i)
+                    data[i] -= l_v.get_result()[i];
+            };
+
+            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(size_type(0),
+                                                               data.size(),
+                                                               std::move(lbd));
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else lbd (size_type(0), data.size());
+        }
+
+        if (params_.de_serial_corr)  {  // Take serial correlation out
+            value_type  prev_val { data[0] };
+
+            for (auto &datum : data)  {
+                const value_type    tmp = datum;
+
+                datum -= prev_val;
+                prev_val = tmp;
+            }
+            data[0] = data[1];
+        }
+
+        fft_v<T, I> fft;
+
+        fft.pre();
+        fft (idx_begin, idx_end, data.begin(), data.end());
+        fft.post();
+
+        const auto  &mags = fft.get_magnitude();
+
+        for (size_type i { 0 }; const auto &mag : mags)  {
+            const double    val = std::fabs(mag);
+
+            if (val > max_mag_)  {
+                max_mag_ = val;
+                dom_idx_ = i;
+            }
+            i += 1;
+        }
+        dom_freq_ = T(dom_idx_) * T(params_.sampling_rate) / T(mags.size());
+        result_ = T(1.0) / dom_freq_;
+    }
+
+    inline void pre ()  {
+
+        result_ = max_mag_ = dom_freq_ = 0;
+        dom_idx_ = 0;
+    }
+    inline void post ()  {  }
+
+    [[nodiscard]] inline result_type get_result () const  { return (result_); }
+    [[nodiscard]] inline result_type get_period () const  { return (result_); }
+    [[nodiscard]] inline result_type
+    get_max_magnitude () const  { return (max_mag_); }
+    [[nodiscard]] inline result_type
+    get_dominant_frequency () const  { return (dom_freq_); }
+    [[nodiscard]] inline size_type
+    get_dominant_index () const  { return (dom_idx_); }
+
+    explicit
+    SeasonalPeriodVisitor(const SeasonalityParams<T> params = { })
+        : params_(params)  {   }
+
+private:
+
+    const SeasonalityParams<T>  params_;
+    result_type                 result_ { 0 };    // period
+    result_type                 max_mag_ { 0 };   // Max magnitude
+    result_type                 dom_freq_ { 0 };  // Dominant frequency
+    size_type                   dom_idx_ { 0 };   // Dominant index
+};
+
+template<typename T, typename I = unsigned long>
+using ssp_v = SeasonalPeriodVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

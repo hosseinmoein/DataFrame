@@ -754,6 +754,30 @@ struct  CanonCorrResult  {
 
 // ----------------------------------------------------------------------------
 
+// Parameter to the SeasonalPeriodVisitor constructor
+//
+template<typename T>
+struct  SeasonalityParams  {
+
+    // Remove trend
+    bool        detrend { true };
+    // Remove serial correlation by differencing
+    bool        de_serial_corr { false };
+
+    // Parameters to generate trend using LOWESS
+    //
+    std::size_t num_loops { 3 };  // Number of loops
+    // The fraction of the data used when estimating each y-value.
+    T           frac { 0.08 };
+    // Distance within which to use linear-interpolation instead of regression
+    T           delta { 0.0001 };
+
+    // Assume the time series is per 1 unit of time
+    std::size_t sampling_rate { 1 };
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
 

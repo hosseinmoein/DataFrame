@@ -2956,7 +2956,7 @@ struct  SeasonalPeriodVisitor  {
         const size_type         col_s = std::distance(column_begin, column_end);
         std::vector<value_type> data (column_begin, column_end);
 
-        if (params_.detrend)  {
+        if (params_.detrend)  {  // Take trend out
             std::vector<value_type> xvals (col_s);
             value_type              xvalue { 0 };
 

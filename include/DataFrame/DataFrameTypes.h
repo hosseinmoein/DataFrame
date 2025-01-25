@@ -765,6 +765,9 @@ struct  SeasonalityParams  {
     bool        de_serial_corr { false };
 
     // Parameters to generate trend using LOWESS
+    // The two parameters below must be adjusted for different datasets
+    // carefully sometimes by trail and error. The defaults are suitable for
+    // financial market data
     //
     std::size_t num_loops { 3 };  // Number of loops
     // The fraction of the data used when estimating each y-value.

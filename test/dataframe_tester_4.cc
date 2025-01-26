@@ -581,6 +581,7 @@ static void test_explode()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     df.write<std::ostream,
@@ -682,6 +683,7 @@ static void test_read_write_pairs()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     df.write<std::ostream,
@@ -942,6 +944,7 @@ static void test_get_data_at_times()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result = df.get_view_at_times<double, long>(16, 30);
@@ -976,6 +979,7 @@ static void test_get_data_before_times()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result = df.get_view_before_times<double, long>(1, 16);
@@ -1010,6 +1014,7 @@ static void test_get_data_after_times()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result = df.get_view_after_times<double, long>(23, 40);
@@ -1044,6 +1049,7 @@ static void test_get_data_on_days()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result =
@@ -1079,6 +1085,7 @@ static void test_get_data_in_months()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result =
@@ -1114,6 +1121,7 @@ static void test_get_data_on_days_in_month()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result = df.get_view_on_days_in_month<double, long>({ 31, 5 });
@@ -1148,6 +1156,7 @@ static void test_get_data_between_times()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     // Between 11am and 11:30am
@@ -1389,6 +1398,7 @@ static void test_remove_data_by_stdev()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1429,6 +1439,7 @@ static void test_get_data_by_stdev()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1475,6 +1486,7 @@ static void test_get_data_by_kmeans()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1573,6 +1585,7 @@ void test_get_data_by_affin()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1640,6 +1653,7 @@ static void test_remove_data_by_hampel()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1680,6 +1694,7 @@ static void test_DBSCANVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     auto    lbd =
@@ -1726,6 +1741,7 @@ static void test_MeanShiftVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     MeanShiftVisitor<double, std::string, 64>   mshift(
@@ -1766,6 +1782,7 @@ void test_get_data_by_dbscan()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1825,6 +1842,7 @@ void test_get_data_by_mshift()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1886,6 +1904,7 @@ static void test_view_assign()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     auto    lbd =
@@ -1943,6 +1962,7 @@ static void test_CrossCorrVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     CrossCorrVisitor<double, std::string>   cc(-16, 16);
@@ -1971,6 +1991,7 @@ static void test_PartialAutoCorrVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     PartialAutoCorrVisitor<double, std::string> pacf { 50 };
@@ -1999,6 +2020,7 @@ static void test_make_stationary()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     auto    df2 = df;
@@ -2107,6 +2129,7 @@ static void test_StationaryCheckVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     RandGenParams<double>   p;
@@ -2237,6 +2260,7 @@ static void test_covariance_matrix()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  cov_mat =
@@ -2280,6 +2304,7 @@ static void test_pca_by_eigen()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  pca_mat = df.pca_by_eigen<double>(
@@ -2351,6 +2376,7 @@ static void test_compact_svd()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  [U, S, V] =
@@ -2403,6 +2429,7 @@ static void test_SpectralClusteringVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     spect_v<4, double, std::string, 64> spc(1000, 7, 123);
@@ -2454,6 +2481,7 @@ static void test_get_data_by_spectral()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -2520,6 +2548,7 @@ static void test_canon_corr()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result = df.canon_corr<double>({ "IBM_Close", "IBM_Open" },
@@ -2580,6 +2609,7 @@ static void test_SeasonalPeriodVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     ssp_v<double, DateTime> ssp({ .de_serial_corr = true});

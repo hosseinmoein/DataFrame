@@ -896,6 +896,7 @@ static void test_RSIVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1110,6 +1111,7 @@ static void test_bucketize()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1485,6 +1487,7 @@ static void test_io_format_csv2()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
     df_read.write<std::ostream,
                   int,
@@ -2729,6 +2732,7 @@ static void test_DT_IBM_data()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -2990,6 +2994,7 @@ static void test_WilliamPrcRVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3030,6 +3035,7 @@ static void test_PSLVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3061,6 +3067,7 @@ static void test_CCIVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3129,6 +3136,7 @@ static void test_GarmanKlassVolVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3161,6 +3169,7 @@ static void test_YangZhangVolVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3321,6 +3330,7 @@ static void test_no_index_reads()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3353,6 +3363,7 @@ static void test_KamaVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3385,6 +3396,7 @@ static void test_FisherTransVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3417,6 +3429,7 @@ static void test_PercentPriceOSCIVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3449,6 +3462,7 @@ static void test_SlopeVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3480,6 +3494,7 @@ static void test_UltimateOSCIVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3572,6 +3587,7 @@ static void test_UlcerIndexVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3605,6 +3621,7 @@ static void test_RSXVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3638,6 +3655,7 @@ static void test_TTMTrendVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3695,6 +3713,7 @@ static void test_ParabolicSARVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3726,6 +3745,7 @@ static void test_EBSineWaveVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3773,6 +3793,7 @@ static void test_EhlerSuperSmootherVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3807,6 +3828,7 @@ static void test_VarIdxDynAvgVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3938,6 +3960,7 @@ static void test_PivotPointSRVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3970,6 +3993,7 @@ static void test_AvgDirMovIdxVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4029,6 +4053,7 @@ static void test_HoltWinterChannelVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4088,6 +4113,7 @@ static void test_HeikinAshiCndlVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4177,6 +4203,7 @@ static void test_FastFourierTransVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4209,6 +4236,7 @@ static void test_CenterOfGravityVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4241,6 +4269,7 @@ static void test_ArnaudLegouxMAVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4273,6 +4302,7 @@ static void test_RateOfChangeVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4307,6 +4337,7 @@ static void test_AccumDistVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4342,6 +4373,7 @@ static void test_ChaikinMoneyFlowVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4374,6 +4406,7 @@ static void test_VertHorizFilterVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4409,6 +4442,7 @@ static void test_OnBalanceVolumeVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4465,6 +4499,7 @@ static void test_TrueRangeVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4497,6 +4532,7 @@ static void test_DecayVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4530,6 +4566,7 @@ static void test_HodgesTompkinsVolVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4563,6 +4600,7 @@ static void test_ParkinsonVolVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 

@@ -36,7 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
 #include <cctype>
-#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <future>
@@ -1881,7 +1880,7 @@ _calc_centered_cov_(const MA &mat1, const MA &mat2)  {
     mat1.get_centered(X);
     mat2.get_centered(Y);
 
-	mat_t                               result = X.transpose2() * Y;
+    mat_t                               result = X.transpose2() * Y;
     const typename mat_t::value_type    denom = X.rows() - 1;
 
     if constexpr (result.orientation() == matrix_orient::column_major)  {

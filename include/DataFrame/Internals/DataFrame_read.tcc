@@ -29,13 +29,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/Utils/Endianness.h>
+#include <DataFrame/Utils/FixedSizeAllocator.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/Utils.h>
 
 #include <any>
 #include <cstring>
 #include <sstream>
-#include <string_view>
 
 // ----------------------------------------------------------------------------
 
@@ -773,15 +773,18 @@ read_csv2_(std::FILE *stream,
            size_type starting_row,
            size_type num_rows)  {
 
+    constexpr unsigned long data_size = 64 * 1024;
+
     using SpecVec = StlVecType<_col_data_spec_>;
 
-    char        line[64 * 1024];
-    std::string value;
-    SpecVec     spec_vec;
-    bool        header_read { false };
-    size_type   col_count { 0 };
-    size_type   data_rows_read { 0 };
-    size_type   row_cnt { 0 };
+    char                line[data_size];
+    std::string         value;
+    SpecVec             spec_vec;
+    bool                header_read { false };
+    size_type           col_count { 0 };
+    size_type           data_rows_read { 0 };
+    size_type           row_cnt { 0 };
+    std::stringstream   sstream;
 
     value.reserve(64);
     spec_vec.reserve(32);
@@ -792,7 +795,8 @@ read_csv2_(std::FILE *stream,
 
         if (line[0] == '\0' || line[0] == '#') [[unlikely]]  continue;
 
-        std::stringstream   sstream { line };
+        sstream.clear();
+        sstream.str(line);
 
         // First get the header which is column names, sizes and types
         //
@@ -1004,8 +1008,7 @@ read_csv2_(std::FILE *stream,
             // Make sure we account for empty slots at the end of the line
             // and create NaN data points
             //
-            for (size_type col_idx = 0; col_idx < col_count; ++col_idx)
-            [[likely]]  {
+            for (size_type col_idx = 0; col_idx < col_count; ++col_idx)  {
                 value.clear();
                 if (! sstream.eof()) [[likely]]
                     std::getline(sstream, value, ',');
@@ -1390,7 +1393,9 @@ read_csv2_(std::FILE *stream,
 
     const size_type spec_s = spec_vec.size();
 
-    if (spec_s > 0)  {  // Now load the data into the DataFrame
+    // Now load the data into the DataFrame
+    //
+    if (spec_s > 0)  {
         if (spec_vec[0].col_name != DF_INDEX_COL_NAME && ! columns_only)
         [[unlikely]]
             throw DataFrameError("DataFrame::read_csv2_(): ERROR: "

@@ -453,28 +453,23 @@ private:
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
 template<typename T>
 struct  AtoiFunc  {
 
     inline T value() const  { return (static_cast<T>(value_)); }
 
-    inline bool operator() (const char *str)  {
+    inline void operator() (const char *str, int len)  {
 
-        bool    neg = false;
+        while (*str == ' ')  { ++str; --len; }
 
-        if (str[0] == '-')  {  // Handle negative
-            neg = true;
+        int64_t sign = 1ll;
+
+        if (*str == '-')  {  // Handle negative
+            sign = -1ll;
             ++str;
+            --len;
         }
-
-        const auto  len = ::strlen(str);
+        while (len > 0 &&  (! ::isdigit(str[len - 1])))  --len;
 
         value_ = 0ll;
         switch (len) {
@@ -497,20 +492,14 @@ struct  AtoiFunc  {
         case  3: value_ += (str[len -  3] - '0') * 100ll;
         case  2: value_ += (str[len -  2] - '0') * 10ll;
         case  1: value_ += (str[len -  1] - '0');
-            value_ *= neg ? -1ll : 1ll;
-            return (true);
-        default:
-            return (false);
         }
+        value_ *= sign;
     }
 
 private:
 
     int64_t value_ { 0ll };
 };
-
-
-
 
 } // namespace hmdf
 

@@ -1050,10 +1050,12 @@ read_csv2_(std::FILE *stream,
                     }
                 }
                 else if (col_spec.type_spec == "int")  {
+                    AtoiFunc<int>   num_func;
+
                     if (! value.empty()) [[likely]]  {
+                        num_func(value.c_str(), int(value.size()));
                         std::any_cast<StlVecType<int> &>
-                            (col_spec.col_vec).push_back(
-                                (int) strtol(value.c_str(), nullptr, 0));
+                            (col_spec.col_vec).push_back(num_func.value());
                     }
                     else [[unlikely]]  {
                         std::any_cast<StlVecType<int> &>
@@ -1061,11 +1063,12 @@ read_csv2_(std::FILE *stream,
                     }
                 }
                 else if (col_spec.type_spec == "uint")  {
+                    AtoiFunc<unsigned int>  num_func;
+
                     if (! value.empty()) [[likely]]  {
+                        num_func(value.c_str(), int(value.size()));
                         std::any_cast<StlVecType<unsigned int> &>
-                            (col_spec.col_vec).push_back(
-                                (unsigned int) strtoul(value.c_str(),
-                                                       nullptr, 0));
+                            (col_spec.col_vec).push_back(num_func.value());
                     }
                     else [[unlikely]]  {
                         std::any_cast<StlVecType<unsigned int> &>
@@ -1107,10 +1110,12 @@ read_csv2_(std::FILE *stream,
                     }
                 }
                 else if (col_spec.type_spec == "long")  {
+                    AtoiFunc<long>  num_func;
+
                     if (! value.empty()) [[likely]]  {
+                        num_func(value.c_str(), int(value.size()));
                         std::any_cast<StlVecType<long> &>
-                            (col_spec.col_vec).push_back(
-                                strtol(value.c_str(), nullptr, 0));
+                            (col_spec.col_vec).push_back(num_func.value());
                     }
                     else [[unlikely]]  {
                         std::any_cast<StlVecType<long> &>
@@ -1118,10 +1123,12 @@ read_csv2_(std::FILE *stream,
                     }
                 }
                 else if (col_spec.type_spec == "longlong")  {
+                    AtoiFunc<long long> num_func;
+
                     if (! value.empty()) [[likely]]  {
+                        num_func(value.c_str(), int(value.size()));
                         std::any_cast<StlVecType<long long> &>
-                            (col_spec.col_vec).push_back(
-                                strtoll(value.c_str(), nullptr, 0));
+                            (col_spec.col_vec).push_back(num_func.value());
                     }
                     else [[unlikely]]  {
                         std::any_cast<StlVecType<long long> &>
@@ -1129,14 +1136,12 @@ read_csv2_(std::FILE *stream,
                     }
                 }
                 else if (col_spec.type_spec == "ulong")  {
-                    if (! value.empty()) [[likely]]  {
-                        const unsigned long         v =
-                            strtoul(value.c_str(), nullptr, 0);
-                        StlVecType<unsigned long>  &vec =
-                            std::any_cast<StlVecType<unsigned long> &>
-                                (col_spec.col_vec);
+                    AtoiFunc<unsigned long> num_func;
 
-                        vec.push_back(v);
+                    if (! value.empty()) [[likely]]  {
+                        num_func(value.c_str(), int(value.size()));
+                        std::any_cast<StlVecType<unsigned long> &>
+                            (col_spec.col_vec).push_back(num_func.value());
                     }
                     else [[unlikely]]  {
                         std::any_cast<StlVecType<unsigned long> &>
@@ -1145,10 +1150,12 @@ read_csv2_(std::FILE *stream,
                     }
                 }
                 else if (col_spec.type_spec == "ulonglong")  {
+                    AtoiFunc<unsigned long long>    num_func;
+
                     if (! value.empty()) [[likely]]  {
+                        num_func(value.c_str(), int(value.size()));
                         std::any_cast<StlVecType<unsigned long long> &>
-                            (col_spec.col_vec).push_back(
-                                strtoull(value.c_str(), nullptr, 0));
+                            (col_spec.col_vec).push_back(num_func.value());
                     }
                     else [[unlikely]]  {
                         std::any_cast<StlVecType<unsigned long long> &>

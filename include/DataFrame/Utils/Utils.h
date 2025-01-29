@@ -451,56 +451,6 @@ private:
     char    buffer_[SIZ];
 };
 
-// ----------------------------------------------------------------------------
-
-template<typename T>
-struct  AtoiFunc  {
-
-    inline T value() const  { return (static_cast<T>(value_)); }
-
-    inline void operator() (const char *str, int len)  {
-
-        while (*str == ' ')  { ++str; --len; }
-
-        int64_t sign = 1ll;
-
-        if (*str == '-')  {  // Handle negative
-            sign = -1ll;
-            ++str;
-            --len;
-        }
-        while (len > 0 &&  (! ::isdigit(str[len - 1])))  --len;
-
-        value_ = 0ll;
-        switch (len) {
-        case 19: value_ += (str[len - 19] - '0') * 1'000'000'000'000'000'000ll;
-        case 18: value_ += (str[len - 18] - '0') * 100'000'000'000'000'000ll;
-        case 17: value_ += (str[len - 17] - '0') * 10'000'000'000'000'000ll;
-        case 16: value_ += (str[len - 16] - '0') * 1'000'000'000'000'000ll;
-        case 15: value_ += (str[len - 15] - '0') * 100'000'000'000'000ll;
-        case 14: value_ += (str[len - 14] - '0') * 10'000'000'000'000ll;
-        case 13: value_ += (str[len - 13] - '0') * 1000'000'000'000ll;
-        case 12: value_ += (str[len - 12] - '0') * 100'000'000'000ll;
-        case 11: value_ += (str[len - 11] - '0') * 10'000'000'000ll;
-        case 10: value_ += (str[len - 10] - '0') * 1'000'000'000ll;
-        case  9: value_ += (str[len -  9] - '0') * 100'000'000ll;
-        case  8: value_ += (str[len -  8] - '0') * 10'000'000ll;
-        case  7: value_ += (str[len -  7] - '0') * 1'000'000ll;
-        case  6: value_ += (str[len -  6] - '0') * 100'000ll;
-        case  5: value_ += (str[len -  5] - '0') * 10'000ll;
-        case  4: value_ += (str[len -  4] - '0') * 1'000ll;
-        case  3: value_ += (str[len -  3] - '0') * 100ll;
-        case  2: value_ += (str[len -  2] - '0') * 10ll;
-        case  1: value_ += (str[len -  1] - '0');
-        }
-        value_ *= sign;
-    }
-
-private:
-
-    int64_t value_ { 0ll };
-};
-
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

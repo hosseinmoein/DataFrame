@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <random>
 
 using namespace hmdf;
 using namespace std::chrono;
@@ -50,7 +51,13 @@ int main(int, char *[]) {
 
     stream.open("Large_File.csv");
 
-    stream << "INDEX:300000000:<long>,COL1:300000000:<uint>,COL2:300000000:<int>,COL3:300000000:<int>,COL4:300000000:<int>,COL5:300000000:<ulong>,COL6:300000000:<int>,COL7:300000000:<ulong>\n";
+
+    std::random_device                      rd;
+    std::mt19937_64                         gen(rd());
+    std::uniform_real_distribution<double>  ddist;
+    std::uniform_real_distribution<float>   fdist;
+	
+    stream << "INDEX:300000000:<long>,COL1:300000000:<uint>,COL2:300000000:<int>,COL3:300000000:<int>,COL4:300000000:<int>,COL5:300000000:<ulong>,COL6:300000000:<double>,COL7:300000000:<float>\n";
 
     std::srand(std::time(nullptr));
     for (std::size_t i = 0; i < 300'000'000; ++i)  {
@@ -60,8 +67,8 @@ int main(int, char *[]) {
                << std::rand() << ','
                << std::rand() << ','
                << std::rand() << ','
-               << std::rand() << ','
-               << std::rand() << '\n';
+               << ddist(gen) << ','
+               << fdist(gen) << '\n';
     }
     stream.close();
 
@@ -89,7 +96,7 @@ int main(int, char *[]) {
     const auto  end2 = std::chrono::high_resolution_clock::now();
 
     std::cout << "Column Length: "
-              << df.get_column<int>("COL6").size() << '\n';
+              << df.get_column<double>("COL6").size() << '\n';
     std::cout
     << "Reading Took: "
     << double(duration_cast<microseconds>(end2 - start2).count()) / 1000000.0

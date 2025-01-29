@@ -2343,6 +2343,49 @@ _like_clause_compare_(const char *pattern,
     return (*uinput_str == 0);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static inline T _atoi_(const char *str, int len)  {
+
+    while (*str == ' ')  { ++str; --len; }
+
+    int64_t sign { 1ll };
+
+    if (*str == '-')  {  // Handle negative
+        sign = -1ll;
+        ++str;
+        --len;
+    }
+    while (len > 0 &&  (! ::isdigit(str[len - 1])))  --len;
+
+    int64_t value { 0 };
+
+    switch(len)  {
+        case 19: value += (str[len - 19] - '0') * 1'000'000'000'000'000'000ll;
+        case 18: value += (str[len - 18] - '0') * 100'000'000'000'000'000ll;
+        case 17: value += (str[len - 17] - '0') * 10'000'000'000'000'000ll;
+        case 16: value += (str[len - 16] - '0') * 1'000'000'000'000'000ll;
+        case 15: value += (str[len - 15] - '0') * 100'000'000'000'000ll;
+        case 14: value += (str[len - 14] - '0') * 10'000'000'000'000ll;
+        case 13: value += (str[len - 13] - '0') * 1'000'000'000'000ll;
+        case 12: value += (str[len - 12] - '0') * 100'000'000'000ll;
+        case 11: value += (str[len - 11] - '0') * 10'000'000'000ll;
+        case 10: value += (str[len - 10] - '0') * 1'000'000'000ll;
+        case  9: value += (str[len -  9] - '0') * 100'000'000ll;
+        case  8: value += (str[len -  8] - '0') * 10'000'000ll;
+        case  7: value += (str[len -  7] - '0') * 1'000'000ll;
+        case  6: value += (str[len -  6] - '0') * 100'000ll;
+        case  5: value += (str[len -  5] - '0') * 10'000ll;
+        case  4: value += (str[len -  4] - '0') * 1'000ll;
+        case  3: value += (str[len -  3] - '0') * 100ll;
+        case  2: value += (str[len -  2] - '0') * 10ll;
+        case  1: value += (str[len -  1] - '0');
+    }
+
+    return (static_cast<T>(value * sign));
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

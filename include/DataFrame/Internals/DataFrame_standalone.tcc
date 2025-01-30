@@ -66,6 +66,8 @@ struct  _TypeinfoHasher_  {
     }
 };
 
+// -------------------------------------
+
 struct  _TypeinfoEqualTo_  {
 
     bool
@@ -75,6 +77,10 @@ struct  _TypeinfoEqualTo_  {
     }
 };
 
+// -------------------------------------
+
+// This is used for writing to files
+//
 static const
 std::unordered_map<_TypeInfoRef_,
                    const char *const,
@@ -129,6 +135,63 @@ _typeinfo_name_  {
     { typeid(std::set<std::string>), "str_set" },
     { typeid(std::map<std::string, double>), "str_dbl_map" },
     { typeid(std::unordered_map<std::string, double>), "str_dbl_unomap" },
+};
+
+// -------------------------------------
+
+// This is used for reading from files
+//
+static const
+std::unordered_map<std::string, file_dtypes>    _typename_id_  {
+
+    // Numerics
+    //
+    { "float", file_dtypes::FLOAT },
+    { "double", file_dtypes::DOUBLE },
+    { "longdouble", file_dtypes::LONG_DOUBLE },
+    { "short", file_dtypes::SHORT },
+    { "ushort", file_dtypes::USHORT },
+    { "int", file_dtypes::INT },
+    { "uint", file_dtypes::UINT },
+    { "long", file_dtypes::LONG },
+    { "ulong", file_dtypes::ULONG },
+    { "longlong", file_dtypes::LONG_LONG },
+    { "ulonglong", file_dtypes::ULONG_LONG },
+    { "char", file_dtypes::CHAR },
+    { "uchar", file_dtypes::UCHAR },
+    { "bool", file_dtypes::BOOL },
+
+    // Strings
+    //
+    { "string", file_dtypes::STRING },
+    { "vstr32", file_dtypes::VSTR32 },
+    { "vstr64", file_dtypes::VSTR64 },
+    { "vstr128", file_dtypes::VSTR128 },
+    { "vstr512", file_dtypes::VSTR512 },
+    { "vstr1K", file_dtypes::VSTR1K },
+    { "vstr2K", file_dtypes::VSTR2K },
+
+    // DateTime
+    //
+    { "DateTime", file_dtypes::DATETIME },
+    { "DateTimeAME", file_dtypes::DATETIME_AME },
+    { "DateTimeEUR", file_dtypes::DATETIME_EUR },
+    { "DateTimeISO", file_dtypes::DATETIME_ISO },
+
+    // Pairs
+    //
+    { "str_dbl_pair", file_dtypes::STR_DBL_PAIR },
+    { "str_str_pair", file_dtypes::STR_STR_PAIR },
+    { "dbl_dbl_pair", file_dtypes::DBL_DBL_PAIR },
+
+    // Containers
+    //
+    { "dbl_vec", file_dtypes::DBL_VEC },
+    { "str_vec", file_dtypes::STR_VEC },
+    { "dbl_set", file_dtypes::DBL_SET },
+    { "str_set", file_dtypes::STR_SET },
+    { "str_dbl_map", file_dtypes::STR_DBL_MAP },
+    { "str_dbl_unomap", file_dtypes::STR_DBL_UNOMAP },
 };
 
 // ----------------------------------------------------------------------------

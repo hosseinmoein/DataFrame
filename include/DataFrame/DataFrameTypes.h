@@ -717,6 +717,52 @@ struct  StationaryTestParams  {
 
 // ----------------------------------------------------------------------------
 
+// Column data types that can come from a file
+//
+enum class  file_dtypes : std::size_t  {
+
+    FLOAT = 0,
+    DOUBLE = 1,
+    LONG_DOUBLE = 2,
+    SHORT = 3,
+    USHORT = 4,
+    INT = 5,
+    UINT = 6,
+    LONG = 7,
+    ULONG = 8,
+    LONG_LONG = 9,
+    ULONG_LONG = 10,
+    CHAR = 11,
+    UCHAR = 12,
+    BOOL = 13,
+
+    STRING = 14,
+    VSTR32 = 15,
+    VSTR64 = 16,
+    VSTR128 = 17,
+    VSTR512 = 18,
+    VSTR1K = 19,
+    VSTR2K = 20,
+
+    DATETIME = 21,
+    DATETIME_AME = 22,
+    DATETIME_EUR = 23,
+    DATETIME_ISO = 24,
+
+    STR_DBL_PAIR = 25,
+    STR_STR_PAIR = 26,
+    DBL_DBL_PAIR = 27,
+
+    DBL_VEC = 28,
+    STR_VEC = 29,
+    DBL_SET = 30,
+    STR_SET = 31,
+    STR_DBL_MAP = 32,
+    STR_DBL_UNOMAP = 33,
+};
+
+// ----------------------------------------------------------------------------
+
 struct  PCAParams  {
 
     normalization_type  norm_type { normalization_type::z_score };

@@ -754,11 +754,11 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
 struct _col_data_spec_  {
 
     std::any    col_vec { };
-    String32    type_spec { };
+    file_dtypes type_spec { 0 };
     String64    col_name { };
 
     template<typename V>
-    _col_data_spec_(V cv, const char *ts, const char *cn, std::size_t rs)
+    _col_data_spec_(V cv, file_dtypes ts, const char *cn, std::size_t rs)
         : col_vec(cv), type_spec(ts), col_name(cn)  {
 
         std::any_cast<V &>(col_vec).reserve(rs);
@@ -829,95 +829,110 @@ read_csv2_(std::FILE *stream,
                 const size_type nrows =
                     num_rows == std::numeric_limits<size_type>::max()
                         ? size_type(atol(value.c_str())) : num_rows;
+                const auto      citer = _typename_id_.find(type_str);
+
+                if (citer == _typename_id_.end())
+                    throw DataFrameError("DataFrame::read_csv2_(): ERROR: "
+                                         "Unknown column type");
 
                 if (type_str == "float")
                     spec_vec.emplace_back(StlVecType<float>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "double") [[likely]]
                     spec_vec.emplace_back(StlVecType<double>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "longdouble")
                     spec_vec.emplace_back(StlVecType<long double>(),
-                                          type_str.c_str(),
+                                          citer->second,
+                                          col_name.c_str(),
+                                          nrows);
+                else if (type_str == "short")
+                    spec_vec.emplace_back(StlVecType<short>(),
+                                          citer->second,
+                                          col_name.c_str(),
+                                          nrows);
+                else if (type_str == "ushort")
+                    spec_vec.emplace_back(StlVecType<unsigned short>(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "int")
                     spec_vec.emplace_back(StlVecType<int>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "uint")
                     spec_vec.emplace_back(StlVecType<unsigned int>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "char")
                     spec_vec.emplace_back(StlVecType<char>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "uchar")
                     spec_vec.emplace_back(StlVecType<unsigned char>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "long")
                     spec_vec.emplace_back(StlVecType<long>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "longlong")
                     spec_vec.emplace_back(StlVecType<long long>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "ulong")
                     spec_vec.emplace_back(StlVecType<unsigned long>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "ulonglong")
                     spec_vec.emplace_back(StlVecType<unsigned long long>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "string")
                     spec_vec.emplace_back(StlVecType<std::string>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "vstr32")
                     spec_vec.emplace_back(StlVecType<String32>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "vstr64")
                     spec_vec.emplace_back(StlVecType<String64>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "vstr128")
                     spec_vec.emplace_back(StlVecType<String128>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "vstr512")
                     spec_vec.emplace_back(StlVecType<String512>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "vstr1K")
                     spec_vec.emplace_back(StlVecType<String1K>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "vstr2K")
                     spec_vec.emplace_back(StlVecType<String2K>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
 
@@ -926,12 +941,12 @@ read_csv2_(std::FILE *stream,
                 //
                 else if (! ::strncmp(type_str.c_str(), "DateTime", 8))
                     spec_vec.emplace_back(StlVecType<DateTime>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "bool")
                     spec_vec.emplace_back(StlVecType<bool>(),
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
 
@@ -940,19 +955,19 @@ read_csv2_(std::FILE *stream,
                 else if (type_str == "str_dbl_pair")
                     spec_vec.emplace_back(
                         StlVecType<std::pair<std::string, double>>{ },
-                        type_str.c_str(),
+                        citer->second,
                         col_name.c_str(),
                         nrows);
                 else if (type_str == "str_str_pair")
                     spec_vec.emplace_back(
                         StlVecType<std::pair<std::string, std::string>>{ },
-                        type_str.c_str(),
+                        citer->second,
                         col_name.c_str(),
                         nrows);
                 else if (type_str == "dbl_dbl_pair")
                     spec_vec.emplace_back(
                         StlVecType<std::pair<double, double>>{ },
-                        type_str.c_str(),
+                        citer->second,
                         col_name.c_str(),
                         nrows);
 
@@ -960,40 +975,37 @@ read_csv2_(std::FILE *stream,
                 //
                 else if (type_str == "dbl_vec")
                     spec_vec.emplace_back(StlVecType<std::vector<double>>{ },
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "str_vec")
                     spec_vec.emplace_back(
                         StlVecType<std::vector<std::string>>{ },
-                        type_str.c_str(),
+                        citer->second,
                         col_name.c_str(),
                         nrows);
                 else if (type_str == "dbl_set")
                     spec_vec.emplace_back(StlVecType<std::set<double>>{ },
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "str_set")
                     spec_vec.emplace_back(StlVecType<std::set<std::string>>{ },
-                                          type_str.c_str(),
+                                          citer->second,
                                           col_name.c_str(),
                                           nrows);
                 else if (type_str == "str_dbl_map")
                     spec_vec.emplace_back(
                         StlVecType<std::map<std::string, double>>{ },
-                        type_str.c_str(),
+                        citer->second,
                         col_name.c_str(),
                         nrows);
                 else if (type_str == "str_dbl_unomap")
                     spec_vec.emplace_back(
                         StlVecType<std::unordered_map<std::string, double>>{ },
-                        type_str.c_str(),
+                        citer->second,
                         col_name.c_str(),
                         nrows);
-                else
-                    throw DataFrameError("DataFrame::read_csv2_(): ERROR: "
-                                         "Unknown column type");
 
                 col_count += 1;
             }
@@ -1017,326 +1029,382 @@ read_csv2_(std::FILE *stream,
                 _col_data_spec_ &col_spec = spec_vec[col_idx];
                 const auto      val_size = value.size();
 
-                if (col_spec.type_spec == "float")  {
-                    if (val_size > 0) [[likely]]
-                        std::any_cast<StlVecType<float> &>
-                            (col_spec.col_vec).push_back(
-                                 std::strtof(value.c_str(), nullptr));
-                    else
-                        std::any_cast<StlVecType<float> &>
-                            (col_spec.col_vec).push_back(get_nan<float>());
-                }
-                else if (col_spec.type_spec == "double") [[likely]]  {
-                    if (val_size > 0) [[likely]]
-                        std::any_cast<StlVecType<double> &>
-                            (col_spec.col_vec).push_back(
-                                 std::strtod(value.c_str(), nullptr));
-                    else
-                        std::any_cast<StlVecType<double> &>
-                            (col_spec.col_vec).push_back(get_nan<double>());
-                }
-                else if (col_spec.type_spec == "longdouble")  {
-                    if (val_size > 0) [[likely]]
-                        std::any_cast<StlVecType<long double> &>
-                            (col_spec.col_vec).push_back(
-                                 std::strtold(value.c_str(), nullptr));
-                    else
-                        std::any_cast<StlVecType<long double> &>
-                            (col_spec.col_vec).push_back(
-                                 get_nan<long double>());
-                }
-                else if (col_spec.type_spec == "int")  {
-                    std::any_cast<StlVecType<int> &>
-                        (col_spec.col_vec).push_back(
-                            _atoi_<int>(value.c_str(), int(val_size)));
-                }
-                else if (col_spec.type_spec == "uint")  {
-                    std::any_cast<StlVecType<unsigned int> &>
-                        (col_spec.col_vec).push_back(
-                            _atoi_<unsigned int>(value.c_str(), int(val_size)));
-                }
-                else if (col_spec.type_spec == "char")  {
-                    if (val_size > 1)  {
-                        std::any_cast<StlVecType<char> &>
-                            (col_spec.col_vec).push_back(
-                                static_cast<char>(atoi(value.c_str())));
+                switch(col_spec.type_spec)  {
+                    case file_dtypes::FLOAT: {
+                        if (val_size > 0) [[likely]]
+                            std::any_cast<StlVecType<float> &>
+                                (col_spec.col_vec).push_back(
+                                     std::strtof(value.c_str(), nullptr));
+                        else
+                            std::any_cast<StlVecType<float> &>
+                                (col_spec.col_vec).push_back(get_nan<float>());
+                        break;
                     }
-                    else if (val_size > 0)  {
-                        std::any_cast<StlVecType<char> &>
-                            (col_spec.col_vec).push_back(value[0]);
+                    case file_dtypes::DOUBLE: {
+                        if (val_size > 0) [[likely]]
+                            std::any_cast<StlVecType<double> &>
+                                (col_spec.col_vec).push_back(
+                                     std::strtod(value.c_str(), nullptr));
+                        else
+                            std::any_cast<StlVecType<double> &>
+                                (col_spec.col_vec).push_back(
+                                     get_nan<double>());
+                        break;
                     }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<char> &>
-                            (col_spec.col_vec).push_back(get_nan<char>());
+                    case file_dtypes::LONG_DOUBLE: {
+                        if (val_size > 0) [[likely]]
+                            std::any_cast<StlVecType<long double> &>
+                                (col_spec.col_vec).push_back(
+                                     std::strtold(value.c_str(), nullptr));
+                        else
+                            std::any_cast<StlVecType<long double> &>
+                                (col_spec.col_vec).push_back(
+                                     get_nan<long double>());
+                        break;
                     }
-                }
-                else if (col_spec.type_spec == "uchar")  {
-                    if (val_size > 1)  {
-                        std::any_cast<StlVecType<unsigned char> &>
+                    case file_dtypes::SHORT: {
+                        std::any_cast<StlVecType<short> &>
                             (col_spec.col_vec).push_back(
-                                static_cast<unsigned char>(
-                                    atoi(value.c_str())));
+                                _atoi_<short>(value.c_str(), int(val_size)));
+                        break;
                     }
-                    else if (val_size > 0)  {
-                        std::any_cast<StlVecType<unsigned char> &>
+                    case file_dtypes::USHORT: {
+                        std::any_cast<StlVecType<unsigned short> &>
                             (col_spec.col_vec).push_back(
-                                static_cast<unsigned char>(value[0]));
-                    }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<unsigned char> &>
-                            (col_spec.col_vec).push_back(
-                                 get_nan<unsigned char>());
-                    }
-                }
-                else if (col_spec.type_spec == "long")  {
-                    std::any_cast<StlVecType<long> &>
-                        (col_spec.col_vec).push_back(
-                            _atoi_<long>(value.c_str(), int(val_size)));
-                }
-                else if (col_spec.type_spec == "longlong")  {
-                    std::any_cast<StlVecType<long long> &>
-                        (col_spec.col_vec).push_back(
-                            _atoi_<long long>(value.c_str(), int(val_size)));
-                }
-                else if (col_spec.type_spec == "ulong")  {
-                    std::any_cast<StlVecType<unsigned long> &>
-                        (col_spec.col_vec).push_back(
-                            _atoi_<unsigned long>(value.c_str(),
-                                                  int(val_size)));
-                }
-                else if (col_spec.type_spec == "ulonglong")  {
-                    std::any_cast<StlVecType<unsigned long long> &>
-                        (col_spec.col_vec).push_back(
-                            _atoi_<unsigned long long>(value.c_str(),
+                                _atoi_<unsigned short>(value.c_str(),
                                                        int(val_size)));
-                }
-                else if (col_spec.type_spec == "string")  {
-                    if (val_size > 0 &&
-                        (value.back() == '\n' || value.back() == '\r')) {
-                        value.pop_back();
+                        break;
                     }
-                    std::any_cast<StlVecType<std::string> &>
-                        (col_spec.col_vec).emplace_back(value);
-                }
-                else if (col_spec.type_spec == "vstr32")  {
-                    std::any_cast<StlVecType<String32> &>
-                        (col_spec.col_vec).emplace_back(value.c_str());
-                }
-                else if (col_spec.type_spec == "vstr64")  {
-                    std::any_cast<StlVecType<String64> &>
-                        (col_spec.col_vec).emplace_back(value.c_str());
-                }
-                else if (col_spec.type_spec == "vstr128")  {
-                    std::any_cast<StlVecType<String128> &>
-                        (col_spec.col_vec).emplace_back(value.c_str());
-                }
-                else if (col_spec.type_spec == "vstr512")  {
-                    std::any_cast<StlVecType<String512> &>
-                        (col_spec.col_vec).emplace_back(value.c_str());
-                }
-                else if (col_spec.type_spec == "vstr1K")  {
-                    std::any_cast<StlVecType<String1K> &>
-                        (col_spec.col_vec).emplace_back(value.c_str());
-                }
-                else if (col_spec.type_spec == "vstr2K")  {
-                    std::any_cast<StlVecType<String2K> &>
-                        (col_spec.col_vec).emplace_back(value.c_str());
-                }
-                else if (col_spec.type_spec == "DateTime")  {
-                    if (val_size > 0) [[likely]]  {
-                        time_t      t;
-                        int         n;
-                        DateTime    dt;
+                    case file_dtypes::INT: {
+                        std::any_cast<StlVecType<int> &>
+                            (col_spec.col_vec).push_back(
+                                _atoi_<int>(value.c_str(), int(val_size)));
+                        break;
+                    }
+                    case file_dtypes::UINT: {
+                        std::any_cast<StlVecType<unsigned int> &>
+                            (col_spec.col_vec).push_back(
+                                _atoi_<unsigned int>(value.c_str(),
+                                                     int(val_size)));
+                        break;
+                    }
+                    case file_dtypes::LONG: {
+                        std::any_cast<StlVecType<long> &>
+                            (col_spec.col_vec).push_back(
+                                _atoi_<long>(value.c_str(), int(val_size)));
+                        break;
+                    }
+                    case file_dtypes::ULONG: {
+                        std::any_cast<StlVecType<unsigned long> &>
+                            (col_spec.col_vec).push_back(
+                                _atoi_<unsigned long>(value.c_str(),
+                                                      int(val_size)));
+                        break;
+                    }
+                    case file_dtypes::LONG_LONG: {
+                        std::any_cast<StlVecType<long long> &>
+                            (col_spec.col_vec).push_back(
+                                _atoi_<long long>(value.c_str(),
+                                                  int(val_size)));
+                        break;
+                    }
+                    case file_dtypes::ULONG_LONG: {
+                        std::any_cast<StlVecType<unsigned long long> &>
+                            (col_spec.col_vec).push_back(
+                                _atoi_<unsigned long long>(value.c_str(),
+                                                           int(val_size)));
+                        break;
+                    }
+                    case file_dtypes::CHAR: {
+                        if (val_size > 1)  {
+                            std::any_cast<StlVecType<char> &>
+                                (col_spec.col_vec).push_back(
+                                    static_cast<char>(atoi(value.c_str())));
+                        }
+                        else if (val_size > 0)  {
+                            std::any_cast<StlVecType<char> &>
+                                (col_spec.col_vec).push_back(value[0]);
+                        }
+                        else [[unlikely]]  {
+                            std::any_cast<StlVecType<char> &>
+                                (col_spec.col_vec).push_back(get_nan<char>());
+                        }
+                        break;
+                    }
+                    case file_dtypes::UCHAR: {
+                        if (val_size > 1)  {
+                            std::any_cast<StlVecType<unsigned char> &>
+                                (col_spec.col_vec).push_back(
+                                    static_cast<unsigned char>(
+                                        atoi(value.c_str())));
+                        }
+                        else if (val_size > 0)  {
+                            std::any_cast<StlVecType<unsigned char> &>
+                                    (col_spec.col_vec).push_back(
+                                    static_cast<unsigned char>(value[0]));
+                        }
+                        else [[unlikely]]  {
+                            std::any_cast<StlVecType<unsigned char> &>
+                                (col_spec.col_vec).push_back(
+                                     get_nan<unsigned char>());
+                        }
+                        break;
+                    }
+                    case file_dtypes::BOOL: {
+                        if (val_size > 0) [[likely]]  {
+                            const bool          v =
+                                static_cast<bool>
+                                    (strtoul(value.c_str(), nullptr, 0));
+                            StlVecType<bool>   &vec =
+                                std::any_cast<StlVecType<bool> &>
+                                    (col_spec.col_vec);
+
+                            vec.push_back(v);
+                        }
+                        else [[unlikely]]  {
+                            std::any_cast<StlVecType<bool> &>
+                                (col_spec.col_vec).push_back(get_nan<bool>());
+                        }
+                        break;
+                    }
+                    case file_dtypes::STRING: {
+                        if (val_size > 0 &&
+                            (value.back() == '\n' || value.back() == '\r')) {
+                            value.pop_back();
+                        }
+                        std::any_cast<StlVecType<std::string> &>
+                            (col_spec.col_vec).emplace_back(value);
+                        break;
+                    }
+                    case file_dtypes::VSTR32: {
+                        std::any_cast<StlVecType<String32> &>
+                            (col_spec.col_vec).emplace_back(value.c_str());
+                        break;
+                    }
+                    case file_dtypes::VSTR64: {
+                        std::any_cast<StlVecType<String64> &>
+                            (col_spec.col_vec).emplace_back(value.c_str());
+                        break;
+                    }
+                    case file_dtypes::VSTR128: {
+                        std::any_cast<StlVecType<String128> &>
+                            (col_spec.col_vec).emplace_back(value.c_str());
+                        break;
+                    }
+                    case file_dtypes::VSTR512: {
+                        std::any_cast<StlVecType<String512> &>
+                            (col_spec.col_vec).emplace_back(value.c_str());
+                        break;
+                    }
+                    case file_dtypes::VSTR1K: {
+                        std::any_cast<StlVecType<String1K> &>
+                            (col_spec.col_vec).emplace_back(value.c_str());
+                        break;
+                    }
+                    case file_dtypes::VSTR2K: {
+                        std::any_cast<StlVecType<String2K> &>
+                            (col_spec.col_vec).emplace_back(value.c_str());
+                        break;
+                    }
+                    case file_dtypes::DATETIME: {
+                        if (val_size > 0) [[likely]]  {
+                            time_t      t;
+                            int         n;
+                            DateTime    dt;
 
 #ifdef _MSC_VER
-                        ::sscanf(value.c_str(), "%lld.%d", &t, &n);
+                            ::sscanf(value.c_str(), "%lld.%d", &t, &n);
 #else
-                        ::sscanf(value.c_str(), "%ld.%d", &t, &n);
+                            ::sscanf(value.c_str(), "%ld.%d", &t, &n);
 #endif // _MSC_VER
-                        dt.set_time(t, n);
-                        std::any_cast<StlVecType<DateTime> &>
-                            (col_spec.col_vec).emplace_back(std::move(dt));
+                            dt.set_time(t, n);
+                            std::any_cast<StlVecType<DateTime> &>
+                                (col_spec.col_vec).emplace_back(std::move(dt));
+                        }
+                        else [[unlikely]]  {
+                            std::any_cast<StlVecType<DateTime> &>
+                                (col_spec.col_vec).push_back(
+                                     get_nan<DateTime>());
+                        }
+                        break;
                     }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<DateTime> &>
-                            (col_spec.col_vec).push_back(get_nan<DateTime>());
+                    case file_dtypes::DATETIME_AME: {
+                        if (val_size > 0) [[likely]]  {
+                            std::any_cast<StlVecType<DateTime> &>
+                                (col_spec.col_vec).emplace_back(
+                                    value.c_str(), DT_DATE_STYLE::AME_STYLE);
+                        }
+                        else [[unlikely]]  {
+                            std::any_cast<StlVecType<DateTime> &>
+                                (col_spec.col_vec).push_back(
+                                     get_nan<DateTime>());
+                        }
+                        break;
                     }
-                }
-                else if (col_spec.type_spec == "DateTimeAME")  {
-                    if (val_size > 0) [[likely]]  {
-                        std::any_cast<StlVecType<DateTime> &>
-                            (col_spec.col_vec).emplace_back(
-                                value.c_str(), DT_DATE_STYLE::AME_STYLE);
+                    case file_dtypes::DATETIME_EUR: {
+                        if (val_size > 0) [[likely]]  {
+                            std::any_cast<StlVecType<DateTime> &>
+                                (col_spec.col_vec).emplace_back(
+                                    value.c_str(), DT_DATE_STYLE::EUR_STYLE);
+                        }
+                        else [[unlikely]]  {
+                            std::any_cast<StlVecType<DateTime> &>
+                                (col_spec.col_vec).push_back(
+                                     get_nan<DateTime>());
+                        }
+                        break;
                     }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<DateTime> &>
-                            (col_spec.col_vec).push_back(get_nan<DateTime>());
+                    case file_dtypes::DATETIME_ISO: {
+                        if (val_size > 0) [[likely]]  {
+                            std::any_cast<StlVecType<DateTime> &>
+                                (col_spec.col_vec).emplace_back(
+                                    value.c_str(), DT_DATE_STYLE::ISO_STYLE);
+                        }
+                        else [[unlikely]]  {
+                            std::any_cast<StlVecType<DateTime> &>
+                                (col_spec.col_vec).push_back(
+                                     get_nan<DateTime>());
+                        }
+                        break;
                     }
-                }
-                else if (col_spec.type_spec == "DateTimeEUR")  {
-                    if (val_size > 0) [[likely]]  {
-                        std::any_cast<StlVecType<DateTime> &>
-                            (col_spec.col_vec).emplace_back(
-                                value.c_str(), DT_DATE_STYLE::EUR_STYLE);
-                    }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<DateTime> &>
-                            (col_spec.col_vec).push_back(get_nan<DateTime>());
-                    }
-                }
-                else if (col_spec.type_spec == "DateTimeISO")  {
-                    if (val_size > 0) [[likely]]  {
-                        std::any_cast<StlVecType<DateTime> &>
-                            (col_spec.col_vec).emplace_back(
-                                value.c_str(), DT_DATE_STYLE::ISO_STYLE);
-                    }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<DateTime> &>
-                            (col_spec.col_vec).push_back(get_nan<DateTime>());
-                    }
-                }
-                else if (col_spec.type_spec == "bool")  {
-                    if (val_size > 0) [[likely]]  {
-                        const bool          v =
-                            static_cast<bool>
-                                (strtoul(value.c_str(), nullptr, 0));
-                        StlVecType<bool>   &vec =
-                            std::any_cast<StlVecType<bool> &>(col_spec.col_vec);
+                    case file_dtypes::STR_DBL_PAIR: {
+                        using val_t = std::pair<std::string, double>;
 
-                        vec.push_back(v);
+                        StlVecType<val_t>   &vec =
+                            std::any_cast<StlVecType<val_t> &>(
+                                col_spec.col_vec);
+
+                        vec.push_back(std::move(_get_str_dbl_pair_from_value_(
+                                                    value.c_str())));
+                        break;
                     }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<bool> &>
-                            (col_spec.col_vec).push_back(get_nan<bool>());
+                    case file_dtypes::STR_STR_PAIR: {
+                        using val_t = std::pair<std::string, std::string>;
+
+                        StlVecType<val_t>   &vec =
+                            std::any_cast<StlVecType<val_t> &>(
+                                col_spec.col_vec);
+
+                        vec.push_back(std::move(_get_str_str_pair_from_value_(
+                                                    value.c_str())));
+                        break;
                     }
-                }
+                    case file_dtypes::DBL_DBL_PAIR: {
+                        using val_t = std::pair<double, double>;
 
-                // Pairs
-                //
-                else if (col_spec.type_spec == "str_dbl_pair")  {
-                    using val_t = std::pair<std::string, double>;
+                        StlVecType<val_t>   &vec =
+                            std::any_cast<StlVecType<val_t> &>(
+                                col_spec.col_vec);
 
-                    StlVecType<val_t>   &vec =
-                        std::any_cast<StlVecType<val_t> &>(col_spec.col_vec);
+                        vec.push_back(std::move(_get_dbl_dbl_pair_from_value_(
+                                                    value.c_str())));
+                        break;
+                    }
+                    case file_dtypes::DBL_VEC: {
+                        if (val_size > 0) [[likely]]  {
+                            StlVecType<std::vector<double>>  &vec =
+                                std::any_cast<StlVecType<
+                                    std::vector<double>> &>(col_spec.col_vec);
 
-                    vec.push_back(std::move(_get_str_dbl_pair_from_value_(
-                                                value.c_str())));
-                }
-                else if (col_spec.type_spec == "str_str_pair")  {
-                    using val_t = std::pair<std::string, std::string>;
-
-                    StlVecType<val_t>   &vec =
-                        std::any_cast<StlVecType<val_t> &>(col_spec.col_vec);
-
-                    vec.push_back(std::move(_get_str_str_pair_from_value_(
-                                                value.c_str())));
-                }
-                else if (col_spec.type_spec == "dbl_dbl_pair")  {
-                    using val_t = std::pair<double, double>;
-
-                    StlVecType<val_t>   &vec =
-                        std::any_cast<StlVecType<val_t> &>(col_spec.col_vec);
-
-                    vec.push_back(std::move(_get_dbl_dbl_pair_from_value_(
-                                                value.c_str())));
-                }
-
-                // Containers
-                //
-                else if (col_spec.type_spec == "dbl_vec")  {
-                    if (val_size > 0) [[likely]]  {
-                        StlVecType<std::vector<double>>  &vec =
+                            vec.push_back(
+                                std::move(_get_dbl_vec_from_value_(
+                                              value.c_str())));
+                        }
+                        else [[unlikely]]  {
                             std::any_cast<StlVecType<std::vector<double>> &>
-                                (col_spec.col_vec);
+                                (col_spec.col_vec).push_back
+                                    (std::vector<double> { });
+                        }
+                        break;
+                    }
+                    case file_dtypes::STR_VEC: {
+                        if (val_size > 0) [[likely]]  {
+                            StlVecType<std::vector<std::string>> &vec =
+                                 std::any_cast<StlVecType<
+                                     std::vector<std::string>> &>
+                                         (col_spec.col_vec);
 
-                        vec.push_back(
-                            std::move(_get_dbl_vec_from_value_(value.c_str())));
+                            vec.push_back(
+                                std::move(_get_str_vec_from_value_(
+                                              value.c_str())));
+                        }
+                        else [[unlikely]]  {
+                            std::any_cast<StlVecType<
+                                std::vector<std::string>> &>
+                                    (col_spec.col_vec).push_back(
+                                        std::vector<std::string> { });
+                        }
+                        break;
                     }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<std::vector<double>> &>
-                            (col_spec.col_vec).push_back
-                                (std::vector<double> { });
-                    }
-                }
-                else if (col_spec.type_spec == "str_vec")  {
-                    if (val_size > 0) [[likely]]  {
-                        StlVecType<std::vector<std::string>> &vec =
-                          std::any_cast<StlVecType<std::vector<std::string>> &>
-                                (col_spec.col_vec);
+                    case file_dtypes::DBL_SET: {
+                        using set_t = std::set<double>;
 
-                        vec.push_back(
-                            std::move(_get_str_vec_from_value_(value.c_str())));
-                    }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<std::vector<std::string>> &>
-                            (col_spec.col_vec).push_back(
-                                std::vector<std::string> { });
-                    }
-                }
-                else if (col_spec.type_spec == "dbl_set")  {
-                    using set_t = std::set<double>;
+                        if (val_size > 0) [[likely]]  {
+                            StlVecType<set_t>   &vec =
+                                std::any_cast<StlVecType<set_t> &>
+                                    (col_spec.col_vec);
 
-                    if (val_size > 0) [[likely]]  {
-                        StlVecType<set_t>   &vec =
+                            vec.push_back(std::move(_get_dbl_set_from_value_(
+                                              value.c_str())));
+                        }
+                        else [[unlikely]]  {
                             std::any_cast<StlVecType<set_t> &>
-                                (col_spec.col_vec);
-
-                        vec.push_back(std::move(_get_dbl_set_from_value_(
-                                          value.c_str())));
+                                (col_spec.col_vec).push_back(set_t { });
+                        }
+                        break;
                     }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<set_t> &>
-                            (col_spec.col_vec).push_back(set_t { });
-                    }
-                }
-                else if (col_spec.type_spec == "str_set")  {
-                    using set_t = std::set<std::string>;
+                    case file_dtypes::STR_SET: {
+                        using set_t = std::set<std::string>;
 
-                    if (val_size > 0) [[likely]]  {
-                        StlVecType<set_t>   &vec =
+                        if (val_size > 0) [[likely]]  {
+                            StlVecType<set_t>   &vec =
+                                std::any_cast<StlVecType<set_t> &>
+                                    (col_spec.col_vec);
+
+                            vec.push_back(std::move(_get_str_set_from_value_(
+                                              value.c_str())));
+                        }
+                        else [[unlikely]]  {
                             std::any_cast<StlVecType<set_t> &>
-                                (col_spec.col_vec);
-
-                        vec.push_back(std::move(_get_str_set_from_value_(
-                                          value.c_str())));
+                                (col_spec.col_vec).push_back(set_t { });
+                        }
+                        break;
                     }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<set_t> &>
-                            (col_spec.col_vec).push_back(set_t { });
-                    }
-                }
-                else if (col_spec.type_spec == "str_dbl_map")  {
-                    using map_t = std::map<std::string, double>;
+                    case file_dtypes::STR_DBL_MAP: {
+                        using map_t = std::map<std::string, double>;
 
-                    if (val_size > 0) [[likely]]  {
-                        StlVecType<map_t>   &vec =
+                        if (val_size > 0) [[likely]]  {
+                            StlVecType<map_t>   &vec =
+                                std::any_cast<StlVecType<map_t> &>
+                                    (col_spec.col_vec);
+
+                            vec.push_back(
+                                std::move(_get_str_dbl_map_from_value_<map_t>(
+                                value.c_str())));
+                        }
+                        else [[unlikely]]  {
                             std::any_cast<StlVecType<map_t> &>
-                                (col_spec.col_vec);
-
-                        vec.push_back(
-                            std::move(_get_str_dbl_map_from_value_<map_t>(
-                            value.c_str())));
+                                (col_spec.col_vec).push_back(map_t { });
+                        }
+                        break;
                     }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<map_t> &>
-                            (col_spec.col_vec).push_back(map_t { });
-                    }
-                }
-                else if (col_spec.type_spec == "str_dbl_unomap")  {
-                    using map_t = std::unordered_map<std::string, double>;
+                    case file_dtypes::STR_DBL_UNOMAP: {
+                        using map_t = std::unordered_map<std::string, double>;
 
-                    if (val_size > 0) [[likely]]  {
-                        StlVecType<map_t>   &vec =
+                        if (val_size > 0) [[likely]]  {
+                            StlVecType<map_t>   &vec =
+                                std::any_cast<StlVecType<map_t> &>
+                                    (col_spec.col_vec);
+
+                            vec.push_back(
+                                std::move(_get_str_dbl_map_from_value_<map_t>(
+                                value.c_str())));
+                        }
+                        else [[unlikely]]  {
                             std::any_cast<StlVecType<map_t> &>
-                                (col_spec.col_vec);
-
-                        vec.push_back(
-                            std::move(_get_str_dbl_map_from_value_<map_t>(
-                            value.c_str())));
-                    }
-                    else [[unlikely]]  {
-                        std::any_cast<StlVecType<map_t> &>
-                            (col_spec.col_vec).push_back(map_t { });
+                                (col_spec.col_vec).push_back(map_t { });
+                        }
+                        break;
                     }
                 }
             }
@@ -1352,6 +1420,7 @@ read_csv2_(std::FILE *stream,
         [[unlikely]]
             throw DataFrameError("DataFrame::read_csv2_(): ERROR: "
                                  "Index column is not the first column");
+
         if (! columns_only) [[likely]]
             load_index(std::move(
                 std::any_cast<IndexVecType &>(spec_vec[0].col_vec)));
@@ -1362,204 +1431,275 @@ read_csv2_(std::FILE *stream,
         for (size_type i = begin; i < spec_s; ++i) [[likely]]  {
             _col_data_spec_ col_spec = spec_vec[i];
 
-            if (col_spec.type_spec == "float")
-                load_column<float>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<float> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "double") [[likely]]
-                load_column<double>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<double> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "longdouble")
-                load_column<long double>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<long double> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "int")
-                load_column<int>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<int> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "uint")
-                load_column<unsigned int>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<unsigned int> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "char")
-                load_column<char>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<char> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "uchar")
-                load_column<unsigned char>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<unsigned char> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "long")
-                load_column<long>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<long> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "longlong")
-                load_column<long long>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<long long> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "ulong")
-                load_column<unsigned long>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<unsigned long>&>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "ulonglong")
-                load_column<unsigned long long>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<unsigned long long> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "string")
-                load_column<std::string>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<std::string> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "vstr32")
-                load_column<String32>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<String32> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "vstr64")
-                load_column<String64>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<String64> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "vstr128")
-                load_column<String128>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<String128> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "vstr512")
-                load_column<String512>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<String512> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "vstr1K")
-                load_column<String1K>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<String1K> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "vstr2K")
-                load_column<String2K>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<String2K> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (! ::strncmp(col_spec.type_spec.c_str(), "DateTime", 8))
-                load_column<DateTime>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<DateTime> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "bool")
-                load_column<bool>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<bool> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
+            switch(col_spec.type_spec)  {
+                case file_dtypes::FLOAT: {
+                    load_column<float>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<float> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::DOUBLE: {
+                    load_column<double>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<double> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::LONG_DOUBLE: {
+                    load_column<long double>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<long double> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::SHORT: {
+                    load_column<short>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<short> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::USHORT: {
+                    load_column<unsigned short>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<unsigned short> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::INT: {
+                    load_column<int>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<int> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::UINT: {
+                    load_column<unsigned int>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<unsigned int> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::LONG: {
+                    load_column<long>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<long> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::ULONG: {
+                    load_column<unsigned long>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<unsigned long>&>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::LONG_LONG: {
+                    load_column<long long>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<long long> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::ULONG_LONG: {
+                    load_column<unsigned long long>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<
+                                      StlVecType<unsigned long long> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::CHAR: {
+                    load_column<char>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<char> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::UCHAR: {
+                    load_column<unsigned char>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<unsigned char> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::BOOL: {
+                    load_column<bool>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<bool> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::STRING: {
+                    load_column<std::string>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<std::string> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::VSTR32: {
+                    load_column<String32>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<String32> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::VSTR64: {
+                    load_column<String64>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<String64> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::VSTR128: {
+                    load_column<String128>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<String128> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::VSTR512: {
+                    load_column<String512>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<String512> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::VSTR1K: {
+                    load_column<String1K>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<String1K> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::VSTR2K: {
+                    load_column<String2K>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<String2K> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::DATETIME:
+                case file_dtypes::DATETIME_AME:
+                case file_dtypes::DATETIME_EUR:
+                case file_dtypes::DATETIME_ISO: {
+                    load_column<DateTime>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<DateTime> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::STR_DBL_PAIR: {
+                    using val_t = std::pair<std::string, double>;
 
-            // Pairs
-            //
-            else if (col_spec.type_spec == "str_dbl_pair")  {
-                using val_t = std::pair<std::string, double>;
+                    load_column<val_t>(col_spec.col_name.c_str(),
+                                       std::move(std::any_cast<
+                                           StlVecType<val_t> &>
+                                               (col_spec.col_vec)),
+                                       nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::STR_STR_PAIR: {
+                    using val_t = std::pair<std::string, std::string>;
 
-                load_column<val_t>(col_spec.col_name.c_str(),
-                                   std::move(std::any_cast<StlVecType<val_t> &>
-                                       (col_spec.col_vec)),
-                                   nan_policy::dont_pad_with_nans);
-            }
-            else if (col_spec.type_spec == "str_str_pair")  {
-                using val_t = std::pair<std::string, std::string>;
+                    load_column<val_t>(col_spec.col_name.c_str(),
+                                       std::move(std::any_cast<
+                                           StlVecType<val_t> &>
+                                               (col_spec.col_vec)),
+                                       nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::DBL_DBL_PAIR: {
+                    using val_t = std::pair<double, double>;
 
-                load_column<val_t>(col_spec.col_name.c_str(),
-                                   std::move(std::any_cast<StlVecType<val_t> &>
-                                       (col_spec.col_vec)),
-                                   nan_policy::dont_pad_with_nans);
-            }
-            else if (col_spec.type_spec == "dbl_dbl_pair")  {
-                using val_t = std::pair<double, double>;
+                    load_column<val_t>(col_spec.col_name.c_str(),
+                                       std::move(std::any_cast<
+                                           StlVecType<val_t> &>
+                                               (col_spec.col_vec)),
+                                       nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::DBL_VEC: {
+                    load_column<std::vector<double>>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<
+                            std::vector<double>> &>(col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::STR_VEC: {
+                    load_column<std::vector<std::string>>(
+                        col_spec.col_name.c_str(),
+                        std::move(
+                            std::any_cast<StlVecType<
+                                std::vector<std::string>> &>
+                                    (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::DBL_SET: {
+                    using set_t = std::set<double>;
 
-                load_column<val_t>(col_spec.col_name.c_str(),
-                                   std::move(std::any_cast<StlVecType<val_t> &>
-                                       (col_spec.col_vec)),
-                                   nan_policy::dont_pad_with_nans);
-            }
+                    load_column<set_t>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<set_t> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::STR_SET: {
+                    using set_t = std::set<std::string>;
 
-            // Containers
-            //
-            else if (col_spec.type_spec == "dbl_vec")
-                load_column<std::vector<double>>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<std::vector<double>> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "str_vec")
-                load_column<std::vector<std::string>>(
-                    col_spec.col_name.c_str(),
-                    std::move(
-                        std::any_cast<StlVecType<std::vector<std::string>> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "dbl_set")  {
-                using set_t = std::set<double>;
+                    load_column<set_t>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<set_t> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::STR_DBL_MAP: {
+                    using map_t = std::map<std::string, double>;
 
-                load_column<set_t>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<set_t> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            }
-            else if (col_spec.type_spec == "str_set")  {
-                using set_t = std::set<std::string>;
+                    load_column<map_t>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<map_t> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::STR_DBL_UNOMAP: {
+                    using map_t = std::unordered_map<std::string, double>;
 
-                load_column<set_t>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<set_t> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            }
-            else if (col_spec.type_spec == "str_dbl_map")  {
-                using map_t = std::map<std::string, double>;
-
-                load_column<map_t>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<map_t> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
-            }
-            else if (col_spec.type_spec == "str_dbl_unomap")  {
-                using map_t = std::unordered_map<std::string, double>;
-
-                load_column<map_t>(
-                    col_spec.col_name.c_str(),
-                    std::move(std::any_cast<StlVecType<map_t> &>
-                        (col_spec.col_vec)),
-                    nan_policy::dont_pad_with_nans);
+                    load_column<map_t>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<map_t> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
             }
         }
     }

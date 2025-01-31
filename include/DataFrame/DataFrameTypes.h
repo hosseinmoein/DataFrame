@@ -721,44 +721,44 @@ struct  StationaryTestParams  {
 //
 enum class  file_dtypes : std::size_t  {
 
-    FLOAT = 0,
-    DOUBLE = 1,
-    LONG_DOUBLE = 2,
-    SHORT = 3,
-    USHORT = 4,
-    INT = 5,
-    UINT = 6,
-    LONG = 7,
-    ULONG = 8,
-    LONG_LONG = 9,
-    ULONG_LONG = 10,
-    CHAR = 11,
-    UCHAR = 12,
-    BOOL = 13,
+    FLOAT = 0,            // float
+    DOUBLE = 1,           // double
+    LONG_DOUBLE = 2,      // long double
+    SHORT = 3,            // short int
+    USHORT = 4,           // unsigned short int
+    INT = 5,              // int
+    UINT = 6,             // unsigned int
+    LONG = 7,             // long int
+    ULONG = 8,            // unsigned long int
+    LONG_LONG = 9,        // long long int
+    ULONG_LONG = 10,      // unsigned long long int
+    CHAR = 11,            // char
+    UCHAR = 12,           // unsigned char
+    BOOL = 13,            // bool
 
-    STRING = 14,
-    VSTR32 = 15,
-    VSTR64 = 16,
-    VSTR128 = 17,
-    VSTR512 = 18,
-    VSTR1K = 19,
-    VSTR2K = 20,
+    STRING = 14,          // std::string
+    VSTR32 = 15,          // FixedSizeString<31> / String32
+    VSTR64 = 16,          // FixedSizeString<63> / String64
+    VSTR128 = 17,         // FixedSizeString<127> / String128
+    VSTR512 = 18,         // FixedSizeString<511> / String512
+    VSTR1K = 19,          // FixedSizeString<1023> / String1K
+    VSTR2K = 20,          // FixedSizeString<2047> / String2K
 
-    DATETIME = 21,
-    DATETIME_AME = 22,
-    DATETIME_EUR = 23,
-    DATETIME_ISO = 24,
+    DATETIME = 21,        // DateTime
+    DATETIME_AME = 22,    // DateTime
+    DATETIME_EUR = 23,    // DateTime
+    DATETIME_ISO = 24,    // DateTime
 
-    STR_DBL_PAIR = 25,
-    STR_STR_PAIR = 26,
-    DBL_DBL_PAIR = 27,
+    STR_DBL_PAIR = 25,    // std::pair<std::string, double>
+    STR_STR_PAIR = 26,    // std::pair<std::string, std::string>
+    DBL_DBL_PAIR = 27,    // std::pair<double, double>
 
-    DBL_VEC = 28,
-    STR_VEC = 29,
-    DBL_SET = 30,
-    STR_SET = 31,
-    STR_DBL_MAP = 32,
-    STR_DBL_UNOMAP = 33,
+    DBL_VEC = 28,         // std::vector<double>
+    STR_VEC = 29,         // std::vector<std::string>
+    DBL_SET = 30,         // std::set<double>
+    STR_SET = 31,         // std::set<std::string>
+    STR_DBL_MAP = 32,     // std::map<std::string, double>
+    STR_DBL_UNOMAP = 33,  // std::unordered_map<std::string, double>
 };
 
 // ----------------------------------------------------------------------------

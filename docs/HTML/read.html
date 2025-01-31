@@ -98,7 +98,8 @@ read(const char *file_name,
           <LI>Fields in column dictionaries must be in N (name), T (type), D (data) order</LI>
         </OL>
  -----------------------------------------------<BR>
-        <B>Binary</B> format is a proprietary format, that is optimized for compressing algorithms. It also takes care of different endianness. The file is always written with the same endianness as the writing host. But it will be adjusted accordingly when reading it from a different host with a different endianness.<BR>
+        <B>Binary</B> format is a proprietary format, that is optimized for compressing algorithms. It also takes care of different endianness. The file is always written with the same endianness as the writing host. But it will be adjusted accordingly when reading it from a different host with a different endianness.<BR><BR>
+		Binary format is, by far, the fastest way to read and write large files<BR><BR>
         <B>NOTE:</B> Only in CSV2 and binary formats you can specify <I>starting_row</I> and <I>num_rows</I>. This way you can read very large files (that don't fit into memory) in chunks and process them. In this case the reading starts at <I>starting_row</I> and continues until either <I>num_rows</I> rows is read or end-of-column is reached.<BR><BR>
 
  -----------------------------------------------<BR>

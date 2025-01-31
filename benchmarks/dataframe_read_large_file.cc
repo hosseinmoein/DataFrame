@@ -56,7 +56,7 @@ int main(int, char *[]) {
     std::mt19937_64                         gen(rd());
     std::uniform_real_distribution<double>  ddist;
     std::uniform_real_distribution<float>   fdist;
-	
+
     stream << "INDEX:300000000:<long>,COL1:300000000:<uint>,COL2:300000000:<int>,COL3:300000000:<int>,COL4:300000000:<int>,COL5:300000000:<ulong>,COL6:300000000:<double>,COL7:300000000:<float>\n";
 
     std::srand(std::time(nullptr));
@@ -102,10 +102,10 @@ int main(int, char *[]) {
     << double(duration_cast<microseconds>(end2 - start2).count()) / 1000000.0
     << " seconds\n";
 
-    /*
-    df.write<long, unsigned int, int, unsigned long>
+/*
+    df.write<long, unsigned int, int, unsigned long, double, float>
         ("Large_File.dat", io_format::binary);
-    */
+*/
 
     return (0);
 }

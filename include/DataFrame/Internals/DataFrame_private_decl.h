@@ -67,7 +67,9 @@ void read_binary_(std::istream &file,
                   size_type starting_row,
                   size_type num_rows);
 void read_csv_(std::istream &file, bool columns_only);
-void read_csv2_(std::FILE *stream,
+
+template<typename S>
+void read_csv2_(S &stream,
                 bool columns_only,
                 size_type starting_row,
                 size_type num_rows);

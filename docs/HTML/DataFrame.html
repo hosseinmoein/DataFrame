@@ -1978,7 +1978,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, consider you pass a column with 3 values in it and ask DataFrame to find peaks that are higher than 5 data points around them. Without a sanity check you get a crash or garbage.<BR>
   <P>
 
-    <font size="+1"><B>Using plain make and make-files:</B></font><BR>
+    <font size="+1"><B>Using plain make and make-files</B></font> (Not Recommended):<BR>
     Go to the <I>src</I> subdirectory, and execute build_all.sh. This will build the library and test executables for <I>Linux/Unix flavors only</I><BR><BR>
 
     <font size="+1"><B>Using CMake:</B></font><BR>

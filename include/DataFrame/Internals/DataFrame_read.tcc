@@ -768,8 +768,9 @@ struct _col_data_spec_  {
 // --------------------------------------
 
 template<typename I, typename H>
+template<typename S>
 void DataFrame<I, H>::
-read_csv2_(std::FILE *stream,
+read_csv2_(S &stream,
            bool columns_only,
            size_type starting_row,
            size_type num_rows)  {
@@ -789,10 +790,24 @@ read_csv2_(std::FILE *stream,
 
     value.reserve(64);
     spec_vec.reserve(32);
-    while (! std::feof(stream)) {
+    while (true)  {
+        if constexpr (std::same_as<S, std::FILE *>)  {
+            if (std::feof(stream))  break;
+        }
+        else  {
+            if (stream.eof())  break;
+        }
+
         line[0] = '\0';
-        if (std::fgets(line, sizeof(line) - 1, stream) == nullptr)
-            continue;
+        if constexpr (std::same_as<S, std::FILE *>)  {
+            if (std::fgets(line, sizeof(line) - 1, stream) == nullptr)
+                continue;
+        }
+        else  {
+            stream.getline(line, sizeof(line) - 1);
+            if (stream.fail())
+                continue;
+        }
 
         if (line[0] == '\0' || line[0] == '#') [[unlikely]]  continue;
 
@@ -2085,11 +2100,10 @@ read (S &in_s,
             throw NotImplemented("read(): Reading files in chunks is currently"
                                  " only implemented for io_format::csv2");
 
-        read_csv_ (in_s, columns_only);
+        read_csv_(in_s, columns_only);
     }
     else if (iof == io_format::csv2)  {
-        throw NotImplemented("read(): You can read a file in io_format::csv2 "
-                             "format only by calling read() with file name");
+        read_csv2_(in_s, columns_only, starting_row, num_rows);
     }
     else if (iof == io_format::json)  {
         if (starting_row != 0 ||
@@ -2097,10 +2111,10 @@ read (S &in_s,
             throw NotImplemented("read(): Reading files in chunks is currently"
                                  " only implemented for io_format::csv2");
 
-        read_json_ (in_s, columns_only);
+        read_json_(in_s, columns_only);
     }
     else if (iof == io_format::binary)  {
-        read_binary_ (in_s, columns_only, starting_row, num_rows);
+        read_binary_(in_s, columns_only, starting_row, num_rows);
     }
     else
         throw NotImplemented("read(): This io_format is not implemented");

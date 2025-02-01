@@ -77,7 +77,8 @@ read(const char *file_name,
       .<BR>
       .<BR>
       .<BR>
-        All empty lines or lines starting with # will be skipped.<BR>
+        All empty lines or lines starting with # will be skipped.<BR><BR>
+        In CSV2 format it is more efficient if you call <I>read()</I> with a filename instead of opening the file yourself and passing a stream reference. With a name, DataFrame opens the file and sets the read buffers the most efficient way.<BR><BR>
         <B>NOTE:</B> Only in CSV2 and binary formats you can specify <I>starting_row</I> and <I>num_rows</I>. This way you can read very large files (that don't fit into memory) in chunks and process them. In this case the reading starts at <I>starting_row</I> and continues until either <I>num_rows</I> rows is read or EOF is reached.<BR><BR>
 
  -----------------------------------------------<BR>

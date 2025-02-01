@@ -3865,7 +3865,10 @@ static void test_writing_binary()  {
     StrDataFrame    ibm_vw_json;
 
     try  {
-        ibm.read("SHORT_IBM.csv", io_format::csv2);
+        std::ifstream   stream;
+
+        stream.open("SHORT_IBM.csv");
+        ibm.read(stream, io_format::csv2);
 
         ibm.write<double, long>("./SHORT_IBM_dup.csv", io_format::csv);
         ibm.write<double, long>("./SHORT_IBM_dup.csv2", io_format::csv2);
@@ -4102,6 +4105,7 @@ static void test_reading_in_binary_chunks()  {
         StrDataFrame    df1;
 
         df1.read("SHORT_IBM.dat", io_format::binary, false, 0, 10);
+
         assert(df1.get_index().size() == 10);
         assert(df1.get_column<double>("IBM_Close").size() == 10);
         assert(df1.get_index()[0] == "2014-01-02");

@@ -3149,7 +3149,10 @@ static void test_YangZhangVolVisitor()  {
     MyDataFrame df;
 
     try  {
-        df.read("FORD.csv", io_format::csv2);
+        std::ifstream   stream;
+
+        stream.open("FORD.csv");
+        df.read(stream, io_format::csv2);
 
         YangZhangVolVisitor<double, unsigned long, 64> yz_v;
 

@@ -717,7 +717,7 @@ struct  StationaryTestParams  {
 
 // ----------------------------------------------------------------------------
 
-// Column data types that can come from a file
+// These are enumerations for data types that can be read/written from/to files
 //
 enum class  file_dtypes : std::size_t  {
 

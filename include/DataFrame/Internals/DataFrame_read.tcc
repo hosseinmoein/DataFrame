@@ -434,317 +434,423 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
         if (col_name == DF_INDEX_COL_NAME)  {
             IndexVecType    vec;
 
-            vec.reserve(::atoi(value.c_str()));
+            vec.reserve(_atoi_<size_type>(value.c_str(), value.size()));
             IdxParserFunctor_<IndexType>()(vec, stream);
             if (! columns_only)
                 load_index(std::forward<IndexVecType &&>(vec));
         }
         else [[likely]]  {
-            if (type_str == "float")  {
-                StlVecType<float>                                   &vec =
-                    create_column<float>(col_name.c_str(), false);
-                const ColVectorPushBack_<float, StlVecType<float>>  slug;
+            const auto  citer = _typename_id_.find(type_str);
 
-                vec.reserve(::atoi(value.c_str()));
-                slug(vec, stream, &::strtof);
-            }
-            else if (type_str == "double") [[likely]]  {
-                StlVecType<double>                                    &vec =
-                    create_column<double>(col_name.c_str(), false);
-                const ColVectorPushBack_<double, StlVecType<double>>  slug;
-
-                vec.reserve(::atoi(value.c_str()));
-                slug(vec, stream, &::strtod);
-            }
-            else if (type_str == "longdouble")  {
-                StlVecType<long double>                     &vec =
-                    create_column<long double>(col_name.c_str(), false);
-                const ColVectorPushBack_
-                    <long double, StlVecType<long double>>  slug;
-
-                vec.reserve(::atoi(value.c_str()));
-                slug(vec, stream, &::strtold);
-            }
-            else if (type_str == "int")  {
-                StlVecType<int> &vec =
-                    create_column<int>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_func_(vec, stream, &::strtol);
-            }
-            else if (type_str == "uint")  {
-                StlVecType<unsigned int>   &vec =
-                    create_column<unsigned int>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_func_(vec, stream, &::strtoul);
-            }
-            else if (type_str == "char")  {
-                StlVecType<char>    &vec =
-                    create_column<char>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_func_<char, StlVecType<char>>(
-                    vec,
-                    stream,
-                    [](const char *tok, char **, int) -> char  {
-                        if (tok[0] == '\0')
-                            return ('\0');
-                        else if (tok[1] == '\0')
-                            return (static_cast<char>(int(tok[0])));
-                        else
-                            return (static_cast<char>(atoi(tok)));
-                    });
-            }
-            else if (type_str == "uchar")  {
-                StlVecType<unsigned char>   &vec =
-                    create_column<unsigned char>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_func_<unsigned char,
-                                           StlVecType<unsigned char>>(
-                    vec,
-                    stream,
-                    [](const char *tok, char **, int) -> unsigned char  {
-                        if (tok[0] == '\0')
-                            return ('\0');
-                        else if (tok[1] == '\0')
-                            return (static_cast<unsigned char>(int(tok[0])));
-                        else
-                            return (static_cast<unsigned char>(atoi(tok)));
-                    });
-            }
-            else if (type_str == "long")  {
-                StlVecType<long>    &vec =
-                    create_column<long>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_func_(vec, stream, &::strtol);
-            }
-            else if (type_str == "longlong")  {
-                StlVecType<long long>   &vec =
-                    create_column<long long>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_func_(vec, stream, &::strtoll);
-            }
-            else if (type_str == "ulong")  {
-                StlVecType<unsigned long>   &vec =
-                    create_column<unsigned long>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_func_(vec, stream, &::strtoul);
-            }
-            else if (type_str == "ulonglong")  {
-                StlVecType<unsigned long long>  &vec =
-                    create_column<unsigned long long>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_func_(vec, stream, &::strtoull);
-            }
-            else if (type_str == "string")  {
-                StlVecType<std::string> &vec =
-                    create_column<std::string>(col_name.c_str(), false);
-                auto                    converter =
-                    [](const char *s, char **)-> const char * { return s; };
-                const ColVectorPushBack_
-                    <const char *, StlVecType<std::string>> slug;
-
-                vec.reserve(::atoi(value.c_str()));
-                slug(vec, stream, converter);
-            }
-            else if (type_str == "vstr32")  {
-                StlVecType<String32>    &vec =
-                    create_column<String32>(col_name.c_str(), false);
-                auto                    converter =
-                    [](const char *s, char **)-> const char * { return s; };
-                const ColVectorPushBack_
-                    <const char *, StlVecType<String32>> slug;
-
-                vec.reserve(::atoi(value.c_str()));
-                slug(vec, stream, converter);
-            }
-            else if (type_str == "vstr64")  {
-                StlVecType<String64>    &vec =
-                    create_column<String64>(col_name.c_str(), false);
-                auto                    converter =
-                    [](const char *s, char **)-> const char * { return s; };
-                const ColVectorPushBack_
-                    <const char *, StlVecType<String64>> slug;
-
-                vec.reserve(::atoi(value.c_str()));
-                slug(vec, stream, converter);
-            }
-            else if (type_str == "vstr128")  {
-                StlVecType<String128>   &vec =
-                    create_column<String128>(col_name.c_str(), false);
-                auto                    converter =
-                    [](const char *s, char **)-> const char * { return s; };
-                const ColVectorPushBack_
-                    <const char *, StlVecType<String128>> slug;
-
-                vec.reserve(::atoi(value.c_str()));
-                slug(vec, stream, converter);
-            }
-            else if (type_str == "vstr512")  {
-                StlVecType<String512>   &vec =
-                    create_column<String512>(col_name.c_str(), false);
-                auto                    converter =
-                    [](const char *s, char **)-> const char * { return s; };
-                const ColVectorPushBack_
-                    <const char *, StlVecType<String512>> slug;
-
-                vec.reserve(::atoi(value.c_str()));
-                slug(vec, stream, converter);
-            }
-            else if (type_str == "vstr1K")  {
-                StlVecType<String1K>    &vec =
-                    create_column<String1K>(col_name.c_str(), false);
-                auto                    converter =
-                    [](const char *s, char **)-> const char * { return s; };
-                const ColVectorPushBack_
-                    <const char *, StlVecType<String1K>> slug;
-
-                vec.reserve(::atoi(value.c_str()));
-                slug(vec, stream, converter);
-            }
-            else if (type_str == "vstr2K")  {
-                StlVecType<String2K>    &vec =
-                    create_column<String2K>(col_name.c_str(), false);
-                auto                    converter =
-                    [](const char *s, char **)-> const char * { return s; };
-                const ColVectorPushBack_
-                    <const char *, StlVecType<String2K>> slug;
-
-                vec.reserve(::atoi(value.c_str()));
-                slug(vec, stream, converter);
-            }
-            else if (type_str == "DateTime")  {
-                StlVecType<DateTime>    &vec =
-                    create_column<DateTime>(col_name.c_str(), false);
-                auto                    converter =
-                    [](const char *, char **) -> DateTime {
-                        return DateTime();
-                    };
-                const ColVectorPushBack_<DateTime, StlVecType<DateTime>>  slug;
-
-                vec.reserve(::atoi(value.c_str()));
-                slug (vec, stream, converter);
-            }
-            else if (type_str == "bool")  {
-                StlVecType<bool>    &vec =
-                    create_column<bool>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_func_(vec, stream, &::strtol);
-            }
-
-            // Pairs
-            //
-            else if (type_str == "str_dbl_pair")  {
-                using val_t = std::pair<std::string, double>;
-
-                StlVecType<val_t>   &vec =
-                    create_column<val_t>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(
-                    vec, stream, &_get_str_dbl_pair_from_value_);
-            }
-            else if (type_str == "str_str_pair")  {
-                using val_t = std::pair<std::string, std::string>;
-
-                StlVecType<val_t>   &vec =
-                    create_column<val_t>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(
-                    vec, stream, &_get_str_str_pair_from_value_);
-            }
-            else if (type_str == "dbl_dbl_pair")  {
-                using val_t = std::pair<double, double>;
-
-                StlVecType<val_t>   &vec =
-                    create_column<val_t>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(
-                    vec, stream, &_get_dbl_dbl_pair_from_value_);
-            }
-
-            // Containers
-            //
-            else if (type_str == "dbl_vec")  {
-                using vec_t = std::vector<double>;
-
-                StlVecType<vec_t>   &vec =
-                    create_column<vec_t>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(vec,
-                                                stream,
-                                                &_get_dbl_vec_from_value_);
-            }
-            else if (type_str == "str_vec")  {
-                using vec_t = std::vector<std::string>;
-
-                StlVecType<vec_t>   &vec =
-                    create_column<vec_t>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(vec,
-                                                stream,
-                                                &_get_str_vec_from_value_);
-            }
-            else if (type_str == "dbl_set")  {
-                using set_t = std::set<double>;
-
-                StlVecType<set_t>   &vec =
-                    create_column<set_t>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(vec,
-                                                stream,
-                                                &_get_dbl_set_from_value_);
-            }
-            else if (type_str == "str_set")  {
-                using set_t = std::set<std::string>;
-
-                StlVecType<set_t>   &vec =
-                    create_column<set_t>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(vec,
-                                                stream,
-                                                &_get_str_set_from_value_);
-            }
-            else if (type_str == "str_dbl_map")  {
-                using map_t = std::map<std::string, double>;
-
-                StlVecType<map_t>   &vec =
-                    create_column<map_t>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(
-                    vec,
-                    stream,
-                    &_get_str_dbl_map_from_value_<map_t>);
-            }
-            else if (type_str == "str_dbl_unomap")  {
-                using map_t = std::unordered_map<std::string, double>;
-
-                StlVecType<map_t>   &vec =
-                    create_column<map_t>(col_name.c_str(), false);
-
-                vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(
-                    vec,
-                    stream,
-                    &_get_str_dbl_map_from_value_<map_t>);
-            }
-            else [[unlikely]]
+            if (citer == _typename_id_.end())
                 throw DataFrameError("DataFrame::read_csv_(): ERROR: Unknown "
                                      "column type");
+
+            switch(citer->second)  {
+                case file_dtypes::FLOAT: {
+                    StlVecType<float>                                   &vec =
+                        create_column<float>(col_name.c_str(), false);
+                    const ColVectorPushBack_<float, StlVecType<float>>  slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, &::strtof);
+                    break;
+                }
+                case file_dtypes::DOUBLE: {
+                    StlVecType<double>  &vec =
+                        create_column<double>(col_name.c_str(), false);
+                    const ColVectorPushBack_<double, StlVecType<double>>  slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, &::strtod);
+                    break;
+                }
+                case file_dtypes::LONG_DOUBLE: {
+                    StlVecType<long double>                     &vec =
+                        create_column<long double>(col_name.c_str(), false);
+                    const ColVectorPushBack_
+                        <long double, StlVecType<long double>>  slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, &::strtold);
+                    break;
+                }
+                case file_dtypes::SHORT: {
+                    StlVecType<short>   &vec =
+                        create_column<short>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_(&_atoi_<short>, stream, vec);
+                    break;
+                }
+                case file_dtypes::USHORT: {
+                    StlVecType<unsigned short>  &vec =
+                        create_column<unsigned short>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_(&_atoi_<unsigned short>,
+                                               stream,
+                                               vec);
+                    break;
+                }
+                case file_dtypes::INT: {
+                    StlVecType<int> &vec =
+                        create_column<int>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_(&_atoi_<int>, stream, vec);
+                    break;
+                }
+                case file_dtypes::UINT: {
+                    StlVecType<unsigned int>    &vec =
+                        create_column<unsigned int>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_(&_atoi_<unsigned int>,
+                                               stream,
+                                               vec);
+                    break;
+                }
+                case file_dtypes::LONG: {
+                    StlVecType<long>    &vec =
+                        create_column<long>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_(&_atoi_<long>, stream, vec);
+                    break;
+                }
+                case file_dtypes::ULONG: {
+                    StlVecType<unsigned long>   &vec =
+                        create_column<unsigned long>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_(&_atoi_<unsigned long>,
+                                               stream,
+                                               vec);
+                    break;
+                }
+                case file_dtypes::LONG_LONG: {
+                    StlVecType<long long>   &vec =
+                        create_column<long long>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_(&_atoi_<long long>,
+                                               stream,
+                                               vec);
+                    break;
+                }
+                case file_dtypes::ULONG_LONG: {
+                    StlVecType<unsigned long long>  &vec =
+                        create_column<unsigned long long>(col_name.c_str(),
+                                                          false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_(&_atoi_<unsigned long long>,
+                                               stream,
+                                               vec);
+                    break;
+                }
+                case file_dtypes::CHAR: {
+                    StlVecType<char>    &vec =
+                        create_column<char>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_<char, StlVecType<char>>(
+                        vec,
+                        stream,
+                        [](const char *tok, char **, int) -> char  {
+                            if (tok[0] == '\0')
+                                return ('\0');
+                            else if (tok[1] == '\0')
+                                return (static_cast<char>(int(tok[0])));
+                            else
+                                return (static_cast<char>(atoi(tok)));
+                        });
+                    break;
+                }
+                case file_dtypes::UCHAR: {
+                    StlVecType<unsigned char>   &vec =
+                        create_column<unsigned char>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_<unsigned char,
+                                               StlVecType<unsigned char>>(
+                        vec,
+                        stream,
+                        [](const char *tok, char **, int) -> unsigned char  {
+                            if (tok[0] == '\0')
+                                return ('\0');
+                            else if (tok[1] == '\0')
+                                return (static_cast<unsigned char>(
+                                            int(tok[0])));
+                            else
+                                return (static_cast<unsigned char>(atoi(tok)));
+                        });
+                    break;
+                }
+                case file_dtypes::BOOL: {
+                    StlVecType<bool>    &vec =
+                        create_column<bool>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_func_(vec, stream, &::strtol);
+                    break;
+                }
+                case file_dtypes::STRING: {
+                    StlVecType<std::string> &vec =
+                        create_column<std::string>(col_name.c_str(), false);
+                    auto                    converter =
+                        [](const char *s, char **)-> const char * {
+                            return s;
+                        };
+                    const ColVectorPushBack_
+                        <const char *, StlVecType<std::string>> slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, converter);
+                    break;
+                }
+                case file_dtypes::VSTR32: {
+                    StlVecType<String32>    &vec =
+                        create_column<String32>(col_name.c_str(), false);
+                    auto                    converter =
+                        [](const char *s, char **)-> const char * {
+                            return s;
+                        };
+                    const ColVectorPushBack_
+                        <const char *, StlVecType<String32>>    slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, converter);
+                    break;
+                }
+                case file_dtypes::VSTR64: {
+                    StlVecType<String64>    &vec =
+                        create_column<String64>(col_name.c_str(), false);
+                    auto                    converter =
+                        [](const char *s, char **)-> const char * {
+                            return s;
+                        };
+                    const ColVectorPushBack_
+                        <const char *, StlVecType<String64>>    slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, converter);
+                    break;
+                }
+                case file_dtypes::VSTR128: {
+                    StlVecType<String128>   &vec =
+                        create_column<String128>(col_name.c_str(), false);
+                    auto                    converter =
+                        [](const char *s, char **)-> const char * {
+                            return s;
+                        };
+                    const ColVectorPushBack_
+                        <const char *, StlVecType<String128>>   slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, converter);
+                    break;
+                }
+                case file_dtypes::VSTR512: {
+                    StlVecType<String512>   &vec =
+                        create_column<String512>(col_name.c_str(), false);
+                    auto                    converter =
+                        [](const char *s, char **)-> const char * {
+                            return s;
+                        };
+                    const ColVectorPushBack_
+                        <const char *, StlVecType<String512>>   slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, converter);
+                    break;
+                }
+                case file_dtypes::VSTR1K: {
+                    StlVecType<String1K>    &vec =
+                        create_column<String1K>(col_name.c_str(), false);
+                    auto                    converter =
+                        [](const char *s, char **)-> const char * {
+                            return s;
+                        };
+                    const ColVectorPushBack_
+                        <const char *, StlVecType<String1K>> slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, converter);
+                    break;
+                }
+                case file_dtypes::VSTR2K: {
+                    StlVecType<String2K>    &vec =
+                        create_column<String2K>(col_name.c_str(), false);
+                    auto                    converter =
+                        [](const char *s, char **)-> const char * {
+                            return s;
+                        };
+                    const ColVectorPushBack_
+                        <const char *, StlVecType<String2K>> slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, converter);
+                    break;
+                }
+                case file_dtypes::DATETIME: {
+                    StlVecType<DateTime>    &vec =
+                        create_column<DateTime>(col_name.c_str(), false);
+                    auto                    converter =
+                        [](const char *, char **) -> DateTime {
+                            return DateTime();
+                        };
+                    const ColVectorPushBack_<DateTime,
+                                             StlVecType<DateTime>>  slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug (vec, stream, converter);
+                    break;
+                }
+                case file_dtypes::STR_DBL_PAIR: {
+                    using val_t = std::pair<std::string, double>;
+
+                    StlVecType<val_t>   &vec =
+                        create_column<val_t>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_cont_func_(
+                        vec, stream, &_get_str_dbl_pair_from_value_);
+                    break;
+                }
+                case file_dtypes::STR_STR_PAIR: {
+                    using val_t = std::pair<std::string, std::string>;
+
+                    StlVecType<val_t>   &vec =
+                        create_column<val_t>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_cont_func_(
+                        vec, stream, &_get_str_str_pair_from_value_);
+                    break;
+                }
+                case file_dtypes::DBL_DBL_PAIR: {
+                    using val_t = std::pair<double, double>;
+
+                    StlVecType<val_t>   &vec =
+                        create_column<val_t>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_cont_func_(
+                        vec, stream, &_get_dbl_dbl_pair_from_value_);
+                    break;
+                }
+                case file_dtypes::DBL_VEC: {
+                    using vec_t = std::vector<double>;
+
+                    StlVecType<vec_t>   &vec =
+                        create_column<vec_t>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_cont_func_(vec,
+                                                    stream,
+                                                    &_get_dbl_vec_from_value_);
+                    break;
+                }
+                case file_dtypes::STR_VEC: {
+                    using vec_t = std::vector<std::string>;
+
+                    StlVecType<vec_t>   &vec =
+                        create_column<vec_t>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_cont_func_(vec,
+                                                    stream,
+                                                    &_get_str_vec_from_value_);
+                    break;
+                }
+                case file_dtypes::DBL_SET: {
+                    using set_t = std::set<double>;
+
+                    StlVecType<set_t>   &vec =
+                        create_column<set_t>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_cont_func_(vec,
+                                                    stream,
+                                                    &_get_dbl_set_from_value_);
+                    break;
+                }
+                case file_dtypes::STR_SET: {
+                    using set_t = std::set<std::string>;
+
+                    StlVecType<set_t>   &vec =
+                        create_column<set_t>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_cont_func_(vec,
+                                                    stream,
+                                                    &_get_str_set_from_value_);
+                    break;
+                }
+                case file_dtypes::STR_DBL_MAP: {
+                    using map_t = std::map<std::string, double>;
+
+                    StlVecType<map_t>   &vec =
+                        create_column<map_t>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_cont_func_(
+                        vec,
+                        stream,
+                        &_get_str_dbl_map_from_value_<map_t>);
+                    break;
+                }
+                case file_dtypes::STR_DBL_UNOMAP: {
+                    using map_t = std::unordered_map<std::string, double>;
+
+                    StlVecType<map_t>   &vec =
+                        create_column<map_t>(col_name.c_str(), false);
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    col_vector_push_back_cont_func_(
+                        vec,
+                        stream,
+                        &_get_str_dbl_map_from_value_<map_t>);
+                    break;
+                }
+                default: {
+                    throw DataFrameError("DataFrame::read_csv_(): ERROR: "
+                                         "Type is not supported");
+                }
+            }
         }
     }
 }
@@ -843,7 +949,8 @@ read_csv2_(S &stream,
 
                 const size_type nrows =
                     num_rows == std::numeric_limits<size_type>::max()
-                        ? size_type(atol(value.c_str())) : num_rows;
+                        ? _atoi_<size_type>(value.c_str(), int(value.size()))
+                        : num_rows;
                 const auto      citer = _typename_id_.find(type_str);
 
                 if (citer == _typename_id_.end())
@@ -1134,7 +1241,9 @@ read_csv2_(S &stream,
                         if (val_size > 1)  {
                             std::any_cast<StlVecType<char> &>
                                 (col_spec.col_vec).push_back(
-                                    static_cast<char>(atoi(value.c_str())));
+                                    static_cast<char>(
+                                        _atoi_<int>(value.c_str(),
+                                                    value.size())));
                         }
                         else if (val_size > 0)  {
                             std::any_cast<StlVecType<char> &>
@@ -1151,7 +1260,8 @@ read_csv2_(S &stream,
                             std::any_cast<StlVecType<unsigned char> &>
                                 (col_spec.col_vec).push_back(
                                     static_cast<unsigned char>(
-                                        atoi(value.c_str())));
+                                        _atoi_<int>(value.c_str(),
+                                                    value.size())));
                         }
                         else if (val_size > 0)  {
                             std::any_cast<StlVecType<unsigned char> &>

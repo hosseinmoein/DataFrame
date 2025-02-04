@@ -2425,7 +2425,8 @@ static void test_SpectralClusteringVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("SHORT_IBM.csv", io_format::csv2, false, 0, 1000);
+        df.read("SHORT_IBM.csv", io_format::csv2,
+                 { .starting_row = 0, .num_rows = 1000 });
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -2477,7 +2478,8 @@ static void test_get_data_by_spectral()  {
     StrDataFrame    df;
 
     try  {
-        df.read("SHORT_IBM.csv", io_format::csv2, false, 1000, 500);
+        df.read("SHORT_IBM.csv", io_format::csv2,
+                 { .starting_row = 1000, .num_rows = 500 });
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

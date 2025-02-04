@@ -1327,7 +1327,8 @@ static void test_reading_in_chunks()  {
     try  {
         StrDataFrame    df1;
 
-        df1.read("SHORT_IBM.csv", io_format::csv2, false, 0, 10);
+        df1.read("SHORT_IBM.csv", io_format::csv2,
+                 { .starting_row = 0, .num_rows = 10 });
         assert(df1.get_index().size() == 10);
         assert(df1.get_column<double>("IBM_Close").size() == 10);
         assert(df1.get_index()[0] == "2014-01-02");
@@ -1337,7 +1338,8 @@ static void test_reading_in_chunks()  {
 
         StrDataFrame    df2;
 
-        df2.read("SHORT_IBM.csv", io_format::csv2, false, 800, 10);
+        df2.read("SHORT_IBM.csv", io_format::csv2,
+                 { .starting_row = 800, .num_rows = 10 });
         assert(df2.get_index().size() == 10);
         assert(df2.get_column<double>("IBM_Close").size() == 10);
         assert(df2.get_index()[0] == "2017-03-08");
@@ -1347,7 +1349,8 @@ static void test_reading_in_chunks()  {
 
         StrDataFrame    df3;
 
-        df3.read("SHORT_IBM.csv", io_format::csv2, false, 1716, 10);
+        df3.read("SHORT_IBM.csv", io_format::csv2,
+                 { .starting_row = 1716, .num_rows = 10 });
         assert(df3.get_index().size() == 5);
         assert(df3.get_column<double>("IBM_Close").size() == 5);
         assert(df3.get_index()[0] == "2020-10-26");
@@ -4104,7 +4107,8 @@ static void test_reading_in_binary_chunks()  {
     try  {
         StrDataFrame    df1;
 
-        df1.read("SHORT_IBM.dat", io_format::binary, false, 0, 10);
+        df1.read("SHORT_IBM.dat", io_format::binary,
+                 { .starting_row = 0, .num_rows = 10 });
 
         assert(df1.get_index().size() == 10);
         assert(df1.get_column<double>("IBM_Close").size() == 10);
@@ -4115,7 +4119,8 @@ static void test_reading_in_binary_chunks()  {
 
         StrDataFrame    df2;
 
-        df2.read("SHORT_IBM.dat", io_format::binary, false, 800, 10);
+        df2.read("SHORT_IBM.dat", io_format::binary,
+                 { .starting_row = 800, .num_rows = 10 });
         assert(df2.get_index().size() == 10);
         assert(df2.get_column<double>("IBM_Close").size() == 10);
         assert(df2.get_index()[0] == "2017-03-08");
@@ -4125,7 +4130,8 @@ static void test_reading_in_binary_chunks()  {
 
         StrDataFrame    df3;
 
-        df3.read("SHORT_IBM.dat", io_format::binary, false, 1716, 10);
+        df3.read("SHORT_IBM.dat", io_format::binary,
+                 { .starting_row = 1716, .num_rows = 10 });
         assert(df3.get_index().size() == 5);
         assert(df3.get_column<double>("IBM_Close").size() == 5);
         assert(df3.get_index()[0] == "2020-10-26");

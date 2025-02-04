@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/Vectors/HeteroVector.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 
 #include <complex>
 #include <limits>
@@ -737,12 +738,12 @@ enum class  file_dtypes : std::size_t  {
     BOOL = 13,            // bool
 
     STRING = 14,          // std::string
-    VSTR32 = 15,          // FixedSizeString<31> / String32
-    VSTR64 = 16,          // FixedSizeString<63> / String64
-    VSTR128 = 17,         // FixedSizeString<127> / String128
-    VSTR512 = 18,         // FixedSizeString<511> / String512
-    VSTR1K = 19,          // FixedSizeString<1023> / String1K
-    VSTR2K = 20,          // FixedSizeString<2047> / String2K
+    VSTR32 = 15,          // FixedSizeString<31> == String32
+    VSTR64 = 16,          // FixedSizeString<63> == String64
+    VSTR128 = 17,         // FixedSizeString<127> == String128
+    VSTR512 = 18,         // FixedSizeString<511> == String512
+    VSTR1K = 19,          // FixedSizeString<1023> == String1K
+    VSTR2K = 20,          // FixedSizeString<2047> == String2K
 
     DATETIME = 21,        // DateTime
     DATETIME_AME = 22,    // DateTime
@@ -759,6 +760,52 @@ enum class  file_dtypes : std::size_t  {
     STR_SET = 31,         // std::set<std::string>
     STR_DBL_MAP = 32,     // std::map<std::string, double>
     STR_DBL_UNOMAP = 33,  // std::unordered_map<std::string, double>
+};
+
+// ----------------------------------------------------------------------------
+
+// A structure to describe a column of data used in a read operation to
+// decipher data in a file in csv2 format.
+//
+struct  ReadSchema  {
+
+    using ColNameType = String64;
+
+    ColNameType col_name { DF_INDEX_COL_NAME };
+    file_dtypes col_type { file_dtypes::ULONG };
+    std::size_t num_rows { 0 };
+
+};
+
+// Parameters to read() function of DataFrame
+//
+struct  ReadParams  {
+
+    // If true, it only reads the data columns and skips the index column
+    //
+    bool                    columns_only { false };
+
+    // Start reading data from this row number.
+    // It only applies to csv2 and binary formats
+    //
+    std::size_t             starting_row { 0 };
+
+    // Only read this many rows of data.
+    // It only applies to csv2 and binary formats
+    //
+    std::size_t             num_rows {
+        std::numeric_limits<std::size_t>::max()
+    };
+
+    // These are only considered in csv2 format.
+    // They are ignored in all other formats.
+    //
+    // If <I> skip_first_line</I> is true, it is assumed that user wants to
+    // read the file with specifying a <I>schema</I> and the first non-empty
+    // line of the file is the header that should be skipped.
+    //
+    bool                    skip_first_line { true };
+    std::vector<ReadSchema> schema { };
 };
 
 // ----------------------------------------------------------------------------

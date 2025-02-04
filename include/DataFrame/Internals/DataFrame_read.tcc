@@ -2169,23 +2169,25 @@ read_binary_(std::istream &stream,
 
 template<typename I, typename H>
 bool DataFrame<I, H>::
-read (const char *file_name,
-      io_format iof,
-      bool columns_only,
-      size_type starting_row,
-      size_type num_rows)  {
+read(const char *file_name, io_format iof, const ReadParams params)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
+                  "Only a StdDataFrame can call read()");
 
     if (iof == io_format::csv2)  {
         IOFileOpti  io_opti(file_name);
 
-        read_csv2_(io_opti.file, columns_only, starting_row, num_rows);
+        read_csv2_(io_opti.file,
+                   params.columns_only,
+                   params.starting_row,
+                   params.num_rows);
     }
     else  {
         std::ifstream       stream;
         const IOStreamOpti  io_opti(
             stream, file_name, iof == io_format::binary);
 
-        read<std::istream>(stream, iof, columns_only, starting_row, num_rows);
+        read<std::istream>(stream, iof, params);
     }
     return (true);
 }
@@ -2195,36 +2197,38 @@ read (const char *file_name,
 template<typename I, typename H>
 template<typename S>
 bool DataFrame<I, H>::
-read (S &in_s,
-      io_format iof,
-      bool columns_only,
-      size_type starting_row,
-      size_type num_rows)  {
+read(S &in_s, io_format iof, const ReadParams params)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call read()");
 
     if (iof == io_format::csv)  {
-        if (starting_row != 0 ||
-            num_rows != std::numeric_limits<size_type>::max()) [[unlikely]]
+        if (params.starting_row != 0 ||
+            params.num_rows != std::numeric_limits<size_type>::max())
             throw NotImplemented("read(): Reading files in chunks is currently"
                                  " only implemented for io_format::csv2");
 
-        read_csv_(in_s, columns_only);
+        read_csv_(in_s, params.columns_only);
     }
     else if (iof == io_format::csv2)  {
-        read_csv2_(in_s, columns_only, starting_row, num_rows);
+        read_csv2_(in_s,
+                   params.columns_only,
+                   params.starting_row,
+                   params.num_rows);
     }
     else if (iof == io_format::json)  {
-        if (starting_row != 0 ||
-            num_rows != std::numeric_limits<size_type>::max()) [[unlikely]]
+        if (params.starting_row != 0 ||
+            params.num_rows != std::numeric_limits<size_type>::max())
             throw NotImplemented("read(): Reading files in chunks is currently"
                                  " only implemented for io_format::csv2");
 
-        read_json_(in_s, columns_only);
+        read_json_(in_s, params.columns_only);
     }
     else if (iof == io_format::binary)  {
-        read_binary_(in_s, columns_only, starting_row, num_rows);
+        read_binary_(in_s,
+                     params.columns_only,
+                     params.starting_row,
+                     params.num_rows);
     }
     else
         throw NotImplemented("read(): This io_format is not implemented");
@@ -2236,14 +2240,14 @@ read (S &in_s,
 
 template<typename I, typename H>
 bool
-DataFrame<I, H>::from_string (const char *data_frame)  {
+DataFrame<I, H>::from_string(const char *data_frame)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call from_string()");
 
     std::stringstream   ss (std::string(data_frame), std::ios_base::in);
 
-    read<std::istream>(ss, io_format::csv, false);
+    read<std::istream>(ss, io_format::csv);
     return (true);
 }
 
@@ -2251,14 +2255,14 @@ DataFrame<I, H>::from_string (const char *data_frame)  {
 
 template<typename I, typename H>
 bool
-DataFrame<I, H>::deserialize (const std::string &data_frame)  {
+DataFrame<I, H>::deserialize(const std::string &data_frame)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call deserialize()");
 
     std::stringstream   ss (data_frame, std::ios_base::in);
 
-    read<std::istream>(ss, io_format::binary, false);
+    read<std::istream>(ss, io_format::binary);
     return (true);
 }
 
@@ -2266,25 +2270,16 @@ DataFrame<I, H>::deserialize (const std::string &data_frame)  {
 
 template<typename I, typename H>
 std::future<bool> DataFrame<I, H>::
-read_async(const char *file_name,
-           io_format iof,
-           bool columns_only,
-           size_type starting_row,
-           size_type num_rows) {
+read_async(const char *file_name, io_format iof, const ReadParams params)  {
 
     return (thr_pool_.dispatch(
                 true,
                 [file_name,
                  iof,
-                 columns_only,
-                 starting_row,
-                 num_rows,
+                 params,
                  this] () -> bool  {
-                    return (this->read(file_name,
-                                       iof,
-                                       columns_only,
-                                       starting_row,
-                                       num_rows));
+                    return (this->read(file_name, iof,
+                                       std::forward<const ReadParams>(params)));
                 }));
 }
 
@@ -2293,25 +2288,17 @@ read_async(const char *file_name,
 template<typename I, typename H>
 template<typename S>
 std::future<bool> DataFrame<I, H>::
-read_async(S &in_s,
-           io_format iof,
-           bool columns_only,
-           size_type starting_row,
-           size_type num_rows) {
+read_async(S &in_s, io_format iof, const ReadParams params)  {
 
     return (thr_pool_.dispatch(
                 true,
                 [&in_s,
                  iof,
-                 columns_only,
-                 starting_row,
-                 num_rows,
+                 params,
                  this] () -> bool  {
-                    return (this->read<S>(in_s,
-                                          iof,
-                                          columns_only,
-                                          starting_row,
-                                          num_rows));
+                    return (this->read<S>(
+                                in_s, iof,
+                                std::forward<const ReadParams>(params)));
                 }));
 }
 

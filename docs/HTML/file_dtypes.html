@@ -1,0 +1,109 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>
+enum class  file_dtypes : std::size_t  {
+
+    FLOAT = 0,            // float
+    DOUBLE = 1,           // double
+    LONG_DOUBLE = 2,      // long double
+    SHORT = 3,            // short int
+    USHORT = 4,           // unsigned short int
+    INT = 5,              // int
+    UINT = 6,             // unsigned int
+    LONG = 7,             // long int
+    ULONG = 8,            // unsigned long int
+    LONG_LONG = 9,        // long long int
+    ULONG_LONG = 10,      // unsigned long long int
+    CHAR = 11,            // char
+    UCHAR = 12,           // unsigned char
+    BOOL = 13,            // bool
+
+    STRING = 14,          // std::string
+    VSTR32 = 15,          // FixedSizeString<31> == String32
+    VSTR64 = 16,          // FixedSizeString<63> == String64
+    VSTR128 = 17,         // FixedSizeString<127> == String128
+    VSTR512 = 18,         // FixedSizeString<511> == String512
+    VSTR1K = 19,          // FixedSizeString<1023> == String1K
+    VSTR2K = 20,          // FixedSizeString<2047> == String2K
+
+    DATETIME = 21,        // DateTime
+    DATETIME_AME = 22,    // DateTime
+    DATETIME_EUR = 23,    // DateTime
+    DATETIME_ISO = 24,    // DateTime
+
+    STR_DBL_PAIR = 25,    // std::pair<std::string, double>
+    STR_STR_PAIR = 26,    // std::pair<std::string, std::string>
+    DBL_DBL_PAIR = 27,    // std::pair<double, double>
+
+    DBL_VEC = 28,         // std::vector<double>
+    STR_VEC = 29,         // std::vector<std::string>
+    DBL_SET = 30,         // std::set<double>
+    STR_SET = 31,         // std::set<std::string>
+    STR_DBL_MAP = 32,     // std::map<std::string, double>
+    STR_DBL_UNOMAP = 33,  // std::unordered_map<std::string, double>
+};
+      </B></PRE> </font>
+      </td>
+      <td>
+        These are enumerations for data types that can be read/written from/to files.<BR>
+        They can also be specified in schemas.
+      </td>
+    </tr>
+  </table>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

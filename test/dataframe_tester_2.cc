@@ -3287,9 +3287,12 @@ static void test_no_index_reads()  {
     MyDataFrame df3;
 
     try  {
-        df.read("csv2_format_data.csv", io_format::csv2, false);
-        df.read("csv2_format_data_2.csv", io_format::csv2, true);
-        df.read("csv2_format_data_no_index.csv", io_format::csv2, true);
+        df.read("csv2_format_data.csv", io_format::csv2,
+                { .columns_only = false });
+        df.read("csv2_format_data_2.csv", io_format::csv2,
+                { .columns_only = true });
+        df.read("csv2_format_data_no_index.csv", io_format::csv2,
+                { .columns_only = true });
         df.write<std::ostream,
                  int,
                  unsigned long,
@@ -3300,9 +3303,12 @@ static void test_no_index_reads()  {
                  std::string>(std::cout, io_format::csv2);
 
         std::cout << '\n' << std::endl;
-        df2.read("sample_data.csv", io_format::csv, false);
-        df2.read("sample_data_2.csv", io_format::csv, true);
-        df2.read("sample_data_no_index.csv", io_format::csv, true);
+        df2.read("sample_data.csv", io_format::csv,
+                 { .columns_only = false });
+        df2.read("sample_data_2.csv", io_format::csv,
+                 { .columns_only = true });
+        df2.read("sample_data_no_index.csv", io_format::csv,
+                 { .columns_only = true });
         df2.write<std::ostream,
                   int,
                   unsigned long,
@@ -3322,9 +3328,12 @@ static void test_no_index_reads()  {
                   std::string>(std::cout, io_format::csv2);
 
         std::cout << '\n' << std::endl;
-        df3.read("sample_data.json", io_format::json, false);
-        df3.read("sample_data_2.json", io_format::json, true);
-        df3.read("sample_data_no_index.json", io_format::json, true);
+        df3.read("sample_data.json", io_format::json,
+                 { .columns_only = false });
+        df3.read("sample_data_2.json", io_format::json,
+                 { .columns_only = true });
+        df3.read("sample_data_no_index.json", io_format::json,
+                 { .columns_only = true });
         df3.write<std::ostream,
                   double,
                   char,

@@ -5529,17 +5529,13 @@ public:  // Reading and writing
     bool
     write(S &o,
           io_format iof = io_format::csv,
-          std::streamsize precision = 12,
-          bool columns_only = false,
-          long max_recs = std::numeric_limits<long>::max()) const;
+          const WriteParams params = { }) const;
 
     template<typename ... Ts>
     bool
     write(const char *file_name,
           io_format iof = io_format::csv,
-          std::streamsize precision = 12,
-          bool columns_only = false,
-          long max_recs = std::numeric_limits<long>::max()) const;
+          const WriteParams params = { }) const;
 
     // Same as write() above, but executed asynchronously
     //
@@ -5547,17 +5543,13 @@ public:  // Reading and writing
     [[nodiscard]] std::future<bool>
     write_async(S &o,
                 io_format iof = io_format::csv,
-                std::streamsize precision = 12,
-                bool columns_only = false,
-                long max_recs = std::numeric_limits<long>::max()) const;
+                const WriteParams params = { }) const;
 
     template<typename ... Ts>
     [[nodiscard]] std::future<bool>
     write_async(const char *file_name,
                 io_format iof = io_format::csv,
-                std::streamsize precision = 12,
-                bool columns_only = false,
-                long max_recs = std::numeric_limits<long>::max()) const;
+                const WriteParams params = { }) const;
 
     // This is a convenient function (simple implementation) to convert a
     // DataFrame into a string that could be restored later by calling

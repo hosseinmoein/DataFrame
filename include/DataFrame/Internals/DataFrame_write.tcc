@@ -39,17 +39,13 @@ namespace hmdf
 template<typename I, typename H>
 template<typename ... Ts>
 bool DataFrame<I, H>::
-write(const char *file_name,
-      io_format iof,
-      std::streamsize precision,
-      bool columns_only,
-      long max_recs) const  {
+write(const char *file_name, io_format iof, const WriteParams params) const  {
 
     std::ofstream       stream;
     const IOStreamOpti  io_opti(stream, file_name, iof == io_format::binary);
 
-    write<std::ostream, Ts ...>
-        (stream, iof, precision, columns_only, max_recs);
+    write<std::ostream, Ts ...>(stream, iof,
+                                std::forward<const WriteParams>(params));
     return (true);
 }
 
@@ -62,7 +58,7 @@ DataFrame<I, H>::to_string(std::streamsize precision) const  {
 
     std::stringstream   ss (std::ios_base::out);
 
-    write<std::ostream, Ts ...>(ss, io_format::csv, precision);
+    write<std::ostream, Ts ...>(ss, io_format::csv, { .precision = precision });
     return (ss.str());
 }
 
@@ -84,11 +80,7 @@ DataFrame<I, H>::serialize() const  {
 template<typename I, typename H>
 template<typename S, typename ... Ts>
 bool DataFrame<I, H>::
-write(S &o,
-      io_format iof,
-      std::streamsize precision,
-      bool columns_only,
-      long max_recs) const  {
+write(S &o, io_format iof, const WriteParams params) const  {
 
     if (iof != io_format::csv &&
         iof != io_format::json &&
@@ -100,16 +92,16 @@ write(S &o,
     long    end_row = indices_.size();
     long    start_row = 0;
 
-    if (max_recs >= 0)
-        end_row = std::min(end_row, max_recs);
+    if (params.max_recs >= 0)
+        end_row = std::min(end_row, long(params.max_recs));
     else
-        start_row = std::max(long(0), end_row + max_recs);
+        start_row = std::max(long(0), end_row + long(params.max_recs));
 
-    if (iof != io_format::binary)  o.precision(precision);
+    if (iof != io_format::binary)  o.precision(params.precision);
 
     if (iof == io_format::json)  {
         o << "{\n";
-        if (! columns_only) [[likely]]  {
+        if (! params.columns_only) [[likely]]  {
             _write_json_df_header_<S, IndexType>(o,
                                                  DF_INDEX_COL_NAME,
                                                  end_row - start_row);
@@ -140,7 +132,7 @@ write(S &o,
         }
     }
     else if (iof == io_format::csv)  {
-        if (! columns_only) [[likely]]  {
+        if (! params.columns_only) [[likely]]  {
             _write_csv_df_header_<S, IndexType>(o,
                                                 DF_INDEX_COL_NAME,
                                                 end_row - start_row) << ':';
@@ -162,7 +154,7 @@ write(S &o,
         }
     }
     else if (iof == io_format::csv2)  {
-        if (! columns_only) [[likely]]  {
+        if (! params.columns_only) [[likely]]  {
             _write_csv_df_header_<S, IndexType>(o,
                                                 DF_INDEX_COL_NAME,
                                                 end_row - start_row);
@@ -185,7 +177,7 @@ write(S &o,
         for (long i = start_row; i < end_row; ++i)  {
             size_type   count = 0;
 
-            if (! columns_only) [[likely]]  {
+            if (! params.columns_only) [[likely]]  {
                 o << indices_[i];
                 need_pre_comma = true;
                 count += 1;
@@ -213,7 +205,7 @@ write(S &o,
 
         o.write(reinterpret_cast<const char *>(&col_num), sizeof(col_num));
 
-        if (! columns_only) [[likely]]  {
+        if (! params.columns_only) [[likely]]  {
             print_binary_functor_<Ts ...>   idx_functor (
                 DF_INDEX_COL_NAME, o, start_row, end_row);
 
@@ -246,23 +238,15 @@ template<typename ... Ts>
 std::future<bool> DataFrame<I, H>::
 write_async (const char *file_name,
              io_format iof,
-             std::streamsize precision,
-             bool columns_only,
-             long max_recs) const  {
+             const WriteParams params) const  {
 
     return (thr_pool_.dispatch(
                 true,
-                [file_name,
-                 iof,
-                 precision,
-                 columns_only,
-                 max_recs,
-                 this] () -> bool  {
-                    return (this->write<Ts ...>(file_name,
-                                                iof,
-                                                precision,
-                                                columns_only,
-                                                max_recs));
+                [file_name, iof, params, this] () -> bool  {
+                    return (this->write<Ts ...>(
+                        file_name,
+                        iof,
+                        std::forward<const WriteParams>(params)));
                 }));
 }
 
@@ -271,25 +255,15 @@ write_async (const char *file_name,
 template<typename I, typename H>
 template<typename S, typename ... Ts>
 std::future<bool> DataFrame<I, H>::
-write_async (S &o,
-             io_format iof,
-             std::streamsize precision,
-             bool columns_only,
-             long max_recs) const  {
+write_async (S &o, io_format iof, const WriteParams params) const  {
 
     return (thr_pool_.dispatch(
                 true,
-                [&o,
-                 iof,
-                 precision,
-                 columns_only,
-                 max_recs,
-                 this] () -> bool  {
-                    return (this->write<S, Ts ...>(o,
-                                                   iof,
-                                                   precision,
-                                                   columns_only,
-                                                   max_recs));
+                [&o, iof, params, this] () -> bool  {
+                    return (this->write<S, Ts ...>(
+                        o,
+                        iof,
+                        std::forward<const WriteParams>(params)));
                 }));
 }
 

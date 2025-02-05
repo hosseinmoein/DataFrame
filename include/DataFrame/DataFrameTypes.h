@@ -810,6 +810,25 @@ struct  ReadParams  {
 
 // ----------------------------------------------------------------------------
 
+// Parameters to write() function of DataFrame
+//
+struct  WriteParams  {
+
+    // Floating-point values precision when written to a file
+    //
+    std::streamsize precision { 12 };
+
+    // If true, it only reads the data columns and skips the index column
+    //
+    bool            columns_only { false };
+
+    // Max number of rows to write
+    //
+    std::size_t     max_recs { std::numeric_limits<std::size_t>::max() };
+};
+
+// ----------------------------------------------------------------------------
+
 struct  PCAParams  {
 
     normalization_type  norm_type { normalization_type::z_score };

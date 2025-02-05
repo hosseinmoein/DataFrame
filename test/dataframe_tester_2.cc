@@ -3236,14 +3236,15 @@ static void test_no_index_writes()  {
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::csv, 6, false);
+             std::string>(std::cout, io_format::csv, { .precision = 6 });
     std::cout << std::endl;
     df.write<std::ostream,
              int,
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::csv, 6, true);
+             std::string>(std::cout, io_format::csv,
+                          { .precision = 6, .columns_only = true });
     std::cout << '\n' << std::endl;
 
     df.write<std::ostream,
@@ -3251,14 +3252,14 @@ static void test_no_index_writes()  {
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::csv2, 6, false);
+             std::string>(std::cout, io_format::csv2, { .precision = 6 });
     std::cout << std::endl;
     df.write<std::ostream,
              int,
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::csv2, 12, true);
+             std::string>(std::cout, io_format::csv2, { .columns_only = true });
     std::cout << '\n' << std::endl;
 
     df.write<std::ostream,
@@ -3266,14 +3267,14 @@ static void test_no_index_writes()  {
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::json, 12, false);
+             std::string>(std::cout, io_format::json);
     std::cout << std::endl;
     df.write<std::ostream,
              int,
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::json, 12, true);
+             std::string>(std::cout, io_format::json, { .columns_only = true });
 }
 
 // -----------------------------------------------------------------------------

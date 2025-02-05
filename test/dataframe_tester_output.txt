@@ -2236,7 +2236,7 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: -0.035911589957, 0.037505797473, 0.00882973583452, -0.00603030804194, 
+Means of clusters are: -0.0397662142374, -0.00846139142505, 0.00568770442596, 0.0301207820038, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 The seasonality of IBM returns is 59 days.
 So use this instead of 170 days in decomposition analysis

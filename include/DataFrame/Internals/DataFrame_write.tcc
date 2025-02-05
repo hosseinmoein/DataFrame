@@ -44,8 +44,7 @@ write(const char *file_name, io_format iof, const WriteParams params) const  {
     std::ofstream       stream;
     const IOStreamOpti  io_opti(stream, file_name, iof == io_format::binary);
 
-    write<std::ostream, Ts ...>(stream, iof,
-                                std::forward<const WriteParams>(params));
+    write<std::ostream, Ts ...>(stream, iof, params);
     return (true);
 }
 
@@ -93,9 +92,9 @@ write(S &o, io_format iof, const WriteParams params) const  {
     long    start_row = 0;
 
     if (params.max_recs >= 0)
-        end_row = std::min(end_row, long(params.max_recs));
+        end_row = std::min(end_row, params.max_recs);
     else
-        start_row = std::max(long(0), end_row + long(params.max_recs));
+        start_row = std::max(long(0), end_row + params.max_recs);
 
     if (iof != io_format::binary)  o.precision(params.precision);
 

@@ -824,7 +824,7 @@ struct  WriteParams  {
 
     // Max number of rows to write
     //
-    std::size_t     max_recs { std::numeric_limits<std::size_t>::max() };
+    long            max_recs { std::numeric_limits<long>::max() };
 };
 
 // ----------------------------------------------------------------------------

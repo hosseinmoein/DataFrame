@@ -43,14 +43,14 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class rank_policy : unsigned char  {
-    average = 1, // Average of ranks, if an item is repeated
-    first = 2,   // First rank, if an item is repeated
-    last = 3,    // Last rank, if an item is repeated
-    actual = 4,  // The actual rank of each item based on stable sort
-};</B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> rank_policy <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    average <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Average of ranks, if an item is repeated</span></span>
+<span class="line_wrapper">    first <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>   <span style="color:#696969; ">// First rank, if an item is repeated</span></span>
+<span class="line_wrapper">    last <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// Last rank, if an item is repeated</span></span>
+<span class="line_wrapper">    actual <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// The actual rank of each item based on stable sort</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This policy determines how to calculate ranking for a vector of data that is sortable.<BR>

@@ -43,55 +43,54 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class  stationary_test : unsigned char  {
-
-    // Kwiatkowski-Phillips-Schmidt–Shin (KPSS)
-    // In econometrics, Kwiatkowski–Phillips–Schmidt–Shin (KPSS) tests are
-    // used for testing a null hypothesis that an observable time series is stationary around a deterministic
-    // trend (i.e. trend-stationary) against the alternative of a unit root. Contrary to most unit root tests,
-    // the presence of a unit root is not the null hypothesis but the alternative. Additionally, in the KPSS
-    // test, the absence of a unit root is not a proof of stationarity but, by design, of trend-stationarity.
-    // This is an important distinction since it is possible for a time series to be non-stationary, have no
-    // unit root yet be trend-stationary.
-    //
-    // In a KPSS test, a higher test statistic value (meaning a larger calculated KPSS statistic) indicates a
-    // greater likelihood that the time series is not stationary around a deterministic trend, while a lower
-    // value suggests stationarity; essentially, you want a low KPSS test value to conclude stationarity.
-    //
-    kpss = 1,
-
-    // Augmented Dickey-Fuller (ADF)
-    // In statistics, an augmented Dickey–Fuller test (ADF) tests the null hypothesis that a unit root is
-    // present in a time series sample. The alternative hypothesis depends on which version of the test is
-    // used, but is usually stationarity or trend-stationarity. It is an augmented version of the
-    // Dickey–Fuller test for a larger and more complicated set of time series models. The augmented
-    // Dickey–Fuller (ADF) statistic, used in the test, is a negative number. The more negative it is, the
-    // stronger the rejection of the hypothesis that there is a unit root at some level of confidence.
-    //
-    // To interpret an ADF test statistic, compare its value to the critical value at a chosen significance
-    // level (usually 0.05): if the test statistic is less than the critical value, you reject the null
-    // hypothesis and conclude that the time series is stationary; if it's greater than the critical value,
-    // you fail to reject the null hypothesis, indicating non-stationarity; a more negative ADF statistic
-    // signifies stronger evidence against the null hypothesis (i.e., more likely stationary).
-    //
-    adf = 2,
-};
-
-
-struct  StationaryTestParams  {
-
-    // Only considered for KPSS test
-    //
-    double  critical_values[4] { 0.347, 0.463, 0.574, 0.739 };
-
-    // Only considered for ADF test
-    //
-    std::size_t adf_lag { 1 };
-    bool        adf_with_trend { false };
-};
-        </B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  stationary_test <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Kwiatkowski-Phillips-Schmidt–Shin (KPSS)</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// In econometrics, Kwiatkowski–Phillips–Schmidt–Shin (KPSS) tests are</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// used for testing a null hypothesis that an observable time series is stationary around a deterministic</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// trend (i.e. trend-stationary) against the alternative of a unit root. Contrary to most unit root tests,</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// the presence of a unit root is not the null hypothesis but the alternative. Additionally, in the KPSS</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// test, the absence of a unit root is not a proof of stationarity but, by design, of trend-stationarity.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// This is an important distinction since it is possible for a time series to be non-stationary, have no</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// unit root yet be trend-stationary.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// In a KPSS test, a higher test statistic value (meaning a larger calculated KPSS statistic) indicates a</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// greater likelihood that the time series is not stationary around a deterministic trend, while a lower</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// value suggests stationarity; essentially, you want a low KPSS test value to conclude stationarity.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    kpss <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Augmented Dickey-Fuller (ADF)</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// In statistics, an augmented Dickey–Fuller test (ADF) tests the null hypothesis that a unit root is</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// present in a time series sample. The alternative hypothesis depends on which version of the test is</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// used, but is usually stationarity or trend-stationarity. It is an augmented version of the</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Dickey–Fuller test for a larger and more complicated set of time series models. The augmented</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Dickey–Fuller (ADF) statistic, used in the test, is a negative number. The more negative it is, the</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// stronger the rejection of the hypothesis that there is a unit root at some level of confidence.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// To interpret an ADF test statistic, compare its value to the critical value at a chosen significance</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// level (usually 0.05): if the test statistic is less than the critical value, you reject the null</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// hypothesis and conclude that the time series is stationary; if it's greater than the critical value,</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// you fail to reject the null hypothesis, indicating non-stationarity; a more negative ADF statistic</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// signifies stronger evidence against the null hypothesis (i.e., more likely stationary).</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    adf <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  StationaryTestParams  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Only considered for KPSS test</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  critical_values<span style="color:#808030; ">[</span><span style="color:#008c00; ">4</span><span style="color:#808030; ">]</span> <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.347</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.463</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.574</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.739</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Only considered for ADF test</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> adf_lag <span style="color:#800080; ">{</span> <span style="color:#008c00; ">1</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span>        adf_with_trend <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">false</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Methods to test if a time-series is stationary<BR>

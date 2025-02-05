@@ -43,16 +43,16 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class shift_policy : unsigned char  {
-    down = 1,  // Shift/rotate the content of all columns down
-    up = 2,    // Shift/rotate the content of all columns up
-    left = 3,  // Shift/rotate the columns to the left
-    right = 4, // Shift/rotate the columns to the right
-}; </B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> shift_policy <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    down <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Shift/rotate the content of all columns down</span></span>
+<span class="line_wrapper">    up <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// Shift/rotate the content of all columns up</span></span>
+<span class="line_wrapper">    left <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Shift/rotate the columns to the left</span></span>
+<span class="line_wrapper">    right <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Shift/rotate the columns to the right</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
-      <td width="50%">
+      <td>
         This policy is relative to a tabular data structure. The index column always remains unchanged<BR>
       </td>
     </tr>

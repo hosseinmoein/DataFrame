@@ -42,23 +42,23 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class concat_policy : unsigned char  {
-    // Only apply concatenation to the common columns
-    //
-    common_columns = 1,
-
-    // Concatenate all columns. If a column does not exist in self,
-    // create one in the result and prepend with nan
-    //
-    all_columns = 2,
-
-    // The result will have all the columns in self,
-    // but only common columns and index are concatenated
-    //
-    lhs_and_common_columns = 3,
-};</B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> concat_policy <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Only apply concatenation to the common columns</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    common_columns <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Concatenate all columns. If a column does not exist in self,</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// create one in the result and prepend with nan</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    all_columns <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// The result will have all the columns in self,</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// but only common columns and index are concatenated</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    lhs_and_common_columns <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Enumerated type to specify joining/concatenating one DataFrame to the end of another.

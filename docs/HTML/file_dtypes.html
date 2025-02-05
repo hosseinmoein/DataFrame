@@ -42,50 +42,49 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class  file_dtypes : std::size_t  {
-
-    FLOAT = 0,            // float
-    DOUBLE = 1,           // double
-    LONG_DOUBLE = 2,      // long double
-    SHORT = 3,            // short int
-    USHORT = 4,           // unsigned short int
-    INT = 5,              // int
-    UINT = 6,             // unsigned int
-    LONG = 7,             // long int
-    ULONG = 8,            // unsigned long int
-    LONG_LONG = 9,        // long long int
-    ULONG_LONG = 10,      // unsigned long long int
-    CHAR = 11,            // char
-    UCHAR = 12,           // unsigned char
-    BOOL = 13,            // bool
-
-    STRING = 14,          // std::string
-    VSTR32 = 15,          // FixedSizeString<31> == String32
-    VSTR64 = 16,          // FixedSizeString<63> == String64
-    VSTR128 = 17,         // FixedSizeString<127> == String128
-    VSTR512 = 18,         // FixedSizeString<511> == String512
-    VSTR1K = 19,          // FixedSizeString<1023> == String1K
-    VSTR2K = 20,          // FixedSizeString<2047> == String2K
-
-    DATETIME = 21,        // DateTime
-    DATETIME_AME = 22,    // DateTime
-    DATETIME_EUR = 23,    // DateTime
-    DATETIME_ISO = 24,    // DateTime
-
-    STR_DBL_PAIR = 25,    // std::pair<std::string, double>
-    STR_STR_PAIR = 26,    // std::pair<std::string, std::string>
-    DBL_DBL_PAIR = 27,    // std::pair<double, double>
-
-    DBL_VEC = 28,         // std::vector<double>
-    STR_VEC = 29,         // std::vector<std::string>
-    DBL_SET = 30,         // std::set<double>
-    STR_SET = 31,         // std::set<std::string>
-    STR_DBL_MAP = 32,     // std::map<std::string, double>
-    STR_DBL_UNOMAP = 33,  // std::unordered_map<std::string, double>
-};
-      </B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  file_dtypes <span style="color:#800080; ">:</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#603000; ">FLOAT</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span>            <span style="color:#696969; ">// float</span></span>
+<span class="line_wrapper">    DOUBLE <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>           <span style="color:#696969; ">// double</span></span>
+<span class="line_wrapper">    LONG_DOUBLE <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>      <span style="color:#696969; ">// long double</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">SHORT</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>            <span style="color:#696969; ">// short int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">USHORT</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span>           <span style="color:#696969; ">// unsigned short int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">INT</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span>              <span style="color:#696969; ">// int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">UINT</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">6</span><span style="color:#808030; ">,</span>             <span style="color:#696969; ">// unsigned int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">LONG</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">7</span><span style="color:#808030; ">,</span>             <span style="color:#696969; ">// long int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">ULONG</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">8</span><span style="color:#808030; ">,</span>            <span style="color:#696969; ">// unsigned long int</span></span>
+<span class="line_wrapper">    LONG_LONG <span style="color:#808030; ">=</span> <span style="color:#008c00; ">9</span><span style="color:#808030; ">,</span>        <span style="color:#696969; ">// long long int</span></span>
+<span class="line_wrapper">    ULONG_LONG <span style="color:#808030; ">=</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span>      <span style="color:#696969; ">// unsigned long long int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">CHAR</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">11</span><span style="color:#808030; ">,</span>            <span style="color:#696969; ">// char</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">UCHAR</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">12</span><span style="color:#808030; ">,</span>           <span style="color:#696969; ">// unsigned char</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">BOOL</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">13</span><span style="color:#808030; ">,</span>            <span style="color:#696969; ">// bool</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    STRING <span style="color:#808030; ">=</span> <span style="color:#008c00; ">14</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// std::string</span></span>
+<span class="line_wrapper">    VSTR32 <span style="color:#808030; ">=</span> <span style="color:#008c00; ">15</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// FixedSizeString&lt;31&gt; == String32</span></span>
+<span class="line_wrapper">    VSTR64 <span style="color:#808030; ">=</span> <span style="color:#008c00; ">16</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// FixedSizeString&lt;63&gt; == String64</span></span>
+<span class="line_wrapper">    VSTR128 <span style="color:#808030; ">=</span> <span style="color:#008c00; ">17</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// FixedSizeString&lt;127&gt; == String128</span></span>
+<span class="line_wrapper">    VSTR512 <span style="color:#808030; ">=</span> <span style="color:#008c00; ">18</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// FixedSizeString&lt;511&gt; == String512</span></span>
+<span class="line_wrapper">    VSTR1K <span style="color:#808030; ">=</span> <span style="color:#008c00; ">19</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// FixedSizeString&lt;1023&gt; == String1K</span></span>
+<span class="line_wrapper">    VSTR2K <span style="color:#808030; ">=</span> <span style="color:#008c00; ">20</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// FixedSizeString&lt;2047&gt; == String2K</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    DATETIME <span style="color:#808030; ">=</span> <span style="color:#008c00; ">21</span><span style="color:#808030; ">,</span>        <span style="color:#696969; ">// DateTime</span></span>
+<span class="line_wrapper">    DATETIME_AME <span style="color:#808030; ">=</span> <span style="color:#008c00; ">22</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// DateTime</span></span>
+<span class="line_wrapper">    DATETIME_EUR <span style="color:#808030; ">=</span> <span style="color:#008c00; ">23</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// DateTime</span></span>
+<span class="line_wrapper">    DATETIME_ISO <span style="color:#808030; ">=</span> <span style="color:#008c00; ">24</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// DateTime</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    STR_DBL_PAIR <span style="color:#808030; ">=</span> <span style="color:#008c00; ">25</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// std::pair</span></span>
+<span class="line_wrapper">    STR_STR_PAIR <span style="color:#808030; ">=</span> <span style="color:#008c00; ">26</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// std::pair</span></span>
+<span class="line_wrapper">    DBL_DBL_PAIR <span style="color:#808030; ">=</span> <span style="color:#008c00; ">27</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// std::pair</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    DBL_VEC <span style="color:#808030; ">=</span> <span style="color:#008c00; ">28</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// std::vector</span></span>
+<span class="line_wrapper">    STR_VEC <span style="color:#808030; ">=</span> <span style="color:#008c00; ">29</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// std::vector</span></span>
+<span class="line_wrapper">    DBL_SET <span style="color:#808030; ">=</span> <span style="color:#008c00; ">30</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// std::set</span></span>
+<span class="line_wrapper">    STR_SET <span style="color:#808030; ">=</span> <span style="color:#008c00; ">31</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// std::set</span></span>
+<span class="line_wrapper">    STR_DBL_MAP <span style="color:#808030; ">=</span> <span style="color:#008c00; ">32</span><span style="color:#808030; ">,</span>     <span style="color:#696969; ">// std::map</span></span>
+<span class="line_wrapper">    STR_DBL_UNOMAP <span style="color:#808030; ">=</span> <span style="color:#008c00; ">33</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// std::unordered_map</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         These are enumerations for data types that can be read/written from/to files.<BR>

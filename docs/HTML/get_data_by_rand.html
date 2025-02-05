@@ -43,14 +43,14 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class random_policy : unsigned char  {
-    num_rows_with_seed = 1,  // Number of rows with specifying a seed
-    num_rows_no_seed = 2,    // Number of rows with no seed specification
-    frac_rows_with_seed = 3, // Fraction of rows with specifying a seed
-    frac_rows_no_seed = 4,   // Fraction of rows with no seed specification
-};</B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> random_policy <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    num_rows_with_seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Number of rows with specifying a seed</span></span>
+<span class="line_wrapper">    num_rows_no_seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// Number of rows with no seed specification</span></span>
+<span class="line_wrapper">    frac_rows_with_seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Fraction of rows with specifying a seed</span></span>
+<span class="line_wrapper">    frac_rows_no_seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span>   <span style="color:#696969; ">// Fraction of rows with no seed specification</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Specification for calling get_[data|view]_by_rand()<BR>

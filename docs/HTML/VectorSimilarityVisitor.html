@@ -63,21 +63,21 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class vector_sim_type : unsigned char  {
-    euclidean_dist = 1,     // Euclidean distance
-    manhattan_dist = 2,     // Manhattan distance
-    dot_product = 3,
-    simple_similarity = 4,  // Two binary vectors must be of equal length
-    cosine_similarity = 5,
-    jaccard_similarity = 6, // Relatively expensive to calculate
-
-    // Hamming distance is number of unequal members
-    // Two vectors must be of equal length
-    //
-    hamming_dist = 7,
-};</B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> vector_sim_type <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    euclidean_dist <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>     <span style="color:#696969; ">// Euclidean distance</span></span>
+<span class="line_wrapper">    manhattan_dist <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>     <span style="color:#696969; ">// Manhattan distance</span></span>
+<span class="line_wrapper">    dot_product <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    simple_similarity <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Two binary vectors must be of equal length</span></span>
+<span class="line_wrapper">    cosine_similarity <span style="color:#808030; ">=</span> <span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    jaccard_similarity <span style="color:#808030; ">=</span> <span style="color:#008c00; ">6</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Relatively expensive to calculate</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Hamming distance is number of unequal members</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Two vectors must be of equal length</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    hamming_dist <span style="color:#808030; ">=</span> <span style="color:#008c00; ">7</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Different types of vector similarity measurementloss function <BR>

@@ -43,17 +43,16 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class  linreg_moving_mean_type : unsigned char  {
-    linreg = 1,
-    forecast = 2, // Also called Correlation Trend Indicator
-    slope = 3,
-    intercept = 4,
-    theta = 5,    // arc-tan of slope
-    degree = 6,   // degree of slope
-};
-</B></PRE< </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  linreg_moving_mean_type <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    linreg <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    forecast <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Also called Correlation Trend Indicator</span></span>
+<span class="line_wrapper">    slope <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    intercept <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    theta <span style="color:#808030; ">=</span> <span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// arc-tan of slope</span></span>
+<span class="line_wrapper">    degree <span style="color:#808030; ">=</span> <span style="color:#008c00; ">6</span><span style="color:#808030; ">,</span>   <span style="color:#696969; ">// degree of slope</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This specifies what values to return when calculating Linear Regression moving average

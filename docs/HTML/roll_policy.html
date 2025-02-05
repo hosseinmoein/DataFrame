@@ -42,20 +42,19 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class  roll_policy : unsigned char  {
-    // Roll one block of data at a time
-    // The length of result will be "input length / rolling period"
-    //
-    blocks = 1,
-
-    // Roll one data point at a time
-    // The length of result will be "input length - rolling period"
-    //
-    continuous = 2,
-};
-        </font></B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  roll_policy <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Roll one block of data at a time</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// The length of result will be "input length / rolling period"</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    blocks <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Roll one data point at a time</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// The length of result will be "input length - rolling period"</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    continuous <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Enumerated type to specify how to roll different statistics over input series

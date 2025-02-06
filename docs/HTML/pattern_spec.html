@@ -69,14 +69,13 @@ body {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-bool
-pattern_match(const char *col_name,
-              pattern_spec pattern,
-              double epsilon = 0.0) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">bool</span></span>
+<span class="line_wrapper">pattern_match<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              pattern_spec pattern<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#800000; font-weight:bold; ">double</span> epsilon <span style="color:#808030; ">=</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This method returns true if the given column follows the given pattern, otherwise it returns false. Epsilon is used for approximation.<BR>

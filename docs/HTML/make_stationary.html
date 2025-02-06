@@ -31,7 +31,6 @@ body {
   background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
 }
 
-a { color: #FF5555; }
 </style>
 </head>
 
@@ -44,41 +43,39 @@ a { color: #FF5555; }
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class  stationary_method : unsigned char  {
-
-    differencing = 1,  // X<sub>t</sub> = Y<sub>t</sub> - Y<sub>t-1</sub>
-    log_trans = 2,     // X<sub>t</sub> = ln(Y<sub>t</sub>)
-    sqrt_trans = 3,    // X<sub>t</sub> = sqrt(Y<sub>t</sub>)
-    boxcox_trans = 4,  // See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/BoxCoxVisitor.html">BoxCoxVisitor</a>
-    decomposition = 5, // See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DecomposeVisitor.html">DecomposeVisitor</a>
-    smoothing = 6,     // See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ExponentiallyWeightedMeanVisitor.html">ExponentiallyWeightedMeanVisitor</a>
-};
-
-struct  StationaryParams  {
-
-    // Only considered in case of <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/BoxCoxVisitor.html"><I>BoxCox</I></a> transformation method
-    //
-    box_cox_type            bc_type { box_cox_type::original };
-    double                  lambda { 0 };
-    bool                    is_all_positive { true };
-
-    // Only considered in case of <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DecomposeVisitor.html"><I>Decomposition</I></a> method
-    //
-    std::size_t             season_period { 0 };
-    double                  dcom_fraction { 0 };
-    double                  dcom_delta { 0 };
-    decompose_type          dcom_type { decompose_type::additive };
-
-    // Only considered in case of <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ExponentiallyWeightedMeanVisitor.html"><I>Smoothing</I></a> method
-    //
-    exponential_decay_spec  decay_spec { exponential_decay_spec::span };
-    double                  decay_alpha { 0 };
-    bool                    finite_adjust { true };
-};
-        </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  stationary_method <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    differencing <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Xt = Yt - Yt-1</span></span>
+<span class="line_wrapper">    log_trans <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>     <span style="color:#696969; ">// Xt = ln(Yt)</span></span>
+<span class="line_wrapper">    sqrt_trans <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// Xt = sqrt(Yt)</span></span>
+<span class="line_wrapper">    boxcox_trans <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/BoxCoxVisitor.html">BoxCoxVisitor</a></span></span>
+<span class="line_wrapper">    decomposition <span style="color:#808030; ">=</span> <span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DecomposeVisitor.html">DecomposeVisitor</a></span></span>
+<span class="line_wrapper">    smoothing <span style="color:#808030; ">=</span> <span style="color:#008c00; ">6</span><span style="color:#808030; ">,</span>     <span style="color:#696969; ">// See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ExponentiallyWeightedMeanVisitor.html">ExponentiallyWeightedMeanVisitor</a></span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  StationaryParams  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Only considered in case of <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/BoxCoxVisitor.html"><I>BoxCox</I></a> transformation method</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    box_cox_type            bc_type <span style="color:#800080; ">{</span> box_cox_type<span style="color:#800080; ">::</span>original <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>                  lambda <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span>                    is_all_positive <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">true</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Only considered in case of <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DecomposeVisitor.html"><I>Decomposition</I></a> method</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>             season_period <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>                  dcom_fraction <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>                  dcom_delta <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    decompose_type          dcom_type <span style="color:#800080; ">{</span> decompose_type<span style="color:#800080; ">::</span>additive <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Only considered in case of <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ExponentiallyWeightedMeanVisitor.html"><I>Smoothing</I></a> method</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    exponential_decay_spec  decay_spec <span style="color:#800080; ">{</span> exponential_decay_spec<span style="color:#800080; ">::</span>span <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>                  decay_alpha <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span>                    finite_adjust <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">true</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Enumerated type for different methods of making a time-series stationary<BR>
@@ -97,14 +94,13 @@ struct  StationaryParams  {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T&gt;
-void
-make_stationary(const char *col_name,
-                stationary_method method,
-                const StationaryParams params = { });
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">make_stationary<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                stationary_method method<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                <span style="color:#800000; font-weight:bold; ">const</span> StationaryParams params <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This function assumes the named column is a time-series. It attempts to make the time-series stationary by the specified method. In cases of <I>differencing</I> and <I>smoothing</I> methods, the first datapoint in the column remains unchanged.<BR><BR>

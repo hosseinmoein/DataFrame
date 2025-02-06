@@ -67,12 +67,11 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T, typename ... Ts&gt;
-void
-sort(const char *name, sort_spec dir);
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper"><span style="color:#603000; ">sort</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span> sort_spec dir<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         Sort the DataFrame by the named column. If name equals DF_INDEX_COL_NAME, it sorts by index. Otherwise it sorts by the named column. Sort first calls make_consistent() that may add nan values to data columns.<BR>
@@ -87,13 +86,12 @@ sort(const char *name, sort_spec dir);
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T1, typename T2, typename ... Ts&gt;
-void
-sort(const char *name1, sort_spec dir1,
-     const char *name2, sort_spec dir2);
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper"><span style="color:#603000; ">sort</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This sort function sorts DataFrame based on two columns, also specified by the two directions. name[n] could be DF_INDEX_COL_NAME in which case the index column is taken as the sorting column.<BR>
@@ -112,15 +110,14 @@ sort(const char *name1, sort_spec dir1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T1, typename T2, typename T3,
-         typename ... Ts&gt;
-void
-sort(const char *name1, sort_spec dir1,
-     const char *name2, sort_spec dir2,
-     const char *name3, sort_spec dir3);
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper"><span style="color:#603000; ">sort</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This sort function is similar to above, but it uses 3 columns
@@ -140,16 +137,15 @@ sort(const char *name1, sort_spec dir1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T1, typename T2, typename T3,
-         typename T4, typename ... Ts&gt;
-void
-sort(const char *name1, sort_spec dir1,
-     const char *name2, sort_spec dir2,
-     const char *name3, sort_spec dir3,
-     const char *name4, sort_spec dir4);
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> T4<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper"><span style="color:#603000; ">sort</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span> sort_spec dir4<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This sort function is similar to above, but it uses 4 columns
@@ -172,17 +168,16 @@ sort(const char *name1, sort_spec dir1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T1, typename T2, typename T3,
-         typename T4, typename T5, typename ... Ts&gt;
-void
-sort(const char *name1, sort_spec dir1,
-     const char *name2, sort_spec dir2,
-     const char *name3, sort_spec dir3,
-     const char *name4, sort_spec dir4,
-     const char *name5, sort_spec dir5);
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> T4<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T5<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper"><span style="color:#603000; ">sort</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span> sort_spec dir4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name5<span style="color:#808030; ">,</span> sort_spec dir5<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This sort function is similar to above, but it uses 5 columns
@@ -208,12 +203,11 @@ sort(const char *name1, sort_spec dir1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T, typename ... Ts&gt;
-std::future&lt;void&gt;
-sort_async(const char *name, sort_spec dir);
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">void</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">sort_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span> sort_spec dir<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This is the asynchronous version that returns a std::future. Please see above for details
@@ -223,13 +217,12 @@ sort_async(const char *name, sort_spec dir);
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T1, typename T2, typename ... Ts&gt;
-std::future&lt;void&gt;
-sort_async(const char *name1, sort_spec dir1,
-           const char *name2, sort_spec dir2);
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">void</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">sort_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This is the asynchronous version that returns a std::future. Please see above for details
@@ -239,15 +232,15 @@ sort_async(const char *name1, sort_spec dir1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T1, typename T2, typename T3,
-         typename ... Ts&gt;
-std::future&lt;void&gt;
-sort_async(const char *name1, sort_spec dir1,
-           const char *name2, sort_spec dir2,
-           const char *name3, sort_spec dir3);
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">void</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">sort_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This is the asynchronous version that returns a std::future. Please see above for details
@@ -257,16 +250,16 @@ sort_async(const char *name1, sort_spec dir1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T1, typename T2, typename T3,
-         typename T4, typename ... Ts&gt;
-std::future&lt;void&gt;
-sort_async(const char *name1, sort_spec dir1,
-           const char *name2, sort_spec dir2,
-           const char *name3, sort_spec dir3,
-           const char *name4, sort_spec dir4);
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> T4<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">void</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">sort_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span> sort_spec dir4<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This is the asynchronous version that returns a std::future. Please see above for details
@@ -276,17 +269,16 @@ sort_async(const char *name1, sort_spec dir1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T1, typename T2, typename T3,
-         typename T4, typename T5, typename ... Ts&gt;
-std::future&lt;void&gt;
-sort_async(const char *name1, sort_spec dir1,
-           const char *name2, sort_spec dir2,
-           const char *name3, sort_spec dir3,
-           const char *name4, sort_spec dir4,
-           const char *name5, sort_spec dir5);
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> T4<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T5<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">void</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">sort_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span> sort_spec dir4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name5<span style="color:#808030; ">,</span> sort_spec dir5<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This is the asynchronous version that returns a std::future. Please see above for details

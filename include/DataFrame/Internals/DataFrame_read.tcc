@@ -879,7 +879,9 @@ void DataFrame<I, H>::
 read_csv2_(S &stream,
            bool columns_only,
            size_type starting_row,
-           size_type num_rows)  {
+           size_type num_rows,
+           bool skip_first_line,
+           const std::vector<ReadSchema> &schema)  {
 
     constexpr unsigned long data_size = 64 * 1024;
 
@@ -915,12 +917,256 @@ read_csv2_(S &stream,
                 continue;
         }
 
-        if (line[0] == '\0' || line[0] == '#') [[unlikely]]  continue;
+        if (line[0] == '\0' || line[0] == '#' ||
+            line[0] == '\n' || line[0] == '\r') [[unlikely]]  continue;
 
         sstream.clear();
         sstream.str(line);
 
-        // First get the header which is column names, sizes and types
+        // Is the caller specifying the schema
+        //
+        if ((! header_read) && (! schema.empty())) [[unlikely]]  {
+            col_count = schema.size();
+            for (const auto &entry : schema)  {
+                switch(entry.col_type)  {
+                    case file_dtypes::FLOAT: {
+                        spec_vec.emplace_back(StlVecType<float>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::DOUBLE: {
+                        spec_vec.emplace_back(StlVecType<double>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::LONG_DOUBLE: {
+                        spec_vec.emplace_back(StlVecType<long double>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::SHORT: {
+                        spec_vec.emplace_back(StlVecType<short>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::USHORT: {
+                        spec_vec.emplace_back(StlVecType<unsigned short>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::INT: {
+                        spec_vec.emplace_back(StlVecType<int>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::UINT: {
+                        spec_vec.emplace_back(StlVecType<unsigned int>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::LONG: {
+                        spec_vec.emplace_back(StlVecType<long>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::ULONG: {
+                        spec_vec.emplace_back(StlVecType<unsigned long>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::LONG_LONG: {
+                        spec_vec.emplace_back(StlVecType<long long>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::ULONG_LONG: {
+                        spec_vec.emplace_back(
+                            StlVecType<unsigned long long>{ },
+                            entry.col_type,
+                            entry.col_name.c_str(),
+                            entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::CHAR: {
+                        spec_vec.emplace_back(StlVecType<char>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::UCHAR: {
+                        spec_vec.emplace_back(StlVecType<unsigned char>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::BOOL: {
+                        spec_vec.emplace_back(StlVecType<bool>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::STRING: {
+                        spec_vec.emplace_back(StlVecType<std::string>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::VSTR32: {
+                        spec_vec.emplace_back(StlVecType<String32>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::VSTR64: {
+                        spec_vec.emplace_back(StlVecType<String64>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::VSTR128: {
+                        spec_vec.emplace_back(StlVecType<String128>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::VSTR512: {
+                        spec_vec.emplace_back(StlVecType<String512>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::VSTR1K: {
+                        spec_vec.emplace_back(StlVecType<String1K>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::VSTR2K: {
+                        spec_vec.emplace_back(StlVecType<String2K>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::DATETIME:
+                    case file_dtypes::DATETIME_AME:
+                    case file_dtypes::DATETIME_EUR:
+                    case file_dtypes::DATETIME_ISO: {
+                        spec_vec.emplace_back(StlVecType<DateTime>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::STR_DBL_PAIR: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::pair<std::string, double>>{ },
+                            entry.col_type,
+                            entry.col_name.c_str(),
+                            entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::STR_STR_PAIR: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::pair<std::string, std::string>>{ },
+                            entry.col_type,
+                            entry.col_name.c_str(),
+                            entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::DBL_DBL_PAIR: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::pair<double, double>>{ },
+                            entry.col_type,
+                            entry.col_name.c_str(),
+                            entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::DBL_VEC: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::vector<double>>{ },
+                            entry.col_type,
+                            entry.col_name.c_str(),
+                            entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::STR_VEC: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::vector<std::string>>{ },
+                            entry.col_type,
+                            entry.col_name.c_str(),
+                            entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::DBL_SET: {
+                        spec_vec.emplace_back(StlVecType<std::set<double>>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::STR_SET: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::set<std::string>>{ },
+                            entry.col_type,
+                            entry.col_name.c_str(),
+                            entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::STR_DBL_MAP: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::map<std::string, double>>{ },
+                            entry.col_type,
+                            entry.col_name.c_str(),
+                            entry.num_rows);
+                        break;
+                    }
+                    case file_dtypes::STR_DBL_UNOMAP: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::unordered_map<std::string,
+                                                          double>>{ },
+                            entry.col_type,
+                            entry.col_name.c_str(),
+                            entry.num_rows);
+                        break;
+                    }
+                }
+            }
+
+            header_read = true;
+            if (skip_first_line)  continue;
+        }
+
+        // The schema/header comes from the file
         //
         if (! header_read) [[unlikely]]  {
             std::string type_str;
@@ -957,177 +1203,238 @@ read_csv2_(S &stream,
                     throw DataFrameError("DataFrame::read_csv2_(): ERROR: "
                                          "Unknown column type");
 
-                if (type_str == "float")
-                    spec_vec.emplace_back(StlVecType<float>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "double") [[likely]]
-                    spec_vec.emplace_back(StlVecType<double>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "longdouble")
-                    spec_vec.emplace_back(StlVecType<long double>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "short")
-                    spec_vec.emplace_back(StlVecType<short>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "ushort")
-                    spec_vec.emplace_back(StlVecType<unsigned short>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "int")
-                    spec_vec.emplace_back(StlVecType<int>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "uint")
-                    spec_vec.emplace_back(StlVecType<unsigned int>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "char")
-                    spec_vec.emplace_back(StlVecType<char>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "uchar")
-                    spec_vec.emplace_back(StlVecType<unsigned char>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "long")
-                    spec_vec.emplace_back(StlVecType<long>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "longlong")
-                    spec_vec.emplace_back(StlVecType<long long>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "ulong")
-                    spec_vec.emplace_back(StlVecType<unsigned long>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "ulonglong")
-                    spec_vec.emplace_back(StlVecType<unsigned long long>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "string")
-                    spec_vec.emplace_back(StlVecType<std::string>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "vstr32")
-                    spec_vec.emplace_back(StlVecType<String32>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "vstr64")
-                    spec_vec.emplace_back(StlVecType<String64>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "vstr128")
-                    spec_vec.emplace_back(StlVecType<String128>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "vstr512")
-                    spec_vec.emplace_back(StlVecType<String512>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "vstr1K")
-                    spec_vec.emplace_back(StlVecType<String1K>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "vstr2K")
-                    spec_vec.emplace_back(StlVecType<String2K>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-
-                // This includes DateTime, DateTimeAME, DateTimeEUR,
-                // DateTimeISO
-                //
-                else if (! ::strncmp(type_str.c_str(), "DateTime", 8))
-                    spec_vec.emplace_back(StlVecType<DateTime>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "bool")
-                    spec_vec.emplace_back(StlVecType<bool>(),
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-
-                // Pairs
-                //
-                else if (type_str == "str_dbl_pair")
-                    spec_vec.emplace_back(
-                        StlVecType<std::pair<std::string, double>>{ },
-                        citer->second,
-                        col_name.c_str(),
-                        nrows);
-                else if (type_str == "str_str_pair")
-                    spec_vec.emplace_back(
-                        StlVecType<std::pair<std::string, std::string>>{ },
-                        citer->second,
-                        col_name.c_str(),
-                        nrows);
-                else if (type_str == "dbl_dbl_pair")
-                    spec_vec.emplace_back(
-                        StlVecType<std::pair<double, double>>{ },
-                        citer->second,
-                        col_name.c_str(),
-                        nrows);
-
-                // Containers
-                //
-                else if (type_str == "dbl_vec")
-                    spec_vec.emplace_back(StlVecType<std::vector<double>>{ },
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "str_vec")
-                    spec_vec.emplace_back(
-                        StlVecType<std::vector<std::string>>{ },
-                        citer->second,
-                        col_name.c_str(),
-                        nrows);
-                else if (type_str == "dbl_set")
-                    spec_vec.emplace_back(StlVecType<std::set<double>>{ },
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "str_set")
-                    spec_vec.emplace_back(StlVecType<std::set<std::string>>{ },
-                                          citer->second,
-                                          col_name.c_str(),
-                                          nrows);
-                else if (type_str == "str_dbl_map")
-                    spec_vec.emplace_back(
-                        StlVecType<std::map<std::string, double>>{ },
-                        citer->second,
-                        col_name.c_str(),
-                        nrows);
-                else if (type_str == "str_dbl_unomap")
-                    spec_vec.emplace_back(
-                        StlVecType<std::unordered_map<std::string, double>>{ },
-                        citer->second,
-                        col_name.c_str(),
-                        nrows);
+                switch(citer->second)  {
+                    case file_dtypes::FLOAT: {
+                        spec_vec.emplace_back(StlVecType<float>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::DOUBLE: {
+                        spec_vec.emplace_back(StlVecType<double>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::LONG_DOUBLE: {
+                        spec_vec.emplace_back(StlVecType<long double>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::SHORT: {
+                        spec_vec.emplace_back(StlVecType<short>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::USHORT: {
+                        spec_vec.emplace_back(StlVecType<unsigned short>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::INT: {
+                        spec_vec.emplace_back(StlVecType<int>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::UINT: {
+                        spec_vec.emplace_back(StlVecType<unsigned int>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::LONG: {
+                        spec_vec.emplace_back(StlVecType<long>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::ULONG: {
+                        spec_vec.emplace_back(StlVecType<unsigned long>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::LONG_LONG: {
+                        spec_vec.emplace_back(StlVecType<long long>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::ULONG_LONG: {
+                        spec_vec.emplace_back(
+                            StlVecType<unsigned long long>{ },
+                            citer->second,
+                            col_name.c_str(),
+                            nrows);
+                        break;
+                    }
+                    case file_dtypes::CHAR: {
+                        spec_vec.emplace_back(StlVecType<char>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::UCHAR: {
+                        spec_vec.emplace_back(StlVecType<unsigned char>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::BOOL: {
+                        spec_vec.emplace_back(StlVecType<bool>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::STRING: {
+                        spec_vec.emplace_back(StlVecType<std::string>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::VSTR32: {
+                        spec_vec.emplace_back(StlVecType<String32>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::VSTR64: {
+                        spec_vec.emplace_back(StlVecType<String64>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::VSTR128: {
+                        spec_vec.emplace_back(StlVecType<String128>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::VSTR512: {
+                        spec_vec.emplace_back(StlVecType<String512>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::VSTR1K: {
+                        spec_vec.emplace_back(StlVecType<String1K>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::VSTR2K: {
+                        spec_vec.emplace_back(StlVecType<String2K>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::DATETIME:
+                    case file_dtypes::DATETIME_AME:
+                    case file_dtypes::DATETIME_EUR:
+                    case file_dtypes::DATETIME_ISO: {
+                        spec_vec.emplace_back(StlVecType<DateTime>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::STR_DBL_PAIR: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::pair<std::string, double>>{ },
+                            citer->second,
+                            col_name.c_str(),
+                            nrows);
+                        break;
+                    }
+                    case file_dtypes::STR_STR_PAIR: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::pair<std::string, std::string>>{ },
+                            citer->second,
+                            col_name.c_str(),
+                            nrows);
+                        break;
+                    }
+                    case file_dtypes::DBL_DBL_PAIR: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::pair<double, double>>{ },
+                            citer->second,
+                            col_name.c_str(),
+                            nrows);
+                        break;
+                    }
+                    case file_dtypes::DBL_VEC: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::vector<double>>{ },
+                            citer->second,
+                            col_name.c_str(),
+                            nrows);
+                        break;
+                    }
+                    case file_dtypes::STR_VEC: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::vector<std::string>>{ },
+                            citer->second,
+                            col_name.c_str(),
+                            nrows);
+                        break;
+                    }
+                    case file_dtypes::DBL_SET: {
+                        spec_vec.emplace_back(StlVecType<std::set<double>>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows);
+                        break;
+                    }
+                    case file_dtypes::STR_SET: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::set<std::string>>{ },
+                            citer->second,
+                            col_name.c_str(),
+                            nrows);
+                        break;
+                    }
+                    case file_dtypes::STR_DBL_MAP: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::map<std::string, double>>{ },
+                            citer->second,
+                            col_name.c_str(),
+                            nrows);
+                        break;
+                    }
+                    case file_dtypes::STR_DBL_UNOMAP: {
+                        spec_vec.emplace_back(
+                            StlVecType<std::unordered_map<std::string,
+                                                          double>>{ },
+                            citer->second,
+                            col_name.c_str(),
+                            nrows);
+                        break;
+                    }
+                }
 
                 col_count += 1;
             }
@@ -2180,7 +2487,9 @@ read(const char *file_name, io_format iof, const ReadParams params)  {
         read_csv2_(io_opti.file,
                    params.columns_only,
                    params.starting_row,
-                   params.num_rows);
+                   params.num_rows,
+                   params.skip_first_line,
+                   params.schema);
     }
     else  {
         std::ifstream       stream;
@@ -2214,7 +2523,9 @@ read(S &in_s, io_format iof, const ReadParams params)  {
         read_csv2_(in_s,
                    params.columns_only,
                    params.starting_row,
-                   params.num_rows);
+                   params.num_rows,
+                   params.skip_first_line,
+                   params.schema);
     }
     else if (iof == io_format::json)  {
         if (params.starting_row != 0 ||

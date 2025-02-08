@@ -2627,6 +2627,61 @@ static void test_SeasonalPeriodVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_read_data_file_with_schema()  {
+
+    std::cout << "\nTesting SeasonalPeriodVisitor{ } ..." << std::endl;
+
+    MyDataFrame             df1;
+    MyDataFrame             df2;
+    ReadParams::SchemaVec   schema {
+        { .col_type = file_dtypes::ULONG, .num_rows = 12 },  // Index column
+        { "Open", file_dtypes::DOUBLE, 12 },
+        { "High", file_dtypes::DOUBLE, 12 },
+        { "Low", file_dtypes::DOUBLE, 12 },
+        { "Close", file_dtypes::DOUBLE, 12 },
+        { "Adj_Close", file_dtypes::DOUBLE, 12 },
+        { "Volume", file_dtypes::LONG, 12 },
+    };
+
+    try  {
+        df1.read("SchemaWithHeader.csv", io_format::csv2, { .schema = schema });
+        df2.read("SchemaWithoutHeader.csv", io_format::csv2,
+                 { .skip_first_line = false, .schema = schema });
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    assert(df1.get_index().size() == 12);
+    assert(df1.get_index()[0] == 1);
+    assert(df1.get_index()[6] == 7);
+    assert(df1.get_index()[11] == 12);
+    assert(df1.get_column<double>("Close").size() == 12);
+    assert((std::fabs(df1.get_column<double>("Close")[0] - 185.53) < 0.01));
+    assert((std::fabs(df1.get_column<double>("Close")[6] - 187.26) < 0.01));
+    assert((std::fabs(df1.get_column<double>("Close")[11] - 190.09) < 0.01));
+    assert(df1.get_column<long>("Volume").size() == 12);
+    assert(df1.get_column<long>("Volume")[0] == 4546500);
+    assert(df1.get_column<long>("Volume")[6] == 4022400);
+    assert(df1.get_column<long>("Volume")[11] == 7644600);
+
+    assert(df2.get_index().size() == 12);
+    assert(df2.get_index()[0] == 1);
+    assert(df2.get_index()[6] == 7);
+    assert(df2.get_index()[11] == 12);
+    assert(df2.get_column<double>("Close").size() == 12);
+    assert((std::fabs(df2.get_column<double>("Close")[0] - 185.53) < 0.01));
+    assert((std::fabs(df2.get_column<double>("Close")[6] - 187.26) < 0.01));
+    assert((std::fabs(df2.get_column<double>("Close")[11] - 190.09) < 0.01));
+    assert(df2.get_column<long>("Volume").size() == 12);
+    assert(df2.get_column<long>("Volume")[0] == 4546500);
+    assert(df2.get_column<long>("Volume")[6] == 4022400);
+    assert(df2.get_column<long>("Volume")[11] == 7644600);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2675,6 +2730,7 @@ int main(int, char *[]) {
     test_canon_corr();
     test_MC_station_dist();
     test_SeasonalPeriodVisitor();
+    test_read_data_file_with_schema();
 
     return (0);
 }

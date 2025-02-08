@@ -72,7 +72,9 @@ template<typename S>
 void read_csv2_(S &stream,
                 bool columns_only,
                 size_type starting_row,
-                size_type num_rows);
+                size_type num_rows,
+                bool skip_first_line,
+                const std::vector<ReadSchema> &schema);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>

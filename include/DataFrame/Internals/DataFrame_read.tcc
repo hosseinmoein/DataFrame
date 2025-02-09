@@ -44,7 +44,8 @@ namespace hmdf
 {
 
 template<typename I, typename H>
-void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
+template<typename S>
+void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
 
     char            c { '\0' };
     const SpinGuard guard(lock_);
@@ -395,7 +396,8 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
+template<typename S>
+void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
     std::string     col_name;
     std::string     value;
@@ -2140,8 +2142,9 @@ read_csv2_(S &stream,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename S>
 void DataFrame<I, H>::
-read_binary_(std::istream &stream,
+read_binary_(S &stream,
              bool columns_only,
              size_type starting_row,
              size_type num_rows)  {

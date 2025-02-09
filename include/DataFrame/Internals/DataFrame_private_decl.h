@@ -61,12 +61,17 @@ using JoinSortingPair = std::pair<const T *, size_type>;
 
 // ----------------------------------------------------------------------------
 
-void read_json_(std::istream &file, bool columns_only);
-void read_binary_(std::istream &file,
+template<typename S>
+void read_json_(S &file, bool columns_only);
+
+template<typename S>
+void read_binary_(S &file,
                   bool columns_only,
                   size_type starting_row,
                   size_type num_rows);
-void read_csv_(std::istream &file, bool columns_only);
+
+template<typename S>
+void read_csv_(S &file, bool columns_only);
 
 template<typename S>
 void read_csv2_(S &stream,

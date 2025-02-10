@@ -43,14 +43,14 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class exponential_decay_spec : unsigned char  {
-    center_of_gravity = 1, // Decay = 1 / (1 + &alpha;)     For &alpha; >= 0
-    span = 2,              // Decay = 2 / (1 + &alpha;)     For &alpha; >= 1
-    halflife = 3,          // Decay = 1 - e<sup>log(0.5)/&alpha; </sup>  For &alpha; > 0
-    fixed = 4,             // Decay = &alpha;               For 0 < &alpha; <= 1
-};</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> exponential_decay_spec <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    center_of_gravity <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Decay = 1 / (1 + α)     For α &gt;= 0</span></span>
+<span class="line_wrapper">    span <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>              <span style="color:#696969; ">// Decay = 2 / (1 + α)     For α &gt;= 1</span></span>
+<span class="line_wrapper">    halflife <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// Decay = 1 - e<sup>log(0.5)/α</sup>   For α &gt; 0</span></span>
+<span class="line_wrapper">    fixed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span>             <span style="color:#696969; ">// Decay = α               For 0 &lt; α &lt;= 1</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This spec determines how an exponentially moving stat decays. Based on this spec, the value (&alpha;) parameter is converted to decay.
@@ -67,19 +67,19 @@ enum class exponential_decay_spec : unsigned char  {
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-struct ExponentiallyWeightedMeanVisitor;
-
-// -------------------------------------
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-using ewm_v = ExponentiallyWeightedMeanVisitor&lt;T, I, A&gt;;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> ExponentiallyWeightedMeanVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> ewm_v <span style="color:#808030; ">=</span> ExponentiallyWeightedMeanVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
@@ -114,19 +114,19 @@ using ewm_v = ExponentiallyWeightedMeanVisitor&lt;T, I, A&gt;;
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-struct ExponentiallyWeightedVarVisitor;
-
-// -------------------------------------
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-using ewm_var_v = ExponentiallyWeightedVarVisitor&lt;T, I, A&gt;;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> ExponentiallyWeightedVarVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> ewm_var_v <span style="color:#808030; ">=</span> ExponentiallyWeightedVarVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
@@ -149,19 +149,19 @@ using ewm_var_v = ExponentiallyWeightedVarVisitor&lt;T, I, A&gt;;
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-struct ExponentiallyWeightedCovVisitor;
-
-// -------------------------------------
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-using ewm_cov_v = ExponentiallyWeightedCovVisitor&lt;T, I, A&gt;;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> ExponentiallyWeightedCovVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> ewm_cov_v <span style="color:#808030; ">=</span> ExponentiallyWeightedCovVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
@@ -184,19 +184,19 @@ using ewm_cov_v = ExponentiallyWeightedCovVisitor&lt;T, I, A&gt;;
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-struct ExponentiallyWeightedCorrVisitor;
-
-// -------------------------------------
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-using ewm_corr_v = ExponentiallyWeightedCorrVisitor&lt;T, I, A&gt;;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> ExponentiallyWeightedCorrVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> ewm_corr_v <span style="color:#808030; ">=</span> ExponentiallyWeightedCorrVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>

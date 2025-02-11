@@ -174,203 +174,267 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                 load_index(std::forward<IndexVecType &&>(vec));
         }
         else  {
-            if (col_type == "float")  {
-                StlVecType<float>                                   &vec =
-                    create_column<float>(col_name.c_str(), false);
-                const ColVectorPushBack_<float, StlVecType<float>>  slug;
+            const auto  citer = _typename_id_.find(col_type);
 
-                vec.reserve(col_size);
-                slug(vec, stream, &::strtof, io_format::json);
-            }
-            else if (col_type == "double") [[likely]]  {
-                StlVecType<double>                                    &vec =
-                    create_column<double>(col_name.c_str(), false);
-                const ColVectorPushBack_<double, StlVecType<double>>  slug;
+            if (citer == _typename_id_.end()) [[unlikely]]  {
+                String1K    err;
 
-                vec.reserve(col_size);
-                slug(vec, stream, &::strtod, io_format::json);
+                err.printf("read_json_(): ERROR: Cannot find Type '%s'",
+                           col_type.c_str());
+                throw DataFrameError(err.c_str());
             }
-            else if (col_type == "longdouble")  {
-                StlVecType<long double>                     &vec =
-                    create_column<long double>(col_name.c_str(), false);
-                const ColVectorPushBack_
-                    <long double, StlVecType<long double>>  slug;
 
-                vec.reserve(col_size);
-                slug(vec, stream, &::strtold, io_format::json);
-            }
-            else if (col_type == "int")  {
-                StlVecType<int> &vec =
-                    create_column<int>(col_name.c_str(), false);
+            switch(citer->second)  {
+                case file_dtypes::FLOAT: {
+                    StlVecType<float>                                   &vec =
+                        create_column<float>(col_name.c_str(), false);
+                    const ColVectorPushBack_<float, StlVecType<float>>  slug;
 
-                vec.reserve(col_size);
-                col_vector_push_back_func_(vec,
-                                           stream,
-                                           &::strtol,
-                                           io_format::json);
-            }
-            else if (col_type == "uint")  {
-                StlVecType<unsigned int>   &vec =
-                    create_column<unsigned int>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    slug(vec, stream, &::strtof, io_format::json);
+                    break;
+                }
+                case file_dtypes::DOUBLE: {
+                    StlVecType<double>                  &vec =
+                        create_column<double>(col_name.c_str(), false);
+                    const ColVectorPushBack_
+                        <double, StlVecType<double>>    slug;
 
-                vec.reserve(col_size);
-                col_vector_push_back_func_(vec,
-                                           stream,
-                                           &::strtoul,
-                                           io_format::json);
-            }
-            else if (col_type == "char")  {
-                StlVecType<char>    &vec =
-                    create_column<char>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    slug(vec, stream, &::strtod, io_format::json);
+                    break;
+                }
+                case file_dtypes::LONG_DOUBLE: {
+                    StlVecType<long double>                     &vec =
+                        create_column<long double>(col_name.c_str(), false);
+                    const ColVectorPushBack_
+                        <long double, StlVecType<long double>>  slug;
 
-                vec.reserve(col_size);
-                col_vector_push_back_func_<char, StlVecType<char>>(
-                    vec,
-                    stream,
-                    [](const char *tok, char **, int) -> char  {
-                        if (tok[0] == '\0')
-                            return ('\0');
-                        else if (tok[1] == '\0')
-                            return (static_cast<char>(int(tok[0])));
-                        else
-                            return (static_cast<char>(atoi(tok)));
-                    },
-                    io_format::json);
-            }
-            else if (col_type == "uchar")  {
-                StlVecType<unsigned char>   &vec =
-                    create_column<unsigned char>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    slug(vec, stream, &::strtold, io_format::json);
+                    break;
+                }
+                case file_dtypes::SHORT: {
+                    StlVecType<short int>   &vec =
+                        create_column<short int>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                col_vector_push_back_func_<unsigned char,
-                                           StlVecType<unsigned char>>(
-                    vec,
-                    stream,
-                    [](const char *tok, char **, int) -> unsigned char  {
-                        if (tok[0] == '\0')
-                            return ('\0');
-                        else if (tok[1] == '\0')
-                            return (static_cast<unsigned char>(int(tok[0])));
-                        else
-                            return (static_cast<unsigned char>(atoi(tok)));
-                    },
-                    io_format::json);
-            }
-            else if (col_type == "long")  {
-                StlVecType<long>    &vec =
-                    create_column<long>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_(vec,
+                                               stream,
+                                               &::strtol,
+                                               io_format::json);
+                    break;
+                }
+                case file_dtypes::USHORT: {
+                    StlVecType<unsigned short int>   &vec =
+                        create_column<unsigned short int>(col_name.c_str(),
+                                                          false);
 
-                vec.reserve(col_size);
-                col_vector_push_back_func_(vec,
-                                           stream,
-                                           &::strtol,
-                                           io_format::json);
-            }
-            else if (col_type == "longlong")  {
-                StlVecType<long long>   &vec =
-                    create_column<long long>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_(vec,
+                                               stream,
+                                               &::strtol,
+                                               io_format::json);
+                    break;
+                }
+                case file_dtypes::INT: {
+                    StlVecType<int> &vec =
+                        create_column<int>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                col_vector_push_back_func_(vec,
-                                           stream,
-                                           &::strtoll,
-                                           io_format::json);
-            }
-            else if (col_type == "ulong")  {
-                StlVecType<unsigned long>   &vec =
-                    create_column<unsigned long>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_(vec,
+                                               stream,
+                                               &::strtol,
+                                               io_format::json);
+                break;
+                }
+                case file_dtypes::UINT: {
+                    StlVecType<unsigned int>   &vec =
+                        create_column<unsigned int>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                col_vector_push_back_func_(vec,
-                                           stream,
-                                           &::strtoul,
-                                           io_format::json);
-            }
-            else if (col_type == "ulonglong")  {
-                StlVecType<unsigned long long>  &vec =
-                    create_column<unsigned long long>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_(vec,
+                                               stream,
+                                               &::strtoul,
+                                               io_format::json);
+                    break;
+                }
+                case file_dtypes::LONG: {
+                    StlVecType<long>    &vec =
+                        create_column<long>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                col_vector_push_back_func_(vec,
-                                           stream,
-                                           &::strtoull,
-                                           io_format::json);
-            }
-            else if (col_type == "string")  {
-                StlVecType<std::string> &vec =
-                    create_column<std::string>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_(vec,
+                                               stream,
+                                               &::strtol,
+                                               io_format::json);
+                    break;
+                }
+                case file_dtypes::ULONG: {
+                    StlVecType<unsigned long>   &vec =
+                        create_column<unsigned long>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                json_str_col_vector_push_back_(vec, stream);
-            }
-            else if (col_type == "vstr32")  {
-                StlVecType<String32>    &vec =
-                    create_column<String32>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_(vec,
+                                               stream,
+                                               &::strtoul,
+                                               io_format::json);
+                    break;
+                }
+                case file_dtypes::LONG_LONG: {
+                    StlVecType<long long>   &vec =
+                        create_column<long long>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                json_str_col_vector_push_back_(vec, stream);
-            }
-            else if (col_type == "vstr64")  {
-                StlVecType<String64>    &vec =
-                    create_column<String64>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_(vec,
+                                               stream,
+                                               &::strtoll,
+                                               io_format::json);
+                    break;
+                }
+                case file_dtypes::ULONG_LONG: {
+                    StlVecType<unsigned long long>  &vec =
+                        create_column<unsigned long long>(col_name.c_str(),
+                                                          false);
 
-                vec.reserve(col_size);
-                json_str_col_vector_push_back_(vec, stream);
-            }
-            else if (col_type == "vstr128")  {
-                StlVecType<String128>   &vec =
-                    create_column<String128>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_(vec,
+                                               stream,
+                                               &::strtoull,
+                                               io_format::json);
+                    break;
+                }
+                case file_dtypes::CHAR: {
+                    StlVecType<char>    &vec =
+                        create_column<char>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                json_str_col_vector_push_back_(vec, stream);
-            }
-            else if (col_type == "vstr512")  {
-                StlVecType<String512>   &vec =
-                    create_column<String512>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_<char, StlVecType<char>>(
+                        vec,
+                        stream,
+                        [](const char *tok, char **, int) -> char  {
+                            if (tok[0] == '\0')
+                                return ('\0');
+                            else if (tok[1] == '\0')
+                                return (static_cast<char>(int(tok[0])));
+                            else
+                                return (static_cast<char>(atoi(tok)));
+                        },
+                        io_format::json);
+                    break;
+                }
+                case file_dtypes::UCHAR: {
+                    StlVecType<unsigned char>   &vec =
+                        create_column<unsigned char>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                json_str_col_vector_push_back_(vec, stream);
-            }
-            else if (col_type == "vstr1K")  {
-                StlVecType<String1K>    &vec =
-                    create_column<String1K>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_<unsigned char,
+                                               StlVecType<unsigned char>>(
+                        vec,
+                        stream,
+                        [](const char *tok, char **, int) -> unsigned char  {
+                            if (tok[0] == '\0')
+                                return ('\0');
+                            else if (tok[1] == '\0')
+                                return (static_cast<unsigned char>(
+                                            int(tok[0])));
+                            else
+                                return (static_cast<unsigned char>(atoi(tok)));
+                        },
+                        io_format::json);
+                    break;
+                }
+                case file_dtypes::BOOL: {
+                    StlVecType<bool>    &vec =
+                        create_column<bool>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                json_str_col_vector_push_back_(vec, stream);
-            }
-            else if (col_type == "vstr2K")  {
-                StlVecType<String2K>    &vec =
-                    create_column<String2K>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    col_vector_push_back_func_(vec,
+                                               stream,
+                                               &::strtol,
+                                               io_format::json);
+                    break;
+                }
+                case file_dtypes::STRING: {
+                    StlVecType<std::string> &vec =
+                        create_column<std::string>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                json_str_col_vector_push_back_(vec, stream);
-            }
-            else if (col_type == "DateTime")  {
-                StlVecType<DateTime>    &vec =
-                    create_column<DateTime>(col_name.c_str(), false);
-                auto                    converter =
-                    [](const char *, char **) -> DateTime {
-                        return DateTime();
-                    };
-                const ColVectorPushBack_<DateTime, StlVecType<DateTime>>  slug;
+                    vec.reserve(col_size);
+                    json_str_col_vector_push_back_(vec, stream);
+                    break;
+                }
+                case file_dtypes::VSTR32: {
+                    StlVecType<String32>    &vec =
+                        create_column<String32>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                slug(vec, stream, converter, io_format::json);
-            }
-            else if (col_type == "bool")  {
-                StlVecType<bool>    &vec =
-                    create_column<bool>(col_name.c_str(), false);
+                    vec.reserve(col_size);
+                    json_str_col_vector_push_back_(vec, stream);
+                    break;
+                }
+                case file_dtypes::VSTR64: {
+                    StlVecType<String64>    &vec =
+                        create_column<String64>(col_name.c_str(), false);
 
-                vec.reserve(col_size);
-                col_vector_push_back_func_(vec,
-                                           stream,
-                                           &::strtol,
-                                           io_format::json);
+                    vec.reserve(col_size);
+                    json_str_col_vector_push_back_(vec, stream);
+                    break;
+                }
+                case file_dtypes::VSTR128: {
+                    StlVecType<String128>   &vec =
+                        create_column<String128>(col_name.c_str(), false);
+
+                    vec.reserve(col_size);
+                    json_str_col_vector_push_back_(vec, stream);
+                    break;
+                }
+                case file_dtypes::VSTR512: {
+                    StlVecType<String512>   &vec =
+                        create_column<String512>(col_name.c_str(), false);
+
+                    vec.reserve(col_size);
+                    json_str_col_vector_push_back_(vec, stream);
+                    break;
+                }
+                case file_dtypes::VSTR1K: {
+                    StlVecType<String1K>    &vec =
+                        create_column<String1K>(col_name.c_str(), false);
+
+                    vec.reserve(col_size);
+                    json_str_col_vector_push_back_(vec, stream);
+                    break;
+                }
+                case file_dtypes::VSTR2K: {
+                    StlVecType<String2K>    &vec =
+                        create_column<String2K>(col_name.c_str(), false);
+
+                    vec.reserve(col_size);
+                    json_str_col_vector_push_back_(vec, stream);
+                    break;
+                }
+                case file_dtypes::DATETIME: {
+                    StlVecType<DateTime>    &vec =
+                        create_column<DateTime>(col_name.c_str(), false);
+                    auto                    converter =
+                        [](const char *, char **) -> DateTime {
+                            return DateTime();
+                        };
+                    const ColVectorPushBack_<DateTime,
+                                             StlVecType<DateTime>>  slug;
+
+                    vec.reserve(col_size);
+                    slug(vec, stream, converter, io_format::json);
+                    break;
+                }
+                default:  {
+                    String1K    err;
+
+                    err.printf("read_json_(): ERROR: Type '%s' is not "
+                               "supported", col_type.c_str());
+                    throw DataFrameError(err.c_str());
+                }
             }
-            else
-                throw DataFrameError (
-                    "DataFrame::read_json_(): ERROR: Unknown column type");
         }
+
         while (stream.get(c))
             if (c != ' ' && c != '\r' && c != '\t' && c != '\n')  break;
         if (c != '}') [[unlikely]]
@@ -2213,264 +2277,300 @@ read_binary_(S &stream,
         stream.read(col_name, sizeof(col_name));
         stream.read(col_type, sizeof(col_type));
 
-        if (! std::strcmp(col_type, "string"))  {
-            ColumnVecType<std::string>  vec;
+        const auto  citer = _typename_id_.find(col_type);
 
-            _read_binary_string_<std::string>(stream, vec, needs_flipping,
-                                              starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if (! std::strcmp(col_type, "vstr32"))  {
-            ColumnVecType<String32> vec;
-
-            _read_binary_string_<String32>(stream, vec, needs_flipping,
-                                           starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if (! std::strcmp(col_type, "vstr64"))  {
-            ColumnVecType<String64> vec;
-
-            _read_binary_string_<String64>(stream, vec, needs_flipping,
-                                           starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if (! std::strcmp(col_type, "vstr128"))  {
-            ColumnVecType<String128>    vec;
-
-            _read_binary_string_<String128>(stream, vec, needs_flipping,
-                                            starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if (! std::strcmp(col_type, "vstr512"))  {
-            ColumnVecType<String512>    vec;
-
-            _read_binary_string_<String512>(stream, vec, needs_flipping,
-                                            starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if (! std::strcmp(col_type, "vstr1K"))  {
-            ColumnVecType<String1K> vec;
-
-            _read_binary_string_<String1K>(stream, vec, needs_flipping,
-                                           starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if (! std::strcmp(col_type, "vstr2K"))  {
-            ColumnVecType<String2K> vec;
-
-            _read_binary_string_<String2K>(stream, vec, needs_flipping,
-                                           starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if (! std::strcmp(col_type, "DateTime"))  {
-            ColumnVecType<DateTime> vec;
-
-            _read_binary_datetime_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if (! std::strcmp(col_type, "float"))  {
-            ColumnVecType<float>    vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "double"))  {
-            ColumnVecType<double>   vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "short"))  {
-            ColumnVecType<short int>    vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "ushort"))  {
-            ColumnVecType<unsigned short int>   vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "int"))  {
-            ColumnVecType<int>  vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "uint"))  {
-            ColumnVecType<unsigned int> vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "long"))  {
-            ColumnVecType<long int> vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "ulong"))  {
-            ColumnVecType<unsigned long int>    vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "longlong"))  {
-            ColumnVecType<long long int>    vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "ulonglong"))  {
-            ColumnVecType<unsigned long long int>   vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "char"))  {
-            ColumnVecType<char> vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "uchar"))  {
-            ColumnVecType<unsigned char>    vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "bool"))  {
-            ColumnVecType<bool> vec;
-
-            _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-
-        // Pairs
-        //
-        else if ( ! std::strcmp(col_type, "str_dbl_pair"))  {
-            using val_t = std::pair<std::string, double>;
-
-            ColumnVecType<val_t>    vec;
-
-            _read_binary_str_dbl_pair_(stream, vec, needs_flipping,
-                                       starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "str_str_pair"))  {
-            using val_t = std::pair<std::string, std::string>;
-
-            ColumnVecType<val_t>    vec;
-
-            _read_binary_str_str_pair_(stream, vec, needs_flipping,
-                                       starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "dbl_dbl_pair"))  {
-            using val_t = std::pair<double, double>;
-
-            ColumnVecType<val_t>    vec;
-
-            _read_binary_dbl_dbl_pair_(stream, vec, needs_flipping,
-                                       starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-
-        // Containers
-        //
-        else if ( ! std::strcmp(col_type, "dbl_vec"))  {
-            ColumnVecType<std::vector<double>>  vec;
-
-            _read_binary_dbl_vec_(stream, vec, needs_flipping,
-                                  starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "str_vec"))  {
-            ColumnVecType<std::vector<std::string>> vec;
-
-            _read_binary_str_vec_(stream, vec, needs_flipping,
-                                  starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "dbl_set"))  {
-            ColumnVecType<std::set<double>> vec;
-
-            _read_binary_dbl_set_(stream, vec, needs_flipping,
-                                  starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "str_set"))  {
-            ColumnVecType<std::set<std::string>>    vec;
-
-            _read_binary_str_set_(stream, vec, needs_flipping,
-                                  starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "str_dbl_map"))  {
-            ColumnVecType<std::map<std::string, double>>    vec;
-
-            _read_binary_str_dbl_map_(stream, vec, needs_flipping,
-                                      starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else if ( ! std::strcmp(col_type, "str_dbl_unomap"))  {
-            ColumnVecType<std::unordered_map<std::string, double>>  vec;
-
-            _read_binary_str_dbl_map_(stream, vec, needs_flipping,
-                                      starting_row, num_rows);
-            load_column(col_name, std::move(vec),
-                        nan_policy::dont_pad_with_nans);
-        }
-        else  {
+        if (citer == _typename_id_.end())  {
             String1K    err;
 
             err.printf("read_binary_(): ERROR: Type '%s' is not supported",
                        col_type);
             throw DataFrameError(err.c_str());
+        }
+
+        switch(citer->second)  {
+            case file_dtypes::FLOAT: {
+                ColumnVecType<float>    vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                               starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::DOUBLE: {
+                ColumnVecType<double>   vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::SHORT: {
+                ColumnVecType<short int>    vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::USHORT: {
+                ColumnVecType<unsigned short int>   vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::INT: {
+                ColumnVecType<int>  vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::UINT: {
+                ColumnVecType<unsigned int> vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::LONG: {
+                ColumnVecType<long int> vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::ULONG: {
+                ColumnVecType<unsigned long int>    vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::LONG_LONG: {
+                ColumnVecType<long long int>    vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::ULONG_LONG: {
+                ColumnVecType<unsigned long long int>   vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::CHAR: {
+                ColumnVecType<char> vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::UCHAR: {
+                ColumnVecType<unsigned char>    vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::BOOL: {
+                ColumnVecType<bool> vec;
+
+                _read_binary_data_(stream, vec, needs_flipping,
+                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::STRING: {
+                ColumnVecType<std::string>  vec;
+
+                _read_binary_string_<std::string>(stream, vec, needs_flipping,
+                                                  starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::VSTR32: {
+                ColumnVecType<String32> vec;
+
+                _read_binary_string_<String32>(stream, vec, needs_flipping,
+                                               starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::VSTR64: {
+                ColumnVecType<String64> vec;
+
+                _read_binary_string_<String64>(stream, vec, needs_flipping,
+                                               starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::VSTR128: {
+                ColumnVecType<String128>    vec;
+
+                _read_binary_string_<String128>(stream, vec, needs_flipping,
+                                               starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::VSTR512: {
+                ColumnVecType<String512>    vec;
+
+                _read_binary_string_<String512>(stream, vec, needs_flipping,
+                                               starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::VSTR1K: {
+                ColumnVecType<String1K> vec;
+
+                _read_binary_string_<String1K>(stream, vec, needs_flipping,
+                                               starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::VSTR2K: {
+                ColumnVecType<String2K> vec;
+
+                _read_binary_string_<String2K>(stream, vec, needs_flipping,
+                                               starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::DATETIME: {
+                ColumnVecType<DateTime> vec;
+
+                _read_binary_datetime_(stream, vec, needs_flipping,
+                                       starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::STR_DBL_PAIR: {
+                using val_t = std::pair<std::string, double>;
+
+                ColumnVecType<val_t>    vec;
+
+                _read_binary_str_dbl_pair_(stream, vec, needs_flipping,
+                                           starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::STR_STR_PAIR: {
+                using val_t = std::pair<std::string, std::string>;
+
+                ColumnVecType<val_t>    vec;
+
+                _read_binary_str_str_pair_(stream, vec, needs_flipping,
+                                           starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::DBL_DBL_PAIR: {
+                using val_t = std::pair<double, double>;
+
+                ColumnVecType<val_t>    vec;
+
+                _read_binary_dbl_dbl_pair_(stream, vec, needs_flipping,
+                                           starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::DBL_VEC: {
+                ColumnVecType<std::vector<double>>  vec;
+
+                _read_binary_dbl_vec_(stream, vec, needs_flipping,
+                                      starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::STR_VEC: {
+                ColumnVecType<std::vector<std::string>> vec;
+
+                _read_binary_str_vec_(stream, vec, needs_flipping,
+                                      starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::DBL_SET: {
+                ColumnVecType<std::set<double>> vec;
+
+                _read_binary_dbl_set_(stream, vec, needs_flipping,
+                                      starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::STR_SET: {
+                ColumnVecType<std::set<std::string>>    vec;
+
+                _read_binary_str_set_(stream, vec, needs_flipping,
+                                      starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::STR_DBL_MAP: {
+                ColumnVecType<std::map<std::string, double>>    vec;
+
+                _read_binary_str_dbl_map_(stream, vec, needs_flipping,
+                                          starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::STR_DBL_UNOMAP: {
+                ColumnVecType<std::unordered_map<std::string, double>>  vec;
+
+                _read_binary_str_dbl_map_(stream, vec, needs_flipping,
+                                          starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            default:  {
+                String1K    err;
+
+                err.printf("read_binary_(): ERROR: Type '%s' is not supported",
+                           col_type);
+                throw DataFrameError(err.c_str());
+            }
         }
     }
 }

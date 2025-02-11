@@ -114,7 +114,7 @@ body {
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
-        It inputs the contents of a text/binary file/stream into itself (i.e. DataFrame). Currently 4 formats (i.e. csv, csv2, json, binray) are supported. See io_format documentation page<BR>
+        It inputs the contents of a text/binary file/stream into itself (i.e. DataFrame). Currently 4 formats (i.e. csv, csv2, json, binray) are supported. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/io_format.html">io_format</a> documentation page<BR>
   <B>NOTE</B>: If the DataFrame that is reading the file already has existing data columns, the file data will be <I>added</I> to the existing DataFrame columns.
         If the file has a data column with the same name and type as a column in the DataFrame, the file data will <I>replace</I> the existing data column in the DataFrame.
         If the file has a data column with the same name but different type as a column in the DataFrame, the behavior is undefined.
@@ -195,7 +195,7 @@ DateTime   -- DateTime data in format of
               &lt;Epoch seconds&gt;.&lt;nanoseconds&gt;
               (1516179600.874123908)
         </PRE>
-        In case of io_format::csv2, io_format::csv, and io_format::binary the following additional types are also supported:
+        In case of <I>csv2, csv, and binary</I> the following additional types are also supported:
         <PRE>
 str_dbl_pair   -- std::pair&lt;std::string, double&gt;.
                   The pair is printed as "&lt;s:d&gt;,&lt;s:d&gt;, ...
@@ -233,14 +233,12 @@ str_dbl_unomap -- std::unoredered_map&lt;std::string, double&gt;.
                   and v's are keys and values.
         </PRE>
 
-        In case of io_format::csv2 the following additional types are also supported:
+        In case of <I>csv2</I> the following additional types are also supported:
         <PRE>
 DateTimeAME -- American style (MM/DD/YYYY HH:MM:SS.mmm)
 DateTimeEUR -- European style (YYYY/MM/DD HH:MM:SS.mmm)
 DateTimeISO -- ISO style (YYYY-MM-DD HH:MM:SS.mmm)
         </PRE>
-
-        <B>NOTE:</B>: This version of read() can be substantially faster, especially for larger files, than if you open the file yourself and use the read() version below.
       </td>
       <td width="32%">
 <B>file_name</B>: Complete path to the file<BR>
@@ -259,7 +257,8 @@ DateTimeISO -- ISO style (YYYY-MM-DD HH:MM:SS.mmm)
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
-        Same as read() above, but takes a reference to a stream
+        Same as read() above, but takes a reference to a stream<BR>
+        <B>NOTE</B>: It will be more efficient if you let DataFrame to open the file by passing the filename.<BR>
       </td>
       <td width="32%">
       </td>

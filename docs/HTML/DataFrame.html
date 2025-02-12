@@ -153,7 +153,7 @@ table {
 table.hovertable {
     font-family: Georgia,serif;
     font-weight:bold;
-    font-size:13px;
+    font-size:14px;
     color:#333333;
     border-width: 3px;
     border-color: #999999;
@@ -1980,38 +1980,47 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 
   <H2 ID="9"><font color="blue">Build Instructions <font size="+4">&#x1F6E0;</font></font></H2>
     When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, consider you pass a column with 3 values in it and ask DataFrame to find peaks that are higher than 5 data points around them. Without a sanity check you get a crash or garbage.<BR>
-  <P>
-
-    <font size="+1"><B>Using plain make and make-files</B></font> (Not Recommended):<BR>
-    Go to the <I>src</I> subdirectory, and execute build_all.sh. This will build the library and test executables for <I>Linux/Unix flavors only</I><BR><BR>
-
-    <font size="+1"><B>Using CMake:</B></font><BR>
-<font size="+1">
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">mkdir</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cd</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
-<span class="line_wrapper"></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cmake</span> -<span style="color:#797997; ">DCMAKE_BUILD_TYPE</span><span style="color:#808030; ">=</span>Release -<span style="color:#797997; ">DHMDF_BENCHMARKS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_EXAMPLES</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_TESTING</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> <span style="color:#800000; font-weight:bold; ">.</span><span style="color:#800000; font-weight:bold; ">.</span></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cmake</span> -<span style="color:#797997; ">DCMAKE_BUILD_TYPE</span><span style="color:#808030; ">=</span>Debug -<span style="color:#797997; ">DHMDF_SANITY_EXCEPTIONS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_BENCHMARKS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_EXAMPLES</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_TESTING</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> <span style="color:#800000; font-weight:bold; ">.</span><span style="color:#800000; font-weight:bold; ">.</span></span>
-<span class="line_wrapper"></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">make</span></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">make</span> install</span>
-<span class="line_wrapper">    </span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cd</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">make</span> uninstall</span></pre>
-</font>
-
-    <font size="+1"><B>Using Package Managers:</B></font><BR>
-      DataFrame is available on <a href="https://conan.io/center/recipes/dataframe"<I>Conan</I></a> platform. See the <a href="https://docs.conan.io/2/"<I>Conan docs</I></a> for more information.<BR>
-      DataFrame is also available on <a href="https://vcpkg.link/ports/dataframe"<I>VCPKG</I></a> platform. See <a href="https://learn.microsoft.com/en-us/vcpkg/"<I>VCPKG docs</i></a> for more information<BR>
 
     <BR><font size="+1"><B>Cloning Repo:</B></font><BR>
 <font size="+1">
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">git clone https</span><span style="color:#800000; font-weight:bold; ">:</span><span style="color:#808030; ">/</span><span style="color:#808030; ">/</span><span style="color:#0000e6; ">github</span><span style="color:#808030; ">.</span><span style="color:#0000e6; ">com</span><span style="color:#808030; ">/</span><span style="color:#0000e6; ">hosseinmoein</span><span style="color:#808030; ">/</span><span style="color:#0000e6; ">DataFrame</span><span style="color:#808030; ">.</span><span style="color:#0000e6; ">git</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#005fd2; ">git</span> <span style="color:#0000e6; ">clone</span> <span style="color:#0000e6; ">https://github.com/hosseinmoein/DataFrame.git</span></span>
 <span class="line_wrapper"></span></pre>
 </font>
-  </P>
 
+    <font size="+1"><B>Using CMake:</B></font><BR>
+<font size="+1">
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#005fd2; ">mkdir</span> <span style="color:#0000e6; ">[Debug</span><span style="color:#bb7977; font-weight:bold; ">|</span><span style="color:#005fd2; ">Release]</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">cd</span> <span style="color:#0000e6; ">[Debug</span><span style="color:#bb7977; font-weight:bold; ">|</span><span style="color:#005fd2; ">Release]</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; "># Making the optimized release version</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">#</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">cmake</span> <span style="color:#074726; ">-DCMAKE_BUILD_TYPE=Release</span> <span style="color:#074726; ">-DHMDF_BENCHMARKS=1</span> <span style="color:#074726; ">-DHMDF_EXAMPLES=1</span> <span style="color:#074726; ">-DHMDF_TESTING=1</span> <span style="color:#0000e6; ">..</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; "># Making the debug version with debug info</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">#</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">cmake</span> <span style="color:#074726; ">-DCMAKE_BUILD_TYPE=Debug</span> <span style="color:#074726; ">-DHMDF_SANITY_EXCEPTIONS=1</span> <span style="color:#074726; ">-DHMDF_BENCHMARKS=1</span> <span style="color:#074726; ">-DHMDF_EXAMPLES=1</span> <span style="color:#074726; ">-DHMDF_TESTING=1</span> <span style="color:#0000e6; ">..</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">make</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">make</span> <span style="color:#0000e6; ">install</span></span>
+<span class="line_wrapper">    </span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">cd</span> <span style="color:#0000e6; ">[Debug</span><span style="color:#bb7977; font-weight:bold; ">|</span><span style="color:#005fd2; ">Release]</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">make</span> <span style="color:#0000e6; ">uninstall</span></span>
+<span class="line_wrapper"></span></pre>
+</font>
 
+    <font size="+1"><B>Using Package Managers:</B></font><BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DataFrame is available on <a href="https://conan.io/center/recipes/dataframe"<I>Conan</I></a> platform. See the <a href="https://docs.conan.io/2/"<I>Conan docs</I></a> for more information.<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DataFrame is also available on <a href="https://vcpkg.link/ports/dataframe"<I>VCPKG</I></a> platform. See <a href="https://learn.microsoft.com/en-us/vcpkg/"<I>VCPKG docs</i></a> for more information<BR>
+
+    <BR>
+    <font size="+1"><B>Using plain make and make-files</B></font> (<I>Not Recommended</I>):<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Go to the <I>src</I> subdirectory, and execute build_all.sh. This will build the library and test executables for <I>Linux/Unix flavors only</I><BR>
+
+    <BR>
+    <font size="+1"><B>Running the test executables:</B></font><BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Almost all test programs in <I>test/</I>, <I>example/</I>, and <I> benchmarks/</I> directories need to open mocked datafiles that exist in <I>data/</I> directory. They also assume the data files are in the <I>current directory</I>. If you use CMake to build the project, it copies the datafiles into the execution directory. If you are running the tests by yourself, <I>data/</I> directory must be your current directory.<BR><BR>
+
+  <BR>
   <BR><a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">&#8592; Back to Github</a><BR>
 
 </body></html>

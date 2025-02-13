@@ -1965,15 +1965,20 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 
   <H2 ID="8"><font color="blue">Code Structure <font size="+4">&#128450;</font></font></H2>
   <P>
-    The DataFrame library is <I>almost</I> a header-only library. Currently the only library source file is <I>DateTime.cc.</I><BR>
-    <BR>
-    Starting from the root directory:<BR>
-    <BR>
-    <font size="+1"><I>include/DataFrame</I></font> subdirectory contains almost all of the code. It includes <I>.h</I> and <I>.tcc</I> files. The latter are C++ template code files (they are mostly located in the <I>Internals</I> subdirectory). The main header file is <I>DataFrame.h.</I> It contains the DataFrame class and its public interface. There are comprehensive comments for each public interface call in that file. The rest of the files will show you how the sausage is made. <I>Include</I> directory also contains subdirectories that contain mostly internal DataFrame implementation. One exception is the <I>Utils</I> subdirectory<BR>
-    <BR>
-    <font size="+1"><I>src</I></font> directory contains Linux-only make files and <I>Utils</I> subdirectory.<BR>
-    <BR>
-    <font size="+1"><I>test</I></font> directory contains all the test source files. Mocked data files are in the <I>data</I> subdirectory. The main test source files are <I>dataframe_tester.cc</I>, <I>dataframe_tester_2.cc</I>, and <I>dataframe_tester_3.cc</I>. It contains test cases for all functionalities of DataFrame. <I>benchmarks</I> subdirectory contains a bunch of benchmarks. All documnetations are under <I>docs</I> subdirectory.
+    Starting from the repo’s root directory:<BR><BR>
+
+    <B>benchmarks/</B>&emsp;contains a few programs that time and benchmark various operations and compare them with other packages doing the same thing.<BR>
+    <B>data/</B>&emsp;&emsp;&emsp;&emsp;&emsp;contains all the mocked data files that are used by test programs.<BR>
+    <B>docs/</B>&emsp;&emsp;&emsp;&emsp;&emsp;contains all the documentations including the HTML files.<BR>
+    <B>examples/</B>&emsp;&emsp;&nbsp;&nbsp;contains the example <I>hello world</I> program.<BR>
+    <B>include/</B>&emsp;&emsp;&emsp;&nbsp;&nbsp;contains 99% of implementations. It includes <I>DataFrame</I> main header file and implementation of all analytical visitors. It also includes the following subdirectories:<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Internals/</B>&emsp;&nbsp;&nbsp;&nbsp;&nbsp;contains implementation of all APIs.<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Utils/</B>&emsp;&emsp;&emsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contains various peripheral utilities used by <I>DataFrame</I>.<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Threads/</B>&emsp;contains implementation of all thread related logic.<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Vectors/</B>&emsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contains implementation of heterogenous vectors.<BR>
+    <B>src/</B>&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;&nbsp;contains Linux based makefiles and following subdirectory:<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Utils/</B>&emsp;contains the sole source files in <I>DataFrame</I> that is archived into a library.<BR>
+    <B>test/</B>&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;contains all the test programs that I am happy to say tests 100% of the API.<BR>
   </P>
 
 <BR><HR COLOR="Gray" SIZE="5">
@@ -2018,7 +2023,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 
     <BR>
     <font size="+1"><B>Running the test executables:</B></font><BR>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Almost all test programs in <I>test/</I>, <I>example/</I>, and <I> benchmarks/</I> directories need to open mocked datafiles that exist in <I>data/</I> directory. They also assume the data files are in the <I>current directory</I>. If you use CMake to build the project, it copies the datafiles into the execution directory. If you are running the tests by yourself, <I>data/</I> directory must be your current directory.<BR><BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Almost all test programs in <I>test/</I>, <I>example/</I>, and <I> benchmarks/</I> directories need to open mocked datafiles that exist in <I>data/</I> directory. They also assume the datafiles are in the <I>current directory</I>. If you use CMake to build the project, it copies the datafiles into the execution directory. If you are running the tests by yourself, <I>data/</I> directory must be your current directory.<BR><BR>
 
   <BR>
   <BR><a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">&#8592; Back to Github</a><BR>

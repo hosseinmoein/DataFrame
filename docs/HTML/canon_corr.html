@@ -44,26 +44,24 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-struct  CanonCorrResult  {
-
-    // These values represent the strength of the linear relationship between
-    // each pair of canonical variates, ranging from -1 to 1, with higher
-    // absolute values signifying a stronger association.
-    //
-    std::vector&lt;T&gt;  coeffs { };     // Canonical correlation coefficients
-
-    // The Redundancy Index is a measure that indicates how much variance in
-    // one set of variables is explained by the linear combination of the other
-    // set of variables. This was proposed by Stewart and Love (1968).
-    //
-    T               x_red_idx { };  // Redundancy index for X
-    T               y_red_idx { };  // Redundancy index for Y
-};
-        </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  CanonCorrResult  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// These values represent the strength of the linear relationship between</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// each pair of canonical variates, ranging from -1 to 1, with higher</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// absolute values signifying a stronger association.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span>  coeffs <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>     <span style="color:#696969; ">// Canonical correlation coefficients</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// The Redundancy Index is a measure that indicates how much variance in</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// one set of variables is explained by the linear combination of the other</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// set of variables. This was proposed by Stewart and Love (1968).</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    T               x_red_idx <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// Redundancy index for X</span></span>
+<span class="line_wrapper">    T               y_red_idx <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// Redundancy index for Y</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Result of Canonical Correlation Analysis as returned by canon_corr() interface<BR>
@@ -80,13 +78,12 @@ struct  CanonCorrResult  {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T&gt;
-CanonCorrResult&lt;T&gt;
-canon_corr(std::vector&lt;const char *&gt; &amp;&amp;X_col_names,
-           std::vector&lt;const char *&gt; &amp;&amp;Y_col_names) const;
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">CanonCorrResult<span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">canon_corr<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span><span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>X_col_names<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span><span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>Y_col_names<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This performs Canonical Correlation Analysis (CCA) between two sets of columns <I>X</I> and <I>Y</I>. It returns the result in a struct defined above.<BR>

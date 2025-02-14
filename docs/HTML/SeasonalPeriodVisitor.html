@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 body {
   background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
 }
-a { color: #FF5555; }
 
 </style>
 </head>
@@ -45,25 +44,24 @@ a { color: #FF5555; }
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-struct  SeasonalityParams  {
-
-    bool        detrend { true };          // Remove trend
-    bool        de_serial_corr { false };  // Remove serial correlation by differencing
-
-    // Parameters to generate trend using <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LowessVisitor.html">LOWESS</a>
-    // The two parameters below must be adjusted for different datasets carefully sometimes by trail and error.
-    // The defaults are suitable for financial market data
-    //
-    std::size_t num_loops { 3 };      // Number of loops
-    T           frac { 0.08 };        // The fraction of the data used when estimating each y-value.
-    T           delta { 0.0001 };     // Distance with which to use linear-interpolation instead of regression
-
-    std::size_t sampling_rate { 1 };  // Assume the time series is per 1 unit of time
-};
-        </B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  SeasonalityParams  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span>        detrend <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">true</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>          <span style="color:#696969; ">// Remove trend</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span>        de_serial_corr <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">false</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// Remove serial correlation by differencing</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Parameters to generate trend using <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LowessVisitor.html">LOWESS</a></span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// The two parameters below must be adjusted for different datasets carefully sometimes by trail and error.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// The defaults are suitable for financial market data</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> num_loops <span style="color:#800080; ">{</span> <span style="color:#008c00; ">3</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>      <span style="color:#696969; ">// Number of loops</span></span>
+<span class="line_wrapper">    T           frac <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.08</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>        <span style="color:#696969; ">// The fraction of the data used when estimating each y-value.</span></span>
+<span class="line_wrapper">    T           delta <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.0001</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>     <span style="color:#696969; ">// Distance with which to use linear-interpolation instead of regression</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> sampling_rate <span style="color:#800080; ">{</span> <span style="color:#008c00; ">1</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// Assume the time series is per 1 unit of time</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Parameter to the <I>SeasonalPeriodVisitor</I> constructor<BR>
@@ -80,17 +78,17 @@ struct  SeasonalityParams  {
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameMLVisitors.h&gt;
-
-template&lt;arithmetic T, typename I = unsigned long&gt;
-struct SeasonalPeriodVisitor;
-
-// -------------------------------------
-
-template&lt;typename T, typename I = unsigned long&gt;
-using ssp_v = SeasonalPeriodVisitor&lt;T, I&gt;;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameMLVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>arithmetic T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> SeasonalPeriodVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> ssp_v <span style="color:#808030; ">=</span> SeasonalPeriodVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>

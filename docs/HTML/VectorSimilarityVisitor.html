@@ -94,17 +94,17 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameMLVisitors.h&gt;
-
-template&lt;vector_sim_type TYP, typename T, typename I = unsigned long&gt;
-struct VectorSimilarityVisitor;
-
-// -------------------------------------
-
-template&lt;vector_sim_type TYP, typename T, typename I = unsigned long&gt;
-using vs_v = VectorSimilarityVisitor&lt;TYP, T, I&gt;;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameMLVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>vector_sim_type TYP<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> VectorSimilarityVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>vector_sim_type TYP<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> vs_v <span style="color:#808030; ">=</span> VectorSimilarityVisitor<span style="color:#800080; ">&lt;</span>TYP<span style="color:#808030; ">,</span> T<span style="color:#808030; ">,</span> I<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Similarity measures play a crucial role in machine learning. These measures quantify the similarity between objects, data points, or vectors in a mathematical manner. Understanding the concept of similarity in the vector space and employing appropriate measures is fundamental in solving a wide range of real-world problems. There are several similarity measures that can be used to calculate how close two vectors are in the embedding space (See above <I>vector_sim_type</I>).<BR>

@@ -162,8 +162,7 @@ int main(int, char *[])  {
 
     // Or, you could choose to get a view. See docs for views.
     //
-    auto    above_150_view =
-        ibm_df.get_view_by_sel<double, decltype(above_150_fn), double, long>("IBM_Close", above_150_fn);
+    auto    above_150_view = ibm_df.get_view_by_sel<double, decltype(above_150_fn), double, long>("IBM_Close", above_150_fn);
 
     // You can get another DataFrame by group-bying on one or multiple columns.
     // You must specify only the type(s) of column(s), you are group-bying.
@@ -321,45 +320,35 @@ int main(int, char *[])  {
     //
     ibm_dt_df.single_act_visit<double>("IBM_Return", decom);
 
-    // But what if you don’t know the seasonality of IBM returns which would be most of the time. No worries,
-    // Mr. Joseph Fourier comes to the rescue.
+    // But what if you don’t know the seasonality of IBM returns which would be most of the time.
+    // No worries, you can find that out with one function call. But before we do that let’s see what that one function
+    // call does:
+    // First of all, you must know your data well. If there are no seasons in the data, the following method may give you
+    // misleading clues.
+    // The one function call goes through these steps:
+    // 1. Off course, load the data into DataFrame.
+    // 2. Optionally detrend the data. You must know if your data has a trend or not. If you analyze seasonality with trend,
+    //    trend appears as a strong signal in the frequency domain and skews your analysis. You can do that by a few different
+    //    methods. You can fit a polynomial curve through the data (you must know the degree), or you can use a method like
+    //    LOWESS which is in essence a dynamically degreed polynomial curve. In any case you subtract the trend from your data.
+    // 3. Optionally take serial correlation out by differencing. Again, you must know this about your data. Analyzing
+    //    seasonality with serial correlation will show up in frequency domain as leakage and spreads the dominant frequencies.
+    // 4. Now you have prepared your data for final analysis. Now you need to convert your time-series to frequency-series.
+    //    In other words, you need to convert your data from time domain to frequency domain. Mr. Joseph Fourier has a solution
+    //    for that. You can run Fast Fourier Transform (FFT) which is an implementation of Discrete Fourier Transform (DFT).
+    //    FFT gives you a vector of complex values that represent the frequency spectrum. In other words, they are amplitude
+    //    and phase of different frequency components.
+    // 5. Take the absolute values of FFT result. These are the magnitude spectrum which shows the strength of different
+    //    frequencies within the data.
+    // 6. Do some simple searching and arithmetic to find the seasonality period.
     //
-    FastFourierTransVisitor<double, DateTime>   fft;
+    SeasonalPeriodVisitor<double, DateTime> ssp({ .de_serial_corr = true });
 
-    ibm_dt_df.single_act_visit<double>("IBM_Return", fft);
-
-    const auto  &magnitudes = fft.get_magnitude();
-    double      max_val = 0;
-
-    // The following analysis and conclusion are over simplified and naive. It is more involved which is behind the scope of
-    // Hello World. But this is the basic idea.
+    ibm_dt_df.single_act_visit<double>("IBM_Return", ssp);
+    std::cout << "IBM returns seasonality period is; " << ssp.get_period() <<  std::endl;
     //
-    for (std::size_t i = 1; i < magnitudes.size(); ++i)  {
-        const double    val = 1.0 / magnitudes[i];
-
-        if (val > max_val)
-            max_val = val;
-    }
-    std::cout << "The seasonality of IBM returns is " << std::size_t(max_val) << " days.\n"
-              << "So use this instead of 170 days in decomposition analysis"
-              << std::endl;
-
-    // Use lagged auto-correlation to verify your finding.
-    //
-    FixedAutoCorrVisitor<double, DateTime>  facorr { 170, roll_policy::blocks };
-    FixedAutoCorrVisitor<double, DateTime>  facorr2 { std::size_t(max_val), roll_policy::blocks };
-
-    ibm_dt_df.single_act_visit<double>("IBM_Return", facorr);
-    ibm_dt_df.single_act_visit<double>("IBM_Return", facorr2);
-
-    std::cout << "Auto correlations of 170 days lag: ";
-    for (std::size_t i = facorr.get_result().size() - 1; i > facorr.get_result().size() - 10; --i)
-        std::cout << facorr.get_result()[i] << ", ";
-    std::cout << std::endl;
-    std::cout << "Auto correlations of " << std::size_t(max_val) << " days lag: ";
-    for (std::size_t i = facorr2.get_result().size() - 1; i > facorr2.get_result().size() - 10; --i)
-        std::cout << facorr2.get_result()[i] << ", ";
-    std::cout << std::endl;
+    // After doing all that, I believe this value to be misleading since I don’t believe IBM returns have any seasonality.
+    // But you can do this with ice cream data, and you will get a meaningful value.
 
     return (0);
 }

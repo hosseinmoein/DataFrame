@@ -340,6 +340,7 @@ static void test_CoppockCurveVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -442,6 +443,7 @@ static void test_BiasVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -490,6 +492,7 @@ static void test_BalanceOfPowerVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -531,6 +534,7 @@ static void test_ChandeKrollStopVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -572,6 +576,7 @@ static void test_VortexVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -613,6 +618,7 @@ static void test_KeltnerChannelsVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -658,6 +664,7 @@ static void test_TrixVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -690,6 +697,7 @@ static void test_PrettyGoodOsciVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -728,7 +736,7 @@ static void test_col_name_to_idx()  {
         std::cout << df.col_name_to_idx("xxxxx") << std::endl;
         assert(false);
     }
-    catch (const ColNotFound &)  {
+    catch (const ColNotFound &ex)  {
         assert(true);
     }
 
@@ -776,6 +784,7 @@ static void test_ZeroLagMovingMeanVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -799,6 +808,7 @@ static void test_describe()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -827,6 +837,7 @@ static void test_T3MovingMeanVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -910,6 +921,7 @@ static void test_load_result_as_column()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -962,6 +974,7 @@ static void test_load_result_as_column2()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1314,7 +1327,8 @@ static void test_reading_in_chunks()  {
     try  {
         StrDataFrame    df1;
 
-        df1.read("SHORT_IBM.csv", io_format::csv2, false, 0, 10);
+        df1.read("SHORT_IBM.csv", io_format::csv2,
+                 { .starting_row = 0, .num_rows = 10 });
         assert(df1.get_index().size() == 10);
         assert(df1.get_column<double>("IBM_Close").size() == 10);
         assert(df1.get_index()[0] == "2014-01-02");
@@ -1324,7 +1338,8 @@ static void test_reading_in_chunks()  {
 
         StrDataFrame    df2;
 
-        df2.read("SHORT_IBM.csv", io_format::csv2, false, 800, 10);
+        df2.read("SHORT_IBM.csv", io_format::csv2,
+                 { .starting_row = 800, .num_rows = 10 });
         assert(df2.get_index().size() == 10);
         assert(df2.get_column<double>("IBM_Close").size() == 10);
         assert(df2.get_index()[0] == "2017-03-08");
@@ -1334,7 +1349,8 @@ static void test_reading_in_chunks()  {
 
         StrDataFrame    df3;
 
-        df3.read("SHORT_IBM.csv", io_format::csv2, false, 1716, 10);
+        df3.read("SHORT_IBM.csv", io_format::csv2,
+                 { .starting_row = 1716, .num_rows = 10 });
         assert(df3.get_index().size() == 5);
         assert(df3.get_column<double>("IBM_Close").size() == 5);
         assert(df3.get_index()[0] == "2020-10-26");
@@ -1344,6 +1360,7 @@ static void test_reading_in_chunks()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1386,6 +1403,7 @@ static void test_FixedAutoCorrVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1422,6 +1440,7 @@ static void test_RVIVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1454,6 +1473,7 @@ static void test_LinregMovingMeanVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1487,6 +1507,7 @@ static void test_InertiaVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1520,6 +1541,7 @@ static void test_SymmTriangleMovingMeanVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1562,6 +1584,7 @@ static void test_RelativeVigorIndexVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1603,6 +1626,7 @@ static void test_ElderRayIndexVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1634,6 +1658,7 @@ static void test_ChopIndexVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1665,6 +1690,7 @@ static void test_DetrendPriceOsciVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1815,6 +1841,7 @@ static void test_AccelerationBandsVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1846,6 +1873,7 @@ static void test_PriceDistanceVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1904,6 +1932,7 @@ static void test_EldersThermometerVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -2124,6 +2153,7 @@ static void test_EldersForceIndexVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -2157,6 +2187,7 @@ static void test_EaseOfMovementVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -2186,6 +2217,7 @@ static void test_read_csv_with_vector()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -2243,6 +2275,7 @@ static void test_read_csv_with_maps()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -2357,6 +2390,7 @@ static void test_PriceVolumeTrendVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -2427,6 +2461,7 @@ static void test_QuantQualEstimationVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -2474,6 +2509,7 @@ static void test_get_str_col_stats()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -2992,6 +3028,7 @@ static void test_get_data_by_sel_from_view()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3039,6 +3076,7 @@ static void test_get_data_by_idx_loc_from_view()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3085,6 +3123,7 @@ static void test_get_data_by_rand_from_view()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3185,6 +3224,7 @@ static void test_get_data_from_view()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3332,6 +3372,7 @@ static void test_get_view_by_sel_from_view()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3379,6 +3420,7 @@ static void test_get_view_by_idx_loc_from_view()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3425,6 +3467,7 @@ static void test_get_view_by_rand_from_view()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3525,6 +3568,7 @@ static void test_get_view_from_view()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3662,6 +3706,7 @@ static void test_client_csv_read_test()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3724,6 +3769,7 @@ static void test_PeaksAndValleysVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3762,6 +3808,7 @@ static void test_EhlersHighPassFilterVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3801,6 +3848,7 @@ static void test_EhlersBandPassFilterVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3820,7 +3868,10 @@ static void test_writing_binary()  {
     StrDataFrame    ibm_vw_json;
 
     try  {
-        ibm.read("SHORT_IBM.csv", io_format::csv2);
+        std::ifstream   stream;
+
+        stream.open("SHORT_IBM.csv");
+        ibm.read(stream, io_format::csv2);
 
         ibm.write<double, long>("./SHORT_IBM_dup.csv", io_format::csv);
         ibm.write<double, long>("./SHORT_IBM_dup.csv2", io_format::csv2);
@@ -3974,6 +4025,7 @@ static void test_writing_binary()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4042,6 +4094,7 @@ static void test_writing_binary_2()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4054,7 +4107,9 @@ static void test_reading_in_binary_chunks()  {
     try  {
         StrDataFrame    df1;
 
-        df1.read("SHORT_IBM.dat", io_format::binary, false, 0, 10);
+        df1.read("SHORT_IBM.dat", io_format::binary,
+                 { .starting_row = 0, .num_rows = 10 });
+
         assert(df1.get_index().size() == 10);
         assert(df1.get_column<double>("IBM_Close").size() == 10);
         assert(df1.get_index()[0] == "2014-01-02");
@@ -4064,7 +4119,8 @@ static void test_reading_in_binary_chunks()  {
 
         StrDataFrame    df2;
 
-        df2.read("SHORT_IBM.dat", io_format::binary, false, 800, 10);
+        df2.read("SHORT_IBM.dat", io_format::binary,
+                 { .starting_row = 800, .num_rows = 10 });
         assert(df2.get_index().size() == 10);
         assert(df2.get_column<double>("IBM_Close").size() == 10);
         assert(df2.get_index()[0] == "2017-03-08");
@@ -4074,7 +4130,8 @@ static void test_reading_in_binary_chunks()  {
 
         StrDataFrame    df3;
 
-        df3.read("SHORT_IBM.dat", io_format::binary, false, 1716, 10);
+        df3.read("SHORT_IBM.dat", io_format::binary,
+                 { .starting_row = 1716, .num_rows = 10 });
         assert(df3.get_index().size() == 5);
         assert(df3.get_column<double>("IBM_Close").size() == 5);
         assert(df3.get_index()[0] == "2020-10-26");
@@ -4084,6 +4141,7 @@ static void test_reading_in_binary_chunks()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4160,6 +4218,7 @@ static void test_writing_binary_3()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 

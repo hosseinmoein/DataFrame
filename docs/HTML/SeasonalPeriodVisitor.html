@@ -1,0 +1,165 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+
+  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  SeasonalityParams  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span>        detrend <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">true</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>          <span style="color:#696969; ">// Remove trend</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">bool</span>        de_serial_corr <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">false</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// Remove serial correlation by differencing</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Parameters to generate trend using <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LowessVisitor.html">LOWESS</a></span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// The two parameters below must be adjusted for different datasets carefully sometimes by trail and error.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// The defaults are suitable for financial market data</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> num_loops <span style="color:#800080; ">{</span> <span style="color:#008c00; ">3</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>      <span style="color:#696969; ">// Number of loops</span></span>
+<span class="line_wrapper">    T           frac <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.08</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>        <span style="color:#696969; ">// The fraction of the data used when estimating each y-value.</span></span>
+<span class="line_wrapper">    T           delta <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.0001</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>     <span style="color:#696969; ">// Distance with which to use linear-interpolation instead of regression</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> sampling_rate <span style="color:#800080; ">{</span> <span style="color:#008c00; ">1</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// Assume the time series is per 1 unit of time</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        Parameter to the <I>SeasonalPeriodVisitor</I> constructor<BR>
+      </td>
+    </tr>
+
+  </table>
+
+  <BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameMLVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>arithmetic T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> SeasonalPeriodVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> ssp_v <span style="color:#808030; ">=</span> SeasonalPeriodVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+This visitor calculates seasonality of the given column (time series). Seasons mean any repeating pattern in your data. It doesn’t have to correspond to natural seasons. To do that you must know your data well. If there are no seasons in the data, the following method may give you misleading clues. You also must know other things (mentioned below) about your data. These are the steps it goes through:<BR>
+
+        <OL>
+          <LI>Optionally detrend the data. You must know if your data has a trend or not. If you analyze seasonality with trend, trend appears as a strong signal in the frequency domain and skews your analysis. You can do that by a few different methods. You can <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">fit a polynomial curve</a> through the data (you must know the degree), or you can use a method like <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LowessVisitor.html">LOWESS</a> which is in essence a dynamically degreed polynomial curve. In any case you subtract the trend from your data.</LI>
+          <LI>Optionally take serial correlation out by differencing. Again, you must know this about your data. Analyzing seasonality with serial correlation will show up in frequency domain as leakage and spreads the dominant frequencies.</LI>
+          <LI>Now you have prepared your data for final analysis. Now you need to convert your time-series to frequency-series. In other words, you need to convert your data from time domain to frequency domain. Mr. Joseph Fourier has a solution for that. You can run Fast Fourier Transform (FFT) which is an implementation of Discrete Fourier Transform (DFT). FFT gives you a vector of complex values that represent the frequency spectrum. In other words, they are amplitude and phase of different frequency components.</LI>
+          <LI>Take the absolute values of FFT result. These are the magnitude spectrum which shows the strength of different frequencies within the data.</LI>
+          <LI>Do some simple searching and arithmetic to find the seasonality period.</LI>
+        </OL>
+
+        <BR>
+        This visitor has the following methods to get results:<BR>
+        <I>get_result()</I>: Returns the length of seasons.<BR>
+        <I>get_period()</I>: Returns the length of seasons.<BR>
+        <I>get_max_magnitude()</I>: Returns the maximum frequency magnitude<BR>
+        <I>get_dominant_frequency()</I>: Returns the dominant frequency<BR>
+        <I>get_dominant_index()</I>: Returns index of thw column corresponding to the dominant frequency<BR>
+        <I>
+        <PRE>
+    explicit
+    SeasonalPeriodVisitor(const SeasonalityParams<T> params = { });
+        </PRE>
+        </I>
+          <B>params</B>: Necessary parameters as explained above.<BR>
+      </td>
+      <td width="15%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_SeasonalPeriodVisitor<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing SeasonalPeriodVisitor{ } ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    DTDataFrame df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">try</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span><span style="color:#603000; ">read</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IcecreamProduction.csv</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> io_format<span style="color:#800080; ">::</span>csv2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">catch</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DataFrameError <span style="color:#808030; ">&amp;</span>ex<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> ex<span style="color:#808030; ">.</span>what<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ssp_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> DateTime<span style="color:#800080; ">&gt;</span> ssp<span style="color:#808030; ">(</span><span style="color:#800080; ">{</span> <span style="color:#808030; ">.</span>de_serial_corr <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IceCreamProduction</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> ssp<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>ssp<span style="color:#808030; ">.</span>get_max_magnitude<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">4073.55</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.01</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>ssp<span style="color:#808030; ">.</span>get_dominant_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">53</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>ssp<span style="color:#808030; ">.</span>get_dominant_frequency<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.08346</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.00001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>ssp<span style="color:#808030; ">.</span>get_period<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">11.9811</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>ssp<span style="color:#808030; ">.</span>get_period<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> ssp<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

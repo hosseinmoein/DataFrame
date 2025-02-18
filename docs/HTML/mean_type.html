@@ -42,16 +42,16 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class mean_type : unsigned char  {
-
-    arithmetic = 1, // sum(value) / count
-    weighted = 2,   // sum(weighted value) / ((count * (count + 1)) / 2)
-    geometric = 3,  // exp(log(sum(value)) / count)
-    harmonic = 4,   // count / sum(1 / value)
-    quadratic = 5,  // sqrt(sum(value * value) / count)
-}; </B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> mean_type <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    arithmetic <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// sum(value) / count</span></span>
+<span class="line_wrapper">    weighted <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>   <span style="color:#696969; ">// sum(weighted value) / ((count * (count + 1)) / 2)</span></span>
+<span class="line_wrapper">    geometric <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// exp(log(sum(value)) / count)</span></span>
+<span class="line_wrapper">    harmonic <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span>   <span style="color:#696969; ">// count / sum(1 / value)</span></span>
+<span class="line_wrapper">    quadratic <span style="color:#808030; ">=</span> <span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// sqrt(sum(value * value) / count)</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This specifies the type of mean/average calculation

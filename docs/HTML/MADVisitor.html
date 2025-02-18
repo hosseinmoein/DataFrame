@@ -43,14 +43,14 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class mad_type : unsigned char  {
-    mean_abs_dev_around_mean = 1,     // Mean of absolute distances from mean
-    mean_abs_dev_around_median = 2,   // Mean of absolute distances from median
-    median_abs_dev_around_mean = 3,   // Median of absolute distances from mean
-    median_abs_dev_around_median = 4, // Median of absolute distances from median
-};</B></PRE< </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> mad_type <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    mean_abs_dev_around_mean <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>     <span style="color:#696969; ">// Mean of absolute distances from mean</span></span>
+<span class="line_wrapper">    mean_abs_dev_around_median <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>   <span style="color:#696969; ">// Mean of absolute distances from median</span></span>
+<span class="line_wrapper">    median_abs_dev_around_mean <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>   <span style="color:#696969; ">// Median of absolute distances from mean</span></span>
+<span class="line_wrapper">    median_abs_dev_around_median <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Median of absolute distances from median</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This defines different ways of calculating averages around averages,
@@ -68,19 +68,19 @@ enum class mad_type : unsigned char  {
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-struct MADVisitor;
-
-// -------------------------------------
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-using mad_v = MADVisitor&lt;T, I, A&gt;;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> MADVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> mad_v <span style="color:#808030; ">=</span> MADVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>

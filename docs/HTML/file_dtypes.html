@@ -1,0 +1,108 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  file_dtypes <span style="color:#800080; ">:</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#603000; ">FLOAT</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span>            <span style="color:#696969; ">// float</span></span>
+<span class="line_wrapper">    DOUBLE <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>           <span style="color:#696969; ">// double</span></span>
+<span class="line_wrapper">    LONG_DOUBLE <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>      <span style="color:#696969; ">// long double</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">SHORT</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>            <span style="color:#696969; ">// short int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">USHORT</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span>           <span style="color:#696969; ">// unsigned short int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">INT</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span>              <span style="color:#696969; ">// int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">UINT</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">6</span><span style="color:#808030; ">,</span>             <span style="color:#696969; ">// unsigned int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">LONG</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">7</span><span style="color:#808030; ">,</span>             <span style="color:#696969; ">// long int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">ULONG</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">8</span><span style="color:#808030; ">,</span>            <span style="color:#696969; ">// unsigned long int</span></span>
+<span class="line_wrapper">    LONG_LONG <span style="color:#808030; ">=</span> <span style="color:#008c00; ">9</span><span style="color:#808030; ">,</span>        <span style="color:#696969; ">// long long int</span></span>
+<span class="line_wrapper">    ULONG_LONG <span style="color:#808030; ">=</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span>      <span style="color:#696969; ">// unsigned long long int</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">CHAR</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">11</span><span style="color:#808030; ">,</span>            <span style="color:#696969; ">// char</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">UCHAR</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">12</span><span style="color:#808030; ">,</span>           <span style="color:#696969; ">// unsigned char</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">BOOL</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">13</span><span style="color:#808030; ">,</span>            <span style="color:#696969; ">// bool</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    STRING <span style="color:#808030; ">=</span> <span style="color:#008c00; ">14</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// std::string</span></span>
+<span class="line_wrapper">    VSTR32 <span style="color:#808030; ">=</span> <span style="color:#008c00; ">15</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// FixedSizeString&lt;31&gt; == String32</span></span>
+<span class="line_wrapper">    VSTR64 <span style="color:#808030; ">=</span> <span style="color:#008c00; ">16</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// FixedSizeString&lt;63&gt; == String64</span></span>
+<span class="line_wrapper">    VSTR128 <span style="color:#808030; ">=</span> <span style="color:#008c00; ">17</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// FixedSizeString&lt;127&gt; == String128</span></span>
+<span class="line_wrapper">    VSTR512 <span style="color:#808030; ">=</span> <span style="color:#008c00; ">18</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// FixedSizeString&lt;511&gt; == String512</span></span>
+<span class="line_wrapper">    VSTR1K <span style="color:#808030; ">=</span> <span style="color:#008c00; ">19</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// FixedSizeString&lt;1023&gt; == String1K</span></span>
+<span class="line_wrapper">    VSTR2K <span style="color:#808030; ">=</span> <span style="color:#008c00; ">20</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// FixedSizeString&lt;2047&gt; == String2K</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    DATETIME <span style="color:#808030; ">=</span> <span style="color:#008c00; ">21</span><span style="color:#808030; ">,</span>        <span style="color:#696969; ">// DateTime</span></span>
+<span class="line_wrapper">    DATETIME_AME <span style="color:#808030; ">=</span> <span style="color:#008c00; ">22</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// DateTime</span></span>
+<span class="line_wrapper">    DATETIME_EUR <span style="color:#808030; ">=</span> <span style="color:#008c00; ">23</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// DateTime</span></span>
+<span class="line_wrapper">    DATETIME_ISO <span style="color:#808030; ">=</span> <span style="color:#008c00; ">24</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// DateTime</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    STR_DBL_PAIR <span style="color:#808030; ">=</span> <span style="color:#008c00; ">25</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// std::pair&lt;std::string, double&gt;</span></span>
+<span class="line_wrapper">    STR_STR_PAIR <span style="color:#808030; ">=</span> <span style="color:#008c00; ">26</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// std::pair&lt;std::string, std::string&gt;</span></span>
+<span class="line_wrapper">    DBL_DBL_PAIR <span style="color:#808030; ">=</span> <span style="color:#008c00; ">27</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// std::pair&lt;double, double&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    DBL_VEC <span style="color:#808030; ">=</span> <span style="color:#008c00; ">28</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// std::vector&lt;double&gt;</span></span>
+<span class="line_wrapper">    STR_VEC <span style="color:#808030; ">=</span> <span style="color:#008c00; ">29</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// std::vector&lt;std::string&gt;</span></span>
+<span class="line_wrapper">    DBL_SET <span style="color:#808030; ">=</span> <span style="color:#008c00; ">30</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// std::set&lt;double&gt;</span></span>
+<span class="line_wrapper">    STR_SET <span style="color:#808030; ">=</span> <span style="color:#008c00; ">31</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// std::set&lt;std::string&gt;</span></span>
+<span class="line_wrapper">    STR_DBL_MAP <span style="color:#808030; ">=</span> <span style="color:#008c00; ">32</span><span style="color:#808030; ">,</span>     <span style="color:#696969; ">// std::map&lt;std::string, double&gt;</span></span>
+<span class="line_wrapper">    STR_DBL_UNOMAP <span style="color:#808030; ">=</span> <span style="color:#008c00; ">33</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// std::unordered_map&lt;std::string, double&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        These are enumerations for data types that can be read/written from/to files.<BR>
+        They can also be specified in schemas.
+      </td>
+    </tr>
+  </table>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

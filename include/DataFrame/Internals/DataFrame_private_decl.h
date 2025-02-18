@@ -61,16 +61,25 @@ using JoinSortingPair = std::pair<const T *, size_type>;
 
 // ----------------------------------------------------------------------------
 
-void read_json_(std::istream &file, bool columns_only);
-void read_binary_(std::istream &file,
+template<typename S>
+void read_json_(S &file, bool columns_only);
+
+template<typename S>
+void read_binary_(S &file,
                   bool columns_only,
                   size_type starting_row,
                   size_type num_rows);
-void read_csv_(std::istream &file, bool columns_only);
-void read_csv2_(std::FILE *stream,
+
+template<typename S>
+void read_csv_(S &file, bool columns_only);
+
+template<typename S>
+void read_csv2_(S &stream,
                 bool columns_only,
                 size_type starting_row,
-                size_type num_rows);
+                size_type num_rows,
+                bool skip_first_line,
+                const std::vector<ReadSchema> &schema);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
@@ -1197,6 +1206,30 @@ replace_vector_vals_(V &data_vec,
 
 // ----------------------------------------------------------------------------
 
+template<typename V>
+inline static void
+col_vector_push_back_func_(
+    typename V::value_type(*converter)(const char *, int),
+    std::istream &file,
+    V &vec,
+    io_format file_type = io_format::csv)  {
+
+    std::string value;
+    char        c = 0;
+
+    while (file.get(c)) [[likely]] {
+        value.clear();
+        if (file_type == io_format::csv && c == '\n')  break;
+        else if (file_type == io_format::json && c == ']')  break;
+        file.unget();
+        _get_token_from_file_(file, ',', value,
+                              file_type == io_format::json ? ']' : '\0');
+        vec.push_back(converter(value.c_str(), int(value.size())));
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename V>
 inline static void
 col_vector_push_back_func_(V &vec,
@@ -1481,7 +1514,7 @@ struct  IdxParserFunctor_<int, Dummy>  {
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        col_vector_push_back_func_(vec, file, &::strtol, file_type);
+        col_vector_push_back_func_(&_atoi_<int>, file, vec, file_type);
     }
 };
 
@@ -1494,7 +1527,7 @@ struct  IdxParserFunctor_<long, Dummy>  {
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        col_vector_push_back_func_(vec, file, &::strtol, file_type);
+        col_vector_push_back_func_(&_atoi_<long>, file, vec, file_type);
     }
 };
 
@@ -1507,7 +1540,7 @@ struct  IdxParserFunctor_<long long, Dummy>  {
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        col_vector_push_back_func_(vec, file, &::strtoll, file_type);
+        col_vector_push_back_func_(&_atoi_<long long>, file, vec, file_type);
     }
 };
 
@@ -1520,7 +1553,7 @@ struct  IdxParserFunctor_<unsigned int, Dummy>  {
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        col_vector_push_back_func_(vec, file, &::strtoul, file_type);
+        col_vector_push_back_func_(&_atoi_<unsigned int>, file, vec, file_type);
     }
 };
 
@@ -1533,7 +1566,8 @@ struct  IdxParserFunctor_<unsigned long, Dummy>  {
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        col_vector_push_back_func_(vec, file, &::strtoul, file_type);
+        col_vector_push_back_func_(&_atoi_<unsigned long>,
+                                   file, vec, file_type);
     }
 };
 
@@ -1546,7 +1580,8 @@ struct  IdxParserFunctor_<unsigned long long, Dummy>  {
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        col_vector_push_back_func_(vec, file, &::strtoull, file_type);
+        col_vector_push_back_func_(&_atoi_<unsigned long long>,
+                                   file, vec, file_type);
     }
 };
 

@@ -43,12 +43,12 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class bucket_type : unsigned char  {
-    by_distance = 1, // Bucketize by distance between two index values (i.g. X<sub>2</sub> - X<sub>1</sub> = N)
-    by_count = 2,    // Bucketize by counting of index values (e.g. every N index items)
-}; </B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> bucket_type <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    by_distance <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Bucketize by distance between two index values (i.g. X<sub>2</sub> - X<sub>1</sub> = N)</span></span>
+<span class="line_wrapper">    by_count <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// Bucketize by counting of index values (e.g. every N index items)</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This determines the bucketization logic
@@ -66,17 +66,16 @@ enum class bucket_type : unsigned char  {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename V, typename I_V, typename ... Ts&gt;
-DataFrame
-bucketize(bucket_type bt,
-          const V &amp;value,
-          I_V &amp;&amp;idx_visitor,
-          Ts&amp;&amp; ... args) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I_V<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">DataFrame</span>
+<span class="line_wrapper">bucketize<span style="color:#808030; ">(</span>bucket_type bt<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">          <span style="color:#800000; font-weight:bold; ">const</span> V <span style="color:#808030; ">&amp;</span>value<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">          I_V <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>idx_visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">          Ts<span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> args<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
-      <td width="35%">
+      <td>
         It bucketizes the data and index into intervals, based on index values and bucket_type.<BR>
         You must specify how the index column is bucketized, by providing a visitor.<BR>
         You must specify how each column is bucketized, by providing 3-member tuples (triples). Each triple must have the following members:<BR>
@@ -100,17 +99,16 @@ bucketize(bucket_type bt,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename V, typename I_V, typename ... Ts&gt;
-std::future&lt;DataFrame&gt;
-bucketize_async(bucket_type bt,
-                const V &amp;value,
-                I_V &amp;&amp;idx_visitor,
-                Ts&amp;&amp; ... args) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I_V<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span>DataFrame<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">bucketize_async<span style="color:#808030; ">(</span>bucket_type bt<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                <span style="color:#800000; font-weight:bold; ">const</span> V <span style="color:#808030; ">&amp;</span>value<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                I_V <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>idx_visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                Ts<span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> args<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
-      <td width="35%">
+      <td>
         Same as bucketize() above, but executed asynchronously
       </td>
       <td width="35%">

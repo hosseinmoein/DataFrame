@@ -43,25 +43,24 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-struct  StringStats  {
-
-    double  avg_size { 0 };        // Average of sizes
-    double  std_size { 0 };        // Standard deviation of sizes
-    double  avg_alphabets { 0 };   // Average number of a - z, A - Z
-    double  avg_caps { 0 };        // Average number of A - Z
-    double  avg_digits { 0 };      // Average number of 0 - 9
-    double  avg_spaces { 0 };      // Average number of ' '
-    double  avg_arithmetic { 0 };  // Average number of + - / *
-    double  avg_line_feed { 0 };   // Average number of \n
-
-    // Punctuations. Anything that's not an alphabet, digit, space, line feed,
-    // or arithmetic operators.
-    //
-    double  avg_puncts { 0 };
-};
-      </B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">truct  StringStats  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  avg_size <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>        <span style="color:#696969; ">// Average of sizes</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  std_size <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>        <span style="color:#696969; ">// Standard deviation of sizes</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  avg_alphabets <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>   <span style="color:#696969; ">// Average number of a - z, A - Z</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  avg_caps <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>        <span style="color:#696969; ">// Average number of A - Z</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  avg_digits <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>      <span style="color:#696969; ">// Average number of 0 - 9</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  avg_spaces <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>      <span style="color:#696969; ">// Average number of ' '</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  avg_arithmetic <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// Average number of + - / *</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  avg_line_feed <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>   <span style="color:#696969; ">// Average number of \n</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Punctuations. Anything that's not an alphabet, digit, space, line feed,</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// or arithmetic operators.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">double</span>  avg_puncts <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         A set of statistics about a string column
@@ -78,12 +77,11 @@ struct  StringStats  {
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;StringOnly T&gt;
-[[nodiscard]] StringStats
-get_str_col_stats(const char *col_name) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>StringOnly T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">StringStats</span>
+<span class="line_wrapper">get_str_col_stats<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This call takes a string column as input and returns a set of statistics about the strings in that column. You could use these statistics to figure out the characteristics of the strings in the column. Or you could use the statistics to determine if a new string is acceptable for this column, or ...<BR>

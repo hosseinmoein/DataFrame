@@ -714,18 +714,18 @@ col_2:1:<double>:8,
 col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
-INDEX:1:<ulong>:123451,
-col_1:1:<double>:2,
-col_2:1:<double>:9,
-col_3:1:<double>:16,
-col_str:1:<string>:22,
-col_4:1:<double>:23,
-INDEX:1:<ulong>:123452,
-col_1:1:<double>:3,
-col_2:1:<double>:10,
-col_3:1:<double>:17,
-col_str:1:<string>:33,
-col_4:1:<double>:24,
+INDEX:1:<ulong>:123450,
+col_1:1:<double>:1,
+col_2:1:<double>:8,
+col_3:1:<double>:15,
+col_str:1:<string>:11,
+col_4:1:<double>:22,
+INDEX:1:<ulong>:123450,
+col_1:1:<double>:1,
+col_2:1:<double>:8,
+col_3:1:<double>:15,
+col_str:1:<string>:11,
+col_4:1:<double>:22,
 
 Testing write(json) ...
 Writing in JSON:
@@ -820,6 +820,10 @@ Testing VWBASVisitor{ } ...
 Testing self_concat( ) ...
 
 Testing concat( ) ...
+
+Testing data frame parsing csv2...
+
+Testing data frame parsing csv...
 
 Testing get_reindexed( ) ...
 
@@ -2178,6 +2182,42 @@ Testing remove_data_by_stdev( ) ...
 Testing get_data_by_stdev( ) ...
 
 Testing get_data_by_kmeans( ) ...
+
+Testing remove_data_by_hampel( ) ...
+
+Testing DBSCANVisitor{ } ...
+
+Testing MeanShiftVisitor{ } ...
+
+Testing get_data_by_dbscan( ) ...
+
+Testing get_data_by_mshift( ) ...
+
+Testing view_assign( ) ...
+
+Testing CrossCorrVisitor{ } ...
+
+Testing PartialAutoCorrVisitor{  } ...
+
+Testing make_stationary( ) ...
+
+Testing StationaryCheckVisitor{  } ...
+
+Testing covariance_matrix( ) ...
+
+Testing pca_by_eigen( ) ...
+
+Testing compact_svd( ) ...
+
+Testing SpectralClusteringVisitor{ } ...
+
+Testing get_data_by_spectral( ) ...
+
+Testing canon_corr( ) ...
+
+Testing MC_station_dist( ) ...
+
+Testing SeasonalPeriodVisitor{ } ...
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2196,9 +2236,9 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: 0.00888415247107, -0.0358647832857, -0.00598867464212, 0.0376205075422, 
+Means of clusters are: -0.0397662142374, -0.00846139142505, 0.00568770442596, 0.0301207820038, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 The seasonality of IBM returns is 59 days.
 So use this instead of 170 days in decomposition analysis
-Auto correlations of 170 days lag: 0.236070931014, -0.121015633837, 0.0464307990427, -0.0359793785314, 0.151526132376, -0.0345951524195, -0.148550119041, 0.0423553428149, -0.0462490105059, 
-Auto correlations of 59 days lag: 0.0144756496869, 0.120904938677, -0.040095547295, 0.0583500943114, -0.257693985614, -0.0399080542821, 0.0901183894223, -0.362114582068, -0.0784921093017, 
+Auto correlations of 170 days lag: 0.0978881577662, -0.121015633837, 0.0464307990427, -0.0359793785314, 0.151526132376, -0.0345951524195, -0.148550119041, 0.0423553428149, -0.0462490105059, 
+Auto correlations of 59 days lag: 0.0132716046862, 0.120904938677, -0.040095547295, 0.0583500943114, -0.257693985614, -0.0399080542821, 0.0901183894223, -0.362114582068, -0.0784921093017, 

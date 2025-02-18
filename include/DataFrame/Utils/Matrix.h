@@ -281,6 +281,95 @@ public:
     template<typename MA1, typename MA2, typename MA3>
     inline void svd(MA1 &U, MA2 &S, MA3 &V, bool full_size = true) const;
 
+    // In linear algebra, the LU decomposition is a matrix decomposition
+    // which writes a matrix as the product of a lower and upper triangular
+    // amtrices. This decomposition is used in numerical analysis to solve
+    // systems of linear equations or calculate the determinant.
+    //
+    // LU decomposition of a square matrix A is a decomposition of A as
+    //     A = LU
+    //
+    // where L and U are lower and upper triangular matrices (of the same
+    // size), respectively. This means that L has only zeros above the
+    // diagonal and U has only zeros below the diagonal.
+    //
+    // The LU decomposition is twice as efficient as the QR decomposition.
+    //
+    // NOTE: The LU decompostion with pivoting always exists, even if the
+    //       matrix is singular. The primary use of the LU decomposition is
+    //       in the solution of square systems of simultaneous linear
+    //       equations. This will fail if is_singular() returns false.
+    //
+    template<typename MA1, typename MA2>
+    inline void lud(MA1 &L, MA2 &U) const;
+
+    // In 2-D, when you talk about the point (2, 4), you can think of the
+    // 2 and 4 as directions to get from the origin to the point
+    // (move 2 units in the x direction and 4 in the y direction).  In
+    // a 3-D system, the same idea holds - (1, 3, 7) means start at the
+    // origin (0, 0, 0), go 1 unit in the x direction, 3 in the y direction,
+    // and 7 in the z direction.
+    // The determinant of a 1x1 matrix is the signed length of the line
+    // from the origin to the point. It's positive if the point is in the
+    // positive x direction, negative if in the other direction.
+    // In 2-D, look at the matrix as two 2-dimensional points on the plane,
+    // and complete the parallelogram that includes those two points and
+    // the origin. The (signed) area of this parallelogram is the
+    // determinant.  If you sweep clockwise from the first to the second,
+    // the determinant is negative, otherwise, positive.
+    // In 3-D, look at the matrix as 3 3-dimensional points in space.
+    // Complete the parallepipe that includes these points and the origin,
+    // and the determinant is the (signed) volume of the parallelepipe.
+    // The same idea works in any number of dimensions.  The determinant
+    // is just the (signed) volume of the n-dimensional parallelepipe.
+    // Note that length, area, volume are the _volumes_ in 1, 2, and
+    // 3-dimensional spaces.  A similar concept of volume exists for
+    // Euclidean space of any dimensionality.
+    //
+    // [HM]: A matrix that has determinant equals zero is singular.
+    //       It means it has at least 2 vectors that are linearly
+    //       dependent, therefore they cannot enclose an area or a space.
+    //
+    // For how determinant of N X N matrices are calulated
+    //     see: http://mathworld.wolfram.com/Determinant.html
+    // For Laplace Expension
+    //     see: http://en.wikipedia.org/wiki/Cofactor_expansion
+    //
+    // NOTE: This is a relatively _expensive_ calculation. Its complexity
+    //       is O(n!), where n is the number of rows or columns.
+    //
+    inline value_type determinant() const;
+
+    // Minor of a matrix is the same matrix with the specified row
+    // and column taken out.
+    //
+    // NOTE: Linear algebrically speaking, a minor of a matrix is the
+    //       _detereminant_ of some smaller square matrix, cut down from
+    //       the original matrix.
+    //
+    template<typename MA>
+    inline void
+    get_minor(MA &mmatrix, size_type drow, size_type dcol) const noexcept;
+
+    // A Cofactor of a matrix is the determinant of a minor of the matrix.
+    // You can also say cofactor is the signed minor of the matrix.
+    //
+    inline value_type cofactor(size_type row, size_type column) const;
+
+    // The Adjoint of a matrix is formed by taking the transpose of the
+    // cofactors matrix of the original matrix.
+    //
+    template<typename MA>
+    inline void adjoint(MA &amatrix) const;
+
+    // A "centered matrix" is a matrix where the mean of each column has been
+    // adjusted to be zero, meaning that the data within each column is
+    // centered around the value of zero
+    //
+    inline void center() noexcept;
+    template<typename MA>
+    inline void get_centered(MA &cmatrix) const noexcept;
+
 private:
 
     static constexpr size_type  NOPOS_ = static_cast<size_type>(-9);
@@ -545,8 +634,7 @@ public:
         operator - (row_const_iterator lhs, row_const_iterator rhs)  {
 
             if (lhs.mptr_ != rhs.mptr_)
-                throw DataFrameError(
-                    "- operation in iterator is not feasible");
+                throw NotFeasible("- operation in iterator is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
             const size_type col_diff = lhs.col_ - rhs.col_;
@@ -737,7 +825,7 @@ public:
         operator - (row_iterator lhs, row_iterator rhs)  {
 
             if (lhs.mptr_ != rhs.mptr_)
-                throw DataFrameError(
+                throw NotFeasible(
                     "- operation between iterators is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
@@ -934,7 +1022,7 @@ public:
         operator - (col_const_iterator lhs, col_const_iterator rhs) noexcept  {
 
             if (lhs.mptr_ != rhs.mptr_)
-                throw DataFrameError(
+                throw NotFeasible(
                     "- operation between iterators is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
@@ -1126,7 +1214,7 @@ public:
         operator - (col_iterator lhs, col_iterator rhs)  {
 
             if (lhs.mptr_ != rhs.mptr_)
-                throw DataFrameError(
+                throw NotFeasible(
                     "- operation between iterators is not feasible");
 
             const size_type row_diff = lhs.row_ - rhs.row_;
@@ -1299,7 +1387,7 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw DataFrameError(
+        throw NotFeasible(
             "+ operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -1344,7 +1432,7 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
             }
         };
     const long  thread_level =
-        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     if (thread_level > 2)  {
@@ -1389,7 +1477,7 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw DataFrameError(
+        throw NotFeasible(
             "- operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -1434,7 +1522,7 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
             }
         };
     const long  thread_level =
-        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     if (thread_level > 2)  {
@@ -1477,7 +1565,7 @@ operator += (Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw DataFrameError(
+        throw NotFeasible(
             "+= operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -1510,7 +1598,7 @@ operator += (Matrix<T, MO1, IS_SYM1> &lhs,
             }
         };
     const long  thread_level =
-        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     if (thread_level > 2)  {
@@ -1553,7 +1641,7 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw DataFrameError(
+        throw NotFeasible(
             "-= operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -1586,7 +1674,7 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
             }
         };
     const long  thread_level =
-        (lhs_cols >= 20000L || lhs_rows >= 20000L)
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     if (thread_level > 2)  {
@@ -1627,7 +1715,7 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_cols != rhs.rows())
-        throw DataFrameError(
+        throw NotFeasible(
             "* operation between these two metrices is not feasible");
 #endif // HMDF_SANITY_EXCEPTIONS
 

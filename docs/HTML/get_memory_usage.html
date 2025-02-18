@@ -43,20 +43,19 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-struct  MemUsage  {
-    size_t  column_used_memory { 0 };
-    size_t  column_capacity_memory { 0 };
-    size_t  column_type_size { 0 };
-    size_t  index_used_memory { 0 };
-    size_t  index_capacity_memory { 0 };
-    size_t  index_type_size { 0 };
-
-    template&lt;typename S&gt;
-    friend S &operator << (S &stream, const MemUsage &mu);
-}; </font>
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">truct  MemUsage  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">size_t</span>  column_used_memory <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">size_t</span>  column_capacity_memory <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">size_t</span>  column_type_size <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">size_t</span>  index_used_memory <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">size_t</span>  index_capacity_memory <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">size_t</span>  index_type_size <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> S<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">friend</span> S <span style="color:#808030; ">&amp;</span><span style="color:#800000; font-weight:bold; ">operator</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#808030; ">(</span>S <span style="color:#808030; ">&amp;</span>stream<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> MemUsage <span style="color:#808030; ">&amp;</span>mu<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This struct holds the result of calling get_memory_usage() method on DataFrame.

@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -370,7 +371,7 @@ shift_left(V &vec, std::size_t n)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename STR, std::size_t SIZ = 256 * 1024>
+template<typename STR, std::size_t SIZ = 64 * 1024>
 struct  IOStreamOpti  {
 
     IOStreamOpti (STR &stream, const char *file_name, bool binary = false)
@@ -418,7 +419,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<std::size_t SIZ = 256 * 1024>
+template<std::size_t SIZ = 64 * 1024>
 struct  IOFileOpti  {
 
     std::FILE   *file;
@@ -436,7 +437,7 @@ struct  IOFileOpti  {
             throw DataFrameError(err.c_str());
         }
 #endif // HMDF_SANITY_EXCEPTIONS
-        std::setvbuf(file, nullptr, _IOFBF, SIZ);
+        std::setvbuf(file, buffer_, _IOFBF, SIZ);
     }
 
     ~IOFileOpti ()  { if (file)  std::fclose(file); }
@@ -444,6 +445,10 @@ struct  IOFileOpti  {
     IOFileOpti () = delete;
     IOFileOpti (const IOFileOpti &) = delete;
     IOFileOpti &operator = (const IOFileOpti &) = delete;
+
+private:
+
+    char    buffer_[SIZ];
 };
 
 } // namespace hmdf

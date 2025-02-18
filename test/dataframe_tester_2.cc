@@ -896,6 +896,7 @@ static void test_RSIVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1110,6 +1111,7 @@ static void test_bucketize()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -1485,6 +1487,7 @@ static void test_io_format_csv2()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
     df_read.write<std::ostream,
                   int,
@@ -2729,6 +2732,7 @@ static void test_DT_IBM_data()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -2990,6 +2994,7 @@ static void test_WilliamPrcRVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3030,6 +3035,7 @@ static void test_PSLVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3061,6 +3067,7 @@ static void test_CCIVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3129,6 +3136,7 @@ static void test_GarmanKlassVolVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3141,7 +3149,10 @@ static void test_YangZhangVolVisitor()  {
     MyDataFrame df;
 
     try  {
-        df.read("FORD.csv", io_format::csv2);
+        std::ifstream   stream;
+
+        stream.open("FORD.csv");
+        df.read(stream, io_format::csv2);
 
         YangZhangVolVisitor<double, unsigned long, 64> yz_v;
 
@@ -3161,6 +3172,7 @@ static void test_YangZhangVolVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3224,14 +3236,15 @@ static void test_no_index_writes()  {
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::csv, 6, false);
+             std::string>(std::cout, io_format::csv, { .precision = 6 });
     std::cout << std::endl;
     df.write<std::ostream,
              int,
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::csv, 6, true);
+             std::string>(std::cout, io_format::csv,
+                          { .precision = 6, .columns_only = true });
     std::cout << '\n' << std::endl;
 
     df.write<std::ostream,
@@ -3239,14 +3252,14 @@ static void test_no_index_writes()  {
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::csv2, 6, false);
+             std::string>(std::cout, io_format::csv2, { .precision = 6 });
     std::cout << std::endl;
     df.write<std::ostream,
              int,
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::csv2, 12, true);
+             std::string>(std::cout, io_format::csv2, { .columns_only = true });
     std::cout << '\n' << std::endl;
 
     df.write<std::ostream,
@@ -3254,14 +3267,14 @@ static void test_no_index_writes()  {
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::json, 12, false);
+             std::string>(std::cout, io_format::json);
     std::cout << std::endl;
     df.write<std::ostream,
              int,
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, io_format::json, 12, true);
+             std::string>(std::cout, io_format::json, { .columns_only = true });
 }
 
 // -----------------------------------------------------------------------------
@@ -3275,9 +3288,12 @@ static void test_no_index_reads()  {
     MyDataFrame df3;
 
     try  {
-        df.read("csv2_format_data.csv", io_format::csv2, false);
-        df.read("csv2_format_data_2.csv", io_format::csv2, true);
-        df.read("csv2_format_data_no_index.csv", io_format::csv2, true);
+        df.read("csv2_format_data.csv", io_format::csv2,
+                { .columns_only = false });
+        df.read("csv2_format_data_2.csv", io_format::csv2,
+                { .columns_only = true });
+        df.read("csv2_format_data_no_index.csv", io_format::csv2,
+                { .columns_only = true });
         df.write<std::ostream,
                  int,
                  unsigned long,
@@ -3288,9 +3304,12 @@ static void test_no_index_reads()  {
                  std::string>(std::cout, io_format::csv2);
 
         std::cout << '\n' << std::endl;
-        df2.read("sample_data.csv", io_format::csv, false);
-        df2.read("sample_data_2.csv", io_format::csv, true);
-        df2.read("sample_data_no_index.csv", io_format::csv, true);
+        df2.read("sample_data.csv", io_format::csv,
+                 { .columns_only = false });
+        df2.read("sample_data_2.csv", io_format::csv,
+                 { .columns_only = true });
+        df2.read("sample_data_no_index.csv", io_format::csv,
+                 { .columns_only = true });
         df2.write<std::ostream,
                   int,
                   unsigned long,
@@ -3310,9 +3329,12 @@ static void test_no_index_reads()  {
                   std::string>(std::cout, io_format::csv2);
 
         std::cout << '\n' << std::endl;
-        df3.read("sample_data.json", io_format::json, false);
-        df3.read("sample_data_2.json", io_format::json, true);
-        df3.read("sample_data_no_index.json", io_format::json, true);
+        df3.read("sample_data.json", io_format::json,
+                 { .columns_only = false });
+        df3.read("sample_data_2.json", io_format::json,
+                 { .columns_only = true });
+        df3.read("sample_data_no_index.json", io_format::json,
+                 { .columns_only = true });
         df3.write<std::ostream,
                   double,
                   char,
@@ -3321,6 +3343,7 @@ static void test_no_index_reads()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3353,6 +3376,7 @@ static void test_KamaVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3385,6 +3409,7 @@ static void test_FisherTransVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3417,6 +3442,7 @@ static void test_PercentPriceOSCIVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3449,6 +3475,7 @@ static void test_SlopeVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3480,6 +3507,7 @@ static void test_UltimateOSCIVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3572,6 +3600,7 @@ static void test_UlcerIndexVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3605,6 +3634,7 @@ static void test_RSXVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3638,6 +3668,7 @@ static void test_TTMTrendVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3695,6 +3726,7 @@ static void test_ParabolicSARVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3726,6 +3758,7 @@ static void test_EBSineWaveVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3773,6 +3806,7 @@ static void test_EhlerSuperSmootherVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3807,6 +3841,7 @@ static void test_VarIdxDynAvgVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3938,6 +3973,7 @@ static void test_PivotPointSRVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -3970,6 +4006,7 @@ static void test_AvgDirMovIdxVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4029,6 +4066,7 @@ static void test_HoltWinterChannelVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4088,6 +4126,7 @@ static void test_HeikinAshiCndlVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4177,6 +4216,7 @@ static void test_FastFourierTransVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4209,6 +4249,7 @@ static void test_CenterOfGravityVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4241,6 +4282,7 @@ static void test_ArnaudLegouxMAVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4273,6 +4315,7 @@ static void test_RateOfChangeVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4307,6 +4350,7 @@ static void test_AccumDistVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4342,6 +4386,7 @@ static void test_ChaikinMoneyFlowVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4374,6 +4419,7 @@ static void test_VertHorizFilterVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4409,6 +4455,7 @@ static void test_OnBalanceVolumeVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4465,6 +4512,7 @@ static void test_TrueRangeVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4497,6 +4545,7 @@ static void test_DecayVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4530,6 +4579,7 @@ static void test_HodgesTompkinsVolVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 
@@ -4563,6 +4613,7 @@ static void test_ParkinsonVolVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 }
 

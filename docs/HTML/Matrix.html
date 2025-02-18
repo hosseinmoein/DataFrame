@@ -43,21 +43,20 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class  matrix_orient : unsigned char  {
-
-    column_major = 1, // Data is laid out col by col
-    row_major = 2,    // Data is laid out row by row
-};
-
-// -----------------------
-
-template&lt;typename T,
-         matrix_orient MO = matrix_orient::column_major,
-         IS_SYM = false&gt;
-class   Matrix;
-		</B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  matrix_orient <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    column_major <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Data is laid out col by col</span></span>
+<span class="line_wrapper">    row_major <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// Data is laid out row by row</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -----------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         matrix_orient MO <span style="color:#808030; ">=</span> matrix_orient<span style="color:#800080; ">::</span>column_major<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         IS_SYM <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">class</span>   Matrix<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         <I>Matrix</I> is an efficient and flat-memory implementation of matrix. It implements many numerical analysis and algorithms. It is used internally by <I>DataFrame</I> library to implement few of its algorithms. Also, some of <I>DataFrame</I> analysis results are in <I>Matrix</I> format.<BR>

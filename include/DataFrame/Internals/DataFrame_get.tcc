@@ -1028,6 +1028,90 @@ pca_by_eigen(std::vector<const char *> &&col_names,
 
 template<typename I, typename H>
 template<typename T>
+KNNResult<T> DataFrame<I, H>::
+knn(std::vector<const char *> &&col_names,
+    const std::vector<T> &target,
+    size_type k,
+    KNNDistFunc<T> &&dfunc) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (target.size() != col_names.size())
+        throw NotFeasible("knn(): Target dimension != number of features");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    size_type                               col_s { indices_.size() };
+    const size_type                         fet_s { col_names.size() };
+    std::vector<const ColumnVecType<T> *>   columns(fet_s, nullptr);
+    SpinGuard                               guard { lock_ };
+
+    for (size_type i { 0 }; i < fet_s; ++i)  {
+        columns[i] = &get_column<T>(col_names[i], false);
+        if (columns[i]->size() < col_s) [[unlikely]]
+            col_s = columns[i]->size();
+    }
+    guard.release();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (k >= col_s || k == 0)
+        throw NotFeasible("knn(): K must be < number of features and > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    using dist_t = std::pair<double, size_type>;
+
+    const auto          thread_level =
+        (col_s < 60000) ? 0L : get_thread_level();
+    std::vector<dist_t> distances(col_s);
+    auto                lbd =
+        [&columns = std::as_const(columns), &target = std::as_const(target),
+         &distances, &dfunc, fet_s]
+        (size_type begin, size_type end) -> void  {
+            std::vector<T>  feature(fet_s);
+
+            for (size_type i { begin }; i < end; ++i)  {
+                for (size_type j { 0 }; j < fet_s; ++j)
+                    feature[j] = columns[j]->at(i);
+                distances[i] = std::make_pair(dfunc(feature, target), i);
+            }
+        };
+
+    if (thread_level > 2)  {
+        auto    futuers =
+            thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+        thr_pool_.parallel_sort(distances.begin(), distances.end(),
+                                [](const auto &lhs, const auto &rhs) -> bool  {
+                                    return (lhs.first < rhs.first);
+                                });
+    }
+    else  {
+        lbd(size_type(0), col_s);
+        std::sort(distances.begin(), distances.end(),
+                  [](const auto &lhs, const auto &rhs) -> bool  {
+                      return (lhs.first < rhs.first);
+                  });
+    }
+
+    KNNResult<T>    result;
+
+    result.reserve(k);
+    for (size_type i { 0 }; i < k; ++i)  {
+        KNNPair<T>  item;
+
+        item.first.reserve(fet_s);
+        for (size_type j { 0 }; j < fet_s; ++j)
+            item.first.push_back(columns[j]->at(distances[i].second));
+        item.second = distances[i].second;
+        result.push_back(std::move(item));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
 std::tuple<Matrix<T, matrix_orient::column_major>,  // U
            Matrix<T, matrix_orient::column_major>,  // S
            Matrix<T, matrix_orient::column_major>>  // V
@@ -1050,6 +1134,156 @@ compact_svd(std::vector<const char *> &&col_names,
     scaled_data_mat.svd(U, S, V, true);
 
     return (std::make_tuple(U, S, V));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+CanonCorrResult<T> DataFrame<I, H>::
+canon_corr(std::vector<const char *> &&X_col_names,
+           std::vector<const char *> &&Y_col_names) const  {
+
+    using col_mat_t = Matrix<T, matrix_orient::column_major>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (X_col_names.size() != Y_col_names.size())
+        throw NotFeasible("canon_corr(): "
+                          "Two sets must have same number of variables");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    size_type                               min_col_s { indices_.size() };
+    std::vector<const ColumnVecType<T> *>   columns
+        (X_col_names.size() + Y_col_names.size(), nullptr);
+    SpinGuard                               guard { lock_ };
+
+    for (size_type i { 0 }; i < X_col_names.size(); ++i)  {
+        columns[i] = &get_column<T>(X_col_names[i], false);
+        if (columns[i]->size() < min_col_s)
+            min_col_s = columns[i]->size();
+    }
+    for (size_type i { 0 }; i < Y_col_names.size(); ++i)  {
+        const size_type idx = i + X_col_names.size();
+
+        columns[idx] = &get_column<T>(Y_col_names[i], false);
+        if (columns[idx]->size() < min_col_s)
+            min_col_s = columns[idx]->size();
+    }
+    guard.release();
+
+    col_mat_t   X { long(min_col_s), long(X_col_names.size()) };
+
+    for (size_type i { 0 }; i < X_col_names.size(); ++i)
+        X.set_column(columns[i]->begin(), i);
+
+    col_mat_t   Y { long(min_col_s), long(Y_col_names.size()) };
+
+    for (size_type i { 0 }; i < Y_col_names.size(); ++i)
+        Y.set_column(columns[i + X_col_names.size()]->begin(), i);
+
+    const auto  XY_cov = _calc_centered_cov_(X, Y);
+    const auto  X_cov = _calc_centered_cov_(X, X);
+    const auto  Y_cov = _calc_centered_cov_(Y, Y);
+    const auto  sq_root_mat =
+        X_cov.inverse() * XY_cov * Y_cov.inverse() * XY_cov.transpose();
+    col_mat_t   U;
+    col_mat_t   S;
+    col_mat_t   V;
+
+    sq_root_mat.svd(U, S, V, false);
+
+    CanonCorrResult<T>  result;
+
+    result.coeffs.reserve(S.rows());
+    for (long i { 0 }; i < S.rows(); ++i)
+        result.coeffs.push_back(S(i, 0));
+
+    T   X_cov_diag_sum { 0 };
+    T   Y_cov_diag_sum { 0 };
+
+    for (long i { 0 }; i < X_cov.rows(); ++i)  {
+        X_cov_diag_sum += X_cov(i, i);
+        Y_cov_diag_sum += Y_cov(i, i);
+    }
+
+    T   redun { 0 };
+
+    for (long i { 0 }; i < X_cov.rows(); ++i)  {
+        const T S_val = S(i, 0);
+
+        redun += S_val * S_val * X_cov(i, i);
+    }
+    result.x_red_idx = redun / X_cov_diag_sum;
+
+    redun = 0;
+    for (long i { 0 }; i < Y_cov.rows(); ++i)  {
+        const T S_val = S(i, 0);
+
+        redun += S_val * S_val * Y_cov(i, i);
+    }
+    result.y_red_idx = redun / Y_cov_diag_sum;
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+std::vector<T> DataFrame<I, H>::
+MC_station_dist(std::vector<const char *> &&trans_col_names,
+                size_type max_iter,
+                T epsilon) const  {
+
+    using col_mat_t = Matrix<T, matrix_orient::column_major>;
+
+    const size_type                         cols_s { trans_col_names.size() };
+    size_type                               min_col_s { indices_.size() };
+    std::vector<const ColumnVecType<T> *>   columns (cols_s, nullptr);
+    SpinGuard                               guard { lock_ };
+
+    for (size_type i { 0 }; i < cols_s; ++i)  {
+        columns[i] = &get_column<T>(trans_col_names[i], false);
+        if (columns[i]->size() < min_col_s)
+            min_col_s = columns[i]->size();
+    }
+    guard.release();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (cols_s != min_col_s)
+        throw NotFeasible("MC_station_dist(): The matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    col_mat_t   mat { long(cols_s), long(cols_s) };
+
+    for (size_type i { 0 }; i < cols_s; ++i)
+        mat.set_column(columns[i]->begin(), i);
+
+    std::vector<T>  result;
+    col_mat_t       pi { 1L, long(cols_s), T(1) / T(cols_s) };
+    auto            normalize = [](auto &mat) -> void  {
+        T   sum { 0 };
+
+        for (long c { 0 }; c < mat.cols(); ++c)
+            sum += mat(0, c);
+        for (long c { 0 }; c < mat.cols(); ++c)
+            mat(0, c) /= sum;
+    };
+
+    for (size_type i { 0 }; i < max_iter; ++i)  {
+        auto    new_pi = pi * mat;
+
+        normalize(new_pi);
+        if ((new_pi - pi).norm() < epsilon)  {
+            result.reserve(pi.cols());
+            for (long c { 0 }; c < pi.cols(); ++c)
+                result.push_back(pi(0, c));
+            break;
+        }
+        pi = std::move(new_pi);
+    }
+
+    return (result);
 }
 
 } // namespace hmdf

@@ -43,15 +43,14 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class join_policy : unsigned char  {
-    inner_join = 1,
-    left_join = 2,
-    right_join = 3,
-    left_right_join = 4 // This is merge
-};
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> join_policy <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    inner_join <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    left_join <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    right_join <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    left_right_join <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span> <span style="color:#696969; ">// This is merge</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Enumerated type to specify joining two DataFrames
@@ -69,14 +68,13 @@ enum class join_policy : unsigned char  {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename RHS_T, typename T, typename ... Ts&gt;
-StdDataFrame&lt;unsigned long&gt;
-join_by_column(const RHS_T &amp;rhs,
-               const char *name,
-               join_policy jp) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> RHS_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">StdDataFrame<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">join_by_column<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> RHS_T <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">               <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">               join_policy jp<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It joins the data between self (lhs) and rhs and returns the joined data in a StdDataFrame, based on specification in join_policy.<BR>
@@ -100,12 +98,11 @@ join_by_column(const RHS_T &amp;rhs,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename RHS_T, typename ... Ts&gt;
-StdDataFrame&lt;I&gt;
-join_by_index(const RHS_T &amp;rhs, join_policy jp) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> RHS_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">StdDataFrame<span style="color:#800080; ">&lt;</span>I<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">join_by_index<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> RHS_T <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">,</span> join_policy jp<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It joins the data between self (lhs) and rhs and returns the joined data<BR>

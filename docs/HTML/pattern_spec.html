@@ -42,17 +42,17 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class pattern_spec : unsigned char  {
-    monotonic_increasing = 1,          // i >= j
-    strictly_monotonic_increasing = 2, // i > j
-    monotonic_decreasing = 3,          // i <= j
-    strictly_monotonic_decreasing = 4, // i < j
-    normally_distributed = 6,          // 68%-95%-99.7% 3-sigma rule to approximate
-    standard_normally_distributed = 7, // Same as normal + 0/1.0 check
-    lognormally_distributed = 8,       // Uses the above normal test on the log(x) + Skew and Kurtosis
-}; </B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> pattern_spec <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    monotonic_increasing <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// i &gt;= j</span></span>
+<span class="line_wrapper">    strictly_monotonic_increasing <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// i &gt; j</span></span>
+<span class="line_wrapper">    monotonic_decreasing <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// i &lt;= j</span></span>
+<span class="line_wrapper">    strictly_monotonic_decreasing <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// i &lt; j</span></span>
+<span class="line_wrapper">    normally_distributed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">6</span><span style="color:#808030; ">,</span>          <span style="color:#696969; ">// 68%-95%-99.7% 3-sigma rule to approximate</span></span>
+<span class="line_wrapper">    standard_normally_distributed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">7</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Same as normal + 0/1.0 check</span></span>
+<span class="line_wrapper">    lognormally_distributed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">8</span><span style="color:#808030; ">,</span>       <span style="color:#696969; ">// Uses the above normal test on the log(x) + Skew and Kurtosis</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Enumerated type to specify different patterns to detect.
@@ -69,14 +69,13 @@ enum class pattern_spec : unsigned char  {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-bool
-pattern_match(const char *col_name,
-              pattern_spec pattern,
-              double epsilon = 0.0) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">bool</span></span>
+<span class="line_wrapper">pattern_match<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              pattern_spec pattern<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#800000; font-weight:bold; ">double</span> epsilon <span style="color:#808030; ">=</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This method returns true if the given column follows the given pattern, otherwise it returns false. Epsilon is used for approximation.<BR>

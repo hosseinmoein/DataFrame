@@ -32,10 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/Endianness.h>
 #include <DataFrame/Utils/FixedSizeString.h>
+#include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
 #include <cctype>
-#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <future>
@@ -66,6 +66,8 @@ struct  _TypeinfoHasher_  {
     }
 };
 
+// -------------------------------------
+
 struct  _TypeinfoEqualTo_  {
 
     bool
@@ -75,6 +77,10 @@ struct  _TypeinfoEqualTo_  {
     }
 };
 
+// -------------------------------------
+
+// This is used for writing to files
+//
 static const
 std::unordered_map<_TypeInfoRef_,
                    const char *const,
@@ -129,6 +135,63 @@ _typeinfo_name_  {
     { typeid(std::set<std::string>), "str_set" },
     { typeid(std::map<std::string, double>), "str_dbl_map" },
     { typeid(std::unordered_map<std::string, double>), "str_dbl_unomap" },
+};
+
+// -------------------------------------
+
+// This is used for reading from files
+//
+static const
+std::unordered_map<std::string, file_dtypes>    _typename_id_  {
+
+    // Numerics
+    //
+    { "float", file_dtypes::FLOAT },
+    { "double", file_dtypes::DOUBLE },
+    { "longdouble", file_dtypes::LONG_DOUBLE },
+    { "short", file_dtypes::SHORT },
+    { "ushort", file_dtypes::USHORT },
+    { "int", file_dtypes::INT },
+    { "uint", file_dtypes::UINT },
+    { "long", file_dtypes::LONG },
+    { "ulong", file_dtypes::ULONG },
+    { "longlong", file_dtypes::LONG_LONG },
+    { "ulonglong", file_dtypes::ULONG_LONG },
+    { "char", file_dtypes::CHAR },
+    { "uchar", file_dtypes::UCHAR },
+    { "bool", file_dtypes::BOOL },
+
+    // Strings
+    //
+    { "string", file_dtypes::STRING },
+    { "vstr32", file_dtypes::VSTR32 },
+    { "vstr64", file_dtypes::VSTR64 },
+    { "vstr128", file_dtypes::VSTR128 },
+    { "vstr512", file_dtypes::VSTR512 },
+    { "vstr1K", file_dtypes::VSTR1K },
+    { "vstr2K", file_dtypes::VSTR2K },
+
+    // DateTime
+    //
+    { "DateTime", file_dtypes::DATETIME },
+    { "DateTimeAME", file_dtypes::DATETIME_AME },
+    { "DateTimeEUR", file_dtypes::DATETIME_EUR },
+    { "DateTimeISO", file_dtypes::DATETIME_ISO },
+
+    // Pairs
+    //
+    { "str_dbl_pair", file_dtypes::STR_DBL_PAIR },
+    { "str_str_pair", file_dtypes::STR_STR_PAIR },
+    { "dbl_dbl_pair", file_dtypes::DBL_DBL_PAIR },
+
+    // Containers
+    //
+    { "dbl_vec", file_dtypes::DBL_VEC },
+    { "str_vec", file_dtypes::STR_VEC },
+    { "dbl_set", file_dtypes::DBL_SET },
+    { "str_set", file_dtypes::STR_SET },
+    { "str_dbl_map", file_dtypes::STR_DBL_MAP },
+    { "str_dbl_unomap", file_dtypes::STR_DBL_UNOMAP },
 };
 
 // ----------------------------------------------------------------------------
@@ -1868,6 +1931,37 @@ _read_binary_str_dbl_map_(STRM &strm, V &map_vec, bool needs_flipping,
 
 // ----------------------------------------------------------------------------
 
+template<typename MA>
+inline static typename std::remove_reference<MA>::type
+_calc_centered_cov_(const MA &mat1, const MA &mat2)  {
+
+    using mat_t = typename std::remove_reference<MA>::type;
+
+    mat_t   X;
+    mat_t   Y;
+
+    mat1.get_centered(X);
+    mat2.get_centered(Y);
+
+    mat_t                               result = X.transpose2() * Y;
+    const typename mat_t::value_type    denom = X.rows() - 1;
+
+    if constexpr (result.orientation() == matrix_orient::column_major)  {
+        for (long c = 0; c < result.cols(); ++c)
+            for (long r = 0; r < result.rows(); ++r)
+                result(r, c) /= denom;
+    }
+    else  {
+        for (long r = 0; r < result.rows(); ++r)
+            for (long c = 0; c < result.cols(); ++c)
+                result(r, c) /= denom;
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
 //
 // Specializing std::hash for tuples
 //
@@ -2310,6 +2404,49 @@ _like_clause_compare_(const char *pattern,
     }
 
     return (*uinput_str == 0);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static inline T _atoi_(const char *str, int len)  {
+
+    while (*str == ' ')  { ++str; --len; }
+
+    int64_t sign { 1ll };
+
+    if (*str == '-')  {  // Handle negative
+        sign = -1ll;
+        ++str;
+        --len;
+    }
+    while (len > 0 &&  (! ::isdigit(str[len - 1])))  --len;
+
+    int64_t value { 0 };
+
+    switch(len)  {
+        case 19: value += (str[len - 19] - '0') * 1'000'000'000'000'000'000ll;
+        case 18: value += (str[len - 18] - '0') * 100'000'000'000'000'000ll;
+        case 17: value += (str[len - 17] - '0') * 10'000'000'000'000'000ll;
+        case 16: value += (str[len - 16] - '0') * 1'000'000'000'000'000ll;
+        case 15: value += (str[len - 15] - '0') * 100'000'000'000'000ll;
+        case 14: value += (str[len - 14] - '0') * 10'000'000'000'000ll;
+        case 13: value += (str[len - 13] - '0') * 1'000'000'000'000ll;
+        case 12: value += (str[len - 12] - '0') * 100'000'000'000ll;
+        case 11: value += (str[len - 11] - '0') * 10'000'000'000ll;
+        case 10: value += (str[len - 10] - '0') * 1'000'000'000ll;
+        case  9: value += (str[len -  9] - '0') * 100'000'000ll;
+        case  8: value += (str[len -  8] - '0') * 10'000'000ll;
+        case  7: value += (str[len -  7] - '0') * 1'000'000ll;
+        case  6: value += (str[len -  6] - '0') * 100'000ll;
+        case  5: value += (str[len -  5] - '0') * 10'000ll;
+        case  4: value += (str[len -  4] - '0') * 1'000ll;
+        case  3: value += (str[len -  3] - '0') * 100ll;
+        case  2: value += (str[len -  2] - '0') * 10ll;
+        case  1: value += (str[len -  1] - '0');
+    }
+
+    return (static_cast<T>(value * sign));
 }
 
 } // namespace hmdf

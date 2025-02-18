@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <random>
 
 using namespace hmdf;
 using namespace std::chrono;
@@ -44,30 +45,46 @@ using MyDataFrame = StdDataFrame<long>;
 
 int main(int, char *[]) {
 
-    /*
+/*
+    const auto      start1 = std::chrono::high_resolution_clock::now();
     std::ofstream   stream;
 
     stream.open("Large_File.csv");
 
-    stream << "INDEX:200000000:<long>,COL1:200000000:<uint>,COL2:200000000:<int>,COL3:200000000:<int>,COL4:200000000:<int>,COL5:200000000:<ulong>,COL6:200000000:<int>,COL7:200000000:<ulong>\n";
+
+    std::random_device                      rd;
+    std::mt19937_64                         gen(rd());
+    std::uniform_real_distribution<double>  ddist;
+    std::uniform_real_distribution<float>   fdist;
+
+    stream << "INDEX:300000000:<long>,COL1:300000000:<uint>,COL2:300000000:<int>,COL3:300000000:<int>,COL4:300000000:<int>,COL5:300000000:<ulong>,COL6:300000000:<double>,COL7:300000000:<float>\n";
 
     std::srand(std::time(nullptr));
-    for (std::size_t i = 0; i < 200000000; ++i)  {
+    for (std::size_t i = 0; i < 300'000'000; ++i)  {
         stream << i << ','
                << std::rand() << ','
                << std::rand() << ','
                << std::rand() << ','
                << std::rand() << ','
                << std::rand() << ','
-               << std::rand() << ','
-               << std::rand() << '\n';
+               << ddist(gen) << ','
+               << fdist(gen) << '\n';
     }
     stream.close();
-    */
 
+    const auto  end1 = std::chrono::high_resolution_clock::now();
+
+    std::cout
+    << "Writing Took: "
+    << double(duration_cast<microseconds>(end1 - start1).count()) / 1000000.0
+    << " seconds\n";
+*/
+
+    // Now the reading
+    //
     MyDataFrame df;
 
-    const auto  start = std::chrono::high_resolution_clock::now();
+    const auto  start2 = std::chrono::high_resolution_clock::now();
 
     try  {
         df.read("Large_File.csv", io_format::csv2);
@@ -76,19 +93,19 @@ int main(int, char *[]) {
         std::cout << ex.what() << std::endl;
     }
 
-    const auto  end = std::chrono::high_resolution_clock::now();
+    const auto  end2 = std::chrono::high_resolution_clock::now();
 
     std::cout << "Column Length: "
-              << df.get_column<int>("COL6").size() << '\n';
+              << df.get_column<double>("COL6").size() << '\n';
     std::cout
-        << "Reading Took: "
-        << double(duration_cast<microseconds>(end - start).count()) / 1000000.0
-        << " seconds\n";
+    << "Reading Took: "
+    << double(duration_cast<microseconds>(end2 - start2).count()) / 1000000.0
+    << " seconds\n";
 
-    /*
-    df.write<long, unsigned int, int, unsigned long>
+/*
+    df.write<long, unsigned int, int, unsigned long, double, float>
         ("Large_File.dat", io_format::binary);
-    */
+*/
 
     return (0);
 }

@@ -582,6 +582,7 @@ static void test_explode()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     df.write<std::ostream,
@@ -683,6 +684,7 @@ static void test_read_write_pairs()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     df.write<std::ostream,
@@ -943,6 +945,7 @@ static void test_get_data_at_times()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result = df.get_view_at_times<double, long>(16, 30);
@@ -977,6 +980,7 @@ static void test_get_data_before_times()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result = df.get_view_before_times<double, long>(1, 16);
@@ -1011,6 +1015,7 @@ static void test_get_data_after_times()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result = df.get_view_after_times<double, long>(23, 40);
@@ -1045,6 +1050,7 @@ static void test_get_data_on_days()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result =
@@ -1080,6 +1086,7 @@ static void test_get_data_in_months()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result =
@@ -1115,6 +1122,7 @@ static void test_get_data_on_days_in_month()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  result = df.get_view_on_days_in_month<double, long>({ 31, 5 });
@@ -1149,6 +1157,7 @@ static void test_get_data_between_times()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     // Between 11am and 11:30am
@@ -1390,6 +1399,7 @@ static void test_remove_data_by_stdev()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1430,6 +1440,7 @@ static void test_get_data_by_stdev()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1476,6 +1487,7 @@ static void test_get_data_by_kmeans()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1574,6 +1586,7 @@ void test_get_data_by_affin()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1641,6 +1654,7 @@ static void test_remove_data_by_hampel()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1681,6 +1695,7 @@ static void test_DBSCANVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     auto    lbd =
@@ -1727,6 +1742,7 @@ static void test_MeanShiftVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     MeanShiftVisitor<double, std::string, 64>   mshift(
@@ -1767,6 +1783,7 @@ void test_get_data_by_dbscan()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1826,6 +1843,7 @@ void test_get_data_by_mshift()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -1887,6 +1905,7 @@ static void test_view_assign()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     auto    lbd =
@@ -1944,6 +1963,7 @@ static void test_CrossCorrVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     CrossCorrVisitor<double, std::string>   cc(-16, 16);
@@ -1972,6 +1992,7 @@ static void test_PartialAutoCorrVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     PartialAutoCorrVisitor<double, std::string> pacf { 50 };
@@ -2000,6 +2021,7 @@ static void test_make_stationary()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     auto    df2 = df;
@@ -2108,6 +2130,7 @@ static void test_StationaryCheckVisitor()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     RandGenParams<double>   p;
@@ -2238,6 +2261,7 @@ static void test_covariance_matrix()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  cov_mat =
@@ -2281,6 +2305,7 @@ static void test_pca_by_eigen()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  pca_mat = df.pca_by_eigen<double>(
@@ -2352,6 +2377,7 @@ static void test_compact_svd()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     const auto  [U, S, V] =
@@ -2400,10 +2426,12 @@ static void test_SpectralClusteringVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("SHORT_IBM.csv", io_format::csv2, false, 0, 1000);
+        df.read("SHORT_IBM.csv", io_format::csv2,
+                 { .starting_row = 0, .num_rows = 1000 });
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     spect_v<4, double, std::string, 64> spc(1000, 7, 123);
@@ -2451,10 +2479,12 @@ static void test_get_data_by_spectral()  {
     StrDataFrame    df;
 
     try  {
-        df.read("SHORT_IBM.csv", io_format::csv2, false, 1000, 500);
+        df.read("SHORT_IBM.csv", io_format::csv2,
+                 { .starting_row = 1000, .num_rows = 500 });
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
+        ::exit(-1);
     }
 
     StrDataFrame    df2 = df;
@@ -2493,7 +2523,7 @@ static void test_get_data_by_spectral()  {
     assert(result_view[1].get_index()[46] == "2019-01-22");
     assert(result_view[1].get_column<double>("IBM_High")[20] == 121.68);
     assert(result_view[1].get_column<long>("IBM_Volume")[35] == 4346700);
-	
+
     assert(result_df[2].get_index().size() == 452);
     assert(result_df[2].get_column<double>("IBM_Open").size() == 452);
     assert(result_df[2].get_index()[0] == "2017-12-20");
@@ -2507,9 +2537,200 @@ static void test_get_data_by_spectral()  {
     assert(result_view[2].get_column<double>("IBM_High")[200] == 149.070007);
     assert(result_view[2].get_column<long>("IBM_Volume")[300] == 4958000);
 }
+
+// ----------------------------------------------------------------------------
+
+static void test_canon_corr()  {
+
+    std::cout << "\nTesting canon_corr( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const auto  result = df.canon_corr<double>({ "IBM_Close", "IBM_Open" },
+                                               { "IBM_High", "IBM_Low" });
+
+    assert(result.coeffs.size() == 2);
+    assert(std::fabs(result.coeffs[0] - 0.999944) < 0.000001);
+    assert(std::fabs(result.coeffs[1] - 0.262927) < 0.000001);
+    assert(std::fabs(result.x_red_idx - 0.534073) < 0.000001);
+    assert(std::fabs(result.y_red_idx - 0.535897) < 0.000001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_MC_station_dist()  {
+
+    std::cout << "\nTesting MC_station_dist( ) ..." << std::endl;
+
+    const std::size_t   item_cnt = 20;
+    MyDataFrame         df;
+
+    df.load_index(MyDataFrame::gen_sequence_index(0, item_cnt, 1));
+
+    RandGenParams<double>       p;
+    std::vector<const char *>   col_names (item_cnt, nullptr);
+
+    p.seed = 0;
+    df.load_column("0_col_name", gen_normal_dist<double, 256>(item_cnt, p));
+    for (std::size_t i = 1; i < item_cnt; ++i)  {
+        p.seed = i;
+        df.load_column((std::to_string(i) + "_col_name").c_str(),
+                       gen_normal_dist<double, 256>(item_cnt, p));
+    }
+    for (std::size_t i = 0; i < item_cnt; ++i)
+        col_names[i] = df.col_idx_to_name(i);
+
+    const auto  result =
+        df.MC_station_dist<double>(
+            std::forward<std::vector<const char *>>(col_names));
+
+    assert(result.size() == 20);
+    assert(std::fabs(result[0] - -0.705967) < 0.000001);
+    assert(std::fabs(result[5] - 0.121566) < 0.000001);
+    assert(std::fabs(result[15] - -0.639604) < 0.000001);
+    assert(std::fabs(result[19] - -0.692765) < 0.000001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_SeasonalPeriodVisitor()  {
+
+    std::cout << "\nTesting SeasonalPeriodVisitor{ } ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("IcecreamProduction.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    ssp_v<double, DateTime> ssp({ .de_serial_corr = true});
+
+    df.single_act_visit<double>("IceCreamProduction", ssp);
+
+    assert(std::fabs(ssp.get_max_magnitude() - 4073.55) < 0.01);
+    assert(ssp.get_dominant_index() == 53);
+    assert(std::fabs(ssp.get_dominant_frequency() - 0.08346) < 0.00001);
+    assert(std::fabs(ssp.get_period() - 11.9811) < 0.0001);
+    assert(ssp.get_period() == ssp.get_result());
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_read_data_file_with_schema()  {
+
+    std::cout << "\nTesting SeasonalPeriodVisitor{ } ..." << std::endl;
+
+    MyDataFrame             df1;
+    MyDataFrame             df2;
+    ReadParams::SchemaVec   schema {
+        { .col_type = file_dtypes::ULONG, .num_rows = 12 },  // Index column
+        { "Open", file_dtypes::DOUBLE, 12 },
+        { "High", file_dtypes::DOUBLE, 12 },
+        { "Low", file_dtypes::DOUBLE, 12 },
+        { "Close", file_dtypes::DOUBLE, 12 },
+        { "Adj_Close", file_dtypes::DOUBLE, 12 },
+        { "Volume", file_dtypes::LONG, 12 },
+    };
+
+    try  {
+        df1.read("SchemaWithHeader.csv", io_format::csv2, { .schema = schema });
+        df2.read("SchemaWithoutHeader.csv", io_format::csv2,
+                 { .skip_first_line = false, .schema = schema });
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    assert(df1.get_index().size() == 12);
+    assert(df1.get_index()[0] == 1);
+    assert(df1.get_index()[6] == 7);
+    assert(df1.get_index()[11] == 12);
+    assert(df1.get_column<double>("Close").size() == 12);
+    assert((std::fabs(df1.get_column<double>("Close")[0] - 185.53) < 0.01));
+    assert((std::fabs(df1.get_column<double>("Close")[6] - 187.26) < 0.01));
+    assert((std::fabs(df1.get_column<double>("Close")[11] - 190.09) < 0.01));
+    assert(df1.get_column<long>("Volume").size() == 12);
+    assert(df1.get_column<long>("Volume")[0] == 4546500);
+    assert(df1.get_column<long>("Volume")[6] == 4022400);
+    assert(df1.get_column<long>("Volume")[11] == 7644600);
+
+    assert(df2.get_index().size() == 12);
+    assert(df2.get_index()[0] == 1);
+    assert(df2.get_index()[6] == 7);
+    assert(df2.get_index()[11] == 12);
+    assert(df2.get_column<double>("Close").size() == 12);
+    assert((std::fabs(df2.get_column<double>("Close")[0] - 185.53) < 0.01));
+    assert((std::fabs(df2.get_column<double>("Close")[6] - 187.26) < 0.01));
+    assert((std::fabs(df2.get_column<double>("Close")[11] - 190.09) < 0.01));
+    assert(df2.get_column<long>("Volume").size() == 12);
+    assert(df2.get_column<long>("Volume")[0] == 4546500);
+    assert(df2.get_column<long>("Volume")[6] == 4022400);
+    assert(df2.get_column<long>("Volume")[11] == 7644600);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_knn()  {
+
+    std::cout << "\nTesting knn( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const auto  result =
+        df.knn<double>({ "IBM_Open", "IBM_High", "IBM_Low", "IBM_Close" },
+                       { 78.95, 80.48, 78.35, 80.48 }, 4);
+
+    assert(result.size() == 4);
+
+    assert(result[0].second == 500);  // Index into the IBM data columns
+    assert(result[0].first.size() == 4);
+    assert((std::fabs(result[0].first[0] - 78.9) < 0.01));
+    assert((std::fabs(result[0].first[2] - 78.32) < 0.01));
+    assert((std::fabs(result[0].first[3] - 80.4) < 0.01));
+
+    assert(result[1].second == 541);  // Index into the IBM data columns
+    assert(result[1].first.size() == 4);
+    assert((std::fabs(result[1].first[0] - 78.8) < 0.01));
+    assert((std::fabs(result[1].first[2] - 78.19) < 0.01));
+    assert((std::fabs(result[1].first[3] - 80.57) < 0.01));
+
+    assert(result[2].second == 558);  // Index into the IBM data columns
+    assert(result[2].first.size() == 4);
+    assert((std::fabs(result[2].first[0] - 78.5) < 0.01));
+    assert((std::fabs(result[2].first[2] - 78.36) < 0.01));
+    assert((std::fabs(result[2].first[3] - 80.11) < 0.01));
+
+    assert(result[3].second == 1232);  // Index into the IBM data columns
+    assert(result[3].first.size() == 4);
+    assert((std::fabs(result[3].first[0] - 79.25) < 0.01));
+    assert((std::fabs(result[3].first[2] - 78.87) < 0.01));
+    assert((std::fabs(result[3].first[3] - 80.36) < 0.01));
+}
 */
 
 // ----------------------------------------------------------------------------
+
 
 
 
@@ -2610,7 +2831,11 @@ int main(int, char *[]) {
     test_compact_svd();
     test_SpectralClusteringVisitor();
     test_get_data_by_spectral();
-*/
+    test_canon_corr();
+    test_MC_station_dist();
+    test_SeasonalPeriodVisitor();
+    test_read_data_file_with_schema();
+    test_knn();
     test_FastHierVisitor();
 
     return (0);

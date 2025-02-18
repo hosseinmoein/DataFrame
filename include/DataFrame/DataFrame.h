@@ -3861,6 +3861,51 @@ public: // Read/access and slicing interfaces
     pca_by_eigen(std::vector<const char *> &&col_names,
                  const PCAParams params = { }) const;
 
+    // This implements the K-Nearest Neighbors (KNN) algorithm. KNN is a
+    // machine learning technique that uses proximity to classify or predict
+    // data points. It's a supervised learning algorithm that's often used for
+    // classification problems.
+    // As mentioned KNN can be used for both classification and regression.
+    // This method is agnostic of what the intention of the user is. This
+    // method simply calculates the KNN and returns the result in a vector of
+    // pairs. The vector has k nearest neighbors. Each pair entry contains the
+    // value of the neighbor (first element) and the 0-based index of the
+    // neighbor (second element) in your dataset. The vector is sorted from
+    // nearest to furthest.
+    // It is up the user to process this result for his/her purpose. User can
+    // calculate average or weighed average for prediction, or it can use the
+    // indices into his/her categorical data for classification.
+    //
+    // T:
+    //   Type of the named columns
+    // col_names:
+    //   Vector of column names of independent features
+    // target:
+    //   Dependent feature
+    // k:
+    //   The K parameter
+    // dfunc:
+    //   A function to calculate distance between two features. The default is
+    //   Euclidean distance
+    //
+    template<typename T>
+    [[nodiscard]] KNNResult<T>
+    knn(std::vector<const char *> &&col_names,
+        const std::vector<T> &target,
+        size_type k,
+        KNNDistFunc<T> &&dfunc =
+            [](const std::vector<T> &X, const std::vector<T> &y) -> T  {
+                T   dist { 0 };
+
+                for (std::size_t i { 0 }; const auto &xval : X)  {
+                    const T &yval = y[i++];
+
+                    dist += (xval - yval) * (xval - yval);
+                }
+                return (std::sqrt(dist));
+            }
+        ) const;
+
     // This calculates Singular Value Decomposition (SVD). Optionaly it may
     // normalize the original matrix first.
     // In linear algebra, SVD is a factorization of a real or complex matrix
@@ -3890,6 +3935,61 @@ public: // Read/access and slicing interfaces
     compact_svd(std::vector<const char *> &&col_names,
                 normalization_type norm_type =
                     normalization_type::z_score) const;
+
+    // This performs Canonical Correlation Analysis (CCA) between two sets of
+    // columns // X and Y. It returns the result in a struct defined above.
+    //
+    // CCA is a statistical method for examining and measuring correlations
+    // between two sets of variables. Fundamentally, CCA looks for linear
+    // combinations of variables, also referred to as canonical variables,
+    // within each set so that the correlation between them is maximized.
+    // Finding relationships and patterns of linkage between the two groups
+    // is the main objective.
+    //
+    // NOTE: Number of columns in each set must be the same
+    //
+    // T:
+    //   Type of the named columns
+    // X_col_names:
+    //   Names of the first set of columns
+    // Y_col_names:
+    //   Names of the second set of columns
+    //
+    template<typename T>
+    [[nodiscard]] CanonCorrResult<T>
+    canon_corr(std::vector<const char *> &&X_col_names,
+               std::vector<const char *> &&Y_col_names) const;
+
+    // Markov Chains Stationary Distributions
+    // A stationary distribution in the context of Markov Chains refers to a
+    // probability distribution that remains unchanged over time, meaning if a
+    // Markov chain starts in this distribution, it will always stay in that
+    // same distribution regardless of how many steps are taken; essentially,
+    // it represents a stable state of the chain where the probabilities of
+    // being in each state do not fluctuate further.
+    // In probability theory and statistics, a Markov chain or Markov process
+    // is a stochastic process describing a sequence of possible events in
+    // which the probability of each event depends only on the state attained
+    // in the previous event. Informally, this may be thought of as;
+    // <I>What happens next depends only on the state of affairs now.</I>
+    //
+    // NOTE: This method solves the problem iteratively. If the returned vector
+    //       is empty, it means the algorithm did not converge.
+    //
+    // T:
+    //   Type of the named columns
+    // trans_col_names:
+    //   Transition column names specifying the transition matrix
+    // max_iter:
+    //   Maximum number of iterations
+    // epsilon:
+    //   Threshold for convergence
+    //
+    template<typename T>
+    [[nodiscard]] std::vector<T>
+    MC_station_dist(std::vector<const char *> &&trans_col_name,
+                    size_type max_iter = 1000,
+                    T epsilon = T(1e-8)) const;
 
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.
@@ -5474,17 +5574,13 @@ public:  // Reading and writing
     bool
     write(S &o,
           io_format iof = io_format::csv,
-          std::streamsize precision = 12,
-          bool columns_only = false,
-          long max_recs = std::numeric_limits<long>::max()) const;
+          const WriteParams params = { }) const;
 
     template<typename ... Ts>
     bool
     write(const char *file_name,
           io_format iof = io_format::csv,
-          std::streamsize precision = 12,
-          bool columns_only = false,
-          long max_recs = std::numeric_limits<long>::max()) const;
+          const WriteParams params = { }) const;
 
     // Same as write() above, but executed asynchronously
     //
@@ -5492,17 +5588,13 @@ public:  // Reading and writing
     [[nodiscard]] std::future<bool>
     write_async(S &o,
                 io_format iof = io_format::csv,
-                std::streamsize precision = 12,
-                bool columns_only = false,
-                long max_recs = std::numeric_limits<long>::max()) const;
+                const WriteParams params = { }) const;
 
     template<typename ... Ts>
     [[nodiscard]] std::future<bool>
     write_async(const char *file_name,
                 io_format iof = io_format::csv,
-                std::streamsize precision = 12,
-                bool columns_only = false,
-                long max_recs = std::numeric_limits<long>::max()) const;
+                const WriteParams params = { }) const;
 
     // This is a convenient function (simple implementation) to convert a
     // DataFrame into a string that could be restored later by calling
@@ -5611,33 +5703,25 @@ public:  // Reading and writing
     bool
     read(S &in_s,
          io_format iof = io_format::csv,
-         bool columns_only = false,
-         size_type starting_row = 0,
-         size_type num_rows = std::numeric_limits<size_type>::max());
+         const ReadParams params = { });
 
     bool
     read(const char *file_name,
          io_format iof = io_format::csv,
-         bool columns_only = false,
-         size_type starting_row = 0,
-         size_type num_rows = std::numeric_limits<size_type>::max());
+         const ReadParams params = { });
 
     // Same as read() above, but executed asynchronously
     //
     [[nodiscard]] std::future<bool>
     read_async(const char *file_name,
                io_format iof = io_format::csv,
-               bool columns_only = false,
-               size_type starting_row = 0,
-               size_type num_rows = std::numeric_limits<size_type>::max());
+               const ReadParams params = { });
 
     template<typename S>
     [[nodiscard]] std::future<bool>
     read_async(S &in_s,
                io_format iof = io_format::csv,
-               bool columns_only = false,
-               size_type starting_row = 0,
-               size_type num_rows = std::numeric_limits<size_type>::max());
+               const ReadParams params = { });
 
     // This is a convenient function (simple implementation) to restore a
     // DataFrame from a string that was previously generated by calling

@@ -153,7 +153,7 @@ table {
 table.hovertable {
     font-family: Georgia,serif;
     font-weight:bold;
-    font-size:13px;
+    font-size:14px;
     color:#333333;
     border-width: 3px;
     border-color: #999999;
@@ -254,6 +254,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Performs canonical correlation analysis between two sets of columns"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/canon_corr.html">canon_corr</a>()</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Get column index for the given column name"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/col_name_to_idx.html">col_name_to_idx</a>()</td>
     </tr>
 
@@ -323,6 +327,14 @@ table.hovertable td {
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Returns true if DataFrames are equal"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/is_equal.html">is_equal</a>()</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates  K-Nearest Neighbors (KNN) algorithm"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/knn.html">knn</a>()</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Returns the Markov Chains stationary distributions"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MC_station_dist.html">MC_station_dist</a>()</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1032,10 +1044,6 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Locally Weighted Scatterplot Smoothing">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LowessVisitor.html">LowessVisitor</a>{}</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Normalizes column data">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">NormalizeVisitor</a>{}</td>
     </tr>
 
@@ -1051,6 +1059,9 @@ table.hovertable td {
       <td title="Calculates Rectifing functions">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SigmoidVisitor.html">RectifyVisitor</a>{}</td>
     </tr>
 
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Finds seasonality in the given column (time series)">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SeasonalPeriodVisitor.html">SeasonalPeriodVisitor</a>{}</td>
+    </tr>
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates Sigmoid functions">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SigmoidVisitor.html">SigmoidVisitor</a>{}</td>
     </tr>
@@ -1085,6 +1096,10 @@ table.hovertable td {
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Fits y = b0 + b1 * log(x) through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">LogFitVisitor</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Locally Weighted Scatterplot Smoothing">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LowessVisitor.html">LowessVisitor</a>{}</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1506,6 +1521,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Data types from/to files">enum class <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/file_dtypes.html">file_dtypes</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Specification for Hampel filter">enum class <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/HampelFilterVisitor.html">hampel_type</a>{}</td>
     </tr>
 
@@ -1630,6 +1649,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Result of canonical correlation">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/canon_corr.html">CanonCorrResult</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Handy date and time object">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html">DateTime</a>{}</td>
     </tr>
 
@@ -1643,6 +1666,10 @@ table.hovertable td {
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="structure containing the parameteres to pca_by_eigen() call">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/pca_by_eigen.html">PCAParams</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="structure containing the parameteres to SeasonalPeriodVisitor constructor">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SeasonalPeriodVisitor.html">SeasonalityParams</a>{}</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1946,46 +1973,67 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 
   <H2 ID="8"><font color="blue">Code Structure <font size="+4">&#128450;</font></font></H2>
   <P>
-    The DataFrame library is <I>almost</I> a header-only library. Currently the only library source file is <I>DateTime.cc.</I><BR>
-    <BR>
-    Starting from the root directory:<BR>
-    <BR>
-    <font size="+1"><I>include/DataFrame</I></font> subdirectory contains almost all of the code. It includes <I>.h</I> and <I>.tcc</I> files. The latter are C++ template code files (they are mostly located in the <I>Internals</I> subdirectory). The main header file is <I>DataFrame.h.</I> It contains the DataFrame class and its public interface. There are comprehensive comments for each public interface call in that file. The rest of the files will show you how the sausage is made. <I>Include</I> directory also contains subdirectories that contain mostly internal DataFrame implementation. One exception is the <I>Utils</I> subdirectory<BR>
-    <BR>
-    <font size="+1"><I>src</I></font> directory contains Linux-only make files and <I>Utils</I> subdirectory.<BR>
-    <BR>
-    <font size="+1"><I>test</I></font> directory contains all the test source files. Mocked data files are in the <I>data</I> subdirectory. The main test source files are <I>dataframe_tester.cc</I>, <I>dataframe_tester_2.cc</I>, and <I>dataframe_tester_3.cc</I>. It contains test cases for all functionalities of DataFrame. <I>benchmarks</I> subdirectory contains a bunch of benchmarks. All documnetations are under <I>docs</I> subdirectory.
+    Starting from the repo’s root directory:<BR><BR>
+
+    <B>benchmarks/</B>&emsp;contains a few programs that time and benchmark various operations and compare them with other packages doing the same thing.<BR>
+    <B>data/</B>&emsp;&emsp;&emsp;&emsp;&emsp;contains all the mocked data files that are used by test programs.<BR>
+    <B>docs/</B>&emsp;&emsp;&emsp;&emsp;&emsp;contains all the documentations including the HTML files.<BR>
+    <B>examples/</B>&emsp;&emsp;&nbsp;&nbsp;contains the example <I>hello world</I> program.<BR>
+    <B>include/</B>&emsp;&emsp;&emsp;&nbsp;&nbsp;contains 99% of implementations. It includes <I>DataFrame</I> main header file and implementation of all analytical visitors. It also includes the following subdirectories:<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Internals/</B>&emsp;&nbsp;&nbsp;&nbsp;&nbsp;contains implementation of all APIs.<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Utils/</B>&emsp;&emsp;&emsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contains various peripheral utilities used by <I>DataFrame</I>.<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Threads/</B>&emsp;contains implementation of all thread related logic.<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Vectors/</B>&emsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contains implementation of heterogenous vectors.<BR>
+    <B>src/</B>&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;&nbsp;contains Linux based makefiles and following subdirectory:<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Utils/</B>&emsp;contains the sole source files in <I>DataFrame</I> that is archived into a library.<BR>
+    <B>test/</B>&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;contains all the test programs that I am happy to say tests 100% of the API.<BR>
   </P>
 
 <BR><HR COLOR="Gray" SIZE="5">
 
   <H2 ID="9"><font color="blue">Build Instructions <font size="+4">&#x1F6E0;</font></font></H2>
-    When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, consider you pass a column with 3 values in it and ask DataFrame to find peaks that are higher than 5 data points around them. Without a sanity check you get a crash or garbage.<BR>
-  <P>
+    When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, supposed you call to calculate KNN and supposed K is greater than observed datapoints passed in . if <I> HMDF_SANITY_EXCEPTIONS</I> is defined, you get an exception with explanation. If it is not defined, you get garbage or a crash.<BR>
 
-    <font size="+1"><B>Using plain make and make-files:</B></font><BR>
-    Go to the <I>src</I> subdirectory, and execute build_all.sh. This will build the library and test executables for <I>Linux/Unix flavors only</I><BR><BR>
+    <BR><font size="+1"><B>Cloning Repo:</B></font><BR>
+<font size="+1">
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#005fd2; ">git</span> <span style="color:#0000e6; ">clone</span> <span style="color:#0000e6; ">https://github.com/hosseinmoein/DataFrame.git</span></span>
+<span class="line_wrapper"></span></pre>
+</font>
 
     <font size="+1"><B>Using CMake:</B></font><BR>
 <font size="+1">
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">mkdir</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cd</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#005fd2; ">mkdir</span> <span style="color:#0000e6; ">[Debug</span><span style="color:#bb7977; font-weight:bold; ">|</span><span style="color:#005fd2; ">Release]</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">cd</span> <span style="color:#0000e6; ">[Debug</span><span style="color:#bb7977; font-weight:bold; ">|</span><span style="color:#005fd2; ">Release]</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cmake</span> -<span style="color:#797997; ">DCMAKE_BUILD_TYPE</span><span style="color:#808030; ">=</span>Release -<span style="color:#797997; ">DHMDF_BENCHMARKS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_EXAMPLES</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_TESTING</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> <span style="color:#800000; font-weight:bold; ">.</span><span style="color:#800000; font-weight:bold; ">.</span></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cmake</span> -<span style="color:#797997; ">DCMAKE_BUILD_TYPE</span><span style="color:#808030; ">=</span>Debug -<span style="color:#797997; ">DHMDF_SANITY_EXCEPTIONS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_BENCHMARKS</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_EXAMPLES</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> -<span style="color:#797997; ">DHMDF_TESTING</span><span style="color:#808030; ">=</span><span style="color:#008c00; ">1</span> <span style="color:#800000; font-weight:bold; ">.</span><span style="color:#800000; font-weight:bold; ">.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; "># Making the optimized release version</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">#</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">cmake</span> <span style="color:#074726; ">-DCMAKE_BUILD_TYPE=Release</span> <span style="color:#074726; ">-DHMDF_BENCHMARKS=1</span> <span style="color:#074726; ">-DHMDF_EXAMPLES=1</span> <span style="color:#074726; ">-DHMDF_TESTING=1</span> <span style="color:#0000e6; ">..</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">make</span></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">make</span> install</span>
+<span class="line_wrapper">    <span style="color:#696969; "># Making the debug version with debug info</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">#</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">cmake</span> <span style="color:#074726; ">-DCMAKE_BUILD_TYPE=Debug</span> <span style="color:#074726; ">-DHMDF_SANITY_EXCEPTIONS=1</span> <span style="color:#074726; ">-DHMDF_BENCHMARKS=1</span> <span style="color:#074726; ">-DHMDF_EXAMPLES=1</span> <span style="color:#074726; ">-DHMDF_TESTING=1</span> <span style="color:#0000e6; ">..</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">make</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">make</span> <span style="color:#0000e6; ">install</span></span>
 <span class="line_wrapper">    </span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">cd</span> <span style="color:#808030; ">[</span><span style="color:#0000e6; ">Debug|Release</span><span style="color:#808030; ">]</span></span>
-<span class="line_wrapper">    <span style="color:#bb7977; font-weight:bold; ">make</span> uninstall</span></pre>
+<span class="line_wrapper">    <span style="color:#005fd2; ">cd</span> <span style="color:#0000e6; ">[Debug</span><span style="color:#bb7977; font-weight:bold; ">|</span><span style="color:#005fd2; ">Release]</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">make</span> <span style="color:#0000e6; ">uninstall</span></span>
+<span class="line_wrapper"></span></pre>
 </font>
 
     <font size="+1"><B>Using Package Managers:</B></font><BR>
-      DataFrame is available on <a href="https://conan.io/center/recipes/dataframe"<I>Conan</I></a> platform. See the <a href="https://docs.conan.io/2/"<I>Conan docs</I></a> for more information.<BR>
-      DataFrame is also available on <a href="https://vcpkg.link/ports/dataframe"<I>VCPKG</I></a> platform. See <a href="https://learn.microsoft.com/en-us/vcpkg/"<I>VCPKG docs</i></a> for more information<BR>
-  </P>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DataFrame is available on <a href="https://conan.io/center/recipes/dataframe"<I>Conan</I></a> platform. See the <a href="https://docs.conan.io/2/"<I>Conan docs</I></a> for more information.<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DataFrame is also available on <a href="https://vcpkg.link/ports/dataframe"<I>VCPKG</I></a> platform. See <a href="https://learn.microsoft.com/en-us/vcpkg/"<I>VCPKG docs</i></a> for more information<BR>
 
+    <BR>
+    <font size="+1"><B>Using plain make and make-files</B></font> (<I>Not Recommended</I>):<BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Go to the <I>src</I> subdirectory, and execute build_all.sh. This will build the library and test executables for <I>Linux/Unix flavors only</I><BR>
+
+    <BR>
+    <font size="+1"><B>Running the test executables:</B></font><BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Almost all test programs in <I>test/</I>, <I>example/</I>, and <I> benchmarks/</I> directories need to open mocked datafiles that exist in <I>data/</I> directory. They also assume the datafiles are in the <I>current directory</I>. If you use CMake to build the project, it copies the datafiles into the execution directory. If you are running the tests by yourself, <I>data/</I> directory must be your current directory.<BR><BR>
+
+  <BR>
   <BR><a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">&#8592; Back to Github</a><BR>
 
 </body></html>

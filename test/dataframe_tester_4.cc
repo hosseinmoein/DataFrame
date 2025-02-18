@@ -2836,6 +2836,7 @@ int main(int, char *[]) {
     test_SeasonalPeriodVisitor();
     test_read_data_file_with_schema();
     test_knn();
+*/
     test_FastHierVisitor();
 
     return (0);

@@ -3861,6 +3861,51 @@ public: // Read/access and slicing interfaces
     pca_by_eigen(std::vector<const char *> &&col_names,
                  const PCAParams params = { }) const;
 
+    // This implements the K-Nearest Neighbors (KNN) algorithm. KNN is a
+    // machine learning technique that uses proximity to classify or predict
+    // data points. It's a supervised learning algorithm that's often used for
+    // classification problems.
+    // As mentioned KNN can be used for both classification and regression.
+    // This method is agnostic of what the intention of the user is. This
+    // method simply calculates the KNN and returns the result in a vector of
+    // pairs. The vector has k nearest neighbors. Each pair entry contains the
+    // value of the neighbor (first element) and the 0-based index of the
+    // neighbor (second element) in your dataset. The vector is sorted from
+    // nearest to furthest.
+    // It is up the user to process this result for his/her purpose. User can
+    // calculate average or weighed average for prediction, or it can use the
+    // indices into his/her categorical data for classification.
+    //
+    // T:
+    //   Type of the named columns
+    // col_names:
+    //   Vector of column names of independent features
+    // target:
+    //   Dependent feature
+    // k:
+    //   The K parameter
+    // dfunc:
+    //   A function to calculate distance between two features. The default is
+    //   Euclidean distance
+    //
+    template<typename T>
+    [[nodiscard]] KNNResult<T>
+    knn(std::vector<const char *> &&col_names,
+        const std::vector<T> &target,
+        size_type k,
+        KNNDistFunc<T> &&dfunc =
+            [](const std::vector<T> &X, const std::vector<T> &y) -> T  {
+                T   dist { 0 };
+
+                for (std::size_t i { 0 }; const auto &xval : X)  {
+                    const T &yval = y[i++];
+
+                    dist += (xval - yval) * (xval - yval);
+                }
+                return (std::sqrt(dist));
+            }
+        ) const;
+
     // This calculates Singular Value Decomposition (SVD). Optionaly it may
     // normalize the original matrix first.
     // In linear algebra, SVD is a factorization of a real or complex matrix

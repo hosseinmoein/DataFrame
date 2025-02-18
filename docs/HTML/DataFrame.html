@@ -330,6 +330,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates  K-Nearest Neighbors (KNN) algorithm"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/knn.html">knn</a>()</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Returns the Markov Chains stationary distributions"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MC_station_dist.html">MC_station_dist</a>()</td>
     </tr>
 
@@ -1988,7 +1992,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 <BR><HR COLOR="Gray" SIZE="5">
 
   <H2 ID="9"><font color="blue">Build Instructions <font size="+4">&#x1F6E0;</font></font></H2>
-    When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, consider you pass a column with 3 values in it and ask DataFrame to find peaks that are higher than 5 data points around them. Without a sanity check you get a crash or garbage.<BR>
+    When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, supposed you call to calculate KNN and supposed K is greater than number of features passed in. if <I> HMDF_SANITY_EXCEPTIONS</I> is defined, you get an exception with explanation. If it is not defined, you get garbage or a crash.<BR>
 
     <BR><font size="+1"><B>Cloning Repo:</B></font><BR>
 <font size="+1">

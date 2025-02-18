@@ -1028,6 +1028,90 @@ pca_by_eigen(std::vector<const char *> &&col_names,
 
 template<typename I, typename H>
 template<typename T>
+KNNResult<T> DataFrame<I, H>::
+knn(std::vector<const char *> &&col_names,
+    const std::vector<T> &target,
+    size_type k,
+    KNNDistFunc<T> &&dfunc) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (target.size() != col_names.size())
+        throw NotFeasible("knn(): Target dimension != number of features");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    size_type                               col_s { indices_.size() };
+    const size_type                         fet_s { col_names.size() };
+    std::vector<const ColumnVecType<T> *>   columns(fet_s, nullptr);
+    SpinGuard                               guard { lock_ };
+
+    for (size_type i { 0 }; i < fet_s; ++i)  {
+        columns[i] = &get_column<T>(col_names[i], false);
+        if (columns[i]->size() < col_s) [[unlikely]]
+            col_s = columns[i]->size();
+    }
+    guard.release();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (k >= col_s || k == 0)
+        throw NotFeasible("knn(): K must be < number of features and > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    using dist_t = std::pair<double, size_type>;
+
+    const auto          thread_level =
+        (col_s < 60000) ? 0L : get_thread_level();
+    std::vector<dist_t> distances(col_s);
+    auto                lbd =
+        [&columns = std::as_const(columns), &target = std::as_const(target),
+         &distances, &dfunc, fet_s]
+        (size_type begin, size_type end) -> void  {
+            std::vector<T>  feature(fet_s);
+
+            for (size_type i { begin }; i < end; ++i)  {
+                for (size_type j { 0 }; j < fet_s; ++j)
+                    feature[j] = columns[j]->at(i);
+                distances[i] = std::make_pair(dfunc(feature, target), i);
+            }
+        };
+
+    if (thread_level > 2)  {
+        auto    futuers =
+            thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+        thr_pool_.parallel_sort(distances.begin(), distances.end(),
+                                [](const auto &lhs, const auto &rhs) -> bool  {
+                                    return (lhs.first < rhs.first);
+                                });
+    }
+    else  {
+        lbd(size_type(0), col_s);
+        std::sort(distances.begin(), distances.end(),
+                  [](const auto &lhs, const auto &rhs) -> bool  {
+                      return (lhs.first < rhs.first);
+                  });
+    }
+
+    KNNResult<T>    result;
+
+    result.reserve(k);
+    for (size_type i { 0 }; i < k; ++i)  {
+        KNNPair<T>  item;
+
+        item.first.reserve(fet_s);
+        for (size_type j { 0 }; j < fet_s; ++j)
+            item.first.push_back(columns[j]->at(distances[i].second));
+        item.second = distances[i].second;
+        result.push_back(std::move(item));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
 std::tuple<Matrix<T, matrix_orient::column_major>,  // U
            Matrix<T, matrix_orient::column_major>,  // S
            Matrix<T, matrix_orient::column_major>>  // V

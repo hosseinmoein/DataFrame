@@ -2682,6 +2682,53 @@ static void test_read_data_file_with_schema()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_knn()  {
+
+    std::cout << "\nTesting knn( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const auto  result =
+        df.knn<double>({ "IBM_Open", "IBM_High", "IBM_Low", "IBM_Close" },
+                       { 78.95, 80.48, 78.35, 80.48 }, 4);
+
+    assert(result.size() == 4);
+
+    assert(result[0].second == 500);  // Index into the IBM data columns
+    assert(result[0].first.size() == 4);
+    assert((std::fabs(result[0].first[0] - 78.9) < 0.01));
+    assert((std::fabs(result[0].first[2] - 78.32) < 0.01));
+    assert((std::fabs(result[0].first[3] - 80.4) < 0.01));
+
+    assert(result[1].second == 541);  // Index into the IBM data columns
+    assert(result[1].first.size() == 4);
+    assert((std::fabs(result[1].first[0] - 78.8) < 0.01));
+    assert((std::fabs(result[1].first[2] - 78.19) < 0.01));
+    assert((std::fabs(result[1].first[3] - 80.57) < 0.01));
+
+    assert(result[2].second == 558);  // Index into the IBM data columns
+    assert(result[2].first.size() == 4);
+    assert((std::fabs(result[2].first[0] - 78.5) < 0.01));
+    assert((std::fabs(result[2].first[2] - 78.36) < 0.01));
+    assert((std::fabs(result[2].first[3] - 80.11) < 0.01));
+
+    assert(result[3].second == 1232);  // Index into the IBM data columns
+    assert(result[3].first.size() == 4);
+    assert((std::fabs(result[3].first[0] - 79.25) < 0.01));
+    assert((std::fabs(result[3].first[2] - 78.87) < 0.01));
+    assert((std::fabs(result[3].first[3] - 80.36) < 0.01));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2731,6 +2778,7 @@ int main(int, char *[]) {
     test_MC_station_dist();
     test_SeasonalPeriodVisitor();
     test_read_data_file_with_schema();
+    test_knn();
 
     return (0);
 }

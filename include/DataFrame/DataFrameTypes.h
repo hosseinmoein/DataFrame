@@ -953,6 +953,18 @@ struct  Index2D  {
 
 // ----------------------------------------------------------------------------
 
+template<typename T>
+using KNNPair = std::pair<std::vector<T>, std::size_t>; 
+
+template<typename T>
+using KNNResult = std::vector<KNNPair<T>>;
+
+template<typename T>
+using KNNDistFunc =
+    std::function<T(const std::vector<T> &X, const std::vector<T> &y)>;
+
+// ----------------------------------------------------------------------------
+
 template<typename V>
 using GroupBySpec = std::tuple<const char *, const char *, V>;
 

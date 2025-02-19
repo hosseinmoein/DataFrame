@@ -720,66 +720,6 @@ private:
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Fast Hierarchical Agglomerative Clustering
 //
 template<typename T, typename I = unsigned long, std::size_t A = 0>
@@ -854,8 +794,9 @@ public:
 
         for (const auto &node : clus_res.Z)
             std::cout << node.node1 << ", "
-                      << node.node2 << ", " << node.dist << '\n';
-        std::cout << '\n' << std::endl;
+                      << node.node2 << ", "
+                      << node.dist << '\n';
+        std::cout << "\n\n" << std::endl;
         for (const auto &val : Z)
             std::cout << val << ", ";
         std::cout << std::endl;
@@ -894,51 +835,6 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Runtime complexity is O(I * n^2) where I is number of iterations.
 //

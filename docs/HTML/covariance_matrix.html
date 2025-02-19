@@ -31,7 +31,6 @@ body {
   background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
 }
 
-a { color: #FF5555; }
 </style>
 </head>
 
@@ -45,17 +44,17 @@ a { color: #FF5555; }
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-<PRE><B>
-template&lt;typename T&gt;
-<a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Matrix.html">Matrix</a>&lt;T, <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Matrix.html">matrix_orient</a>::column_major&gt;
-covariance_matrix(std::vector&lt;const char *&gt; &amp;&amp;col_names,
-                  <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">normalization_type</a> norm_type =
-                      normalization_type::none) const;
-</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Matrix.html">Matrix</a><span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Matrix.html">matrix_orient</a><span style="color:#800080; ">::</span>column_major<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">covariance_matrix<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span><span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>col_names<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                  <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">normalization_type</a> norm_type <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">                      normalization_type<span style="color:#800080; ">::</span>none<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         This calculates and returns the variance/covariance matrix of the specified columns, optionally normalizing the columns first.<BR>
+        If you normalize the data with <I>z-score</I> method first, you will get a <I>correlation</I> matrix.<BR>
       </td>
       <td>
        <B>T</B>: Type of the named columns<BR>

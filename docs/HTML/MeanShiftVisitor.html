@@ -42,60 +42,58 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class  mean_shift_kernel : unsigned char  {
-
-    // if d <= 1 then 1 else 0
-    //
-    uniform = 1,
-
-    // if d <= 1 then 1 - abs(d) else 0
-    //
-    triangular = 2,
-
-    // if d <= 1 then 1 - d * d else 0
-    //
-    parabolic = 3,
-
-    //  x = 1 - d * d
-    //	if d <= 1 then x * x else 0	
-    //
-    biweight = 4,
-
-    // x = 1 - d * d
-    // if d <= 1 then x * x * x else 0
-    //
-    triweight = 5,
-
-    // x = 1 - d * d * d
-    // if d <= 1 then x * x * x else 0
-    //
-    tricube = 6,
-
-    // e<sup>-0.5 * d * d</sup>
-    //
-    gaussian = 7,
-
-    // if d <= 1 then cos(M_PI_2 * d) else 0
-    //
-    cosin = 8,
-
-    // 1 / (2 + e<sup>d</sup> + e<sup>-d</sup>)
-    //
-    logistic = 9,
-
-    // 1.0 / (e<sup>d</sup> + e<sup>-d</sup>)
-    //
-    sigmoid = 10,
-
-    // x = M_SQRT1_2 * abs(d)
-    // e<sup>-x</sup> * sin(x + M_PI_4)
-    //
-    silverman = 11,
-};
-        </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  mean_shift_kernel <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// if d &lt;= 1 then 1 else 0</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    uniform <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// if d &lt;= 1 then 1 - abs(d) else 0</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    triangular <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// if d &lt;= 1 then 1 - d * d else 0</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    parabolic <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//  x = 1 - d * d</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//    if d &lt;= 1 then x * x else 0    </span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    biweight <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// x = 1 - d * d</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// if d &lt;= 1 then x * x * x else 0</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    triweight <span style="color:#808030; ">=</span> <span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// x = 1 - d * d * d</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// if d &lt;= 1 then x * x * x else 0</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    tricube <span style="color:#808030; ">=</span> <span style="color:#008c00; ">6</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// e<sup>-0.5 * d * d</sup></span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    gaussian <span style="color:#808030; ">=</span> <span style="color:#008c00; ">7</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// if d &lt;= 1 then cos(M_PI_2 * d) else 0</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    cosin <span style="color:#808030; ">=</span> <span style="color:#008c00; ">8</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// 1 / (2 + e<sup>d</sup> + e<sup>-d</sup>)</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    logistic <span style="color:#808030; ">=</span> <span style="color:#008c00; ">9</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// 1.0 / (e<sup>d</sup> + e<sup>-d</sup>)</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    sigmoid <span style="color:#808030; ">=</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// x = M_SQRT1_2 * abs(d)</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// e<sup>-x</sup> * sin(x + M_PI_4)</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    silverman <span style="color:#808030; ">=</span> <span style="color:#008c00; ">11</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Kernal is a fancy mathematical name for a weight assigned to a distance between datapoints
@@ -113,13 +111,13 @@ enum class  mean_shift_kernel : unsigned char  {
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameMLVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-struct MeanShiftVisitor;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameMLVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> MeanShiftVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is a single action visitor, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>

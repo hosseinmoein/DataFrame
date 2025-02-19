@@ -42,22 +42,22 @@ body {
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long,
-         typename Cmp = std::less&lt;T&gt;&gt;
-struct ExtremumSubArrayVisitor;
-
-// -------------------------------------
-
-template&lt;typename T, typename I = unsigned long&gt;
-using <U>MaxSubArrayVisitor</U> =
-    ExtremumSubArrayVisitor&lt;T, I, std::less&lt;T&gt;&gt;;
-template&lt;typename T, typename I = unsigned long&gt;
-using <U>MinSubArrayVisitor</U> =
-    ExtremumSubArrayVisitor&lt;T, I, std::greater&lt;T&gt;&gt;;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> Cmp <span style="color:#808030; ">=</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">less</span><span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">&gt;</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> ExtremumSubArrayVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> MaxSubArrayVisitor <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">    ExtremumSubArrayVisitor<span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">less</span><span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">&gt;</span><span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> MinSubArrayVisitor <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">    ExtremumSubArrayVisitor<span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">greater</span><span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">&gt;</span><span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This functor finds the subinterval within the given column that contains elements with maximum or minimum (depending on <I>Cmp</I>. The default is maximum) sum than any other interval. It does it in O(n). In the constructor, the user can specify maximum and minimum values to consider. The default is to consider all values.<BR>
@@ -79,22 +79,22 @@ using <U>MinSubArrayVisitor</U> =
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;std::size_t N, typename T, typename I = unsigned long,
-         typename Cmp = std::less&lt;T&gt;, std::size_t A = 0&gt;
-struct NExtremumSubArrayVisitor;
-
-// -------------------------------------
-
-template&lt;std::size_t N, typename T, typename I, std::size_t A = 0&gt;
-using <U>NMaxSubArrayVisitor</U> =
-    NExtremumSubArrayVisitor&lt;N, T, I, std::less&lt;T&gt;, A&gt;;
-template&lt;std::size_t N, typename T, typename I, std::size_t A = 0&gt;
-using <U>NMinSubArrayVisitor</U> =
-    NExtremumSubArrayVisitor&lt;N, T, I, std::greater&lt;T&gt;, A&gt;;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> N<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> Cmp <span style="color:#808030; ">=</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">less</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> NExtremumSubArrayVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> N<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> NMaxSubArrayVisitor <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">    NExtremumSubArrayVisitor<span style="color:#800080; ">&lt;</span>N<span style="color:#808030; ">,</span> T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">less</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> N<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> NMinSubArrayVisitor <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">    NExtremumSubArrayVisitor<span style="color:#800080; ">&lt;</span>N<span style="color:#808030; ">,</span> T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">greater</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This functor is similar to the above <I>ExtremumSubArrayVisitor</I>, but it finds at most N subintervals within the given column that contain elements with maximum or minimum sum than any other interval. It does it in O(n + kNlog(N)); where <I>n</I> = column length, <I>k</I> = a multiplier less than <I>n</I>, <I>N</I> = number of max sums to find<BR>

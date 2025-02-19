@@ -43,14 +43,13 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T, typename V&gt;
-V &amp;
-visit(const char *name,
-      V &amp;visitor,
-      bool in_reverse = false); </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">V <span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">visit<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">bool</span> in_reverse <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It passes the values of each index and the named column to the functor visitor sequentially from beginning to end<BR>
@@ -66,14 +65,13 @@ visit(const char *name,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T, typename V&gt;
-std::future&lt;V &amp;&gt;
-visit_async(const char *name,
-            V &amp;visitor,
-            bool in_reverse = false); </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span>V <span style="color:#808030; ">&amp;</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">visit_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> in_reverse <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         These are identical to above visit() but could execute asynchronously.<BR>
@@ -86,15 +84,14 @@ visit_async(const char *name,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename V&gt;
-V &amp;
-visit(const char *name1,
-      const char *name2,
-      V &amp;visitor,
-      bool in_reverse = false); </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">V <span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">visit<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">bool</span> in_reverse <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It passes the values of each index and the two named columns to the functor visitor sequentially from beginning to end<BR>
@@ -112,15 +109,14 @@ visit(const char *name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename V&gt;
-std::future&lt;V &amp;&gt;
-visit_async(const char *name1,
-            const char *name2,
-            V &amp;visitor,
-            bool in_reverse = false); </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span>V <span style="color:#808030; ">&amp;</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">visit_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> in_reverse <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         These are identical to above visit() but could execute asynchronously.<BR>
@@ -133,16 +129,15 @@ visit_async(const char *name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename T3, typename V&gt;
-V &amp;
-visit(const char *name1,
-      const char *name2,
-      const char *name3,
-      V &amp;visitor,
-      bool in_reverse = false); </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">V <span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">visit<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">bool</span> in_reverse <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It passes the values of each index and the three named columns to the functor visitor sequentially from beginning to end<BR>
@@ -162,16 +157,15 @@ visit(const char *name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename T3, typename V&gt;
-std::future&lt;V &amp;&gt;
-visit_async(const char *name1,
-            const char *name2,
-            const char *name3,
-            V &amp;visitor,
-            bool in_reverse = false); </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span>V <span style="color:#808030; ">&amp;</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">visit_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> in_reverse <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         These are identical to above visit() but could execute asynchronously.<BR>
@@ -184,18 +178,17 @@ visit_async(const char *name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename T3, typename T4,
-         typename V&gt;
-V &amp;
-visit(const char *name1,
-      const char *name2,
-      const char *name3,
-      const char *name4,
-      V &amp;visitor,
-      bool in_reverse = false); </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">V <span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">visit<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">bool</span> in_reverse <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It passes the values of each index and the four named columns to the functor visitor sequentially from beginning to end<BR>
@@ -217,18 +210,17 @@ visit(const char *name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename T3, typename T4,
-         typename V&gt;
-std::future&lt;V &amp;&gt;
-visit_async(const char *name1,
-            const char *name2,
-            const char *name3,
-            const char *name4,
-            V &amp;visitor,
-            bool in_reverse = false); </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span>V <span style="color:#808030; ">&amp;</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">visit_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> in_reverse <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         These are identical to above visit() but could execute asynchronously.<BR>
@@ -241,19 +233,18 @@ visit_async(const char *name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename T3, typename T4,
-         typename T5, typename V&gt;
-V &amp;
-visit(const char *name1,
-      const char *name2,
-      const char *name3,
-      const char *name4,
-      const char *name5,
-      V &amp;visitor,
-      bool in_reverse = false); </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> T5<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">V <span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">visit<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name5<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">bool</span> in_reverse <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It passes the values of each index and the five named columns to the functor visitor sequentially from beginning to end<BR>
@@ -277,19 +268,18 @@ visit(const char *name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename T3, typename T4,
-         typename T5, typename V&gt;
-std::future&lt;V &amp;&gt;
-visit_async(const char *name1,
-            const char *name2,
-            const char *name3,
-            const char *name4,
-            const char *name5,
-            V &amp;visitor,
-            bool in_reverse = false); </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> T5<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span>V <span style="color:#808030; ">&amp;</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">visit_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name5<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> in_reverse <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         These are identical to above visit() but could execute asynchronously.<BR>

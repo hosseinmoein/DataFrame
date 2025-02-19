@@ -42,17 +42,16 @@ body {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename OLD_T1, typename OLD_T2,
-         typename NEW_T, typename F&gt;
-void
-consolidate(const char *old_col_name1,
-            const char *old_col_name2,
-            const char *new_col_name,
-            F &functor,
-            bool delete_old_cols = true);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> NEW_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">consolidate<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This method feeds old_col_name1 and old_col_name2 of types OLD_T1 and OLD_T2 to functor which returns a std::vector<NEW_T> which will be loaded into self as column new_col_name. Both old columns will be removed, if delete_old_cols is true<BR>
@@ -82,19 +81,18 @@ consolidate(const char *old_col_name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename OLD_T1, typename OLD_T2,
-         typename OLD_T3,
-         typename NEW_T, typename F&gt;
-void
-consolidate(const char *old_col_name1,
-            const char *old_col_name2,
-            const char *old_col_name3,
-            const char *new_col_name,
-            F &functor,
-            bool delete_old_cols = true);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> NEW_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">consolidate<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is the same as above consolidate(), but it consolidates 3 columns into one.<BR>
@@ -127,20 +125,19 @@ consolidate(const char *old_col_name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename OLD_T1, typename OLD_T2,
-         typename OLD_T3, typename OLD_T4,
-         typename NEW_T, typename F&gt;
-void
-consolidate(const char *old_col_name1,
-            const char *old_col_name2,
-            const char *old_col_name3,
-            const char *old_col_name4,
-            const char *new_col_name,
-            F &functor,
-            bool delete_old_cols = true);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> NEW_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">consolidate<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is the same as above consolidate(), but it consolidates 4 columns into one.<BR>
@@ -176,22 +173,21 @@ consolidate(const char *old_col_name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename OLD_T1, typename OLD_T2,
-         typename OLD_T3, typename OLD_T4,
-         typename OLD_T5,
-         typename NEW_T, typename F&gt;
-void
-consolidate(const char *old_col_name1,
-            const char *old_col_name2,
-            const char *old_col_name3,
-            const char *old_col_name4,
-            const char *old_col_name5,
-            const char *new_col_name,
-            F &functor,
-            bool delete_old_cols = true);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T5<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> NEW_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">consolidate<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name5<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is the same as above consolidate(), but it consolidates 5 columns into one.<BR>

@@ -3062,6 +3062,98 @@ private:
 template<typename T, typename I = unsigned long>
 using ssp_v = SeasonalPeriodVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Dynamic Time Warping (DTW) is an algorithm for measuring similarity between
+// two temporal sequences, which may vary in speed.
+//
+template<typename T, typename I = unsigned long>
+struct  DynamicTimeWarpVisitor  {
+
+private:
+
+    using matrix_t = Matrix<double, matrix_orient::row_major>;
+
+    template<typename H>
+    inline void calc_(const H &x_begin, const H &x_end,
+                      const H &y_begin, const H &y_end)  {
+
+        const long  x_col_s = long(std::distance(x_begin, x_end));
+        const long  y_col_s = long(std::distance(y_begin, y_end));
+        matrix_t    mt (x_col_s + 1, y_col_s + 1,
+                        std::numeric_limits<double>::infinity());
+
+        mt(0, 0) = 0.0;
+        for (long i { 1 }; i <= x_col_s; ++i)  {
+            const value_type    &xval = *(x_begin + (i - 1));
+
+            for (long j { 1 }; j <= y_col_s; ++j)  {
+                const double    cost = dfunc_(xval, *(y_begin + (j - 1)));
+
+                mt(i, j) =
+                    cost +
+                    std::min({ mt(i - 1, j), mt(i, j - 1), mt(i - 1, j - 1) });
+            }
+        }
+
+        result_ = mt(x_col_s, y_col_s);
+    }
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type = double;
+    using distance_func = std::function<double(const T &x, const T &y)>;
+
+    template<typename IV, typename H>
+    inline void
+    operator() (const IV &idx_begin, const IV &idx_end,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
+
+        if (nt_ > normalization_type::none)  {
+            NormalizeVisitor<T, I>  x_norm_v { nt_ };
+            NormalizeVisitor<T, I>  y_norm_v { nt_ };
+
+            x_norm_v.pre();
+            x_norm_v(idx_begin, idx_end, x_begin, x_end);
+            x_norm_v.post();
+
+            y_norm_v.pre();
+            y_norm_v(idx_begin, idx_end, y_begin, y_end);
+            y_norm_v.post();
+
+            calc_(x_norm_v.get_result().begin(), x_norm_v.get_result().end(),
+                  y_norm_v.get_result().begin(), y_norm_v.get_result().end());
+        }
+        else  calc_(x_begin, x_end, y_begin, y_end);
+    }
+
+    inline void pre ()  { result_ = 0.0; }
+    inline void post ()  {  }
+
+    inline result_type get_result () const  { return (result_); }
+
+    explicit
+    DynamicTimeWarpVisitor(
+        normalization_type norm_type = normalization_type::none,
+        distance_func &&f =
+            [](const value_type &x, const value_type &y) -> double  {
+                return (std::fabs(x - y));
+            })
+        : nt_(norm_type), dfunc_(std::forward<distance_func>(f))  {   }
+
+private:
+
+    const normalization_type    nt_;
+    distance_func               dfunc_;
+    result_type                 result_ { 0 };
+};
+
+template<typename T, typename I = unsigned long>
+using dtw_v = DynamicTimeWarpVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

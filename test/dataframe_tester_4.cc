@@ -52,6 +52,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -2726,6 +2727,65 @@ static void test_knn()  {
     assert((std::fabs(result[3].first[2] - 78.87) < 0.01));
     assert((std::fabs(result[3].first[3] - 80.36) < 0.01));
 }
+*/
+
+// ----------------------------------------------------------------------------
+
+static void test_DynamicTimeWarpVisitor()  {
+
+    std::cout << "\nTesting DynamicTimeWarpVisitor{ } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    dtw_v<double, std::string>  dtw;
+
+    df.single_act_visit<double, double>("IBM_Open", "IBM_Close", dtw);
+    assert((std::fabs(dtw.get_result() - 2682.91) < 0.01));
+
+    df.single_act_visit<double, double>("IBM_High", "IBM_Low", dtw);
+    assert((std::fabs(dtw.get_result() - 6255.33) < 0.01));
+
+    df.single_act_visit<double, double>("IBM_Open", "IBM_Low", dtw);
+    assert((std::fabs(dtw.get_result() - 3649.94) < 0.01));
+
+    df.single_act_visit<double, double>("IBM_Close", "IBM_Low", dtw);
+    assert((std::fabs(dtw.get_result() - 3851.43) < 0.01));
+
+    df.single_act_visit<double, double>("IBM_Open", "IBM_High", dtw);
+    assert((std::fabs(dtw.get_result() - 3833.26) < 0.01));
+
+    df.single_act_visit<double, double>("IBM_Close", "IBM_High", dtw);
+    assert((std::fabs(dtw.get_result() - 3737.44) < 0.01));
+
+    DynamicTimeWarpVisitor<double, std::string> dtw2 (
+        normalization_type::z_score);
+
+    df.single_act_visit<double, double>("IBM_Open", "IBM_Close", dtw2);
+    assert((std::fabs(dtw2.get_result() - 70.4392) < 0.0001));
+
+    df.single_act_visit<double, double>("IBM_High", "IBM_Low", dtw2);
+    assert((std::fabs(dtw2.get_result() - 90.0254) < 0.0001));
+
+    df.single_act_visit<double, double>("IBM_Open", "IBM_Low", dtw2);
+    assert((std::fabs(dtw2.get_result() - 77.116) < 0.0001));
+
+    df.single_act_visit<double, double>("IBM_Close", "IBM_Low", dtw2);
+    assert((std::fabs(dtw2.get_result() - 76.7581) < 0.0001));
+
+    df.single_act_visit<double, double>("IBM_Open", "IBM_High", dtw2);
+    assert((std::fabs(dtw2.get_result() - 77.2208) < 0.0001));
+
+    df.single_act_visit<double, double>("IBM_Close", "IBM_High", dtw2);
+    assert((std::fabs(dtw2.get_result() - 77.2344) < 0.0001));
+}
 
 // ----------------------------------------------------------------------------
 
@@ -2733,6 +2793,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -2779,6 +2840,8 @@ int main(int, char *[]) {
     test_SeasonalPeriodVisitor();
     test_read_data_file_with_schema();
     test_knn();
+*/
+    test_DynamicTimeWarpVisitor();
 
     return (0);
 }

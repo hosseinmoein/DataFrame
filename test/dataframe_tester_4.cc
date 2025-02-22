@@ -52,7 +52,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -2727,7 +2726,6 @@ static void test_knn()  {
     assert((std::fabs(result[3].first[2] - 78.87) < 0.01));
     assert((std::fabs(result[3].first[3] - 80.36) < 0.01));
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -2793,7 +2791,6 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -2840,7 +2837,6 @@ int main(int, char *[]) {
     test_SeasonalPeriodVisitor();
     test_read_data_file_with_schema();
     test_knn();
-*/
     test_DynamicTimeWarpVisitor();
 
     return (0);

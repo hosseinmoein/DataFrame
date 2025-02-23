@@ -43,19 +43,18 @@ body {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-DataFrame&lt;DateTime, H&gt;
-get_data_between_times(DateTime::HourType start_hour,  // 24 hour
-                       DateTime::HourType end_hour,  // 24 hour
-                       DateTime::MinuteType start_minute = 0,
-                       DateTime::MinuteType end_minute = 0,
-                       DateTime::SecondType start_second = 0,
-                       DateTime::SecondType end_second = 0,
-                       DateTime::MillisecondType start_msec = 0,
-                       DateTime::MillisecondType end_msec = 0) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">DataFrame<span style="color:#800080; ">&lt;</span>DateTime<span style="color:#808030; ">,</span> H<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">get_data_between_times<span style="color:#808030; ">(</span>DateTime<span style="color:#800080; ">::</span>HourType start_hour<span style="color:#808030; ">,</span>  <span style="color:#696969; ">// 24 hour</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>HourType end_hour<span style="color:#808030; ">,</span>  <span style="color:#696969; ">// 24 hour</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MinuteType start_minute <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MinuteType end_minute <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>SecondType start_second <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>SecondType end_second <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MillisecondType start_msec <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MillisecondType end_msec <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This selects the rows using the index column that happen between the specified start and end time. It returns another DataFrame with selected data indexed by DateTime. The specified start/end times are excluded. Self is unchanged.<BR><BR>
@@ -75,19 +74,18 @@ get_data_between_times(DateTime::HourType start_hour,  // 24 hour
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-PtrView
-get_view_between_times(DateTime::HourType start_hour,  // 24 hour
-                       DateTime::HourType end_hour,  // 24 hour
-                       DateTime::MinuteType start_minute = 0,
-                       DateTime::MinuteType end_minute = 0,
-                       DateTime::SecondType start_second = 0,
-                       DateTime::SecondType end_second = 0,
-                       DateTime::MillisecondType start_msec = 0,
-                       DateTime::MillisecondType end_msec = 0);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">PtrView</span>
+<span class="line_wrapper">get_view_between_times<span style="color:#808030; ">(</span>DateTime<span style="color:#800080; ">::</span>HourType start_hour<span style="color:#808030; ">,</span>  <span style="color:#696969; ">// 24 hour</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>HourType end_hour<span style="color:#808030; ">,</span>  <span style="color:#696969; ">// 24 hour</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MinuteType start_minute <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MinuteType end_minute <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>SecondType start_second <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>SecondType end_second <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MillisecondType start_msec <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MillisecondType end_msec <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It behaves like get_data_between_times(), but it returns a View. A view is a DataFrame that is a reference to the original DataFrame. So if you modify anything in the view the original DataFrame will also be modified.<BR><BR>
@@ -107,19 +105,18 @@ get_view_between_times(DateTime::HourType start_hour,  // 24 hour
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-ConstPtrView
-get_view_between_times(DateTime::HourType start_hour,  // 24 hour
-                       DateTime::HourType end_hour,  // 24 hour
-                       DateTime::MinuteType start_minute = 0,
-                       DateTime::MinuteType end_minute = 0,
-                       DateTime::SecondType start_second = 0,
-                       DateTime::SecondType end_second = 0,
-                       DateTime::MillisecondType start_msec = 0,
-                       DateTime::MillisecondType end_msec = 0) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">ConstPtrView</span>
+<span class="line_wrapper">get_view_between_times<span style="color:#808030; ">(</span>DateTime<span style="color:#800080; ">::</span>HourType start_hour<span style="color:#808030; ">,</span>  <span style="color:#696969; ">// 24 hour</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>HourType end_hour<span style="color:#808030; ">,</span>  <span style="color:#696969; ">// 24 hour</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MinuteType start_minute <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MinuteType end_minute <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>SecondType start_second <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>SecondType end_second <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MillisecondType start_msec <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                       DateTime<span style="color:#800080; ">::</span>MillisecondType end_msec <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is reflected in the const view.       

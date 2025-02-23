@@ -43,13 +43,13 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class drop_policy : unsigned char  {
-    all = 1,      // Remove row if all columns are nan
-    any = 2,      // Remove row if any column is nan
-    threshold = 3 // Remove row if threshold number of columns are nan
-}; </B></PRE> </font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> drop_policy <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    all <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>      <span style="color:#696969; ">// Remove row if all columns are nan</span></span>
+<span class="line_wrapper">    any <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>      <span style="color:#696969; ">// Remove row if any column is nan</span></span>
+<span class="line_wrapper">    threshold <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span> <span style="color:#696969; ">// Remove row if threshold number of columns are nan</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This policy specifies what rows to drop/remove based on missing column data<BR>
@@ -69,12 +69,11 @@ enum class drop_policy : unsigned char  {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-void
-drop_missing(drop_policy policy, std::size_t threshold = 0);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">drop_missing<span style="color:#808030; ">(</span>drop_policy policy<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> threshold <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It removes a row if any or all or some of the columns are NaN, based on drop policy
@@ -95,38 +94,38 @@ drop_missing(drop_policy policy, std::size_t threshold = 0);
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-    <PRE><B>
-enum class fill_policy : unsigned char  {
-    // Fill all missing values with the given substitute
-    //
-    value = 1,
-
-    // Fill the missing values with the previous value
-    //
-    fill_forward = 2,
-
-    // Fill the missing values with the next value
-    //
-    fill_backward = 3,
-
-    //           X - X<sub>1</sub>
-    // Y = Y<sub>1</sub> + --------- * (Y<sub>2</sub> - Y<sub>1</sub>)
-    //           X<sub>2</sub> - X<sub>1</sub>
-    // Use the index column as X coordinate and the given column as Y coordinate
-    //
-    linear_interpolate = 4,
-
-    // Fill missing values with mid-point of surrounding values
-    //
-    mid_point = 5,
-
-    // O(n<sup>2</sup>) algorithm for each missing value. It uses the index as X coordinate
-    // This is very much a <I>garbage in, garbage out</I> algorithm.
-    // The index and column data must be in the same scale and be correlated.
-    //
-    lagrange_interpolate = 6,
-};</B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> fill_policy <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Fill all missing values with the given substitute</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    value <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Fill the missing values with the previous value</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    fill_forward <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Fill the missing values with the next value</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    fill_backward <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//           X - X1</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Y = Y1 + --------- * (Y2 - Y1)</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//           X2 - X1</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Use the index column as X coordinate and the given column as Y coordinate</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    linear_interpolate <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Fill missing values with mid-point of surrounding values</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    mid_point <span style="color:#808030; ">=</span> <span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// O(n2) algorithm for each missing value. It uses the index as X coordinate</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// This is very much a garbage in, garbage out algorithm.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// The index and column data must be in the same scale and be correlated.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    lagrange_interpolate <span style="color:#808030; ">=</span> <span style="color:#008c00; ">6</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This policy determines how to fill missing values in the DataFrame<BR>
@@ -143,15 +142,14 @@ enum class fill_policy : unsigned char  {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-void
-fill_missing(const std::vector<const char *> &amp;col_names,
-             fill_policy policy,
-             const std::vector<T> &amp;values = { },
-             int limit = -1);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">fill_missing<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span> <span style="color:#808030; ">&amp;</span>col_names<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">             fill_policy policy<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">             <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span> <span style="color:#808030; ">&amp;</span>values <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">             <span style="color:#800000; font-weight:bold; ">int</span> limit <span style="color:#808030; ">=</span> <span style="color:#808030; ">-</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It fills all the "missing values" with the given values, and/or using the given method
@@ -169,12 +167,12 @@ fill_missing(const std::vector<const char *> &amp;col_names,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename DF, typename ... Ts&gt;
-void
-fill_missing(const DF &rhs);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> DF<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">fill_missing<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DF <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It fills the missing values in all columns in self by investigating the rhs DataFrame. It attempts to find columns with the same name and type in rhs. If there are such columns in rhs, it fills the missing values in the corresponding columns in self that also have the same index value.<BR><BR>

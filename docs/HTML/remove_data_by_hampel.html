@@ -43,16 +43,14 @@ body {
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;arithmetic T, typename ... Ts&gt;
-void
-remove_data_by_hampel(const char *col_name,
-                      size_type window_size,
-                      hampel_type htype = hampel_type::median,
-                      T num_of_stdev = 3);
-
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>arithmetic T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">remove_data_by_hampel<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      size_type window_size<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/HampelFilterVisitor.html">hampel_type</a> htype <span style="color:#808030; ">=</span> hampel_type<span style="color:#800080; ">::</span>median<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      T num_of_stdev <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This uses an <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/HampelFilterVisitor.html">Hampel filter</a> to detect and remove outliers in the named column and all rows corresponding to those outliers in the DataFrame.<BR><BR>

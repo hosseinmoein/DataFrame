@@ -42,14 +42,13 @@ body {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-DataFrame&lt;T, H&gt;
-change_freq(size_type new_freq,
-            <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/time_frequency.html" style="color:white">time_frequency</a> time_unit =
-                time_frequency::not_valid) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">DataFrame<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> H<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">change_freq<span style="color:#808030; ">(</span>size_type new_freq<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/time_frequency.html">time_frequency</a> time_unit <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">                time_frequency<span style="color:#800080; ">::</span>not_valid<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This returns a new DataFrame with the same index type. But the frequency of the index in the new DataFrame is according to the parameters of this call. If the frequency has  increased the data is forward-filled from self. If the frequency has decreased, the last data point is copied from self.<BR><BR>

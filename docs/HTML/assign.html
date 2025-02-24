@@ -42,16 +42,15 @@ body {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename OTHER, typename ... Ts&gt;
-DataFrame &amp;
-assign(const OTHER &rhs);
-
-template&lt;typename OTHER, typename ... Ts&gt;
-DataFrame &amp;
-assign(OTHER &rhs);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OTHER<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">DataFrame <span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">assign<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> OTHER <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OTHER<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">DataFrame <span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">assign<span style="color:#808030; ">(</span>OTHER <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
           The purpose of <I>assign()</I> is to make it possible to copy any version of DataFrame to any other version. It means you can assign a <I>View</I> to a <I>DataFrame</I> or assign a <I>PtrView</I> to a <I>View</I> and so on and so forth. <I>assign()</I> copies the data from <I>rhs</I> to self. It returns a reference to self.<BR>

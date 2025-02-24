@@ -43,12 +43,11 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue" width = "27%"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-std::string
-to_string(std::streamsize precision = 12) const; </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span></span>
+<span class="line_wrapper">to_string<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>streamsize precision <span style="color:#808030; ">=</span> <span style="color:#008c00; ">12</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "37%">
         This is a convenient function (simple implementation) to convert a DataFrame into a string that could be restored later by calling from_string(). It utilizes the write() member function of DataFrame.<BR>
@@ -63,12 +62,11 @@ to_string(std::streamsize precision = 12) const; </font>
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-std::fututre&lt;std::string&gt;
-to_string_async(std::streamsize precision = 12) const; </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>fututre<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">to_string_async<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>streamsize precision <span style="color:#808030; ">=</span> <span style="color:#008c00; ">12</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Same as to_string() above, but executed asynchronously
@@ -78,12 +76,11 @@ to_string_async(std::streamsize precision = 12) const; </font>
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue" width = "27%"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-std::string
-serialize() const; </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span></span>
+<span class="line_wrapper">serialize<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "37%">
         This is similar to to_string() to serialize a DataFrame into a binary buffer that could be restored later by calling deserialize(). It utilizes the write() member function of DataFrame. These functions could be used to transmit a DataFrame from one place to another or store a DataFrame in databases, caches, ...<BR><BR>
@@ -97,12 +94,11 @@ serialize() const; </font>
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-std::fututre&lt;std::string&gt;
-serialize_async() const; </font>
-        </B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>fututre<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">serialize_async<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Same as serialize() above, but executed asynchronously

@@ -42,27 +42,26 @@ body {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue" width = "15%"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-void
-multi_visit(Ts ... args);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">multi_visit<span style="color:#808030; ">(</span>Ts <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> args<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
-      <td width = "33.3%">
+      <td>
         This is the most generalized visit function. It visits multiple columns with the corresponding function objects sequentially. Each function object is passed every single value of the given column along with its name and the corresponding index value. All functions objects must have this signature<BR>
         <I><PRE>
-    bool (const IndexType &i, const char *name, T &col_value)<BR>
+  bool (const IndexType &i, const char *name, T &col_value)<BR>
         </PRE></I>
         If the function object returns false, the DataFrame will stop iterating at that point on that column..<BR>
         <B>NOTE</B>: This method could be used to implement a pivot table.
       </td>
-      <td width = "33.3%">
+      <td width = "35%">
         <B>Ts</B>: The list of types for columns in args<BR>
         <B>args</B>: A variable list of arguments consisting of<BR>
         <I><PRE>
-    std::pair(const char *name,
-              &std::function&lt;bool (const IndexType &, const char *, T &)&gt;)
+  std::pair(const char *name,
+            &std::function&lt;bool (const IndexType &, const char *, T &)&gt;)
         </PRE></I>
         Each pair represents a column name and the functor to run on it.<BR>
         <B>NOTE</b>: The second member of pair is a _pointer_ to the function or functor object

@@ -1346,9 +1346,13 @@ public:
                         col_s,
                         [&column_begin, &result]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i) [[likely]]
-                                result[i] =
-                                    std::complex<T>(*(column_begin + i), 0);
+                            for (size_type i = begin; i < end; ++i)  {
+                                if constexpr (is_complex<T>::value)
+                                    result[i] = *(column_begin + i);
+                                else
+                                    result[i] =
+                                        std::complex<T>(*(column_begin + i), 0);
+                            }
                         });
             }
             for (auto &fut : futures)  fut.get();
@@ -3153,6 +3157,85 @@ private:
 
 template<typename T, typename I = unsigned long>
 using dtw_v = DynamicTimeWarpVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  AnomalyDetectByFFTVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type =
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (freq_num_ >= col_s)
+           throw DataFrameError("AnomalyDetectByFFTVisitor: "
+                                "freq num must be < column length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        NormalizeVisitor<T, I, A>   norm { nt_ };
+
+        if (nt_ > normalization_type::none)  {
+            norm.pre();
+            norm(idx_begin, idx_end, column_begin, column_end);
+            norm.post();
+        }
+
+        fft_v<T, I, A>  fft;
+
+        fft.pre();
+        if (nt_ > normalization_type::none)
+            fft(idx_begin, idx_end,
+                norm.get_result().begin(), norm.get_result().end());
+        else
+            fft(idx_begin, idx_end, column_begin, column_end);
+        fft.post();
+
+        auto    fft_res = std::move(fft.get_result());
+
+        for (size_type i { freq_num_ }; i < col_s; ++i)
+            fft_res[i] = T(0);
+
+        fft_v<std::complex<T>, I, A>    ifft(true); // Inverse FFT
+
+        ifft.pre();
+        ifft(idx_begin, idx_end, fft_res.begin(), fft_res.end());
+        ifft.post();
+
+        result_.reserve(col_s / 100);
+        for (size_type i { 0 }; i < col_s; ++i)
+            if (std::abs(*(column_begin + i) - ifft.get_result()[i]) > ath_)
+                result_.push_back(i);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    AnomalyDetectByFFTVisitor(size_type freq_num,
+                              value_type anomaly_threshold = T(1),
+                              normalization_type norm_type =
+                                  normalization_type::none)
+        : ath_(anomaly_threshold), freq_num_(freq_num), nt_(norm_type)  {   }
+
+private:
+
+    const value_type            ath_;
+    const size_type             freq_num_;
+    const normalization_type    nt_;
+    result_type                 result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using and_fft_v = AnomalyDetectByFFTVisitor<T, I, A>;
 
 } // namespace hmdf
 

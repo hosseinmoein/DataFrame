@@ -44,6 +44,7 @@ using namespace hmdf;
 // A DataFrame with ulong index type
 //
 using MyDataFrame = StdDataFrame256<unsigned long>;
+using MyStdDataFrame = StdDataFrame<unsigned long>;
 using StrDataFrame = StdDataFrame<std::string>;
 using DTDataFrame = StdDataFrame256<DateTime>;
 
@@ -2787,6 +2788,86 @@ static void test_DynamicTimeWarpVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_AnomalyDetectByFFTVisitor()  {
+
+    std::cout << "\nTesting AnomalyDetectByFFTVisitor{ } ..." << std::endl;
+
+    constexpr std::size_t   item_cnt = 1024;
+    MyStdDataFrame          df;
+
+    df.load_index(MyStdDataFrame::gen_sequence_index(0, item_cnt, 1));
+
+    std::vector<double>   sine_col;
+
+    sine_col.reserve(item_cnt);
+    for (std::size_t i = 0; i < item_cnt; ++i)  {
+        sine_col.push_back(std::sin(2.0 * M_PI * i / 20.0)); // Base sine wave
+        if (i % 30 == 0)  sine_col.back() += 2.0;  // Inject anomalies
+    }
+    df.load_column("sine col", std::move(sine_col));
+
+    // Keep at least 10% of the frequencies as dominant frequencies.
+    //
+    and_fft_v<double>               anomaly1(100, 1.0);
+    const std::vector<std::size_t>  result1 =
+        { 0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420,
+          450, 480, 510, 540, 570, 600, 630, 660, 690, 720, 750, 780, 810, 840,
+          870, 900, 930, 960, 990, 1020 };
+
+    df.single_act_visit<double>("sine col", anomaly1);
+    assert((anomaly1.get_result() == result1));
+
+    and_fft_v<double>   anomaly2(10, 1.5);
+
+    df.single_act_visit<double>("sine col", anomaly2);
+    assert((anomaly2.get_result() == result1));
+
+    and_fft_v<double>   anomaly3(100, 1.0, normalization_type::z_score);
+
+    df.single_act_visit<double>("sine col", anomaly3);
+    assert((anomaly3.get_result() == result1));
+
+    and_fft_v<double>   anomaly4(10, 1.5, normalization_type::z_score);
+
+    df.single_act_visit<double>("sine col", anomaly4);
+    assert((anomaly4.get_result() == result1));
+
+    // Now do the same thing for IBM market data
+    //
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+    ibm.get_column<double>("IBM_Close")[502] = 800.0;
+    ibm.get_column<double>("IBM_Close")[1001] = 900.0;
+    ibm.get_column<double>("IBM_Close")[2002] = 850.0;
+
+    // Keep at least 10% of the frequencies as dominant frequencies.
+    // In case of IBM market data, I had to keep more
+    //
+    and_fft_v<double, std::string>  anomaly5(1000, 80.0);
+    const std::vector<std::size_t>  result2 =
+        { 500, 501, 502, 503, 504, 998, 999, 1000, 1001, 1002, 1003, 2000,
+          2001, 2002, 2003, 2004 };
+
+    ibm.single_act_visit<double>("IBM_Close", anomaly5);
+    assert((anomaly5.get_result() == result2));
+
+    and_fft_v<double, std::string>  anomaly6(1000, 250.0,
+                                             normalization_type::z_score);
+    const std::vector<std::size_t>  result3 = { 502, 1001, 2002 };
+
+    ibm.single_act_visit<double>("IBM_Close", anomaly6);
+    assert((anomaly6.get_result() == result3));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2838,6 +2919,7 @@ int main(int, char *[]) {
     test_read_data_file_with_schema();
     test_knn();
     test_DynamicTimeWarpVisitor();
+    test_AnomalyDetectByFFTVisitor();
 
     return (0);
 }

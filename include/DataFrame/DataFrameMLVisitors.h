@@ -3237,6 +3237,141 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_fft_v = AnomalyDetectByFFTVisitor<T, I, A>;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  HampelFilterVisitor {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type =
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
+
+private:
+
+    template<typename K, typename H, typename AR>
+    inline void
+    hampel_(K idx_begin, K idx_end, H column_begin, H column_end, AR &&aggr)  {
+
+        GET_COL_SIZE
+
+        aggr.pre();
+        aggr(idx_begin, idx_end, column_begin, column_end);
+        aggr.post();
+
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
+        vec_t       diff(col_s);
+
+        if (thread_level > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&aggr = std::as_const(aggr.get_result()), &diff,
+                     &column_begin]
+                    (auto begin, auto end) -> void  {
+                        for (size_type i = begin; i < end; ++i)
+                            diff[i] = aggr[i] - *(column_begin + i);
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            std::transform(aggr.get_result().begin(), aggr.get_result().end(),
+                           column_begin,
+                           diff.begin(),
+                           [](const T &agr, const T &col) -> T  {
+                               return (std::fabs(agr - col));
+                           });
+        }
+
+        // Calculate median absolute deviation
+        //
+        aggr.pre();
+        aggr(idx_begin, idx_end, diff.begin(), diff.end());
+        aggr.post();
+
+        const value_type    factor = num_of_std_ * unbiased_factor_;
+        const auto          &aggr_res = aggr.get_result();
+
+        result_.reserve(col_s / 100);
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (diff[i] > (aggr_res[i] * factor))
+                result_.push_back(i);
+        }
+    }
+
+public:
+
+    template<typename K, typename H>
+    inline void
+    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
+
+        if (type_ == hampel_type::median)
+            hampel_(idx_begin, idx_end, column_begin, column_end,
+                    SimpleRollAdopter<MedianVisitor<T, I>, T, I>
+                        (MedianVisitor<T, I> { }, window_size_));
+        else if (type_ == hampel_type::mean)
+            hampel_(idx_begin, idx_end, column_begin, column_end,
+                    SimpleRollAdopter<MeanVisitor<T, I>, T, I>
+                        (MeanVisitor<T, I> { true }, window_size_));
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    HampelFilterVisitor(size_type window_size,
+                        hampel_type ht = hampel_type::median,
+                        value_type num_of_std = 3)
+        : window_size_(window_size),
+          type_(ht),
+          num_of_std_(num_of_std)  {  }
+
+private:
+
+    using vec_t = std::vector<T, typename allocator_declare<T, A>::type>;
+
+    static constexpr value_type unbiased_factor_ { value_type(1.4826) };
+    const size_type             window_size_;
+    const hampel_type           type_;
+    const value_type            num_of_std_;
+    result_type                 result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using hamf_v = HampelFilterVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

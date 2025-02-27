@@ -548,13 +548,13 @@ remove_data_by_hampel(const char *col_name,
     using hampel_t = HampelFilterVisitor<T, I, std::size_t(H::align_value)>;
 
     ColumnVecType<T>    &vec = get_column<T>(col_name);
-    hampel_t            hampel { window_size, htype, num_of_stdev, true };
+    hampel_t            hampel { window_size, htype, num_of_stdev };
 
     hampel.pre();
     hampel(indices_.begin(), indices_.end(), vec.begin(), vec.end());
     hampel.post();
 
-    remove_data_by_sel_common_<Ts ...>(hampel.get_idxs());
+    remove_data_by_sel_common_<Ts ...>(hampel.get_result());
     return;
 }
 

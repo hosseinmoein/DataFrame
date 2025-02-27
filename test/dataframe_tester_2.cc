@@ -1761,46 +1761,31 @@ static void test_HampelFilterVisitor()  {
     std::cout << "\nTesting HampelFilterVisitor{  } ..." << std::endl;
 
     StlVecType<unsigned long>  idx =
-        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-          123457, 123458, 123459, 123460, 123461, 123462, 123466,
-          123467, 123468, 123469, 123470, 123471, 123472, 123473,
-          123467, 123468, 123469, 123470, 123471, 123472, 123473,
-          123467, 123468, 123469, 123470, 123471, 123472, 123473,
-        };
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+          20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, };
     StlVecType<double>         d1 =
         { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98,
           0.34, 1.56, -12.34, 2.3, -0.34, -1.9, 0.387,
           0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59,
           0.125, 1.9, -0.68, 2.0045, 50.8, -1.0, 0.78,
-          0.48, 1.99, -0.97, 1.03, 8.678, -1.4, 1.59,
-        };
-    MyDataFrame                 df;
+          0.48, 1.99, -0.97, 1.03, 8.678, -1.4, 1.59, };
+    MyDataFrame                df;
 
     df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
 
-    HampelFilterVisitor<double, unsigned long, 64> hf_v(7,
-                                                        hampel_type::mean,
-                                                        2);
-    auto                        result =
-        df.single_act_visit<double>("dbl_col", hf_v).get_result();
-    StlVecType<double>         hampel_result = {
-        2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56,
-        std::numeric_limits<double>::quiet_NaN(), 2.3, -0.34, -1.9, 0.387,
-        0.123, 1.06, -0.65, 2.03, 0.4, -1, 0.59, 0.125, 1.9, -0.68, 2.0045,
-        std::numeric_limits<double>::quiet_NaN(), -1, 0.78, 0.48, 1.99,
-        -0.97, 1.03, 8.678, -1.4, 1.59
-    };
-    const auto                  &column = df.get_column<double>("dbl_col");
+    hamf_v<double, unsigned long, 64>   hf_v1(7, hampel_type::mean, 2);
+    const auto                          &result1 =
+        df.single_act_visit<double>("dbl_col", hf_v1).get_result();
+    const StlVecType<std::size_t>       compare1 = { 9, 25 };
 
-    assert(result == 2);
-    for (size_t i = 0; i < hampel_result.size(); ++i)  {
-        const auto  v = column[i];
+    assert(result1 == compare1);
 
-        if (std::isnan(v))
-            assert(std::isnan(hampel_result[i]));
-        else
-            assert(hampel_result[i] == v);
-    }
+    hamf_v<double, unsigned long, 64>   hf_v2(6, hampel_type::median, 2);
+    const auto                          &result2 =
+        df.single_act_visit<double>("dbl_col", hf_v2).get_result();
+    const StlVecType<std::size_t>       compare2 = { 9, 25, 32 };
+
+    assert(result2 == compare2);
 }
 
 // -----------------------------------------------------------------------------
@@ -2350,8 +2335,8 @@ static void test_HWExpoSmootherVisitor()  {
 // -----------------------------------------------------------------------------
 
 static StlVecType<std::string>
-add_columns(MyDataFrame::IndexVecType::const_iterator /*idx_begin*/,
-            MyDataFrame::IndexVecType::const_iterator /*idx_end*/,
+add_columns(MyDataFrame::IndexVecType::const_iterator,
+            MyDataFrame::IndexVecType::const_iterator,
             StlVecType<double>::const_iterator b_citer1,
             StlVecType<double>::const_iterator e_citer1,
             StlVecType<double>::const_iterator b_citer2,
@@ -4208,11 +4193,9 @@ static void test_FastFourierTransVisitor()  {
 
         df2.single_act_visit<cx>("FFT Close", i_fft2_2);
 
-        /*
-        for (auto citer : i_fft2_2.get_result())
-            std::cout << citer << ", ";
-        std::cout << std::endl;
-        */
+        // for (auto citer : i_fft2_2.get_result())
+        //     std::cout << citer << ", ";
+        // std::cout << std::endl;
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -5198,21 +5181,20 @@ static void test_get_view_by_rand()  {
             (random_policy::frac_rows_with_seed, 0.8, 23);
 
     result2.write<std::ostream, double, std::string>(std::cout);
-/*
-    assert(result2.get_index().size() == 6);
-    assert(result2.get_column<double>("col_1").size() == 6);
-    assert(result2.get_column<double>("col_4").size() == 1);
-    assert(result2.get_column<std::string>("col_str").size() == 6);
-    assert(result2.get_column<double>("col_4")[0] == 25.0);
-    assert(result2.get_column<double>("col_3")[4] == 24.0);
-    assert(result2.get_column<double>("col_1")[5] == 11.0);
-    assert(result2.get_column<std::string>("col_str")[4] == "ii");
 
-    result2.get_column<std::string>("col_str")[4] = "TEST";
-    assert(result2.get_column<std::string>("col_str")[4] == "TEST");
-    assert(result2.get_column<std::string>("col_str")[4] ==
-           df.get_column<std::string>("col_str")[9]);
-*/
+    // assert(result2.get_index().size() == 6);
+    // assert(result2.get_column<double>("col_1").size() == 6);
+    // assert(result2.get_column<double>("col_4").size() == 1);
+    // assert(result2.get_column<std::string>("col_str").size() == 6);
+    // assert(result2.get_column<double>("col_4")[0] == 25.0);
+    // assert(result2.get_column<double>("col_3")[4] == 24.0);
+    // assert(result2.get_column<double>("col_1")[5] == 11.0);
+    // assert(result2.get_column<std::string>("col_str")[4] == "ii");
+
+    // result2.get_column<std::string>("col_str")[4] = "TEST";
+    // assert(result2.get_column<std::string>("col_str")[4] == "TEST");
+    // assert(result2.get_column<std::string>("col_str")[4] ==
+    //        df.get_column<std::string>("col_str")[9]);
 }
 
 // -----------------------------------------------------------------------------

@@ -972,6 +972,34 @@ public:  // Load/append/remove interfaces
                           hampel_type htype = hampel_type::median,
                           T num_of_stdev = 3);
 
+    // This uses an Fast Fourier Transform (FFT) to detect and remove
+    // outliers in the named column and all rows corresponding to those
+    // outliers in the DataFrame.
+    //
+    // NOTE: Type T must support arithmetic operations
+    //
+    // T:
+    //   Type of the named column.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // freq_num:
+    //   Number of dominant frequencies to keep when performing IFFT on the
+    //   result of FFT
+    // anomaly_threshold:
+    //   The difference threshold between original data and the result of IFFT
+    // norm:
+    //   Normalization type to be applied as the first step
+    //
+    template<arithmetic T, typename ... Ts>
+    void
+    remove_data_by_fft(const char *col_name,
+                       size_type freq_num,
+                       T anomaly_threshold = T(1),
+                       normalization_type norm = normalization_type::none);
+
     // It removes duplicate rows and returns a new DataFrame. Duplication is
     // determined by the given column. remove_dup_spec determines which
     // of the duplicated rows to keep.

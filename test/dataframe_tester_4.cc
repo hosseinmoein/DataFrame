@@ -2868,6 +2868,82 @@ static void test_AnomalyDetectByFFTVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_remove_data_by_fft()  {
+
+    std::cout << "\nTesting remove_data_by_fft( ) ..." << std::endl;
+
+    constexpr std::size_t   item_cnt = 1024;
+    MyStdDataFrame          df;
+
+    df.load_index(MyStdDataFrame::gen_sequence_index(0, item_cnt, 1));
+
+    std::vector<double>   sine_col;
+
+    sine_col.reserve(item_cnt);
+    for (std::size_t i = 0; i < item_cnt; ++i)  {
+        sine_col.push_back(std::sin(2.0 * M_PI * i / 20.0)); // Base sine wave
+        if (i % 30 == 0)  sine_col.back() += 2.0;  // Inject anomalies
+    }
+    df.load_column("sine col", std::move(sine_col));
+
+    MyStdDataFrame  df2 = df;
+
+    auto    lbd =
+        [](const unsigned long &, const double &) -> bool { return (true); };
+    auto    view =
+        df2.get_view_by_sel<double, decltype(lbd), double>("sine col", lbd);
+
+    assert((df.get_column<double>("sine col").size() == 1024));
+    assert((view.get_column<double>("sine col").size() == 1024));
+
+    // Keep at least 10% of the frequencies as dominant frequencies.
+    //
+    df.remove_data_by_fft<double, double>("sine col", 100, 1.0);
+    assert((df.get_column<double>("sine col").size() == (1024 - 35)));
+
+    view.remove_data_by_fft<double, double>("sine col", 100, 1.0);
+    assert((view.get_column<double>("sine col").size() == (1024 - 35)));
+
+    // Now do the same thing for IBM market data
+    //
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+    ibm.get_column<double>("IBM_Close")[502] = 800.0;
+    ibm.get_column<double>("IBM_Close")[1001] = 900.0;
+    ibm.get_column<double>("IBM_Close")[2002] = 850.0;
+
+    StrDataFrame    ibm2 = ibm;
+    auto            ibm_lbd =
+        [](const std::string &, const double &) -> bool { return (true); };
+    auto            ibm_view =
+        ibm2.get_view_by_sel<double, decltype(ibm_lbd), double, long>
+            ("IBM_Open", ibm_lbd);
+
+    ibm_view.get_column<double>("IBM_Close")[502] = 800.0;
+    ibm_view.get_column<double>("IBM_Close")[1001] = 900.0;
+    ibm_view.get_column<double>("IBM_Close")[2002] = 850.0;
+
+    assert((ibm.get_column<double>("IBM_Open").size() == 5031));
+    assert((ibm_view.get_column<double>("IBM_Open").size() == 5031));
+
+    ibm.remove_data_by_fft<double, double, long>("IBM_Close", 1000, 250,
+                                                 normalization_type::z_score);
+    assert((ibm.get_column<double>("IBM_Open").size() == (5031 - 3)));
+
+    ibm_view.remove_data_by_fft<double, double, long>
+        ("IBM_Close", 1000, 250, normalization_type::z_score);
+    assert((ibm_view.get_column<double>("IBM_Open").size() == (5031 - 3)));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2920,6 +2996,7 @@ int main(int, char *[]) {
     test_knn();
     test_DynamicTimeWarpVisitor();
     test_AnomalyDetectByFFTVisitor();
+    test_remove_data_by_fft();
 
     return (0);
 }

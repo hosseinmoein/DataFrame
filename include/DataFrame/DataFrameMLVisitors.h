@@ -3237,33 +3237,6 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_fft_v = AnomalyDetectByFFTVisitor<T, I, A>;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

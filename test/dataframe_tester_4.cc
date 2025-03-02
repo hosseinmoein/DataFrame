@@ -2944,6 +2944,57 @@ static void test_remove_data_by_fft()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_AnomalyDetectByIQRVisitor()  {
+
+    std::cout << "\nTesting AnomalyDetectByIQRVisitor{ } ..." << std::endl;
+
+    constexpr std::size_t   item_cnt = 1024;
+    MyStdDataFrame          df;
+
+    df.load_index(MyStdDataFrame::gen_sequence_index(0, item_cnt, 1));
+
+    std::vector<double>   sine_col;
+
+    sine_col.reserve(item_cnt);
+    for (std::size_t i = 0; i < item_cnt; ++i)  {
+        sine_col.push_back(std::sin(2.0 * M_PI * i / 20.0)); // Base sine wave
+        if (i % 30 == 0)  sine_col.back() += 2.0;  // Inject anomalies
+    }
+    df.load_column("sine col", std::move(sine_col));
+
+    and_iqr_v<double>               anomaly1(0.5, 0.5);
+    const std::vector<std::size_t>  result1 =
+        { 0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420,
+          450, 480, 510, 540, 570, 600, 630, 660, 690, 720, 750, 780, 810, 840,
+          870, 900, 930, 960, 990, 1020 };
+
+    df.single_act_visit<double>("sine col", anomaly1);
+    assert((anomaly1.get_result() == result1));
+
+    // Now do the same thing for IBM market data
+    //
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+    ibm.get_column<double>("IBM_Close")[502] = 800.0;
+    ibm.get_column<double>("IBM_Close")[1001] = 900.0;
+    ibm.get_column<double>("IBM_Close")[2002] = 850.0;
+
+    and_iqr_v<double>               anomaly2;
+    const std::vector<std::size_t>  result2 = { 502, 1001, 2002 };
+
+    ibm.single_act_visit<double>("IBM_Close", anomaly2);
+    assert((anomaly2.get_result() == result2));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2997,6 +3048,7 @@ int main(int, char *[]) {
     test_DynamicTimeWarpVisitor();
     test_AnomalyDetectByFFTVisitor();
     test_remove_data_by_fft();
+    test_AnomalyDetectByIQRVisitor();
 
     return (0);
 }

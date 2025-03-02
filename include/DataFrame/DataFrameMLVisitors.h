@@ -3210,7 +3210,7 @@ struct  AnomalyDetectByFFTVisitor  {
         ifft(idx_begin, idx_end, fft_res.begin(), fft_res.end());
         ifft.post();
 
-        result_.reserve(col_s / 100);
+        result_.reserve(32);
         for (size_type i { 0 }; i < col_s; ++i)
             if (std::abs(*(column_begin + i) - ifft.get_result()[i]) > ath_)
                 result_.push_back(i);
@@ -3297,7 +3297,7 @@ private:
         const value_type    factor = num_of_std_ * unbiased_factor_;
         const auto          &aggr_res = aggr.get_result();
 
-        result_.reserve(col_s / 100);
+        result_.reserve(32);
         for (size_type i = 0; i < col_s; ++i)  {
             if (diff[i] > (aggr_res[i] * factor))
                 result_.push_back(i);
@@ -3344,6 +3344,94 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using hamf_v = HampelFilterVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  AnomalyDetectByIQRVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type =
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &, const K &,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 20)
+           throw DataFrameError("AnomalyDetectByIQRVisitor: "
+                                "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        vec_t   data(column_begin, column_end);
+
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
+
+        if (thread_level > 2)
+            ThreadGranularity::thr_pool_.parallel_sort(
+                data.begin(), data.end());
+        else
+            std::sort(data.begin(), data.end());
+
+        const size_type     mid = col_s / 2;
+        const value_type    q1 { median_(data.begin(), data.begin() + mid) };
+        const value_type    q3 {
+            (col_s & size_type(0x01))
+                ? median_(data.begin() + (mid + 1), data.end())  // Odd
+                : median_(data.begin() + mid, data.end())        // Even
+        };
+        const value_type    iqr { q3 - q1 };
+        const value_type    low_bound { q1 - low_fence_ * iqr };
+        const value_type    high_bound { q3 + high_fence_ * iqr };
+
+        result_.reserve(32);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    &val = *(column_begin + i);
+
+            if (val < low_bound || val > high_bound) [[unlikely]]
+                result_.push_back(i);
+        }
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    AnomalyDetectByIQRVisitor(value_type high_fence = T(1.5),
+                              value_type low_fence = T(1.5))
+        : high_fence_(high_fence), low_fence_(low_fence)  {   }
+
+private:
+
+    using vec_t = std::vector<T, typename allocator_declare<T, A>::type>;
+
+    template <typename H>
+    static inline T
+    median_(const H &data_begin, const H &data_end)  {
+
+        const size_type     s = std::distance(data_begin, data_end);
+        const size_type     mid = s / 2;
+        const value_type    &mid_val = *(data_begin + mid);
+
+        if (s & size_type(0x01))  // Odd
+            return (mid_val);
+        else                      // Even
+            return ((*(data_begin + (mid - 1)) + mid_val) / T(2));
+    }
+
+    const value_type    high_fence_;
+    const value_type    low_fence_;
+    result_type         result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using and_iqr_v = AnomalyDetectByIQRVisitor<T, I, A>;
 
 } // namespace hmdf
 

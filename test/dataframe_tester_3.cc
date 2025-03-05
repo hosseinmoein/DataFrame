@@ -736,7 +736,7 @@ static void test_col_name_to_idx()  {
         std::cout << df.col_name_to_idx("xxxxx") << std::endl;
         assert(false);
     }
-    catch (const ColNotFound &ex)  {
+    catch (const ColNotFound &)  {
         assert(true);
     }
 

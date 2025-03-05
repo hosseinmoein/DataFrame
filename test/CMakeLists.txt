@@ -68,6 +68,13 @@ target_compile_options(matrix_tester
 )
 add_test(NAME matrix_tester COMMAND matrix_tester)
 
+add_executable(iso_tree_tester iso_tree_tester.cc)
+target_link_libraries(iso_tree_tester PRIVATE DataFrame)
+target_compile_options(iso_tree_tester
+    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+)
+add_test(NAME iso_tree_tester COMMAND iso_tree_tester)
+
 if(NOT MSVC)
     # MSVC compiler craps out on immediately executing lambdas
     add_executable(allocator_tester allocator_tester.cc)

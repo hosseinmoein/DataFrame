@@ -12,8 +12,8 @@ CXX = /usr/bin/g++
 INCLUDES =
 
 LFLAGS =
-# CXXFLAGS = -O3 -march=native $(INCLUDES) $(DEFINES) -std=c++2b
-CXXFLAGS = -O3 $(INCLUDES) $(DEFINES) -std=c++2b
+CXXFLAGS = -O3 -march=native $(INCLUDES) $(DEFINES) -std=c++2b
+# CXXFLAGS = -O3 $(INCLUDES) $(DEFINES) -std=c++2b
 
 PLATFORM_LIBS = -lpthread -ldl -lm -lstdc++
 

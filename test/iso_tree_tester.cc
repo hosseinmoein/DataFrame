@@ -88,8 +88,8 @@ int main(int, char *[]) {
     IsoForest<double>   forest { 25, 10 };
 
     forest.fit(data);
-    for (long r { 0 }; r < data.rows(); ++r)  {
-        std::cout << forest.outlier_score(data, r) << std::endl;
+    for (long c { 0 }; c < data.cols(); ++c)  {
+        std::cout << forest.outlier_score(data, c) << std::endl;
     }
 
     return (0);

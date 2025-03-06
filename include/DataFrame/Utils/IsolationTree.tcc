@@ -58,50 +58,49 @@ inline double IsoTree<T>::calc_depth(size_type size)  {
 template<typename T>
 IsoTree<T>::size_type IsoTree<T>::
 build_tree(const matrix_t &data,
-           const std::vector<size_type> &rows,
+           const std::vector<size_type> &cols,
            std::mt19937 &gen,
            size_type depth)  {
 
-    if (rows.size() <= 1 || depth >= max_depth_)  {
-        iso_tree_.push_back(IsoNode<T> { size_type(rows.size()) });
+    if (cols.size() <= 1 || depth >= max_depth_)  {
+        iso_tree_.push_back(IsoNode<T> { size_type(cols.size()) });
         return (iso_tree_.size() - 1);
     }
 
-    const size_type feature = std::rand() % data.cols(); // Random feature
-    value_type      min_value = data(rows[0], feature);
+    const size_type dimension = std::rand() % data.rows(); // Random dimension
+    value_type      min_value = data(dimension, cols[0]);
     value_type      max_value = min_value;
 
-    for (size_type r = 1; r < size_type(rows.size()); ++r)  {
-        min_value = std::min(min_value, data(rows[r], feature));
-        max_value = std::max(max_value, data(rows[r], feature));
+    for (size_type c = 1; c < size_type(cols.size()); ++c)  {
+        min_value = std::min(min_value, data(dimension, cols[c]));
+        max_value = std::max(max_value, data(dimension, cols[c]));
     }
     if (max_value == min_value)  {
-        iso_tree_.push_back(IsoNode<T> { size_type(rows.size()) });
+        iso_tree_.push_back(IsoNode<T> { size_type(cols.size()) });
         return (iso_tree_.size() - 1);
     }
 
     std::uniform_real_distribution<T>   dist(min_value, max_value);
     value_type                          split_value = dist(gen);
-    std::vector<size_type>              left_row_idx { };
-    std::vector<size_type>              right_row_idx { };
+    std::vector<size_type>              left_col_idx { };
+    std::vector<size_type>              right_col_idx { };
 
-    left_row_idx.reserve(rows.size() / 2);
-    right_row_idx.reserve(rows.size() / 2);
-    for (size_type r = 0; r < size_type(rows.size()); ++r)  {
-        if (data(rows[r], feature) < split_value)
-            left_row_idx.push_back(r);
+    left_col_idx.reserve(cols.size() / 2);
+    right_col_idx.reserve(cols.size() / 2);
+    for (size_type c = 0; c < size_type(cols.size()); ++c)  {
+        if (data(dimension, cols[c]) < split_value)
+            left_col_idx.push_back(c);
         else
-            right_row_idx.push_back(r);
+            right_col_idx.push_back(c);
     }
 
-    IsoNode<value_type> node { size_type(rows.size()) };
+    IsoNode<value_type> node { size_type(cols.size()) };
 
-    node.feature = feature;
+    node.dimension = dimension;
     node.split_value = split_value;
-    node.left = build_tree(data, left_row_idx, gen, depth + 1);
-    node.right = build_tree(data, right_row_idx, gen, depth + 1);
+    node.left = build_tree(data, left_col_idx, gen, depth + 1);
+    node.right = build_tree(data, right_col_idx, gen, depth + 1);
     iso_tree_.push_back(std::move(node));
-
     return (iso_tree_.size() - 1);
 }
 
@@ -110,7 +109,7 @@ build_tree(const matrix_t &data,
 template<typename T>
 IsoTree<T>::size_type IsoTree<T>::
 path_len(const matrix_t &data,
-         size_type row,
+         size_type col,
          size_type tree_node,
          size_type depth) const  {
 
@@ -119,9 +118,9 @@ path_len(const matrix_t &data,
     if (node.left < 0 && node.right < 0)
         return (depth + calc_depth(node.leaf_size));
 
-    if (data(row, node.feature) < node.split_value)
-        return (path_len(data, row, node.left, depth + 1));
-    return (path_len(data, row, node.right, depth + 1));
+    if (data(node.dimension, col) < node.split_value)
+        return (path_len(data, col, node.left, depth + 1));
+    return (path_len(data, col, node.right, depth + 1));
 }
 
 // ----------------------------------------------------------------------------
@@ -136,23 +135,23 @@ template<typename T>
 void IsoForest<T>::
 fit(const matrix_t &data)  {
 
-    std::vector<size_type>  rows(data.rows());
+    std::vector<size_type>  cols(data.cols());
 
-    std::iota(rows.begin(), rows.end(), 0);
+    std::iota(cols.begin(), cols.end(), 0);
     for (auto &tree : trees_)
-        tree.build_tree(data, rows, gen_, 0);
+        tree.build_tree(data, cols, gen_, 0);
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename T>
 double IsoForest<T>::
-outlier_score(const matrix_t &data, size_type row) const  {
+outlier_score(const matrix_t &data, size_type col) const  {
 
     double  avg_path_len { 0 };
 
     for (const auto &tree : trees_)
-        avg_path_len += tree.path_len(data, row, 0, 0);
+        avg_path_len += tree.path_len(data, col, 0, 0);
     avg_path_len /= double(trees_.size());
 
     const double    adj_path_len {

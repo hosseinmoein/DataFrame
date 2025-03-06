@@ -48,7 +48,7 @@ struct  IsoNode {
     size_type   left { -1 };
     size_type   right { -1 };
     size_type   leaf_size { 0 }; // Leaf node size
-    size_type   feature { -1 };  // Index to matrix columns
+    size_type   dimension { -1 };  // Index to matrix rows
 
     explicit IsoNode(size_type size) : leaf_size(size)  {  }
     IsoNode() = default;
@@ -77,7 +77,9 @@ public:
     IsoTree(IsoTree &&) = default;
     IsoTree &operator =(const IsoTree &) = default;
     IsoTree &operator =(IsoTree &&) = default;
-    ~IsoTree() {  }
+    ~IsoTree() = default;
+
+    const vec_t &get_tree() const  { return (iso_tree_); }
 
     static inline double calc_depth(size_type size);
 
@@ -116,7 +118,7 @@ public:
     IsoForest(IsoForest &&) = default;
     IsoForest &operator =(const IsoForest &) = default;
     IsoForest &operator =(IsoForest &&) = default;
-    ~IsoForest() {  }
+    ~IsoForest() = default;
 
     void fit(const matrix_t &data);
     double outlier_score(const matrix_t &data, size_type row) const;

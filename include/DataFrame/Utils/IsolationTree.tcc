@@ -107,7 +107,7 @@ build_tree(const matrix_t &data,
 // ----------------------------------------------------------------------------
 
 template<typename T>
-IsoTree<T>::size_type IsoTree<T>::
+double IsoTree<T>::
 path_len(const matrix_t &data,
          size_type col,
          size_type tree_node,
@@ -116,7 +116,7 @@ path_len(const matrix_t &data,
     const IsoNode<value_type>   &node = iso_tree_[tree_node];
 
     if (node.left < 0 && node.right < 0)
-        return (depth + calc_depth(node.leaf_size));
+        return (double(depth) + calc_depth(node.leaf_size));
 
     if (data(node.dimension, col) < node.split_value)
         return (path_len(data, col, node.left, depth + 1));
@@ -151,7 +151,7 @@ outlier_score(const matrix_t &data, size_type col) const  {
     double  avg_path_len { 0 };
 
     for (const auto &tree : trees_)
-        avg_path_len += tree.path_len(data, col, 0, 0);
+        avg_path_len += tree.path_len(data, col, tree.root_idx(), 0);
     avg_path_len /= double(trees_.size());
 
     const double    adj_path_len {

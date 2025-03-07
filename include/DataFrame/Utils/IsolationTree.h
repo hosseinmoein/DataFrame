@@ -79,7 +79,7 @@ public:
     IsoTree &operator =(IsoTree &&) = default;
     ~IsoTree() = default;
 
-    const vec_t &get_tree() const  { return (iso_tree_); }
+    size_type root_idx() const  { return (iso_tree_.size() - 1); }
 
     static inline double calc_depth(size_type size);
 
@@ -89,10 +89,10 @@ public:
         std::mt19937 &gen,
         size_type depth);
 
-    size_type path_len(const matrix_t &data,
-                       size_type row,        // Row index into data
-                       size_type tree_node,  // Index into iso_tree
-                       size_type depth) const;
+    double path_len(const matrix_t &data,
+                    size_type row,        // Row index into data
+                    size_type tree_node,  // Index into iso_tree
+                    size_type depth) const;
 
 private:
 

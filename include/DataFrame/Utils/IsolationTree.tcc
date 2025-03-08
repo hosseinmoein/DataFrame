@@ -27,11 +27,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <DataFrame/Utils/IsolationTree.h>
+
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
-#include <iostream>
-#include <numeric>
 
 // ----------------------------------------------------------------------------
 
@@ -41,17 +40,8 @@ namespace hmdf
 template<typename T>
 IsoTree<T>::IsoTree(size_type max_depth) : max_depth_(max_depth)  {
 
-    iso_tree_.reserve(max_depth_ * 2);
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename T>
-inline double IsoTree<T>::calc_depth(size_type size)  {
-
-    if (size <= 1)  return (0);
-    return ((2.0 * (std::log(double(size - 1)) + 0.5772156649)) -
-            (2.0 * (double(size - 1.0)) / double(size)));
+    iso_tree_.reserve(
+        (max_depth_ > 100) ? max_depth_ * (max_depth_ / 100) : max_depth_);
 }
 
 // ----------------------------------------------------------------------------
@@ -64,28 +54,27 @@ build_tree(std::vector<value_type> &data,
            size_type right,
            size_type depth)  {
 
-    if (left >= right || depth >= max_depth_)  {
-        iso_tree_.push_back(IsoNode<T> { .leaf_size = 0 });
-        return (iso_tree_.size() - 1);
+    if (left >= right || depth >= max_depth_) [[unlikely]]  {
+        iso_tree_.push_back(IsoNode<T> { });
     }
+    else  {
+        std::uniform_int_distribution<size_type>    dis { left, right };
+        const value_type                            &anchor = data[dis(gen)];
+        const auto                                  citer =
+            std::partition(data.begin() + left, data.begin() + right,
+                           [anchor](const value_type &v) -> bool {
+                               return (v < anchor);
+                           });
+        const size_type                             mid =
+            size_type(std::distance(data.begin(), citer));
+        const IsoNode<value_type>                   node {
+            anchor,
+            build_tree(data, gen, left, mid, depth + 1),
+            build_tree(data, gen, mid, right, depth + 1)
+        };
 
-    std::uniform_int_distribution<size_type>    dis { left, right };
-    const value_type                            &split_value = data[dis(gen)];
-    const auto                                  citer =
-        std::partition(data.begin() + left, data.begin() + right,
-                       [split_value](const value_type &v) -> bool {
-                           return (v < split_value);
-                       });
-    const size_type                             mid =
-        size_type(std::distance(data.begin(), citer));
-    const IsoNode<value_type>                   node {
-        split_value,
-        right - left,
-        build_tree(data, gen, left, mid, depth + 1),
-        build_tree(data, gen, mid, right, depth + 1)
-    };
-
-    iso_tree_.push_back(std::move(node));
+        iso_tree_.push_back(std::move(node));
+    }
     return (iso_tree_.size() - 1);
 }
 
@@ -93,19 +82,28 @@ build_tree(std::vector<value_type> &data,
 
 template<typename T>
 double IsoTree<T>::
-path_len(const value_type &value,
-         size_type node,
-         size_type depth) const  {
+path_len(const value_type &value, size_type node, size_type depth) const  {
 
     const IsoNode<value_type>   &node_val = iso_tree_[node];
 
-    if (node_val.left >= 0 || node_val.right >= 0)  {
+    if (node_val.left >= 0 || node_val.right >= 0) [[likely]]  {
         if (value < node_val.split_value && node_val.left >= 0)
             return (path_len(value, node_val.left, depth + 1));
         else if (node_val.right >= 0)
             return (path_len(value, node_val.right, depth + 1));
     }
-    return (double(depth) + calc_depth(node_val.leaf_size));
+    return (double(depth - 1));
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline double IsoForest<T>::calc_depth_(size_type size)  {
+
+    if (size <= 1)  return (0);
+    return ((2.0 * (std::log(double(size - 1)) + 0.5772156649)) -
+            (2.0 * (double(size - 1)) / double(size)));
 }
 
 // ----------------------------------------------------------------------------
@@ -117,15 +115,15 @@ IsoForest<T>::IsoForest(size_type num_trees, size_type max_depth)
 // ----------------------------------------------------------------------------
 
 template<typename T>
+template<typename I>
 void IsoForest<T>::
-fit(const std::vector<T> &data)  {
+fit(const I &begin, const I &end)  {
 
-    std::vector<value_type> sample;
+    std::vector<value_type> data_copy(begin, end);
 
     for (auto &tree : trees_)  {
-        sample = data;
-        std::ranges::shuffle(sample.begin(), sample.end(), gen_);
-        tree.build_tree(sample, gen_, 0, size_type(sample.size()), 0);
+        std::ranges::shuffle(data_copy.begin(), data_copy.end(), gen_);
+        tree.build_tree(data_copy, gen_, 0, size_type(data_copy.size()), 0);
     }
 }
 
@@ -142,11 +140,8 @@ outlier_score(const value_type &value, size_type data_size) const  {
     }
     avg_path_len /= double(trees_.size());
 
-    const double    adj_path_len {
-        -avg_path_len / IsoTree<T>::calc_depth(data_size - 1)
-    };
-
-    return (std::pow(2.0, adj_path_len));
+    return (std::pow(2.0, avg_path_len / calc_depth_(data_size)));
+    // return (std::pow(2.0, -avg_path_len / calc_depth_(data_size)));
 }
 
 } // namespace hmdf

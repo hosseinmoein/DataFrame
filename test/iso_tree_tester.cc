@@ -43,7 +43,7 @@ int main(int, char *[]) {
 
     IsoForest<double>   forest { 25, 100 };
 
-    forest.fit(data);
+    forest.fit(data.begin(), data.end());
     for (const auto &val : data)
         std::cout << forest.outlier_score(val, data.size()) << std::endl;
 

@@ -44,7 +44,6 @@ struct  IsoNode {
     using value_type = T;
 
     value_type  split_value { 0 };
-    size_type   leaf_size { -1 };
     size_type   left { -1 };
     size_type   right { -1 };
 };
@@ -70,8 +69,6 @@ public:
 
     size_type root_idx() const  { return (iso_tree_.size() - 1); }
 
-    static inline double calc_depth(size_type size);
-
     size_type build_tree(std::vector<value_type> &data,
                          std::mt19937 &gen,
                          size_type left,
@@ -81,8 +78,6 @@ public:
     double path_len(const value_type &value,
                     size_type node,
                     size_type depth) const;
-
-    size_type max_depth() const  { return(max_depth_); }
 
 private:
 
@@ -109,10 +104,15 @@ public:
     IsoForest &operator =(IsoForest &&) = default;
     ~IsoForest() = default;
 
-    void fit(const std::vector<T> &data);
+    template<typename I>
+    void fit(const I &begin, const I &end);
     double outlier_score(const value_type &value, size_type data_size) const;
 
 private:
+
+    // Estimates the expected path length for a given data size.
+    //
+    static inline double calc_depth_(size_type size);
 
     std::random_device  rd_ { };
     std::mt19937        gen_ { rd_() };

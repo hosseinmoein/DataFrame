@@ -27,10 +27,11 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 #include <numeric>
-#include <random>
 
 // ----------------------------------------------------------------------------
 
@@ -57,49 +58,33 @@ inline double IsoTree<T>::calc_depth(size_type size)  {
 
 template<typename T>
 IsoTree<T>::size_type IsoTree<T>::
-build_tree(const matrix_t &data,
-           const std::vector<size_type> &cols,
+build_tree(std::vector<value_type> &data,
            std::mt19937 &gen,
+           size_type left,
+           size_type right,
            size_type depth)  {
 
-    if (cols.size() <= 1 || depth >= max_depth_)  {
-        iso_tree_.push_back(IsoNode<T> { size_type(cols.size()) });
+    if (left >= right || depth >= max_depth_)  {
+        iso_tree_.push_back(IsoNode<T> { .leaf_size = 0 });
         return (iso_tree_.size() - 1);
     }
 
-    const size_type dimension = std::rand() % data.rows(); // Random dimension
-    value_type      min_value = data(dimension, cols[0]);
-    value_type      max_value = min_value;
+    std::uniform_int_distribution<size_type>    dis { left, right };
+    const value_type                            &split_value = data[dis(gen)];
+    const auto                                  citer =
+        std::partition(data.begin() + left, data.begin() + right,
+                       [split_value](const value_type &v) -> bool {
+                           return (v < split_value);
+                       });
+    const size_type                             mid =
+        size_type(std::distance(data.begin(), citer));
+    const IsoNode<value_type>                   node {
+        split_value,
+        right - left,
+        build_tree(data, gen, left, mid, depth + 1),
+        build_tree(data, gen, mid, right, depth + 1)
+    };
 
-    for (size_type c = 1; c < size_type(cols.size()); ++c)  {
-        min_value = std::min(min_value, data(dimension, cols[c]));
-        max_value = std::max(max_value, data(dimension, cols[c]));
-    }
-    if (max_value == min_value)  {
-        iso_tree_.push_back(IsoNode<T> { size_type(cols.size()) });
-        return (iso_tree_.size() - 1);
-    }
-
-    std::uniform_real_distribution<T>   dist(min_value, max_value);
-    value_type                          split_value = dist(gen);
-    std::vector<size_type>              left_col_idx { };
-    std::vector<size_type>              right_col_idx { };
-
-    left_col_idx.reserve(cols.size() / 2);
-    right_col_idx.reserve(cols.size() / 2);
-    for (size_type c = 0; c < size_type(cols.size()); ++c)  {
-        if (data(dimension, cols[c]) < split_value)
-            left_col_idx.push_back(c);
-        else
-            right_col_idx.push_back(c);
-    }
-
-    IsoNode<value_type> node { size_type(cols.size()) };
-
-    node.dimension = dimension;
-    node.split_value = split_value;
-    node.left = build_tree(data, left_col_idx, gen, depth + 1);
-    node.right = build_tree(data, right_col_idx, gen, depth + 1);
     iso_tree_.push_back(std::move(node));
     return (iso_tree_.size() - 1);
 }
@@ -108,19 +93,19 @@ build_tree(const matrix_t &data,
 
 template<typename T>
 double IsoTree<T>::
-path_len(const matrix_t &data,
-         size_type col,
-         size_type tree_node,
+path_len(const value_type &value,
+         size_type node,
          size_type depth) const  {
 
-    const IsoNode<value_type>   &node = iso_tree_[tree_node];
+    const IsoNode<value_type>   &node_val = iso_tree_[node];
 
-    if (node.left < 0 && node.right < 0)
-        return (double(depth) + calc_depth(node.leaf_size));
-
-    if (data(node.dimension, col) < node.split_value)
-        return (path_len(data, col, node.left, depth + 1));
-    return (path_len(data, col, node.right, depth + 1));
+    if (node_val.left >= 0 || node_val.right >= 0)  {
+        if (value < node_val.split_value && node_val.left >= 0)
+            return (path_len(value, node_val.left, depth + 1));
+        else if (node_val.right >= 0)
+            return (path_len(value, node_val.right, depth + 1));
+    }
+    return (double(depth) + calc_depth(node_val.leaf_size));
 }
 
 // ----------------------------------------------------------------------------
@@ -133,29 +118,32 @@ IsoForest<T>::IsoForest(size_type num_trees, size_type max_depth)
 
 template<typename T>
 void IsoForest<T>::
-fit(const matrix_t &data)  {
+fit(const std::vector<T> &data)  {
 
-    std::vector<size_type>  cols(data.cols());
+    std::vector<value_type> sample;
 
-    std::iota(cols.begin(), cols.end(), 0);
-    for (auto &tree : trees_)
-        tree.build_tree(data, cols, gen_, 0);
+    for (auto &tree : trees_)  {
+        sample = data;
+        std::ranges::shuffle(sample.begin(), sample.end(), gen_);
+        tree.build_tree(sample, gen_, 0, size_type(sample.size()), 0);
+    }
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename T>
 double IsoForest<T>::
-outlier_score(const matrix_t &data, size_type col) const  {
+outlier_score(const value_type &value, size_type data_size) const  {
 
     double  avg_path_len { 0 };
 
-    for (const auto &tree : trees_)
-        avg_path_len += tree.path_len(data, col, tree.root_idx(), 0);
+    for (const auto &tree : trees_)  {
+        avg_path_len += tree.path_len(value, tree.root_idx(), 0);
+    }
     avg_path_len /= double(trees_.size());
 
     const double    adj_path_len {
-        -avg_path_len / IsoTree<T>::calc_depth(data.cols())
+        -avg_path_len / IsoTree<T>::calc_depth(data_size - 1)
     };
 
     return (std::pow(2.0, adj_path_len));

@@ -35,62 +35,17 @@ using namespace hmdf;
 
 // ----------------------------------------------------------------------------
 
-using matrix_t = Matrix<double, matrix_orient::column_major>;
-
-// ----------------------------------------------------------------------------
-
 int main(int, char *[]) {
 
-    // This matrix has 10 features each having 3 dimensions (observations)
-    //
-    matrix_t   data { 3, 10 };
+    std::vector<double> data =
+        { 1.2, 1.8, 0.99, 10.4, 2.0, 1.86, 0.899, 1.3, 0.901, 1.345,
+          1.25, 1.9, 0.96, 1.48, 1.97, 1.867, 1.9, 1.48, 0.001, 1.45, };
 
-    data(0, 0) = 1.2;
-    data(1, 0) = 10.2;
-    data(2, 0) = 0.2;
-
-    data(0, 1) = 1.8;
-    data(1, 1) = 12.0;
-    data(2, 1) = 0.17;
-
-    data(0, 2) = 0.99;
-    data(1, 2) = 11.1;
-    data(2, 2) = 0.45;
-
-    data(0, 3) = 100.04;
-    data(1, 3) = 10.89;  // <--
-    data(2, 3) = 50.5;
-
-    data(0, 4) = 2.0;
-    data(1, 4) = 10.556;
-    data(2, 4) = 0.254;
-
-    data(0, 5) = 1.86;
-    data(1, 5) = 11.23;
-    data(2, 5) = -8.5;  // <--
-
-    data(0, 6) = 0.899;
-    data(1, 6) = 11.5;
-    data(2, 6) = 0.56;
-
-    data(0, 7) = 1.3;
-    data(1, 7) = 11.8;
-    data(2, 7) = 0.345;
-
-    data(0, 8) = 1.5;
-    data(1, 8) = 0.99;  // <--
-    data(2, 8) = 0.71;
-
-    data(0, 9) = 1.345;
-    data(1, 9) = 10.654;
-    data(2, 9) = 0.56;
-
-    IsoForest<double>   forest { 25, 10 };
+    IsoForest<double>   forest { 25, 100 };
 
     forest.fit(data);
-    for (long c { 0 }; c < data.cols(); ++c)  {
-        std::cout << forest.outlier_score(data, c) << std::endl;
-    }
+    for (const auto &val : data)
+        std::cout << forest.outlier_score(val, data.size()) << std::endl;
 
     return (0);
 }

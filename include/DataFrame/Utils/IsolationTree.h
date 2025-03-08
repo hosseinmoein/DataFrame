@@ -29,8 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <DataFrame/Utils/Matrix.h>
-
+#include <random>
 #include <vector>
 
 // ----------------------------------------------------------------------------
@@ -45,18 +44,9 @@ struct  IsoNode {
     using value_type = T;
 
     value_type  split_value { 0 };
+    size_type   leaf_size { -1 };
     size_type   left { -1 };
     size_type   right { -1 };
-    size_type   leaf_size { 0 }; // Leaf node size
-    size_type   dimension { -1 };  // Index to matrix rows
-
-    explicit IsoNode(size_type size) : leaf_size(size)  {  }
-    IsoNode() = default;
-    IsoNode(const IsoNode &) = default;
-    IsoNode(IsoNode &&) = default;
-    IsoNode &operator =(const IsoNode &) = default;
-    IsoNode &operator =(IsoNode &&) = default;
-    ~IsoNode() = default;
 };
 
 // ----------------------------------------------------------------------------
@@ -66,10 +56,9 @@ class   IsoTree {
 
 public:
 
-    using size_type = long;
-    using value_type = T;
-    using vec_t = std::vector<IsoNode<value_type>>;
-    using matrix_t = Matrix<value_type, matrix_orient::column_major>;
+    using size_type = typename IsoNode<T>::size_type;
+    using value_type = typename IsoNode<T>::value_type;
+    using tree_t = std::vector<IsoNode<T>>;
 
     explicit
     IsoTree(size_type max_depth = 10);
@@ -83,20 +72,21 @@ public:
 
     static inline double calc_depth(size_type size);
 
-    size_type build_tree(
-        const matrix_t &data,
-        const std::vector<size_type> &rows,  // Row indices into data
-        std::mt19937 &gen,
-        size_type depth);
+    size_type build_tree(std::vector<value_type> &data,
+                         std::mt19937 &gen,
+                         size_type left,
+                         size_type right,
+                         size_type depth);
 
-    double path_len(const matrix_t &data,
-                    size_type row,        // Row index into data
-                    size_type tree_node,  // Index into iso_tree
+    double path_len(const value_type &value,
+                    size_type node,
                     size_type depth) const;
+
+    size_type max_depth() const  { return(max_depth_); }
 
 private:
 
-    vec_t           iso_tree_ { };
+    tree_t          iso_tree_ { };
     const size_type max_depth_;
 };
 
@@ -107,10 +97,9 @@ class   IsoForest {
 
 public:
 
-    using size_type = long;
-    using value_type = T;
+    using size_type = typename IsoNode<T>::size_type;
+    using value_type = typename IsoNode<T>::value_type;
     using tree_t = IsoTree<T>;
-    using matrix_t = Matrix<value_type, matrix_orient::column_major>;
 
     IsoForest(size_type num_trees, size_type max_depth);
     IsoForest() = delete;
@@ -120,8 +109,8 @@ public:
     IsoForest &operator =(IsoForest &&) = default;
     ~IsoForest() = default;
 
-    void fit(const matrix_t &data);
-    double outlier_score(const matrix_t &data, size_type row) const;
+    void fit(const std::vector<T> &data);
+    double outlier_score(const value_type &value, size_type data_size) const;
 
 private:
 

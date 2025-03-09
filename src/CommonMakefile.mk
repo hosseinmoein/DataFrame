@@ -81,7 +81,9 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeAllocator.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Endianness.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Matrix.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Matrix.tcc
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Matrix.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IsolationTree.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IsolationTree.tcc
 
 LIB_NAME = DataFrame
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
@@ -104,7 +106,8 @@ TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/meta_prog_tester \
            $(LOCAL_BIN_DIR)/date_time_tester \
            $(LOCAL_BIN_DIR)/gen_rand_tester \
-           $(LOCAL_BIN_DIR)/matrix_tester
+           $(LOCAL_BIN_DIR)/matrix_tester \
+           $(LOCAL_BIN_DIR)/iso_tree_tester
 
 # -----------------------------------------------------------------------------
 
@@ -229,6 +232,10 @@ MATRIX_TESTER_OBJ = $(LOCAL_OBJ_DIR)/matrix_tester.o
 $(LOCAL_BIN_DIR)/matrix_tester: $(TARGET_LIB) $(MATRIX_TESTER_OBJ)
 	$(CXX) -o $@ $(MATRIX_TESTER_OBJ) $(LIBS)
 
+ISO_TREE_TESTER_OBJ = $(LOCAL_OBJ_DIR)/iso_tree_tester.o
+$(LOCAL_BIN_DIR)/iso_tree_tester: $(TARGET_LIB) $(ISO_TREE_TESTER_OBJ)
+	$(CXX) -o $@ $(ISO_TREE_TESTER_OBJ) $(LIBS)
+
 # -----------------------------------------------------------------------------
 
 depend:
@@ -243,7 +250,8 @@ clean:
           $(HELLO_WORLD_OBJ) $(DATAFRAME_PERFORMANCE_2_OBJ) \
           $(DATAFRAME_THREAD_SAFTY_OBJ) $(DATAFRAME_TESTER_SCHEMA_OBJ) \
           $(ALLOCATOR_TESTER_OBJ) $(LINKEDIN_BENCHMARK_OBJ) \
-          $(DATAFRAME_READ_LARGE_FILE_OBJ) $(MATRIX_TESTER_OBJ)
+          $(DATAFRAME_READ_LARGE_FILE_OBJ) $(MATRIX_TESTER_OBJ) \
+          $(ISO_TREE_TESTER_OBJ)
 
 clobber:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
@@ -255,7 +263,8 @@ clobber:
           $(ALLOCATOR_TESTER_OBJ) $(DATAFRAME_PERFORMANCE_OBJ) \
           $(DATAFRAME_PERFORMANCE_2_OBJ) \
           $(META_PROG_OBJ) $(LINKEDIN_BENCHMARK_OBJ) \
-          $(DATAFRAME_READ_LARGE_FILE_OBJ) $(MATRIX_TESTER_OBJ)
+          $(DATAFRAME_READ_LARGE_FILE_OBJ) $(MATRIX_TESTER_OBJ) \
+          $(ISO_TREE_TESTER_OBJ)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

@@ -4533,9 +4533,8 @@ struct  ZScoreVisitor  {
 
         const value_type    m = mvisit.get_result();
         const value_type    s = svisit.get_result();
-        result_type         result;
+        result_type         result(col_s);
 
-        result.resize(col_s);
         if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(

@@ -3433,6 +3433,89 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_iqr_v = AnomalyDetectByIQRVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  AnomalyDetectByZScoreVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type =
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 10)
+           throw DataFrameError("AnomalyDetectByZScoreVisitor: "
+                                "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        MeanVisitor<T, I>   mvisit { true };
+        StdVisitor<T, I>    svisit;
+        const auto          thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
+
+        mvisit.pre();
+        svisit.pre();
+        if (thread_level > 2)  {
+            auto    fut1 =
+                ThreadGranularity::thr_pool_.dispatch(
+                      false,
+                      [&svisit,
+                       &idx_begin, &idx_end,
+                       &column_begin, &column_end]() -> void  {
+                          svisit(idx_begin, idx_end, column_begin, column_end);
+                      });
+            auto    fut2 =
+                ThreadGranularity::thr_pool_.dispatch(
+                      false,
+                      [&mvisit,
+                       &idx_begin, &idx_end,
+                       &column_begin, &column_end]() -> void  {
+                          mvisit(idx_begin, idx_end, column_begin, column_end);
+                      });
+
+            fut1.get();
+            fut2.get();
+        }
+        else  {
+            mvisit(idx_begin, idx_end, column_begin, column_end);
+            svisit(idx_begin, idx_end, column_begin, column_end);
+        }
+        mvisit.post();
+        svisit.post();
+
+        const value_type    m = mvisit.get_result();
+        const value_type    s = svisit.get_result();
+
+        result_.reserve(32);
+        for (size_type i { 0 }; i < col_s; ++i)
+            if (std::abs((*(column_begin + i) - m) / s) > threshold_)
+                result_.push_back(i);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    AnomalyDetectByZScoreVisitor(value_type threshold)
+        : threshold_(threshold)  {   }
+
+private:
+
+    result_type         result_ { };
+    const value_type    threshold_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using and_zscr_v = AnomalyDetectByZScoreVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

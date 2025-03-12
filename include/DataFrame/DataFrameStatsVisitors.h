@@ -2912,9 +2912,7 @@ public:
         matrix_t    y;
 
         result[0] = 1;
-        x.reserve(max_lag_, max_lag_);
-        y.reserve(max_lag_, 1);
-        for (size_type k = 1; k <= max_lag_; ++k)  {
+        for (size_type k = 1; k < max_lag_; ++k)  {
             x.clear();
             x.resize(col_s - k, k);
             y.clear();

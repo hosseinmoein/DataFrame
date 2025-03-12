@@ -972,7 +972,7 @@ public:  // Load/append/remove interfaces
                           hampel_type htype = hampel_type::median,
                           T num_of_stdev = 3);
 
-    // This uses an Fast Fourier Transform (FFT) to detect and remove
+    // This uses Fast Fourier Transform (FFT) to detect and remove
     // outliers in the named column and all rows corresponding to those
     // outliers in the DataFrame.
     //
@@ -999,6 +999,30 @@ public:  // Load/append/remove interfaces
                        size_type freq_num,
                        T anomaly_threshold = T(1),
                        normalization_type norm = normalization_type::none);
+
+    // This uses Inter-Quartile Range (IQR) to detect and remove outliers in
+    // the named column and all rows corresponding to those outliers in the
+    // DataFrame.
+    //
+    // NOTE: Type T must support arithmetic operations
+    //
+    // T:
+    //   Type of the named column.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // high_fence:
+    //   Upper limit that is multiplied by the IQR value.
+    // low_fence:
+    //   Lower limit that is multiplied by the IQR value.
+    //
+    template<arithmetic T, typename ... Ts>
+    void
+    remove_data_by_iqr(const char *col_name,
+                       T high_fence = T(1.5),
+                       T low_fence = T(1.5));
 
     // It removes duplicate rows and returns a new DataFrame. Duplication is
     // determined by the given column. remove_dup_spec determines which

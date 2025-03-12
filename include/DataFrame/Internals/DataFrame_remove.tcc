@@ -590,6 +590,32 @@ remove_data_by_fft(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<arithmetic T, typename ... Ts>
+void DataFrame<I, H>::
+remove_data_by_iqr(const char *col_name, T high_fence, T low_fence)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  "Only a StdDataFrame or a PtrView can call "
+                  "remove_data_by_iqr()");
+
+    using iqrv_t =
+        AnomalyDetectByIQRVisitor<T, I, std::size_t(H::align_value)>;
+
+    ColumnVecType<T>    &vec = get_column<T>(col_name);
+    iqrv_t              iqr { high_fence, low_fence };
+
+    iqr.pre();
+    iqr(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    iqr.post();
+
+    remove_data_by_sel_common_<Ts ...>(iqr.get_result());
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<hashable_equal T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 remove_duplicates (const char *name,

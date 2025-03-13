@@ -1024,6 +1024,25 @@ public:  // Load/append/remove interfaces
                        T high_fence = T(1.5),
                        T low_fence = T(1.5));
 
+    // This uses z-score to detect and remove outliers in the named column and
+    // all rows corresponding to those outliers in the DataFrame.
+    //
+    // NOTE: Type T must support arithmetic operations
+    //
+    // T:
+    //   Type of the named column.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // threshold:
+    //   Number of stdev's higher than that it is a outlier
+    //
+    template<arithmetic T, typename ... Ts>
+    void
+    remove_data_by_zscore(const char *col_name, T threshold);
+
     // It removes duplicate rows and returns a new DataFrame. Duplication is
     // determined by the given column. remove_dup_spec determines which
     // of the duplicated rows to keep.

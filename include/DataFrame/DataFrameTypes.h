@@ -764,6 +764,51 @@ enum class  file_dtypes : std::size_t  {
 
 // ----------------------------------------------------------------------------
 
+// Different methods of detecting anomalous data points. Anomalous data don’t
+// mean NaN or missing data points
+//
+enum class  detect_method : unsigned char  {
+
+    fft = 1,     // Fast Fourier Transform (FFT)
+    iqr = 2,     // Inter-Quartile Range (IQR)
+    lof = 3,     // Local Outlier Factor (LOF)
+    zscore = 4,  // Z-Score method
+    hampel = 5,  // Hampel Filter
+};
+
+// -------------------------------------
+
+// Parameters to member function detect_and_fill()
+//
+template<typename T>
+struct  DetectAndFillParams  {
+
+    using value_type = T;
+
+    // Parameters specific to FFT
+    //
+    std::size_t         freq_num { 0 };
+    value_type          anomaly_threshold { 1 };
+    normalization_type  norm_type { normalization_type::none };
+
+    // Parameters specific to IQR
+    //
+    value_type          high_fence { 1.5 };
+    value_type          low_fence { 1.5 };
+
+    // Parameters specific to Z-Score
+    //
+    value_type          threshold { 0 };
+
+    // Parameters specific to Hampel filter
+    //
+    std::size_t         window_size { 0 };
+    hampel_type         htype { hampel_type::median };
+    value_type          num_stdev { 3.0 };
+};
+
+// ----------------------------------------------------------------------------
+
 // A structure to describe a column of data used in a read operation to
 // decipher data in a file in csv2 format.
 //
@@ -954,7 +999,7 @@ struct  Index2D  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
-using KNNPair = std::pair<std::vector<T>, std::size_t>; 
+using KNNPair = std::pair<std::vector<T>, std::size_t>;
 
 template<typename T>
 using KNNResult = std::vector<KNNPair<T>>;

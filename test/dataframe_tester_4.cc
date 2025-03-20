@@ -3190,6 +3190,57 @@ static void test_remove_data_by_zscore()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_AnomalyDetectByLOFVisitor()  {
+
+    std::cout << "\nTesting AnomalyDetectByLOFVisitor{ } ..." << std::endl;
+
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+    ibm.get_column<double>("IBM_Adj_Close")[502] = 800.0;
+    ibm.get_column<double>("IBM_Adj_Close")[1001] = 900.0;
+    ibm.get_column<double>("IBM_Adj_Close")[2002] = 450.0;
+    ibm.get_column<double>("IBM_Adj_Close")[5000] = 1.5;
+    ibm.get_column<double>("IBM_Adj_Close")[5030] = 20.0;
+
+    and_lof_v<double, std::string>  anomaly { 10, 2.0 };
+
+    ibm.single_act_visit<double>("IBM_Adj_Close", anomaly);
+
+    const std::vector<std::size_t>  result = { 502, 1001, 2002, 5000 };
+
+    assert((anomaly.get_result() == result));
+
+    constexpr std::size_t   item_cnt = 1024;
+    MyStdDataFrame          df2;
+
+    df2.load_index(MyStdDataFrame::gen_sequence_index(0, item_cnt, 1));
+
+    std::vector<double>   sine_col;
+
+    sine_col.reserve(item_cnt);
+    for (std::size_t i = 0; i < item_cnt; ++i)  {
+        sine_col.push_back(std::sin(2.0 * M_PI * i / 20.0)); // Base sine wave
+        if (i % 30 == 0)  sine_col.back() += 10.0;  // Inject anomalies
+    }
+    df2.load_column("sine col", std::move(sine_col));
+
+    and_lof_v<double>   anomaly2 { 10, 1.5 };
+
+    // It doesn't work for sine wave data. All the scores are 1.
+    //
+    df2.single_act_visit<double>("sine col", anomaly2);
+    assert(anomaly2.get_result().empty());
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3247,6 +3298,7 @@ int main(int, char *[]) {
     test_AnomalyDetectByZScoreVisitor();
     test_remove_data_by_iqr();
     test_remove_data_by_zscore();
+    test_AnomalyDetectByLOFVisitor();
 
     return (0);
 }

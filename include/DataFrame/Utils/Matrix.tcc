@@ -660,7 +660,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
             if (s == T(0))
                 s = norm;
-            if (std::fabs(hess_form(l, l - 1)) < (EPSILON_ * s))
+            if (std::fabs(hess_form(l, l - 1)) < (value_type(EPSILON_) * s))
                 break;
 
             l -= 1;
@@ -808,7 +808,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
                 if (std::fabs(hess_form(m, m - 1)) *
                     (std::fabs(q) + std::fabs(oo)) <
-                        EPSILON_ *
+                        value_type(EPSILON_) *
                         (std::fabs(p) *
                          (std::fabs(hess_form (m - 1, m - 1)) +
                           std::fabs(cref) +
@@ -939,7 +939,8 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
                     if (imagi(0, r) == T(0))
                         hess_form(r, c) =
-                            ww != T(0) ? -oo / ww : -oo / (EPSILON_ * norm);
+                            ww != T(0) ? -oo / ww
+                                       : -oo / (value_type(EPSILON_) * norm);
                     else  {  // Solve real equations
                         q = (e_vals(0, r) - p) * (e_vals(0, r) - p) +
                             imagi(0, r) * imagi(0, r);
@@ -959,7 +960,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
                     //
                     const value_type    t { std::fabs(hess_form(r, c)) };
 
-                    if ((EPSILON_ * t * t) > T(1))
+                    if ((value_type(EPSILON_) * t * t) > T(1))
                         for (size_type rr = r; rr <= c; ++rr)
                             hess_form(rr, c) /= t;
                 }
@@ -1027,7 +1028,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
                             q * q };
 
                         if (vr == T(0) && vi == T(0))
-                            vr = EPSILON_ *
+                            vr = value_type(EPSILON_) *
                                  norm *
                                  (std::fabs(ww) +
                                   std::fabs(q) +
@@ -1071,7 +1072,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
                         std::max(std::fabs(hess_form (r, c - 1)),
                                  std::fabs(hess_form (r, c))) };
 
-                    if (EPSILON_ * t * t > 1)
+                    if (value_type(EPSILON_) * t * t > 1)
                         for (size_type rr = r; rr <= c; ++rr)  {
                             hess_form(rr, c - 1) /= t;
                             hess_form(rr, c) /= t;
@@ -1267,7 +1268,7 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
         size_type   m { c };
 
         while (m < e_vecs.cols())  {
-            if (std::fabs(imagi(0, m)) <= (EPSILON_ * tst1))
+            if (std::fabs(imagi(0, m)) <= (value_type(EPSILON_) * tst1))
                 break;
             m += 1;
         }
@@ -1339,7 +1340,7 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
                // Check for convergence.
                //
-            }  while (std::fabs(imagi(0, c)) > (EPSILON_ * tst1));
+            }  while (std::fabs(imagi(0, c)) > (value_type(EPSILON_) * tst1));
         }
 
         e_vals(0, c) = e_vals(0, c) + f;
@@ -1679,8 +1680,8 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                 break;
 
             if (std::fabs(imagi(0, c)) <=
-                    EPSILON_ * (std::fabs(s_tmp[c]) +
-                                std::fabs(s_tmp[c + 1])))  {
+                    value_type(EPSILON_) * (std::fabs(s_tmp[c]) +
+                                            std::fabs(s_tmp[c + 1])))  {
                 imagi(0, c) = 0;
                 break;
             }
@@ -1699,7 +1700,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                     ks != p ? std::fabs(imagi(0, ks)) : T(0) +
                     ks != c + T(1) ? std::fabs(imagi(0, ks - 1)) : T(0) };
 
-                if (std::fabs(s_tmp[ks]) <= (EPSILON_ * t))  {
+                if (std::fabs(s_tmp[ks]) <= (value_type(EPSILON_) * t))  {
                     s_tmp[ks] = 0;
                     break;
                 }

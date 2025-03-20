@@ -376,7 +376,7 @@ private:
 
     using storage_t = std::vector<value_type>;
 
-    inline static constexpr value_type  EPSILON_ { value_type(2.220446e-16) };
+    inline static constexpr double  EPSILON_ { double(2.220446e-16) };
 
     // Partial pivoting for Gaussian elimination:
     //

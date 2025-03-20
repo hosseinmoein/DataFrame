@@ -3516,6 +3516,155 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_zscr_v = AnomalyDetectByZScoreVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  AnomalyDetectByLOFVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type =
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
+    using distance_func = std::function<double(const T &x, const T &y)>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 20 || k_ >= (col_s - 1))
+            throw DataFrameError("AnomalyDetectByLOFVisitor: "
+                                 "Time-series is too short or k is too large");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        NormalizeVisitor<T, I, A>   norm { nt_ };
+
+        if (nt_ > normalization_type::none)  {
+            norm.pre();
+            norm(idx_begin, idx_end, column_begin, column_end);
+            norm.post();
+        }
+
+        pvec_t      dists(col_s);
+        knn_mat_t   neighbors { long(col_s), long(k_) };
+        rch_mat_t   reach_dists { long(col_s), long(k_) };
+        dist_vec_t  lrd(col_s, 0);  // Local Reachability Density
+
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            if (nt_ > normalization_type::none)
+                get_knn_(norm.get_result().begin(), col_s, i, neighbors, dists);
+            else
+                get_knn_(column_begin, col_s, i, neighbors, dists);
+
+            double          sum_reach_dist { 0 };
+
+            for (long j { 0 }; j < neighbors.cols(); ++j)  {
+                const double    reach_d =
+                    std::max(neighbors(i, j).first,
+                             dfunc_(*(column_begin + j), *(column_begin + i)));
+
+                reach_dists(long(i), j) = reach_d;
+                sum_reach_dist += reach_d;
+            }
+
+            lrd[i] = double(k_) / sum_reach_dist;
+        }
+
+        result_.reserve(32);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            double  sum_ratio { 0 };
+
+            for (long j { 0 }; j < neighbors.cols(); ++j)
+                sum_ratio += lrd[neighbors(i, j).second] / lrd[i];
+
+            // std::cout << sum_ratio / double(k_) << "\n";
+            if ((sum_ratio / double(k_)) > threshold_)
+                result_.push_back(i);
+        }
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    AnomalyDetectByLOFVisitor(
+        size_type k,
+        double threshold,
+        normalization_type norm_type = normalization_type::none,
+        distance_func &&f =
+            [](const value_type &x, const value_type &y) -> double  {
+                return (std::fabs(x - y));
+            })
+        : k_(k),
+          threshold_(threshold),
+          nt_(norm_type),
+          dfunc_(std::forward<distance_func>(f))  {   }
+
+private:
+
+    using dist_vec_t = std::vector<double>;
+    using pvec_t = std::vector<std::pair<double, size_type>> ;
+    using knn_mat_t =
+        Matrix<std::pair<double, size_type>, matrix_orient::row_major>;
+    using rch_mat_t = Matrix<double, matrix_orient::row_major>;
+
+    template <typename H>
+    inline void
+    get_knn_(const H &column_begin,
+             size_type col_s, size_type index,
+             knn_mat_t &neighbors, pvec_t &dists) const  {
+
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
+        const auto  &idx_val = *(column_begin + index);
+        auto        lbd =
+            [&dists, this,
+             &column_begin = std::as_const(column_begin),
+             &idx_val = std::as_const(idx_val)]
+            (auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)
+                    dists[i] = { dfunc_(idx_val, *(column_begin + i)), i };
+            };
+
+        if (thread_level > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0), col_s, std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+            ThreadGranularity::thr_pool_.parallel_sort(
+                dists.begin(), dists.end(),
+                [] (const auto &lhs, const auto &rhs)  {
+                    return (lhs.first < rhs.first);
+                });
+        }
+        else  {
+            lbd(size_type(0), col_s);
+            std::sort(dists.begin(), dists.end(),
+                      [] (const auto &lhs, const auto &rhs)  {
+                          return (lhs.first < rhs.first);
+                      });
+        }
+
+        // Skip the first element which is 0 (distance of index with itself)
+        //
+        for (size_type i { 1 }; i <= k_; ++i)
+            neighbors(long(index), long(i - 1)) = dists[i];
+        return;
+    }
+
+    const size_type             k_;
+    const double                threshold_;
+    const normalization_type    nt_;
+    distance_func               dfunc_;
+    result_type                 result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using and_lof_v = AnomalyDetectByLOFVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

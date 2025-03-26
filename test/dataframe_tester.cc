@@ -2526,59 +2526,57 @@ static void test_gen_datetime_index()  {
     assert(idx_vec1[10] == 20280101);
     assert(idx_vec1[20] == 20380101);
 
-    /*
-    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-                                               "12/31/2038",
-                                               time_frequency::monthly,
-                                               3,
-                                               DT_TIME_ZONE::AM_NEW_YORK);
-    assert(idx_vec1.size() == 84);
-    assert(idx_vec1.capacity() == 86);
-    assert(idx_vec1[0] == 20180101);
-    assert(idx_vec1[1] == 20180401);
-    assert(idx_vec1[2] == 20180701);
-    assert(idx_vec1[40] == 20280101);
-    assert(idx_vec1[83] == 20381001);
+    // idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+    //                                            "12/31/2038",
+    //                                            time_frequency::monthly,
+    //                                            3,
+    //                                            DT_TIME_ZONE::AM_NEW_YORK);
+    // assert(idx_vec1.size() == 84);
+    // assert(idx_vec1.capacity() == 86);
+    // assert(idx_vec1[0] == 20180101);
+    // assert(idx_vec1[1] == 20180401);
+    // assert(idx_vec1[2] == 20180701);
+    // assert(idx_vec1[40] == 20280101);
+    // assert(idx_vec1[83] == 20381001);
 
-    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-                                               "12/31/2038",
-                                               time_frequency::weekly,
-                                               4,
-                                               DT_TIME_ZONE::AM_NEW_YORK);
-    assert(idx_vec1.size() == 274);
-    assert(idx_vec1.capacity() == 274);
-    assert(idx_vec1[0] == 20180101);
-    assert(idx_vec1[1] == 20180129);
-    assert(idx_vec1[2] == 20180226);
-    assert(idx_vec1[272] == 20381108);
-    assert(idx_vec1[273] == 20381206);
+    // idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+    //                                            "12/31/2038",
+    //                                            time_frequency::weekly,
+    //                                            4,
+    //                                            DT_TIME_ZONE::AM_NEW_YORK);
+    // assert(idx_vec1.size() == 274);
+    // assert(idx_vec1.capacity() == 274);
+    // assert(idx_vec1[0] == 20180101);
+    // assert(idx_vec1[1] == 20180129);
+    // assert(idx_vec1[2] == 20180226);
+    // assert(idx_vec1[272] == 20381108);
+    // assert(idx_vec1[273] == 20381206);
 
-    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-                                               "12/31/2038",
-                                               time_frequency::daily,
-                                               1,
-                                               DT_TIME_ZONE::AM_NEW_YORK);
-    assert(idx_vec1.size() == 7669);
-    assert(idx_vec1.capacity() == 7670);
-    assert(idx_vec1[0] == 20180101);
-    assert(idx_vec1[1] == 20180102);
-    assert(idx_vec1[2] == 20180103);
-    assert(idx_vec1[7667] == 20381229);
-    assert(idx_vec1[7668] == 20381230);
+    // idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+    //                                            "12/31/2038",
+    //                                            time_frequency::daily,
+    //                                            1,
+    //                                            DT_TIME_ZONE::AM_NEW_YORK);
+    // assert(idx_vec1.size() == 7669);
+    // assert(idx_vec1.capacity() == 7670);
+    // assert(idx_vec1[0] == 20180101);
+    // assert(idx_vec1[1] == 20180102);
+    // assert(idx_vec1[2] == 20180103);
+    // assert(idx_vec1[7667] == 20381229);
+    // assert(idx_vec1[7668] == 20381230);
 
-    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-                                               "12/31/2022",
-                                               time_frequency::hourly,
-                                               1,
-                                               DT_TIME_ZONE::AM_NEW_YORK);
-    assert(idx_vec1.size() == 43800);
-    assert(idx_vec1.capacity() == 43801);
-    assert(idx_vec1[0] == 1514782800);
-    assert(idx_vec1[1] == 1514786400);
-    assert(idx_vec1[2] == 1514790000);
-    assert(idx_vec1[43798] == 1672455600);
-    assert(idx_vec1[43799] == 1672459200);
-    */
+    // idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+    //                                            "12/31/2022",
+    //                                            time_frequency::hourly,
+    //                                            1,
+    //                                            DT_TIME_ZONE::AM_NEW_YORK);
+    // assert(idx_vec1.size() == 43800);
+    // assert(idx_vec1.capacity() == 43801);
+    // assert(idx_vec1[0] == 1514782800);
+    // assert(idx_vec1[1] == 1514786400);
+    // assert(idx_vec1[2] == 1514790000);
+    // assert(idx_vec1[43798] == 1672455600);
+    // assert(idx_vec1[43799] == 1672459200);
 
     idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
                                                "03/31/2018",
@@ -3997,55 +3995,53 @@ static void test_k_means()  {
         std::cout << citer << ", ";
     std::cout << std::endl;
 
-/*
     // Using the calculated means, separate the given column into clusters
-    const auto  &clusters = km_visitor.get_clusters();
-    bool        found = false;
+    // const auto  &clusters = km_visitor.get_clusters();
+    // bool        found = false;
 
-    for (auto iter : clusters)  {
-        if (::fabs(iter[0] - 1.89348) < 0.00001)  {
-            if (::fabs(iter[6] - 1.44231) < 0.00001)  {
-                found = true;
-                break;
-            }
-        }
-    }
-    assert(found);
-    found = false;
-    for (auto iter : clusters)  {
-        if (::fabs(iter[0] - 0.593126) < 0.00001)  {
-            if (::fabs(iter[2] - 0.950026) < 0.00001)  {
-                found = true;
-                break;
-            }
-        }
-    }
-    assert(found);
-    found = false;
-    for (auto iter : clusters)  {
-        if (::fabs(iter[0] - 14.2245) < 0.0001)  {
-            found = true;
-            break;
-        }
-    }
-    assert(found);
-    found = false;
-    for (auto iter : clusters)  {
-        if (::fabs(iter[0] - 6.90427) < 0.00001)  {
-            found = true;
-            break;
-        }
-    }
-    assert(found);
-    found = false;
-    for (auto iter : clusters)  {
-        if (::fabs(iter[0] - 3.8146) < 0.00001)  {
-            found = true;
-            break;
-        }
-    }
-    assert(found);
-*/
+    // for (auto iter : clusters)  {
+    //     if (::fabs(iter[0] - 1.89348) < 0.00001)  {
+    //         if (::fabs(iter[6] - 1.44231) < 0.00001)  {
+    //             found = true;
+    //             break;
+    //         }
+    //     }
+    // }
+    // assert(found);
+    // found = false;
+    // for (auto iter : clusters)  {
+    //     if (::fabs(iter[0] - 0.593126) < 0.00001)  {
+    //         if (::fabs(iter[2] - 0.950026) < 0.00001)  {
+    //             found = true;
+    //             break;
+    //         }
+    //     }
+    // }
+    // assert(found);
+    // found = false;
+    // for (auto iter : clusters)  {
+    //     if (::fabs(iter[0] - 14.2245) < 0.0001)  {
+    //         found = true;
+    //         break;
+    //     }
+    // }
+    // assert(found);
+    // found = false;
+    // for (auto iter : clusters)  {
+    //     if (::fabs(iter[0] - 6.90427) < 0.00001)  {
+    //         found = true;
+    //         break;
+    //     }
+    // }
+    // assert(found);
+    // found = false;
+    // for (auto iter : clusters)  {
+    //     if (::fabs(iter[0] - 3.8146) < 0.00001)  {
+    //         found = true;
+    //         break;
+    //     }
+    // }
+    // assert(found);
 
     // Now try with Points
     //
@@ -4080,64 +4076,61 @@ static void test_k_means()  {
         std::cout << "\n\n" << std::endl;
     }
 
-/*
-    found = false;
-    for (auto iter : clusters2)  {
-        if (::fabs(iter[0].x - 18.9556) < 0.1 &&
-            ::fabs(iter[0].y - 2.17537) < 0.1)  {
-            if (::fabs(iter[6].x - 16.7309) < 0.1 &&
-                ::fabs(iter[6].y - 0.872376) < 0.1)  {
-                found = true;
-                break;
-            }
-        }
-    }
-    assert(found);
-*/
-/*
-    found = false;
-    for (auto iter : clusters2)  {
-        if (::fabs(iter[0].x - 0.943977) < 0.1 &&
-            ::fabs(iter[0].y - 0.910989) < 0.1)  {
-            if (::fabs(iter[2].x - 0.30509) < 0.1 &&
-                ::fabs(iter[2].y - 1.69017) < 0.1)  {
-                found = true;
-                break;
-            }
-        }
-    }
-    assert(found);
-    found = false;
-    for (auto iter : clusters2)  {
-        if (::fabs(iter[0].x - 4.31973) < 0.1 &&
-            ::fabs(iter[0].y - 1.24214) < 0.1)  {
-            if (::fabs(iter[3].x - 4.68381) < 0.1 &&
-                ::fabs(iter[3].y - 0.453632) < 0.1)  {
-                found = true;
-                break;
-            }
-        }
-    }
-    assert(found);
-    found = false;
-    for (auto iter : clusters2)  {
-        if (::fabs(iter[0].x - 1.5694) < 0.1 &&
-            ::fabs(iter[0].y - 15.3338) < 0.1)  {
-            found = true;
-            break;
-        }
-    }
-    assert(found);
-    found = false;
-    for (auto iter : clusters2)  {
-        if (::fabs(iter[0].x - 1.29624) < 0.1 &&
-            ::fabs(iter[0].y - 4.13919) < 0.1)  {
-            found = true;
-            break;
-        }
-    }
-    assert(found);
-*/
+    // found = false;
+    // for (auto iter : clusters2)  {
+    //     if (::fabs(iter[0].x - 18.9556) < 0.1 &&
+    //         ::fabs(iter[0].y - 2.17537) < 0.1)  {
+    //         if (::fabs(iter[6].x - 16.7309) < 0.1 &&
+    //             ::fabs(iter[6].y - 0.872376) < 0.1)  {
+    //             found = true;
+    //             break;
+    //         }
+    //     }
+    // }
+    // assert(found);
+
+    // found = false;
+    // for (auto iter : clusters2)  {
+    //     if (::fabs(iter[0].x - 0.943977) < 0.1 &&
+    //         ::fabs(iter[0].y - 0.910989) < 0.1)  {
+    //         if (::fabs(iter[2].x - 0.30509) < 0.1 &&
+    //             ::fabs(iter[2].y - 1.69017) < 0.1)  {
+    //             found = true;
+    //             break;
+    //         }
+    //     }
+    // }
+    // assert(found);
+    // found = false;
+    // for (auto iter : clusters2)  {
+    //     if (::fabs(iter[0].x - 4.31973) < 0.1 &&
+    //         ::fabs(iter[0].y - 1.24214) < 0.1)  {
+    //         if (::fabs(iter[3].x - 4.68381) < 0.1 &&
+    //             ::fabs(iter[3].y - 0.453632) < 0.1)  {
+    //             found = true;
+    //             break;
+    //         }
+    //     }
+    // }
+    // assert(found);
+    // found = false;
+    // for (auto iter : clusters2)  {
+    //     if (::fabs(iter[0].x - 1.5694) < 0.1 &&
+    //         ::fabs(iter[0].y - 15.3338) < 0.1)  {
+    //         found = true;
+    //         break;
+    //     }
+    // }
+    // assert(found);
+    // found = false;
+    // for (auto iter : clusters2)  {
+    //     if (::fabs(iter[0].x - 1.29624) < 0.1 &&
+    //         ::fabs(iter[0].y - 4.13919) < 0.1)  {
+    //         found = true;
+    //         break;
+    //     }
+    // }
+    // assert(found);
 }
 
 // -----------------------------------------------------------------------------
@@ -5062,17 +5055,16 @@ static void test_VWAP()  {
     assert(result[1].index_value == 200);
     assert(result[10].event_count == 24);
     assert(result[10].index_value == 1100);
-/*
-    assert(fabs(result[0].vwap - 548.091) < 0.001);
-    assert(fabs(result[0].average_price - 535.331) < 0.001);
-    assert(fabs(result[0].cumulative_vwap - 548.091) < 0.001);
-    assert(fabs(result[4].vwap - 551.923) < 0.001);
-    assert(fabs(result[4].average_price - 537.798) < 0.001);
-    assert(fabs(result[4].cumulative_vwap - 550.347) < 0.001);
-    assert(fabs(result[10].vwap - 553.196) < 0.001);
-    assert(fabs(result[10].average_price - 539.629) < 0.001);
-    assert(fabs(result[10].cumulative_vwap - 552.067) < 0.001);
-*/
+
+    // assert(fabs(result[0].vwap - 548.091) < 0.001);
+    // assert(fabs(result[0].average_price - 535.331) < 0.001);
+    // assert(fabs(result[0].cumulative_vwap - 548.091) < 0.001);
+    // assert(fabs(result[4].vwap - 551.923) < 0.001);
+    // assert(fabs(result[4].average_price - 537.798) < 0.001);
+    // assert(fabs(result[4].cumulative_vwap - 550.347) < 0.001);
+    // assert(fabs(result[10].vwap - 553.196) < 0.001);
+    // assert(fabs(result[10].average_price - 539.629) < 0.001);
+    // assert(fabs(result[10].cumulative_vwap - 552.067) < 0.001);
 }
 
 // -----------------------------------------------------------------------------
@@ -5137,31 +5129,29 @@ static void test_VWBAS()  {
     assert(result[10].event_count == 24);
     assert(result[10].index_value == 1100);
 
-/*
-    assert(fabs(result[0].spread - 2.11835) < 0.00001);
-    assert(fabs(result[0].percent_spread - 2.0998) < 0.0001);
-    assert(fabs(result[0].vwbas - 2.15156) < 0.00001);
-    assert(fabs(result[0].percent_vwbas - 2.13298) < 0.00001);
-    assert(fabs(result[0].high_bid_price - 101.966) < 0.001);
-    assert(fabs(result[0].low_ask_price - 102.012) < 0.001);
-    assert(fabs(result[0].cumulative_vwbas - 2.15156) < 0.00001);
+    // assert(fabs(result[0].spread - 2.11835) < 0.00001);
+    // assert(fabs(result[0].percent_spread - 2.0998) < 0.0001);
+    // assert(fabs(result[0].vwbas - 2.15156) < 0.00001);
+    // assert(fabs(result[0].percent_vwbas - 2.13298) < 0.00001);
+    // assert(fabs(result[0].high_bid_price - 101.966) < 0.001);
+    // assert(fabs(result[0].low_ask_price - 102.012) < 0.001);
+    // assert(fabs(result[0].cumulative_vwbas - 2.15156) < 0.00001);
 
-    assert(fabs(result[5].spread - 1.92471) < 0.00001);
-    assert(fabs(result[5].percent_spread - 1.90509) < 0.0001);
-    assert(fabs(result[5].vwbas - 1.9199) < 0.0001);
-    assert(fabs(result[5].percent_vwbas - 1.90052) < 0.00001);
-    assert(fabs(result[5].high_bid_price - 101.987) < 0.001);
-    assert(fabs(result[5].low_ask_price - 102.04) < 0.01);
-    assert(fabs(result[5].cumulative_vwbas - 2.07029) < 0.00001);
+    // assert(fabs(result[5].spread - 1.92471) < 0.00001);
+    // assert(fabs(result[5].percent_spread - 1.90509) < 0.0001);
+    // assert(fabs(result[5].vwbas - 1.9199) < 0.0001);
+    // assert(fabs(result[5].percent_vwbas - 1.90052) < 0.00001);
+    // assert(fabs(result[5].high_bid_price - 101.987) < 0.001);
+    // assert(fabs(result[5].low_ask_price - 102.04) < 0.01);
+    // assert(fabs(result[5].cumulative_vwbas - 2.07029) < 0.00001);
 
-    assert(fabs(result[10].spread - 1.98223) < 0.00001);
-    assert(fabs(result[10].percent_spread - 1.96279) < 0.0001);
-    assert(fabs(result[10].vwbas - 2.05129) < 0.0001);
-    assert(fabs(result[10].percent_vwbas - 2.03336) < 0.00001);
-    assert(fabs(result[10].high_bid_price - 101.997) < 0.001);
-    assert(fabs(result[10].low_ask_price - 102.12) < 0.01);
-    assert(fabs(result[10].cumulative_vwbas - 2.02198) < 0.00001);
-*/
+    // assert(fabs(result[10].spread - 1.98223) < 0.00001);
+    // assert(fabs(result[10].percent_spread - 1.96279) < 0.0001);
+    // assert(fabs(result[10].vwbas - 2.05129) < 0.0001);
+    // assert(fabs(result[10].percent_vwbas - 2.03336) < 0.00001);
+    // assert(fabs(result[10].high_bid_price - 101.997) < 0.001);
+    // assert(fabs(result[10].low_ask_price - 102.12) < 0.01);
+    // assert(fabs(result[10].cumulative_vwbas - 2.02198) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

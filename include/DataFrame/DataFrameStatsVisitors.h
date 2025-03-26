@@ -177,14 +177,9 @@ namespace hmdf
     obo_data_ = false;
 
 #define OBO_PORT_POST \
-    if (obo_data_)  {                                      \
-        if (aux_idx_vec_.empty())  {                       \
-            aux_idx_vec_.reserve(1);                       \
-            aux_idx_vec_.push_back(index_type { });        \
-        }                                                  \
-        (*this)(aux_idx_vec_.begin(), aux_idx_vec_.end(),  \
-                aux_val_vec_.begin(), aux_val_vec_.end()); \
-    }
+    if (obo_data_) \
+        (*this)(aux_idx_vec_.begin(), aux_idx_vec_.end(), \
+                aux_val_vec_.begin(), aux_val_vec_.end());
 
 // ----------------------------------------------------------------------------
 
@@ -4204,26 +4199,23 @@ private:
         mean_visitor.post();
 
         MeanVisitor<T, I>   mean_mean_visitor(skip_nan_);
+        const value_type    mean = mean_visitor.get_result();
+        const index_type    idx = index_type { };
 
         mean_mean_visitor.pre();
         if (! skip_nan_)  {
-            const value_type    mean = mean_visitor.get_result();
-            const index_type    &idx = *idx_begin;
-
             for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
                 const value_type    &value = *(column_begin + i);
 
-                mean_mean_visitor(idx, value - mean);
+                mean_mean_visitor(idx, std::fabs(value - mean));
             }
         }
         else  {
             for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    value = *(column_begin + i);
+                const value_type    &value = *(column_begin + i);
 
                 if (! is_nan__(value)) [[likely]]
-                    mean_mean_visitor(
-                        *idx_begin,
-                        std::fabs(value - mean_visitor.get_result()));
+                    mean_mean_visitor(idx, std::fabs(value - mean));
             }
         }
         mean_mean_visitor.post();
@@ -4247,12 +4239,13 @@ private:
         GET_COL_SIZE2
 
         MeanVisitor<T, I>   mean_median_visitor(skip_nan_);
+        const index_type    idx = index_type { };
 
         mean_median_visitor.pre();
         if (! skip_nan_)  {
             for (std::size_t i = 0; i < col_s; ++i) [[likely]]
                 mean_median_visitor(
-                    *idx_begin,
+                    idx,
                     std::fabs(*(column_begin + i) -
                               median_visitor.get_result()));
         }
@@ -4262,7 +4255,7 @@ private:
 
                 if (! is_nan__(value)) [[likely]]
                     mean_median_visitor(
-                        *idx_begin,
+                        idx,
                         std::fabs(value - median_visitor.get_result()));
             }
         }

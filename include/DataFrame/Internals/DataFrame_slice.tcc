@@ -3555,10 +3555,7 @@ get_data_on_days(std::vector<DT_WEEKDAY> &&days) const  {
         std::is_base_of<DateTime, I>::value,
         "Index type must be DateTime to call get_data_on_days()");
 
-    using set_t = std::unordered_set<DT_WEEKDAY,
-                                     std::hash<DT_WEEKDAY>,
-                                     std::equal_to<DT_WEEKDAY>,
-                                     StackFirstFitAllocator<DT_WEEKDAY, 32>>;
+    using set_t = std::unordered_set<DT_WEEKDAY>;
 
     const set_t             day_set(days.begin(), days.end());
     const size_type         idx_s = indices_.size();
@@ -3584,10 +3581,7 @@ get_view_on_days(std::vector<DT_WEEKDAY> &&days)  {
         std::is_base_of<DateTime, I>::value,
         "Index type must be DateTime to call get_view_on_days()");
 
-    using set_t = std::unordered_set<DT_WEEKDAY,
-                                     std::hash<DT_WEEKDAY>,
-                                     std::equal_to<DT_WEEKDAY>,
-                                     StackFirstFitAllocator<DT_WEEKDAY, 32>>;
+    using set_t = std::unordered_set<DT_WEEKDAY>;
 
     const set_t             day_set(days.begin(), days.end());
     const size_type         idx_s = indices_.size();
@@ -3612,10 +3606,7 @@ get_view_on_days(std::vector<DT_WEEKDAY> &&days) const  {
         std::is_base_of<DateTime, I>::value,
         "Index type must be DateTime to call get_view_on_days()");
 
-    using set_t = std::unordered_set<DT_WEEKDAY,
-                                     std::hash<DT_WEEKDAY>,
-                                     std::equal_to<DT_WEEKDAY>,
-                                     StackFirstFitAllocator<DT_WEEKDAY, 32>>;
+    using set_t = std::unordered_set<DT_WEEKDAY>;
 
     const set_t             day_set(days.begin(), days.end());
     const size_type         idx_s = indices_.size();
@@ -3641,11 +3632,7 @@ get_data_on_days_in_month(std::vector<DateTime::DatePartType> &&days) const  {
         std::is_base_of<DateTime, I>::value,
         "Index type must be DateTime to call get_data_on_days_in_month()");
 
-    using set_t =
-        std::unordered_set<DateTime::DatePartType,
-                           std::hash<DateTime::DatePartType>,
-                           std::equal_to<DateTime::DatePartType>,
-                           StackFirstFitAllocator<DateTime::DatePartType, 64>>;
+    using set_t = std::unordered_set<DateTime::DatePartType>;
 
     const set_t             day_set(days.begin(), days.end());
     const size_type         idx_s = indices_.size();
@@ -3671,11 +3658,7 @@ get_view_on_days_in_month(std::vector<DateTime::DatePartType> &&days)  {
         std::is_base_of<DateTime, I>::value,
         "Index type must be DateTime to call get_view_on_days_in_month()");
 
-    using set_t =
-        std::unordered_set<DateTime::DatePartType,
-                           std::hash<DateTime::DatePartType>,
-                           std::equal_to<DateTime::DatePartType>,
-                           StackFirstFitAllocator<DateTime::DatePartType, 64>>;
+    using set_t = std::unordered_set<DateTime::DatePartType>;
 
     const set_t             day_set(days.begin(), days.end());
     const size_type         idx_s = indices_.size();
@@ -3700,11 +3683,7 @@ get_view_on_days_in_month(std::vector<DateTime::DatePartType> &&days) const  {
         std::is_base_of<DateTime, I>::value,
         "Index type must be DateTime to call get_view_on_days_in_month()");
 
-    using set_t =
-        std::unordered_set<DateTime::DatePartType,
-                           std::hash<DateTime::DatePartType>,
-                           std::equal_to<DateTime::DatePartType>,
-                           StackFirstFitAllocator<DateTime::DatePartType, 64>>;
+    using set_t = std::unordered_set<DateTime::DatePartType>;
 
     const set_t             day_set(days.begin(), days.end());
     const size_type         idx_s = indices_.size();
@@ -3730,10 +3709,7 @@ get_data_in_months(std::vector<DT_MONTH> &&months) const  {
         std::is_base_of<DateTime, I>::value,
         "Index type must be DateTime to call get_data_in_months()");
 
-    using set_t = std::unordered_set<DT_MONTH,
-                                     std::hash<DT_MONTH>,
-                                     std::equal_to<DT_MONTH>,
-                                     StackFirstFitAllocator<DT_MONTH, 32>>;
+    using set_t = std::unordered_set<DT_MONTH>;
 
     const set_t             month_set(months.begin(), months.end());
     const size_type         idx_s = indices_.size();
@@ -3759,10 +3735,7 @@ get_view_in_months(std::vector<DT_MONTH> &&months)  {
         std::is_base_of<DateTime, I>::value,
         "Index type must be DateTime to call get_view_in_months()");
 
-    using set_t = std::unordered_set<DT_MONTH,
-                                     std::hash<DT_MONTH>,
-                                     std::equal_to<DT_MONTH>,
-                                     StackFirstFitAllocator<DT_MONTH, 32>>;
+    using set_t = std::unordered_set<DT_MONTH>;
 
     const set_t             month_set(months.begin(), months.end());
     const size_type         idx_s = indices_.size();
@@ -3787,10 +3760,7 @@ get_view_in_months(std::vector<DT_MONTH> &&months) const  {
         std::is_base_of<DateTime, I>::value,
         "Index type must be DateTime to call get_view_in_months()");
 
-    using set_t = std::unordered_set<DT_MONTH,
-                                     std::hash<DT_MONTH>,
-                                     std::equal_to<DT_MONTH>,
-                                     StackFirstFitAllocator<DT_MONTH, 32>>;
+    using set_t = std::unordered_set<DT_MONTH>;
 
     const set_t             month_set(months.begin(), months.end());
     const size_type         idx_s = indices_.size();

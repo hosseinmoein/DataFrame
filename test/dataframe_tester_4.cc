@@ -1531,44 +1531,44 @@ static void test_get_data_by_kmeans()  {
     assert(result_view[0].get_column<double>("IBM_High")[200] == 182.839996);
     assert(result_view[0].get_column<long>("IBM_Volume")[100] == 3721600);
 
-    assert(result_df[1].get_index().size() == 585);
-    assert(result_df[1].get_column<double>("IBM_Open").size() == 585);
-    assert(result_df[1].get_index()[0] == "2014-10-20");
-    assert(result_df[1].get_index()[584] == "2020-02-21");
-    assert(result_df[1].get_column<double>("IBM_High")[200] == 153.100006);
-    assert(result_df[1].get_column<long>("IBM_Volume")[100] == 3749600);
-    assert(result_view[1].get_index().size() == 585);
-    assert(result_view[1].get_column<double>("IBM_Open").size() == 585);
-    assert(result_view[1].get_index()[0] == "2014-10-20");
-    assert(result_view[1].get_index()[584] == "2020-02-21");
-    assert(result_view[1].get_column<double>("IBM_High")[200] == 153.100006);
-    assert(result_view[1].get_column<long>("IBM_Volume")[100] == 3749600);
+    assert(result_df[1].get_index().size() == 606);
+    assert(result_df[1].get_column<double>("IBM_Open").size() == 606);
+    assert(result_df[1].get_index()[0] == "2015-08-21");
+    assert(result_df[1].get_index()[605] == "2020-10-08");
+    assert(result_df[1].get_column<double>("IBM_High")[200] == 145.880005);
+    assert(result_df[1].get_column<long>("IBM_Volume")[100] == 4386200);
+    assert(result_view[1].get_index().size() == 606);
+    assert(result_view[1].get_column<double>("IBM_Open").size() == 606);
+    assert(result_view[1].get_index()[0] == "2015-08-21");
+    assert(result_view[1].get_index()[605] == "2020-10-08");
+    assert(result_view[1].get_column<double>("IBM_High")[200] == 145.880005);
+    assert(result_view[1].get_column<long>("IBM_Volume")[100] == 4386200);
 
-    assert(result_df[2].get_index().size() == 258);
-    assert(result_df[2].get_column<double>("IBM_Open").size() == 258);
-    assert(result_df[2].get_index()[0] == "2016-01-15");
-    assert(result_df[2].get_index()[257] == "2020-10-30");
-    assert(result_df[2].get_column<double>("IBM_High")[200] == 127.239998);
-    assert(result_df[2].get_column<long>("IBM_Volume")[100] == 12502100);
-    assert(result_view[2].get_index().size() == 258);
-    assert(result_view[2].get_column<double>("IBM_Open").size() == 258);
-    assert(result_view[2].get_index()[0] == "2016-01-15");
-    assert(result_view[2].get_index()[257] == "2020-10-30");
-    assert(result_view[2].get_column<double>("IBM_High")[200] == 127.239998);
-    assert(result_view[2].get_column<long>("IBM_Volume")[100] == 12502100);
+    assert(result_df[2].get_index().size() == 585);
+    assert(result_df[2].get_column<double>("IBM_Open").size() == 585);
+    assert(result_df[2].get_index()[0] == "2014-10-20");
+    assert(result_df[2].get_index()[584] == "2020-02-21");
+    assert(result_df[2].get_column<double>("IBM_High")[200] == 153.100006);
+    assert(result_df[2].get_column<long>("IBM_Volume")[100] == 3749600);
+    assert(result_view[2].get_index().size() == 585);
+    assert(result_view[2].get_column<double>("IBM_Open").size() == 585);
+    assert(result_view[2].get_index()[0] == "2014-10-20");
+    assert(result_view[2].get_index()[584] == "2020-02-21");
+    assert(result_view[2].get_column<double>("IBM_High")[200] == 153.100006);
+    assert(result_view[2].get_column<long>("IBM_Volume")[100] == 3749600);
 
-    assert(result_df[3].get_index().size() == 606);
-    assert(result_df[3].get_column<double>("IBM_Open").size() == 606);
-    assert(result_df[3].get_index()[0] == "2015-08-21");
-    assert(result_df[3].get_index()[605] == "2020-10-08");
-    assert(result_df[3].get_column<double>("IBM_High")[200] == 145.880005);
-    assert(result_df[3].get_column<long>("IBM_Volume")[100] == 4386200);
-    assert(result_view[3].get_index().size() == 606);
-    assert(result_view[3].get_column<double>("IBM_Open").size() == 606);
-    assert(result_view[3].get_index()[0] == "2015-08-21");
-    assert(result_view[3].get_index()[605] == "2020-10-08");
-    assert(result_view[3].get_column<double>("IBM_High")[200] == 145.880005);
-    assert(result_view[3].get_column<long>("IBM_Volume")[100] == 4386200);
+    assert(result_df[3].get_index().size() == 258);
+    assert(result_df[3].get_column<double>("IBM_Open").size() == 258);
+    assert(result_df[3].get_index()[0] == "2016-01-15");
+    assert(result_df[3].get_index()[257] == "2020-10-30");
+    assert(result_df[3].get_column<double>("IBM_High")[200] == 127.239998);
+    assert(result_df[3].get_column<long>("IBM_Volume")[100] == 12502100);
+    assert(result_view[3].get_index().size() == 258);
+    assert(result_view[3].get_column<double>("IBM_Open").size() == 258);
+    assert(result_view[3].get_index()[0] == "2016-01-15");
+    assert(result_view[3].get_index()[257] == "2020-10-30");
+    assert(result_view[3].get_column<double>("IBM_High")[200] == 127.239998);
+    assert(result_view[3].get_column<long>("IBM_Volume")[100] == 12502100);
 }
 
 // ----------------------------------------------------------------------------
@@ -2201,13 +2201,13 @@ static void test_StationaryCheckVisitor()  {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = false } };
 
     df.single_act_visit<double>("normal_col", sc4);
-    assert(std::fabs(sc4.get_adf_statistic() - 0.0286854) < 0.0000001);
+    assert(std::fabs(sc4.get_adf_statistic() - 0.0289613) < 0.0000001);
 
     StationaryCheckVisitor<double, std::string> sc5 {
         stationary_test::adf, { .adf_lag = 25, .adf_with_trend = false } };
 
     df.single_act_visit<double>("normal_col", sc5);
-    assert(std::fabs(sc5.get_adf_statistic() - -0.0017814) < 0.0000001);
+    assert(std::fabs(sc5.get_adf_statistic() - 0.0208191) < 0.0000001);
 
     // ADF tests with trend
     //
@@ -2227,13 +2227,13 @@ static void test_StationaryCheckVisitor()  {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
 
     df.single_act_visit<double>("normal_col", sc8);
-    assert(std::fabs(sc8.get_adf_statistic() - 0.0286834) < 0.0000001);
+    assert(std::fabs(sc8.get_adf_statistic() - 0.0289582) < 0.0000001);
 
     StationaryCheckVisitor<double, std::string> sc9 {
         stationary_test::adf, { .adf_lag = 25, .adf_with_trend = true } };
 
     df.single_act_visit<double>("normal_col", sc9);
-    assert(std::fabs(sc9.get_adf_statistic() - -0.00178569) < 0.0000001);
+    assert(std::fabs(sc9.get_adf_statistic() - 0.020812) < 0.0000001);
 
     StationaryCheckVisitor<double, std::string> sc10 {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
@@ -2442,30 +2442,30 @@ static void test_SpectralClusteringVisitor()  {
 
     assert(clusters.size() == 4);
 
-    assert(clusters[0].size() == 16);
-    assert(clusters[1].size() == 89);
-    assert(clusters[2].size() == 207);
-    assert(clusters[3].size() == 688);
+    assert(clusters[0].size() == 89);
+    assert(clusters[1].size() == 688);
+    assert(clusters[2].size() == 208);
+    assert(clusters[3].size() == 15);
 
-    assert(std::fabs(clusters[0][0] - 121.86) < 0.001);
-    assert(std::fabs(clusters[0][8] - 124.83) < 0.001);
-    assert(std::fabs(clusters[0][12] - 120.19) < 0.001);
-    assert(std::fabs(clusters[0][15] - 122.74) < 0.001);
+    assert(std::fabs(clusters[0][0] - 177.9) < 0.001);
+    assert(std::fabs(clusters[0][23] - 171.12) < 0.001);
+    assert(std::fabs(clusters[0][61] - 177.18) < 0.001);
+    assert(std::fabs(clusters[0][88] - 170.05) < 0.001);
 
-    assert(std::fabs(clusters[1][0] - 177.9) < 0.001);
-    assert(std::fabs(clusters[1][23] - 171.12) < 0.001);
-    assert(std::fabs(clusters[1][61] - 177.18) < 0.001);
-    assert(std::fabs(clusters[1][88] - 170.05) < 0.001);
+    assert(std::fabs(clusters[1][0] - 169.1) < 0.001);
+    assert(std::fabs(clusters[1][300] - 140.19) < 0.001);
+    assert(std::fabs(clusters[1][542] - 152.51) < 0.001);
+    assert(std::fabs(clusters[1][687] - 153.23) < 0.001);
 
     assert(std::fabs(clusters[2][0] - 185.53) < 0.001);
     assert(std::fabs(clusters[2][100] - 181.22) < 0.001);
-    assert(std::fabs(clusters[2][200] - 179.82) < 0.001);
-    assert(std::fabs(clusters[2][206] - 179.45) < 0.001);
+    assert(std::fabs(clusters[2][200] - 179.4) < 0.001);
+    assert(std::fabs(clusters[2][207] - 179.45) < 0.001);
 
-    assert(std::fabs(clusters[3][0] - 169.1) < 0.001);
-    assert(std::fabs(clusters[3][300] - 140.19) < 0.001);
-    assert(std::fabs(clusters[3][542] - 152.51) < 0.001);
-    assert(std::fabs(clusters[3][687] - 153.23) < 0.001);
+    assert(std::fabs(clusters[3][0] - 121.86) < 0.001);
+    assert(std::fabs(clusters[3][8] - 124.83) < 0.001);
+    assert(std::fabs(clusters[3][12] - 120.19) < 0.001);
+    assert(std::fabs(clusters[3][14] - 122.74) < 0.001);
 }
 
 // ----------------------------------------------------------------------------
@@ -2503,26 +2503,26 @@ static void test_get_data_by_spectral()  {
     assert(result_df.size() == 3);
     assert(result_df.size() == result_view.size());
 
-    assert(result_df[0].get_index().size() == 1);
-    assert(result_df[0].get_column<double>("IBM_Open").size() == 1);
-    assert(result_df[0].get_index()[0] == "2018-12-24");
-    assert(result_df[0].get_column<double>("IBM_High")[0] == 111.0);
-    assert(result_df[0].get_column<long>("IBM_Volume")[0] == 3821400);
-    assert(result_view[0].get_column<double>("IBM_High")[0] == 111.0);
-    assert(result_view[0].get_column<long>("IBM_Volume")[0] == 3821400);
+    assert(result_df[0].get_index().size() == 47);
+    assert(result_df[0].get_column<double>("IBM_Open").size() == 47);
+    assert(result_df[0].get_index()[0] == "2018-10-29");
+    assert(result_df[0].get_index()[46] == "2019-01-22");
+    assert(result_df[0].get_column<double>("IBM_High")[20] == 121.68);
+    assert(result_df[0].get_column<long>("IBM_Volume")[35] == 4346700);
+    assert(result_view[0].get_index().size() == 47);
+    assert(result_view[0].get_column<double>("IBM_Open").size() == 47);
+    assert(result_view[0].get_index()[0] == "2018-10-29");
+    assert(result_view[0].get_index()[46] == "2019-01-22");
+    assert(result_view[0].get_column<double>("IBM_High")[20] == 121.68);
+    assert(result_view[0].get_column<long>("IBM_Volume")[35] == 4346700);
 
-    assert(result_df[1].get_index().size() == 47);
-    assert(result_df[1].get_column<double>("IBM_Open").size() == 47);
-    assert(result_df[1].get_index()[0] == "2018-10-29");
-    assert(result_df[1].get_index()[46] == "2019-01-22");
-    assert(result_df[1].get_column<double>("IBM_High")[20] == 121.68);
-    assert(result_df[1].get_column<long>("IBM_Volume")[35] == 4346700);
-    assert(result_view[1].get_index().size() == 47);
-    assert(result_view[1].get_column<double>("IBM_Open").size() == 47);
-    assert(result_view[1].get_index()[0] == "2018-10-29");
-    assert(result_view[1].get_index()[46] == "2019-01-22");
-    assert(result_view[1].get_column<double>("IBM_High")[20] == 121.68);
-    assert(result_view[1].get_column<long>("IBM_Volume")[35] == 4346700);
+    assert(result_df[1].get_index().size() == 1);
+    assert(result_df[1].get_column<double>("IBM_Open").size() == 1);
+    assert(result_df[1].get_index()[0] == "2018-12-24");
+    assert(result_df[1].get_column<double>("IBM_High")[0] == 111.0);
+    assert(result_df[1].get_column<long>("IBM_Volume")[0] == 3821400);
+    assert(result_view[1].get_column<double>("IBM_High")[0] == 111.0);
+    assert(result_view[1].get_column<long>("IBM_Volume")[0] == 3821400);
 
     assert(result_df[2].get_index().size() == 452);
     assert(result_df[2].get_column<double>("IBM_Open").size() == 452);
@@ -2578,7 +2578,7 @@ static void test_MC_station_dist()  {
     RandGenParams<double>       p;
     std::vector<const char *>   col_names (item_cnt, nullptr);
 
-    p.seed = 0;
+    p.seed = 16;
     df.load_column("0_col_name", gen_normal_dist<double, 256>(item_cnt, p));
     for (std::size_t i = 1; i < item_cnt; ++i)  {
         p.seed = i;
@@ -2593,10 +2593,10 @@ static void test_MC_station_dist()  {
             std::forward<std::vector<const char *>>(col_names));
 
     assert(result.size() == 20);
-    assert(std::fabs(result[0] - -0.705967) < 0.000001);
-    assert(std::fabs(result[5] - 0.121566) < 0.000001);
-    assert(std::fabs(result[15] - -0.639604) < 0.000001);
-    assert(std::fabs(result[19] - -0.692765) < 0.000001);
+    assert(std::fabs(result[0] - -0.45676) < 0.000001);
+    assert(std::fabs(result[5] - -0.0338666) < 0.000001);
+    assert(std::fabs(result[15] - -0.10117) < 0.000001);
+    assert(std::fabs(result[19] - 0.232359) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

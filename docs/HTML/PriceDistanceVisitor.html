@@ -59,7 +59,7 @@ using pdist_v = PriceDistanceVisitor&lt;T, I, A&gt;;
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the Price Distance indicator. It requires 4 input columns in the order of <I>low, high, open, close</I>.<BR>
-        The result is a vector of values with same number of items as the given columns. The first item in the result will be NAN.<BR><BR>
+        The result is a vector of values with same number of items as the given columns. The first and last items in the result will be NAN.<BR><BR>
 
         It Evaluates the "distance" covered by price movements overnight and during the day
       </td>

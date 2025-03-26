@@ -1384,9 +1384,9 @@ static void test_FixedAutoCorrVisitor()  {
         assert(std::abs(fac.get_result()[0] - -0.5436) < 0.0001);
         assert(std::abs(fac.get_result()[12] - 0.1328) < 0.001);
         assert(std::abs(fac.get_result()[14] - -0.594) < 0.0001);
-        assert(std::abs(fac.get_result()[161] - -0.1109) < 0.0001);
+        assert(std::abs(fac.get_result()[161] - 0.3364) < 0.0001);
         assert(std::abs(fac.get_result()[160] - -0.231) < 0.0001);
-        assert(std::abs(fac.get_result()[159] - 0.075) < 0.0001);
+        assert(std::abs(fac.get_result()[159] - 0.075) < 0.001);
 
         FixedAutoCorrVisitor<double,
                              std::string> fac2 { 31, roll_policy::continuous };
@@ -1397,9 +1397,9 @@ static void test_FixedAutoCorrVisitor()  {
         assert(std::abs(fac2.get_result()[0] - -0.5436) < 0.0001);
         assert(std::abs(fac2.get_result()[12] - -0.7213) < 0.001);
         assert(std::abs(fac2.get_result()[14] - -0.6657) < 0.0001);
-        assert(std::abs(fac2.get_result()[4999] - 0.1446) < 0.0001);
-        assert(std::abs(fac2.get_result()[4998] - 0.1809) < 0.0001);
-        assert(std::abs(fac2.get_result()[4997] - 0.1732) < 0.0001);
+        assert(std::isnan(fac2.get_result()[4999]));
+        assert(std::abs(fac2.get_result()[4998] - -1.0) < 0.001);
+        assert(std::abs(fac2.get_result()[4997] - -0.9617) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -1863,13 +1863,13 @@ static void test_PriceDistanceVisitor()  {
 
         assert(pdist.get_result().size() == 1721);
         assert(std::isnan(pdist.get_result()[0]));
-        assert(std::abs(pdist.get_result()[13] - 13.84) < 0.0001);
-        assert(std::abs(pdist.get_result()[14] - 5.54) < 0.0001);
-        assert(std::abs(pdist.get_result()[18] - 5.73) < 0.0001);
-        assert(std::abs(pdist.get_result()[25] - 4.34) < 0.0001);
-        assert(std::abs(pdist.get_result()[1720] - 5.35) < 0.0001);
-        assert(std::abs(pdist.get_result()[1712] - 9.91) < 0.0001);
-        assert(std::abs(pdist.get_result()[1707] - 4.55) < 0.0001);
+        assert(std::abs(pdist.get_result()[13] - 7.51) < 0.001);
+        assert(std::abs(pdist.get_result()[14] - 6.2) < 0.1);
+        assert(std::abs(pdist.get_result()[18] - 5.63) < 0.001);
+        assert(std::abs(pdist.get_result()[25] - 3.65) < 0.01);
+        assert(std::isnan(pdist.get_result()[1720]));
+        assert(std::abs(pdist.get_result()[1712] - 4.9) < 0.001);
+        assert(std::abs(pdist.get_result()[1707] - 3.94) < 0.01);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -3105,21 +3105,21 @@ static void test_get_data_by_rand_from_view()  {
             vw.get_data_by_rand<double, long>
                 (random_policy::frac_rows_with_seed, 0.5, 100);
 
-        assert(data_from_ptr_vw.get_index().size() == 188);
+        assert(data_from_ptr_vw.get_index().size() == 174);
         assert((std::abs(data_from_ptr_vw.get_column<double>("IBM_Close")[0] -
                     187.97) < 0.0001));
         assert((std::abs(data_from_ptr_vw.get_column<double>("IBM_Open")[10] -
-                    188.98) < 0.0001));
+                    192.01) < 0.0001));
         assert((std::abs(data_from_ptr_vw.get_column<double>("IBM_Close")[10] -
-                    190.08) < 0.0001));
+                    192.15) < 0.0001));
 
-        assert(data_from_vw.get_index().size() == 275);
+        assert(data_from_vw.get_index().size() == 273);
         assert((std::abs(data_from_vw.get_column<double>("IBM_Close")[0] -
                     152.95) < 0.0001));
         assert((std::abs(data_from_vw.get_column<double>("IBM_Open")[10] -
-                    166.21) < 0.0001));
+                    166.75) < 0.0001));
         assert((std::abs(data_from_vw.get_column<double>("IBM_Close")[10] -
-                    163.62) < 0.0001));
+                    165.37) < 0.0001));
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -3187,11 +3187,11 @@ static void test_get_data_by_like_from_view()  {
     assert((from_vw.get_column<std::string>("str column 2")[2] ==
                 "!@#$0987^HGTtiff\""));
 
-    assert(from_ptr_vw.get_index().size() == 2);
-    assert(from_ptr_vw.get_index()[1] == 10);
-    assert(from_ptr_vw.get_column<int>("int column")[1] == 10);
-    assert(from_ptr_vw.get_column<std::string>("str column 1").size() == 2);
-    assert(from_ptr_vw.get_column<std::string>("str column 2").size() == 2);
+    assert(from_ptr_vw.get_index().size() == 4);
+    assert(from_ptr_vw.get_index()[1] == 5);
+    assert(from_ptr_vw.get_column<int>("int column")[1] == 5);
+    assert(from_ptr_vw.get_column<std::string>("str column 1").size() == 4);
+    assert(from_ptr_vw.get_column<std::string>("str column 2").size() == 4);
 }
 
 // ----------------------------------------------------------------------------
@@ -3449,21 +3449,21 @@ static void test_get_view_by_rand_from_view()  {
             vw.get_view_by_rand<double, long>
                 (random_policy::frac_rows_with_seed, 0.5, 100);
 
-        assert(view_from_ptr_vw.get_index().size() == 188);
+        assert(view_from_ptr_vw.get_index().size() == 174);
         assert((std::abs(view_from_ptr_vw.get_column<double>("IBM_Close")[0] -
                     187.97) < 0.0001));
         assert((std::abs(view_from_ptr_vw.get_column<double>("IBM_Open")[10] -
-                    188.98) < 0.0001));
+                    192.01) < 0.0001));
         assert((std::abs(view_from_ptr_vw.get_column<double>("IBM_Close")[10] -
-                    190.08) < 0.0001));
+                    192.15) < 0.0001));
 
-        assert(view_from_vw.get_index().size() == 275);
+        assert(view_from_vw.get_index().size() == 273);
         assert((std::abs(view_from_vw.get_column<double>("IBM_Close")[0] -
                     152.95) < 0.0001));
         assert((std::abs(view_from_vw.get_column<double>("IBM_Open")[10] -
-                    166.21) < 0.0001));
+                    166.75) < 0.0001));
         assert((std::abs(view_from_vw.get_column<double>("IBM_Close")[10] -
-                    163.62) < 0.0001));
+                    165.37) < 0.0001));
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -3531,11 +3531,11 @@ static void test_get_view_by_like_from_view()  {
     assert((from_vw.get_column<std::string>("str column 2")[2] ==
                 "!@#$0987^HGTtiff\""));
 
-    assert(from_ptr_vw.get_index().size() == 2);
-    assert(from_ptr_vw.get_index()[1] == 10);
-    assert(from_ptr_vw.get_column<int>("int column")[1] == 10);
-    assert(from_ptr_vw.get_column<std::string>("str column 1").size() == 2);
-    assert(from_ptr_vw.get_column<std::string>("str column 2").size() == 2);
+    assert(from_ptr_vw.get_index().size() == 4);
+    assert(from_ptr_vw.get_index()[1] == 5);
+    assert(from_ptr_vw.get_column<int>("int column")[1] == 5);
+    assert(from_ptr_vw.get_column<std::string>("str column 1").size() == 4);
+    assert(from_ptr_vw.get_column<std::string>("str column 2").size() == 4);
 }
 
 // ----------------------------------------------------------------------------

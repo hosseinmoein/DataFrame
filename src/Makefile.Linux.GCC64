@@ -6,14 +6,13 @@ BUILD_DEFINE = Linux_GCC64
 
 # -----------------------------------------------------------------------------
 
-CXX = /usr/bin/g++
+CXX = /usr/local/bin/g++-14
+# CXX = /usr/bin/g++
 
-# INCLUDES = -I/usr/include/c++/7 -I/usr/include
 INCLUDES =
 
 LFLAGS =
-CXXFLAGS = -O3 -march=native $(INCLUDES) $(DEFINES) -std=c++2b
-# CXXFLAGS = -O3 $(INCLUDES) $(DEFINES) -std=c++2b
+CXXFLAGS = -O3 -march=native $(INCLUDES) $(DEFINES) -Wno-strict-aliasing -std=c++23
 
 PLATFORM_LIBS = -lpthread -ldl -lm -lstdc++
 

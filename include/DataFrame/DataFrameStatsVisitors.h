@@ -177,9 +177,14 @@ namespace hmdf
     obo_data_ = false;
 
 #define OBO_PORT_POST \
-    if (obo_data_) \
-        (*this)(aux_idx_vec_.begin(), aux_idx_vec_.end(), \
-                aux_val_vec_.begin(), aux_val_vec_.end());
+    if (obo_data_)  {                                      \
+        if (aux_idx_vec_.empty())  {                       \
+            aux_idx_vec_.reserve(1);                       \
+            aux_idx_vec_.push_back(index_type { });        \
+        }                                                  \
+        (*this)(aux_idx_vec_.begin(), aux_idx_vec_.end(),  \
+                aux_val_vec_.begin(), aux_val_vec_.end()); \
+    }
 
 // ----------------------------------------------------------------------------
 
@@ -2978,14 +2983,21 @@ struct  FixedAutoCorrVisitor  {
             result.reserve(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
                 auto    far_end = i * lag_ + 2 * lag_;
+                auto    near_end = i * lag_ + lag_;
+                auto    begin = i * lag_;
 
-                if (far_end > col_s)
+                if (far_end >= col_s)
                     far_end -= far_end % col_s;
+                if (near_end >= col_s)
+                    near_end -= near_end % col_s;
+                if ((near_end - begin) > (far_end - near_end))
+                    begin += ((near_end - begin) - (far_end - near_end));
+
                 corr.pre();
                 corr (idx_begin, idx_end,  // This doesn't matter
-                      column_begin + (i * lag_),
-                      column_begin + (i * lag_ + lag_),
-                      column_begin + (i * lag_ + lag_),
+                      column_begin + begin,
+                      column_begin + near_end,
+                      column_begin + near_end,
                       column_begin + far_end);
                 corr.post();
 
@@ -2998,14 +3010,20 @@ struct  FixedAutoCorrVisitor  {
             result.reserve(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
                 auto    far_end = i + 2 * lag_;
+                auto    near_end = i + lag_;
+                auto    begin = i;
 
                 if (far_end > col_s)
                     far_end -= far_end % col_s;
+                if (near_end >= col_s)
+                    near_end -= near_end % col_s;
+                if ((near_end - begin) > (far_end - near_end))
+                    begin += ((near_end - begin) - (far_end - near_end));
                 corr.pre();
                 corr (idx_begin, idx_end,  // This doesn't matter
-                      column_begin + i,
-                      column_begin + (i + lag_),
-                      column_begin + (i + lag_),
+                      column_begin + begin,
+                      column_begin + near_end,
+                      column_begin + near_end,
                       column_begin + far_end);
                 corr.post();
 
@@ -4177,6 +4195,8 @@ private:
 
         GET_COL_SIZE2
 
+        if (col_s == 0)  return;
+
         MeanVisitor<T, I>   mean_visitor(skip_nan_);
 
         mean_visitor.pre();
@@ -4187,10 +4207,14 @@ private:
 
         mean_mean_visitor.pre();
         if (! skip_nan_)  {
-            for (std::size_t i = 0; i < col_s; ++i) [[likely]]
-                mean_mean_visitor(
-                    *idx_begin,
-                    std::fabs(*(column_begin + i) - mean_visitor.get_result()));
+            const value_type    mean = mean_visitor.get_result();
+            const index_type    &idx = *idx_begin;
+
+            for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    &value = *(column_begin + i);
+
+                mean_mean_visitor(idx, value - mean);
+            }
         }
         else  {
             for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
@@ -4315,8 +4339,6 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    MADVisitor (mad_type mt, bool skip_nan = false)
-        : mad_type_(mt), skip_nan_(skip_nan)  {   }
     template <typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
@@ -4345,6 +4367,9 @@ public:
     }
 
     OBO_PORT_OPT
+
+    MADVisitor (mad_type mt, bool skip_nan = false)
+        : mad_type_(mt), skip_nan_(skip_nan)  {   }
 
     inline void pre ()  {
 

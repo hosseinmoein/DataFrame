@@ -587,7 +587,7 @@ struct  sel_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
         : name (n), sel_indices (si), indices_size(is), dfv(d)  {   }
 
     const char              *name;
-    const StlVecType<IT>   &sel_indices;
+    const StlVecType<IT>    &sel_indices;
     const size_type         indices_size;
     DF                      &dfv;
 

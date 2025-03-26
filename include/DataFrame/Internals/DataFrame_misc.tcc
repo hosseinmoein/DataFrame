@@ -927,11 +927,12 @@ operator() (const T &vec)  {
     using ValueType = typename VecType::value_type;
     using NewVecType = typename DF::template ColumnVecType<ValueType>;
 
-    NewVecType  new_vec (vec.size() - to_delete.size());
+    NewVecType  new_vec;
 
-    for (size_type i = 0, n = 0; i < vec.size(); ++i)  {
+    new_vec.reserve(vec.size() - to_delete.size());
+    for (size_type i = 0; i < vec.size(); ++i)  {
         if (! to_delete.contains(i))
-            new_vec[n++] = vec[i];
+            new_vec.push_back(vec[i]);
     }
 
     df.template load_column<ValueType>(name,

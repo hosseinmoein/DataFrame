@@ -51,12 +51,9 @@ target_compile_options(iso_tree_tester
 )
 add_test(NAME iso_tree_tester COMMAND iso_tree_tester)
 
-if(NOT MSVC)
-    # MSVC compiler craps out on immediately executing lambdas
-    add_executable(allocator_tester allocator_tester.cc)
-    target_link_libraries(allocator_tester PRIVATE DataFrame)
-    add_test(NAME allocator_tester COMMAND allocator_tester)
-endif()
+add_executable(allocator_tester allocator_tester.cc)
+target_link_libraries(allocator_tester PRIVATE DataFrame)
+add_test(NAME allocator_tester COMMAND allocator_tester)
 
 add_executable(vector_ptr_view_tester vector_ptr_view_tester.cc)
 target_link_libraries(vector_ptr_view_tester PRIVATE DataFrame)
@@ -75,5 +72,7 @@ target_link_libraries(gen_rand_tester PRIVATE DataFrame)
 add_test(NAME gen_rand_tester COMMAND gen_rand_tester)
 
 add_executable(dataframe_thread_safety dataframe_thread_safety.cc)
-target_link_libraries(dataframe_thread_safety PRIVATE DataFrame Threads::Threads)
+target_link_libraries(dataframe_thread_safety
+    PRIVATE DataFrame Threads::Threads
+)
 add_test(NAME dataframe_thread_safety COMMAND dataframe_thread_safety)

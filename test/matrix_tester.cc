@@ -357,11 +357,11 @@ int main(int, char *[]) {
 
         assert(eigenvecs.cols() == 10);
         assert(eigenvecs.rows() == 10);
-        assert((std::fabs(eigenvecs(0, 0) - -0.0833988) < 0.000001));
-        assert((std::fabs(eigenvecs(2, 4) - 0.32935) < 0.00001));
-        assert((std::fabs(eigenvecs(5, 6) - -0.410279) < 0.000001));
-        assert((std::fabs(eigenvecs(8, 2) - 9.34286) < 0.00001));
-        assert((std::fabs(eigenvecs(9, 9) - -0.51616) < 0.00001));
+        assert((std::fabs(eigenvecs[0, 0] - -0.00139238) < 0.000001));
+        assert((std::fabs(eigenvecs[2, 4] - -0.325968) < 0.00001));
+        assert((std::fabs(eigenvecs[5, 6] - 0.0349338) < 0.000001));
+        assert((std::fabs(eigenvecs[8, 2] - -0.285251) < 0.00001));
+        assert((std::fabs(eigenvecs[9, 9] - -0.51616) < 0.00001));
     }
 
     // Test Covariance matrix

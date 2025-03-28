@@ -48,7 +48,7 @@ body {
 template&lt;typename ... Ts&gt;
 DataFrame&lt;DateTime, H&gt;
 get_data_on_days_in_month(
-    std::vector&lt;DateTime::DatePartType&gt; &amp;&amp;days) const;
+    const std::vector&lt;DateTime::DatePartType&gt; &amp;days) const;
         </B></PRE></font>
       </td>
       <td>
@@ -67,7 +67,7 @@ get_data_on_days_in_month(
 template&lt;typename ... Ts&gt;
 PtrView
 get_view_on_days_in_month(
-    std::vector&lt;DateTime::DatePartType&gt; &amp;&amp;days);
+    const std::vector&lt;DateTime::DatePartType&gt; &amp;days);
         </B></PRE></font>
       </td>
       <td>
@@ -86,7 +86,7 @@ get_view_on_days_in_month(
 template&lt;typename ... Ts&gt;
 ConstPtrView
 get_view_on_days_in_month(
-    std::vector&lt;DateTime::DatePartType&gt; &amp;&amp;days) const;
+    const std::vector&lt;DateTime::DatePartType&gt; &amp;days) const;
         </B></PRE></font>
       </td>
       <td>

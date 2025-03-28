@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <utility>
 
 // ----------------------------------------------------------------------------
 
@@ -54,15 +56,16 @@ build_tree(std::vector<value_type> &data,
            size_type right,
            size_type depth)  {
 
-    if (left >= right || depth >= max_depth_) [[unlikely]]  {
+    if (left >= right || depth >= max_depth_ || right == 0) [[unlikely]]  {
         iso_tree_.push_back(IsoNode<T> { });
     }
     else  {
-        std::uniform_int_distribution<size_type>    dis { left, right };
+        std::uniform_int_distribution<size_type>    dis { left, right - 1 };
         const value_type                            &anchor = data[dis(gen)];
         const auto                                  citer =
             std::partition(data.begin() + left, data.begin() + right,
-                           [anchor](const value_type &v) -> bool {
+                           [&anchor = std::as_const(anchor)]
+                           (const value_type &v) -> bool {
                                return (v < anchor);
                            });
         const size_type                             mid =

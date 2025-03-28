@@ -4649,19 +4649,19 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
-    get_data_on_days(std::vector<DT_WEEKDAY> &&days) const;
+    get_data_on_days(const std::vector<DT_WEEKDAY> &days) const;
 
     // Same as get_data_on_days() above, but it returns a view
     //
     template<typename ... Ts>
     [[nodiscard]] PtrView
-    get_view_on_days(std::vector<DT_WEEKDAY> &&days);
+    get_view_on_days(const std::vector<DT_WEEKDAY> &days);
 
     // Same as get_view_on_days() above, but it returns a const view
     //
     template<typename ... Ts>
     [[nodiscard]] ConstPtrView
-    get_view_on_days(std::vector<DT_WEEKDAY> &&days) const;
+    get_view_on_days(const std::vector<DT_WEEKDAY> &days) const;
 
     // This selects the rows using the index column that happen on the specified
     // days of the month. It returns another DataFrame with selected data
@@ -4677,19 +4677,21 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
-    get_data_on_days_in_month(std::vector<DateTime::DatePartType> &&days) const;
+    get_data_on_days_in_month(
+        const std::vector<DateTime::DatePartType> &days) const;
 
     // Same as get_data_on_days() above, but it returns a view
     //
     template<typename ... Ts>
     [[nodiscard]] PtrView
-    get_view_on_days_in_month(std::vector<DateTime::DatePartType> &&days);
+    get_view_on_days_in_month(const std::vector<DateTime::DatePartType> &days);
 
     // Same as get_view_on_days() above, but it returns a const view
     //
     template<typename ... Ts>
     [[nodiscard]] ConstPtrView
-    get_view_on_days_in_month(std::vector<DateTime::DatePartType> &&days) const;
+    get_view_on_days_in_month(
+        const std::vector<DateTime::DatePartType> &days) const;
 
     // This selects the rows using the index column that happen in the
     // specified months. It returns another DataFrame with selected data
@@ -4705,19 +4707,20 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
-    get_data_in_months(std::vector<DT_MONTH> &&months) const;
+    get_data_in_months(
+        const std::vector<DT_MONTH> &months) const;
 
     // Same as get_data_on_months() above, but it returns a view
     //
     template<typename ... Ts>
     [[nodiscard]] PtrView
-    get_view_in_months(std::vector<DT_MONTH> &&months);
+    get_view_in_months(const std::vector<DT_MONTH> &months);
 
     // Same as get_view_on_months() above, but it returns a const view
     //
     template<typename ... Ts>
     [[nodiscard]] ConstPtrView
-    get_view_in_months(std::vector<DT_MONTH> &&months) const;
+    get_view_in_months(const std::vector<DT_MONTH> &months) const;
 
 public:  // Visitors
 

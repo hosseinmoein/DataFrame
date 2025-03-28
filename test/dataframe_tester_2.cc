@@ -930,6 +930,13 @@ static void test_remove_duplicates()  {
                    std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
+    StlVecType<double>         actual_d {
+        100, 101, 102, 103, 105, 106.55, 107.34, 1.8, 111, 112, 113,
+        114, 115, 116 };
+    StlVecType<std::string>    actual_s {
+        "zz", "bb", "cc", "ww", "ff", "gg", "hh",  "ii", "jj", "kk",
+        "ll", "mm", "nn", "oo" };
+
     auto    vw =
         df.get_view<double, int, std::string>(
             { "dbl_col", "dbl_col_2", "str_col", "int_col" });
@@ -946,13 +953,6 @@ static void test_remove_duplicates()  {
                              double, std::string, int>
             ("dbl_col", "dbl_col_2", "int_col", "str_col",
              false, remove_dup_spec::keep_first);
-
-    StlVecType<double>         actual_d {
-        100, 101, 102, 103, 105, 106.55, 107.34, 1.8, 111, 112, 113,
-        114, 115, 116 };
-    StlVecType<std::string>    actual_s {
-        "zz", "bb", "cc", "ww", "ff", "gg", "hh",  "ii", "jj", "kk",
-        "ll", "mm", "nn", "oo" };
 
     assert(result2.get_index().size() == 14);
     assert(result2.get_column<double>("dbl_col_2") == actual_d);
@@ -1028,14 +1028,15 @@ static void test_remove_duplicates()  {
     const auto  actual_idx = StlVecType<unsigned long>
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 13UL, 15UL, 14UL };
 
-    actual_d = StlVecType<double>
+    StlVecType<double>      actual_d2 =
         { 100, 101, 102, 103, 101, 105, 106.55, 107.34, 1.8, 113, 115, 116 };
-    actual_s = StlVecType<std::string>
+    StlVecType<std::string> actual_s2 =
         { "zz", "bb", "cc", "ww", "bb", "ff", "gg", "hh", "ii", "ll",
           "nn", "oo" };
+
     assert(result7.get_index() == actual_idx);
-    assert(result7.get_column<double>("dbl_col_2") == actual_d);
-    assert(result7.get_column<std::string>("str_col") == actual_s);
+    assert(result7.get_column<double>("dbl_col_2") == actual_d2);
+    assert(result7.get_column<std::string>("str_col") == actual_s2);
 }
 
 // -----------------------------------------------------------------------------

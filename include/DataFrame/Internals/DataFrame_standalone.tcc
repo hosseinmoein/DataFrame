@@ -621,7 +621,8 @@ _bucketize_core_(DV &dst_vec,
 
         for (std::size_t i = 0; (i + value) < src_s; i += value) [[likely]]  {
             visitor.pre();
-            for (std::size_t j = 0; j < std::size_t(value); ++j)
+            for (std::size_t j = 0;
+                 (j < std::size_t(value)) && ((i + j) < src_s); ++j)
                 visitor(src_idx[i + j], src_vec[i + j]);
             visitor.post();
             dst_vec.push_back(visitor.get_result());
@@ -652,7 +653,7 @@ _load_bucket_data_(const DF &source,
         (src_idx.size() < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-    if (thread_level > 3)
+    if (thread_level > 3)  {
         futures.emplace_back(
             ThreadGranularity::thr_pool_.dispatch(
                 false,
@@ -668,8 +669,10 @@ _load_bucket_data_(const DF &source,
                     std::ref(visitor),
                     src_s,
                     bt));
-    else
+    }
+    else  {
         _bucketize_core_(dst_vec, src_idx, src_vec, value, visitor, src_s, bt);
+    }
 }
 
 // ----------------------------------------------------------------------------

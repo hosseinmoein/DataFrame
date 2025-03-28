@@ -2978,14 +2978,21 @@ struct  FixedAutoCorrVisitor  {
             result.reserve(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
                 auto    far_end = i * lag_ + 2 * lag_;
+                auto    near_end = i * lag_ + lag_;
+                auto    begin = i * lag_;
 
-                if (far_end > col_s)
+                if (far_end >= col_s)
                     far_end -= far_end % col_s;
+                if (near_end >= col_s)
+                    near_end -= near_end % col_s;
+                if ((near_end - begin) > (far_end - near_end))
+                    begin += ((near_end - begin) - (far_end - near_end));
+
                 corr.pre();
                 corr (idx_begin, idx_end,  // This doesn't matter
-                      column_begin + (i * lag_),
-                      column_begin + (i * lag_ + lag_),
-                      column_begin + (i * lag_ + lag_),
+                      column_begin + begin,
+                      column_begin + near_end,
+                      column_begin + near_end,
                       column_begin + far_end);
                 corr.post();
 
@@ -2998,14 +3005,20 @@ struct  FixedAutoCorrVisitor  {
             result.reserve(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
                 auto    far_end = i + 2 * lag_;
+                auto    near_end = i + lag_;
+                auto    begin = i;
 
                 if (far_end > col_s)
                     far_end -= far_end % col_s;
+                if (near_end >= col_s)
+                    near_end -= near_end % col_s;
+                if ((near_end - begin) > (far_end - near_end))
+                    begin += ((near_end - begin) - (far_end - near_end));
                 corr.pre();
                 corr (idx_begin, idx_end,  // This doesn't matter
-                      column_begin + i,
-                      column_begin + (i + lag_),
-                      column_begin + (i + lag_),
+                      column_begin + begin,
+                      column_begin + near_end,
+                      column_begin + near_end,
                       column_begin + far_end);
                 corr.post();
 
@@ -4177,6 +4190,8 @@ private:
 
         GET_COL_SIZE2
 
+        if (col_s == 0)  return;
+
         MeanVisitor<T, I>   mean_visitor(skip_nan_);
 
         mean_visitor.pre();
@@ -4184,22 +4199,23 @@ private:
         mean_visitor.post();
 
         MeanVisitor<T, I>   mean_mean_visitor(skip_nan_);
+        const value_type    mean = mean_visitor.get_result();
+        const index_type    idx = index_type { };
 
         mean_mean_visitor.pre();
         if (! skip_nan_)  {
-            for (std::size_t i = 0; i < col_s; ++i) [[likely]]
-                mean_mean_visitor(
-                    *idx_begin,
-                    std::fabs(*(column_begin + i) - mean_visitor.get_result()));
+            for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    &value = *(column_begin + i);
+
+                mean_mean_visitor(idx, std::fabs(value - mean));
+            }
         }
         else  {
             for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    value = *(column_begin + i);
+                const value_type    &value = *(column_begin + i);
 
                 if (! is_nan__(value)) [[likely]]
-                    mean_mean_visitor(
-                        *idx_begin,
-                        std::fabs(value - mean_visitor.get_result()));
+                    mean_mean_visitor(idx, std::fabs(value - mean));
             }
         }
         mean_mean_visitor.post();
@@ -4223,12 +4239,13 @@ private:
         GET_COL_SIZE2
 
         MeanVisitor<T, I>   mean_median_visitor(skip_nan_);
+        const index_type    idx = index_type { };
 
         mean_median_visitor.pre();
         if (! skip_nan_)  {
             for (std::size_t i = 0; i < col_s; ++i) [[likely]]
                 mean_median_visitor(
-                    *idx_begin,
+                    idx,
                     std::fabs(*(column_begin + i) -
                               median_visitor.get_result()));
         }
@@ -4238,7 +4255,7 @@ private:
 
                 if (! is_nan__(value)) [[likely]]
                     mean_median_visitor(
-                        *idx_begin,
+                        idx,
                         std::fabs(value - median_visitor.get_result()));
             }
         }
@@ -4315,8 +4332,6 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    MADVisitor (mad_type mt, bool skip_nan = false)
-        : mad_type_(mt), skip_nan_(skip_nan)  {   }
     template <typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
@@ -4345,6 +4360,9 @@ public:
     }
 
     OBO_PORT_OPT
+
+    MADVisitor (mad_type mt, bool skip_nan = false)
+        : mad_type_(mt), skip_nan_(skip_nan)  {   }
 
     inline void pre ()  {
 

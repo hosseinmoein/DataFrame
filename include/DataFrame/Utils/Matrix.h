@@ -95,6 +95,9 @@ public:
     reference operator() (size_type r, size_type c);
     const_reference operator() (size_type r, size_type c) const;
 
+    reference operator[] (size_type r, size_type c);
+    const_reference operator[] (size_type r, size_type c) const;
+
     // Set the given column or row from the given iterator.
     // col_data/row_Data iterators must be valid for the length of
     // columns/rows.

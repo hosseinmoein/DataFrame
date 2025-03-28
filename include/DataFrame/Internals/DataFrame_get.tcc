@@ -52,7 +52,7 @@ MemUsage DataFrame<I, H>::get_memory_usage(const char *col_name) const  {
 
     MemUsage    result;
 
-    // [[assume(col_name != nullptr)]];
+    [[assume(col_name != nullptr)]];
     result.index_type_size = sizeof(IndexType);
     result.column_type_size = sizeof(T);
     get_mem_numbers_(get_index(),

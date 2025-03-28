@@ -47,7 +47,7 @@ body {
         <PRE><B>
 template&lt;typename ... Ts&gt;
 DataFrame&lt;DateTime, H&gt;
-get_data_on_days(std::vector&lt;DT_WEEKDAY&gt; &amp;&amp;days) const;
+get_data_on_days(const std::vector&lt;DT_WEEKDAY&gt; &amp;days) const;
         </B></PRE></font>
       </td>
       <td>
@@ -65,7 +65,7 @@ get_data_on_days(std::vector&lt;DT_WEEKDAY&gt; &amp;&amp;days) const;
         <PRE><B>
 template&lt;typename ... Ts&gt;
 PtrView
-get_view_on_days(std::vector&lt;DT_WEEKDAY&gt; &amp;&amp;days);
+get_view_on_days(const std::vector&lt;DT_WEEKDAY&gt; &amp;days);
         </B></PRE></font>
       </td>
       <td>
@@ -83,7 +83,7 @@ get_view_on_days(std::vector&lt;DT_WEEKDAY&gt; &amp;&amp;days);
         <PRE><B>
 template&lt;typename ... Ts&gt;
 ConstPtrView
-get_view_on_days(std::vector&lt;DT_WEEKDAY&gt; &amp;&amp;days) const;
+get_view_on_days(const std::vector&lt;DT_WEEKDAY&gt; &amp;days) const;
         </B></PRE></font>
       </td>
       <td>

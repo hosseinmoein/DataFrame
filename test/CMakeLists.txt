@@ -1,30 +1,18 @@
 add_executable(dataframe_tester dataframe_tester.cc)
 target_link_libraries(dataframe_tester PRIVATE DataFrame Threads::Threads)
-target_compile_options(dataframe_tester
-    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-)
 add_test(NAME dataframe_tester COMMAND dataframe_tester)
 
 add_executable(dataframe_tester_2 dataframe_tester_2.cc)
 target_link_libraries(dataframe_tester_2 PRIVATE DataFrame)
-target_compile_options(dataframe_tester_2
-    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-)
 add_test(NAME dataframe_tester_2 COMMAND dataframe_tester_2)
 
 add_executable(dataframe_tester_3 dataframe_tester_3.cc)
 target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)
-target_compile_options(dataframe_tester_3
-    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-)
 add_test(NAME dataframe_tester_3 COMMAND dataframe_tester_3)
 
 add_executable(dataframe_tester_4 dataframe_tester_4.cc)
 add_test(NAME dataframe_tester_4 COMMAND dataframe_tester_4)
 target_link_libraries(dataframe_tester_4 PRIVATE DataFrame)
-target_compile_options(dataframe_tester_4
-    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-)
 
 add_executable(dataframe_tester_schema dataframe_tester_schema.cc)
 target_link_libraries(dataframe_tester_schema PRIVATE DataFrame)
@@ -32,23 +20,14 @@ add_test(NAME dataframe_tester_schema COMMAND dataframe_tester_schema)
 
 add_executable(vectors_tester vectors_tester.cc)
 target_link_libraries(vectors_tester PRIVATE DataFrame)
-target_compile_options(vectors_tester
-    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-)
 add_test(NAME vectors_tester COMMAND vectors_tester)
 
 add_executable(matrix_tester matrix_tester.cc)
 target_link_libraries(matrix_tester PRIVATE DataFrame)
-target_compile_options(matrix_tester
-    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-)
 add_test(NAME matrix_tester COMMAND matrix_tester)
 
 add_executable(iso_tree_tester iso_tree_tester.cc)
 target_link_libraries(iso_tree_tester PRIVATE DataFrame)
-target_compile_options(iso_tree_tester
-    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-)
 add_test(NAME iso_tree_tester COMMAND iso_tree_tester)
 
 add_executable(allocator_tester allocator_tester.cc)

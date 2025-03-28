@@ -298,12 +298,12 @@ struct  FirstFitStack : public StackStorage<T, MAX_SIZE>  {
 
     // The bitmap to indicate which slots are in use.
     //
-    alignas(value_type[])
+    alignas(unsigned char[])
     unsigned char in_use_[memory_size];
 
     // Pointer to the first free slot.
     //
-    alignas(value_type *)
+    alignas(unsigned char *)
     unsigned char *first_free_ptr_ { in_use_ };
 
     FirstFitStack() : Base()  { std::memset(in_use_, FREE_, MAX_SIZE); }

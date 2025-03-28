@@ -498,7 +498,7 @@ gen_dft_sample_freq(std::size_t n, T spacing)  {
         result.push_back(i);
     for (long i = 0; i < mid_size - 1; ++i)
         result.push_back(-mid_size + i + 1);
-    for (std::size_t i = 0; i < n; ++i)
+    for (std::size_t i = 0; i < result.size(); ++i)
         result[i] *= multiplier;
 
     return (result);

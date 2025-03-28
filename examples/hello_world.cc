@@ -286,16 +286,14 @@ int main(int, char *[])  {
     for (const auto &mean : cluster_means)
         std::cout << mean << ", ";
     std::cout << std::endl;
-    /*
     // This produces a very large output.
     //
-    std::cout << "\nClusters are: ";
-    for (const auto &mean1 : kmeans_v.get_clusters())  {
-        for (const auto &mean2 : mean1)
-            std::cout << mean2 << ", ";
-        std::cout << '\n' << std::endl;
-    }
-    */
+    // std::cout << "\nClusters are: ";
+    // for (const auto &mean1 : kmeans_v.get_clusters())  {
+    //     for (const auto &mean2 : mean1)
+    //         std::cout << mean2 << ", ";
+    //     std::cout << '\n' << std::endl;
+    // }
 
     // We want to find a few quantiles of IBM returns
     //

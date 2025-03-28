@@ -242,8 +242,8 @@ private:
             const value_type    &value = *(column_begin + j);
 
             if (! is_nan__(value)) [[likely]]  {
-                double      min_dist = std::numeric_limits<double>::max();
-                size_type   min_idx;
+                double      min_dist { std::numeric_limits<double>::max() };
+                size_type   min_idx { 0 };
 
                 for (size_type i = 0; i < K; ++i)  {
                     const double    dist = dfunc_(value, result_[i]);
@@ -613,7 +613,7 @@ private:
         }
 
         seeds.erase(seeds.begin() + core_index);
-        for (id_t i = 0, n = seeds_s; i < n; ++i)  {
+        for (id_t i = 0, n = seeds.size(); i < n; ++i)  {
             calculate_cluster_(column_begin, seeds[i], col_s, cluster_neighors);
 
             if (id_t(cluster_neighors.size()) >= min_mems_)  {
@@ -621,7 +621,7 @@ private:
                     auto    &cluster_val = cluster_ids[j];
 
                     if (cluster_val < 0)  {  // NOISE or UNCLASSIFIED
-                        if (cluster_val == UNCLASSIFIED )  {
+                        if (cluster_val == UNCLASSIFIED)  {
                             seeds.push_back(cluster_neighors[j]);
                             n = id_t(seeds.size());
                         }

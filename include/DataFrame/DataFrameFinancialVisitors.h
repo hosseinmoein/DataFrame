@@ -7598,10 +7598,10 @@ struct  PriceDistanceVisitor  {
 
         nzr.pre();
         nzr(idx_begin, idx_end,
-            // FIXME: "close_begin - 1" is not good
-            open_begin, open_end, close_begin - 1, close_end);
+            open_begin + 1, open_end, close_begin, close_end);
         nzr.post();
-        result[0] = std::numeric_limits<T>::quiet_NaN();
+        result[0] = result[result.size() - 1] =
+            std::numeric_limits<T>::quiet_NaN();
         if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
@@ -7616,13 +7616,8 @@ struct  PriceDistanceVisitor  {
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            std::transform(nzr.get_result().begin() + 1,
-                           nzr.get_result().begin() + col_s,
-                           result.begin() + 1,
-                           result.begin() + 1,
-                           [](const auto &n, const auto &r) -> value_type  {
-                               return (r + abs__(n));
-                           });
+           for (size_type i = 1; i < col_s - 1; ++i) [[likely]]
+               result[i] += abs__(nzr.get_result()[i]);
         }
 
         nzr.pre();

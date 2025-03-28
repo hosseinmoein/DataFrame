@@ -6,16 +6,15 @@ BUILD_DEFINE = Linux_GCC64
 
 # -----------------------------------------------------------------------------
 
-CXX = /usr/bin/g++
+CXX = /usr/local/bin/g++-14
+# CXX = /usr/bin/g++
 
-# INCLUDES = -I/usr/include/c++/7 -I/usr/include
 INCLUDES =
 
 LFLAGS =
-CXXFLAGS = -g $(INCLUDES) $(DEFINES) -D_GLIBCXX_DEBUG -DHMDF_SANITY_EXCEPTIONS -pedantic -Wall -Wextra -std=c++2b
-# CXXFLAGS = -g $(INCLUDES) $(DEFINES) -std=c++2b
+CXXFLAGS = -g1 $(INCLUDES) $(DEFINES) -D_GLIBCXX_DEBUG -DHMDF_SANITY_EXCEPTIONS -Wno-implicit-fallthrough -pedantic -Wall -Wextra -std=c++23
 
-PLATFORM_LIBS = -lpthread -ldl -lm -lstdc++ -fsanitize-address-use-after-scope -fsanitize=address
+PLATFORM_LIBS = -lpthread -ldl -lm -lstdc++ -fsanitize-address-use-after-scope
 
 # -----------------------------------------------------------------------------
 

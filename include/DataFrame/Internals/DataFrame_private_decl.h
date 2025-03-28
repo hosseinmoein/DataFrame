@@ -817,12 +817,16 @@ remove_dups_common_(const DataFrame &s_df,
 
     rows_to_del.reserve(idx_s / 100);
     if (rds == remove_dup_spec::keep_first)  {
-        for (const auto &[val_tuple, idx_vec] : row_table)
-            rows_to_del.insert(idx_vec.begin() + 1, idx_vec.end());
+        for (const auto &[val_tuple, idx_vec] : row_table)  {
+            if (idx_vec.size() > 1)
+                rows_to_del.insert(idx_vec.begin() + 1, idx_vec.end());
+        }
     }
     else if (rds == remove_dup_spec::keep_last)  {
-        for (const auto &[val_tuple, idx_vec] : row_table)
-            rows_to_del.insert(idx_vec.begin(), idx_vec.end() - 1);
+        for (const auto &[val_tuple, idx_vec] : row_table)  {
+            if (idx_vec.size() > 1)
+                rows_to_del.insert(idx_vec.begin(), idx_vec.end() - 1);
+        }
     }
     else  {  // remove_dup_spec::keep_none
         for (const auto &[val_tuple, idx_vec] : row_table)
@@ -831,14 +835,15 @@ remove_dups_common_(const DataFrame &s_df,
     }
 
     res_t                        new_df;
-    typename res_t::IndexVecType new_index (idx_s - rows_to_del.size());
+    typename res_t::IndexVecType new_index;
     const SpinGuard              guard(lock_);
 
     // Load the index
     //
-    for (size_type i = 0, n = 0; i < idx_s; ++i)  {
+    new_index.reserve(idx_s - rows_to_del.size());
+    for (size_type i = 0; i < idx_s; ++i)  {
         if (! rows_to_del.contains(i))
-            new_index[n++] = index[i];
+            new_index.push_back(index[i]);
     }
 
     new_df.load_index(std::move(new_index));

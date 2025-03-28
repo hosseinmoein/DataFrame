@@ -6,6 +6,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -20,6 +21,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -34,6 +36,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -48,6 +51,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -62,6 +66,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -76,6 +81,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -90,6 +96,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -104,6 +111,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -118,6 +126,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -132,6 +141,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -146,6 +156,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -160,6 +171,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -174,6 +186,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
@@ -190,6 +203,7 @@ target_compile_options(
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>

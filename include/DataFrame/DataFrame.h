@@ -1366,6 +1366,47 @@ public:  // Data manipulation
     void
     fill_missing(const DF &rhs);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    template<arithmetic T>
+    void
+    detect_and_fill(const StlVecType<const char *> &col_names,
+                    detect_method d_method,
+                    fill_policy f_policy,
+                    const DetectAndFillParams<T> params);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // It removes a row if any or all or some of the columns are NaN, based
     // on drop policy
     //

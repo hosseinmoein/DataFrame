@@ -765,15 +765,15 @@ enum class  file_dtypes : std::size_t  {
 // ----------------------------------------------------------------------------
 
 // Different methods of detecting anomalous data points. Anomalous data don’t
-// mean NaN or missing data points
+// mean NaN or missing data points. The best description is unusual datapoints.
 //
 enum class  detect_method : unsigned char  {
 
     fft = 1,     // Fast Fourier Transform (FFT)
     iqr = 2,     // Inter-Quartile Range (IQR)
     lof = 3,     // Local Outlier Factor (LOF)
-    zscore = 4,  // Z-Score method
-    hampel = 5,  // Hampel Filter
+    hampel = 4,  // Hampel Filter
+    zscore = 5,  // Z-Score method
 };
 
 // -------------------------------------
@@ -785,20 +785,26 @@ struct  DetectAndFillParams  {
 
     using value_type = T;
 
-    // Parameters specific to FFT
+    // Parameter specific to Z-Score, FFT and LOF
+    //
+    value_type          threshold { 0 };
+
+    // Parameter specific to FFT and LOF
+    //
+    normalization_type  norm_type { normalization_type::none };
+
+    // Parameter specific to FFT
     //
     std::size_t         freq_num { 0 };
-    value_type          anomaly_threshold { 1 };
-    normalization_type  norm_type { normalization_type::none };
 
     // Parameters specific to IQR
     //
     value_type          high_fence { 1.5 };
     value_type          low_fence { 1.5 };
 
-    // Parameters specific to Z-Score
+    // Parameter specific to LOF
     //
-    value_type          threshold { 0 };
+    std::size_t         k { 0 };
 
     // Parameters specific to Hampel filter
     //

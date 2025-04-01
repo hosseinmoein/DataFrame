@@ -765,7 +765,7 @@ enum class  file_dtypes : std::size_t  {
 // ----------------------------------------------------------------------------
 
 // Different methods of detecting anomalous data points. Anomalous data don’t
-// mean NaN or missing data points. The best description is unusual datapoints.
+// mean NaN or missing datapoints. The best description is unusual datapoints.
 //
 enum class  detect_method : unsigned char  {
 
@@ -781,9 +781,10 @@ enum class  detect_method : unsigned char  {
 // Parameters to member function detect_and_fill()
 //
 template<typename T>
-struct  DetectAndFillParams  {
+struct  DetectAndChangeParams  {
 
     using value_type = T;
+    using distance_func = std::function<double(const T &x, const T &y)>;
 
     // Parameter specific to Z-Score, FFT and LOF
     //
@@ -805,6 +806,10 @@ struct  DetectAndFillParams  {
     // Parameter specific to LOF
     //
     std::size_t         k { 0 };
+    distance_func       dist_fun =
+		[](const value_type &x, const value_type &y) -> double  {
+            return (std::fabs(x - y));
+        };
 
     // Parameters specific to Hampel filter
     //

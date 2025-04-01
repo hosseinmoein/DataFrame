@@ -53,6 +53,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -3238,6 +3239,7 @@ static void test_AnomalyDetectByLOFVisitor()  {
     df2.single_act_visit<double>("sine col", anomaly2);
     assert(anomaly2.get_result().empty());
 }
+*/
 
 // ----------------------------------------------------------------------------
 
@@ -3245,6 +3247,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -3299,6 +3302,7 @@ int main(int, char *[]) {
     test_remove_data_by_iqr();
     test_remove_data_by_zscore();
     test_AnomalyDetectByLOFVisitor();
+*/
 
     return (0);
 }

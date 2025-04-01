@@ -1323,7 +1323,7 @@ public:  // Data manipulation
     //   Size of col_names and values vector
     // col_names:
     //   A vector of names specifying the columns to fill.
-    // fp:
+    // policy:
     //   Specifies the method to use to fill the missing values. For example;
     //   forward fill, values, etc.
     // values:
@@ -1366,46 +1366,29 @@ public:  // Data manipulation
     void
     fill_missing(const DF &rhs);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // It detects anomalous data based on the specified method and changes them
+    // based on the specified fill policy. 
+    // Anomalous data don't mean NaN or missing datapoints. The best
+    // description is unusual datapoints. But once it identifies the anomalous
+    // data it changes it like filling missing data.
+    //
+    // T:
+    //   Type of the column(s) in col_names vector
+    // col_names:
+    //   A vector of names specifying the columns to fill.
+    // d_policy:
+    //   Specifies the method to use to detect anomalous data.
+    // f_policy:
+    //   Specifies the method to use to change anomalous data.
+    // params:
+    //   Contains parameters for various detection methods
+    //
     template<arithmetic T>
     void
-    detect_and_fill(const StlVecType<const char *> &col_names,
-                    detect_method d_method,
-                    fill_policy f_policy,
-                    const DetectAndFillParams<T> params);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    detect_and_change(const StlVecType<const char *> &col_names,
+                      detect_method d_method,
+                      fill_policy f_policy,
+                      const DetectAndChangeParams<T> &params);
 
     // It removes a row if any or all or some of the columns are NaN, based
     // on drop policy

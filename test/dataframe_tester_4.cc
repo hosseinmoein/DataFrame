@@ -53,7 +53,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -3239,7 +3238,131 @@ static void test_AnomalyDetectByLOFVisitor()  {
     df2.single_act_visit<double>("sine col", anomaly2);
     assert(anomaly2.get_result().empty());
 }
-*/
+
+// ----------------------------------------------------------------------------
+
+static void test_detect_and_change()  {
+
+    std::cout << "\nTesting detect_and_change( ) ..." << std::endl;
+
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    auto    &close_col = ibm.get_column<double>("IBM_Close");
+    auto    &open_col = ibm.get_column<double>("IBM_Open");
+
+    {
+        close_col[502] = 800.0;
+        close_col[1001] = 900.0;
+        close_col[2002] = 850.0;
+        open_col[2] = 1.0;
+        open_col[3000] = 2.5;
+        open_col[5029] = 850.0;
+
+        ibm.detect_and_change<double>({ "IBM_Close", "IBM_Open" },
+                                      detect_method::zscore,
+                                      fill_policy::fill_forward,
+                                      { .threshold = 3.0 });
+
+        assert((std::fabs(close_col[502] - 82.5) < 0.01));
+        assert((std::fabs(close_col[1001] - 89.5) < 0.01));
+        assert((std::fabs(close_col[2002] - 92.51) < 0.01));
+        assert((std::fabs(open_col[2] - 99.0) < 0.01));
+        assert((std::fabs(open_col[3000] - 210.28) < 0.01));
+        assert((std::fabs(open_col[5029] - 108.66) < 0.01));
+    }
+
+    {
+        close_col[502] = 800.0;
+        close_col[1001] = 900.0;
+        close_col[2002] = 850.0;
+        open_col[2] = 1.0;
+        open_col[3000] = 2.5;
+        open_col[5029] = 850.0;
+
+        ibm.detect_and_change<double>({ "IBM_Close", "IBM_Open" },
+                                      detect_method::hampel,
+                                      fill_policy::fill_backward,
+                                      { .window_size = 10,
+                                        .htype = hampel_type::median,
+                                        .num_stdev = 2.0 });
+
+        assert((std::fabs(close_col[502] - 81.54) < 0.01));
+        assert((std::fabs(close_col[1001] - 90.11) < 0.01));
+        assert((std::fabs(close_col[2002] - 83.6) < 0.01));
+        assert((std::fabs(open_col[2] - 1.0) < 0.01)); // It didn't catch it
+        assert((std::fabs(open_col[3000] - 210.02) < 0.01));
+        assert((std::fabs(open_col[5029] - 107.9) < 0.01));
+    }
+
+    {
+        close_col[502] = 800.0;
+        close_col[1001] = 900.0;
+        close_col[2002] = 850.0;
+        open_col[2] = 1.0;
+        open_col[3000] = 2.5;
+        open_col[5029] = 850.0;
+
+        ibm.detect_and_change<double>(
+            { "IBM_Close", "IBM_Open" },
+            detect_method::fft,
+            fill_policy::mid_point,
+            { .threshold = 250.0,
+              .norm_type = normalization_type::z_score,
+              .freq_num = 1000 });
+
+        assert((std::fabs(close_col[502] - 82.02) < 0.01));
+        assert((std::fabs(close_col[1001] - 89.805) < 0.01));
+        assert((std::fabs(close_col[2002] - 88.055) < 0.01));
+        assert((std::fabs(open_col[2] - 1.0) < 0.01));    // It didn't catch it
+        assert((std::fabs(open_col[3000] - 2.5) < 0.01)); // It didn't catch it
+        assert((std::fabs(open_col[5029] - 108.28) < 0.01));
+    }
+
+    // Now we need a DataFrame with a numeric index to be able to use
+    // interpolation
+    //
+    MyDataFrame ford;
+
+    try  {
+        ford.read("FORD.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    auto    &fclose_col = ford.get_column<double>("FORD_Close");
+    auto    &fopen_col = ford.get_column<double>("FORD_Open");
+
+    {
+        fclose_col[502] = 200.0;
+        fclose_col[1001] = 300.0;
+        fclose_col[2002] = 250.0;
+        fopen_col[2] = 0.01;
+        fopen_col[3000] = 0.05;
+        fopen_col[5029] = 850.0;
+
+        ford.detect_and_change<double>({ "FORD_Close", "FORD_Open" },
+                                       detect_method::iqr,
+                                       fill_policy::linear_interpolate,
+                                       { .high_fence = 0.5, .low_fence = 0.5 });
+
+        assert((std::fabs(fclose_col[502] - 1.6889) < 0.0001));
+        assert((std::fabs(fclose_col[1001] - 1.8146) < 0.0001));
+        assert((std::fabs(fclose_col[2002] - 0.9022) < 0.0001));
+        assert((std::fabs(fopen_col[2] - 0.01) < 0.01));    // No catch
+        assert((std::fabs(fopen_col[3000] - 0.05) < 0.01)); // No catch
+        assert((std::fabs(fopen_col[5029] - 7.9947) < 0.0001));
+    }
+}
 
 // ----------------------------------------------------------------------------
 
@@ -3247,7 +3370,6 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -3302,7 +3424,7 @@ int main(int, char *[]) {
     test_remove_data_by_iqr();
     test_remove_data_by_zscore();
     test_AnomalyDetectByLOFVisitor();
-*/
+    test_detect_and_change();
 
     return (0);
 }

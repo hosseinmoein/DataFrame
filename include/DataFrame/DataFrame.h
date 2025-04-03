@@ -1388,7 +1388,7 @@ public:  // Data manipulation
     detect_and_change(const StlVecType<const char *> &col_names,
                       detect_method d_method,
                       fill_policy f_policy,
-                      const DetectAndChangeParams<T> &params);
+                      DetectAndChangeParams<T> params = { });
 
     // It removes a row if any or all or some of the columns are NaN, based
     // on drop policy

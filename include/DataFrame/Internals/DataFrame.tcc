@@ -399,17 +399,17 @@ void DataFrame<I, H>::
 detect_and_change(const StlVecType<const char *> &col_names,
                   detect_method d_method,
                   fill_policy f_policy,
-                  const DetectAndChangeParams<T> &params)  {
+                  DetectAndChangeParams<T> params)  {
 
     const size_type                 count = col_names.size();
-    const auto                      thread_level =
-        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : get_thread_level();
-    StlVecType<std::future<void>>   futures;
+    // const auto                      thread_level =
+    //     (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+    //         ? 0L : get_thread_level();
+    // StlVecType<std::future<void>>   futures;
 
-    for (size_type i = 0; i < count; ++i)  {
-        ColumnVecType<T>        &vec = get_column<T>(col_names[i]);
-        StlVecType<size_type>   *rows { nullptr };;
+    for (size_type col = 0; col < count; ++col)  {
+        ColumnVecType<T>        &vec = get_column<T>(col_names[col]);
+        StlVecType<size_type>   rows {  };;
 
         if (vec.empty()) [[unlikely]]  continue;
 
@@ -421,7 +421,7 @@ detect_and_change(const StlVecType<const char *> &col_names,
             fft.pre();
             fft(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             fft.post();
-            rows = &(fft.get_result());
+            rows = std::move(fft.get_result());
         }
         else if (d_method == detect_method::iqr)  {
             using iqrv_t = and_iqr_v<T, I, std::size_t(H::align_value)>;
@@ -431,18 +431,18 @@ detect_and_change(const StlVecType<const char *> &col_names,
             iqr.pre();
             iqr(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             iqr.post();
-            rows = &(iqr.get_result());
+            rows = std::move(iqr.get_result());
         }
         else if (d_method == detect_method::lof)  {
             using lofv_t = and_lof_v<T, I, std::size_t(H::align_value)>;
 
             lofv_t  lof { params.k, params.threshold,
-                          params.norm_type, params.dist_fun };
+                          params.norm_type, std::move(params.dist_fun) };
 
             lof.pre();
             lof(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             lof.post();
-            rows = &(lof.get_result());
+            rows = std::move(lof.get_result());
         }
         else if (d_method == detect_method::hampel)  {
             using hampel_t = hamf_v<T, I, std::size_t(H::align_value)>;
@@ -453,7 +453,7 @@ detect_and_change(const StlVecType<const char *> &col_names,
             hampel.pre();
             hampel(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             hampel.post();
-            rows = &(hampel.get_result());
+            rows = std::move(hampel.get_result());
         }
         else if (d_method == detect_method::zscore)  {
             using zscorev_t = and_zscr_v<T, I, std::size_t(H::align_value)>;
@@ -463,22 +463,23 @@ detect_and_change(const StlVecType<const char *> &col_names,
             zscore.pre();
             zscore(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             zscore.post();
-            rows = &(zscore.get_result());
+            rows = std::move(zscore.get_result());
         }
         else  {
             throw NotImplemented("detect_and_change(): "
                                  "Detection method is not implemented");
         }
 
-        if (rows->empty()) [[unlikely]]  continue;
+        if (rows.empty()) [[unlikely]]  continue;
 
-        const size_type col_s = vec.size();
-        const size_type row_s = rows->size();
+        const size_type col_s { vec.size() };
+        const size_type row_s { rows.size() };
+        bool            processed { false };
 
         if constexpr (supports_arithmetic<IndexType>::value)  {
             if (f_policy == fill_policy::linear_interpolate)  {
                 for (size_type i = 0; i < row_s; ++i)  {
-                    const auto  row_idx { rows->at(i) };
+                    const auto  row_idx { rows.at(i) };
 
                     if ((row_idx < (col_s - 1)) && (row_idx > 0))  {
                         const auto  &x1 { indices_[row_idx - 1] };
@@ -491,57 +492,38 @@ detect_and_change(const StlVecType<const char *> &col_names,
                             y1 + (T(x - x1) / T(x2 - x1)) * (y2 - y1);
                     }
                 }
-            }
-            else if (f_policy == fill_policy::lagrange_interpolate)  {
-                for (size_type i = 0; i < row_s; ++i)  {
-                    const auto  row_idx { rows->at(i) };
-                    const auto  x { indices_[row_idx] };
-                    T           y { 0 };
-
-                    for (size_type j = 0; j < col_s; ++j)  {
-                        const auto  &jidx = indices_[j];
-                        T           product { static_cast<T>(jidx) };
-
-                        for (size_type k = 0; k < col_s; ++k)  {
-                            const auto  &kidx = indices_[k];
-
-                            if (j != k && jidx != kidx) 
-                                product *= static_cast<T>(x - kidx) /
-                                           static_cast<T>(jidx - kidx);
-                        }
-                        y += product;
-                    }
-
-                    vec[i] = y;
-                }
+                processed = true;
             }
         }
         if (f_policy == fill_policy::fill_forward)  {
             for (size_type i = 0; i < row_s; ++i)  {
-                const auto  row_idx { rows->at(i) };
+                const auto  row_idx { rows.at(i) };
 
                 if (row_idx > 0)
                     vec[row_idx] = vec[row_idx - 1];
             }
+            processed = true;
         }
         else if (f_policy == fill_policy::fill_backward)  {
             for (size_type i = 0; i < row_s; ++i)  {
-                const auto  row_idx { rows->at(i) };
+                const auto  row_idx { rows.at(i) };
 
                 if (row_idx < (col_s - 1))
                     vec[row_idx] = vec[row_idx + 1];
             }
+            processed = true;
         }
         else if (f_policy == fill_policy::mid_point)  {
             for (size_type i = 0; i < row_s; ++i)  {
-                const auto  row_idx { rows->at(i) };
+                const auto  row_idx { rows.at(i) };
 
                 if ((row_idx < (col_s - 1)) && (row_idx > 0))
                     vec[row_idx] =
                         (vec[row_idx + 1] + vec[row_idx - 1]) * T(0.5);
             }
+            processed = true;
         }
-        else  {
+        else if (! processed)  {
             throw NotImplemented("detect_and_change(): "
                                  "Fill policy is not implemented");
         }

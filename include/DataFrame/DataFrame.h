@@ -1367,7 +1367,7 @@ public:  // Data manipulation
     fill_missing(const DF &rhs);
 
     // It detects anomalous data based on the specified method and changes them
-    // based on the specified fill policy. 
+    // based on the specified fill policy.
     // Anomalous data don't mean NaN or missing datapoints. The best
     // description is unusual datapoints. But once it identifies the anomalous
     // data it changes it like filling missing data.

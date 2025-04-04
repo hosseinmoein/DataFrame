@@ -764,6 +764,62 @@ enum class  file_dtypes : std::size_t  {
 
 // ----------------------------------------------------------------------------
 
+// Different methods of detecting anomalous data points. Anomalous data don’t
+// mean NaN or missing datapoints. The best description is unusual datapoints.
+//
+enum class  detect_method : unsigned char  {
+
+    fft = 1,     // Fast Fourier Transform (FFT)
+    iqr = 2,     // Inter-Quartile Range (IQR)
+    lof = 3,     // Local Outlier Factor (LOF)
+    hampel = 4,  // Hampel Filter
+    zscore = 5,  // Z-Score method
+};
+
+// -------------------------------------
+
+// Parameters to member function detect_and_fill()
+//
+template<typename T>
+struct  DetectAndChangeParams  {
+
+    using value_type = T;
+    using distance_func = std::function<double(const T &x, const T &y)>;
+
+    // Parameter specific to Z-Score, FFT and LOF
+    //
+    value_type          threshold { 0 };
+
+    // Parameter specific to FFT and LOF
+    //
+    normalization_type  norm_type { normalization_type::none };
+
+    // Parameter specific to FFT
+    //
+    std::size_t         freq_num { 0 };
+
+    // Parameters specific to IQR
+    //
+    value_type          high_fence { 1.5 };
+    value_type          low_fence { 1.5 };
+
+    // Parameter specific to LOF
+    //
+    std::size_t         k { 0 };
+    distance_func       dist_fun =
+		[](const value_type &x, const value_type &y) -> double  {
+            return (std::fabs(x - y));
+        };
+
+    // Parameters specific to Hampel filter
+    //
+    std::size_t         window_size { 0 };
+    hampel_type         htype { hampel_type::median };
+    value_type          num_stdev { 3.0 };
+};
+
+// ----------------------------------------------------------------------------
+
 // A structure to describe a column of data used in a read operation to
 // decipher data in a file in csv2 format.
 //
@@ -954,7 +1010,7 @@ struct  Index2D  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
-using KNNPair = std::pair<std::vector<T>, std::size_t>; 
+using KNNPair = std::pair<std::vector<T>, std::size_t>;
 
 template<typename T>
 using KNNResult = std::vector<KNNPair<T>>;

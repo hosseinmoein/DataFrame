@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 [![Conan Center](https://img.shields.io/conan/v/dataframe)](https://conan.io/center/recipes/dataframe)
 [![VCPKG package](https://repology.org/badge/version-for-repo/vcpkg/dataframe.svg)](https://vcpkg.link/ports/dataframe)
 
-<img src="docs/LionLookingUp.jpg" alt="DataFrame Lion" width="400" longdesc="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html"/>
+<img src="docs/LionLookingUp.jpg" alt="DataFrame Lion" width="400"/>
 
 ## <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html" target="_blank"><B>DataFrame documentation with code samples</B></a>
 This is a C++ analytical library designed for data analysis similar to libraries in Python and R. For example, you would compare this to [Pandas](https://pandas.pydata.org) or [R data.frame](https://www.w3schools.com/r/r_data_frames.asp). The depth and breadth of functionalities offered by C++ DataFrame alone are many times greater than functionalities offered by packages such as Pandas, data.frame, and Polars combined.<BR>
@@ -64,7 +64,7 @@ Each program has three identical parts. First it generates and populates 3 colum
 The maximum dataset I could load into Polars was 300m rows per column. Any bigger dataset blew up the memory and caused OS to kill it. I ran C++ DataFrame with 10b rows per column and I am sure it would have run with bigger datasets too. So, I was forced to run both with 300m rows to compare.
 I ran each test 4 times and took the best time. Polars numbers varied a lot from one run to another, especially calculation and selection times. C++ DataFrame numbers were significantly more consistent.
 
-|                          | [<B>C++ DataFrame</B>](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/dataframe_performance.cc) | [&nbsp;&nbsp;&nbsp;&nbsp;<B>Polars</B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/polars_performance.py) | [&nbsp;&nbsp;&nbsp;&nbsp;<B>Pandas</B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/pandas_performance.py) |
+|                          | [<B>C++ DataFrame</B>](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/dataframe_performance.cc) | [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Polars</B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/polars_performance.py) | [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Pandas</B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/pandas_performance.py) |
 |            :--           |        ---:         |     ---:      |     ---:      |
 | Data generation/load time | 26.9459 secs | 28.4686 secs | 36.6799 secs |
 | Calculation time | 1.2602 secs | 4.8766 secs | 40.3264 secs |

@@ -8192,6 +8192,102 @@ private:
 template<typename T, typename I = unsigned long>
 using stac_v = StationaryCheckVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Two-sample Kolmogorov–Smirnov test
+//
+template<arithmetic T, typename I = unsigned long>
+struct  KolmoSmirnovTestVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = double;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
+                const H &column1_begin, const H &column1_end,
+                const H &column2_begin, const H &column2_end)  {
+
+        const size_type col1_s = std::distance(column1_begin, column1_end);
+        const size_type col2_s = std::distance(column2_begin, column2_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col1_s < 4 || col2_s < 4)
+            throw DataFrameError("KolmoSmirnovTestVisitor: "
+                                 "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        const auto      thread_level = ThreadGranularity::get_thread_level();
+        std::vector<T>  data1(column1_begin, column1_end);
+        std::vector<T>  data2(column2_begin, column2_end);
+
+        if (col1_s > ThreadPool::MUL_THR_THHOLD && thread_level > 2)
+            ThreadGranularity::thr_pool_.parallel_sort(
+                data1.begin(), data1.end());
+        else
+            std::sort(data1.begin(), data1.end());
+
+        if (col2_s > ThreadPool::MUL_THR_THHOLD && thread_level > 2)
+            ThreadGranularity::thr_pool_.parallel_sort(
+                data2.begin(), data2.end());
+        else
+            std::sort(data2.begin(), data2.end());
+
+        size_type   i { 0 }, j { 0 };
+        double      cdf1 { 0 }, cdf2 { 0 };
+        double      max_diff { 0 };
+
+        while (i < col1_s && j < col2_s) [[likely]]  {
+            const auto  &val1 = data1[i];
+            const auto  &val2 = data2[j];
+
+            if (val1 < val2)  {
+                i += 1;
+                cdf1 = double(i) / double(col1_s);
+            }
+            else if (val1 > val2)  {
+                j += 1;
+                cdf2 = double(j) / double(col2_s);
+            }
+            else [[unlikely]]  {
+                i += 1;
+                while (i < col1_s && data1[i] == val1) [[unlikely]]  i += 1;
+                cdf1 = double(i) / double(col1_s);
+
+                j += 1;
+                while (j < col2_s && data2[j] == val2) [[unlikely]]  j += 1;
+                cdf2 = double(j) / double(col2_s);
+            }
+            max_diff = std::max(max_diff, std::fabs(cdf1 - cdf2));
+        }
+
+        result_ = max_diff;
+
+        // Now calculate p-value
+        //
+        const double    n { double(col1_s * col2_s) / double(col1_s + col2_s) };
+        const double    lambda { std::sqrt(n) * result_ };
+        const double    value { 2.0 * std::exp(-2.0 * lambda * lambda) };
+
+        p_value_ = (value > 1.0) ? 1.0 : value; 
+    }
+
+    inline void pre ()  { result_ = -1; p_value_= -1; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (result_); }
+    inline result_type get_p_value () const  { return (p_value_); }
+
+    KolmoSmirnovTestVisitor()  {   }
+
+private:
+
+    result_type result_ { -1 };  // D-value
+    result_type p_value_ { -1 }; // P-value
+};
+
+template<typename T, typename I = unsigned long>
+using ks_test_v = KolmoSmirnovTestVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -3366,6 +3366,88 @@ static void test_detect_and_change()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_KolmoSmirnovTestVisitor()  {
+
+    std::cout << "\nTesting KolmoSmirnovTestVisitor{ } ..." << std::endl;
+
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    MinVisitor<double, std::string> min_val;
+    MaxVisitor<double, std::string> max_val;
+
+    ibm.single_act_visit<double>("IBM_Close", min_val);
+    ibm.single_act_visit<double>("IBM_Close", max_val);
+
+    const auto              col_s = ibm.get_index().size();
+    RandGenParams<double>   p1 { .min_value = min_val.get_result(),
+                                 .max_value = max_val.get_result() };
+    RandGenParams<double>   p2 { .min_value = min_val.get_result(),
+                                 .max_value = max_val.get_result() };
+
+    p1.mean = 4;
+    p1.std = 2.0;
+    p1.seed = 1056;
+    ibm.load_column("normal 1", gen_normal_dist<double>(col_s, p1));
+
+    p1.mean = 0;
+    p1.std = 1.0;
+    p1.seed = 123;
+    ibm.load_column("normal 2", gen_normal_dist<double>(col_s, p1));
+
+    p2.seed = 123;
+    ibm.load_column("uniform", gen_uniform_real_dist<double>(col_s, p2));
+    ibm.load_column("exponential", gen_exponential_dist<double>(col_s, p2));
+    ibm.load_column("lognormal", gen_lognormal_dist<double>(col_s, p2));
+
+    ks_test_v<double, std::string>  ks_test;
+
+    ibm.single_act_visit<double, double>("IBM_Close", "IBM_Open", ks_test);
+    assert((std::fabs(ks_test.get_result() - 0.0034) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 1.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("IBM_Low", "IBM_High", ks_test);
+    assert((std::fabs(ks_test.get_result() - 0.0296) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 0.0242) < 0.0001));
+
+    ibm.single_act_visit<double, double>("IBM_Close", "uniform", ks_test);
+    assert((std::fabs(ks_test.get_result() - 0.1224) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 0.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("IBM_Close", "normal 1", ks_test);
+    assert((std::fabs(ks_test.get_result() - 1.0) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 0.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("IBM_Close", "normal 2", ks_test);
+    assert((std::fabs(ks_test.get_result() - 1.0) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 0.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("IBM_Close", "lognormal", ks_test);
+    assert((std::fabs(ks_test.get_result() - 0.9998) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 0.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("normal 2", "normal 1", ks_test);
+    assert((std::fabs(ks_test.get_result() - 0.8326) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 0.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("normal 2", "lognormal", ks_test);
+    assert((std::fabs(ks_test.get_result() - 0.5353) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 0.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("IBM_Close", "IBM_Close", ks_test);
+    assert((std::fabs(ks_test.get_result() - 0.0) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 1.0) < 0.0001));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3425,6 +3507,7 @@ int main(int, char *[]) {
     test_remove_data_by_zscore();
     test_AnomalyDetectByLOFVisitor();
     test_detect_and_change();
+    test_KolmoSmirnovTestVisitor();
 
     return (0);
 }

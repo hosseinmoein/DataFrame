@@ -41,7 +41,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <array>
-
 #include <cmath>
 
 // PI
@@ -80,6 +79,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <limits>
 #include <map>
+#include <numbers>
 #include <numeric>
 #include <queue>
 #include <tuple>
@@ -3651,7 +3651,7 @@ private:
             const value_type    theta = std::atan(slope);
 
             return (lmm_type == linreg_moving_mean_type::theta
-                        ? theta : theta * (180.0 / M_PI));
+                        ? theta : theta * (180.0 / std::numbers::pi));
         }
 
         const value_type    intercept =
@@ -8269,7 +8269,7 @@ struct  KolmoSmirnovTestVisitor  {
         const double    lambda { std::sqrt(n) * result_ };
         const double    value { 2.0 * std::exp(-2.0 * lambda * lambda) };
 
-        p_value_ = (value > 1.0) ? 1.0 : value; 
+        p_value_ = (value > 1.0) ? 1.0 : value;
     }
 
     inline void pre ()  { result_ = -1; p_value_= -1; }
@@ -8287,6 +8287,132 @@ private:
 
 template<typename T, typename I = unsigned long>
 using ks_test_v = KolmoSmirnovTestVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+// Mann-Whitney U test
+//
+template<arithmetic T, typename I = unsigned long>
+struct  MannWhitneyUTestVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = double;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
+                const H &column1_begin, const H &column1_end,
+                const H &column2_begin, const H &column2_end)  {
+
+        const size_type col1_s = std::distance(column1_begin, column1_end);
+        const size_type col2_s = std::distance(column2_begin, column2_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col1_s < 4 || col2_s < 4)
+            throw DataFrameError("MannWhitneyUTestVisitor: "
+                                 "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        using pvec_t = std::vector<std::pair<value_type, char>>;
+
+        const auto      thread_level = ThreadGranularity::get_thread_level();
+        pvec_t          combined;
+        const size_type com_s = col1_s + col2_s;
+
+        combined.reserve(com_s);
+        for (auto citer = column1_begin; citer < column1_end; ++citer)
+            combined.push_back({ *citer, char(0) });
+        for (auto citer = column2_begin; citer < column2_end; ++citer)
+            combined.push_back({ *citer, char(1) });
+
+        if ((col1_s + col2_s) > ThreadPool::MUL_THR_THHOLD && thread_level > 2)
+            ThreadGranularity::thr_pool_.parallel_sort(
+                combined.begin(), combined.end(),
+                [] (auto lhs, auto rhs) -> bool  {
+                    return (lhs.first < rhs.first);
+                });
+        else
+            std::sort(combined.begin(), combined.end(),
+                      [] (auto lhs, auto rhs) -> bool  {
+                          return (lhs.first < rhs.first);
+                      });
+
+        // Calculate the rank
+        //
+        std::vector<double> ranks(com_s, 0);
+
+        {
+            size_type   i { 0 };
+
+            while (i < com_s) {
+                size_type   j { i };
+
+                while ((j + 1) < com_s &&
+                       combined[j + 1].first == combined[i].first)
+                    j += 1;
+
+                // ranks are 1-based
+                //
+                const double    avg_rank { double(i + j + 2) / 2.0 };
+
+                for (size_type k = i; k <= j; ++k)
+                    ranks[k] = avg_rank;
+                i = j + 1;
+            }
+        }
+
+        // Calculate rank sum for group 1
+        //
+        double  r1 { 0 };
+
+        for (size_type i = 0; i < com_s; ++i) {
+            if (combined[i].second == char(0))
+                r1 += ranks[i];
+        }
+
+        // U statistics
+        //
+        u1_ = r1 - double(col1_s * (col1_s + 1)) / 2.0;
+        u2_ = double(col1_s * col2_s) - u1_;
+        result_ = std::min(u1_, u2_); // U
+
+        // Mean and stdev of U
+        //
+        // The division by 12.0 in the formula for stdev comes from the
+        // variance of the ranks used in the Mann-Whitney U test.
+        //
+        const double    mu_u = double(col1_s * col2_s) / 2.0;
+        const double    sigma_u =
+            std::sqrt(double(col1_s * col2_s * (col1_s + col2_s + 1)) / 12.0);
+
+        zscore_ = (result_ - mu_u) / sigma_u;
+        p_val_ =
+            2.0 *
+			(1.0 - 0.5 * std::erfc(-std::fabs(zscore_) / std::numbers::sqrt2));
+
+    }
+
+    inline void pre ()  { result_ = u1_ = u2_ = zscore_ = -1; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (result_); }
+    inline result_type get_u1 () const  { return (u1_); }
+    inline result_type get_u2 () const  { return (u2_); }
+    inline result_type get_zscore () const  { return (zscore_); }
+    inline result_type get_pvalue () const  { return (p_val_); }
+
+    MannWhitneyUTestVisitor()  {   }
+
+private:
+
+    result_type result_ { -1 };  // U statistics
+    result_type u1_ { -1 };      // U1 statistics
+    result_type u2_ { -1 };      // U2 statistics
+    result_type zscore_ { -1 };  // Z-score
+    result_type p_val_ { -1 };   // Two-tailed p-value
+};
+
+template<typename T, typename I = unsigned long>
+using mwu_test_v = MannWhitneyUTestVisitor<T, I>;
 
 } // namespace hmdf
 

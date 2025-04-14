@@ -3448,6 +3448,89 @@ static void test_KolmoSmirnovTestVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_MannWhitneyUTestVisitor()  {
+
+    std::cout << "\nTesting MannWhitneyUTestVisitor{ } ..." << std::endl;
+
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    MinVisitor<double, std::string> min_val;
+    MaxVisitor<double, std::string> max_val;
+
+    ibm.single_act_visit<double>("IBM_Close", min_val);
+    ibm.single_act_visit<double>("IBM_Close", max_val);
+
+    const auto              col_s = ibm.get_index().size();
+    RandGenParams<double>   p { .min_value = min_val.get_result(),
+                                .max_value = max_val.get_result(),
+                                .seed = 123 };
+
+    ibm.load_column("uniform", gen_uniform_real_dist<double>(col_s, p));
+    ibm.load_column("exponential", gen_exponential_dist<double>(col_s, p));
+    ibm.load_column("lognormal", gen_lognormal_dist<double>(col_s, p));
+
+    mwu_test_v<double, std::string> mwu_test;
+
+    ibm.single_act_visit<double, double>("IBM_Close", "IBM_Open", mwu_test);
+    assert((std::fabs(mwu_test.get_result() - 12643394.5) < 0.0001));
+    assert((std::fabs(mwu_test.get_u1() - 12667566.5) < 0.0001));
+    assert((std::fabs(mwu_test.get_u2() - 12643394.5) < 0.0001));
+    assert((std::fabs(mwu_test.get_zscore() - -0.083) < 0.001));
+    assert((std::fabs(mwu_test.get_pvalue() - 0.9339) < 0.0001));
+
+    ibm.single_act_visit<double, double>("IBM_Low", "IBM_High", mwu_test);
+    assert((std::fabs(mwu_test.get_result() - 12213043.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_u1() - 12213043.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_u2() - 13097918.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_zscore() - -3.0369) < 0.001));
+    assert((std::fabs(mwu_test.get_pvalue() - 0.0024) < 0.0001));
+
+    ibm.single_act_visit<double, double>("IBM_Close", "uniform", mwu_test);
+    assert((std::fabs(mwu_test.get_result() - 11666858.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_u1() - 11666858.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_u2() - 13644103.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_zscore() - -6.7858) < 0.001));
+    assert((std::fabs(mwu_test.get_pvalue() - 0.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("IBM_Close", "lognormal", mwu_test);
+    assert((std::fabs(mwu_test.get_result() - 30.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_u1() - 25310931.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_u2() - 30.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_zscore() - -86.8661) < 0.001));
+    assert((std::fabs(mwu_test.get_pvalue() - 0.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("uniform", "exponential", mwu_test);
+    assert((std::fabs(mwu_test.get_result() - 0.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_u1() - 25310961.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_u2() - 0.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_zscore() - -86.8663) < 0.001));
+    assert((std::fabs(mwu_test.get_pvalue() - 0.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("exponential", "lognormal", mwu_test);
+    assert((std::fabs(mwu_test.get_result() - 9727387.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_u1() - 9727387.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_u2() - 15583574.0) < 0.0001));
+    assert((std::fabs(mwu_test.get_zscore() - -20.0982) < 0.001));
+    assert((std::fabs(mwu_test.get_pvalue() - 0.0) < 0.0001));
+
+    ibm.single_act_visit<double, double>("IBM_Close", "IBM_Close", mwu_test);
+    assert((std::fabs(mwu_test.get_result() - 12655480.5) < 0.0001));
+    assert((std::fabs(mwu_test.get_u1() - 12655480.5) < 0.0001));
+    assert((std::fabs(mwu_test.get_u2() - 12655480.5) < 0.0001));
+    assert((std::fabs(mwu_test.get_zscore() - 0.0) < 0.001));
+    assert((std::fabs(mwu_test.get_pvalue() - 1.0) < 0.0001));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3508,6 +3591,7 @@ int main(int, char *[]) {
     test_AnomalyDetectByLOFVisitor();
     test_detect_and_change();
     test_KolmoSmirnovTestVisitor();
+    test_MannWhitneyUTestVisitor();
 
     return (0);
 }

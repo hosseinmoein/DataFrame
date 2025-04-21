@@ -1945,7 +1945,7 @@ table.hovertable td {
 DataFrame uses multithreading extensively and provides granular tools to adjust your environment. Let's divide the multithreading subject in DataFrame into two categories:<BR>
 
   <H4>1. User Multithreading</H4>
-  If you use multithreading, you are responsible for synchronization of shared resources. Generally speaking, DataFrame is not multithreaded-safe. DataFrame has static data and per-instance data, both of which need protection in threads. Keep on reading:<BR>
+  If you use multithreading, you are responsible for synchronization of shared resources. Generally speaking, DataFrame is not multithreaded-safe. DataFrame has static data and per-instance data, both of which need protection in threads:<BR>
     <UL>
       <LI>DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So, by default there is no locking overhead. If you use DataFrame in a multithreaded program, you must provide a <I>SpinLock</I> defined in <I>ThreadGranularity.h</I> file. DataFrame will use your <I>SpinLock</I> to protect the containers.<BR>Please see above, <I>set_lock()</I>, <I>remove_lock()</I>, and <I>dataframe_tester.cc#3767</I> for code example.<BR>In this case you must go through the above DataFrame API and use the <I>Spinlock</I>. Again, this protects the DataFrame static structures.</LI>
       <LI>In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only.<BR>In this case you must use your own lock and logic. In other words, DataFrame doesn't have an API for this category.</LI>
@@ -1970,6 +1970,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
       <LI>Regular Views: You can change data in the view or in the original DataFrame and see the change on both sides</LI>
       <LI>Const Views: You can not change data in the view. But you can change the data in the original DataFrame or through another view and it will be reflected in the const view</LI>
     </OL>
+   In the this context "you cannot" means it won't compile.<BR>
 
     Why would you use views
     <UL>
@@ -2065,7 +2066,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 	      </UL>
         <LI><a href="https://github.com/hosseinmoein/DataFrame/tree/master/test"><B>test/</B></a> &#8212; Contains all the test programs that I am happy to say tests 100% of the API</LI>
 	  </UL>
-	</UL>
+        </UL>
   </P>
 
 <BR><HR COLOR="Gray" SIZE="5">

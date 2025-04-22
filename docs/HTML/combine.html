@@ -42,14 +42,13 @@ body {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T, typename DF, typename F&gt;
-std::vector&lt;T&gt;
-combine(const char *col_name,
-        const DF &amp;rhs,
-        F &amp;functor) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> DF<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">combine<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> DF <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This method combines the content of column col_name between self and rhs based on the logic in functor. Both self and rhs must contain col_name column with the same type as T.<BR>
@@ -68,16 +67,15 @@ combine(const char *col_name,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T, typename DF1,
-         typename DF2, typename F&gt;
-std::vector&lt;T&gt;
-combine(const char *col_name,
-        const DF1 &amp;df1,
-        const DF2 &amp;df2,
-        F &amp;functor) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> DF1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> DF2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">combine<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> DF1 <span style="color:#808030; ">&amp;</span>df1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> DF2 <span style="color:#808030; ">&amp;</span>df2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Same as the combine() above but it combines 3 columns.<BR>
@@ -96,18 +94,17 @@ combine(const char *col_name,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T, typename DF1,
-         typename DF2, typename DF3,
-         typename F&gt;
-std::vector&lt;T&gt;
-combine(const char *col_name,
-        const DF1 &amp;df1,
-        const DF2 &amp;df2,
-        const DF3 &amp;df3,
-        F &amp;functor) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> DF1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> DF2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> DF3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">combine<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> DF1 <span style="color:#808030; ">&amp;</span>df1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> DF2 <span style="color:#808030; ">&amp;</span>df2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> DF3 <span style="color:#808030; ">&amp;</span>df3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Same as the combine() above but it combines 4 columns.<BR>

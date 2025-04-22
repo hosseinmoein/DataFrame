@@ -42,14 +42,13 @@ body {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="Blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-std::size_t
-append_column(const char *name,
-              const T &amp;val,
-              <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html" style="color:white">nan_policy</a> padding = nan_policy::pad_with_nans);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span></span>
+<span class="line_wrapper">append_column<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>val<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html">nan_policy</a> padding <span style="color:#808030; ">=</span> nan_policy<span style="color:#800080; ">::</span>pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It appends val to the end of the named data column. If data column doesn't exist, it throws an exception.<BR>
@@ -63,14 +62,13 @@ append_column(const char *name,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="Blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ITR&gt;
-std::size_t
-append_column(const char *name,
-              <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Index2D.html" style="color:white">Index2D</a>&lt;const ITR &amp;&gt; range,
-              <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html" style="color:white">nan_policy</a> padding = nan_policy::pad_with_nans);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> ITR<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span></span>
+<span class="line_wrapper">append_column<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Index2D.html">Index2D</a><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">const</span> ITR <span style="color:#808030; ">&amp;</span><span style="color:#800080; ">&gt;</span> range<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html">nan_policy</a> padding <span style="color:#808030; ">=</span> nan_policy<span style="color:#800080; ">::</span>pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It appends the range begin to end to the end of the named data column. If data column doesn't exist, it throws an exception.<BR>

@@ -42,11 +42,10 @@ body {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-[[nodiscard]] size_t
-col_name_to_idx (const char *col_name) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#808030; ">[</span><span style="color:#808030; ">[</span>nodiscard<span style="color:#808030; ">]</span><span style="color:#808030; ">]</span> <span style="color:#603000; ">size_t</span></span>
+<span class="line_wrapper">col_name_to_idx <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It returns the column index for the given column name. If column name does not exist, a ColNotFound will be thrown.<BR>
@@ -58,11 +57,10 @@ col_name_to_idx (const char *col_name) const;
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-[[nodiscard]] const_char *
-col_idx_to_name (size_t col_idx) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#808030; ">[</span><span style="color:#808030; ">[</span>nodiscard<span style="color:#808030; ">]</span><span style="color:#808030; ">]</span> const_char <span style="color:#808030; ">*</span></span>
+<span class="line_wrapper">col_idx_to_name <span style="color:#808030; ">(</span><span style="color:#603000; ">size_t</span> col_idx<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It returns the column name for the given column index. If column index does not exist, a ColNotFound will be thrown.<BR>

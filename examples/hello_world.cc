@@ -71,7 +71,7 @@ int main(int, char *[])  {
     //       doesn’t deal with large datasets to trigger multithreaded algorithms, populating the thread-pool with threads
     //       (i.e. calling set_optimum_thread_level()) is a waste of resources.
     //
-    ThreadGranularity::set_optimum_thread_level();
+    ThreadGranularity::set_optimum_thread_level();  // Calling it anyway for illustration
 
     std::vector<unsigned long>  idx_col1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     std::vector<MyData>         mydata_col (10);
@@ -151,13 +151,12 @@ int main(int, char *[])  {
     // You can sort by one or multiple columns. You must specify all the column types, but only once.
     // Sort first by the index column in ascending order then by "string col" column in descending order.
     //
-    ul_df2.sort<ul_idx_t, std::string, double, std::string>(DF_INDEX_COL_NAME, sort_spec::ascen,
-                                                            "string col", sort_spec::desce);
+    ul_df2.sort<ul_idx_t, std::string, double, std::string>(DF_INDEX_COL_NAME, sort_spec::ascen, "string col", sort_spec::desce);
 
     // You could get another DataFrame by selecting on one or multiple columns.
     // You must specify all the column types, but only once.
     //
-    auto    above_150_fn = [](const std::string &, const double &val)-> bool { return (val > 150.0); };
+    auto    above_150_fn = [](const std::string &, const double &val)-> bool { return val > 150.0; };
     auto    above_150_df = ibm_df.get_data_by_sel<double, decltype(above_150_fn), double, long>("IBM_Close", above_150_fn);
 
     // Or, you could choose to get a view. See docs for views.
@@ -215,8 +214,7 @@ int main(int, char *[])  {
     // correlations for each date in the data stream.
     //
     ewm_corr_v<double>  ewmcorr { exponential_decay_spec::span, 3 };
-    const auto          &ewmcorr_result =
-        aapl_ibm.single_act_visit<double, double>("AAPL_Close", "IBM_Close", ewmcorr).get_result();
+    const auto          &ewmcorr_result = aapl_ibm.single_act_visit<double, double>("AAPL_Close", "IBM_Close", ewmcorr).get_result();
 
     std::cout << "The last exponentailly weighted correlation between AAPL and IBM close prices: "
               << ewmcorr_result.back() << std::endl;
@@ -226,26 +224,25 @@ int main(int, char *[])  {
     // Appel data are daily. Let’s create 10-day OHLC (plus a bunch of other stats) for close prices.
     //
     DTDataFrame aapl_ohlc =
-        aapl_dt_df.bucketize(
-            bucket_type::by_count,
-            10,
-            LastVisitor<dt_idx_t, dt_idx_t>(),  // How to bucketize the index column
-            std::make_tuple("AAPL_Close",  "Open",          FirstVisitor<double, dt_idx_t>()),
-            std::make_tuple("AAPL_Close",  "High",          MaxVisitor<double, dt_idx_t>()),
-            std::make_tuple("AAPL_Close",  "Low",           MinVisitor<double, dt_idx_t>()),
-            std::make_tuple("AAPL_Close",  "Close",         LastVisitor<double, dt_idx_t>()),
-            std::make_tuple("AAPL_Close",  "Mean",          MeanVisitor<double, dt_idx_t>()),
-            std::make_tuple("AAPL_Close",  "Median",        MedianVisitor<double, dt_idx_t>()),
-            std::make_tuple("AAPL_Close",  "25% Quantile",  QuantileVisitor<double, dt_idx_t>(0.25)),
-            std::make_tuple("AAPL_Close",  "Std",           StdVisitor<double, dt_idx_t>()),
-            // "Mode" column is a column of std::array<ModeVisitor::DataItem, 2>'s
-            std::make_tuple("AAPL_Close",  "Mode",          ModeVisitor<2, double, dt_idx_t>()),
-            std::make_tuple("AAPL_Close",  "MAD",           MADVisitor<double, dt_idx_t>(mad_type::mean_abs_dev_around_mean)),
-            // "Z Score" column is a column of std::vector<double>'s
-            std::make_tuple("AAPL_Close",  "Z Score",       ZScoreVisitor<double, dt_idx_t>()),
-            // "Return Vector" column is a column of std::vector<double>'s
-            std::make_tuple("AAPL_Close",  "Return Vector", ReturnVisitor<double, dt_idx_t>(return_policy::log)),
-            std::make_tuple("AAPL_Volume", "Volume",        SumVisitor<long, dt_idx_t>()));
+        aapl_dt_df.bucketize(bucket_type::by_count,
+                             10,
+                             LastVisitor<dt_idx_t, dt_idx_t>(),  // How to bucketize the index column
+                             std::make_tuple("AAPL_Close",  "Open",          FirstVisitor<double, dt_idx_t>()),
+                             std::make_tuple("AAPL_Close",  "High",          MaxVisitor<double, dt_idx_t>()),
+                             std::make_tuple("AAPL_Close",  "Low",           MinVisitor<double, dt_idx_t>()),
+                             std::make_tuple("AAPL_Close",  "Close",         LastVisitor<double, dt_idx_t>()),
+                             std::make_tuple("AAPL_Close",  "Mean",          MeanVisitor<double, dt_idx_t>()),
+                             std::make_tuple("AAPL_Close",  "Median",        MedianVisitor<double, dt_idx_t>()),
+                             std::make_tuple("AAPL_Close",  "25% Quantile",  QuantileVisitor<double, dt_idx_t>(0.25)),
+                             std::make_tuple("AAPL_Close",  "Std",           StdVisitor<double, dt_idx_t>()),
+                             // "Mode" column is a column of std::array<ModeVisitor::DataItem, 2>'s
+                             std::make_tuple("AAPL_Close",  "Mode",          ModeVisitor<2, double, dt_idx_t>()),
+                             std::make_tuple("AAPL_Close",  "MAD",           MADVisitor<double, dt_idx_t>(mad_type::mean_abs_dev_around_mean)),
+                             // "Z Score" column is a column of std::vector<double>'s
+                             std::make_tuple("AAPL_Close",  "Z Score",       ZScoreVisitor<double, dt_idx_t>()),
+                             // "Return Vector" column is a column of std::vector<double>'s
+                             std::make_tuple("AAPL_Close",  "Return Vector", ReturnVisitor<double, dt_idx_t>(return_policy::log)),
+                             std::make_tuple("AAPL_Volume", "Volume",        SumVisitor<long, dt_idx_t>()));
 
     // Big output
     //
@@ -286,7 +283,7 @@ int main(int, char *[])  {
     for (const auto &mean : cluster_means)
         std::cout << mean << ", ";
     std::cout << std::endl;
-    // This produces a very large output.
+    // This produces a large output.
     //
     // std::cout << "\nClusters are: ";
     // for (const auto &mean1 : kmeans_v.get_clusters())  {
@@ -348,7 +345,7 @@ int main(int, char *[])  {
     // After doing all that, I believe this value to be misleading since I don’t believe IBM returns have any seasonality.
     // But you can do this with ice cream data, and you will get a meaningful value.
 
-    return (0);
+    return 0;
 }
 
 // Local Variables:

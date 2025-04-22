@@ -43,14 +43,13 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename V&gt;
-std::size_t
-load_result_as_column(V &amp;visitor,
-                      const char *new_col_name,
-                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html" style="color:white">nan_policy</a> padding = nan_policy::pad_with_nans);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span></span>
+<span class="line_wrapper">load_result_as_column<span style="color:#808030; ">(</span>V <span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html">nan_policy</a> padding <span style="color:#808030; ">=</span> nan_policy<span style="color:#800080; ">::</span>pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is a convenient method to load the result of a visitor (i.e. algorithm) as a column in DataFrame<BR>
@@ -72,15 +71,14 @@ load_result_as_column(V &amp;visitor,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T, typename V&gt;
-std::size_t
-load_result_as_column(const char *col_name,
-                      V &amp;&amp;visitor,
-                      const char *new_col_name,
-                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html" style="color:white">nan_policy</a> padding = nan_policy::pad_with_nans);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span></span>
+<span class="line_wrapper">load_result_as_column<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      V <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html">nan_policy</a> padding <span style="color:#808030; ">=</span> nan_policy<span style="color:#800080; ">::</span>pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is a shortcut to running an algorithm and loading its vectored result as a column in one shot. It runs and loads the result() of a visitor into the named column.<BR>
@@ -102,16 +100,15 @@ load_result_as_column(const char *col_name,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename V&gt;
-std::size_t
-load_result_as_column(const char *col_name1,
-                      const char *col_name2,
-                      V &amp;&amp;visitor,
-                      const char *new_col_name,
-                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html" style="color:white">nan_policy</a> padding = nan_policy::pad_with_nans);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span></span>
+<span class="line_wrapper">load_result_as_column<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      V <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html">nan_policy</a> padding <span style="color:#808030; ">=</span> nan_policy<span style="color:#800080; ">::</span>pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Same as above but supporting two columns.
@@ -129,17 +126,16 @@ load_result_as_column(const char *col_name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename T3, typename V&gt;
-std::size_t
-load_result_as_column(const char *col_name1,
-                      const char *col_name2,
-                      const char *col_name3,
-                      V &amp;&amp;visitor,
-                      const char *new_col_name,
-                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html" style="color:white">nan_policy</a> padding = nan_policy::pad_with_nans);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span></span>
+<span class="line_wrapper">load_result_as_column<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      V <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html">nan_policy</a> padding <span style="color:#808030; ">=</span> nan_policy<span style="color:#800080; ">::</span>pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Same as above but supporting three columns.
@@ -159,18 +155,17 @@ load_result_as_column(const char *col_name1,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename T3, typename T4, typename V&gt;
-std::size_t
-load_result_as_column(const char *col_name1,
-                      const char *col_name2,
-                      const char *col_name3,
-                      const char *col_name4,
-                      V &amp;&amp;visitor,
-                      const char *new_col_name,
-                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html" style="color:white">nan_policy</a> padding = nan_policy::pad_with_nans);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T4<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> V<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span></span>
+<span class="line_wrapper">load_result_as_column<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name1<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      V <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>visitor<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/nan_policy.html">nan_policy</a> padding <span style="color:#808030; ">=</span> nan_policy<span style="color:#800080; ">::</span>pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Same as above but supporting four columns.

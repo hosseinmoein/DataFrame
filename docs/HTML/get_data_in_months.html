@@ -43,12 +43,11 @@ body {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-DataFrame&lt;DateTime, H&gt;
-get_data_in_months(const std::vector&lt;DT_MONTH&gt; &amp;months) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">DataFrame<span style="color:#800080; ">&lt;</span>DateTime<span style="color:#808030; ">,</span> H<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">get_data_in_months<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>DT_MONTH<span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>months<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This selects the rows using the index column that happen in the specified months. It returns another DataFrame with selected data indexed by DateTime. Self is unchanged.<BR><BR>
@@ -61,12 +60,11 @@ get_data_in_months(const std::vector&lt;DT_MONTH&gt; &amp;months) const;
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-PtrView
-get_view_in_months(const std::vector&lt;DT_MONTH&gt; &amp;months);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">PtrView</span>
+<span class="line_wrapper">get_view_in_months<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>DT_MONTH<span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>months<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It behaves like get_data_in_months(), but it returns a View. A view is a DataFrame that is a reference to the original DataFrame. So if you modify anything in the view the original DataFrame will also be modified.<BR><BR>
@@ -79,12 +77,11 @@ get_view_in_months(const std::vector&lt;DT_MONTH&gt; &amp;months);
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-ConstPtrView
-get_view_in_months(const std::vector&lt;DT_MONTH&gt; &amp;months) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">ConstPtrView</span>
+<span class="line_wrapper">get_view_in_months<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>DT_MONTH<span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>months<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is reflected in the const view.       

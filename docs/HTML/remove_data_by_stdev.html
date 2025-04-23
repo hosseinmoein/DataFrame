@@ -43,14 +43,13 @@ body {
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;arithmetic T, typename ... Ts&gt;
-void
-remove_data_by_stdev(const char *col_name,
-                     T above_stdev,
-                     T below_stdev);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>arithmetic T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">remove_data_by_stdev<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                     T above_stdev<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                     T below_stdev<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This calculates the mean and standard deviation of the named column. All data rows above and below the thresholds will be removed.<BR><BR>

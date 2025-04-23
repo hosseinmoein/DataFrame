@@ -43,15 +43,14 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;hashable_equal T&gt;
-std::size_t
-replace(const char *col_name,
-        const std::vector&lt;T&gt; &amp;old_values,
-        const std::vector&lt;T&gt; &amp;new_values,
-        long limit = -1);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>hashable_equal T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span></span>
+<span class="line_wrapper"><span style="color:#603000; ">replace</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>old_values<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>new_values<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">long</span> limit <span style="color:#808030; ">=</span> <span style="color:#808030; ">-</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         It iterates over the column named col_name (or index, if col_name == DF_INDEX_COL_NAME) and replaces all values in old_values with the corresponding values in new_values up to the limit. If limit is omitted, all values will be replaced.<BR>
@@ -69,15 +68,14 @@ replace(const char *col_name,
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;hashable_equal T&gt;
-std::future&lt;std::size_t&gt;
-replace_async(const char *col_name,
-              const std::vector&lt;T&gt; &amp;old_values,
-              const std::vector&lt;T&gt; &amp;new_values,
-              long limit = -1);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>hashable_equal T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">replace_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>old_values<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>new_values<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#800000; font-weight:bold; ">long</span> limit <span style="color:#808030; ">=</span> <span style="color:#808030; ">-</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Same as replace() above, but executed asynchronously<BR><BR>
@@ -89,12 +87,11 @@ replace_async(const char *col_name,
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T, typename F&gt;
-void
-replace(const char *col_name, F &amp;functor);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper"><span style="color:#603000; ">replace</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span> F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is similar to replace() above but it lets a functor replace the values in the named column. The functor is passed every value of the column along with a const reference of the corresponding index value.<BR>
@@ -116,12 +113,11 @@ replace(const char *col_name, F &amp;functor);
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T, typename F&gt;
-std::future&lt;void&gt;
-replace_async(const char *col_name, F &amp;functor);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">void</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">replace_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span> F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Same as replace() above, but executed asynchronously<BR><BR>
@@ -133,13 +129,12 @@ replace_async(const char *col_name, F &amp;functor);
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-std::size_t
-replace_index(const std::vector&lt;IndexType&gt; &amp;old_values,
-              const std::vector&lt;IndexType&gt; &amp;new_values,
-              long limit = -1);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span></span>
+<span class="line_wrapper">replace_index<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>IndexType<span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>old_values<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>IndexType<span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>new_values<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#800000; font-weight:bold; ">long</span> limit <span style="color:#808030; ">=</span> <span style="color:#808030; ">-</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This does the same thing as replace() above for the index column

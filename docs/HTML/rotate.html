@@ -43,12 +43,11 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-void
-void self_rotate(std::size_t periods, shift_policy sp);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span> self_rotate<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> periods<span style="color:#808030; ">,</span> shift_policy sp<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         It rotates all the columns in self up, down, left, or right based on shift_policy.<BR>
@@ -63,12 +62,11 @@ void self_rotate(std::size_t periods, shift_policy sp);
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-StdDataFrame&lt;I&gt;
-void rotate(std::size_t periods, shift_policy sp);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">StdDataFrame<span style="color:#800080; ">&lt;</span>I<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span> <span style="color:#603000; ">rotate</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> periods<span style="color:#808030; ">,</span> shift_policy sp<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It is exactly the same as self_rotate, but it leaves self unchanged and returns a new DataFrame with columns rotated.

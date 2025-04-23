@@ -43,12 +43,11 @@ body {
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T, typename F, typename ... Ts&gt;
-void
-remove_data_by_sel(const char *name, F &amp;sel_functor) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">remove_data_by_sel<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span> F <span style="color:#808030; ">&amp;</span>sel_functor<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
         It removes data rows by boolean filtering selection via the sel_functor (e.g. a functor, function, or lambda). Each element of the named column along with its corresponding index is passed to the sel_functor. If sel_functor returns true, that row will be removed.<BR>
@@ -68,13 +67,11 @@ remove_data_by_sel(const char *name, F &amp;sel_functor) const;
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename F, typename ... Ts&gt;
-void
-remove_data_by_sel(const char *name1, const char *name2,
-                   F &amp;sel_functor) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">remove_data_by_sel<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                   F <span style="color:#808030; ">&amp;</span>sel_functor<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td>
         This does the same function as above remove_data_by_sel() but operating on two columns.<BR>
@@ -95,15 +92,14 @@ remove_data_by_sel(const char *name1, const char *name2,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T1, typename T2, typename T3,
-         typename F, typename ... Ts&gt;
-void
-remove_data_by_sel(const char *name1, const char *name2,
-                   const char *name3,
-                   F &amp;sel_functor) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">remove_data_by_sel<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                   <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                   F <span style="color:#808030; ">&amp;</span>sel_functor<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This does the same function as above remove_data_by_sel() but operating on three columns.<BR>

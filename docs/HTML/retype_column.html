@@ -43,16 +43,15 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename FROM_T, typename TO_T&gt;
-void
-retype_column(const char *name,
-              std::function&lt;TO_T (const FROM_T &amp;)&gt; convert_func =
-                  [](const FROM_T &amp;val) -> TO_T  {
-                      return ((TO_T) (*(&amp;val)));
-                  });
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> FROM_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> TO_T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">retype_column<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>function<span style="color:#800080; ">&lt;</span>TO_T <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> FROM_T <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">)</span><span style="color:#800080; ">&gt;</span> convert_func <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">                  <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> FROM_T <span style="color:#808030; ">&amp;</span>val<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> TO_T  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                      <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#808030; ">(</span>TO_T<span style="color:#808030; ">)</span> <span style="color:#808030; ">(</span><span style="color:#808030; ">*</span><span style="color:#808030; ">(</span><span style="color:#808030; ">&amp;</span>val<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                  <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It changes the type of the named column. The change happens by calling convert_func on each element of named column.<BR>

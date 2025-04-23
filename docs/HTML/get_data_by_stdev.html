@@ -43,14 +43,13 @@ body {
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;arithmetic T, typename ... Ts&gt;
-DataFrame
-get_data_by_stdev(const char *col_name,
-                  T high_stdev,
-                  T low_stdev) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>arithmetic T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">DataFrame</span>
+<span class="line_wrapper">get_data_by_stdev<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                  T high_stdev<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                  T low_stdev<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This calculates the mean and standard deviation of the named column. It returns a new DataFrame that contains all the data where named column data is between <I>high_stdev</I> and <I>low_stdev</I> from the mean.<BR>
@@ -69,14 +68,13 @@ get_data_by_stdev(const char *col_name,
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;arithmetic T, typename ... Ts&gt;
-PtrView
-get_view_by_stdev(const char *col_name,
-                  T high_stdev,
-                  T low_stdev);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>arithmetic T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">PtrView</span>
+<span class="line_wrapper">get_view_by_stdev<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                  T high_stdev<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                  T low_stdev<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is identical to above <I>get_data_by_stdev()</I>, but:<BR>
@@ -97,14 +95,14 @@ get_view_by_stdev(const char *col_name,
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;arithmetic T, typename ... Ts&gt;
-ConstPtrView
-get_view_by_stdev(const char *col_name,
-                  T high_stdev,
-                  T low_stdev) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>arithmetic T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">ConstPtrView</span>
+<span class="line_wrapper">get_view_by_stdev<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                  T high_stdev<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                  T low_stdev<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is reflected in the const view.       

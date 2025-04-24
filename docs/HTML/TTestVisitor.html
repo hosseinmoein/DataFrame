@@ -42,12 +42,12 @@ body {
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long&gt;
-struct TTestVisitor;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> TTestVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It calculates two kinds of t-test: <I>unpaired/unrelated two sample t-test</I> or <I>paired/related t-test</I>, depending on the value of parameter <I>is_related</I>. The unrelated calculation follows <I>Welch t-test</I>, meaning it assumes  X and Y do <B>not</B> follow bivariate normal distribution with equal variances.<BR>

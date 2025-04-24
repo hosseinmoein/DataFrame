@@ -43,12 +43,11 @@ body {
 
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-DataFrame&lt;I, H&gt;
-get_data_by_loc(<a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Index2D.html" style="color:white">Index2D</a>&lt;long&gt; range) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">DataFrame<span style="color:#800080; ">&lt;</span>I<span style="color:#808030; ">,</span> H<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">get_data_by_loc<span style="color:#808030; ">(</span><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Index2D.html">Index2D</a><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span> range<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It returns a DataFrame (including the index and data columns) containing the data from location begin to location end.<BR>
@@ -61,12 +60,11 @@ get_data_by_loc(<a href="https://htmlpreview.github.io/?https://github.com/hosse
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-DataFrame&lt;I, H&gt;
-get_data_by_loc(const std::vector&lt;long&gt; &amp;locations) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">View</span>
+<span class="line_wrapper">get_view_by_loc<span style="color:#808030; ">(</span><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Index2D.html">Index2D</a><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span> range<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It returns a DataFrame (including the index and data columns) containing the data from locations, specified in locations vector. This function supports Python-like negative indexing. That is why the locations vector type is long.<BR>
@@ -80,12 +78,11 @@ get_data_by_loc(const std::vector&lt;long&gt; &amp;locations) const;
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-View
-get_view_by_loc(<a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Index2D.html" style="color:white">Index2D</a>&lt;long&gt; range);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">View</span>
+<span class="line_wrapper">get_view_by_loc<span style="color:#808030; ">(</span><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Index2D.html">Index2D</a><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span> range<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It behaves like get_data_by_loc(), but it returns a View.<BR>
@@ -100,12 +97,11 @@ get_view_by_loc(<a href="https://htmlpreview.github.io/?https://github.com/hosse
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-PtrView
-get_view_by_loc(const std::vector&lt;long&gt; &amp;locations);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">PtrView</span>
+<span class="line_wrapper">get_view_by_loc<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>locations<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It behaves like get_data_by_loc(locations), but it returns a PtrView.<BR>
@@ -119,12 +115,11 @@ get_view_by_loc(const std::vector&lt;long&gt; &amp;locations);
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-ConstView
-get_view_by_loc(<a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Index2D.html" style="color:white">Index2D</a>&lt;long&gt; range) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">ConstView</span>
+<span class="line_wrapper">get_view_by_loc<span style="color:#808030; ">(</span><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/Index2D.html">Index2D</a><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span> range<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is reflected in the const view.       
@@ -136,12 +131,11 @@ get_view_by_loc(<a href="https://htmlpreview.github.io/?https://github.com/hosse
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename ... Ts&gt;
-ConstPtrView
-get_view_by_loc(const std::vector&lt;long&gt; &amp;locations) const;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">ConstPtrView</span>
+<span class="line_wrapper">get_view_by_loc<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>locations<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is reflected in the const view.       

@@ -42,20 +42,19 @@ body {
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long, typename Cmp = std::less&lt;T&gt;&gt;
-struct ExtremumVisitor;
-
-// -------------------------------------
-
-template&lt;typename T, typename I = unsigned long&gt;
-using <U>MaxVisitor</U> = ExtremumVisitor&lt;T, I, std::less&lt;T&gt;&gt;;
-template&lt;typename T, typename I = unsigned long&gt;
-using <U>MinVisitor</U> = ExtremumVisitor&lt;T, I, std::greater&lt;T&gt;&gt;;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> Cmp <span style="color:#808030; ">=</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">less</span><span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">&gt;</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> ExtremumVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> MaxVisitor <span style="color:#808030; ">=</span> ExtremumVisitor<span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">less</span><span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">&gt;</span><span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> MinVisitor <span style="color:#808030; ">=</span> ExtremumVisitor<span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">greater</span><span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">&gt;</span><span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This functor class calculates the maximum/minimum (depending on the type of <I>Cmp</I>. the default is maximum) of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>

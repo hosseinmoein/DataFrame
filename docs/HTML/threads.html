@@ -43,11 +43,10 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-static void
-ThreadGranularity::set_thread_level(long n);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">ThreadGranularity<span style="color:#800080; ">::</span>set_thread_level<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">long</span> n<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Adds n threads to the DataFrame static thread-pool. If n is negative, it terminates n threads in the thread-pool<BR>
@@ -58,11 +57,10 @@ ThreadGranularity::set_thread_level(long n);
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-static void
-ThreadGranularity::set_optimum_thread_level();
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span></span>
+<span class="line_wrapper">ThreadGranularity<span style="color:#800080; ">::</span>set_optimum_thread_level<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It finds the number of active cores in your system, and adds that many threads to the DataFrame static thread-pool<BR>
@@ -72,11 +70,10 @@ ThreadGranularity::set_optimum_thread_level();
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-static long
-ThreadGranularity::get_thread_level();
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">long</span></span>
+<span class="line_wrapper">ThreadGranularity<span style="color:#800080; ">::</span>get_thread_level<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         It returns the current number of threads in DataFrame static thread-pool<BR>

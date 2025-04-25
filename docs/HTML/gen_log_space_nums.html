@@ -43,15 +43,14 @@ body {
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-std::vector&lt;T&gt;
-gen_log_space_nums(std::size_t n,
-                   T first,
-                   T last,
-                   T base);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">gen_log_space_nums<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                   T first<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                   T last<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                   T base<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         Produces n logarithmically spaced numbers between the given base raised to the power of first to last.<BR>
@@ -68,14 +67,13 @@ gen_log_space_nums(std::size_t n,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-std::vector&lt;T&gt;
-gen_even_space_nums(std::size_t n,
-                    T first,
-                    T last);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">gen_even_space_nums<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    T first<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    T last<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This function generates n evenly spaced numbers between the given first and last parameters. The result vector always starts with first and ends shy of last<BR>
@@ -91,13 +89,12 @@ gen_even_space_nums(std::size_t n,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-std::vector&lt;T&gt;
-gen_triangular_nums(T last,
-                    T first = 1);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">gen_triangular_nums<span style="color:#808030; ">(</span>T last<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    T first <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         A number is termed as triangular number if we can represent it in the form of triangular grid of points such that the points form an equilateral triangle and each row contains as many points as the row number, i.e., the first row has one point, second row has two points, third row has three points and so on.<BR>
@@ -114,14 +111,13 @@ gen_triangular_nums(T last,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-std::vector&lt;T&gt;
-gen_sym_triangle(std::size_t n,
-                 const T &amp;start_val,
-                 bool normalize = false);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">gen_sym_triangle<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>start_val<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#800000; font-weight:bold; ">bool</span> normalize <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This generates a set of numbers that represent the upper portion of a symmetric triangle. For example, n = 10 will generate [1, 2, 3, 4, 5, 5, 4, 3, 2, 1], n = 9 will generate [1, 2, 3, 4, 5, 4, 3, 2, 1]. If normalize is true, the numbers are normalized by the sum of all numbers.<BR>
@@ -136,12 +132,11 @@ gen_sym_triangle(std::size_t n,
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-template&lt;typename T&gt;
-std::vector&lt;T&gt;
-gen_dft_sample_freq(std::size_t n, T spacing = 1.0);
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">gen_dft_sample_freq<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span> T spacing <span style="color:#808030; ">=</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This generates the Discrete Fourier Transform sample frequencies. The returned vector contains the frequency bin centers in cycles per unit of the sample spacing (with zero at the start).<BR>

@@ -321,7 +321,7 @@ int main(int, char *[])  {
     // First of all, you must know your data well. If there are no seasons in the data, the following method may give you
     // misleading clues.
     // The one function call goes through these steps:
-    // 1. Off course, load the data into DataFrame.
+    // 1. Of course, load the data into DataFrame.
     // 2. Optionally detrend the data. You must know if your data has a trend or not. If you analyze seasonality with trend,
     //    trend appears as a strong signal in the frequency domain and skews your analysis. You can do that by a few different
     //    methods. You can fit a polynomial curve through the data (you must know the degree), or you can use a method like

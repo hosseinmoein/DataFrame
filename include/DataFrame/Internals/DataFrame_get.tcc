@@ -384,7 +384,7 @@ duplication_mask (bool include_index, bool binary) const  {
 
 template<typename I, typename H>
 template<typename T, typename MT>
-typename DataFrame<I, H>::StlVecType<MT> DataFrame<I, H>::
+typename DataFrame<I, H>::template StlVecType<MT> DataFrame<I, H>::
 mask(const char *col_name, std::function<MT(const T &val)> &&mfunc) const  {
 
     using res_t = StlVecType<MT>;

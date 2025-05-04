@@ -3744,6 +3744,29 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     duplication_mask(bool include_index, bool binary = false) const;
 
+    // This is the generalization of a masking function. Every element of the
+    // given column will be passed to the mfunc and the output of mfunc will
+    // be stored in the result vector. A typical example would be a Boolean
+    // result vector, although the default result is a vector of char.
+    // That’s because std::vector<bool> has an odd implementation that I don’t
+    // like.
+    //
+    // NOTE: Type MT must have default constructor
+    // NOTE: mfunc must be stateless, because it is used in multithreading
+    //
+    // T:
+    //   Type of the "new index" column
+    // MT:
+    //   Masking function return type
+    // col_name:
+    //   Name of the given column
+    // mfunc:
+    //   The masking function
+    //
+    template<typename T, typename MT = char>
+    [[nodiscard]] StlVecType<MT>
+    mask(const char *col_name, std::function<MT(const T &val)> &&mfunc) const;
+
     // It behaves like get_data(), but it returns a View.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will

@@ -383,6 +383,40 @@ duplication_mask (bool include_index, bool binary) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T, typename MT>
+typename DataFrame<I, H>::StlVecType<MT> DataFrame<I, H>::
+mask(const char *col_name, std::function<MT(const T &val)> &&mfunc) const  {
+
+    using res_t = StlVecType<MT>;
+
+    const auto      &column = get_column<T>(col_name);
+    const size_type col_s = column.size();
+    res_t           result(col_s);
+    auto            lbd =
+        [&column = std::as_const(column), &result, &mfunc]
+        (size_type begin, size_type end) -> void  {
+            for (auto i = begin; i < end; ++i)
+                result[i] = mfunc(column[i]);
+        };
+    const auto      thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
+        auto    futuers = thr_pool_.parallel_loop(size_type(0), col_s,
+                                                  std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        lbd(size_type(0), col_s);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {

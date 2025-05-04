@@ -1479,6 +1479,71 @@ using fft_v = FastFourierTransVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
+/*
+template<std::signed_integral T, typename I = unsigned long, std::size_t A = 0>
+struct  NumTheoreticTransVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+public:
+
+    // Inverse = false — Turns a vector of coefficients into its NTT form
+    //                   (evaluation at roots of unity).
+    // Inverse = true — Turns back from NTT domain to original coefficients.
+    //
+    //
+    // Vectors will be resized to the smallest power of 2 equal or larger than
+    // vector size. They will be appended with zeros.
+    //
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+
+    }
+
+    // Multiply two polynomials
+    // {1, 2, 3} represents 1 + 2x + 3x^2
+    // {4, 5, 6} represents 4 + 5x + 6x^2
+    //
+    // Vectors will be resized to the smallest power of 2 equal or larger than
+    // vector size. They will be appended with zeros.
+    //
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column1_begin, const H &column1_end,
+                const H &column2_begin, const H &column2_end)  {
+
+
+    }
+
+    inline void pre ()  {  }
+    inline void post ()  {  }
+
+    DEFINE_RESULT
+
+    explicit
+    NumTheoreticTransVisitor(bool inverse = false)
+        : inverse_(inverse),
+          thread_level_(ThreadGranularity::get_thread_level())  {   }
+
+private:
+
+    const bool      inverse_;
+    const long      thread_level_;
+    result_type     result_ {  };
+};
+
+template<std::signed_integral T, typename I = unsigned long, std::size_t A = 0>
+using ntt_v = NumTheoreticTransVisitor<T, I, A>;
+*/
+
+// ----------------------------------------------------------------------------
+
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  EntropyVisitor  {
 

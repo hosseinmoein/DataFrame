@@ -30,7 +30,7 @@ print(f"{mean[0]}, {var[0]}, {corr[0]}")
 third = datetime.datetime.now()
 
 df3 = df.filter(pl.col("log_normal") > 8)
-print(f"Number of rows after select: {df3.select(pl.count()).item()}")
+print(f"Number of rows after select: {df3.select(pl.len()).item()}")
 fourth = datetime.datetime.now()
 
 # df4 = df.sort(["log_normal", "exponential"]);

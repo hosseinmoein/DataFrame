@@ -3531,6 +3531,61 @@ static void test_MannWhitneyUTestVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_mask()  {
+
+    std::cout << "\nTesting mask( ) ..." << std::endl;
+
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    ibm.load_column("close_mask",
+                    ibm.mask<double, char>("IBM_Close",
+                                           [](const double &close) -> char {
+                                               return (close > 180.0);
+                                           })
+                    );
+    ibm.load_column("close_diff",
+                    ibm.mask<double, double>("IBM_Close",
+                                             [](const double &close) -> double {
+                                                 return (180.0 - close);
+                                             })
+                    );
+
+    const auto  &close_mask = ibm.get_column<char>("close_mask");
+    const auto  &close_diff = ibm.get_column<double>("close_diff");
+
+    assert(close_mask[0] == 0);
+    assert(close_mask[10] == 0);
+    assert(close_mask[247] == 0);
+    assert(close_mask[1180] == 0);
+    assert(close_mask[2761] == 1);
+    assert(close_mask[2806] == 1);
+    assert(close_mask[3372] == 1);
+    assert(close_mask[4106] == 1);
+    assert(close_mask[4966] == 0);
+    assert(close_mask[5030] == 0);
+
+    assert((std::fabs(close_diff[0] - 81.4375) < 0.0001));
+    assert((std::fabs(close_diff[10] - 80.625) < 0.0001));
+    assert((std::fabs(close_diff[247] - 71.93) < 0.0001));
+    assert((std::fabs(close_diff[1180] - 98.19) < 0.0001));
+    assert((std::fabs(close_diff[2761] - -0.360001) < 0.000001));
+    assert((std::fabs(close_diff[2806] - -6.17999) < 0.0001));
+    assert((std::fabs(close_diff[3372] - -13.55) < 0.0001));
+    assert((std::fabs(close_diff[4106] - -0.529999) < 0.000001));
+    assert((std::fabs(close_diff[4966] - 57.06) < 0.0001));
+    assert((std::fabs(close_diff[5030] - 68.34) < 0.0001));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3592,6 +3647,7 @@ int main(int, char *[]) {
     test_detect_and_change();
     test_KolmoSmirnovTestVisitor();
     test_MannWhitneyUTestVisitor();
+    test_mask();
 
     return (0);
 }

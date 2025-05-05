@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <charconv>
 #include <cstdio>
 #include <ranges>
 
@@ -1313,6 +1314,34 @@ explode_helper_(DataFrame &result,
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename V>
+struct  ColVectorPushBackFP_  {
+
+    inline void
+    operator ()(V &vec,
+                std::istream &file,
+                io_format file_type = io_format::csv) const  {
+
+        std::string value;
+        char        c = 0;
+        T           dval;
+
+        value.reserve(1024);
+        while (file.get(c)) [[likely]] {
+            if (file_type == io_format::csv && c == '\n')  break;
+            else if (file_type == io_format::json && c == ']')  break;
+            file.unget();
+            value.clear();
+            _get_token_from_file_(file, ',', value,
+                                  file_type == io_format::json ? ']' : '\0');
+            std::from_chars(value.data(), value.data() + value.size(), dval);
+            vec.push_back(dval);
+        }
+    }
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename V, typename Dummy = void>
 struct  ColVectorPushBack_  {
 
@@ -1474,9 +1503,9 @@ struct  IdxParserFunctor_<float, Dummy>  {
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        const ColVectorPushBack_<float, StlVecType<float>>  slug;
+        const ColVectorPushBackFP_<float, StlVecType<float>>    slug;
 
-        slug(vec, file, &::strtof, file_type);
+        slug(vec, file, file_type);
     }
 };
 
@@ -1489,9 +1518,9 @@ struct  IdxParserFunctor_<double, Dummy>  {
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        const ColVectorPushBack_<double, StlVecType<double>>  slug;
+        const ColVectorPushBackFP_<double, StlVecType<double>>  slug;
 
-        slug(vec, file, &::strtod, file_type);
+        slug(vec, file, file_type);
     }
 };
 
@@ -1504,9 +1533,9 @@ struct  IdxParserFunctor_<long double, Dummy>  {
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        const ColVectorPushBack_<long double, StlVecType<long double>>  slug;
+        const ColVectorPushBackFP_<long double, StlVecType<long double>> slug;
 
-        slug(vec, file, &::strtold, file_type);
+        slug(vec, file, file_type);
     }
 };
 

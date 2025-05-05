@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Utils.h>
 
 #include <any>
+#include <charconv>
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
@@ -188,30 +189,30 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                 case file_dtypes::FLOAT: {
                     StlVecType<float>                                   &vec =
                         create_column<float>(col_name.c_str(), false);
-                    const ColVectorPushBack_<float, StlVecType<float>>  slug;
+                    const ColVectorPushBackFP_<float, StlVecType<float>>  slug;
 
                     vec.reserve(col_size);
-                    slug(vec, stream, &::strtof, io_format::json);
+                    slug(vec, stream, io_format::json);
                     break;
                 }
                 case file_dtypes::DOUBLE: {
                     StlVecType<double>                  &vec =
                         create_column<double>(col_name.c_str(), false);
-                    const ColVectorPushBack_
+                    const ColVectorPushBackFP_
                         <double, StlVecType<double>>    slug;
 
                     vec.reserve(col_size);
-                    slug(vec, stream, &::strtod, io_format::json);
+                    slug(vec, stream, io_format::json);
                     break;
                 }
                 case file_dtypes::LONG_DOUBLE: {
                     StlVecType<long double>                     &vec =
                         create_column<long double>(col_name.c_str(), false);
-                    const ColVectorPushBack_
+                    const ColVectorPushBackFP_
                         <long double, StlVecType<long double>>  slug;
 
                     vec.reserve(col_size);
-                    slug(vec, stream, &::strtold, io_format::json);
+                    slug(vec, stream, io_format::json);
                     break;
                 }
                 case file_dtypes::SHORT: {
@@ -516,32 +517,32 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                 case file_dtypes::FLOAT: {
                     StlVecType<float>                                   &vec =
                         create_column<float>(col_name.c_str(), false);
-                    const ColVectorPushBack_<float, StlVecType<float>>  slug;
+                    const ColVectorPushBackFP_<float, StlVecType<float>> slug;
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, &::strtof);
+                    slug(vec, stream);
                     break;
                 }
                 case file_dtypes::DOUBLE: {
                     StlVecType<double>  &vec =
                         create_column<double>(col_name.c_str(), false);
-                    const ColVectorPushBack_<double, StlVecType<double>>  slug;
+                    const ColVectorPushBackFP_<double, StlVecType<double>> slug;
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, &::strtod);
+                    slug(vec, stream);
                     break;
                 }
                 case file_dtypes::LONG_DOUBLE: {
                     StlVecType<long double>                     &vec =
                         create_column<long double>(col_name.c_str(), false);
-                    const ColVectorPushBack_
+                    const ColVectorPushBackFP_
                         <long double, StlVecType<long double>>  slug;
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, &::strtold);
+                    slug(vec, stream);
                     break;
                 }
                 case file_dtypes::SHORT: {
@@ -1536,10 +1537,15 @@ read_csv2_(S &stream,
                         break;
                     }
                     case file_dtypes::DOUBLE: {
-                        if (val_size > 0) [[likely]]
+                        if (val_size > 0) [[likely]]  {
+                            double  dval { 0 };
+
+                            std::from_chars(value.data(),
+                                            value.data() + value.size(),
+                                            dval);
                             std::any_cast<StlVecType<double> &>
-                                (col_spec.col_vec).push_back(
-                                     std::strtod(value.c_str(), nullptr));
+                                (col_spec.col_vec).push_back(dval);
+                        }
                         else
                             std::any_cast<StlVecType<double> &>
                                 (col_spec.col_vec).push_back(
@@ -1547,10 +1553,15 @@ read_csv2_(S &stream,
                         break;
                     }
                     case file_dtypes::LONG_DOUBLE: {
-                        if (val_size > 0) [[likely]]
+                            long double dval { 0 };
+
+                            std::from_chars(value.data(),
+                                            value.data() + value.size(),
+                                            dval);
+                        if (val_size > 0) [[likely]]  {
                             std::any_cast<StlVecType<long double> &>
-                                (col_spec.col_vec).push_back(
-                                     std::strtold(value.c_str(), nullptr));
+                                (col_spec.col_vec).push_back(dval);
+                        }
                         else
                             std::any_cast<StlVecType<long double> &>
                                 (col_spec.col_vec).push_back(

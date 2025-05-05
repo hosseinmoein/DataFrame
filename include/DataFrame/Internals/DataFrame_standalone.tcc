@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
 #include <cctype>
+#include <charconv>
 #include <cstdlib>
 #include <cstring>
 #include <future>
@@ -796,7 +797,7 @@ _get_str_dbl_pair_from_value_(const char *value)  {
         buffer[bcnt++] = value[vcnt++];
     if (! value[vcnt] || buffer[0] == '\0')  return (data);
     buffer[bcnt] = '\0';
-    data.second = std::strtod(buffer, nullptr);
+    std::from_chars(buffer, buffer + bcnt, data.second);
 
     return (data);
 }
@@ -825,7 +826,7 @@ _get_dbl_dbl_pair_from_value_(const char *value)  {
     if (! value[vcnt]) return (data);
     buffer[bcnt] = '\0';
     if (buffer[0])
-        data.first = std::strtod(buffer, nullptr);
+        std::from_chars(buffer, buffer + bcnt, data.first);
     vcnt += 1;  // skip :
 
     bcnt = 0;
@@ -834,7 +835,7 @@ _get_dbl_dbl_pair_from_value_(const char *value)  {
         buffer[bcnt++] = value[vcnt++];
     if (! value[vcnt] || buffer[0] == '\0')  return (data);
     buffer[bcnt] = '\0';
-    data.second = std::strtod(buffer, nullptr);
+    std::from_chars(buffer, buffer + bcnt, data.second);
 
     return (data);
 }
@@ -893,6 +894,7 @@ _get_dbl_vec_from_value_(const char *value)  {
 
     vec_t       data;
     std::size_t bcnt;
+    double      val;
 
     data.reserve(std::strtol(buffer, nullptr, 10));
     vcnt += 1;  // skip [
@@ -901,7 +903,8 @@ _get_dbl_vec_from_value_(const char *value)  {
         while (value[vcnt] != '|' && value[vcnt] != ']')
             buffer[bcnt++] = value[vcnt++];
         buffer[bcnt] = '\0';
-        data.push_back(std::strtod(buffer, nullptr));
+        std::from_chars(buffer, buffer + bcnt, val);
+        data.push_back(val);
         vcnt += 1;  // skip separator
     }
     return (data);
@@ -957,6 +960,7 @@ _get_dbl_set_from_value_(const char *value)  {
 
     set_t       data;
     std::size_t bcnt;
+    double      val;
 
     vcnt += 1;  // skip [
     while (value[vcnt] && value[vcnt] != ']')  {
@@ -964,7 +968,8 @@ _get_dbl_set_from_value_(const char *value)  {
         while (value[vcnt] != '|' && value[vcnt] != ']')
             buffer[bcnt++] = value[vcnt++];
         buffer[bcnt] = '\0';
-        data.insert(std::strtod(buffer, nullptr));
+        std::from_chars(buffer, buffer + bcnt, val);
+        data.insert(val);
         vcnt += 1;  // skip separator
     }
     return (data);
@@ -1039,8 +1044,9 @@ _get_str_dbl_map_from_value_(const char *value)  {
             buffer[bcnt++] = value[vcnt++];
         buffer[bcnt] = '\0';
 
-        const double    local_value = std::strtod(buffer, nullptr);
+        double  local_value { 0 };
 
+        std::from_chars(buffer, buffer + bcnt, local_value);
         data.emplace(std::make_pair(std::move(key), local_value));
         vcnt += 1;  // skip separator
     }

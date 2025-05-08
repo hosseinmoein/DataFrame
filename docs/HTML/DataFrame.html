@@ -79,14 +79,54 @@ table {
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="60" height="60"/>
   </center>
 
-  <p id="hmdf"></p>
+  <p id="hmdf_time"></p>
     <script>
-      const d = new Date();
-      document.getElementById("hmdf").style.textAlign = "center";
-      document.getElementById("hmdf").style.color = "blue";
-      document.getElementById("hmdf").innerHTML = d;
+      function update_time() {
+        const d = new Date();
+        document.getElementById("hmdf_time").style.textAlign = "center";
+        document.getElementById("hmdf_time").style.color = "blue";
+        document.getElementById("hmdf_time").innerHTML = d;
+      }
+      setInterval(update_time, 1000);
     </script>
   </p>
+
+<!--
+  <p id="hmdf_loc"></p>
+    <script>
+      function get_location() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(show_position, show_error);
+        } else {
+          document.getElementById("hmdf_loc").innerHTML = "Geolocation is not supported by this browser.";
+        }
+      }
+
+	  function show_position(position) {
+        document.getElementById("hmdf_loc").innerHTML = "Latitude: " + position.coords.latitude + "<br>Longitude: " + position.coords.longitude;
+      }
+
+      function show_error(error) {
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            document.getElementById("hmdf_loc").innerHTML = "User denied the request for Geolocation."
+            break;
+          case error.POSITION_UNAVAILABLE:
+            document.getElementById("hmdf_loc").innerHTML = "Location information is unavailable."
+            break;
+          case error.TIMEOUT:
+            document.getElementById("hmdf_loc").innerHTML = "The request to get user position timed out."
+            break;
+          case error.UNKNOWN_ERROR:
+            document.getElementById("hmdf_loc").innerHTML = "An unknown error occurred."
+            break;
+        }
+      }
+
+    get_location();
+    </script>
+  </p>
+-->
 
   <BR>
 

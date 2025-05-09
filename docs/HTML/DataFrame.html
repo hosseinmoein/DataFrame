@@ -1,4 +1,3 @@
-<h1></h1>
 <!--
 Copyright (c) 2019-2026, Hossein Moein
 All rights reserved<h1></h1>
@@ -28,7 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!DOCTYPE html>
 <html>
 <head>
+
 <style>
+
 * {
   box-sizing: border-box;
 }
@@ -48,7 +49,6 @@ body {
   width: 16.6667%;
 }
 
-/* Clearfix (clear floats) */
 .row::after {
   content: "";
   clear: both;
@@ -62,11 +62,47 @@ table {
   border: 1px solid #ddd;
 }
 
-</style>
-</head>
+.content-wrapper {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
 
+@media screen and (min-width: 768px) {
+  .left-container {
+    flex-grow: 1;
+    width: 16%;
+    overflow-y: scroll;
+    height: 100vh;
+  }
+  .right-container {
+    flex-shrink: 0;
+    width: 84%;
+    overflow-y: scroll;
+    height: 100vh;
+  }
+}
+
+</style>
+
+</head>
 <body style="font-family: Georgia, serif">
 
+<div class="content-wrapper">
+  <div class="left-container">
+  <P><font size="+3">&#8592;</font> <a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">Back to Github</a></LI>
+  <P><font size="+3">&#9730;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#1">Introduction</a></P>
+  <P><font size="+3">&#128477;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#2">API Reference</a></P>
+  <P><font size="+3">&#128640;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#3">Multithreading</a><PLI>
+  <P><font size="+3">&#128269;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#4">Views</a></P>
+  <P><font size="+3">&#128109;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#5">Visitors</a></P>
+  <P><font size="+3">&#10052;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#6">Memory Alignment</a></P>
+  <P><font size="+3">&#127922;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#7">Numeric Generators</a></P>
+  <P><font size="+3">&#128450;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#8">Code Structure</a></P>
+  <P><font size="+3">&#x1F6E0;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#9">Build Instructions</a></P>
+  </div>
+
+  <div class="right-container">
   <center>
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="60" height="60"/>
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="90" height="90"/>
@@ -91,62 +127,7 @@ table {
     </script>
   </p>
 
-<!--
-  <p id="hmdf_loc"></p>
-    <script>
-      function get_location() {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(show_position, show_error);
-        } else {
-          document.getElementById("hmdf_loc").innerHTML = "Geolocation is not supported by this browser.";
-        }
-      }
-
-	  function show_position(position) {
-        document.getElementById("hmdf_loc").innerHTML = "Latitude: " + position.coords.latitude + "<br>Longitude: " + position.coords.longitude;
-      }
-
-      function show_error(error) {
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
-            document.getElementById("hmdf_loc").innerHTML = "User denied the request for Geolocation."
-            break;
-          case error.POSITION_UNAVAILABLE:
-            document.getElementById("hmdf_loc").innerHTML = "Location information is unavailable."
-            break;
-          case error.TIMEOUT:
-            document.getElementById("hmdf_loc").innerHTML = "The request to get user position timed out."
-            break;
-          case error.UNKNOWN_ERROR:
-            document.getElementById("hmdf_loc").innerHTML = "An unknown error occurred."
-            break;
-        }
-      }
-
-    get_location();
-    </script>
-  </p>
--->
-
-  <BR>
-
-  <UL>
-    <LI><font color="blue" size="+1"><B>Page Index</B></font></LI>
-      <UL>
-        <LI><font size="+3">&#8592;</font> <a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">Back to Github</a></LI>
-        <LI><font size="+3">&#9730;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#1">Summary</a></LI>
-        <LI><font size="+3">&#128477;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#2">API Reference with code samples</a></LI>
-        <LI><font size="+3">&#128640;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#3">Multithreading</a></LI>
-        <LI><font size="+3">&#128269;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#4">Views</a></LI>
-        <LI><font size="+3">&#128109;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#5">Visitors</a></LI>
-        <LI><font size="+3">&#10052;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#6">Memory Alignment</a></LI>
-        <LI><font size="+3">&#127922;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#7">Numeric Generators</a></LI>
-        <LI><font size="+3">&#128450;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#8">Code Structure</a></LI>
-        <LI><font size="+3">&#x1F6E0;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#9">Build Instructions</a></LI>
-      </UL>
-  </UL>
-
-  <H2 ID="1"><font color="blue">Summary <font size="+4">&#9730;</font></font></H2>
+  <H2 ID="1"><font color="blue">Introduction <font size="+4">&#9730;</font></font></H2>
 <P>
   <font size="+1">DataFrame</font> is a templatized and heterogeneous C++ container designed for data analysis for statistical, machine-learning, or financial applications. You can think of data-frame as a two-dimensional data structure of columns and rows just like an Excel spreadsheet, or a SQL table. But in case of C++ DataFrame, your data needn't be two-dimensional necessarily. Columns in the C++ DataFrame could be vectors of any type, including DataFrames or other containers. So, a C++ DataFrame can be of any dimension. That's the logical layout of the data. C++ DataFrame also includes an intuitive API for data analysis and analytics. The API is designed to be open-ended meaning you can easily include your own custom algorithms.<BR>
   Any data-frame inherently includes a schema. C++ DataFrame schema is either built dynamically at run-time or it comes from a file. Currently C++ DataFrame could be shared between different nodes (e.g. computers) in a couple of ways. It can be written into a file, or it can be serialized into a buffer and sent across and reconstituted on the other side.
@@ -2166,9 +2147,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     <font size="+1"><B>Running the test executables:</B></font><BR>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Almost all test programs in <I>test/</I>, <I>example/</I>, and <I> benchmarks/</I> directories need to open mocked datafiles that exist in <I>data/</I> directory. They also assume the datafiles are in the <I>current directory</I>. If you use CMake to build the project, it copies the datafiles into the execution directory. If you are running the tests by yourself, <I>data/</I> directory must be your current directory.<BR><BR>
 
-  <BR>
-  <BR><a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">&#8592; Back to Github</a><BR>
-
+</div> </div>
 </body></html>
 
 <!--

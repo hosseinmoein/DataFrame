@@ -59,12 +59,45 @@ table {
   border: 1px solid #ddd;
 }
 
+.content-wrapper {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+@media screen and (min-width: 768px) {
+  .left-container {
+    flex-grow: 1;
+    width: 16%;
+    overflow-y: scroll;
+    height: 100vh;
+  }
+  .right-container {
+    flex-shrink: 0;
+    width: 84%;
+    overflow-y: scroll;
+    height: 100vh;
+  }
+}
+
 </style>
 </head>
 
 <body style="font-family: Georgia, serif">
 
+<div class="content-wrapper">
+  <div class="left-container">
+  <P><font size="+3">&#8592;</font> <a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">Back to Github</a></LI>
+  <P><font size="+3">&#9730;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#0">Introduction</a></P>
+  <P><font size="+3">&#128450;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#1">Code structure</a></P>
+  <P><font size="+3">&#x1F6E0;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#2">Build Instructions</a></P>
+  <P><font size="+3">&#129513;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#3">Example</a></P>
+  <P><font size="+3">&#129419;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#4">Types</a></P>
+  <P><font size="+3">&#128477;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#5">Member Functions</a></P>
+  <P><font size="+3">&#127760;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#6">Global Operators</a></P>
+  </div>
 
+  <div class="right-container">
   <center>
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="60" height="60"/>
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="90" height="90"/>
@@ -72,23 +105,8 @@ table {
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="90" height="90"/>
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="60" height="60"/>
   </center>
-  <BR>
 
-  <UL>
-    <LI><font color="blue" size="+1"><B>Page Index</B></font></LI>
-      <UL>
-        <LI><font size="+3">&#8592;</font> <a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">Back to Github</a></LI>
-        <LI><font size="+3">&#9730;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#0">Summary</a></LI>
-        <LI><font size="+3">&#128450;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#1">Code structure</a></LI>
-        <LI><font size="+3">&#x1F6E0;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#2">Build Instructions</a></LI>
-        <LI><font size="+3">&#129513;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#3">Example</a></LI>
-        <LI><font size="+3">&#129419;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#4">Types</a></LI>
-        <LI><font size="+3">&#128477;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#5">Member Functions</a></LI>
-        <LI><font size="+3">&#127760;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html#6">Global DateTime Operators</a></LI>
-      </UL>
-  </UL>
-
-  <H2 ID="0"><font color="blue">Summary <font size="+4">&#9730;</font></font></font></H2>
+  <H2 ID="0"><font color="blue">Introduction <font size="+4">&#9730;</font></font></font></H2>
 <font size="+1">Since DataFrame is a statistical library, it often deals with time-series data. So, it needs to keep track of time.<BR>
 The most efficient way of indexing DataFrame by time is to use an index type of time_t for second precision or double or long long integer for more precision. DateTime class provides a more elaborate handling of time. Also, it is a general handy DateTime object. DateTime is a cool and handy object to manipulate date/time with nanosecond precision and multi timezone capability. It has a very simple and intuitive interface that allows you to break date/time to their components, reassemble date/time from their components, advance or pullback date/time with different granularities, and more.<BR>
 <I>DateTime</I> is one of the types that <I>DataFrame</I> library can read/write from/to files and serialization.</font><BR>
@@ -435,7 +453,7 @@ The most efficient way of indexing DataFrame by time is to use an index type of 
 <span class="line_wrapper">    NanosecondType nanosec<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>       <span style="color:#696969; ">// 0 - 999,999,999</span></span>
 <span class="line_wrapper">    EpochType <span style="color:#603000; ">time</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>               <span style="color:#696969; ">// Like time()</span></span>
 <span class="line_wrapper">    LongTimeType long_time<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>       <span style="color:#696969; ">// Nano seconds since epoch</span></span>
-<span class="line_wrapper">    DatePartType days_in_month<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// 28, 29, 30, 31</span></span></pre>
+<span class="line_wrapper">    DatePartType days_in_month<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">noexcept</span><span style="color:#800080; ">;</span>   <span style="color:#696969; ">// 28, 29, 30, 31</span></span></pre>
 </font>
 
 <HR COLOR="Gray" SIZE="1">
@@ -545,8 +563,7 @@ The most efficient way of indexing DataFrame by time is to use an index type of 
 <span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span></pre>
 </font>
 
-    <BR><a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">&#8592; Back to Github</a><BR>
-
+</div> </div>
 </body></html>
 
 <!--

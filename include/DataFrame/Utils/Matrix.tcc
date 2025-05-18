@@ -228,6 +228,8 @@ Matrix<T, MO, IS_SYM>::operator() (size_type row, size_type col) const  {
 
 // ----------------------------------------------------------------------------
 
+#if !( !defined(__cpp_multidimensional_subscript) || (defined(_MSC_VER) && _MSC_VER <= 1944 /* MSVC2022 v17.14.0 */ ) )
+
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM>::reference
 Matrix<T, MO, IS_SYM>::operator[] (size_type row, size_type col)  {
@@ -243,6 +245,8 @@ Matrix<T, MO, IS_SYM>::operator[] (size_type row, size_type col) const  {
 
     return (at(row, col));
 }
+
+#endif
 
 // ----------------------------------------------------------------------------
 
@@ -284,24 +288,24 @@ Matrix<T, MO, IS_SYM>::transpose() const noexcept  {
         if constexpr (MO == matrix_orient::column_major)  {
             for (size_type c = 0; c < cols(); ++c)
                 for (size_type r = c; r < rows(); ++r)
-                    result[r, c] = at(r, c);
+                    result(r, c) = at(r, c);
         }
         else  {
             for (size_type r = 0; r < rows(); ++r)
                 for (size_type c = r; c < cols(); ++c)
-                    result[r, c] = at(r, c);
+                    result(r, c) = at(r, c);
         }
     }
     else  {
         if constexpr (MO == matrix_orient::column_major)  {
             for (size_type c = 0; c < cols(); ++c)
                 for (size_type r = 0; r < rows(); ++r)
-                    result[c, r] = at(r, c);
+                    result(c, r) = at(r, c);
         }
         else  {
             for (size_type r = 0; r < rows(); ++r)
                 for (size_type c = 0; c < cols(); ++c)
-                    result[c, r] = at(r, c);
+                    result(c, r) = at(r, c);
         }
     }
 
@@ -323,12 +327,12 @@ Matrix<T, MO, IS_SYM>::transpose2() const noexcept  {
         if constexpr (MO == matrix_orient::column_major)  {
             for (size_type c = 0; c < cols(); ++c)
                 for (size_type r = 0; r < rows(); ++r)
-                    result[c, r] = at(r, c);
+                    result(c, r) = at(r, c);
         }
         else  {
             for (size_type r = 0; r < rows(); ++r)
                 for (size_type c = 0; c < cols(); ++c)
-                    result[c, r] = at(r, c);
+                    result(c, r) = at(r, c);
         }
     }
 
@@ -527,7 +531,7 @@ Matrix<T, MO, IS_SYM>::degree_matrix() const  {
 
         for (size_type c = 0; c < cols(); ++c)
             connections += at(r, c);
-        result[r, r] = connections;
+        result(r, r) = connections;
     }
 
     return (result);
@@ -557,7 +561,7 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
         // Scale column.
         //
         for (size_type r = c; r <= e_vecs.rows() - 1; ++r)
-            scale += std::fabs(hess_form[r, c - 1]);
+            scale += std::fabs(hess_form(r, c - 1));
 
         if (scale != T(0))  {
             value_type  h { 0 };
@@ -565,17 +569,17 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
             // Compute Householder transformation.
             //
             for (size_type cc = e_vecs.cols() - 1; cc >= c; --cc)  {
-                const auto  val = hess_form[cc, c - 1] / scale;
+                const auto  val = hess_form(cc, c - 1) / scale;
 
-                ortho[0, cc] = val;
+                ortho(0, cc) = val;
                 h += val * val;
             }
 
             const value_type    g =
-                ortho[0, c] > T(0) ? -std::sqrt(h) : std::sqrt(h);
+                ortho(0, c) > T(0) ? -std::sqrt(h) : std::sqrt(h);
 
-            h -= ortho[0, c] * g;
-            ortho[0, c] -= g;
+            h -= ortho(0, c) * g;
+            ortho(0, c) -= g;
 
             // Apply Householder similarity transformation
             // H = (I - u * u' / h) * H * (I - u * u') / h)
@@ -584,26 +588,26 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
                 value_type  f { 0 };
 
                 for (size_type r = e_vecs.rows() - 1; r >= c; --r)
-                    f += ortho[0, r] * hess_form[r, cc];
+                    f += ortho(0, r) * hess_form(r, cc);
                 f /= h;
 
                 for (size_type r = c; r <= e_vecs.rows() - 1; ++r)
-                    hess_form[r, cc] -= f * ortho[0, r];
+                    hess_form(r, cc) -= f * ortho(0, r);
             }
 
             for (size_type r = 0; r <= e_vecs.rows() - 1; ++r)  {
                 value_type  f { 0 };
 
                 for (size_type cc = e_vecs.cols() - 1; cc >= c; --cc)
-                    f += ortho[0, cc] * hess_form[r, cc];
+                    f += ortho(0, cc) * hess_form(r, cc);
                 f /= h;
 
                 for (size_type cc = c; cc <= e_vecs.cols() - 1; ++cc)
-                    hess_form[r, cc] -= f * ortho[0, cc];
+                    hess_form(r, cc) -= f * ortho(0, cc);
             }
 
-            ortho[0, c] *= scale;
-            hess_form[c, c - 1] = scale * g;
+            ortho(0, c) *= scale;
+            hess_form(c, c - 1) = scale * g;
         }
     }
 
@@ -611,24 +615,24 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
     //
     for (size_type r = 0; r < e_vecs.rows(); ++r)
         for (size_type c = 0; c < e_vecs.cols(); ++c)
-            e_vecs[r, c] = r == c ? T(1) : T(0);
+            e_vecs(r, c) = r == c ? T(1) : T(0);
 
     for (size_type c = e_vecs.cols() - 2; c >= 1; --c)
-        if (hess_form[c, c - 1] != T(0))  {
+        if (hess_form(c, c - 1) != T(0))  {
             for (size_type r = c + 1; r <= e_vecs.rows() - 1; ++r)
-                ortho[0, r] = hess_form[r, c - 1];
+                ortho(0, r) = hess_form(r, c - 1);
 
             for (size_type cc = c; cc <= e_vecs.cols() - 1; ++cc)  {
                 value_type  g { 0 };
 
                 for (size_type r = c; r <= e_vecs.rows() - 1; ++r)
-                    g += ortho[0, r] * e_vecs[r, cc];
+                    g += ortho(0, r) * e_vecs(r, cc);
 
                 // Double division avoids possible underflow
                 //
-                g = (g / ortho[0, c]) / hess_form[c, c - 1];
+                g = (g / ortho(0, c)) / hess_form(c, c - 1);
                 for (size_type r = c; r <= e_vecs.rows() - 1; ++r)
-                    e_vecs[r, cc] += g * ortho[0, r];
+                    e_vecs(r, cc) += g * ortho(0, r);
             }
         }
 

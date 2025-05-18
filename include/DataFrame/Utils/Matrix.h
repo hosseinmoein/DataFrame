@@ -98,6 +98,13 @@ public:
     reference operator[] (size_type r, size_type c);
     const_reference operator[] (size_type r, size_type c) const;
 
+#if !defined(__cpp_multidimensional_subscript) || (defined(_MSC_VER) && _MSC_VER <= 1944 /* MSVC2022 v17.14.0 */ )
+#pragma message("Your compiler (MSVC2022?) does not fully support C++23: operator[] with multiple arguments is not properly supported as per https://en.cppreference.com/w/cpp/language/operators / https://isocpp.org/wiki/faq/operator-overloading#matrix-subscript-op / https://en.cppreference.com/w/cpp/feature_test#Language_features")
+#error Your compiler does not fully support C++23
+// the above code will now report:
+//   E0344: too many parameters for this operator function
+#endif
+
     // Set the given column or row from the given iterator.
     // col_data/row_Data iterators must be valid for the length of
     // columns/rows.

@@ -129,7 +129,7 @@ table {
 
   <H2 ID="1"><font color="blue">Introduction <font size="+4">&#9730;</font></font></H2>
 <P>
-  <font size="+1">DataFrame</font> is a templatized and heterogeneous C++ container designed for data analysis for statistical, machine-learning, or financial applications. You can think of data-frame as a two-dimensional data structure of columns and rows just like an Excel spreadsheet, or a SQL table. But in case of C++ DataFrame, your data needn't be two-dimensional necessarily. Columns in the C++ DataFrame could be vectors of any type, including DataFrames or other containers. So, a C++ DataFrame can be of any dimension. That's the logical layout of the data. C++ DataFrame also includes an intuitive API for data analysis and analytics. The API is designed to be open-ended meaning you can easily include your own custom algorithms.<BR>
+  <font size="+1">DataFrame</font> is a templatized and heterogeneous C++ container designed for data analysis for statistical, machine-learning, or financial applications. You can think of data-frame as a two-dimensional data structure of columns and rows just like an Excel spreadsheet, or a SQL table. But in case of C++ DataFrame, your data needn't be two-dimensional necessarily. Columns in the C++ DataFrame could be vectors of any type, including DataFrames or other containers. So, a C++ DataFrame can be of any dimension. Columns are the first-class citizens of DataFrame, meaning operations and access to columns is far more efficient and easier than dealing with data row by row. That's the logical layout of the data. C++ DataFrame also includes an intuitive API for data analysis and analytics. The API is designed to be open-ended meaning you can easily include your own custom algorithms.<BR>
   Any data-frame inherently includes a schema. C++ DataFrame schema is either built dynamically at run-time or it comes from a file. Currently C++ DataFrame could be shared between different nodes (e.g. computers) in a couple of ways. It can be written into a file, or it can be serialized into a buffer and sent across and reconstituted on the other side.
   <UL>
     <LI>A DataFrame can have one index column and many data columns of any built-in or user-defined types</LI>
@@ -1956,15 +1956,15 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Returns number of threads in thread-pool"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/threads.html">ThreadGranularity::get_thread_level</a>()</td>
+      <td title="Returns number of threads in thread-pool"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/threads.html">get_thread_level</a>()</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Sets optimum number of threads in thread-pool"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/threads.html">ThreadGranularity::set_optimum_thread_level</a>()</td>
+      <td title="Sets optimum number of threads in thread-pool"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/threads.html">set_optimum_thread_level</a>()</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Adds n threads to the thread-pool"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/threads.html">ThreadGranularity::set_thread_level</a>()</td>
+      <td title="Adds n threads to the thread-pool"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/threads.html">set_thread_level</a>()</td>
     </tr>
 
   </table>

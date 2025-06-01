@@ -2107,10 +2107,11 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 
   <H2 ID="9"><font color="blue">Build Instructions <font size="+4">&#x1F6E0;</font></font></H2>
     When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, supposed you call to calculate KNN and supposed K is greater than observed datapoints passed in . if <I> HMDF_SANITY_EXCEPTIONS</I> is defined, you get an exception with explanation. If it is not defined, you get garbage or a crash.<BR>
-    In general, there are two ways you can build C++ applications and libraries.<BR>
+    In general, there are three ways you can build C++ applications and libraries.<BR>
     <OL>
       <LI><I>Bulidng with debug information and no optimizations.</I> This build allows you to debug your application and walk through the source code as it executes inside a debugger. This build results in bigger executable files and significantly slower execution.</LI>
       <LI><I>Building with optimizations and no debug information.</I> You cannot debug these applications and if they crash, they don’t leave any meaningful trace. This build results in smaller executable files, and they are significantly faster at runtime.</LI>
+      <LI><I>Something in between.</I> Experiment with that in your own time.</LI>
     </OL>
 
 

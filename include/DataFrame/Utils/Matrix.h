@@ -351,7 +351,7 @@ public:
     //       the original matrix.
     //
     template<typename MA>
-    inline void
+    inline MA &
     get_minor(MA &mmatrix, size_type drow, size_type dcol) const noexcept;
 
     // A Cofactor of a matrix is the determinant of a minor of the matrix.
@@ -363,7 +363,7 @@ public:
     // cofactors matrix of the original matrix.
     //
     template<typename MA>
-    inline void adjoint(MA &amatrix) const;
+    inline MA &adjoint(MA &amatrix) const;
 
     // A "centered matrix" is a matrix where the mean of each column has been
     // adjusted to be zero, meaning that the data within each column is
@@ -372,6 +372,31 @@ public:
     inline void center() noexcept;
     template<typename MA>
     inline void get_centered(MA &cmatrix) const noexcept;
+
+    // Whitening a data matrix, also known as sphering, is a data preprocessing
+    // technique that transforms the data so that its covariance matrix becomes
+    // the identity matrix. This process effectively decorrelates the features
+    // and ensures they have equal variance. In simpler terms, it changes the
+    // input vector into a white noise vector, where all frequencies have the
+    // same amplitude.
+    // If center is false, it means self is already centered (mean is
+    // subtracted).
+    // 
+    template<typename MA>
+    inline MA &
+    whiten(MA &that, bool center = false) const noexcept;
+
+    // The following methods apply the corresponding functions to all matrix
+    // elements one by one. They return a reference to self.
+    //
+    Matrix &square() noexcept;
+    Matrix &cube() noexcept;
+    Matrix &sqrt() noexcept;
+    Matrix &tanh() noexcept;
+    Matrix &add(value_type val) noexcept;
+    Matrix &minus(value_type val) noexcept;
+    Matrix &multiply(value_type val) noexcept;
+    Matrix &divide(value_type val) noexcept;
 
 private:
 

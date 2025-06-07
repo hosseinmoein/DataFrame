@@ -2055,7 +2055,7 @@ Matrix<T, MO, IS_SYM>::determinant() const  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA>
-void Matrix<T, MO, IS_SYM>::
+inline MA &Matrix<T, MO, IS_SYM>::
 get_minor (MA &mmatrix, size_type drow, size_type dcol) const noexcept  {
 
     mmatrix.resize(rows() - 1, cols() - 1, 0);
@@ -2075,7 +2075,7 @@ get_minor (MA &mmatrix, size_type drow, size_type dcol) const noexcept  {
         }
     }
 
-    return;
+    return (mmatrix);
 }
 
 // ----------------------------------------------------------------------------
@@ -2099,7 +2099,7 @@ Matrix<T, MO, IS_SYM>::cofactor (size_type row, size_type column) const  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA>
-inline void Matrix<T, MO, IS_SYM>::adjoint (MA &that) const  {
+inline MA &Matrix<T, MO, IS_SYM>::adjoint (MA &that) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square())
@@ -2126,7 +2126,7 @@ inline void Matrix<T, MO, IS_SYM>::adjoint (MA &that) const  {
     }
     else  lbd(0L, cols());
 
-    return;
+    return (that);
 }
 
 // ----------------------------------------------------------------------------
@@ -2169,6 +2169,603 @@ void Matrix<T, MO, IS_SYM>::get_centered(MA &cmatrix) const noexcept  {
 
     return;
 }
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::square() noexcept  {
+
+    auto        lbd = [this](auto begin, auto end) -> void  {
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = c + 1; r < rows(); ++r)  {
+                        auto  &val = at(r, c);
+
+                        val *= val;
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = r + 1; c < cols(); ++c)  {
+                        auto  &val = at(r, c);
+
+                        val *= val;
+                    }
+                }
+            }
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = 0; r < rows(); ++r)  {
+                        auto  &val = at(r, c);
+
+                        val *= val;
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = 0; c < cols(); ++c)  {
+                        auto  &val = at(r, c);
+
+                        val *= val;
+                    }
+                }
+            }
+        }
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            lbd(0L, cols());
+        else
+            lbd(0L, rows());
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::cube() noexcept  {
+
+    auto        lbd = [this](auto begin, auto end) -> void  {
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = c + 1; r < rows(); ++r)  {
+                        auto  &val = at(r, c);
+
+                        val *= val * val;
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = r + 1; c < cols(); ++c)  {
+                        auto  &val = at(r, c);
+
+                        val *= val * val;
+                    }
+                }
+            }
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = 0; r < rows(); ++r)  {
+                        auto  &val = at(r, c);
+
+                        val *= val * val;
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = 0; c < cols(); ++c)  {
+                        auto  &val = at(r, c);
+
+                        val *= val * val;
+                    }
+                }
+            }
+        }
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            lbd(0L, cols());
+        else
+            lbd(0L, rows());
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::sqrt() noexcept  {
+
+    auto        lbd = [this](auto begin, auto end) -> void  {
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = c + 1; r < rows(); ++r)  {
+                        auto  &val = at(r, c);
+
+                        val = std::sqrt(val);
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = r + 1; c < cols(); ++c)  {
+                        auto  &val = at(r, c);
+
+                        val = std::sqrt(val);
+                    }
+                }
+            }
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = 0; r < rows(); ++r)  {
+                        auto  &val = at(r, c);
+
+                        val = std::sqrt(val);
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = 0; c < cols(); ++c)  {
+                        auto  &val = at(r, c);
+
+                        val = std::sqrt(val);
+                    }
+                }
+            }
+        }
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            lbd(0L, cols());
+        else
+            lbd(0L, rows());
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::tanh() noexcept  {
+
+    auto        lbd = [this](auto begin, auto end) -> void  {
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = c + 1; r < rows(); ++r)  {
+                        auto  &val = at(r, c);
+
+                        val = std::tanh(val);
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = r + 1; c < cols(); ++c)  {
+                        auto  &val = at(r, c);
+
+                        val = std::tanh(val);
+                    }
+                }
+            }
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = 0; r < rows(); ++r)  {
+                        auto  &val = at(r, c);
+
+                        val = std::tanh(val);
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = 0; c < cols(); ++c)  {
+                        auto  &val = at(r, c);
+
+                        val = std::tanh(val);
+                    }
+                }
+            }
+        }
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            lbd(0L, cols());
+        else
+            lbd(0L, rows());
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::add(value_type val) noexcept  {
+
+    auto        lbd = [this, val](auto begin, auto end) -> void  {
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)
+                    for (size_type r = c + 1; r < rows(); ++r)
+                        at(r, c) += val;
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)
+                    for (size_type c = r + 1; c < cols(); ++c)
+                        at(r, c) += val;
+            }
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)
+                    for (size_type r = 0; r < rows(); ++r)
+                        at(r, c) += val;
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)
+                    for (size_type c = 0; c < cols(); ++c)
+                        at(r, c) += val;
+            }
+        }
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            lbd(0L, cols());
+        else
+            lbd(0L, rows());
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::minus(value_type val) noexcept  {
+
+    auto        lbd = [this, val](auto begin, auto end) -> void  {
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)
+                    for (size_type r = c + 1; r < rows(); ++r)
+                        at(r, c) -= val;
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)
+                    for (size_type c = r + 1; c < cols(); ++c)
+                        at(r, c) -= val;
+            }
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)
+                    for (size_type r = 0; r < rows(); ++r)
+                        at(r, c) -= val;
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)
+                    for (size_type c = 0; c < cols(); ++c)
+                        at(r, c) -= val;
+            }
+        }
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            lbd(0L, cols());
+        else
+            lbd(0L, rows());
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::multiply(value_type val) noexcept  {
+
+    auto        lbd = [this, val](auto begin, auto end) -> void  {
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)
+                    for (size_type r = c + 1; r < rows(); ++r)
+                        at(r, c) *= val;
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)
+                    for (size_type c = r + 1; c < cols(); ++c)
+                        at(r, c) *= val;
+            }
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)
+                    for (size_type r = 0; r < rows(); ++r)
+                        at(r, c) *= val;
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)
+                    for (size_type c = 0; c < cols(); ++c)
+                        at(r, c) *= val;
+            }
+        }
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            lbd(0L, cols());
+        else
+            lbd(0L, rows());
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::divide(value_type val) noexcept  {
+
+    auto        lbd = [this, val](auto begin, auto end) -> void  {
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)
+                    for (size_type r = c + 1; r < rows(); ++r)
+                        at(r, c) /= val;
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)
+                    for (size_type c = r + 1; c < cols(); ++c)
+                        at(r, c) /= val;
+            }
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)
+                    for (size_type r = 0; r < rows(); ++r)
+                        at(r, c) /= val;
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)
+                    for (size_type c = 0; c < cols(); ++c)
+                        at(r, c) /= val;
+            }
+        }
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            lbd(0L, cols());
+        else
+            lbd(0L, rows());
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+template<typename MA>
+inline MA &whiten(MA &that, bool center) const noexcept  {
+
+    that = *this;
+    if (center)  that.center();
+
+    const auto  cov { that.covariance() };
+
+    return (that);
+}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 } // namespace hmdf
 

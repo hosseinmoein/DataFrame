@@ -2741,7 +2741,8 @@ Matrix<T, MO, IS_SYM>::divide(value_type val) noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA>
-inline MA &whiten(MA &that, bool center) const noexcept  {
+inline MA &
+Matrix<T, MO, IS_SYM>::whiten(MA &that, bool center) const noexcept  {
 
     that = *this;
     if (center)  that.center();
@@ -2751,7 +2752,6 @@ inline MA &whiten(MA &that, bool center) const noexcept  {
     return (that);
 }
 
-}
 
 
 

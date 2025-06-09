@@ -41,18 +41,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-struct  VPVSentinel  {
-
-    VPVSentinel() = default;
-    VPVSentinel(const VPVSentinel &) = default;
-    VPVSentinel(VPVSentinel &&) = default;
-    VPVSentinel &operator = (const VPVSentinel &) = default;
-    VPVSentinel &operator = (VPVSentinel &&) = default;
-    ~VPVSentinel() = default;
-};
-
-// ----------------------------------------------------------------------------
-
 template<typename T, std::size_t A = 0>
 class VectorPtrView {
 
@@ -271,17 +259,6 @@ public:
             return (node_ <= rhs.node_);
         }
 
-        friend bool
-        operator == (const iterator &rhs, VPVSentinel) noexcept  {
-
-            return (rhs.node_ == rhs.vector_.end());
-        }
-        friend bool
-        operator != (const iterator &rhs, VPVSentinel) noexcept  {
-
-            return (rhs.node_ != rhs.vector_.end());
-        }
-
        // Following STL style, this iterator appears as a pointer
        // to value_type.
        //
@@ -445,17 +422,6 @@ public:
         inline bool operator <= (const const_iterator &rhs) const noexcept  {
 
             return (node_ <= rhs.node_);
-        }
-
-        friend bool
-        operator == (const const_iterator &rhs, VPVSentinel) noexcept  {
-
-            return (rhs.node_ == rhs.vector_.end());
-        }
-        friend bool
-        operator != (const const_iterator &rhs, VPVSentinel) noexcept  {
-
-            return (rhs.node_ != rhs.vector_.end());
         }
 
        // Following STL style, this iterator appears as a pointer
@@ -816,17 +782,6 @@ public:
         inline bool operator <= (const const_iterator &rhs) const noexcept  {
 
             return (node_ <= rhs.node_);
-        }
-
-        friend bool
-        operator == (const const_iterator &rhs, VPVSentinel) noexcept  {
-
-            return (rhs.node_ == rhs.vector_.end());
-        }
-        friend bool
-        operator != (const const_iterator &rhs, VPVSentinel) noexcept  {
-
-            return (rhs.node_ != rhs.vector_.end());
         }
 
        // Following STL style, this iterator appears as a pointer

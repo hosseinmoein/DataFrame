@@ -39,18 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-struct  VVSentinel  {
-
-    VVSentinel() = default;
-    VVSentinel(const VVSentinel &) = default;
-    VVSentinel(VVSentinel &&) = default;
-    VVSentinel &operator = (const VVSentinel &) = default;
-    VVSentinel &operator = (VVSentinel &&) = default;
-    ~VVSentinel() = default;
-};
-
-// ----------------------------------------------------------------------------
-
 // This is a view that would make an already existing array of
 // continuous memory look like an STL vector.
 // It also gives you STL conformant iterators.
@@ -211,17 +199,6 @@ public:
             return (node_ <= rhs.node_);
         }
 
-        friend bool
-        operator == (const const_iterator &rhs, VVSentinel) noexcept  {
-
-            return (rhs.node_ == rhs.end_ptr_);
-        }
-        friend bool
-        operator != (const const_iterator &rhs, VVSentinel) noexcept  {
-
-            return (rhs.node_ != rhs.end_ptr_);
-        }
-
        // Following STL style, this iterator appears as a pointer
        // to value_type.
        //
@@ -365,17 +342,6 @@ public:
         inline bool operator <= (const iterator &rhs) const noexcept  {
 
             return (node_ <= rhs.node_);
-        }
-
-        friend bool
-        operator == (const iterator &rhs, VVSentinel) noexcept  {
-
-            return (rhs.node_ == rhs.end_ptr_);
-        }
-        friend bool
-        operator != (const iterator &rhs, VVSentinel) noexcept  {
-
-            return (rhs.node_ != rhs.end_ptr_);
         }
 
        // Following STL style, this iterator appears as a pointer
@@ -646,17 +612,6 @@ public:
         inline bool operator <= (const const_iterator &rhs) const noexcept  {
 
             return (node_ <= rhs.node_);
-        }
-
-        friend bool
-        operator == (const const_iterator &rhs, VVSentinel) noexcept  {
-
-            return (rhs.node_ == rhs.end_ptr_);
-        }
-        friend bool
-        operator != (const const_iterator &rhs, VVSentinel) noexcept  {
-
-            return (rhs.node_ != rhs.end_ptr_);
         }
 
        // Following STL style, this iterator appears as a pointer

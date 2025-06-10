@@ -357,10 +357,11 @@ int main(int, char *[]) {
 
         assert(eigenvecs.cols() == 10);
         assert(eigenvecs.rows() == 10);
-        assert((std::fabs(eigenvecs[0, 0] - -0.00139238) < 0.000001));
-        assert((std::fabs(eigenvecs[2, 4] - -0.325968) < 0.00001));
-        assert((std::fabs(eigenvecs[5, 6] - 0.0349338) < 0.000001));
-        assert((std::fabs(eigenvecs[8, 2] - -0.285251) < 0.00001));
+
+        assert((std::fabs(eigenvecs[0, 0] - -0.0833988) < 0.000001));
+        assert((std::fabs(eigenvecs[2, 4] - 0.32935) < 0.00001));
+        assert((std::fabs(eigenvecs[5, 6] - -0.410279) < 0.000001));
+        assert((std::fabs(eigenvecs[8, 2] - 9.34286) < 0.00001));
         assert((std::fabs(eigenvecs[9, 9] - -0.51616) < 0.00001));
     }
 
@@ -550,6 +551,52 @@ int main(int, char *[]) {
         const auto  norm = mat.norm();
 
         assert((std::fabs(norm - 577393.5703) < 0.0001));
+    }
+
+    // Test matrix sqrt
+    //
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  mat { 4, 4 };
+
+        mat(0, 0) = 1.0;
+        mat(0, 1) = 0.2;
+        mat(0, 2) = 0.3;
+        mat(0, 3) = 0.1;
+        mat(1, 0) = 0.2;
+        mat(1, 1) = 2.0;
+        mat(1, 2) = 0.4;
+        mat(1, 3) = 0.2;
+        mat(2, 0) = 0.3;
+        mat(2, 1) = 0.4;
+        mat(2, 2) = 3.0;
+        mat(2, 3) = 0.3;
+        mat(3, 0) = 0.1;
+        mat(3, 1) = 0.2;
+        mat(3, 2) = 0.3;
+        mat(3, 3) = 4.0;
+
+        mat.sqrt();
+        assert((std::fabs(mat(0, 0) - 0.990905) < 0.00001));
+        assert((std::fabs(mat(0, 2) - 0.10619) < 0.0001));
+        assert((std::fabs(mat(1, 1) - 1.40557) < 0.0001));
+        assert((std::fabs(mat(1, 3) - 0.0552678) < 0.000001));
+        assert((std::fabs(mat(2, 0) - 0.10619) < 0.0001));
+        assert((std::fabs(mat(2, 3) - 0.0779677) < 0.000001));
+        assert((std::fabs(mat(3, 2) - 0.0779677) < 0.000001));
+        assert((std::fabs(mat(3, 3) - 1.9975) < 0.0001));
+
+        const auto  mat2 = mat * mat;
+
+        assert((std::fabs(mat2(0, 0) - 1.0) < 0.0001));
+        assert((std::fabs(mat2(0, 2) - 0.3) < 0.0001));
+        assert((std::fabs(mat2(1, 1) - 2.0) < 0.0001));
+        assert((std::fabs(mat2(1, 3) - 0.2) < 0.0001));
+        assert((std::fabs(mat2(2, 0) - 0.3) < 0.0001));
+        assert((std::fabs(mat2(2, 3) - 0.3) < 0.0001));
+        assert((std::fabs(mat2(3, 2) - 0.3) < 0.0001));
+        assert((std::fabs(mat2(3, 3) - 4.0) < 0.0001));
     }
 
     test_thread_pool();

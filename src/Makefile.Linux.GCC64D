@@ -6,7 +6,7 @@ BUILD_DEFINE = Linux_GCC64
 
 # -----------------------------------------------------------------------------
 
-CXX = /usr/local/bin/g++-14
+CXX = /usr/local/bin/g++-15
 # CXX = /usr/bin/g++
 
 INCLUDES =

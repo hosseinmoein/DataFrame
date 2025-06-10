@@ -373,6 +373,19 @@ public:
     template<typename MA>
     inline void get_centered(MA &cmatrix) const noexcept;
 
+    // The square root of a matrix, in the context of linear algebra, is
+    // another matrix that, when multiplied by itself, results in the original
+    // matrix. It's not simply element-wise square rooting. It's a more
+    // involved process involving techniques like diagonalization or
+    // Cholesky decomposition.
+    // NOTE: Matrix must be symmetric positive semi-definite (PSD), otherwise
+    //       you may have negatve Eigen values which results in NaN values.
+    //       A good acceptable input is a convariance matrix.
+    //
+    Matrix &sqrt() noexcept;
+    template<typename MA>
+    inline MA &get_sqrt(MA &that) const noexcept;
+
     // Whitening a data matrix, also known as sphering, is a data preprocessing
     // technique that transforms the data so that its covariance matrix becomes
     // the identity matrix. This process effectively decorrelates the features
@@ -381,22 +394,24 @@ public:
     // same amplitude.
     // If center is false, it means self is already centered (mean is
     // subtracted).
-    // 
+    //
+    Matrix &whiten(bool center = false) noexcept;
     template<typename MA>
-    inline MA &
-    whiten(MA &that, bool center = false) const noexcept;
+    inline MA &get_whiten(MA &that, bool center = false) const noexcept;
 
     // The following methods apply the corresponding functions to all matrix
     // elements one by one. They return a reference to self.
+    // ew = Element Wise
     //
-    Matrix &square() noexcept;
-    Matrix &cube() noexcept;
-    Matrix &sqrt() noexcept;
-    Matrix &tanh() noexcept;
-    Matrix &add(value_type val) noexcept;
-    Matrix &minus(value_type val) noexcept;
-    Matrix &multiply(value_type val) noexcept;
-    Matrix &divide(value_type val) noexcept;
+    Matrix &ew_square() noexcept;
+    Matrix &ew_cube() noexcept;
+    Matrix &ew_sqrt() noexcept;
+    Matrix &ew_tanh() noexcept;
+    Matrix &ew_inverse() noexcept;  // 1/x
+    Matrix &ew_add(value_type val) noexcept;
+    Matrix &ew_minus(value_type val) noexcept;
+    Matrix &ew_multiply(value_type val) noexcept;
+    Matrix &ew_divide(value_type val) noexcept;
 
 private:
 

@@ -2174,7 +2174,7 @@ void Matrix<T, MO, IS_SYM>::get_centered(MA &cmatrix) const noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM> &
-Matrix<T, MO, IS_SYM>::square() noexcept  {
+Matrix<T, MO, IS_SYM>::ew_square() noexcept  {
 
     auto        lbd = [this](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
@@ -2252,7 +2252,7 @@ Matrix<T, MO, IS_SYM>::square() noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM> &
-Matrix<T, MO, IS_SYM>::cube() noexcept  {
+Matrix<T, MO, IS_SYM>::ew_cube() noexcept  {
 
     auto        lbd = [this](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
@@ -2330,7 +2330,7 @@ Matrix<T, MO, IS_SYM>::cube() noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM> &
-Matrix<T, MO, IS_SYM>::sqrt() noexcept  {
+Matrix<T, MO, IS_SYM>::ew_sqrt() noexcept  {
 
     auto        lbd = [this](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
@@ -2408,7 +2408,7 @@ Matrix<T, MO, IS_SYM>::sqrt() noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM> &
-Matrix<T, MO, IS_SYM>::tanh() noexcept  {
+Matrix<T, MO, IS_SYM>::ew_tanh() noexcept  {
 
     auto        lbd = [this](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
@@ -2486,7 +2486,85 @@ Matrix<T, MO, IS_SYM>::tanh() noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM> &
-Matrix<T, MO, IS_SYM>::add(value_type val) noexcept  {
+Matrix<T, MO, IS_SYM>::ew_inverse() noexcept  {
+
+    auto        lbd = [this](auto begin, auto end) -> void  {
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = c + 1; r < rows(); ++r)  {
+                        auto  &val = at(r, c);
+
+                        val = T(1) / val;
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = r + 1; c < cols(); ++c)  {
+                        auto  &val = at(r, c);
+
+                        val = T(1) / val;
+                    }
+                }
+            }
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)  {
+                    for (size_type r = 0; r < rows(); ++r)  {
+                        auto  &val = at(r, c);
+
+                        val = T(1) / val;
+                    }
+                }
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)  {
+                    for (size_type c = 0; c < cols(); ++c)  {
+                        auto  &val = at(r, c);
+
+                        val = T(1) / val;
+                    }
+                }
+            }
+        }
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            lbd(0L, cols());
+        else
+            lbd(0L, rows());
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::ew_add(value_type val) noexcept  {
 
     auto        lbd = [this, val](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
@@ -2548,7 +2626,7 @@ Matrix<T, MO, IS_SYM>::add(value_type val) noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM> &
-Matrix<T, MO, IS_SYM>::minus(value_type val) noexcept  {
+Matrix<T, MO, IS_SYM>::ew_minus(value_type val) noexcept  {
 
     auto        lbd = [this, val](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
@@ -2610,7 +2688,7 @@ Matrix<T, MO, IS_SYM>::minus(value_type val) noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM> &
-Matrix<T, MO, IS_SYM>::multiply(value_type val) noexcept  {
+Matrix<T, MO, IS_SYM>::ew_multiply(value_type val) noexcept  {
 
     auto        lbd = [this, val](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
@@ -2672,7 +2750,7 @@ Matrix<T, MO, IS_SYM>::multiply(value_type val) noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM> &
-Matrix<T, MO, IS_SYM>::divide(value_type val) noexcept  {
+Matrix<T, MO, IS_SYM>::ew_divide(value_type val) noexcept  {
 
     auto        lbd = [this, val](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
@@ -2732,26 +2810,74 @@ Matrix<T, MO, IS_SYM>::divide(value_type val) noexcept  {
 
 // ----------------------------------------------------------------------------
 
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> &Matrix<T, MO, IS_SYM>::sqrt() noexcept  {
 
+    Matrix  eigenvals;
+    Matrix  eigenvecs;
 
+    eigen_space(eigenvals, eigenvecs, false);
+    eigenvals.ew_sqrt();  // Better not have negative values
 
+    // Make it diagonal
+    //
+    Matrix  daig_vals(eigenvals.cols(), eigenvals.cols(), 0);
 
+    for (size_type i = 0; i < daig_vals.cols(); ++i)
+        daig_vals(i, i) = eigenvals(0, i);
 
+    const auto  result { eigenvecs * daig_vals * eigenvecs.transpose() };
 
+    *this = result;
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA>
-inline MA &
-Matrix<T, MO, IS_SYM>::whiten(MA &that, bool center) const noexcept  {
+MA &Matrix<T, MO, IS_SYM>::get_sqrt(MA &that) const noexcept  {
 
     that = *this;
-    if (center)  that.center();
-
-    const auto  cov { that.covariance() };
-
-    return (that);
+    return (that.sqrt());
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+inline Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::whiten(bool do_center) noexcept  {
+
+    if (do_center) center();
+
+    Matrix  eigenvals;
+    Matrix  eigenvecs;
+
+    covariance().eigen_space(eigenvals, eigenvecs, false);
+
+    // Make it diagonal
+    //
+    Matrix  daig_vals(eigenvals.cols(), eigenvals.cols(), 0);
+
+    for (size_type i = 0; i < daig_vals.cols(); ++i)
+        daig_vals(i, i) = eigenvals(0, i);
+
+    const auto  inv_sqrt = daig_vals.inverse().sqrt();
+
+    *this = inv_sqrt * eigenvecs.transpose() * *this;
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+template<typename MA>
+MA &Matrix<T, MO, IS_SYM>::
+get_whiten(MA &that, bool do_center) const noexcept  {
+
+    that = *this;
+    return (that.whiten());
+}
 
 
 

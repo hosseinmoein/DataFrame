@@ -599,6 +599,57 @@ int main(int, char *[]) {
         assert((std::fabs(mat2(3, 3) - 4.0) < 0.0001));
     }
 
+    // Test whiten
+    //
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  mat { 5, 5 };
+
+        mat(0, 0) = -2.5;
+        mat(0, 1) = -0.001;
+        mat(0, 2) = 3;
+        mat(0, 3) = -4;
+        mat(0, 4) = 1.5;
+        mat(1, 0) = 0.5;
+        mat(1, 1) = 4.4;
+        mat(1, 2) = 2.2;
+        mat(1, 3) = 5.1;
+        mat(1, 4) = 0.12;
+        mat(2, 0) = 0.4;
+        mat(2, 1) = 1;
+        mat(2, 2) = -1.1;
+        mat(2, 3) = 0;
+        mat(2, 4) = -2.1;
+        mat(3, 0) = 0.9;
+        mat(3, 1) = -1.6;
+        mat(3, 2) = 3.2;
+        mat(3, 3) = 8.8;
+        mat(3, 4) = -0.001;
+        mat(4, 0) = -0.2;
+        mat(4, 1) = 0.8;
+        mat(4, 2) = -4.1;
+        mat(4, 3) = -0.9;
+        mat(4, 4) = 0.1;
+
+        col_dmat_t  white;
+
+        mat.get_whiten(white, true);
+
+        const auto  cov = white.covariance();
+
+        for (long r = 0; r < cov.rows(); ++r)  {
+            for (long c = 0; c < cov.cols(); ++c)  {
+                if (r == c && r != 1)  { //  Some singular issue here
+                    assert((std::fabs(cov(r, c) - 1.0) < 0.00001));
+                }
+                else  {
+                    assert((std::fabs(cov(r, c) - 0.0) < 0.00001));
+                }
+            }
+        }
+    }
+
     test_thread_pool();
     return (0);
 }

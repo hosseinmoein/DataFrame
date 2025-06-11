@@ -2854,6 +2854,8 @@ Matrix<T, MO, IS_SYM>::whiten(bool do_center) noexcept  {
     Matrix  eigenvecs;
 
     covariance().eigen_space(eigenvals, eigenvecs, false);
+    eigenvals.ew_sqrt();
+    eigenvals.ew_inverse();
 
     // Make it diagonal
     //
@@ -2862,9 +2864,7 @@ Matrix<T, MO, IS_SYM>::whiten(bool do_center) noexcept  {
     for (size_type i = 0; i < daig_vals.cols(); ++i)
         daig_vals(i, i) = eigenvals(0, i);
 
-    const auto  inv_sqrt = daig_vals.inverse().sqrt();
-
-    *this = inv_sqrt * eigenvecs.transpose() * *this;
+    *this = *this * eigenvecs * daig_vals;
     return (*this);
 }
 
@@ -2876,22 +2876,8 @@ MA &Matrix<T, MO, IS_SYM>::
 get_whiten(MA &that, bool do_center) const noexcept  {
 
     that = *this;
-    return (that.whiten());
+    return (that.whiten(do_center));
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 } // namespace hmdf
 

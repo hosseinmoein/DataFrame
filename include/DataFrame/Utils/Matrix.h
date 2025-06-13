@@ -98,6 +98,11 @@ public:
     reference operator[] (size_type r, size_type c);
     const_reference operator[] (size_type r, size_type c) const;
 
+    // This returns another matrix with top n-rows and n-columns of self.
+    // Rows starts at top (index 0) and columns start at left (index 0).
+    //
+    Matrix corner(size_type nrows, size_type ncols) const;
+
     // Set the given column or row from the given iterator.
     // col_data/row_Data iterators must be valid for the length of
     // columns/rows.

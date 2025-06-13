@@ -247,6 +247,47 @@ Matrix<T, MO, IS_SYM>::operator[] (size_type row, size_type col) const  {
 // ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>
+Matrix<T, MO, IS_SYM>::corner(size_type nrows, size_type ncols) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (rows() < nrows || cols() < ncols)
+        throw NotFeasible("Matrix::corner(): nrows or ncols is out of bounds");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    Matrix result { nrows, ncols };
+
+    if constexpr (IS_SYM)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            for (size_type c = 0; c < ncols; ++c)
+                for (size_type r = c + 1; r < nrows; ++r)
+                    result(r, c) = at(r, c);
+        }
+        else  {
+            for (size_type r = 0; r < nrows; ++r)
+                for (size_type c = r + 1; c < ncols; ++c)
+                    result(r, c) = at(r, c);
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            for (size_type c = 0; c < ncols; ++c)
+                for (size_type r = 0; r < nrows; ++r)
+                    result(r, c) = at(r, c);
+        }
+        else  {
+            for (size_type r = 0; r < nrows; ++r)
+                for (size_type c = 0; c < ncols; ++c)
+                    result(r, c) = at(r, c);
+        }
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename I>
 void
 Matrix<T, MO, IS_SYM>::set_column(I col_data, size_type col)  {

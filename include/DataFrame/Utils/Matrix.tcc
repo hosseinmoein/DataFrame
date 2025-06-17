@@ -56,6 +56,35 @@ Matrix(size_type rows, size_type cols, const_reference def_v)
 // ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
+template<typename M2>
+Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::operator = (const M2 &lhs)  {
+
+    rows_ = lhs.rows();
+    cols_ = lhs.cols();
+
+    const auto  msize = rows_ * cols_;
+
+    if (msize != size_type(matrix_.size()))
+        matrix_.resize(msize);
+
+    if constexpr (MO == matrix_orient::column_major)  {
+        for (size_type c = 0; c < cols_; ++c)
+            for (size_type r = 0; r < rows_; ++r)
+                at(r, c) = lhs(r, c);
+    }
+    else  {
+        for (size_type r = 0; r < rows_; ++r)
+            for (size_type c = 0; c < cols_; ++c)
+                at(r, c) = lhs(r, c);
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
 void
 Matrix<T, MO, IS_SYM>::clear() noexcept  {
 
@@ -548,6 +577,76 @@ Matrix<T, MO, IS_SYM>::norm() const noexcept  {
     }
 
     return (std::sqrt(result));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM>::value_type
+Matrix<T, MO, IS_SYM>::mean() const noexcept  {
+
+    auto        lbd = [this](auto begin, auto end) -> value_type  {
+        value_type  result { 0 };
+
+        if constexpr (IS_SYM)  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)
+                    for (size_type r = c + 1; r < rows(); ++r)
+                        result += at(r, c);
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)
+                    for (size_type c = r + 1; c < cols(); ++c)
+                        result += at(r, c);
+            }
+
+            result *= T(2);
+            for (size_type c = begin; c < end; ++c)
+                result += at(c, c);
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)  {
+                for (size_type c = begin; c < end; ++c)
+                    for (size_type r = 0; r < rows(); ++r)
+                        result += at(r, c);
+            }
+            else  {
+                for (size_type r = begin; r < end; ++r)
+                    for (size_type c = 0; c < cols(); ++c)
+                        result += at(r, c);
+            }
+        }
+        return (result);
+    };
+    const long  thread_level =
+        (cols() >= 500L || rows() >= 500L)
+            ? ThreadGranularity::get_thread_level() : 0;
+    value_type  result { 0 };
+
+    if (thread_level > 2)  {
+        if constexpr (MO == matrix_orient::column_major)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  result += fut.get();
+        }
+        else  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  result += fut.get();
+        }
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            result = lbd(0L, cols());
+        else
+            result = lbd(0L, rows());
+    }
+
+    return (result / value_type(rows() * cols()));
 }
 
 // ----------------------------------------------------------------------------

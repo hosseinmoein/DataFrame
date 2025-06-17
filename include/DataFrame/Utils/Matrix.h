@@ -76,6 +76,9 @@ public:
     Matrix &operator = (const Matrix &) = default;
     Matrix &operator = (Matrix &&) = default;
 
+    template<typename M2>
+    Matrix &operator = (const M2 &lhs);
+
     void clear() noexcept;
     void swap(Matrix &rhs) noexcept;
     bool empty() const noexcept;
@@ -137,6 +140,10 @@ public:
     // the squares of the values of the elements of the matrix.
     //
     value_type norm() const noexcept;
+
+    // Mean of the entire values in the matrix
+    //
+    value_type mean() const noexcept;
 
     // Degree matrix is a square diagonal matrix where each diagonal value
     // represents the number of connections in a row of an adjacency matrix.

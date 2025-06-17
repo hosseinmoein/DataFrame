@@ -650,6 +650,21 @@ int main(int, char *[]) {
         }
     }
 
+    // Test mean
+    //
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  mat { 2, 2 };
+
+        mat(0, 0) = 1.0;
+        mat(0, 1) = 2.0;
+        mat(1, 0) = 3.0;
+        mat(1, 1) = 4.0;
+
+        assert((std::fabs(mat.mean() - 2.5) < 0.0000001));
+    }
+
     test_thread_pool();
     return (0);
 }

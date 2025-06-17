@@ -53,6 +53,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -3583,11 +3584,43 @@ static void test_mask()  {
     assert((std::fabs(close_diff[4966] - 57.06) < 0.0001));
     assert((std::fabs(close_diff[5030] - 68.34) < 0.0001));
 }
+*/
+
+// ----------------------------------------------------------------------------
+
+static void test_fast_ica()  {
+
+    std::cout << "\nTesting fast_ica( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const auto  result = df.fast_ica<double>(
+        { "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" },
+        1,
+        { .seed = 21 });
+
+    std::cout << "result:\n";
+    for (long r = 0; r < result.rows(); ++r)  {
+        for (long c = 0; c < result.cols(); ++c)  {
+            std::cout << result(r, c) << ", ";
+        }
+        std::cout << '\n';
+    }
+}
 
 // ----------------------------------------------------------------------------
 
 int main(int, char *[]) {
 
+/*
     MyDataFrame::set_optimum_thread_level();
 
     test_starts_with();
@@ -3648,6 +3681,8 @@ int main(int, char *[]) {
     test_KolmoSmirnovTestVisitor();
     test_MannWhitneyUTestVisitor();
     test_mask();
+*/
+    test_fast_ica();
 
     return (0);
 }

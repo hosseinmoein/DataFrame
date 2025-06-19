@@ -1063,6 +1063,128 @@ pca_by_eigen(std::vector<const char *> &&col_names,
 
 template<typename I, typename H>
 template<typename T>
+Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+fast_ica(std::vector<const char *> &&col_names,
+         size_type num_ind_features,
+         const ICAParams params) const  {
+
+    using mat_t = Matrix<T, matrix_orient::column_major>;
+    using dist_t = std::normal_distribution<T>;
+
+    auto    data_mat =
+        get_scaled_data_matrix_<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            normalization_type::none);
+
+    if (params.center)  data_mat.center();
+    data_mat.whiten(false);
+
+    const auto          features = data_mat.cols();
+    const auto          samples = data_mat.rows();
+    std::random_device  rd;
+    std::mt19937        gen((params.seed != seed_t(-1)) ? params.seed : rd());
+    dist_t              dist(T(0), T(1));
+    mat_t               weight { long(num_ind_features), features };
+    mat_t               w { 1L, features };
+    auto                get_row_mat =
+        [](const auto &mat, auto row) -> mat_t  {
+            mat_t result { 1, mat.cols() };
+
+            for (long col = 0; col < mat.cols(); ++col)
+                result(0, col) = mat(row, col);
+            return (result);
+        };
+    auto                row_and_normalize =
+        [](auto &rhs, const auto &lhs, auto row) -> void  {
+            T   norm { 0 };
+
+            for (long col = 0; col < lhs.cols(); ++col)  {
+                const auto  val = lhs(row, col);
+
+                norm += val * val;
+                rhs(0, col) = val;
+            }
+            norm = std::sqrt(norm);
+            for (long col = 0; col < rhs.cols(); ++col)
+                rhs(0, col) /= norm;
+        };
+    auto                randomize =
+        [&dist, &gen](auto &mat) -> void  {
+            for (long col = 0; col < mat.cols(); ++col)
+                for (long row = 0; row < mat.rows(); ++row)
+                    mat(row, col) = dist(gen);
+        };
+    auto                get_norm =
+        [](const auto &mat) -> T  {
+            T   norm { 0 };
+
+            for (long j = 0; j < mat.cols(); ++j)  {
+                const auto  val = mat(0, j);
+
+                norm += val * val;
+            }
+            return (std::sqrt(norm));
+        };
+    auto                normalize =
+        [](auto &mat, const auto norm) -> void  {
+            for (long j = 0; j < mat.cols(); ++j)
+                mat(0, j) /= norm;
+        };
+    auto                do_tanh = [](auto &mat) -> void  { mat.ew_tanh(); };
+    auto                do_tanh_deriv =
+        [&do_tanh](auto &mat) -> void  {
+            do_tanh(mat);
+            mat.ew_square();
+            for (long col = 0; col < mat.cols(); ++col)  {
+                auto    &val { mat(0, col) };
+
+                val = T(1) - val;
+            }
+        };
+
+    randomize(weight);
+    for (long row = 0; row < long(num_ind_features); ++row)  {
+        row_and_normalize(w, weight, row);
+
+        for (long iter = 0; iter < long(params.num_iter); ++iter)  {
+            const auto  wx = data_mat * w.transpose(); // shape: (samples)
+            auto        gwx = wx;
+            auto        gwx_deriv = wx;
+
+            do_tanh(gwx);
+            do_tanh_deriv(gwx_deriv);
+
+            auto    w_new = gwx.transpose() * data_mat;
+
+            w_new.ew_divide(T(samples));
+            w.ew_multiply(gwx_deriv.mean());
+            w_new -= w;
+
+            for (long rows2 = 0; rows2 < row; ++rows2)  {
+                const auto  mat = get_row_mat(weight, rows2);
+
+                w_new -=
+                    (mat.transpose() * (mat * w_new.transpose())).transpose();
+            }
+            normalize(w, get_norm(w));
+
+            if ((w - w_new).norm() < params.epsilon)  break;
+            w = w_new;
+        }
+
+        for (long col = 0; col <  weight.cols(); ++col)
+            weight(row, col) = w(0, col);
+    }
+
+    // Extract independent components
+    //
+    return (data_mat * weight.transpose());
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
 KNNResult<T> DataFrame<I, H>::
 knn(std::vector<const char *> &&col_names,
     const std::vector<T> &target,

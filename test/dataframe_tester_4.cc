@@ -3586,6 +3586,41 @@ static void test_mask()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_fast_ica()  {
+
+    std::cout << "\nTesting fast_ica( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const auto  result = df.fast_ica<double>(
+        { "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" },
+        2,
+        { .seed = 21 });
+
+    assert(result.rows() == 5031);
+    assert(result.cols() == 2);
+    assert((std::fabs(result(0, 0) - 0.01778) < 0.00001));
+    assert((std::fabs(result(0, 1) - -0.0123) < 0.00001));
+    assert((std::fabs(result(678, 0) - 0.0484) < 0.00001));
+    assert((std::fabs(result(678, 1) - -0.01284) < 0.00001));
+    assert((std::fabs(result(1852, 0) - 0.02188) < 0.00001));
+    assert((std::fabs(result(1852, 1) - 0.01310) < 0.00001));
+    assert((std::fabs(result(4008, 0) - -0.03373) < 0.00001));
+    assert((std::fabs(result(4008, 1) - 0.02964) < 0.00001));
+    assert((std::fabs(result(5030, 0) - -0.0237) < 0.00001));
+    assert((std::fabs(result(5030, 1) - -0.06062) < 0.00001));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3648,6 +3683,7 @@ int main(int, char *[]) {
     test_KolmoSmirnovTestVisitor();
     test_MannWhitneyUTestVisitor();
     test_mask();
+    test_fast_ica();
 
     return (0);
 }

@@ -3971,13 +3971,44 @@ public: // Read/access and slicing interfaces
     //   Type of the named columns
     // col_names:
     //   Vector of column names
+    // num_ind_features:
+    //   Max number of independent feature you want extracted. It is usually
+    //   less than number of passed columns.
     // params:
-    //   Parameters necessary for for this operation
+    //   Parameters necessary for this operation
     //
     template<typename T>
     [[nodiscard]] Matrix<T, matrix_orient::column_major>
     pca_by_eigen(std::vector<const char *> &&col_names,
                  const PCAParams params = { }) const;
+
+    // Independent Component Analysis (ICA) is a powerful technique in the
+    // field of data analysis that allows you to separate and identify the
+    // underlying independent sources in a multivariate data set. ICA is
+    // important because it provides a way to understand the hidden structure
+    // of a data set, and it can be used in a variety of applications, such as
+    // signal processing, brain imaging, finance, and many other fields. In
+    // addition, ICA can help extract the most relevant information from data,
+    // providing valuable insights that would otherwise be lost in a sea of
+    // correlations.
+    // It returns a matrix whose columns are the requested independent
+    // components and number rows is the same as the original data.
+    //
+    // T:
+    //   Type of the named columns
+    // col_names:
+    //   Vector of column names
+    // num_ind_features:
+    //   Number of independent features you want to reduce the specified
+    //   columns to
+    // params:
+    //   Parameters necessary for this operation
+    //
+    template<typename T>
+    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    fast_ica(std::vector<const char *> &&col_names,
+             size_type num_ind_features,
+             const ICAParams params = { }) const;
 
     // This implements the K-Nearest Neighbors (KNN) algorithm. KNN is a
     // machine learning technique that uses proximity to classify or predict

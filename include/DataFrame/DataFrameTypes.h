@@ -807,7 +807,7 @@ struct  DetectAndChangeParams  {
     //
     std::size_t         k { 0 };
     distance_func       dist_fun =
-		[](const value_type &x, const value_type &y) -> double  {
+        [](const value_type &x, const value_type &y) -> double  {
             return (std::fabs(x - y));
         };
 
@@ -901,6 +901,33 @@ struct  PCAParams  {
     // 0.9 means 90%.
     //
     double              pct_comp_to_keep { 0.9 };
+};
+
+// ----------------------------------------------------------------------------
+
+struct  ICAParams  {
+
+    using seed_t = std::random_device::result_type;
+
+    // First center the data matrix
+    //
+    bool                center { true };
+
+    // Max number of iterations before giving up
+    //
+    std::size_t         num_iter { 200 };
+
+    // Epsilon value to call it done
+    //
+    double              epsilon { 1e-5 };
+
+    // Nonlinearity applied to data
+    //
+    sigmoid_type        nonlinearity { sigmoid_type::hyperbolic_tan };
+
+    // Seed for random number generator
+    //
+    seed_t              seed { seed_t(-1) };
 };
 
 // ----------------------------------------------------------------------------

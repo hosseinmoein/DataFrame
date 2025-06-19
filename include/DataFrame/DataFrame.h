@@ -3991,6 +3991,8 @@ public: // Read/access and slicing interfaces
     // addition, ICA can help extract the most relevant information from data,
     // providing valuable insights that would otherwise be lost in a sea of
     // correlations.
+    // It returns a matrix whose columns are the requested independent
+    // components and number rows is the same as the original data.
     //
     // T:
     //   Type of the named columns

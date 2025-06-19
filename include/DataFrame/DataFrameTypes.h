@@ -917,8 +917,7 @@ struct  ICAParams  {
     //
     std::size_t         num_iter { 200 };
 
-    // If populated (num_comp_is 0), percentage of eigen values to keep.
-    // 0.9 means 90%.
+    // Epsilon value to call it done
     //
     double              epsilon { 1e-5 };
 

@@ -339,6 +339,46 @@ Matrix<T, MO, IS_SYM>::set_row(I row_data, size_type row)  {
 // ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
+std::vector<T>
+Matrix<T, MO, IS_SYM>::get_column(size_type col) const noexcept  {
+
+    std::vector<value_type> result;
+
+    if constexpr (MO == matrix_orient::column_major)  {
+        result.insert(result.begin(), &(at(0, col)), (&(at(0, col))) + rows());
+    }
+    else  {
+        result.reserve(rows());
+        for (size_type r = 0; r < rows(); ++r)
+            result.push_back(at(r, col));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+std::vector<T>
+Matrix<T, MO, IS_SYM>::get_row(size_type row) const noexcept  {
+
+    std::vector<value_type> result;
+
+    if constexpr (MO == matrix_orient::row_major)  {
+        result.insert(result.begin(), &(at(row, 0)), (&(at(row, 0))) + cols());
+    }
+    else  {
+        result.reserve(cols());
+        for (size_type c = 0; c < cols(); ++c)
+            result.push_back(at(row, c));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
 constexpr matrix_orient
 Matrix<T, MO, IS_SYM>::orientation()  { return (MO); }
 

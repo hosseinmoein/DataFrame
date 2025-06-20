@@ -665,6 +665,39 @@ int main(int, char *[]) {
         assert((std::fabs(mat.mean() - 2.5) < 0.0000001));
     }
 
+    // Test get_row and get_column
+    //
+    {
+        using col_mat_t = Matrix<int, matrix_orient::column_major>;
+        using row_mat_t = Matrix<int, matrix_orient::row_major>;
+
+		col_mat_t   col_mat { 10, 10 };
+		row_mat_t   row_mat { 10, 10 };
+        int         value { 0 };
+
+        for (long r = 0; r < row_mat.rows(); ++r)
+            for (long c = 0; c < row_mat.cols(); ++c)  {
+                row_mat(r, c) = ++value;
+                col_mat(r, c) = value;
+            }
+
+        const auto  row_res1 = row_mat.get_row(2);
+        const auto  col_res1 = col_mat.get_row(2);
+
+        assert((row_res1 ==
+                std::vector<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 })); 
+        assert((col_res1 ==
+                std::vector<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 })); 
+
+        const auto  row_res2 = row_mat.get_column(9);
+        const auto  col_res2 = col_mat.get_column(9);
+
+        assert((row_res2 ==
+                std::vector<int> { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 })); 
+        assert((col_res2 ==
+                std::vector<int> { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 })); 
+    }
+
     test_thread_pool();
     return (0);
 }

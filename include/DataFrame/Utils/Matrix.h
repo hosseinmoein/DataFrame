@@ -116,6 +116,11 @@ public:
     template<typename I>
     void set_row(I row_data, size_type row);
 
+    // They return requested row or column in std::vector
+    //
+    std::vector<value_type> get_column(size_type col) const noexcept;
+    std::vector<value_type> get_row(size_type row) const noexcept;
+
     bool is_square() const noexcept;
 
     // A matrix is either structurally symmetric (IS_SYM is true) or the data

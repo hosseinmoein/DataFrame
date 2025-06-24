@@ -681,21 +681,41 @@ int main(int, char *[]) {
                 col_mat(r, c) = value;
             }
 
-        const auto  row_res1 = row_mat.get_row(2);
-        const auto  col_res1 = col_mat.get_row(2);
+        const auto  row_res1 = row_mat.get_row_vec(2);
+        const auto  col_res1 = col_mat.get_row_vec(2);
 
         assert((row_res1 ==
                 std::vector<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 })); 
         assert((col_res1 ==
                 std::vector<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 })); 
 
-        const auto  row_res2 = row_mat.get_column(9);
-        const auto  col_res2 = col_mat.get_column(9);
+        const auto  row_res2 = row_mat.get_column_vec(9);
+        const auto  col_res2 = col_mat.get_column_vec(9);
 
         assert((row_res2 ==
                 std::vector<int> { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 })); 
         assert((col_res2 ==
                 std::vector<int> { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 })); 
+
+        const auto  row_res3 = row_mat.get_row_mat(2);
+        const auto  col_res3 = col_mat.get_row_mat(2);
+
+		assert(row_res3.rows() == 1);
+		assert(row_res3.cols() == 10);
+		assert(col_res3.rows() == 1);
+		assert(col_res3.cols() == 10);
+		assert(row_res3(0, 8) == 29);
+		assert(col_res3(0, 5) == 26);
+
+        const auto  row_res4 = row_mat.get_column_mat(9);
+        const auto  col_res4 = col_mat.get_column_mat(9);
+
+		assert(row_res4.rows() == 10);
+		assert(row_res4.cols() == 1);
+		assert(col_res4.rows() == 10);
+		assert(col_res4.cols() == 1);
+		assert(row_res4(8, 0) == 90);
+		assert(col_res4(5, 0) == 60);
     }
 
     test_thread_pool();

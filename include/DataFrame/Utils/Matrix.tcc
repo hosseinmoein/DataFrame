@@ -340,11 +340,11 @@ Matrix<T, MO, IS_SYM>::set_row(I row_data, size_type row)  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 std::vector<T>
-Matrix<T, MO, IS_SYM>::get_column(size_type col) const noexcept  {
+Matrix<T, MO, IS_SYM>::get_column_vec(size_type col) const noexcept  {
 
     std::vector<value_type> result;
 
-    if constexpr (MO == matrix_orient::column_major)  {
+    if constexpr (MO == matrix_orient::column_major && (! IS_SYM))  {
         result.insert(result.begin(), &(at(0, col)), (&(at(0, col))) + rows());
     }
     else  {
@@ -360,11 +360,11 @@ Matrix<T, MO, IS_SYM>::get_column(size_type col) const noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 std::vector<T>
-Matrix<T, MO, IS_SYM>::get_row(size_type row) const noexcept  {
+Matrix<T, MO, IS_SYM>::get_row_vec(size_type row) const noexcept  {
 
     std::vector<value_type> result;
 
-    if constexpr (MO == matrix_orient::row_major)  {
+    if constexpr (MO == matrix_orient::row_major && (! IS_SYM))  {
         result.insert(result.begin(), &(at(row, 0)), (&(at(row, 0))) + cols());
     }
     else  {
@@ -372,6 +372,34 @@ Matrix<T, MO, IS_SYM>::get_row(size_type row) const noexcept  {
         for (size_type c = 0; c < cols(); ++c)
             result.push_back(at(row, c));
     }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO>
+Matrix<T, MO, IS_SYM>::get_column_mat(size_type col) const noexcept  {
+
+    Matrix<T, MO>   result { rows(), 1 };
+
+    for (size_type r = 0; r < rows(); ++r)
+        result(r, 0) = at(r, col);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO>
+Matrix<T, MO, IS_SYM>::get_row_mat(size_type row) const noexcept  {
+
+    Matrix<T, MO>   result { 1, cols() };
+
+    for (size_type c = 0; c < cols(); ++c)
+        result(0, c) = at(row, c);
 
     return (result);
 }

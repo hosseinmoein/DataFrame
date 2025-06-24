@@ -118,8 +118,16 @@ public:
 
     // They return requested row or column in std::vector
     //
-    std::vector<value_type> get_column(size_type col) const noexcept;
-    std::vector<value_type> get_row(size_type row) const noexcept;
+    std::vector<value_type> get_column_vec(size_type col) const noexcept;
+    std::vector<value_type> get_row_vec(size_type row) const noexcept;
+
+    // It returns requested column in a one-column matrix
+    //
+    Matrix<T, MO> get_column_mat(size_type col) const noexcept;
+
+    // It returns requested row in a one-row matrix
+    //
+    Matrix<T, MO> get_row_mat(size_type row) const noexcept;
 
     bool is_square() const noexcept;
 

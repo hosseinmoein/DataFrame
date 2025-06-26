@@ -329,8 +329,14 @@ print_csv2_header_functor_<S, Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    _write_csv_df_header_<S, ValueType>(
-        os, name, std::min(col_size, long(vec.size())));
+    if constexpr (std::same_as<ValueType, DateTime>)  {
+        _write_csv_df_header_<S, ValueType>(
+            os, name, std::min(col_size, long(vec.size())), dt_format);
+    }
+    else  {
+        _write_csv_df_header_<S, ValueType>(
+            os, name, std::min(col_size, long(vec.size())));
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -341,7 +347,15 @@ template<typename T>
 void DataFrame<I, H>::
 print_csv2_data_functor_<S, Ts ...>::operator() (const T &vec)  {
 
-    if (vec.size() > index)  _write_csv_df_index_(os, vec[index]);
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    if (vec.size() > index)  {
+        if constexpr (std::same_as<ValueType, DateTime>)
+            _write_csv_df_index_(os, vec[index], dt_format);
+        else
+            _write_csv_df_index_(os, vec[index]);
+    }
 }
 
 // ----------------------------------------------------------------------------

@@ -55,12 +55,14 @@ enum class DT_FORMAT : unsigned short int  {
     SCT_DT = 6,        // e.g. Sep 16, 1999
     DT_MMDDYYYY = 7,   // e.g. 09161999
     DT_YYYYMMDD = 8,   // e.g. 19990916
-    DT_TM2 = 9,        // e.g. 09/16/1999 13:51:04.256
-    DT_DATETIME = 10,  // e.g. 20010103   09:31:15.124
+    DT_TM2 = 9,        // e.g. 09/16/1999 13:51:04.124
+    DT_DATETIME = 10,  // e.g. 19990916 13:51:04.124
     DT_PRECISE = 11,   // e.g. 1516179600.874123908 = Epoch.Nanoseconds
-    ISO_DT_TM = 12,    // e.g. 2015-05-05 13:51:04.000234
-    ISO_DT = 13,       // e.g. 2015-05-05
-    ISO_DT_NANO = 14,  // e.g. 2015-05-05 13:51:04.123456789
+    ISO_DT_TM = 12,    // e.g. 1999-09-16 13:51:04.000234
+    ISO_DT = 13,       // e.g. 1999-09-16
+    ISO_DT_NANO = 14,  // e.g. 1999-09-16 13:51:04.123456789
+    AMR_DT_TM = 15,    // e.g. 09/16/1999 13:51:04.000234
+    EUR_DT_TM = 16,    // e.g. 16/09/1999 13:51:04.000234
 };
 
 // --------------------------------------
@@ -533,6 +535,42 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
     String128   buffer;
 
     switch (format)  {
+        case DT_FORMAT::ISO_DT_TM:
+        {
+            buffer.printf("%d-%002d-%002d %002d:%002d:%002d.%0000006d",
+                          static_cast<int>(year()),
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(hour()),
+                          static_cast<int>(minute()),
+                          static_cast<int>(sec()),
+                          static_cast<int>(microsec()));
+        } break;
+
+        case DT_FORMAT::AMR_DT_TM:
+        {
+            buffer.printf("%002d/%002d/%d %002d:%002d:%002d.%0000006d",
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(year()),
+                          static_cast<int>(hour()),
+                          static_cast<int>(minute()),
+                          static_cast<int>(sec()),
+                          static_cast<int>(microsec()));
+        } break;
+
+        case DT_FORMAT::EUR_DT_TM:
+        {
+            buffer.printf("%002d/%002d/%d %002d:%002d:%002d.%0000006d",
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(month()),
+                          static_cast<int>(year()),
+                          static_cast<int>(hour()),
+                          static_cast<int>(minute()),
+                          static_cast<int>(sec()),
+                          static_cast<int>(microsec()));
+        } break;
+
         case DT_FORMAT::AMR_DT:
         {
             buffer.printf("%002d/%002d/%002d",
@@ -586,18 +624,6 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
                           static_cast<int>(minute()),
                           static_cast<int>(sec()),
                           static_cast<int>(msec()));
-        } break;
-
-        case DT_FORMAT::ISO_DT_TM:
-        {
-            buffer.printf("%d-%002d-%002d %002d:%002d:%002d.%0000006d",
-                          static_cast<int>(year()),
-                          static_cast<int>(month()),
-                          static_cast<int>(dmonth()),
-                          static_cast<int>(hour()),
-                          static_cast<int>(minute()),
-                          static_cast<int>(sec()),
-                          static_cast<int>(microsec()));
         } break;
 
         case DT_FORMAT::ISO_DT:

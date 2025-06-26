@@ -30,7 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/Vectors/HeteroVector.h>
+#include <DataFrame/Utils/Concepts.h>
 #include <DataFrame/Utils/FixedSizeString.h>
+#include <DataFrame/Utils/DateTime.h>
 
 #include <complex>
 #include <limits>
@@ -872,6 +874,7 @@ struct  ReadParams  {
 
 // Parameters to write() function of DataFrame
 //
+template<DT_ALLOWABLE_FORMATS DT_F = DT_FORMAT>
 struct  WriteParams  {
 
     // Floating-point values precision when written to a file
@@ -885,6 +888,14 @@ struct  WriteParams  {
     // Max number of rows to write
     //
     long            max_recs { std::numeric_limits<long>::max() };
+
+    // This specifies with what format DateTime columns are written into a csv
+    // file. The only permitted formats are DT_PRECISE, ISO_DT_TM, AMR_DT_TM,
+    // EUR_DT_TM, ISO_DT, AMR_DT, and EUR_DT.
+    // See Dateitme docs (DT_FORMAT) for more info.
+    // The default format is seconds since Epoch.nanoseconds.
+    //
+    DT_F            dt_format { DT_FORMAT::DT_PRECISE };
 };
 
 // ----------------------------------------------------------------------------

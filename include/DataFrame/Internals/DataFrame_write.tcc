@@ -39,7 +39,7 @@ namespace hmdf
 template<typename I, typename H>
 template<typename ... Ts>
 bool DataFrame<I, H>::
-write(const char *file_name, io_format iof, const WriteParams params) const  {
+write(const char *file_name, io_format iof, const WriteParams<> params) const  {
 
     std::ofstream       stream;
     const IOStreamOpti  io_opti(stream, file_name, iof == io_format::binary);
@@ -79,7 +79,7 @@ DataFrame<I, H>::serialize() const  {
 template<typename I, typename H>
 template<typename S, typename ... Ts>
 bool DataFrame<I, H>::
-write(S &o, io_format iof, const WriteParams params) const  {
+write(S &o, io_format iof, const WriteParams<> params) const  {
 
     if (iof != io_format::csv &&
         iof != io_format::json &&
@@ -136,8 +136,15 @@ write(S &o, io_format iof, const WriteParams params) const  {
                                                 DF_INDEX_COL_NAME,
                                                 end_row - start_row) << ':';
 
-            for (long i = start_row; i < end_row; ++i)
-                _write_csv_df_index_(o, indices_[i]) << ',';
+            if constexpr (std::same_as<IndexType, DateTime>)  {
+                for (long i = start_row; i < end_row; ++i)
+                    _write_csv_df_index_(o, indices_[i], DT_FORMAT::DT_TM2)
+                        << ',';
+            }
+            else  {
+                for (long i = start_row; i < end_row; ++i)
+                    _write_csv_df_index_(o, indices_[i]) << ',';
+            }
             o << '\n';
         }
 
@@ -154,9 +161,18 @@ write(S &o, io_format iof, const WriteParams params) const  {
     }
     else if (iof == io_format::csv2)  {
         if (! params.columns_only) [[likely]]  {
-            _write_csv_df_header_<S, IndexType>(o,
-                                                DF_INDEX_COL_NAME,
-                                                end_row - start_row);
+            if constexpr (std::same_as<IndexType, DateTime>)  {
+                _write_csv_df_header_<S, IndexType>(
+                    o,
+                    DF_INDEX_COL_NAME,
+                    end_row - start_row,
+                    _dtformat_str_.at(params.dt_format));
+            }
+            else  {
+                _write_csv_df_header_<S, IndexType>(o,
+                                                    DF_INDEX_COL_NAME,
+                                                    end_row - start_row);
+            }
             need_pre_comma = true;
         }
 
@@ -166,7 +182,7 @@ write(S &o, io_format iof, const WriteParams params) const  {
             if (need_pre_comma)  o << ',';
             else  need_pre_comma = true;
             print_csv2_header_functor_<S, Ts ...>   functor(
-                name.c_str(), o, end_row - start_row);
+                name.c_str(), o, end_row - start_row, params.dt_format);
 
             data_[idx].change(functor);
         }
@@ -186,7 +202,8 @@ write(S &o, io_format iof, const WriteParams params) const  {
 
             for (auto citer = column_list_.begin();
                  citer != column_list_.end(); ++citer, ++count)  {
-                print_csv2_data_functor_<S, Ts ...>  functor (i, o);
+                print_csv2_data_functor_<S, Ts ...>  functor (
+                    i, o, params.dt_format);
 
                 if (need_pre_comma && count > 0)  o << ',';
                 else  need_pre_comma = true;
@@ -237,7 +254,7 @@ template<typename ... Ts>
 std::future<bool> DataFrame<I, H>::
 write_async (const char *file_name,
              io_format iof,
-             const WriteParams params) const  {
+             const WriteParams<> params) const  {
 
     return (thr_pool_.dispatch(
                 true,
@@ -245,7 +262,7 @@ write_async (const char *file_name,
                     return (this->write<Ts ...>(
                         file_name,
                         iof,
-                        std::forward<const WriteParams>(params)));
+                        std::forward<const WriteParams<>>(params)));
                 }));
 }
 
@@ -254,7 +271,7 @@ write_async (const char *file_name,
 template<typename I, typename H>
 template<typename S, typename ... Ts>
 std::future<bool> DataFrame<I, H>::
-write_async (S &o, io_format iof, const WriteParams params) const  {
+write_async (S &o, io_format iof, const WriteParams<> params) const  {
 
     return (thr_pool_.dispatch(
                 true,
@@ -262,7 +279,7 @@ write_async (S &o, io_format iof, const WriteParams params) const  {
                     return (this->write<S, Ts ...>(
                         o,
                         iof,
-                        std::forward<const WriteParams>(params)));
+                        std::forward<const WriteParams<>>(params)));
                 }));
 }
 

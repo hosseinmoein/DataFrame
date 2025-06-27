@@ -32,8 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Utils/AlignedAllocator.h>
-#include <DataFrame/Utils/Concepts.h>
-#include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
@@ -5726,13 +5724,13 @@ public:  // Reading and writing
     bool
     write(S &o,
           io_format iof = io_format::csv,
-          const WriteParams params = { }) const;
+          const WriteParams<> params = { }) const;
 
     template<typename ... Ts>
     bool
     write(const char *file_name,
           io_format iof = io_format::csv,
-          const WriteParams params = { }) const;
+          const WriteParams<> params = { }) const;
 
     // Same as write() above, but executed asynchronously
     //
@@ -5740,13 +5738,13 @@ public:  // Reading and writing
     [[nodiscard]] std::future<bool>
     write_async(S &o,
                 io_format iof = io_format::csv,
-                const WriteParams params = { }) const;
+                const WriteParams<> params = { }) const;
 
     template<typename ... Ts>
     [[nodiscard]] std::future<bool>
     write_async(const char *file_name,
                 io_format iof = io_format::csv,
-                const WriteParams params = { }) const;
+                const WriteParams<> params = { }) const;
 
     // This is a convenient function (simple implementation) to convert a
     // DataFrame into a string that could be restored later by calling

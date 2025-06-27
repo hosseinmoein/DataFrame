@@ -290,12 +290,14 @@ struct  print_json_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename S, typename ... Ts>
 struct  print_csv2_header_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline print_csv2_header_functor_ (const char *n, S &o, long cs)
-        : name(n), os(o), col_size(cs)  {   }
+    inline
+    print_csv2_header_functor_ (const char *n, S &o, long cs, DT_FORMAT dtf)
+        : name(n), os(o), col_size(cs), dt_format(_dtformat_str_.at(dtf))  {   }
 
-    const char  *name;
-    S           &os;
-    const long  col_size;
+    const char          *name;
+    S                   &os;
+    const long          col_size;
+    const char *const   dt_format;
 
     template<typename T>
     void operator() (const T &vec);
@@ -306,11 +308,12 @@ struct  print_csv2_header_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename S, typename ... Ts>
 struct  print_csv2_data_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline print_csv2_data_functor_ (std::size_t i, S &o)
-        : index(i), os(o)  {  }
+    inline print_csv2_data_functor_ (std::size_t i, S &o, DT_FORMAT dtf)
+        : index(i), os(o), dt_format(dtf)  {  }
 
     const std::size_t   index;
     S                   &os;
+    const DT_FORMAT     dt_format;
 
     template<typename T>
     void operator() (const T &vec);

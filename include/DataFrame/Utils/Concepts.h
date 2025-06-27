@@ -232,6 +232,20 @@ concept binary_array =
     std::is_same_v<T, std::vector<unsigned char>> ||
     std::is_same_v<T, std::vector<std::byte>>;
 
+// ----------------------------------------------------------------------------
+
+template<typename F>
+concept DT_ALLOWABLE_FORMATS = std::is_enum_v<F> && requires(F format)  {
+    { format == DT_FORMAT::DT_PRECISE ||
+      format == DT_FORMAT::ISO_DT_TM ||
+      format == DT_FORMAT::AMR_DT_TM ||
+      format == DT_FORMAT::EUR_DT_TM ||
+      format == DT_FORMAT::ISO_DT ||
+      format == DT_FORMAT::AMR_DT ||
+      format == DT_FORMAT::EUR_DT
+    } -> std::same_as<bool>;
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

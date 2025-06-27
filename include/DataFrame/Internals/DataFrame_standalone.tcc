@@ -194,6 +194,22 @@ std::unordered_map<std::string, file_dtypes>    _typename_id_  {
     { "str_dbl_unomap", file_dtypes::STR_DBL_UNOMAP },
 };
 
+// -------------------------------------
+
+// This is used for translating DateTime formats to strings for writing files
+//
+static const
+std::unordered_map<DT_FORMAT, const char *const>    _dtformat_str_  {
+
+    { DT_FORMAT::DT_PRECISE, "DateTime" },
+    { DT_FORMAT::ISO_DT_TM, "DateTimeISO" },
+    { DT_FORMAT::AMR_DT_TM, "DateTimeAME" },
+    { DT_FORMAT::EUR_DT_TM, "DateTimeEUR" },
+    { DT_FORMAT::ISO_DT, "DateTimeISO" },
+    { DT_FORMAT::AMR_DT, "DateTimeAME" },
+    { DT_FORMAT::EUR_DT, "DateTimeEUR" },
+};
+
 // ----------------------------------------------------------------------------
 
 template<typename S, typename T>
@@ -1051,16 +1067,22 @@ _get_str_dbl_map_from_value_(const char *value)  {
 
 template<typename S, typename T>
 inline static S &
-_write_csv_df_header_(S &o, const char *col_name, std::size_t col_size)  {
+_write_csv_df_header_(S &o, const char *col_name, std::size_t col_size,
+                      const char *dt_format = nullptr)  {
 
     o << col_name << ':' << col_size << ':';
 
-    const auto  &citer = _typeinfo_name_.find(typeid(T));
+    if (! dt_format) [[likely]]  {
+        const auto  &citer = _typeinfo_name_.find(typeid(T));
 
-    if (citer != _typeinfo_name_.end()) [[likely]]
-        o << '<' << citer->second << '>';
-    else
-        o << "<N/A>";
+        if (citer != _typeinfo_name_.end()) [[likely]]
+            o << '<' << citer->second << '>';
+        else
+            o << "<N/A>";
+    }
+    else  {
+        o << '<' << dt_format << '>';
+    }
     return (o);
 }
 
@@ -1092,9 +1114,13 @@ inline static S &_write_csv_df_index_(S &o, const T &value)  {
 // ----------------------------------------------------------------------------
 
 template<typename S>
-inline static S &_write_csv_df_index_(S &o, const DateTime &value)  {
+inline static S &
+_write_csv_df_index_(S &o, const DateTime &value, DT_FORMAT format)  {
 
-    return (o << value.time() << '.' << value.nanosec());
+    String128   buffer;
+
+    value.date_to_str(format, buffer);
+    return (o << buffer);
 }
 
 // ----------------------------------------------------------------------------

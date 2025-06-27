@@ -193,7 +193,11 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             size_type   count = 0;
 
             if (! params.columns_only) [[likely]]  {
-                o << indices_[i];
+                if constexpr (std::same_as<IndexType, DateTime>)
+                    _write_csv_df_index_(o, indices_[i], params.dt_format);
+                else
+                    o << indices_[i];
+
                 need_pre_comma = true;
                 count += 1;
             }

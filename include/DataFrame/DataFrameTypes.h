@@ -890,7 +890,8 @@ struct  WriteParams  {
     long            max_recs { std::numeric_limits<long>::max() };
 
     // This specifies with what format DateTime columns are written into a csv
-    // file. The only permitted formats are DT_PRECISE, ISO_DT_TM, AMR_DT_TM,
+    // file. This only applies to csv2 format.
+    // The only permitted formats are DT_PRECISE, ISO_DT_TM, AMR_DT_TM,
     // EUR_DT_TM, ISO_DT, AMR_DT, and EUR_DT.
     // See Dateitme docs (DT_FORMAT) for more info.
     // The default format is seconds since Epoch.nanoseconds.

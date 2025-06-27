@@ -3621,6 +3621,57 @@ static void test_fast_ica()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_DateTime_write()  {
+
+    std::cout << "\nTesting test_DateTime_write( ) ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("DT_sample.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    df.write<std::ostream, double, long, DateTime>
+        (std::cout, io_format::csv2, { .max_recs = 5 });
+    std::cout << "\n\n\n";
+
+    df.write<std::ostream, double, long, DateTime>
+        (std::cout, io_format::csv2,
+         { .max_recs = 5, .dt_format = DT_FORMAT::ISO_DT_TM });
+    std::cout << "\n\n\n";
+
+    df.write<std::ostream, double, long, DateTime>
+        (std::cout, io_format::csv2,
+         { .max_recs = 5, .dt_format = DT_FORMAT::AMR_DT_TM });
+    std::cout << "\n\n\n";
+
+    df.write<std::ostream, double, long, DateTime>
+        (std::cout, io_format::csv2,
+         { .max_recs = 5, .dt_format = DT_FORMAT::EUR_DT_TM });
+    std::cout << "\n\n\n";
+
+    df.write<std::ostream, double, long, DateTime>
+        (std::cout, io_format::csv2,
+         { .max_recs = 5, .dt_format = DT_FORMAT::ISO_DT });
+    std::cout << "\n\n\n";
+
+    df.write<std::ostream, double, long, DateTime>
+        (std::cout, io_format::csv2,
+         { .max_recs = 5, .dt_format = DT_FORMAT::AMR_DT });
+    std::cout << "\n\n\n";
+
+    df.write<std::ostream, double, long, DateTime>
+        (std::cout, io_format::csv2,
+         { .max_recs = 5, .dt_format = DT_FORMAT::EUR_DT });
+    std::cout << "\n\n\n";
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3684,6 +3735,7 @@ int main(int, char *[]) {
     test_MannWhitneyUTestVisitor();
     test_mask();
     test_fast_ica();
+    test_DateTime_write();
 
     return (0);
 }

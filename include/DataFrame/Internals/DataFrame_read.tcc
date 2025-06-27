@@ -1728,6 +1728,8 @@ read_csv2_(S &stream,
                     }
                     case file_dtypes::DATETIME_AME: {
                         if (val_size > 0) [[likely]]  {
+                            while (value.back() == '\r' || value.back() == '\n')
+                                value.pop_back();
                             std::any_cast<StlVecType<DateTime> &>
                                 (col_spec.col_vec).emplace_back(
                                     value.c_str(), DT_DATE_STYLE::AME_STYLE);
@@ -1741,6 +1743,8 @@ read_csv2_(S &stream,
                     }
                     case file_dtypes::DATETIME_EUR: {
                         if (val_size > 0) [[likely]]  {
+                            while (value.back() == '\r' || value.back() == '\n')
+                                value.pop_back();
                             std::any_cast<StlVecType<DateTime> &>
                                 (col_spec.col_vec).emplace_back(
                                     value.c_str(), DT_DATE_STYLE::EUR_STYLE);
@@ -1754,6 +1758,8 @@ read_csv2_(S &stream,
                     }
                     case file_dtypes::DATETIME_ISO: {
                         if (val_size > 0) [[likely]]  {
+                            while (value.back() == '\r' || value.back() == '\n')
+                                value.pop_back();
                             std::any_cast<StlVecType<DateTime> &>
                                 (col_spec.col_vec).emplace_back(
                                     value.c_str(), DT_DATE_STYLE::ISO_STYLE);

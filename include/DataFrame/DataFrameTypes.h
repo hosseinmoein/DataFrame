@@ -832,6 +832,7 @@ struct  ReadSchema  {
     ColNameType col_name { DF_INDEX_COL_NAME };
     file_dtypes col_type { file_dtypes::ULONG };
     std::size_t num_rows { 0 };
+    int         col_idx { -1 };
 };
 
 // Parameters to read() function of DataFrame

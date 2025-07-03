@@ -2634,14 +2634,14 @@ static void test_read_data_file_with_schema()  {
 
     MyDataFrame             df1;
     MyDataFrame             df2;
-    ReadParams::SchemaVec   schema {
-        { .col_type = file_dtypes::ULONG, .num_rows = 12 },  // Index column
-        { "Open", file_dtypes::DOUBLE, 12 },
-        { "High", file_dtypes::DOUBLE, 12 },
-        { "Low", file_dtypes::DOUBLE, 12 },
-        { "Close", file_dtypes::DOUBLE, 12 },
-        { "Adj_Close", file_dtypes::DOUBLE, 12 },
-        { "Volume", file_dtypes::LONG, 12 },
+    ReadParams::SchemaVec   schema {  // First is the index column
+        { .col_type = file_dtypes::ULONG, .num_rows = 12, .col_idx = 0 },
+        { "Open", file_dtypes::DOUBLE, 12, 1 },
+        { "High", file_dtypes::DOUBLE, 12, 2 },
+        { "Low", file_dtypes::DOUBLE, 12, 3 },
+        { "Close", file_dtypes::DOUBLE, 12, 4 },
+        { "Adj_Close", file_dtypes::DOUBLE, 12, 5 },
+        { "Volume", file_dtypes::LONG, 12, 6 },
     };
 
     try  {

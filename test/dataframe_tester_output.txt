@@ -714,12 +714,12 @@ col_2:1:<double>:8,
 col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
-INDEX:1:<ulong>:123450,
-col_1:1:<double>:1,
-col_2:1:<double>:8,
-col_3:1:<double>:15,
-col_str:1:<string>:11,
-col_4:1:<double>:22,
+INDEX:1:<ulong>:123451,
+col_1:1:<double>:2,
+col_2:1:<double>:9,
+col_3:1:<double>:16,
+col_str:1:<string>:22,
+col_4:1:<double>:23,
 INDEX:1:<ulong>:123451,
 col_1:1:<double>:2,
 col_2:1:<double>:9,
@@ -2219,7 +2219,7 @@ Testing MC_station_dist( ) ...
 
 Testing SeasonalPeriodVisitor{ } ...
 
-Testing SeasonalPeriodVisitor{ } ...
+Testing test_read_data_file_with_schema{ } ...
 
 Testing knn( ) ...
 
@@ -2313,6 +2313,8 @@ INDEX:5:<DateTimeEUR>,IBM_Open:5:<double>,IBM_High:5:<double>,IBM_Low:5:<double>
 
 
 
+
+Testing test_read_selected_cols_from_file{ } ...
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2331,6 +2333,6 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: 0.00564904820506, 0.0302086097521, -0.0395777091523, -0.00827585396831, 
+Means of clusters are: 0.0283703096424, 0.00461850994733, -0.00986398034942, -0.0419798386768, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 IBM returns seasonality period is; 2.03272727273

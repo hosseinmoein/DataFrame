@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/Utils.h>
 
+#include <algorithm>
 #include <any>
 #include <cstdlib>
 #include <cstring>
@@ -928,10 +929,15 @@ struct _col_data_spec_  {
     std::any    col_vec { };
     file_dtypes type_spec { 0 };
     String64    col_name { };
+    int         col_idx { -1 };
 
     template<typename V>
-    _col_data_spec_(V cv, file_dtypes ts, const char *cn, std::size_t rs)
-        : col_vec(cv), type_spec(ts), col_name(cn)  {
+    _col_data_spec_(V cv,
+                    file_dtypes ts,
+                    const char *cn,
+                    std::size_t rs,
+                    int ci = -1)
+        : col_vec(cv), type_spec(ts), col_name(cn), col_idx(ci)  {
 
         std::any_cast<V &>(col_vec).reserve(rs);
     }
@@ -954,13 +960,16 @@ read_csv2_(S &stream,
     using SpecVec = StlVecType<_col_data_spec_>;
 
     char                line[data_size];
+    const char          delim { ',' };
     std::string         value;
     SpecVec             spec_vec;
     bool                header_read { false };
-    size_type           col_count { 0 };
+    int                 requested_col_count { 0 };
+    int                 actual_col_count { 0 };
     size_type           data_rows_read { 0 };
     size_type           row_cnt { 0 };
     std::stringstream   sstream;
+    const bool          user_schema { ! schema.empty() };
 
     value.reserve(64);
     spec_vec.reserve(32);
@@ -991,78 +1000,92 @@ read_csv2_(S &stream,
 
         // Is the caller specifying the schema
         //
-        if ((! header_read) && (! schema.empty())) [[unlikely]]  {
-            col_count = schema.size();
+        if ((! header_read) && user_schema)  {
+            requested_col_count = static_cast<int>(schema.size());
             for (const auto &entry : schema)  {
+                if (entry.col_idx < 0)
+                    throw DataFrameError(
+                        "DataFrame::read_csv2_(): ERROR: In ReadSchema "
+                        "the column index (col_idx) must be specified");
                 switch(entry.col_type)  {
                     case file_dtypes::FLOAT: {
                         spec_vec.emplace_back(StlVecType<float>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::DOUBLE: {
                         spec_vec.emplace_back(StlVecType<double>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::LONG_DOUBLE: {
                         spec_vec.emplace_back(StlVecType<long double>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::SHORT: {
                         spec_vec.emplace_back(StlVecType<short>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::USHORT: {
                         spec_vec.emplace_back(StlVecType<unsigned short>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::INT: {
                         spec_vec.emplace_back(StlVecType<int>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::UINT: {
                         spec_vec.emplace_back(StlVecType<unsigned int>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::LONG: {
                         spec_vec.emplace_back(StlVecType<long>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::ULONG: {
                         spec_vec.emplace_back(StlVecType<unsigned long>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::LONG_LONG: {
                         spec_vec.emplace_back(StlVecType<long long>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::ULONG_LONG: {
@@ -1070,77 +1093,88 @@ read_csv2_(S &stream,
                             StlVecType<unsigned long long>{ },
                             entry.col_type,
                             entry.col_name.c_str(),
-                            entry.num_rows);
+                            entry.num_rows,
+                            entry.col_idx);
                         break;
                     }
                     case file_dtypes::CHAR: {
                         spec_vec.emplace_back(StlVecType<char>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::UCHAR: {
                         spec_vec.emplace_back(StlVecType<unsigned char>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::BOOL: {
                         spec_vec.emplace_back(StlVecType<bool>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::STRING: {
                         spec_vec.emplace_back(StlVecType<std::string>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::VSTR32: {
                         spec_vec.emplace_back(StlVecType<String32>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::VSTR64: {
                         spec_vec.emplace_back(StlVecType<String64>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::VSTR128: {
                         spec_vec.emplace_back(StlVecType<String128>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::VSTR512: {
                         spec_vec.emplace_back(StlVecType<String512>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::VSTR1K: {
                         spec_vec.emplace_back(StlVecType<String1K>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::VSTR2K: {
                         spec_vec.emplace_back(StlVecType<String2K>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::DATETIME:
@@ -1150,7 +1184,8 @@ read_csv2_(S &stream,
                         spec_vec.emplace_back(StlVecType<DateTime>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::STR_DBL_PAIR: {
@@ -1158,7 +1193,8 @@ read_csv2_(S &stream,
                             StlVecType<std::pair<std::string, double>>{ },
                             entry.col_type,
                             entry.col_name.c_str(),
-                            entry.num_rows);
+                            entry.num_rows,
+                            entry.col_idx);
                         break;
                     }
                     case file_dtypes::STR_STR_PAIR: {
@@ -1166,7 +1202,8 @@ read_csv2_(S &stream,
                             StlVecType<std::pair<std::string, std::string>>{ },
                             entry.col_type,
                             entry.col_name.c_str(),
-                            entry.num_rows);
+                            entry.num_rows,
+                            entry.col_idx);
                         break;
                     }
                     case file_dtypes::DBL_DBL_PAIR: {
@@ -1174,7 +1211,8 @@ read_csv2_(S &stream,
                             StlVecType<std::pair<double, double>>{ },
                             entry.col_type,
                             entry.col_name.c_str(),
-                            entry.num_rows);
+                            entry.num_rows,
+                            entry.col_idx);
                         break;
                     }
                     case file_dtypes::DBL_VEC: {
@@ -1182,7 +1220,8 @@ read_csv2_(S &stream,
                             StlVecType<std::vector<double>>{ },
                             entry.col_type,
                             entry.col_name.c_str(),
-                            entry.num_rows);
+                            entry.num_rows,
+                            entry.col_idx);
                         break;
                     }
                     case file_dtypes::STR_VEC: {
@@ -1190,14 +1229,16 @@ read_csv2_(S &stream,
                             StlVecType<std::vector<std::string>>{ },
                             entry.col_type,
                             entry.col_name.c_str(),
-                            entry.num_rows);
+                            entry.num_rows,
+                            entry.col_idx);
                         break;
                     }
                     case file_dtypes::DBL_SET: {
                         spec_vec.emplace_back(StlVecType<std::set<double>>{ },
                                               entry.col_type,
                                               entry.col_name.c_str(),
-                                              entry.num_rows);
+                                              entry.num_rows,
+                                              entry.col_idx);
                         break;
                     }
                     case file_dtypes::STR_SET: {
@@ -1205,7 +1246,8 @@ read_csv2_(S &stream,
                             StlVecType<std::set<std::string>>{ },
                             entry.col_type,
                             entry.col_name.c_str(),
-                            entry.num_rows);
+                            entry.num_rows,
+                            entry.col_idx);
                         break;
                     }
                     case file_dtypes::STR_DBL_MAP: {
@@ -1213,7 +1255,8 @@ read_csv2_(S &stream,
                             StlVecType<std::map<std::string, double>>{ },
                             entry.col_type,
                             entry.col_name.c_str(),
-                            entry.num_rows);
+                            entry.num_rows,
+                            entry.col_idx);
                         break;
                     }
                     case file_dtypes::STR_DBL_UNOMAP: {
@@ -1222,7 +1265,8 @@ read_csv2_(S &stream,
                                                           double>>{ },
                             entry.col_type,
                             entry.col_name.c_str(),
-                            entry.num_rows);
+                            entry.num_rows,
+                            entry.col_idx);
                         break;
                     }
                 }
@@ -1242,7 +1286,7 @@ read_csv2_(S &stream,
             type_str.reserve(14);
             col_name.reserve(32);
             token.reserve(32);
-            while (std::getline(sstream, token, ','))  {
+            while (std::getline(sstream, token, delim))  {
                 const size_type token_s = token.size();
                 size_type       token_idx { 0 };
 
@@ -1274,70 +1318,80 @@ read_csv2_(S &stream,
                         spec_vec.emplace_back(StlVecType<float>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::DOUBLE: {
                         spec_vec.emplace_back(StlVecType<double>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::LONG_DOUBLE: {
                         spec_vec.emplace_back(StlVecType<long double>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::SHORT: {
                         spec_vec.emplace_back(StlVecType<short>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::USHORT: {
                         spec_vec.emplace_back(StlVecType<unsigned short>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::INT: {
                         spec_vec.emplace_back(StlVecType<int>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::UINT: {
                         spec_vec.emplace_back(StlVecType<unsigned int>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::LONG: {
                         spec_vec.emplace_back(StlVecType<long>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::ULONG: {
                         spec_vec.emplace_back(StlVecType<unsigned long>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::LONG_LONG: {
                         spec_vec.emplace_back(StlVecType<long long>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::ULONG_LONG: {
@@ -1345,77 +1399,88 @@ read_csv2_(S &stream,
                             StlVecType<unsigned long long>{ },
                             citer->second,
                             col_name.c_str(),
-                            nrows);
+                            nrows,
+                            requested_col_count++);
                         break;
                     }
                     case file_dtypes::CHAR: {
                         spec_vec.emplace_back(StlVecType<char>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::UCHAR: {
                         spec_vec.emplace_back(StlVecType<unsigned char>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::BOOL: {
                         spec_vec.emplace_back(StlVecType<bool>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::STRING: {
                         spec_vec.emplace_back(StlVecType<std::string>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::VSTR32: {
                         spec_vec.emplace_back(StlVecType<String32>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::VSTR64: {
                         spec_vec.emplace_back(StlVecType<String64>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::VSTR128: {
                         spec_vec.emplace_back(StlVecType<String128>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::VSTR512: {
                         spec_vec.emplace_back(StlVecType<String512>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::VSTR1K: {
                         spec_vec.emplace_back(StlVecType<String1K>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::VSTR2K: {
                         spec_vec.emplace_back(StlVecType<String2K>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::DATETIME:
@@ -1425,7 +1490,8 @@ read_csv2_(S &stream,
                         spec_vec.emplace_back(StlVecType<DateTime>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::STR_DBL_PAIR: {
@@ -1433,7 +1499,8 @@ read_csv2_(S &stream,
                             StlVecType<std::pair<std::string, double>>{ },
                             citer->second,
                             col_name.c_str(),
-                            nrows);
+                            nrows,
+                            requested_col_count++);
                         break;
                     }
                     case file_dtypes::STR_STR_PAIR: {
@@ -1441,7 +1508,8 @@ read_csv2_(S &stream,
                             StlVecType<std::pair<std::string, std::string>>{ },
                             citer->second,
                             col_name.c_str(),
-                            nrows);
+                            nrows,
+                            requested_col_count++);
                         break;
                     }
                     case file_dtypes::DBL_DBL_PAIR: {
@@ -1449,7 +1517,8 @@ read_csv2_(S &stream,
                             StlVecType<std::pair<double, double>>{ },
                             citer->second,
                             col_name.c_str(),
-                            nrows);
+                            nrows,
+                            requested_col_count++);
                         break;
                     }
                     case file_dtypes::DBL_VEC: {
@@ -1457,7 +1526,8 @@ read_csv2_(S &stream,
                             StlVecType<std::vector<double>>{ },
                             citer->second,
                             col_name.c_str(),
-                            nrows);
+                            nrows,
+                            requested_col_count++);
                         break;
                     }
                     case file_dtypes::STR_VEC: {
@@ -1465,14 +1535,16 @@ read_csv2_(S &stream,
                             StlVecType<std::vector<std::string>>{ },
                             citer->second,
                             col_name.c_str(),
-                            nrows);
+                            nrows,
+                            requested_col_count++);
                         break;
                     }
                     case file_dtypes::DBL_SET: {
                         spec_vec.emplace_back(StlVecType<std::set<double>>{ },
                                               citer->second,
                                               col_name.c_str(),
-                                              nrows);
+                                              nrows,
+                                              requested_col_count++);
                         break;
                     }
                     case file_dtypes::STR_SET: {
@@ -1480,7 +1552,8 @@ read_csv2_(S &stream,
                             StlVecType<std::set<std::string>>{ },
                             citer->second,
                             col_name.c_str(),
-                            nrows);
+                            nrows,
+                            requested_col_count++);
                         break;
                     }
                     case file_dtypes::STR_DBL_MAP: {
@@ -1488,7 +1561,8 @@ read_csv2_(S &stream,
                             StlVecType<std::map<std::string, double>>{ },
                             citer->second,
                             col_name.c_str(),
-                            nrows);
+                            nrows,
+                            requested_col_count++);
                         break;
                     }
                     case file_dtypes::STR_DBL_UNOMAP: {
@@ -1497,12 +1571,11 @@ read_csv2_(S &stream,
                                                           double>>{ },
                             citer->second,
                             col_name.c_str(),
-                            nrows);
+                            nrows,
+                            requested_col_count++);
                         break;
                     }
                 }
-
-                col_count += 1;
             }
             header_read = true;
             continue;
@@ -1510,19 +1583,43 @@ read_csv2_(S &stream,
 
         // Now read data rows
         //
+        if (actual_col_count <= 0) [[unlikely]]  {
+            if (user_schema)  {
+                const std::streampos    old_pos = sstream.tellg();
+
+                std::getline(sstream, value);
+                sstream.seekg(old_pos);
+                actual_col_count =
+                    static_cast<int>(
+                        std::count(value.begin(), value.end(), delim)) +
+                    1;
+            }
+            else
+                actual_col_count = requested_col_count;
+        }
+
         if (row_cnt++ >= starting_row) [[likely]]  {
             if (data_rows_read++ >= num_rows) [[unlikely]]  break;
+
+            size_type   spec_vec_idx { 0 };
 
             // Make sure we account for empty slots at the end of the line
             // and create NaN data points
             //
-            for (size_type col_idx = 0; col_idx < col_count; ++col_idx)  {
+            for (int col_idx = 0; col_idx < actual_col_count; ++col_idx)  {
                 value.clear();
                 if (! sstream.eof()) [[likely]]
-                    std::getline(sstream, value, ',');
+                    std::getline(sstream, value, delim);
 
-                _col_data_spec_ &col_spec = spec_vec[col_idx];
-                const auto      val_size = value.size();
+                if (spec_vec_idx >= spec_vec.size()) [[unlikely]]  break;
+
+                _col_data_spec_ &col_spec = spec_vec[spec_vec_idx];
+
+                if (col_idx != col_spec.col_idx) [[unlikely]] continue;
+
+                spec_vec_idx += 1;
+
+                const auto  val_size = value.size();
 
                 switch(col_spec.type_spec)  {
                     case file_dtypes::FLOAT: {

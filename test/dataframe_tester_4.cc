@@ -2630,18 +2630,19 @@ static void test_SeasonalPeriodVisitor()  {
 
 static void test_read_data_file_with_schema()  {
 
-    std::cout << "\nTesting SeasonalPeriodVisitor{ } ..." << std::endl;
+    std::cout << "\nTesting test_read_data_file_with_schema{ } ..."
+              << std::endl;
 
     MyDataFrame             df1;
     MyDataFrame             df2;
-    ReadParams::SchemaVec   schema {
-        { .col_type = file_dtypes::ULONG, .num_rows = 12 },  // Index column
-        { "Open", file_dtypes::DOUBLE, 12 },
-        { "High", file_dtypes::DOUBLE, 12 },
-        { "Low", file_dtypes::DOUBLE, 12 },
-        { "Close", file_dtypes::DOUBLE, 12 },
-        { "Adj_Close", file_dtypes::DOUBLE, 12 },
-        { "Volume", file_dtypes::LONG, 12 },
+    ReadParams::SchemaVec   schema {  // First is the index column
+        { .col_type = file_dtypes::ULONG, .num_rows = 12, .col_idx = 0 },
+        { "Open", file_dtypes::DOUBLE, 12, 1 },
+        { "High", file_dtypes::DOUBLE, 12, 2 },
+        { "Low", file_dtypes::DOUBLE, 12, 3 },
+        { "Close", file_dtypes::DOUBLE, 12, 4 },
+        { "Adj_Close", file_dtypes::DOUBLE, 12, 5 },
+        { "Volume", file_dtypes::LONG, 12, 6 },
     };
 
     try  {
@@ -3672,6 +3673,75 @@ static void test_DateTime_write()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_read_selected_cols_from_file()  {
+
+    std::cout << "\nTesting test_read_selected_cols_from_file{ } ..."
+              << std::endl;
+
+    MyDataFrame             df1;
+    MyDataFrame             df2;
+    ReadParams::SchemaVec   schema1 {  // First is always the index column
+        { .col_type = file_dtypes::ULONG, .num_rows = 12, .col_idx = 0 },
+        { "Close", file_dtypes::DOUBLE, 12, 4 },
+        { "Volume", file_dtypes::LONG, 12, 6 },
+    };
+    ReadParams::SchemaVec   schema2 {  // First is always the index column
+        { .col_type = file_dtypes::ULONG, .num_rows = 12, .col_idx = 0 },
+        { "Open", file_dtypes::DOUBLE, 12, 1 },
+        { "Low", file_dtypes::DOUBLE, 12, 3 },
+        { "Close", file_dtypes::DOUBLE, 12, 4 },
+    };
+
+    try  {
+        df1.read("SchemaWithHeader.csv", io_format::csv2,
+                 { .schema = schema1 });
+        df2.read("SchemaWithoutHeader.csv", io_format::csv2,
+                 { .skip_first_line = false, .schema = schema2 });
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const auto  df_shape1 = df1.shape();
+    const auto  df_shape2 = df2.shape();
+
+    assert(df_shape1.first == 12);  // Rows
+    assert(df_shape1.second == 2);  // Columns
+    assert(df_shape2.first == 12);  // Rows
+    assert(df_shape2.second == 3);  // Columns
+
+    assert(df1.get_index()[0] == 1);
+    assert(df1.get_index()[6] == 7);
+    assert(df1.get_index()[11] == 12);
+    assert(df1.get_column<double>("Close").size() == 12);
+    assert((std::fabs(df1.get_column<double>("Close")[0] - 185.53) < 0.01));
+    assert((std::fabs(df1.get_column<double>("Close")[6] - 187.26) < 0.01));
+    assert((std::fabs(df1.get_column<double>("Close")[11] - 190.09) < 0.01));
+    assert(df1.get_column<long>("Volume").size() == 12);
+    assert(df1.get_column<long>("Volume")[0] == 4546500);
+    assert(df1.get_column<long>("Volume")[6] == 4022400);
+    assert(df1.get_column<long>("Volume")[11] == 7644600);
+
+    assert(df2.get_index()[0] == 1);
+    assert(df2.get_index()[6] == 7);
+    assert(df2.get_index()[11] == 12);
+    assert(df2.get_column<double>("Close").size() == 12);
+    assert((std::fabs(df2.get_column<double>("Close")[0] - 185.53) < 0.01));
+    assert((std::fabs(df2.get_column<double>("Close")[6] - 187.26) < 0.01));
+    assert((std::fabs(df2.get_column<double>("Close")[11] - 190.09) < 0.01));
+    assert(df2.get_column<double>("Open").size() == 12);
+    assert((std::fabs(df2.get_column<double>("Open")[0] - 187.21) < 0.01));
+    assert((std::fabs(df2.get_column<double>("Open")[6] - 188.31) < 0.01));
+    assert((std::fabs(df2.get_column<double>("Open")[11] - 188.04) < 0.01));
+    assert(df2.get_column<double>("Low").size() == 12);
+    assert((std::fabs(df2.get_column<double>("Low")[0] - 185.2) < 0.1));
+    assert((std::fabs(df2.get_column<double>("Low")[6] - 186.28) < 0.01));
+    assert((std::fabs(df2.get_column<double>("Low")[11] - 187.86) < 0.01));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3736,6 +3806,7 @@ int main(int, char *[]) {
     test_mask();
     test_fast_ica();
     test_DateTime_write();
+    test_read_selected_cols_from_file();
 
     return (0);
 }

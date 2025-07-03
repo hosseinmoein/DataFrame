@@ -1601,6 +1601,8 @@ read_csv2_(S &stream,
         if (row_cnt++ >= starting_row) [[likely]]  {
             if (data_rows_read++ >= num_rows) [[unlikely]]  break;
 
+            size_type   spec_vec_idx { 0 };
+
             // Make sure we account for empty slots at the end of the line
             // and create NaN data points
             //
@@ -1609,10 +1611,13 @@ read_csv2_(S &stream,
                 if (! sstream.eof()) [[likely]]
                     std::getline(sstream, value, delim);
 
-                _col_data_spec_ &col_spec = spec_vec[col_idx];
+                if (spec_vec_idx >= spec_vec.size()) [[unlikely]]  break;
 
-                if (col_idx != col_spec.col_idx) [[unlikely]]
-                    continue;
+                _col_data_spec_ &col_spec = spec_vec[spec_vec_idx];
+
+                if (col_idx != col_spec.col_idx) [[unlikely]] continue;
+
+                spec_vec_idx += 1;
 
                 const auto  val_size = value.size();
 

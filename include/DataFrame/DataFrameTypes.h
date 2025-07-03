@@ -835,7 +835,7 @@ struct  ReadSchema  {
 
     // 0-based index of columns starting at index column at 0.
     // Regular columns start at 1.
-	//
+    //
     int         col_idx { -1 };
 };
 

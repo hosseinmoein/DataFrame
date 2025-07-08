@@ -3744,36 +3744,6 @@ static void test_read_selected_cols_from_file()  {
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 static void test_MutualInfoVisitor()  {
 
     std::cout << "\nTesting MutualInfoVisitor{ } ..." << std::endl;
@@ -3794,18 +3764,26 @@ static void test_MutualInfoVisitor()  {
                     gen_exponential_dist<double>(ibm.get_index().size(), p));
 
     MutualInfoVisitor<double, std::string>  minfo;
+    MutualInfoVisitor<double, std::string>  minfo_nat { M_E };
+    ImpurityVisitor<double, std::string>    im_v (5029,
+                                                  impurity_type::info_entropy);
+
+    ibm.single_act_visit<double>("IBM_Close", im_v);
+    ibm.single_act_visit<double, double>("IBM_Close", "IBM_Close", minfo_nat);
+    assert((std::fabs(im_v.get_result().back() - 11.8933) < 0.0001));
+    assert((std::fabs(minfo_nat.get_result() - 11.7328) < 0.0001));
 
     ibm.single_act_visit<double, double>("IBM_Close", "IBM_Close", minfo);
-    std::cout << "XXXXXXXXDEBUG1: " << minfo.get_result() << std::endl;
+    assert((std::fabs(minfo.get_result() - 16.9269) < 0.0001));
 
     ibm.single_act_visit<double, double>("IBM_Close", "IBM_Open", minfo);
-    std::cout << "XXXXXXXXDEBUG2: " << minfo.get_result() << std::endl;
+    assert((std::fabs(minfo.get_result() - 11.3609) < 0.0001));
 
     ibm.single_act_visit<double, double>("IBM_Close", "random", minfo);
-    std::cout << "XXXXXXXXDEBUG3: " << minfo.get_result() << std::endl;
+    assert((std::fabs(minfo.get_result() - 11.8937) < 0.0001));
 
     ibm.single_act_visit<double, double>("random", "IBM_Close", minfo);
-    std::cout << "XXXXXXXXDEBUG4: " << minfo.get_result() << std::endl;
+    assert((std::fabs(minfo.get_result() - 11.8937) < 0.0001));
 }
 
 // ----------------------------------------------------------------------------

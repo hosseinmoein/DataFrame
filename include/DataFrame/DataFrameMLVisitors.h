@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 #include <cmath>
 #include <complex>
-#include <flat_map>
+// #include <flat_map>
 #include <functional>
 #include <limits>
 #include <numeric>
@@ -3730,41 +3730,6 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_lof_v = AnomalyDetectByLOFVisitor<T, I, A>;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ----------------------------------------------------------------------------
 
 // Mutual Information
@@ -3792,12 +3757,16 @@ struct  MutualInfoVisitor  {
                                  "number of observations");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        std::flat_map<value_type, double>   count_x, count_y;
-        std::flat_map<std::pair<value_type, value_type>, double>    count_xy;
+        // std::flat_map<value_type, double>   count_x;
+        // std::flat_map<value_type, double>   count_y;
+        // std::flat_map<std::pair<value_type, value_type>, double>    count_xy;
+        std::map<value_type, double>                        count_x;
+        std::map<value_type, double>                        count_y;
+        std::map<std::pair<value_type, value_type>, double> count_xy;
 
-        map_reserve_(count_x, col_s / 2);
-        map_reserve_(count_y, col_s / 2);
-        map_reserve_(count_xy, col_s);
+        // map_reserve_(count_x, col_s / 2);
+        // map_reserve_(count_y, col_s / 2);
+        // map_reserve_(count_xy, col_s);
 
         const auto  thread_level = (col_s < (ThreadPool::MUL_THR_THHOLD / 3))
             ? 0L : ThreadGranularity::get_thread_level();
@@ -3861,9 +3830,10 @@ struct  MutualInfoVisitor  {
              &column2_begin = std::as_const(column2_begin),
              &count_x = std::as_const(count_x),
              &count_y = std::as_const(count_y),
-             &count_xy = std::as_const(count_xy), col_s]
+             &count_xy = std::as_const(count_xy),
+             col_s]
             (auto begin, auto end) -> double  {
-                double  res { 0 };
+                double  mi { 0 };
 
                 for (size_type i { begin }; i < end; ++i)  {
                     const auto  &val1 = *(column1_begin + i);
@@ -3873,9 +3843,9 @@ struct  MutualInfoVisitor  {
                     const auto  p_xy =
                         count_xy.find({ val1, val2 })->second / col_s;
 
-                    res += p_xy * std::log(p_xy / (p_x * p_y));
+                    mi += p_xy * std::log(p_xy / (p_x * p_y));
                 }
-                return (res);
+                return (mi);
             };
 
 
@@ -3890,7 +3860,9 @@ struct  MutualInfoVisitor  {
             mi = lbd(size_type(0), col_s);
         }
 
-        result_ = mi / log_log_base_; // // convert from nat to bits
+        // Convert from nat (natural unit) to bits (base 2)
+        //
+        result_ = mi / log_log_base_;
     }
 
     inline void pre()  { result_ = 0; }

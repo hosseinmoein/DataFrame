@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 #include <cmath>
 #include <complex>
+#include <flat_map>
 #include <functional>
 #include <limits>
 #include <numeric>
@@ -1563,7 +1564,8 @@ struct  EntropyVisitor  {
         sum_v (idx_begin, idx_end, column_begin, column_end);
         sum_v.post();
 
-        result_type result = std::move(sum_v.get_result());
+        result_type         result = std::move(sum_v.get_result());
+        const value_type    log_log_base = std::log(log_base_);
 
         if (result.size() >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
@@ -1571,15 +1573,14 @@ struct  EntropyVisitor  {
                     ThreadGranularity::thr_pool_.parallel_loop(
                         size_type(0),
                         result.size(),
-                        [&column_begin, &result, this]
+                        [&column_begin, &result, log_log_base]
                         (auto begin, auto end) -> void  {
                             for (size_type i = begin; i < end; ++i)  {
                                 value_type          &r = result[i];
                                 const value_type    val =
                                     *(column_begin + i) / r;
 
-                                r = -val * std::log(val) /
-                                    std::log(this->log_base_);
+                                r = -val * (std::log(val) / log_log_base);
                             }
                         });
 
@@ -1589,11 +1590,10 @@ struct  EntropyVisitor  {
             std::transform(column_begin, column_end,
                            result.begin(),
                            result.begin(),
-                           [this](auto c, auto r) -> value_type  {
+                           [log_log_base](auto c, auto r) -> value_type  {
                                const value_type    val = c / r;
 
-                               return (-val * std::log(val) /
-                                       std::log(this->log_base_));
+                               return (-val * (std::log(val) / log_log_base));
                            });
         }
 
@@ -3729,6 +3729,198 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_lof_v = AnomalyDetectByLOFVisitor<T, I, A>;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+// Mutual Information
+//
+template<arithmetic T, typename I = unsigned long>
+struct  MutualInfoVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = value_type;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
+                const H &column1_begin, const H &column1_end,
+                const H &column2_begin, const H &column2_end)  {
+
+        const size_type col_s = std::distance(column1_begin, column1_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type col2_s = std::distance(column2_begin, column2_end);
+
+        if (col_s != col2_s)
+            throw DataFrameError("MutualInfoVisitor: "
+                                 "The two variables must have the same "
+                                 "number of observations");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        std::flat_map<value_type, double>   count_x, count_y;
+        std::flat_map<std::pair<value_type, value_type>, double>    count_xy;
+
+        map_reserve_(count_x, col_s / 2);
+        map_reserve_(count_y, col_s / 2);
+        map_reserve_(count_xy, col_s);
+
+        const auto  thread_level = (col_s < (ThreadPool::MUL_THR_THHOLD / 3))
+            ? 0L : ThreadGranularity::get_thread_level();
+
+        if (thread_level > 2)  {
+            auto    fut1 =
+                ThreadGranularity::thr_pool_.dispatch(
+                      false,
+                      [&column1_begin = std::as_const(column1_begin),
+                       col_s, &count_x]() -> void  {
+                          for (size_type i { 0 }; i < col_s; ++i)  {
+                              const auto    &val = *(column1_begin + i);
+
+                              count_x.insert({ val, 0 }).first->second += 1.0;
+                          }
+                      });
+            auto    fut2 =
+                ThreadGranularity::thr_pool_.dispatch(
+                      false,
+                      [&column2_begin = std::as_const(column2_begin),
+                       col_s, &count_y]() -> void  {
+                          for (size_type i { 0 }; i < col_s; ++i)  {
+                              const auto    &val = *(column2_begin + i);
+
+                              count_y.insert({ val, 0 }).first->second += 1.0;
+                          }
+                      });
+            auto    fut3 =
+                ThreadGranularity::thr_pool_.dispatch(
+                      false,
+                      [&column1_begin = std::as_const(column1_begin),
+                       &column2_begin = std::as_const(column2_begin),
+                       col_s, &count_xy]() -> void  {
+                          for (size_type i { 0 }; i < col_s; ++i)  {
+                              const auto  &val1 = *(column1_begin + i);
+                              const auto  &val2 = *(column2_begin + i);
+
+                              count_xy.insert(
+                                  { { val1, val2 }, 0 }).first->second += 1.0;
+                          }
+                      });
+
+            fut1.get();
+            fut2.get();
+            fut3.get();
+        }
+        else  {
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &val1 = *(column1_begin + i);
+                const auto  &val2 = *(column2_begin + i);
+
+                count_x.insert({ val1, 0 }).first->second += 1.0;
+                count_y.insert({ val2, 0 }).first->second += 1.0;
+                count_xy.insert({ { val1, val2 }, 0 }).first->second += 1.0;
+            }
+        }
+
+        double  mi { 0 };
+        auto    lbd =
+            [&column1_begin = std::as_const(column1_begin),
+             &column2_begin = std::as_const(column2_begin),
+             &count_x = std::as_const(count_x),
+             &count_y = std::as_const(count_y),
+             &count_xy = std::as_const(count_xy), col_s]
+            (auto begin, auto end) -> double  {
+                double  res { 0 };
+
+                for (size_type i { begin }; i < end; ++i)  {
+                    const auto  &val1 = *(column1_begin + i);
+                    const auto  &val2 = *(column2_begin + i);
+                    const auto  p_x = count_x.find(val1)->second / col_s;
+                    const auto  p_y = count_y.find(val2)->second / col_s;
+                    const auto  p_xy =
+                        count_xy.find({ val1, val2 })->second / col_s;
+
+                    res += p_xy * std::log(p_xy / (p_x * p_y));
+                }
+                return (res);
+            };
+
+
+        if (thread_level > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0), col_s, std::move(lbd));
+
+            for (auto &fut : futures)  mi += fut.get();
+        }
+        else  {
+            mi = lbd(size_type(0), col_s);
+        }
+
+        result_ = mi / log_log_base_; // // convert from nat to bits
+    }
+
+    inline void pre()  { result_ = 0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
+
+    explicit
+    MutualInfoVisitor(double log_base = 2)
+        : log_log_base_(std::log(log_base))  {   }
+
+private:
+
+    template<typename M>
+    inline static void map_reserve_(M &in_map, size_type in_size)  {
+
+        auto    c { std::move(in_map).extract() };
+        auto    key_vec { std::move(c.keys) };
+        auto    val_vec { std::move(c.values) };
+
+        key_vec.reserve(in_size);
+        val_vec.reserve(in_size);
+        in_map.replace(std::move(key_vec), std::move(val_vec));
+    }
+
+    result_type     result_ { 0 };
+    const double    log_log_base_;
+};
+
+template<typename T, typename I = unsigned long>
+using mut_i_v = MutualInfoVisitor<T, I>;
 
 } // namespace hmdf
 

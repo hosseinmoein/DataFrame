@@ -53,6 +53,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -3739,6 +3740,73 @@ static void test_read_selected_cols_from_file()  {
     assert((std::fabs(df2.get_column<double>("Low")[6] - 186.28) < 0.01));
     assert((std::fabs(df2.get_column<double>("Low")[11] - 187.86) < 0.01));
 }
+*/
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void test_MutualInfoVisitor()  {
+
+    std::cout << "\nTesting MutualInfoVisitor{ } ..." << std::endl;
+
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const RandGenParams<double> p { .seed = 123 };
+
+    ibm.load_column("random",
+                    gen_exponential_dist<double>(ibm.get_index().size(), p));
+
+    MutualInfoVisitor<double, std::string>  minfo;
+
+    ibm.single_act_visit<double, double>("IBM_Close", "IBM_Close", minfo);
+    std::cout << "XXXXXXXXDEBUG1: " << minfo.get_result() << std::endl;
+
+    ibm.single_act_visit<double, double>("IBM_Close", "IBM_Open", minfo);
+    std::cout << "XXXXXXXXDEBUG2: " << minfo.get_result() << std::endl;
+
+    ibm.single_act_visit<double, double>("IBM_Close", "random", minfo);
+    std::cout << "XXXXXXXXDEBUG3: " << minfo.get_result() << std::endl;
+
+    ibm.single_act_visit<double, double>("random", "IBM_Close", minfo);
+    std::cout << "XXXXXXXXDEBUG4: " << minfo.get_result() << std::endl;
+}
 
 // ----------------------------------------------------------------------------
 
@@ -3746,6 +3814,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -3807,6 +3876,8 @@ int main(int, char *[]) {
     test_fast_ica();
     test_DateTime_write();
     test_read_selected_cols_from_file();
+*/
+    test_MutualInfoVisitor();
 
     return (0);
 }

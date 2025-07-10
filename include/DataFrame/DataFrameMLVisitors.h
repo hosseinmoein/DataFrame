@@ -3738,7 +3738,7 @@ template<arithmetic T, typename I = unsigned long>
 struct  MutualInfoVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
-    using result_type = value_type;
+    using result_type = double;
 
     template<typename K, typename H>
     inline void
@@ -3757,16 +3757,12 @@ struct  MutualInfoVisitor  {
                                  "number of observations");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        // std::flat_map<value_type, double>   count_x;
-        // std::flat_map<value_type, double>   count_y;
-        // std::flat_map<std::pair<value_type, value_type>, double>    count_xy;
-        std::map<value_type, double>                        count_x;
-        std::map<value_type, double>                        count_y;
-        std::map<std::pair<value_type, value_type>, double> count_xy;
-
-        // map_reserve_(count_x, col_s / 2);
-        // map_reserve_(count_y, col_s / 2);
-        // map_reserve_(count_xy, col_s);
+        std::unordered_map<value_type, double>              count_x;
+        std::unordered_map<value_type, double>              count_y;
+        std::unordered_map<
+            std::pair<value_type, value_type>, double,
+            PairHash_<std::pair<value_type, value_type>>,
+            PairEqual_<std::pair<value_type, value_type>>>  count_xy;
 
         const auto  thread_level = (col_s < (ThreadPool::MUL_THR_THHOLD / 3))
             ? 0L : ThreadGranularity::get_thread_level();
@@ -3886,6 +3882,23 @@ private:
         val_vec.reserve(in_size);
         in_map.replace(std::move(key_vec), std::move(val_vec));
     }
+
+    template<typename P>
+    struct  PairEqual_  {
+        inline bool operator()(const P &lhs, const P &rhs) const  {
+
+            return ((lhs.first == rhs.first) && (lhs.second == rhs.second));
+        }
+    };
+
+    template<typename P>
+    struct  PairHash_  {
+        inline std::size_t operator()(const P &lhs) const  {
+
+            return (std::hash<typename P::first_type>{}(lhs.first) ^
+                    (std::hash<typename P::second_type>{}(lhs.second) << 1));
+        }
+    };
 
     result_type     result_ { 0 };
     const double    log_log_base_;

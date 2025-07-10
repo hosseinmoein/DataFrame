@@ -53,7 +53,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -1055,7 +1054,8 @@ static void test_get_data_on_days()  {
     }
 
     const auto  result =
-        df.get_view_on_days<double, long>({ DT_WEEKDAY::MON, DT_WEEKDAY::FRI });
+        df.get_view_on_days<double, long>(
+            { DT_WEEKDAY::MON, DT_WEEKDAY::FRI });
 
     assert(result.get_index().size() == 2861);
     assert(result.get_index()[0].date() == 19861117);
@@ -1234,7 +1234,7 @@ static void test_remove_top_n_data()  {
     assert(view.get_column<int>("col_4")[2] == 24);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_remove_bottom_n_data()  {
 
@@ -1285,7 +1285,7 @@ static void test_remove_bottom_n_data()  {
     assert(view.get_column<int>("col_4")[2] == 24);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_remove_above_quantile_data()  {
 
@@ -1335,7 +1335,7 @@ static void test_remove_above_quantile_data()  {
     assert(df.get_column<int>("col_4") == col_4);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_remove_below_quantile_data()  {
 
@@ -1385,7 +1385,7 @@ static void test_remove_below_quantile_data()  {
     assert(df.get_column<int>("col_4") == col_4);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_remove_data_by_stdev()  {
 
@@ -3353,9 +3353,9 @@ static void test_detect_and_change()  {
         fopen_col[5029] = 850.0;
 
         ford.detect_and_change<double>({ "FORD_Close", "FORD_Open" },
-                                       detect_method::iqr,
-                                       fill_policy::linear_interpolate,
-                                       { .high_fence = 0.5, .low_fence = 0.5 });
+                                      detect_method::iqr,
+                                      fill_policy::linear_interpolate,
+                                      { .high_fence = 0.5, .low_fence = 0.5 });
 
         assert((std::fabs(fclose_col[502] - 1.6889) < 0.0001));
         assert((std::fabs(fclose_col[1001] - 1.8146) < 0.0001));
@@ -3555,9 +3555,9 @@ static void test_mask()  {
                     );
     ibm.load_column("close_diff",
                     ibm.mask<double, double>("IBM_Close",
-                                             [](const double &close) -> double {
-                                                 return (180.0 - close);
-                                             })
+                                            [](const double &close) -> double {
+                                                return (180.0 - close);
+                                            })
                     );
 
     const auto  &close_mask = ibm.get_column<char>("close_mask");
@@ -3740,7 +3740,6 @@ static void test_read_selected_cols_from_file()  {
     assert((std::fabs(df2.get_column<double>("Low")[6] - 186.28) < 0.01));
     assert((std::fabs(df2.get_column<double>("Low")[11] - 187.86) < 0.01));
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -3748,42 +3747,46 @@ static void test_MutualInfoVisitor()  {
 
     std::cout << "\nTesting MutualInfoVisitor{ } ..." << std::endl;
 
-    StrDataFrame    ibm;
+    using MyDataFrame = StdDataFrame<unsigned long>;
 
-    try  {
-        ibm.read("IBM.csv", io_format::csv2);
+    MyDataFrame                 df;
+    std::vector<unsigned long>  idxvec =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 16, 17, 18,
+          19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
+    RandGenParams<int>          p;
+
+    p.seed = 123;
+    p.max_value = 4;
+    p.min_value = -4;
+    df.load_data(std::move(idxvec),
+                 std::make_pair("int_col_1",
+                                gen_uniform_int_dist<int>(idxvec.size(), p)),
+                 std::make_pair("str_col", strvec));
+    p.seed = 675;
+    df.load_column("int_col_2", gen_uniform_int_dist<int>(idxvec.size(), p));
+
+    std::vector<int>    intcol3(df.get_index().size());
+    const auto          int_col_1 = df.get_column<int>("int_col_1");
+
+    for (std::size_t i { 0 }; i < intcol3.size(); ++i)  {
+        if (int_col_1[i] >= 0)  intcol3[i] = 1;
+        else  intcol3[i] = -1;
     }
-    catch (const DataFrameError &ex)  {
-        std::cout << ex.what() << std::endl;
-        ::exit(-1);
-    }
+    df.load_column("int_col_3", intcol3);
 
-    const RandGenParams<double> p { .seed = 123 };
+    MutualInfoVisitor<int>  minfo;
 
-    ibm.load_column("random",
-                    gen_exponential_dist<double>(ibm.get_index().size(), p));
+    df.single_act_visit<int, int>("int_col_1", "int_col_1", minfo);
+    assert((std::fabs(minfo.get_result() - 12.4866) < 0.0001));
 
-    MutualInfoVisitor<double, std::string>  minfo;
-    MutualInfoVisitor<double, std::string>  minfo_nat { M_E };
-    ImpurityVisitor<double, std::string>    im_v (5029,
-                                                  impurity_type::info_entropy);
+    df.single_act_visit<int, int>("int_col_1", "int_col_2", minfo);
+    assert((std::fabs(minfo.get_result() - 1.81499) < 0.00001));
 
-    ibm.single_act_visit<double>("IBM_Close", im_v);
-    ibm.single_act_visit<double, double>("IBM_Close", "IBM_Close", minfo_nat);
-    assert((std::fabs(im_v.get_result().back() - 11.8933) < 0.0001));
-    assert((std::fabs(minfo_nat.get_result() - 11.7328) < 0.0001));
-
-    ibm.single_act_visit<double, double>("IBM_Close", "IBM_Close", minfo);
-    assert((std::fabs(minfo.get_result() - 16.9269) < 0.0001));
-
-    ibm.single_act_visit<double, double>("IBM_Close", "IBM_Open", minfo);
-    assert((std::fabs(minfo.get_result() - 11.3609) < 0.0001));
-
-    ibm.single_act_visit<double, double>("IBM_Close", "random", minfo);
-    assert((std::fabs(minfo.get_result() - 11.8937) < 0.0001));
-
-    ibm.single_act_visit<double, double>("random", "IBM_Close", minfo);
-    assert((std::fabs(minfo.get_result() - 11.8937) < 0.0001));
+    df.single_act_visit<int, int>("int_col_1", "int_col_3", minfo);
+    assert((std::fabs(minfo.get_result() - 4.24521) < 0.00001));
 }
 
 // ----------------------------------------------------------------------------
@@ -3792,7 +3795,6 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -3854,7 +3856,6 @@ int main(int, char *[]) {
     test_fast_ica();
     test_DateTime_write();
     test_read_selected_cols_from_file();
-*/
     test_MutualInfoVisitor();
 
     return (0);

@@ -43,6 +43,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 #include <cmath>
 
+// E
+//
+#ifndef M_E
+#  define M_E 2.71828182845904523536
+#endif // M_E
+
 // PI
 //
 #ifndef M_PI

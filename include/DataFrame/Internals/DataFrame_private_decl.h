@@ -71,7 +71,7 @@ void read_binary_(S &file,
                   size_type num_rows);
 
 template<typename S>
-void read_csv_(S &file, bool columns_only);
+void read_csv_(S &file, bool columns_only, char delim);
 
 template<typename S>
 void read_csv2_(S &stream,
@@ -79,7 +79,8 @@ void read_csv2_(S &stream,
                 size_type starting_row,
                 size_type num_rows,
                 bool skip_first_line,
-                const std::vector<ReadSchema> &schema);
+                const std::vector<ReadSchema> &schema,
+                char delim);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
@@ -1217,7 +1218,8 @@ col_vector_push_back_func_(
     typename V::value_type(*converter)(const char *, int),
     std::istream &file,
     V &vec,
-    io_format file_type = io_format::csv)  {
+    io_format file_type,
+    char delim)  {
 
     std::string value;
     char        c = 0;
@@ -1227,7 +1229,7 @@ col_vector_push_back_func_(
         if (file_type == io_format::csv && c == '\n')  break;
         else if (file_type == io_format::json && c == ']')  break;
         file.unget();
-        _get_token_from_file_(file, ',', value,
+        _get_token_from_file_(file, delim, value,
                               file_type == io_format::json ? ']' : '\0');
         vec.push_back(converter(value.c_str(), int(value.size())));
     }
@@ -1240,7 +1242,8 @@ inline static void
 col_vector_push_back_func_(V &vec,
                            std::istream &file,
                            T (*converter)(const char *, char **, int),
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type,
+                           char delim)  {
 
     std::string value;
     char        c = 0;
@@ -1251,7 +1254,7 @@ col_vector_push_back_func_(V &vec,
         if (file_type == io_format::csv && c == '\n')  break;
         else if (file_type == io_format::json && c == ']')  break;
         file.unget();
-        _get_token_from_file_(file, ',', value,
+        _get_token_from_file_(file, delim, value,
                               file_type == io_format::json ? ']' : '\0');
         vec.push_back(static_cast<T>(converter(value.c_str(), nullptr, 0)));
     }
@@ -1263,7 +1266,8 @@ template<typename T, typename V>
 inline static void
 col_vector_push_back_cont_func_(V &vec,
                                 std::istream &file,
-                                T (*converter)(const char *))  {
+                                T (*converter)(const char *),
+                                char delim)  {
 
     std::string value;
     char        c = 0;
@@ -1273,7 +1277,7 @@ col_vector_push_back_cont_func_(V &vec,
         if (c == '\n') [[unlikely]] break;
         file.unget();
         value.clear();
-        _get_token_from_file_(file, ',', value, '\0');
+        _get_token_from_file_(file, delim, value, '\0');
         vec.push_back(converter(value.c_str()));
     }
 }
@@ -1320,7 +1324,8 @@ struct  ColVectorPushBack_  {
     operator ()(V &vec,
                 std::istream &file,
                 T (*converter)(const char *, char **),
-                io_format file_type = io_format::csv) const  {
+                io_format file_type,
+                char delim) const  {
 
         std::string value;
         char        c = 0;
@@ -1331,7 +1336,7 @@ struct  ColVectorPushBack_  {
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
             value.clear();
-            _get_token_from_file_(file, ',', value,
+            _get_token_from_file_(file, delim, value,
                                   file_type == io_format::json ? ']' : '\0');
             vec.push_back(static_cast<T>(converter(value.c_str(), nullptr)));
         }
@@ -1347,7 +1352,8 @@ struct  ColVectorPushBack_<const char *, StlVecType<std::string>, Dummy>  {
     operator ()(StlVecType<std::string> &vec,
                 std::istream &file,
                 const char * (*)(const char *, char **),
-                io_format file_type = io_format::csv) const  {
+                io_format file_type,
+                char delim) const  {
 
         std::string value;
         char        c = 0;
@@ -1358,7 +1364,7 @@ struct  ColVectorPushBack_<const char *, StlVecType<std::string>, Dummy>  {
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
             value.clear();
-            _get_token_from_file_(file, ',', value,
+            _get_token_from_file_(file, delim, value,
                                   file_type == io_format::json ? ']' : '\0');
 
             if (file_type == io_format::json)  { // Get rid of "'s
@@ -1380,7 +1386,8 @@ struct  ColVectorPushBack_<DateTime, StlVecType<DateTime>, Dummy>  {
     operator ()(StlVecType<DateTime> &vec,
                 std::istream &file,
                 DateTime (*)(const char *, char **),
-                io_format file_type = io_format::csv) const  {
+                io_format file_type,
+                char delim) const  {
 
         std::string value;
         char        c = 0;
@@ -1391,7 +1398,7 @@ struct  ColVectorPushBack_<DateTime, StlVecType<DateTime>, Dummy>  {
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
             value.clear();
-            _get_token_from_file_(file, ',', value,
+            _get_token_from_file_(file, delim, value,
                                   file_type == io_format::json ? ']' : '\0');
 
             time_t      t;
@@ -1414,7 +1421,8 @@ struct  ColVectorPushBack_<DateTime, StlVecType<DateTime>, Dummy>  {
 template<typename STR>
 inline static void
 json_str_col_vector_push_back_(StlVecType<STR> &vec,
-                               std::istream &file)  {
+                               std::istream &file,
+                               char delim)  {
 
     char    value[2048];
     char    c = 0;
@@ -1451,7 +1459,7 @@ json_str_col_vector_push_back_(StlVecType<STR> &vec,
         while (file.get(c))
             if (c != ' ' && c != '\n' && c != '\t')  break;
         if (c == ']')  break;
-        else if (c != ',')
+        else if (c != delim)
             throw DataFrameError(
                 "json_str_col_vector_push_back_(): ERROR: Expected ',' (2)");
     }
@@ -1462,7 +1470,8 @@ json_str_col_vector_push_back_(StlVecType<STR> &vec,
 template<typename T, typename Dummy = void>
 struct  IdxParserFunctor_  {
 
-    void operator()(StlVecType<T> &, std::istream &, io_format)  {   }
+    void
+    operator()(StlVecType<T> &, std::istream &, io_format, char delim)  {   }
 };
 
 // ----------------------------------------------------------------------------
@@ -1472,11 +1481,12 @@ struct  IdxParserFunctor_<float, Dummy>  {
 
     inline void operator()(StlVecType<float> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
         const ColVectorPushBack_<float, StlVecType<float>>  slug;
 
-        slug(vec, file, &::strtof, file_type);
+        slug(vec, file, &::strtof, file_type, delim);
     }
 };
 
@@ -1487,11 +1497,12 @@ struct  IdxParserFunctor_<double, Dummy>  {
 
     inline void operator()(StlVecType<double> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
         const ColVectorPushBack_<double, StlVecType<double>>  slug;
 
-        slug(vec, file, &::strtod, file_type);
+        slug(vec, file, &::strtod, file_type, delim);
     }
 };
 
@@ -1502,11 +1513,12 @@ struct  IdxParserFunctor_<long double, Dummy>  {
 
     inline void operator()(StlVecType<long double> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
         const ColVectorPushBack_<long double, StlVecType<long double>>  slug;
 
-        slug(vec, file, &::strtold, file_type);
+        slug(vec, file, &::strtold, file_type, delim);
     }
 };
 
@@ -1517,9 +1529,10 @@ struct  IdxParserFunctor_<int, Dummy>  {
 
     inline void operator()(StlVecType<int> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
-        col_vector_push_back_func_(&_atoi_<int>, file, vec, file_type);
+        col_vector_push_back_func_(&_atoi_<int>, file, vec, file_type, delim);
     }
 };
 
@@ -1530,9 +1543,10 @@ struct  IdxParserFunctor_<long, Dummy>  {
 
     inline void operator()(StlVecType<long> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
-        col_vector_push_back_func_(&_atoi_<long>, file, vec, file_type);
+        col_vector_push_back_func_(&_atoi_<long>, file, vec, file_type, delim);
     }
 };
 
@@ -1543,9 +1557,11 @@ struct  IdxParserFunctor_<long long, Dummy>  {
 
     inline void operator()(StlVecType<long long> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
-        col_vector_push_back_func_(&_atoi_<long long>, file, vec, file_type);
+        col_vector_push_back_func_(&_atoi_<long long>, file, vec,
+                                   file_type, delim);
     }
 };
 
@@ -1556,9 +1572,11 @@ struct  IdxParserFunctor_<unsigned int, Dummy>  {
 
     inline void operator()(StlVecType<unsigned int> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
-        col_vector_push_back_func_(&_atoi_<unsigned int>, file, vec, file_type);
+        col_vector_push_back_func_(&_atoi_<unsigned int>, file, vec,
+                                   file_type, delim);
     }
 };
 
@@ -1569,10 +1587,11 @@ struct  IdxParserFunctor_<unsigned long, Dummy>  {
 
     inline void operator()(StlVecType<unsigned long> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
         col_vector_push_back_func_(&_atoi_<unsigned long>,
-                                   file, vec, file_type);
+                                   file, vec, file_type, delim);
     }
 };
 
@@ -1583,10 +1602,11 @@ struct  IdxParserFunctor_<unsigned long long, Dummy>  {
 
     inline void operator()(StlVecType<unsigned long long> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
         col_vector_push_back_func_(&_atoi_<unsigned long long>,
-                                   file, vec, file_type);
+                                   file, vec, file_type, delim);
     }
 };
 
@@ -1597,13 +1617,14 @@ struct  IdxParserFunctor_<std::string, Dummy>  {
 
     inline void operator()(StlVecType<std::string> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
         auto                   converter =
             [](const char *s, char **)-> const char * { return s; };
         const ColVectorPushBack_<const char *, StlVecType<std::string>>  slug;
 
-        slug(vec, file, converter, file_type);
+        slug(vec, file, converter, file_type, delim);
     }
 };
 
@@ -1614,13 +1635,14 @@ struct  IdxParserFunctor_<DateTime, Dummy>  {
 
     inline void operator()(StlVecType<DateTime> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
         auto                    converter =
             [](const char *, char **)-> DateTime  { return DateTime(); };
         const ColVectorPushBack_<DateTime, StlVecType<DateTime>>  slug;
 
-        slug(vec, file, converter, file_type);
+        slug(vec, file, converter, file_type, delim);
     }
 };
 
@@ -1631,9 +1653,10 @@ struct  IdxParserFunctor_<bool, Dummy>  {
 
     inline void operator()(StlVecType<bool> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv) const  {
+                           io_format file_type,
+                           char delim) const  {
 
-        col_vector_push_back_func_(vec, file, &::strtol, file_type);
+        col_vector_push_back_func_(vec, file, &::strtol, file_type, delim);
     }
 };
 

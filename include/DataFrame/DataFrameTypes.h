@@ -876,6 +876,11 @@ struct  ReadParams  {
     //
     bool        skip_first_line { true };
     SchemaVec   schema { };
+
+    // This only applies to csv and csv2 formats. It specifies the delimiting
+    // (separating) character.
+    //
+    char delim { ',' };
 };
 
 // ----------------------------------------------------------------------------

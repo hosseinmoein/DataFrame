@@ -3791,6 +3791,33 @@ static void test_MutualInfoVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_io_format_csv2_with_bars()  {
+
+    std::cout << "\nTesting io_format_csv2_with_bars( ) ..." << std::endl;
+
+    MyDataFrame df_read;
+
+    try  {
+        df_read.read("csv2_format_data_with_bars.csv",
+                     io_format::csv2,
+                     { .delim = '|' });
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+    df_read.write<std::ostream,
+                  int,
+                  unsigned long,
+                  unsigned char,
+                  char,
+                  double,
+                  bool,
+                  std::string>(std::cout, io_format::csv2);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3857,6 +3884,7 @@ int main(int, char *[]) {
     test_DateTime_write();
     test_read_selected_cols_from_file();
     test_MutualInfoVisitor();
+    test_io_format_csv2_with_bars();
 
     return (0);
 }

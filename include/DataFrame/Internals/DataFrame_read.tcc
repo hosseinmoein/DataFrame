@@ -48,6 +48,7 @@ template<typename I, typename H>
 template<typename S>
 void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
 
+    constexpr char  delim { ',' };
     char            c { '\0' };
     const SpinGuard guard(lock_);
 
@@ -114,7 +115,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                 "DataFrame::read_json_(): ERROR: Expected ':' (6)");
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        _get_token_from_file_(stream, ',', token);
+        _get_token_from_file_(stream, delim, token);
 
         const size_type col_size = ::atoi(token.c_str());
 
@@ -141,7 +142,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
 
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != ',') [[unlikely]]
+        if (c != delim) [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ',' (11)");
         while (stream.get(c))
@@ -170,7 +171,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
             IndexVecType    vec;
 
             vec.reserve(col_size);
-            IdxParserFunctor_<IndexType>()(vec, stream, io_format::json);
+            IdxParserFunctor_<IndexType>()(vec, stream,
+                                           io_format::json, delim);
             if (! columns_only)
                 load_index(std::forward<IndexVecType &&>(vec));
         }
@@ -192,7 +194,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     const ColVectorPushBack_<float, StlVecType<float>>  slug;
 
                     vec.reserve(col_size);
-                    slug(vec, stream, &::strtof, io_format::json);
+                    slug(vec, stream, &::strtof, io_format::json, delim);
                     break;
                 }
                 case file_dtypes::DOUBLE: {
@@ -202,7 +204,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                         <double, StlVecType<double>>    slug;
 
                     vec.reserve(col_size);
-                    slug(vec, stream, &::strtod, io_format::json);
+                    slug(vec, stream, &::strtod, io_format::json, delim);
                     break;
                 }
                 case file_dtypes::LONG_DOUBLE: {
@@ -212,7 +214,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                         <long double, StlVecType<long double>>  slug;
 
                     vec.reserve(col_size);
-                    slug(vec, stream, &::strtold, io_format::json);
+                    slug(vec, stream, &::strtold, io_format::json, delim);
                     break;
                 }
                 case file_dtypes::SHORT: {
@@ -223,7 +225,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     col_vector_push_back_func_(vec,
                                                stream,
                                                &::strtol,
-                                               io_format::json);
+                                               io_format::json,
+                                               delim);
                     break;
                 }
                 case file_dtypes::USHORT: {
@@ -235,7 +238,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     col_vector_push_back_func_(vec,
                                                stream,
                                                &::strtol,
-                                               io_format::json);
+                                               io_format::json,
+                                               delim);
                     break;
                 }
                 case file_dtypes::INT: {
@@ -246,7 +250,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     col_vector_push_back_func_(vec,
                                                stream,
                                                &::strtol,
-                                               io_format::json);
+                                               io_format::json,
+                                               delim);
                 break;
                 }
                 case file_dtypes::UINT: {
@@ -257,7 +262,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     col_vector_push_back_func_(vec,
                                                stream,
                                                &::strtoul,
-                                               io_format::json);
+                                               io_format::json,
+                                               delim);
                     break;
                 }
                 case file_dtypes::LONG: {
@@ -268,7 +274,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     col_vector_push_back_func_(vec,
                                                stream,
                                                &::strtol,
-                                               io_format::json);
+                                               io_format::json,
+                                               delim);
                     break;
                 }
                 case file_dtypes::ULONG: {
@@ -279,7 +286,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     col_vector_push_back_func_(vec,
                                                stream,
                                                &::strtoul,
-                                               io_format::json);
+                                               io_format::json,
+                                               delim);
                     break;
                 }
                 case file_dtypes::LONG_LONG: {
@@ -290,7 +298,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     col_vector_push_back_func_(vec,
                                                stream,
                                                &::strtoll,
-                                               io_format::json);
+                                               io_format::json,
+                                               delim);
                     break;
                 }
                 case file_dtypes::ULONG_LONG: {
@@ -302,7 +311,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     col_vector_push_back_func_(vec,
                                                stream,
                                                &::strtoull,
-                                               io_format::json);
+                                               io_format::json,
+                                               delim);
                     break;
                 }
                 case file_dtypes::CHAR: {
@@ -321,7 +331,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                             else
                                 return (static_cast<char>(atoi(tok)));
                         },
-                        io_format::json);
+                        io_format::json,
+                        delim);
                     break;
                 }
                 case file_dtypes::UCHAR: {
@@ -342,7 +353,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                             else
                                 return (static_cast<unsigned char>(atoi(tok)));
                         },
-                        io_format::json);
+                        io_format::json,
+                        delim);
                     break;
                 }
                 case file_dtypes::BOOL: {
@@ -353,7 +365,8 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     col_vector_push_back_func_(vec,
                                                stream,
                                                &::strtol,
-                                               io_format::json);
+                                               io_format::json,
+                                               delim);
                     break;
                 }
                 case file_dtypes::STRING: {
@@ -361,7 +374,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                         create_column<std::string>(col_name.c_str(), false);
 
                     vec.reserve(col_size);
-                    json_str_col_vector_push_back_(vec, stream);
+                    json_str_col_vector_push_back_(vec, stream, delim);
                     break;
                 }
                 case file_dtypes::VSTR32: {
@@ -369,7 +382,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                         create_column<String32>(col_name.c_str(), false);
 
                     vec.reserve(col_size);
-                    json_str_col_vector_push_back_(vec, stream);
+                    json_str_col_vector_push_back_(vec, stream, delim);
                     break;
                 }
                 case file_dtypes::VSTR64: {
@@ -377,7 +390,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                         create_column<String64>(col_name.c_str(), false);
 
                     vec.reserve(col_size);
-                    json_str_col_vector_push_back_(vec, stream);
+                    json_str_col_vector_push_back_(vec, stream, delim);
                     break;
                 }
                 case file_dtypes::VSTR128: {
@@ -385,7 +398,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                         create_column<String128>(col_name.c_str(), false);
 
                     vec.reserve(col_size);
-                    json_str_col_vector_push_back_(vec, stream);
+                    json_str_col_vector_push_back_(vec, stream, delim);
                     break;
                 }
                 case file_dtypes::VSTR512: {
@@ -393,7 +406,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                         create_column<String512>(col_name.c_str(), false);
 
                     vec.reserve(col_size);
-                    json_str_col_vector_push_back_(vec, stream);
+                    json_str_col_vector_push_back_(vec, stream, delim);
                     break;
                 }
                 case file_dtypes::VSTR1K: {
@@ -401,7 +414,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                         create_column<String1K>(col_name.c_str(), false);
 
                     vec.reserve(col_size);
-                    json_str_col_vector_push_back_(vec, stream);
+                    json_str_col_vector_push_back_(vec, stream, delim);
                     break;
                 }
                 case file_dtypes::VSTR2K: {
@@ -409,7 +422,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                         create_column<String2K>(col_name.c_str(), false);
 
                     vec.reserve(col_size);
-                    json_str_col_vector_push_back_(vec, stream);
+                    json_str_col_vector_push_back_(vec, stream, delim);
                     break;
                 }
                 case file_dtypes::DATETIME: {
@@ -423,7 +436,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                                              StlVecType<DateTime>>  slug;
 
                     vec.reserve(col_size);
-                    slug(vec, stream, converter, io_format::json);
+                    slug(vec, stream, converter, io_format::json, delim);
                     break;
                 }
                 default:  {
@@ -443,7 +456,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                 "DataFrame::read_json_(): ERROR: Expected '}' (16)");
         while (stream.get(c))
             if (c != ' ' && c != '\r' && c != '\t' && c != '\n')  break;
-        if (c != ',')  {
+        if (c != delim)  {
             stream.unget();
             break;
         }
@@ -462,7 +475,7 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
 
 template<typename I, typename H>
 template<typename S>
-void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
+void DataFrame<I, H>::read_csv_(S &stream, bool columns_only, char delim)  {
 
     std::string     col_name;
     std::string     value;
@@ -502,7 +515,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
             IndexVecType    vec;
 
             vec.reserve(_atoi_<size_type>(value.c_str(), value.size()));
-            IdxParserFunctor_<IndexType>()(vec, stream);
+            IdxParserFunctor_<IndexType>()(vec, stream, io_format::csv, delim);
             if (! columns_only)
                 load_index(std::forward<IndexVecType &&>(vec));
         }
@@ -521,7 +534,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, &::strtof);
+                    slug(vec, stream, &::strtof, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::DOUBLE: {
@@ -531,7 +544,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, &::strtod);
+                    slug(vec, stream, &::strtod, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::LONG_DOUBLE: {
@@ -542,7 +555,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, &::strtold);
+                    slug(vec, stream, &::strtold, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::SHORT: {
@@ -551,7 +564,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    col_vector_push_back_func_(&_atoi_<short>, stream, vec);
+                    col_vector_push_back_func_(&_atoi_<short>, stream, vec,
+                                               io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::USHORT: {
@@ -562,7 +576,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                                   value.size()));
                     col_vector_push_back_func_(&_atoi_<unsigned short>,
                                                stream,
-                                               vec);
+                                               vec,
+                                               io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::INT: {
@@ -571,7 +586,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    col_vector_push_back_func_(&_atoi_<int>, stream, vec);
+                    col_vector_push_back_func_(&_atoi_<int>, stream, vec,
+                                               io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::UINT: {
@@ -582,7 +598,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                                   value.size()));
                     col_vector_push_back_func_(&_atoi_<unsigned int>,
                                                stream,
-                                               vec);
+                                               vec,
+                                               io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::LONG: {
@@ -591,7 +608,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    col_vector_push_back_func_(&_atoi_<long>, stream, vec);
+                    col_vector_push_back_func_(&_atoi_<long>, stream, vec,
+                                               io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::ULONG: {
@@ -602,7 +620,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                                   value.size()));
                     col_vector_push_back_func_(&_atoi_<unsigned long>,
                                                stream,
-                                               vec);
+                                               vec,
+                                               io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::LONG_LONG: {
@@ -613,7 +632,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                                   value.size()));
                     col_vector_push_back_func_(&_atoi_<long long>,
                                                stream,
-                                               vec);
+                                               vec,
+                                               io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::ULONG_LONG: {
@@ -625,7 +645,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                                   value.size()));
                     col_vector_push_back_func_(&_atoi_<unsigned long long>,
                                                stream,
-                                               vec);
+                                               vec,
+                                               io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::CHAR: {
@@ -644,7 +665,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                 return (static_cast<char>(int(tok[0])));
                             else
                                 return (static_cast<char>(atoi(tok)));
-                        });
+                        },
+                        io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::UCHAR: {
@@ -665,7 +687,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                             int(tok[0])));
                             else
                                 return (static_cast<unsigned char>(atoi(tok)));
-                        });
+                        },
+                        io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::BOOL: {
@@ -674,7 +697,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    col_vector_push_back_func_(vec, stream, &::strtol);
+                    col_vector_push_back_func_(vec, stream, &::strtol,
+                                               io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::STRING: {
@@ -689,7 +713,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, converter);
+                    slug(vec, stream, converter, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::VSTR32: {
@@ -704,7 +728,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, converter);
+                    slug(vec, stream, converter, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::VSTR64: {
@@ -719,7 +743,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, converter);
+                    slug(vec, stream, converter, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::VSTR128: {
@@ -734,7 +758,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, converter);
+                    slug(vec, stream, converter, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::VSTR512: {
@@ -749,7 +773,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, converter);
+                    slug(vec, stream, converter, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::VSTR1K: {
@@ -764,7 +788,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, converter);
+                    slug(vec, stream, converter, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::VSTR2K: {
@@ -779,7 +803,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug(vec, stream, converter);
+                    slug(vec, stream, converter, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::DATETIME: {
@@ -794,7 +818,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
-                    slug (vec, stream, converter);
+                    slug (vec, stream, converter, io_format::csv, delim);
                     break;
                 }
                 case file_dtypes::STR_DBL_PAIR: {
@@ -806,7 +830,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
                     col_vector_push_back_cont_func_(
-                        vec, stream, &_get_str_dbl_pair_from_value_);
+                        vec, stream, &_get_str_dbl_pair_from_value_, delim);
                     break;
                 }
                 case file_dtypes::STR_STR_PAIR: {
@@ -818,7 +842,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
                     col_vector_push_back_cont_func_(
-                        vec, stream, &_get_str_str_pair_from_value_);
+                        vec, stream, &_get_str_str_pair_from_value_, delim);
                     break;
                 }
                 case file_dtypes::DBL_DBL_PAIR: {
@@ -830,7 +854,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
                     col_vector_push_back_cont_func_(
-                        vec, stream, &_get_dbl_dbl_pair_from_value_);
+                        vec, stream, &_get_dbl_dbl_pair_from_value_, delim);
                     break;
                 }
                 case file_dtypes::DBL_VEC: {
@@ -843,7 +867,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                                   value.size()));
                     col_vector_push_back_cont_func_(vec,
                                                     stream,
-                                                    &_get_dbl_vec_from_value_);
+                                                    &_get_dbl_vec_from_value_,
+                                                    delim);
                     break;
                 }
                 case file_dtypes::STR_VEC: {
@@ -856,7 +881,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                                   value.size()));
                     col_vector_push_back_cont_func_(vec,
                                                     stream,
-                                                    &_get_str_vec_from_value_);
+                                                    &_get_str_vec_from_value_,
+                                                    delim);
                     break;
                 }
                 case file_dtypes::DBL_SET: {
@@ -869,7 +895,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                                   value.size()));
                     col_vector_push_back_cont_func_(vec,
                                                     stream,
-                                                    &_get_dbl_set_from_value_);
+                                                    &_get_dbl_set_from_value_,
+                                                    delim);
                     break;
                 }
                 case file_dtypes::STR_SET: {
@@ -882,7 +909,8 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                                                   value.size()));
                     col_vector_push_back_cont_func_(vec,
                                                     stream,
-                                                    &_get_str_set_from_value_);
+                                                    &_get_str_set_from_value_,
+                                                    delim);
                     break;
                 }
                 case file_dtypes::STR_DBL_MAP: {
@@ -896,7 +924,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                     col_vector_push_back_cont_func_(
                         vec,
                         stream,
-                        &_get_str_dbl_map_from_value_<map_t>);
+                        &_get_str_dbl_map_from_value_<map_t>, delim);
                     break;
                 }
                 case file_dtypes::STR_DBL_UNOMAP: {
@@ -910,7 +938,7 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only)  {
                     col_vector_push_back_cont_func_(
                         vec,
                         stream,
-                        &_get_str_dbl_map_from_value_<map_t>);
+                        &_get_str_dbl_map_from_value_<map_t>, delim);
                     break;
                 }
                 default: {
@@ -953,14 +981,14 @@ read_csv2_(S &stream,
            size_type starting_row,
            size_type num_rows,
            bool skip_first_line,
-           const std::vector<ReadSchema> &schema)  {
+           const std::vector<ReadSchema> &schema,
+           char delim)  {
 
     constexpr unsigned long data_size = 64 * 1024;
 
     using SpecVec = StlVecType<_col_data_spec_>;
 
     char                line[data_size];
-    const char          delim { ',' };
     std::string         value;
     SpecVec             spec_vec;
     bool                header_read { false };
@@ -2695,7 +2723,8 @@ read(const char *file_name, io_format iof, const ReadParams params)  {
                    params.starting_row,
                    params.num_rows,
                    params.skip_first_line,
-                   params.schema);
+                   params.schema,
+                   params.delim);
     }
     else  {
         std::ifstream       stream;
@@ -2723,7 +2752,7 @@ read(S &in_s, io_format iof, const ReadParams params)  {
             throw NotImplemented("read(): Reading files in chunks is currently"
                                  " only implemented for io_format::csv2");
 
-        read_csv_(in_s, params.columns_only);
+        read_csv_(in_s, params.columns_only, params.delim);
     }
     else if (iof == io_format::csv2)  {
         read_csv2_(in_s,
@@ -2731,7 +2760,8 @@ read(S &in_s, io_format iof, const ReadParams params)  {
                    params.starting_row,
                    params.num_rows,
                    params.skip_first_line,
-                   params.schema);
+                   params.schema,
+                   params.delim);
     }
     else if (iof == io_format::json)  {
         if (params.starting_row != 0 ||

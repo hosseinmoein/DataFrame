@@ -219,7 +219,7 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
     const long  er = std::min(end_row, vec_size);
 
     for (long i = sr; i < er; ++i)
-        _write_csv_df_index_(os, vec[i]) << ',';
+        _write_csv_df_index_(os, vec[i]) << delim;
     os << '\n';
 
     return;

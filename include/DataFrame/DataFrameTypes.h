@@ -880,7 +880,7 @@ struct  ReadParams  {
     // This only applies to csv and csv2 formats. It specifies the delimiting
     // (separating) character.
     //
-    char delim { ',' };
+    char        delim { ',' };
 };
 
 // ----------------------------------------------------------------------------
@@ -910,6 +910,11 @@ struct  WriteParams  {
     // The default format is seconds since Epoch.nanoseconds.
     //
     DT_F            dt_format { DT_FORMAT::DT_PRECISE };
+
+    // This only applies to csv and csv2 formats. It specifies the delimiting
+    // (separating) character.
+    //
+    char            delim { ',' };
 };
 
 // ----------------------------------------------------------------------------

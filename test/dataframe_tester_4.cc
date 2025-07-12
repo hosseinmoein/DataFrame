@@ -3814,6 +3814,15 @@ static void test_io_format_csv2_with_bars()  {
                   double,
                   bool,
                   std::string>(std::cout, io_format::csv2);
+    std::cout << "\n\n";
+    df_read.write<std::ostream,
+                  int,
+                  unsigned long,
+                  unsigned char,
+                  char,
+                  double,
+                  bool,
+                  std::string>(std::cout, io_format::csv2, { .delim = '|' });
 }
 
 // -----------------------------------------------------------------------------

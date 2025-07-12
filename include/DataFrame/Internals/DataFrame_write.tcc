@@ -139,11 +139,11 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             if constexpr (std::same_as<IndexType, DateTime>)  {
                 for (long i = start_row; i < end_row; ++i)
                     _write_csv_df_index_(o, indices_[i], DT_FORMAT::DT_TM2)
-                        << ',';
+                        << params.delim;
             }
             else  {
                 for (long i = start_row; i < end_row; ++i)
-                    _write_csv_df_index_(o, indices_[i]) << ',';
+                    _write_csv_df_index_(o, indices_[i]) << params.delim;
             }
             o << '\n';
         }
@@ -154,7 +154,8 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             print_csv_functor_<Ts ...>  functor (name.c_str(),
                                                  o,
                                                  start_row,
-                                                 end_row);
+                                                 end_row,
+                                                 params.delim);
 
             data_[idx].change(functor);
         }
@@ -179,7 +180,7 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
         const SpinGuard guard_1(lock_);
 
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            if (need_pre_comma)  o << ',';
+            if (need_pre_comma)  o << params.delim;
             else  need_pre_comma = true;
             print_csv2_header_functor_<S, Ts ...>   functor(
                 name.c_str(), o, end_row - start_row, params.dt_format);
@@ -189,6 +190,9 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
         o << '\n';
 
         need_pre_comma = false;
+
+        const SpinGuard guard_2(lock_);
+
         for (long i = start_row; i < end_row; ++i)  {
             size_type   count = 0;
 
@@ -202,14 +206,12 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
                 count += 1;
             }
 
-            const SpinGuard guard_2(lock_);
-
             for (auto citer = column_list_.begin();
                  citer != column_list_.end(); ++citer, ++count)  {
                 print_csv2_data_functor_<S, Ts ...>  functor (
                     i, o, params.dt_format);
 
-                if (need_pre_comma && count > 0)  o << ',';
+                if (need_pre_comma && count > 0)  o << params.delim;
                 else  need_pre_comma = true;
                 data_[citer->second].change(functor);
             }

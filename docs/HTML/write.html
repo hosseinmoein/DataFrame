@@ -58,11 +58,11 @@ body {
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">long</span>            max_recs <span style="color:#800080; ">{</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>numeric_limits<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">max</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper">    <span style="color:#696969; ">// This specifies with what format DateTime columns are written into a csv</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// This specifies in what format DateTime columns are written into a csv</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// file. This only applies to csv2 format.</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">// The only permitted formats are DT_PRECISE, ISO_DT_TM, AMR_DT_TM,</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">// EUR_DT_TM, ISO_DT, AMR_DT, and EUR_DT.</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">// <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html">Dateitme docs (DT_FORMAT)</a> for more info.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// The only permitted formats are <I>DT_PRECISE</I>, <I>ISO_DT_TM</I>, <I>AMR_DT_TM</I>,</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// <I>EUR_DT_TM</I>, <I>ISO_DT</I>, <I>AMR_DT</I>, and <I>EUR_DT</I>.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html">Dateitme docs (DT_FORMAT)</a> for more info.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// The default format is seconds since Epoch.nanoseconds.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    DT_F            dt_format <span style="color:#800080; ">{</span> DT_FORMAT<span style="color:#800080; ">::</span>DT_PRECISE <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>

@@ -299,79 +299,64 @@ ThreadPool::parallel_sort(const I begin, const I end)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename I, typename P>
+static inline I
+_median_of_three_(I a, I b, I c, P &compare) {
+
+    if (compare(*b, *a))  std::swap(a, b);
+    if (compare(*c, *b))  std::swap(b, c);
+    if (compare(*b, *a))  std::swap(a, b);
+    return (b); // *a ≤ *b ≤ *c under comp
+}
+
+// --------------------------------------
+
 template<std::random_access_iterator I, typename P, long TH>
 void
 ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
-
-    using value_type = typename std::iterator_traits<I>::value_type;
-    using fut_type = std::future<void>;
 
     if (begin >= end) return;
 
     const size_type data_size = std::distance(begin, end);
 
-    if (data_size > 1)  {
-        auto                left_iter = begin;
-        auto                right_iter = end - 1;
-        bool                is_swapped_left = false;
-        bool                is_swapped_right = false;
-        const value_type    pivot = *(begin + (data_size / 2));
-        auto                fwd_iter = begin + 1;
-
-        while (fwd_iter <= right_iter)  {
-            if (compare(*fwd_iter, pivot))  {
-                is_swapped_left = true;
-                std::iter_swap(left_iter, fwd_iter);
-                ++left_iter;
-                ++fwd_iter;
-            }
-            else if (compare(pivot, *fwd_iter))  {
-                is_swapped_right = true;
-                std::iter_swap(right_iter, fwd_iter);
-                --right_iter;
-            }
-            else ++fwd_iter;
-        }
-
-        is_swapped_left &= begin < left_iter;
-        is_swapped_right &= right_iter < end;
-
-        if (data_size >= TH)  {
-            fut_type    left_fut;
-            fut_type    right_fut;
-
-            if (is_swapped_left)
-                left_fut = dispatch(false,
-                                    &ThreadPool::parallel_sort<I, P, TH>,
-                                    this,
-                                    begin,
-                                    left_iter,
-                                    compare);
-            if (is_swapped_right)
-                right_fut = dispatch(false,
-                                     &ThreadPool::parallel_sort<I, P, TH>,
-                                     this,
-                                     right_iter + 1,
-                                     end,
-                                     compare);
-
-            if (is_swapped_left)
-                while (left_fut.wait_for(std::chrono::seconds(0)) ==
-                           std::future_status::timeout)
-                    run_task();
-            if (is_swapped_right)
-                while (right_fut.wait_for(std::chrono::seconds(0)) ==
-                           std::future_status::timeout)
-                    run_task();
-        }
-        else  {
-            if (is_swapped_left)
-                std::sort(begin, left_iter, compare);
-
-            if (is_swapped_right)
-                std::sort(right_iter + 1, end, compare);
-        }
+    if (data_size <= TH)  {
+        std::sort(begin, end, compare);
+        return;
     }
+
+    // Pivot selection (median‑of‑three)
+    //
+    auto        mid = begin + (data_size / 2);
+    auto        pivot_it = _median_of_three_(begin, mid, end - 1, compare);
+    const auto  pivot = *pivot_it;
+
+    std::iter_swap(pivot_it, end - 1);  // Move pivot to end‑1
+
+    auto    cut =
+        std::partition(begin, end - 1,
+                       [&pivot, &compare](const auto &x) -> bool {
+                           return (compare(x, pivot));
+                       });
+
+    std::iter_swap(cut, end - 1);  // Restore pivot
+
+    auto    lf = dispatch(false,
+                          &ThreadPool::parallel_sort<I, P, TH>,
+                          this,
+                          begin,
+                          cut,
+                          compare);
+    auto    rf = dispatch(false,
+                          &ThreadPool::parallel_sort<I, P, TH>,
+                          this,
+                          cut + 1,
+                          end,
+                          compare);
+
+    while (lf.wait_for(std::chrono::seconds(0)) == std::future_status::timeout)
+        run_task();
+    while (rf.wait_for(std::chrono::seconds(0)) == std::future_status::timeout)
+        run_task();
 }
 
 // ----------------------------------------------------------------------------

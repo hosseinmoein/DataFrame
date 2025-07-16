@@ -3827,6 +3827,63 @@ static void test_io_format_csv2_with_bars()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_AndersonDarlingTestVisitor()  {
+
+    std::cout << "\nTesting AndersonDarlingTestVisitor{ } ..." << std::endl;
+
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const auto              col_s = ibm.get_index().size();
+    RandGenParams<double>   p1 { .min_value = 99,
+                                 .max_value = 200,
+                                 .seed = 123 };
+
+    ibm.load_column("uniform", gen_uniform_real_dist<double>(col_s, p1));
+    ibm.load_column("exponential", gen_exponential_dist<double>(col_s, p1));
+    ibm.load_column("lognormal", gen_lognormal_dist<double>(col_s, p1));
+    ibm.load_column("normal", gen_normal_dist<double>(col_s, p1));
+
+    RandGenParams<double>   p2 { .seed = 123, .mean = 0, .std = 1.0 };
+
+    ibm.load_column("std_normal", gen_normal_dist<double>(col_s, p2));
+
+    AndersonDarlingTestVisitor<double, std::string> adt;
+
+    ibm.single_act_visit<double>("IBM_Close", adt);
+    assert((std::fabs(adt.get_result() - 63.9697) < 0.0001));
+    assert((std::fabs(adt.get_p_value() - 1.02759e-125) < 0.0000000000001));
+
+    ibm.single_act_visit<double>("uniform", adt);
+    assert((std::fabs(adt.get_result() - 56.7522) < 0.0001));
+    assert((std::fabs(adt.get_p_value() - 7.38848e-115) < 0.0000000000001));
+
+    ibm.single_act_visit<double>("exponential", adt);
+    assert((std::fabs(adt.get_result() - 229.787) < 0.001));
+    assert((std::fabs(adt.get_p_value() - 2.29024e-143) < 0.0000000000001));
+
+    ibm.single_act_visit<double>("lognormal", adt);
+    assert((! std::isfinite(adt.get_result())));
+    assert(std::isnan(adt.get_p_value()));
+
+    ibm.single_act_visit<double>("normal", adt);
+    assert((std::fabs(adt.get_result() - 0.26783) < 0.00001));
+    assert((std::fabs(adt.get_p_value() - 0.68509) < 0.00001));
+
+    ibm.single_act_visit<double>("std_normal", adt);
+    assert((std::fabs(adt.get_result() - 0.26783) < 0.00001));
+    assert((std::fabs(adt.get_p_value() - 0.68509) < 0.00001));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3894,6 +3951,7 @@ int main(int, char *[]) {
     test_read_selected_cols_from_file();
     test_MutualInfoVisitor();
     test_io_format_csv2_with_bars();
+    test_AndersonDarlingTestVisitor();
 
     return (0);
 }

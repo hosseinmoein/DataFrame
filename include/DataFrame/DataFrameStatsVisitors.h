@@ -73,6 +73,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  define TAU 6.28318530717958647692528676655900576
 #endif // TAU
 
+// sqrt(2)
+//
+#ifndef M_SQRT2
+#  define M_SQRT2 1.41421356237309504880
+#endif // M_SQRT2
+
 // 1/sqrt(2)
 //
 #ifndef M_SQRT1_2
@@ -8394,7 +8400,7 @@ struct  MannWhitneyUTestVisitor  {
         zscore_ = (result_ - mu_u) / sigma_u;
         p_val_ =
             2.0 *
-			(1.0 - 0.5 * std::erfc(-std::fabs(zscore_) / std::numbers::sqrt2));
+            (1.0 - 0.5 * std::erfc(-std::fabs(zscore_) / std::numbers::sqrt2));
 
     }
 
@@ -8419,6 +8425,139 @@ private:
 
 template<typename T, typename I = unsigned long>
 using mwu_test_v = MannWhitneyUTestVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+// Anderson Darling Test
+//
+template<arithmetic T, typename I = unsigned long>
+struct  AndersonDarlingTestVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = double;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        const size_type col_s = std::distance(column_begin, column_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 20)
+            throw DataFrameError("AndersonDarlingTestVisitor: "
+                                 "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        // Test statistic explicitly depends on order statistics.
+        //
+        std::vector<value_type> sorted(column_begin, column_end);
+        const auto              thread_level =
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level();
+
+        if (thread_level > 2)
+            ThreadGranularity::thr_pool_.parallel_sort(sorted.begin(),
+                                                       sorted.end());
+        else
+            std::sort(sorted.begin(), sorted.end());
+
+        ZScoreVisitor<T, I> zscore;
+
+        zscore.pre();
+        zscore(idx_begin, idx_end, sorted.begin(), sorted.end());
+        zscore.post();
+
+        std::vector<value_type> phi(col_s);
+        auto                    lbd1 =
+            [&phi, &z = std::as_const(zscore.get_result())]
+            (auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)
+                    phi[i] = normal_cdf_(z[i]);
+            };
+
+        if (thread_level > 2)  {
+            auto    futures = ThreadGranularity::thr_pool_.parallel_loop(
+                                  size_type(0), col_s, std::move(lbd1));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            lbd1(size_type(0), col_s);
+        }
+
+        result_type a2 { 0 };
+        auto        lbd2 =
+            [&phi = std::as_const(phi), col_s]
+            (auto begin, auto end) -> result_type  {
+                result_type res { 0 };
+
+                for (size_type i { begin }; i < end; ++i)
+                    res += result_type(2 * i + 1) *
+                           (std::log(phi[i]) +
+                            std::log(1.0 - phi[col_s - 1 - i]));
+                return (res);
+            };
+
+        if (thread_level > 2)  {
+            auto    futures = ThreadGranularity::thr_pool_.parallel_loop(
+                                  size_type(0), col_s, std::move(lbd2));
+
+            for (auto &fut : futures)  a2 += fut.get();
+        }
+        else  {
+            a2 = lbd2(size_type(0), col_s);
+        }
+        a2 = -result_type(col_s) - a2 / result_type(col_s);
+
+        // These constants 4.0 and 25.0 come from a finite-sample correction
+        // proposed by D.A. Stephens in his 1974 paper:
+        //
+        // "EDF Statistics for Goodness of Fit and Some Comparisons"
+        // Journal of the American Statistical Association, Vol. 69, No. 347,
+        // pp. 730–737.
+        //
+        result_ =
+            a2 *
+            result_type(1.0 + 4.0 /
+                        result_type(col_s) - 25.0 / result_type(col_s * col_s));
+        p_value_ = get_p_value(result_);
+    }
+
+    inline void pre()  { result_ = p_value_ = 0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
+    inline result_type get_p_value() const  { return (p_value_); }
+
+    AndersonDarlingTestVisitor()  {   };
+
+private:
+
+    // Standard normal CDF using the error function
+    //
+    static inline value_type normal_cdf_(value_type x)  {
+
+        return (T(0.5) * std::erfc(-x / T(M_SQRT2)));
+    }
+
+    static inline result_type get_p_value(result_type a2) {
+
+        if (a2 < 0.2)
+            return (1.0 - std::exp(-13.436 + 101.14 * a2 - 223.73 * a2 * a2));
+        else if (a2 < 0.34)
+            return (1.0 - std::exp(-8.318 + 42.796 * a2 - 59.938 * a2 * a2));
+        else if (a2 < 0.6)
+            return (std::exp(0.9177 - 4.279 * a2 - 1.38 * a2 * a2));
+        else
+            return (std::exp(1.2937 - 5.709 * a2 + 0.0186 * a2 * a2));
+    }
+
+    result_type result_ { 0 };  // A2*
+    result_type p_value_ { 0 };
+};
+
+template<typename T, typename I = unsigned long>
+using adar_test_v = AndersonDarlingTestVisitor<T, I>;
 
 } // namespace hmdf
 

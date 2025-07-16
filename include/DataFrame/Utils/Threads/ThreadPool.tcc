@@ -299,14 +299,14 @@ ThreadPool::parallel_sort(const I begin, const I end)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename P>
+template<std::random_access_iterator I, typename P>
 static inline I
 _median_of_three_(I a, I b, I c, P &compare) {
 
     if (compare(*b, *a))  std::swap(a, b);
     if (compare(*c, *b))  std::swap(b, c);
     if (compare(*b, *a))  std::swap(a, b);
-    return (b); // *a ≤ *b ≤ *c under comp
+    return (b); // *a <= *b <= *c under compare
 }
 
 // --------------------------------------
@@ -330,26 +330,26 @@ ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
     auto        pivot_it = _median_of_three_(begin, mid, end - 1, compare);
     const auto  pivot = *pivot_it;
 
-    std::iter_swap(pivot_it, end - 1);  // Move pivot to end‑1
+    std::iter_swap(pivot_it, end - 1);  // Move pivot to end ‑ 1
 
     auto    cut =
-        std::partition(begin, end - 1,
-                       [&pivot, &compare](const auto &x) -> bool {
-                           return (compare(x, pivot));
-                       });
+        std::ranges::partition(begin, end - 1,
+                               [&pivot, &compare](const auto &x) -> bool {
+                                   return (compare(x, pivot));
+                               });
 
-    std::iter_swap(cut, end - 1);  // Restore pivot
+    std::iter_swap(cut.begin(), end - 1);  // Restore pivot
 
     auto    lf = dispatch(false,
                           &ThreadPool::parallel_sort<I, P, TH>,
                           this,
                           begin,
-                          cut,
+                          cut.begin(),
                           compare);
     auto    rf = dispatch(false,
                           &ThreadPool::parallel_sort<I, P, TH>,
                           this,
-                          cut + 1,
+                          cut.begin() + 1,
                           end,
                           compare);
 

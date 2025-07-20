@@ -77,7 +77,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 #ifndef M_SQRT2
 #  define M_SQRT2 1.41421356237309504880
-#endif // M_SQRT2
+#endif // m_SQRT2
 
 // 1/sqrt(2)
 //
@@ -8284,10 +8284,10 @@ struct  KolmoSmirnovTestVisitor  {
         p_value_ = (value > 1.0) ? 1.0 : value;
     }
 
-    inline void pre ()  { result_ = -1; p_value_= -1; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
-    inline result_type get_p_value () const  { return (p_value_); }
+    inline void pre()  { result_ = -1; p_value_= -1; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
+    inline result_type get_p_value() const  { return (p_value_); }
 
     KolmoSmirnovTestVisitor()  {   }
 
@@ -8521,7 +8521,7 @@ struct  AndersonDarlingTestVisitor  {
             a2 *
             result_type(1.0 + 4.0 /
                         result_type(col_s) - 25.0 / result_type(col_s * col_s));
-        p_value_ = get_p_value(result_);
+        p_value_ = get_p_value_(result_);
     }
 
     inline void pre()  { result_ = p_value_ = 0; }
@@ -8537,10 +8537,10 @@ private:
     //
     static inline value_type normal_cdf_(value_type x)  {
 
-        return (T(0.5) * std::erfc(-x / T(M_SQRT2)));
+        return (T(0.5) * std::erfc(-x / T(std::numbers::sqrt2)));
     }
 
-    static inline result_type get_p_value(result_type a2) {
+    static inline result_type get_p_value_(result_type a2)  {
 
         if (a2 < 0.2)
             return (1.0 - std::exp(-13.436 + 101.14 * a2 - 223.73 * a2 * a2));
@@ -8558,6 +8558,451 @@ private:
 
 template<typename T, typename I = unsigned long>
 using adar_test_v = AndersonDarlingTestVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+// Shapiro Wilk Test
+//
+template<arithmetic T, typename I = unsigned long>
+struct  ShapiroWilkTestVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = double;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &column_begin, const H &column_end)  {
+
+        const long  col_s = long(std::distance(column_begin, column_end));
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 3)
+            throw DataFrameError("ShapiroWilkTestVisitor: "
+                                 "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        // Test statistic explicitly depends on order statistics.
+        //
+        std::vector<value_type> sorted(column_begin, column_end);
+        const auto              thread_level =
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level();
+
+        if (thread_level > 2)
+            ThreadGranularity::thr_pool_.parallel_sort(sorted.begin(),
+                                                       sorted.end());
+        else
+            std::sort(sorted.begin(), sorted.end());
+
+        //
+        // Algorithm AS R94, Journal of the Royal Statistical Society Series C
+        // (Applied Statistics) vol. 44, no. 4, pp. 547-551 (1995).
+        //
+
+        result_ = p_value_ = 1;  // Stop the behaviour change 'feature'
+
+        // Polynomial coefficients
+        //
+        constexpr result_type   c1[6] =
+            { 0, 0.221157, -0.147981, -2.07119, 4.434685, -2.706056 };
+        constexpr result_type   c2[6] =
+            { 0, 0.042981, -0.293762, -1.752461, 5.682633, -3.582633 };
+
+        std::vector<result_type>    a(col_s, 0);
+
+        const long          n1 { col_s };
+        result_type         w1 { 0 };
+        const result_type   an { result_type(col_s) };
+
+        // Calculate coefficients a[] for the test
+        //
+        if (col_s == 3)  {
+            a[0] = M_SQRT1_2;
+        }
+        else  {
+            const result_type   an25 { an + 0.25 };
+
+            result_type summ2 { 0 };
+
+            for (long i = 1; i <= col_s; ++i) {
+                auto    &val { a[i - 1] };
+
+                val = ppnd7_((i - 0.375) / an25);
+                summ2 += val * val;
+            }
+            summ2 *= 2.0;
+
+            const result_type   ssumm2 { std::sqrt(summ2) };
+            const result_type   rsn { 1.0 / std::sqrt(an) };
+            const result_type   a1 { poly_(c1, 6, rsn) - a[0] / ssumm2 };
+            result_type         fac { 0 };
+            long                i1 { 0 };
+
+            // Normalize a[]
+            //
+            if (col_s > 5)  {
+                i1 = 3;
+
+                const result_type   a2 { -a[1] / ssumm2 + poly_(c2, 6, rsn) };
+
+                fac = std::sqrt((summ2 - 2.0 * a[0] * a[0] -
+                                 2.0 * a[1] * a[1]) /
+                                (1.0 - 2.0 * a1 * a1 - 2.0 * a2 * a2));
+                a[1] = a2;
+            }
+            else  {
+                i1 = 2;
+                fac = std::sqrt((summ2 - 2.0 * a[0] * a[0]) /
+                                (1.0  - 2.0 * a1 * a1));
+            }
+            a[0] = a1;
+            for (long i = i1; i <= (col_s / 2); ++i)
+                a[i - 1] /= -fac;
+        }
+
+        const long          ncens { col_s - n1 };
+        const result_type   delta { ncens / an };
+
+        // If W input as negative, calculate significance level of -W
+        //
+        if (result_ < 0)  {
+            w1 = 1.0 + result_;
+            return (l70_(w1, col_s, an, ncens, delta));
+
+        }
+
+        // Check for zero range
+        //
+        const result_type   range { sorted[n1 - 1] - sorted[0] };
+
+        // Check for correct sort order on range - scaled X
+        //
+        result_type xx { sorted[0] / range };
+        result_type sx { xx };
+        result_type sa { -a[0] };
+        long        j { col_s - 1 };
+
+        for (long i = 2; i <= n1; ++i)  {
+            const result_type   xi { sorted[i - 1] / range };
+
+            sx += xi;
+            if (i != j)
+                sa += sign_ (1, i - j) * a[std::min(i, j) - 1];
+            xx = xi;
+            j -= 1;
+        }
+
+        // Calculate W statistic as squared correlation between data and
+        // coefficients
+        //
+        sa /= n1;
+        sx /= n1;
+
+        result_type ssa { 0 };
+        result_type sax { 0 };
+        result_type ssx { 0 };
+
+        j = col_s;
+        for (long i = 1; i <= n1; ++i, --j)  {
+            const result_type   asa =
+                (i != j)
+                    ? sign_(1, i - j) * a[std::min(i, j) - 1] - sa : -sa;
+            const result_type   xsx { sorted[i - 1] / range - sx };
+
+            ssa += asa * asa;
+            ssx += xsx * xsx;
+            sax += asa * xsx;
+        }
+
+        // W1 equals (1-W) claculated to avoid excessive rounding error
+        // for W very near 1 (a potential problem in very large samples)
+        //
+        const result_type   ssassx { std::sqrt(ssa * ssx) };
+
+        w1 = (ssassx - sax) * (ssassx + sax) / (ssa * ssx);
+
+        l70_(w1, col_s, an, ncens, delta);
+    }
+
+    inline void pre()  { result_ = p_value_ = 0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
+    inline result_type get_p_value() const  { return (p_value_); }
+
+    ShapiroWilkTestVisitor()  {   };
+
+private:
+
+    // Auxiliary procedure in algorithm AS 181, Journal of the Royal
+    // Statistical Society Series C (Applied Statistics) vol. 31, no. 2,
+    // pp. 176-180 (1982).
+    //
+    static inline result_type
+    poly_(const result_type *cc, size_type nord, result_type x)  {
+
+        result_type ret_val { cc[0] };
+
+        if (nord == 1)  return (ret_val);
+
+        size_type   n2 { 0 }, j { 0 };
+        result_type p { x * cc[nord-1] };
+
+        if (nord != 2)  {
+            n2 = nord - 2;
+            j = n2 + 1;
+
+            for (size_type i { 1 }; i <= n2; ++i)  {
+                p = (p + cc[j - 1]) * x;
+                j -= 1;
+            }
+        }
+        ret_val = ret_val + p;
+        return (ret_val);
+    }
+
+    // Algorithm AS 241, Journal of the Royal Statistical Society Series C
+    // (Applied Statistics) vol. 26, no. 3, pp. 118-121 (1977).
+    //
+    static inline result_type
+    ppnd7_(result_type p)  {
+
+        constexpr   result_type half { 0.5 };
+        constexpr   result_type split1 { 0.425 };
+        constexpr   result_type split2 { 5 };
+        constexpr   result_type const1 { 0.180625 };
+        constexpr   result_type const2 { 1.6 };
+        constexpr   result_type a0 { 3.3871327179E+00 };
+        constexpr   result_type a1 { 5.0434271938E+01 };
+        constexpr   result_type a2 { 1.5929113202E+02 };
+        constexpr   result_type a3 { 5.9109374720E+01 };
+        constexpr   result_type b1 { 1.7895169469E+01 };
+        constexpr   result_type b2 { 7.8757757664E+01 };
+        constexpr   result_type b3 { 6.7187563600E+01 };
+        constexpr   result_type c0 { 1.4234372777E+00 };
+        constexpr   result_type c1 { 2.7568153900E+00 };
+        constexpr   result_type c2 { 1.3067284816E+00 };
+        constexpr   result_type c3 { 1.7023821103E-01 };
+        constexpr   result_type d1 { 7.3700164250E-01 };
+        constexpr   result_type d2 { 1.2021132975E-01 };
+        constexpr   result_type e0 { 6.6579051150E+00 };
+        constexpr   result_type e1 { 3.0812263860E+00 };
+        constexpr   result_type e2 { 4.2868294337E-01 };
+        constexpr   result_type e3 { 1.7337203997E-02 };
+        constexpr   result_type f1 { 2.4197894225E-01 };
+        constexpr   result_type f2 { 1.2258202635E-02 };
+
+        result_type normal_dev { 0 };
+        result_type q { 0 };
+        result_type r { 0 };
+
+        q = p - half;
+        if (std::abs(q) <= split1)  {
+            r = const1 - q * q;
+            normal_dev = q * (((a3 * r + a2) * r + a1) * r + a0) /
+                         (((b3 * r + b2) * r + b1) * r + 1.0);
+            return (normal_dev);
+        }
+
+        if (q < 0)
+            r = p;
+        else
+            r = 1.0 - p;
+
+        if (r <= 0)  {
+            normal_dev = 0;
+            return (normal_dev);
+        }
+        r = std::sqrt(-std::log(r));
+        if (r <= split2)  {
+            r = r - const2;
+            normal_dev =
+                (((c3 * r + c2) * r + c1) * r + c0) /
+                ((d2 * r + d1) * r + 1.0);
+        }
+        else  {
+            r = r - split2;
+            normal_dev =
+                (((e3 * r + e2) * r + e1) * r + e0) /
+                ((f2 * r + f1) * r + 1.0);
+        }
+        if (q < 0)  { normal_dev = -normal_dev; }
+        return (normal_dev);
+    }
+
+    // Algorithm AS 66, Journal of the Royal Statistical Society Series C
+    // (Applied Statistics) vol. 22, pp. 424-427 (1973).
+    //
+    static inline result_type
+    alnorm_(result_type x, bool upper)  {
+
+        constexpr result_type   half { 0.5 };
+        constexpr result_type   con { 1.28 };
+        constexpr result_type   ltone { 7.0 };
+        constexpr result_type   utzero { 18.66 };
+        constexpr result_type   p { 0.398942280444 };
+        constexpr result_type   q { 0.39990348504 };
+        constexpr result_type   r { 0.398942280385 };
+        constexpr result_type   a1 { 5.75885480458 };
+        constexpr result_type   a2 { 2.62433121679 };
+        constexpr result_type   a3 { 5.92885724438 };
+        constexpr result_type   b1 { -29.8213557807 };
+        constexpr result_type   b2 { 48.6959930692 };
+        constexpr result_type   c1 { -3.8052E-8 };
+        constexpr result_type   c2 { 3.98064794E-4 };
+        constexpr result_type   c3 { -0.151679116635 };
+        constexpr result_type   c4 { 4.8385912808 };
+        constexpr result_type   c5 { 0.742380924027 };
+        constexpr result_type   c6 { 3.99019417011 };
+        constexpr result_type   d1 { 1.00000615302 };
+        constexpr result_type   d2 { 1.98615381364 };
+        constexpr result_type   d3 { 5.29330324926 };
+        constexpr result_type   d4 { -15.1508972451 };
+        constexpr result_type   d5 { 30.789933034 };
+        result_type             alnorm {0 };
+        result_type             z { x };
+        result_type             y { 0 };
+        bool                    up { upper };
+
+        if (z < 0)  {
+            up = ! up;
+            z = -z;
+        }
+        if (z <= ltone || (up && z <= utzero))  {
+            y = half * z * z;
+            if (z > con)  {
+                alnorm =
+                    r * std::exp(-y) /
+                    (z + c1 + d1 /
+                     (z + c2 + d2 /
+                      (z + c3 + d3 /
+                       (z + c4 + d4 /
+                        (z + c5 + d5 / (z + c6))))));
+            }
+            else  {
+                alnorm =
+                    half - z *
+                    (p - q * y / (y + a1 + b1 / (y + a2 + b2 / (y + a3))));
+            }
+        }
+        else  {
+            alnorm = 0;
+        }
+
+        if (! up)  { alnorm = 1.0 - alnorm; }
+        return (alnorm);
+    }
+
+    static inline long
+    sign_(long x, long y)  { return (y < 0 ? -std::labs(x) : std::labs(x)); }
+
+    // The goto section of the algorithm
+    //
+    inline void
+    l70_(result_type w1,
+         long col_s,
+         result_type an,
+         long ncens,
+         result_type delta)  {
+
+        constexpr result_type   bf1 { 0.8378 };
+        constexpr result_type   pi6 { 1.909859 };
+        constexpr result_type   z90 { 1.2816 };
+        constexpr result_type   z95 { 1.6449 };
+        constexpr result_type   xx90 { 0.556 };
+        constexpr result_type   z99 { 2.3263 };
+        constexpr result_type   zss { 0.56268 };
+        constexpr result_type   zm { 1.7509 };
+        constexpr result_type   xx95 { 0.622 };
+        constexpr result_type   stqr { 1.047198 };
+
+        // polynomial coefficients
+        //
+        constexpr result_type   g[2] = { -2.273, 0.459 };
+        constexpr result_type   c3[4] =
+            { 0.544, -0.39978, 0.025054, -6.714e-4 };
+        constexpr result_type   c4[4] =
+            { 1.3822, -0.77857, 0.062767, -0.0020322 };
+        constexpr result_type   c5[4] =
+            { -1.5861, -0.31082, -0.083751, 0.0038915 };
+        constexpr result_type   c6[3] = { -0.4803, -0.082676, 0.0030302 };
+        constexpr result_type   c7[2] = { 0.164, 0.533 };
+        constexpr result_type   c8[2] = { 0.1736, 0.315 };
+        constexpr result_type   c9[2] = { 0.256, -0.00635 };
+
+        result_ = 1.0 - w1;
+
+        // Calculate significance level for W
+
+        if (col_s == 3)  {  // exact P value
+            p_value_ = pi6 * (std::asin(std::sqrt(result_)) - stqr);
+            return;
+        }
+
+        result_type         y { std::log(w1) };
+        const result_type   xx2 { std::log(an) };
+
+        result_type m { 0 };
+        result_type s { 1 };
+
+        if (col_s <= 11)  {
+            const result_type   gamma { poly_(g, 2, an) };
+
+            if (y >= gamma)  {
+                p_value_ = std::numeric_limits<result_type>::epsilon();
+                return;
+            }
+            y = -std::log(gamma - y);
+            m = poly_(c3, 4, an);
+            s = std::exp(poly_(c4, 4, an));
+        }
+        else  {  // col_s >= 12
+            m = poly_(c5, 4, xx2);
+            s = std::exp(poly_(c6, 3, xx2));
+        }
+
+        if (ncens > 0)  {  // <==>  col_s > n1
+            // Censoring by proportion NCENS/N.
+            // Calculate mean and sd of normal equivalent deviate of W.
+            //
+            const result_type   ld { -std::log(delta) };
+            const result_type   bf { 1.0 + xx2 * bf1 };
+            result_type         r__1 { std::pow(xx90, xx2)};
+            const result_type   z90f {
+                z90 + bf * std::pow(poly_(c7, 2, r__1), ld)
+            };
+
+            r__1 = pow(xx95, xx2);
+
+            const result_type   z95f {
+                z95 + bf * std::pow(poly_(c8, 2, r__1), ld)
+            };
+            const result_type   z99f {
+                z99 + bf * std::pow(poly_(c9, 2, xx2), ld)
+            };
+
+            // Regress Z90F,...,Z99F on normal deviates Z90,...,Z99 to get
+            // pseudo-mean and pseudo-sd of z as the slope and intercept
+            //
+            const result_type   zfm { (z90f + z95f + z99f) / 3.0 };
+            const result_type   zsd {
+                (z90 * (z90f - zfm) +
+                 z95 * (z95f - zfm) + z99 * (z99f - zfm)) / zss
+            };
+            const result_type   zbar { zfm - zsd * zm };
+
+            m += zbar * s;
+            s *= zsd;
+        }
+        p_value_ = alnorm_((y - m) / s, true);
+    }
+
+    result_type result_ { 0 };  // W
+    result_type p_value_ { 0 };
+};
+
+template<typename T, typename I = unsigned long>
+using swilk_test_v = ShapiroWilkTestVisitor<T, I>;
 
 } // namespace hmdf
 

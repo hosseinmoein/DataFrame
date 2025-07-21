@@ -3941,6 +3941,63 @@ static void test_ShapiroWilkTestVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_CramerVonMisesTestVisitor()  {
+
+    std::cout << "\nTesting CramerVonMisesTestVisitor{ } ..." << std::endl;
+
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const auto              col_s = ibm.get_index().size();
+    RandGenParams<double>   p1 { .min_value = 99,
+                                 .max_value = 200,
+                                 .seed = 123 };
+
+    ibm.load_column("uniform", gen_uniform_real_dist<double>(col_s, p1));
+    ibm.load_column("exponential", gen_exponential_dist<double>(col_s, p1));
+    ibm.load_column("lognormal", gen_lognormal_dist<double>(col_s, p1));
+    ibm.load_column("normal", gen_normal_dist<double>(col_s, p1));
+
+    RandGenParams<double>   p2 { .seed = 123, .mean = 0, .std = 1.0 };
+
+    ibm.load_column("std_normal", gen_normal_dist<double>(col_s, p2));
+
+    CramerVonMisesTestVisitor<double, std::string>  cvmt;
+
+    ibm.single_act_visit<double>("IBM_Close", cvmt);
+    assert((std::fabs(cvmt.get_result() - 8.56304) < 0.00001));
+    assert((std::fabs(cvmt.get_p_value() - 2.22045e-16) < 0.0000000000001));
+
+    ibm.single_act_visit<double>("uniform", cvmt);
+    assert((std::fabs(cvmt.get_result() - 7.78703) < 0.00001));
+    assert((std::fabs(cvmt.get_p_value() - 2.22045e-16) < 0.0000000000001));
+
+    ibm.single_act_visit<double>("exponential", cvmt);
+    assert((std::fabs(cvmt.get_result() - 39.0971) < 0.0001));
+    assert((std::fabs(cvmt.get_p_value() - 2.22045e-16) < 0.0000000000001));
+
+    ibm.single_act_visit<double>("lognormal", cvmt);
+    assert((std::fabs(cvmt.get_result() - 96.4868) < 0.0001));
+    assert((std::fabs(cvmt.get_p_value() - 2.22045e-16) < 0.0000000000001));
+
+    ibm.single_act_visit<double>("normal", cvmt);
+    assert((std::fabs(cvmt.get_result() - 0.040035) < 0.000001));
+    assert((std::fabs(cvmt.get_p_value() - 0.99) < 0.01));
+
+    ibm.single_act_visit<double>("std_normal", cvmt);
+    assert((std::fabs(cvmt.get_result() - 0.040035) < 0.000001));
+    assert((std::fabs(cvmt.get_p_value() - 0.99) < 0.01));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4010,6 +4067,7 @@ int main(int, char *[]) {
     test_io_format_csv2_with_bars();
     test_AndersonDarlingTestVisitor();
     test_ShapiroWilkTestVisitor();
+    test_CramerVonMisesTestVisitor();
 
     return (0);
 }

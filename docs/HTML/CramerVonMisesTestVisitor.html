@@ -1,0 +1,145 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> CramerVonMisesTestVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> cvonm_test_v <span style="color:#808030; ">=</span> CramerVonMisesTestVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        This functor class calculates the Cramer-von Mises Test<BR><BR>
+
+        The Cramer-von Mises test is a statistical test used to assess how well a sample dataset fits a specified distribution. It's a non-parametric goodness-of-fit test, meaning it doesn't rely on assumptions about the specific distribution of the data. It's often used as an alternative to the <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/KolmoSmirnovTestVisitor.html">Kolmogorov-Smirnov test</a>, especially when deviations at the tails of the distribution are important.<BR>
+        The calculated test statistic is then compared to critical values from a distribution or a p-value is calculated. This determines whether the observed difference is statistically significant, indicating a poor fit of the data to the hypothesized distribution.<BR><BR>
+
+        <I><B>get_result()</B></I> returns the test statistics (W<sup>2</sup>). It quantifies the difference between the sample's empirical cumulative distribution function (ECDF) and the theoretical normal distribution function (CDF). A higher test statistic indicates a greater discrepancy between the sample and the normal distribution.<BR>
+        <I><B>get_p_value()</B></I> member function returns the p-value. P-value is between 0 and 1. Closer values to one means there's not enough evidence to conclude that the sample data differs significantly from the normal distribution.<BR>
+        <I>
+        <PRE>
+    CramerVonMisesTestVisitor();
+        </PRE>
+        </I>
+      </td>
+      <td width="22%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_CramerVonMisesTestVisitor<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing CramerVonMisesTestVisitor{ } ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    StrDataFrame    ibm<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">try</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        ibm<span style="color:#808030; ">.</span><span style="color:#603000; ">read</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM.csv</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> io_format<span style="color:#800080; ">::</span>csv2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">catch</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DataFrameError <span style="color:#808030; ">&amp;</span>ex<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> ex<span style="color:#808030; ">.</span>what<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">::</span><span style="color:#603000; ">exit</span><span style="color:#808030; ">(</span><span style="color:#808030; ">-</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>              col_s <span style="color:#808030; ">=</span> ibm<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   p1 <span style="color:#800080; ">{</span> <span style="color:#808030; ">.</span>min_value <span style="color:#808030; ">=</span> <span style="color:#008c00; ">99</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">.</span>max_value <span style="color:#808030; ">=</span> <span style="color:#008c00; ">200</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">uniform</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_uniform_real_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p1<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">exponential</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_exponential_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p1<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">lognormal</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_lognormal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p1<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">normal</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p1<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   p2 <span style="color:#800080; ">{</span> <span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">.</span>mean <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">.</span><span style="color:#666616; ">std</span> <span style="color:#808030; ">=</span> <span style="color:#008000; ">1.0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">std_normal</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p2<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    CramerVonMisesTestVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span>  cvmt<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> cvmt<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">8.56304</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.00001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">2.22045e-16</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000000000001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">uniform</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> cvmt<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">7.78703</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.00001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">2.22045e-16</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000000000001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">exponential</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> cvmt<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">39.0971</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">2.22045e-16</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000000000001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">lognormal</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> cvmt<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">96.4868</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">2.22045e-16</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000000000001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">normal</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> cvmt<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.040035</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.000001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.99</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.01</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ibm<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">std_normal</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> cvmt<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.040035</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.000001</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>cvmt<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.99</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.01</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

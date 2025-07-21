@@ -9004,6 +9004,122 @@ private:
 template<typename T, typename I = unsigned long>
 using swilk_test_v = ShapiroWilkTestVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Cramer-von Mises Test
+//
+template<arithmetic T, typename I = unsigned long>
+struct  CramerVonMisesTestVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = double;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        const size_type col_s = std::distance(column_begin, column_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 3)
+            throw DataFrameError("CramerVonMisesTestVisitor: "
+                                 "Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        MeanVisitor<T, I>   mv;
+        StdVisitor<T, I>    sv;
+
+        mv.pre();
+        sv.pre();
+        mv(idx_begin, idx_end, column_begin, column_end);
+        sv(idx_begin, idx_end, column_begin, column_end);
+        mv.post();
+        sv.post();
+
+        std::vector<value_type> sorted(column_begin, column_end);
+        const auto              thread_level =
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level();
+        result_type             sum { 0 };
+        auto                    lbd =
+            [&sorted, col_s,
+             mean = mv.get_result(), stdev = sv.get_result()]
+            (auto begin, auto end) -> result_type {
+                result_type res { 0 };
+
+                for (size_type i { begin }; i < end; ++i)  {
+                    const result_type   fi =
+                        normal_cdf_(sorted[i], mean, stdev);
+                    const result_type   ui =
+                        (2.0 * (i + 1) - 1.0) / (2.0 * col_s);
+
+                    res += ((fi - ui) * (fi - ui));
+                }
+                return (res);
+            };
+
+        if (thread_level > 2)  {
+            ThreadGranularity::thr_pool_.parallel_sort(sorted.begin(),
+                                                       sorted.end());
+
+            auto    futures = ThreadGranularity::thr_pool_.parallel_loop(
+                                  size_type(0), col_s, std::move(lbd));
+
+            for (auto &fut : futures)  sum += fut.get();
+        }
+        else  {
+            std::sort(sorted.begin(), sorted.end());
+            sum = lbd(size_type(0), col_s);
+        }
+
+        result_ = sum + 1.0 / (12.0 * col_s);
+        p_value_ = get_p_value_(result_);
+    }
+
+    inline void pre()  { result_ = p_value_ = 0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
+    inline result_type get_p_value() const  { return (p_value_); }
+
+    CramerVonMisesTestVisitor()  {   };
+
+private:
+
+    // Standard normal CDF using the error function
+    //
+    static inline result_type
+    normal_cdf_(result_type x, value_type mean, value_type stdev)  {
+
+        return (0.5 * std::erfc(-(x - mean) / (stdev * std::numbers::sqrt2)));
+    }
+
+    static inline result_type get_p_value_(result_type w2)  {
+
+        // Approximation formula (Anderson 1962)
+        //
+        if (w2 < 0.0275)  return (1.0);
+        else if (w2 < 0.051)  return (0.99);
+        else if (w2 < 0.092)  return (0.95);
+        else if (w2 < 0.126)  return (0.9);
+        else if (w2 < 0.152)  return (0.85);
+        else if (w2 < 0.195)  return (0.8);
+        else if (w2 < 0.220)  return (0.75);
+        else if (w2 < 0.275)  return (0.7);
+        else if (w2 < 0.319)  return (0.65);
+        else if (w2 < 0.347)  return (0.6);
+        else if (w2 < 0.393)  return (0.55);
+        else if (w2 < 0.429)  return (0.5);
+        else return (std::numeric_limits<result_type>::epsilon());
+    }
+
+    result_type result_ { 0 };  // W^2
+    result_type p_value_ { 0 };
+};
+
+template<typename T, typename I = unsigned long>
+using cvonm_test_v = CramerVonMisesTestVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

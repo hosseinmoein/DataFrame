@@ -4485,16 +4485,6 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     explode(const char *col_name) const;
 
-
-
-
-
-
-
-
-
-
-
     // This rotates (unpivots) a wide DataFrame 90 degrees into a long
     // DataFrame. It rotates the DataFrame on pvt_col_name column. It adds a
     // string column (i.e. variable) to the returned  DataFrame that contains
@@ -4523,19 +4513,6 @@ public: // Read/access and slicing interfaces
          std::vector<const char *> &&value_col_names = { },
          const char *var_name = "variable",
          const char *value_name = "values") const;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     // This returns a DataFrame that is the difference between self and other.
     // The returned DataFrame has the exact same index column as self.

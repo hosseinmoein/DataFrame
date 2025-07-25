@@ -37,18 +37,23 @@ jobs:
         # Learn more about CodeQL language support at https://git.io/codeql-language-support
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Upload SARIF for tool A - Category 1
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results_toolA_cat1.sarif
+          category: toolA-category1
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
-        # If you wish to specify custom queries, you can do so here or in a config file.
-        # By default, queries listed here will override any specified in a config file.
-        # Prefix the list here with "+" to use these queries and those in the config file.
-        # queries: ./path/to/local/query, your-org/your-repo/queries@main
+      # Initializes the CodeQL tools for scanning.
+      - name: Upload SARIF for tool A - Category 2
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          languages: ${{ matrix.language }}
+          sarif_file: results_toolA_cat2.sarif
+          category: toolA-category2
+          # If you wish to specify custom queries, you can do so here or in a config file.
+          # By default, queries listed here will override any specified in a config file.
+          # Prefix the list here with "+" to use these queries and those in the config file.
+          # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)

@@ -43,6 +43,7 @@ using namespace hmdf;
 
 // A DataFrame with ulong index type
 //
+using ULDataFrame = StdDataFrame<unsigned long>;
 using MyDataFrame = StdDataFrame256<unsigned long>;
 using MyStdDataFrame = StdDataFrame<unsigned long>;
 using StrDataFrame = StdDataFrame<std::string>;
@@ -3998,6 +3999,47 @@ static void test_CramerVonMisesTestVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_melt()  {
+
+    std::cout << "\nTesting melt( ) ..." << std::endl;
+
+    ULDataFrame df;
+
+    df.load_data(
+        std::vector<unsigned long>{ 1, 2, 3, 4, 5, 6, 7 },
+        std::make_pair("day",
+                       std::vector<std::string>{ "Monday", "Tuesday",
+                                                 "Wednesday", "Thursday",
+                                                 "Friday", "Saturday", "Sunday"
+                                }),
+        std::make_pair("Chicago",
+                       std::vector<double>{ 32, 30, 28, 22, 30, 20, 25 }),
+        std::make_pair("Tehran",
+                       std::vector<double>{ 75, 77, 75, 82, 83, 81, 77 }),
+        std::make_pair("Berlin",
+                       std::vector<double>{ 41, 43, 45, 38, 30, 45, 47 }),
+        std::make_pair("Str Column",
+                       std::vector<std::string>{ "AA", "BB", "CC", "DD", "EE",
+                                                 "FF", "GG" }));
+
+    df.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
+    std::cout << "\n\n";
+
+    const auto  mdf1 =
+        df.melt<std::string, double>("day", { "Chicago", "Tehran", "Berlin" });
+
+    mdf1.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
+    std::cout << "\n\n";
+
+    const auto  mdf2 = df.melt<std::string, double>("day");
+
+    mdf2.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
+
+    assert((mdf1.is_equal<double, std::string>(mdf2)));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4068,6 +4110,7 @@ int main(int, char *[]) {
     test_AndersonDarlingTestVisitor();
     test_ShapiroWilkTestVisitor();
     test_CramerVonMisesTestVisitor();
+    test_melt();
 
     return (0);
 }

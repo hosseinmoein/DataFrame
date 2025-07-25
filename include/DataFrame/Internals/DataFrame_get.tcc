@@ -931,6 +931,77 @@ DataFrame<I, H>::explode(const char *col_name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename VAR_T, typename VAL_T>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::melt(const char *pvt_col_name,
+                      std::vector<const char *> &&value_col_names,
+                      const char *var_name,
+                      const char *value_name) const  {
+
+    if (value_col_names.empty() && (! column_list_.empty()))  {
+        SpinGuard   guard (lock_);
+
+        value_col_names.reserve(column_list_.size() - 1);
+        for (const auto &[col_name, idx]: column_list_)  {
+            const auto  &col = get_column<VAL_T>(col_name.c_str(), false);
+
+            if ((! col.empty()) && col_name != pvt_col_name)
+                value_col_names.push_back(col_name.c_str());
+        };
+    }
+
+    const size_type             new_col_s =
+        indices_.size() * value_col_names.size();
+    ColumnVecType<std::string>  new_var_col;
+    ColumnVecType<IndexType>    new_idx;
+
+    new_var_col.reserve(new_col_s);
+    new_idx.reserve(new_col_s);
+    for (const auto col_name : value_col_names)  {
+        for (const auto &idx : indices_)  {
+            new_var_col.push_back(col_name);
+            new_idx.push_back(idx);
+        }
+    }
+
+    const auto              &pvt_col = get_column<VAR_T>(pvt_col_name);
+    ColumnVecType<VAR_T>    new_pvt_col;
+
+    new_pvt_col.reserve(new_col_s);
+    for (size_type i = 0; i < value_col_names.size(); ++i)  {
+        size_type   j = 0;
+
+        for ( ; j < pvt_col.size(); ++j)
+            new_pvt_col.push_back(pvt_col[j]);
+        for ( ; j < indices_.size(); ++j)
+            new_pvt_col.push_back(get_nan<VAR_T>());
+    }
+
+    ColumnVecType<VAL_T>    new_val_col;
+
+    new_val_col.reserve(new_col_s);
+    for (const auto col_name : value_col_names)  {
+        const auto  &val_col = get_column<VAL_T>(col_name);
+        size_type   j = 0;
+
+        for ( ; j < val_col.size(); ++j)
+            new_val_col.push_back(val_col[j]);
+        for ( ; j < indices_.size(); ++j)
+            new_val_col.push_back(get_nan<VAL_T>());
+    }
+
+    DataFrame   result;
+
+    result.load_data(std::move(new_idx),
+                     std::make_pair(pvt_col_name, new_pvt_col),
+                     std::make_pair(var_name, new_var_col),
+                     std::make_pair(value_name, new_val_col));
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<equality_default_construct ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::difference(const DataFrame &other) const  {

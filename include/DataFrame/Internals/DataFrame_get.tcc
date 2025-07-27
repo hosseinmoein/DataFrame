@@ -933,10 +933,10 @@ DataFrame<I, H>::explode(const char *col_name) const  {
 template<typename I, typename H>
 template<typename VAR_T, typename VAL_T>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-DataFrame<I, H>::melt(const char *pvt_col_name,
-                      std::vector<const char *> &&value_col_names,
-                      const char *var_name,
-                      const char *value_name) const  {
+DataFrame<I, H>::unpivot(const char *pvt_col_name,
+                         std::vector<const char *> &&value_col_names,
+                         const char *var_name,
+                         const char *value_name) const  {
 
     if (value_col_names.empty() && (! column_list_.empty()))  {
         SpinGuard   guard (lock_);

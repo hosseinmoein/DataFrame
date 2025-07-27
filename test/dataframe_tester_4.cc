@@ -3999,9 +3999,9 @@ static void test_CramerVonMisesTestVisitor()  {
 
 // ----------------------------------------------------------------------------
 
-static void test_melt()  {
+static void test_unpivot()  {
 
-    std::cout << "\nTesting melt( ) ..." << std::endl;
+    std::cout << "\nTesting unpivot( ) ..." << std::endl;
 
     ULDataFrame df;
 
@@ -4026,12 +4026,13 @@ static void test_melt()  {
     std::cout << "\n\n";
 
     const auto  mdf1 =
-        df.melt<std::string, double>("day", { "Chicago", "Tehran", "Berlin" });
+        df.unpivot<std::string, double>
+            ("day", { "Chicago", "Tehran", "Berlin" });
 
     mdf1.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
     std::cout << "\n\n";
 
-    const auto  mdf2 = df.melt<std::string, double>("day");
+    const auto  mdf2 = df.unpivot<std::string, double>("day");
 
     mdf2.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
 
@@ -4110,7 +4111,7 @@ int main(int, char *[]) {
     test_AndersonDarlingTestVisitor();
     test_ShapiroWilkTestVisitor();
     test_CramerVonMisesTestVisitor();
-    test_melt();
+    test_unpivot();
 
     return (0);
 }

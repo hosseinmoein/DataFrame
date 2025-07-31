@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <cstring>
 #include <functional>
+#include <string>
 
 // ----------------------------------------------------------------------------
 
@@ -352,6 +353,8 @@ public:
         : VirtualString (buffer_)  { *this = that; }
     inline FixedSizeString (const VirtualString &that) noexcept
         : VirtualString (buffer_)  { *this = that; }
+    inline FixedSizeString (const std::string &that) noexcept
+        : VirtualString (buffer_)  { *this = that.c_str(); }
 
     // This is a constructor with the same signature as std::string
     // but here the size is ignored
@@ -378,6 +381,11 @@ public:
     inline FixedSizeString &operator = (const VirtualString &rhs) noexcept  {
 
         *this = rhs.c_str ();
+        return (*this);
+    }
+    inline FixedSizeString &operator = (const std::string &rhs) noexcept  {
+
+        snprintf_nowarn(buffer_, S, "%s", rhs.c_str());
         return (*this);
     }
 

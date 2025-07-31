@@ -714,12 +714,12 @@ col_2:1:<double>:8,
 col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
-INDEX:1:<ulong>:123450,
-col_1:1:<double>:1,
-col_2:1:<double>:8,
-col_3:1:<double>:15,
-col_str:1:<string>:11,
-col_4:1:<double>:22,
+INDEX:1:<ulong>:123451,
+col_1:1:<double>:2,
+col_2:1:<double>:9,
+col_3:1:<double>:16,
+col_str:1:<string>:22,
+col_4:1:<double>:23,
 INDEX:1:<ulong>:123450,
 col_1:1:<double>:1,
 col_2:1:<double>:8,
@@ -2386,7 +2386,7 @@ Testing ShapiroWilkTestVisitor{ } ...
 
 Testing CramerVonMisesTestVisitor{ } ...
 
-Testing melt( ) ...
+Testing unpivot( ) ...
 INDEX:7:<ulong>,day:7:<string>,Chicago:7:<double>,Tehran:7:<double>,Berlin:7:<double>,Str Column:7:<string>
 1,Monday,32,75,41,AA
 2,Tuesday,30,77,43,BB
@@ -2443,6 +2443,50 @@ INDEX:21:<ulong>,day:21:<string>,variable:21:<string>,values:21:<double>
 5,Friday,Berlin,30
 6,Saturday,Berlin,45
 7,Sunday,Berlin,47
+
+Testing pivot( ) ...
+INDEX:7:<ulong>,day:7:<string>,Chicago:7:<double>,Tehran:7:<double>,Berlin:7:<double>,Str Column:7:<string>
+1,Monday,32,75,41,AA
+2,Tuesday,30,77,43,BB
+3,Wednesday,28,75,45,CC
+4,Thursday,22,82,38,DD
+5,Friday,30,83,30,EE
+6,Saturday,20,81,45,FF
+7,Sunday,25,77,47,GG
+
+
+INDEX:21:<ulong>,day:21:<string>,variable:21:<string>,values:21:<double>
+1,Monday,Chicago,32
+2,Tuesday,Chicago,30
+3,Wednesday,Chicago,28
+4,Thursday,Chicago,22
+5,Friday,Chicago,30
+6,Saturday,Chicago,20
+7,Sunday,Chicago,25
+1,Monday,Tehran,75
+2,Tuesday,Tehran,77
+3,Wednesday,Tehran,75
+4,Thursday,Tehran,82
+5,Friday,Tehran,83
+6,Saturday,Tehran,81
+7,Sunday,Tehran,77
+1,Monday,Berlin,41
+2,Tuesday,Berlin,43
+3,Wednesday,Berlin,45
+4,Thursday,Berlin,38
+5,Friday,Berlin,30
+6,Saturday,Berlin,45
+7,Sunday,Berlin,47
+
+
+INDEX:7:<ulong>,Chicago:7:<double>,Tehran:7:<double>,Berlin:7:<double>
+1,32,75,41
+2,30,77,43
+3,28,75,45
+4,22,82,38
+5,30,83,30
+6,20,81,45
+7,25,77,47
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2461,6 +2505,6 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: -0.0377825146663, 0.00636987718821, 0.0314588489369, -0.00764112914073, 
+Means of clusters are: 0.0320770124619, -0.00724342080389, 0.00657760289556, -0.0375663204468, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 IBM returns seasonality period is; 2.03272727273

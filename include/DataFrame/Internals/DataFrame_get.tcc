@@ -1002,6 +1002,94 @@ DataFrame<I, H>::unpivot(const char *pvt_col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename VAL_T, StringOnly C_T>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::pivot(const char *col_names_column,
+                       std::vector<const char *> &&val_col_names) const  {
+
+    const auto  &col_names = get_column<C_T>(col_names_column);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (col_names.size() <= 1)
+        throw NotFeasible("pivot(): Names column is too short");
+    if (column_list_.size() <= 1)
+        throw NotFeasible("pivot(): DataFrame doesn't have enough columns");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    auto                        first_nm { col_names[0] };
+    std::vector<ColNameType>    new_col_names;
+
+    new_col_names.reserve(column_list_.size() - 2);
+    new_col_names.push_back(first_nm);
+    for (size_type i = 0; i < col_names.size(); ++i)  {
+        if constexpr (std::is_same_v<C_T, const char *> ||
+                      std::is_same_v<C_T, char *>)  {
+            if (strcmp(col_names[i], first_nm))  {
+                new_col_names.push_back(col_names[i]);
+                first_nm = new_col_names.back().c_str();
+            }
+        }
+        else  {
+            if (col_names[i] != first_nm)  {
+                new_col_names.push_back(col_names[i]);
+                first_nm = new_col_names.back().c_str();
+            }
+        }
+    }
+
+    const size_type col_s { indices_.size() };
+    const size_type new_col_size { new_col_names.size() };
+    const size_type new_row_size { col_s / new_col_size };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (((col_names.size() % new_row_size) != 0) ||
+        ((col_s % new_row_size) != 0))
+        throw NotFeasible("pivot(): Names column or index column size is not "
+                          "multiple of repeating column names");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const size_type                           val_col_s = val_col_names.size();
+    std::vector<const ColumnVecType<VAL_T> *> val_cols(val_col_s, nullptr);
+
+    {
+        SpinGuard   guard (lock_);
+
+        for (size_type i = 0; i < val_col_s; ++i)
+            val_cols[i] = &(get_column<VAL_T>(val_col_names[i], false));
+    }
+
+    std::vector<ColumnVecType<VAL_T>>   new_cols(new_col_size);
+    ColumnVecType<IndexType>            new_idx;
+
+    for (auto &vec : new_cols)  vec.reserve(new_row_size);
+    new_idx.reserve(new_row_size);
+
+    for (size_type i = 0; i < new_row_size; ++i)
+        new_idx.push_back(indices_[i]);
+
+    for (size_type j = 0; j < new_row_size; ++j)
+        for (size_type i = 0; i < new_col_size; ++i)
+            for (size_type h = 0; h < val_col_s; ++h)
+                new_cols[i].push_back(val_cols[h]->at(i * new_row_size + j));
+
+    DataFrame    result;
+
+    result.load_index(std::move(new_idx));
+
+    SpinGuard   guard (lock_);
+
+    for (size_type i = 0; i < new_col_size; ++i)
+        result.load_column<VAL_T>(new_col_names[i].c_str(),
+                                  std::move(new_cols[i]),
+                                  nan_policy::dont_pad_with_nans,
+                                  false);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<equality_default_construct ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::difference(const DataFrame &other) const  {

@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 

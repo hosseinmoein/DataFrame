@@ -4514,6 +4514,27 @@ public: // Read/access and slicing interfaces
             const char *var_name = "variable",
             const char *value_name = "values") const;
 
+    // This rotates up (pivots) a long DataFrame 90 degrees into a wide
+    // DataFrame. It rotates based on repeating values in the col_names_column.
+    // It adds those names as  columns of type VAL_T to the returned DataFrame.
+    // col_names_column column must be of a string type in the calling
+    // DataFrame.
+    //
+    // VAL_T:
+    //   Type of all value columns.
+    // C_T:
+    //   Type of all col_names_column which must be some kind of string
+    // col_names_column:
+    //   Name of the column that contains repeating names of the value columns
+    //   in the returned DataFrame
+    // value_col_names:
+    //   Names of value columns to be spread horizontally
+    //
+    template<typename VAL_T, StringOnly C_T = std::string>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+    pivot(const char *col_names_column,
+          std::vector<const char *> &&value_col_names) const;
+
     // This returns a DataFrame that is the difference between self and other.
     // The returned DataFrame has the exact same index column as self.
     // For each column in self and other with the same name, the returned

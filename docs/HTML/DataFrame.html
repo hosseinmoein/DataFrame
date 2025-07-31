@@ -536,6 +536,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Returns an pivoted DataFrame"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/explode.html">pivot</a>()</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Sorts DataFrame"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/sort.html">sort( 5 )<BR>sort_async( 5 )</a></td>
     </tr>
 
@@ -2085,7 +2089,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     You can use this feature to take advantage of <I>SIMD</I> instructions in modern CPU's. Since DataFrame algorithms are all done on vectors of data &#8212; columns, this can come handy in conjunction with compiler optimizations. Also, you can use alignment to prevent false cache-line sharing between multiple columns.<BR>
     There are convenient typedef's that define DataFrames that allocate memory, for example, on 64, 128, 256, ... bytes boundaries. Best alignment depends on cash line width of your system. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>.<BR>
     When you get access to <I>columns</I> in a DataFrame, you will get a reference to a <I>StlVecType</I>. <I>StlVecType</I> is just a <I>std::vector</I> with custom allocator for the requested alignment.<BR><BR>
-	
+
     SIMD stands for <I>Single Instruction, Multiple Data</I>. This powerful approach allows a single CPU instruction to process multiple data points simultaneously. Imagine you're working with an image or two vectors. Normally, operations on these data points would be performed one at a time - a method known as scalar operation. However, with SIMD optimization, these operations can be vectorized, meaning multiple data points are processed in one go. SIMD architectures typically organize data into vectors or arrays, enabling synchronized execution and faster computational throughput.<BR>
     SIMD techniques have evolved alongside advancements in computer architecture and instruction set extensions. Initial SIMD implementations emerged in the 1990s, and subsequent developments, such as Intel's Streaming SIMD Extensions (SSE) and Advanced Vector Extensions (AVX), expanded SIMD capabilities. These extensions introduced specialized SIMD instructions that significantly improved computational performance by enabling efficient execution of parallel operations.<BR>
   </P>
@@ -2128,20 +2132,21 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
               <LI><B><a href="https://github.com/hosseinmoein/DataFrame/tree/master/include/DataFrame/Utils/Threads">Threads/</B></a> &#8212; Contains implementation of all thread related logic</LI>
               </UL>
             <LI><a href="https://github.com/hosseinmoein/DataFrame/tree/master/include/DataFrame/Vectors"><B>Vectors/</B></a> &#8212; Contains implementation of heterogenous vectors</LI>
-	      </UL>
+          </UL>
         <LI><a href="https://github.com/hosseinmoein/DataFrame/tree/master/src"><B>src/</B></a> &#8212; Contains Linux based makefiles and following subdirectory:</LI>
           <UL type="square">
             <LI><a href="https://github.com/hosseinmoein/DataFrame/tree/master/src/Utils"><B>Utils/</B></a> &#8212; Contains the sole source files in <I>DataFrame</I> that is archived into a library</LI>
-	      </UL>
+          </UL>
         <LI><a href="https://github.com/hosseinmoein/DataFrame/tree/master/test"><B>test/</B></a> &#8212; Contains all the test programs that I am happy to say tests 100% of the API</LI>
-	  </UL>
+      </UL>
         </UL>
   </P>
 
 <BR><HR COLOR="Gray" SIZE="5">
 
   <H2 ID="9"><font color="blue">Build Instructions <font size="+4">&#x1F6E0;</font></font></H2>
-    When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, supposed you call to calculate KNN and supposed K is greater than observed datapoints passed in . if <I> HMDF_SANITY_EXCEPTIONS</I> is defined, you get an exception with explanation. If it is not defined, you get garbage or a crash.<BR>
+    When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, supposed you call to calculate KNN and supposed K is greater than observed datapoints passed in. if <I>HMDF_SANITY_EXCEPTIONS</I> is defined, you get an exception with explanation. If it is not defined, you get garbage or a crash.<BR>
+    If you do not define <I>HMDF_SANITY_EXCEPTIONS</I>, it means you are sure you have no bugs in your system. That is a tall order! If you are getting mysterious crashes or results, chances are defining <I>HMDF_SANITY_EXCEPTIONS</I> will help you a lot.<BR><BR>
     In general, there are three ways you can build C++ applications and libraries.<BR>
     <OL>
       <LI><I>Bulidng with debug information and no optimizations.</I> This build allows you to debug your application and walk through the source code as it executes inside a debugger. This build results in bigger executable files and significantly slower execution.</LI>

@@ -4041,6 +4041,46 @@ static void test_unpivot()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_pivot()  {
+
+    std::cout << "\nTesting pivot( ) ..." << std::endl;
+
+    ULDataFrame df;
+
+    df.load_data(
+        std::vector<unsigned long>{ 1, 2, 3, 4, 5, 6, 7 },
+        std::make_pair("day",
+                       std::vector<std::string>{ "Monday", "Tuesday",
+                                                 "Wednesday", "Thursday",
+                                                 "Friday", "Saturday", "Sunday"
+                                }),
+        std::make_pair("Chicago",
+                       std::vector<double>{ 32, 30, 28, 22, 30, 20, 25 }),
+        std::make_pair("Tehran",
+                       std::vector<double>{ 75, 77, 75, 82, 83, 81, 77 }),
+        std::make_pair("Berlin",
+                       std::vector<double>{ 41, 43, 45, 38, 30, 45, 47 }),
+        std::make_pair("Str Column",
+                       std::vector<std::string>{ "AA", "BB", "CC", "DD", "EE",
+                                                 "FF", "GG" }));
+
+    df.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
+    std::cout << "\n\n";
+
+    const auto  mdf1 =
+        df.unpivot<std::string, double>
+            ("day", { "Chicago", "Tehran", "Berlin" });
+
+    mdf1.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
+    std::cout << "\n\n";
+
+    const auto  mdf2 = mdf1.pivot<double>("variable", { "values" });
+
+    mdf2.write<std::ostream, double>(std::cout, io_format::csv2);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4112,6 +4152,7 @@ int main(int, char *[]) {
     test_ShapiroWilkTestVisitor();
     test_CramerVonMisesTestVisitor();
     test_unpivot();
+    test_pivot();
 
     return (0);
 }

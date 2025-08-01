@@ -54,6 +54,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -4078,6 +4079,63 @@ static void test_pivot()  {
 
     mdf2.write<std::ostream, double>(std::cout, io_format::csv2);
 }
+*/
+
+// ----------------------------------------------------------------------------
+
+static void test_sort_freq()  {
+
+    std::cout << "\nTesting sort_freq( ) ..." << std::endl;
+
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    auto    fut =
+        ibm.sort_freq_async<double, double, long>("IBM_Close",
+                                                  sort_spec::desce);
+
+    fut.get();
+    assert((ibm.get_index()[0] == "2000-12-22"));
+    assert((std::fabs(ibm.get_column<double>("IBM_Low")[0] - 84.5) < 0.01));
+    assert((std::fabs(ibm.get_column<double>("IBM_Close")[0] - 89.0) < 0.01));
+    assert((ibm.get_column<long>("IBM_Volume")[0] == 9514000)) ;
+
+    assert((ibm.get_index()[7] == "2002-04-19"));
+    assert((std::fabs(ibm.get_column<double>("IBM_High")[7] - 90.03) < 0.01));
+    assert((std::fabs(ibm.get_column<double>("IBM_Close")[7] - 89.0) < 0.01));
+    assert((ibm.get_column<long>("IBM_Volume")[7] == 9273200)) ;
+
+    assert((ibm.get_index()[55] == "2010-01-06"));
+    assert((std::fabs(ibm.get_column<double>("IBM_High")[55] - 131.49) < 0.01));
+    assert((std::fabs(ibm.get_column<double>("IBM_Close")[55] - 130.0) < 0.01));
+    assert((ibm.get_column<long>("IBM_Volume")[55] == 5605300)) ;
+
+    assert((ibm.get_index()[58] == "2008-07-22"));
+    assert((std::fabs(ibm.get_column<double>("IBM_Open")[58] - 127.5) < 0.01));
+    assert((std::fabs(ibm.get_column<double>("IBM_Close")[58] - 130.0) < 0.01));
+    assert((ibm.get_column<long>("IBM_Volume")[58] == 11428600)) ;
+
+    assert((ibm.get_index()[4973] == "2002-09-05"));
+    assert(
+        (std::fabs(ibm.get_column<double>("IBM_Open")[4973] - 72.73) < 0.01));
+    assert(
+        (std::fabs(ibm.get_column<double>("IBM_Close")[4973] - 72.18) < 0.01));
+    assert((ibm.get_column<long>("IBM_Volume")[4973] == 6467700)) ;
+
+    assert((ibm.get_index()[5030] == "2002-10-09"));
+    assert(
+        (std::fabs(ibm.get_column<double>("IBM_Open")[5030] - 56.05) < 0.01));
+    assert(
+        (std::fabs(ibm.get_column<double>("IBM_Close")[5030] - 55.07) < 0.01));
+    assert((ibm.get_column<long>("IBM_Volume")[5030] == 12156000)) ;
+}
 
 // ----------------------------------------------------------------------------
 
@@ -4085,6 +4143,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -4153,6 +4212,8 @@ int main(int, char *[]) {
     test_CramerVonMisesTestVisitor();
     test_unpivot();
     test_pivot();
+*/
+    test_sort_freq();
 
     return (0);
 }

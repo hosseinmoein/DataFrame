@@ -70,8 +70,8 @@ body {
       <td>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
-<span class="line_wrapper"><span style="color:#603000; ">sort</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span> sort_spec dir<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span></pre>
+<span class="line_wrapper"><span style="color:#603000; ">sort</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span> sort_spec dir<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td width = "33.3%">
         Sort the DataFrame by the named column. If name equals DF_INDEX_COL_NAME, it sorts by index. Otherwise it sorts by the named column. Sort first calls make_consistent() that may add nan values to data columns.<BR>
@@ -81,7 +81,8 @@ body {
         <B>T</B>: Type of the by_name column. You always of the specify this type, even if it is being sorted to the default index<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
         <B>name</B>: The name of a column or string DF_INDEX_COL_NAME.<BR>
-        <B>dir</B>: Direction of sorting, ascending or descending
+        <B>dir</B>: Direction of sorting, ascending or descending<BR>
+        <B>ignore_index</b>: If true, index column won't be sorted<BR>
       </td>
     </tr>
 
@@ -90,8 +91,8 @@ body {
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
 <span class="line_wrapper"><span style="color:#603000; ">sort</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span></pre>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td width = "33.3%">
         This sort function sorts DataFrame based on two columns, also specified by the two directions. name[n] could be DF_INDEX_COL_NAME in which case the index column is taken as the sorting column.<BR>
@@ -105,7 +106,8 @@ body {
         <B>name1</b>: Name of the first column or string DF_INDEX_COL_NAME<BR>
         <B>name2</b>: Name of the second column or string DF_INDEX_COL_NAME<BR>
         <B>dir1</b>: Direction of sorting for the first column<BR>
-        <B>dir2</b>: Direction of sorting for the second column
+        <B>dir2</b>: Direction of sorting for the second column<BR>
+        <B>ignore_index</b>: If true, index column won't be sorted<BR>
       </td>
     </tr>
 
@@ -116,8 +118,8 @@ body {
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
 <span class="line_wrapper"><span style="color:#603000; ">sort</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span></pre>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td width = "33.3%">
         This sort function is similar to above, but it uses 3 columns
@@ -133,6 +135,7 @@ body {
         <B>dir1</b>: Direction of sorting for the first column<BR>
         <B>dir2</b>: Direction of sorting for the second column<BR>
         <B>dir3</b>: Direction of sorting for the third column<BR>
+        <B>ignore_index</b>: If true, index column won't be sorted<BR>
       </td>
     </tr>
 
@@ -144,8 +147,8 @@ body {
 <span class="line_wrapper"><span style="color:#603000; ">sort</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span> sort_spec dir4<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span></pre>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span> sort_spec dir4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td width = "33.3%">
         This sort function is similar to above, but it uses 4 columns
@@ -164,6 +167,7 @@ body {
         <B>dir2</b>: Direction of sorting for the second column<BR>
         <B>dir3</b>: Direction of sorting for the third column<BR>
         <B>dir4</b>: Direction of sorting for the fourth column<BR>
+        <B>ignore_index</b>: If true, index column won't be sorted<BR>
       </td>
     </tr>
 
@@ -176,8 +180,8 @@ body {
 <span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span> sort_spec dir4<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name5<span style="color:#808030; ">,</span> sort_spec dir5<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span></pre>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name5<span style="color:#808030; ">,</span> sort_spec dir5<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td width = "33.3%">
         This sort function is similar to above, but it uses 5 columns
@@ -199,6 +203,7 @@ body {
         <B>dir3</b>: Direction of sorting for the third column<BR>
         <B>dir4</b>: Direction of sorting for the fourth column<BR>
         <B>dir5</b>: Direction of sorting for the fifth column<BR>
+        <B>ignore_index</b>: If true, index column won't be sorted<BR>
       </td>
     </tr>
 
@@ -206,8 +211,8 @@ body {
       <td>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">void</span><span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper">sort_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span> sort_spec dir<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span></pre>
+<span class="line_wrapper">sort_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span> sort_spec dir<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td width = "33.3%">
         This is the asynchronous version that returns a std::future. Please see above for details
@@ -221,8 +226,8 @@ body {
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">void</span><span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">sort_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span></pre>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td width = "33.3%">
         This is the asynchronous version that returns a std::future. Please see above for details
@@ -238,8 +243,8 @@ body {
 <span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">void</span><span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">sort_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td width = "33.3%">
@@ -257,9 +262,8 @@ body {
 <span class="line_wrapper">sort_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name1<span style="color:#808030; ">,</span> sort_spec dir1<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span> sort_spec dir4<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span>
-<span class="line_wrapper"></span></pre>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span> sort_spec dir4</span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td width = "33.3%">
         This is the asynchronous version that returns a std::future. Please see above for details
@@ -277,8 +281,8 @@ body {
 <span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name2<span style="color:#808030; ">,</span> sort_spec dir2<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name3<span style="color:#808030; ">,</span> sort_spec dir3<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name4<span style="color:#808030; ">,</span> sort_spec dir4<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name5<span style="color:#808030; ">,</span> sort_spec dir5<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span></pre>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name5<span style="color:#808030; ">,</span> sort_spec dir5<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td width = "33.3%">
         This is the asynchronous version that returns a std::future. Please see above for details

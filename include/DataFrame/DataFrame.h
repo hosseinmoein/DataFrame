@@ -1612,6 +1612,42 @@ public:  // Data manipulation
                const char *name5, sort_spec dir5,
                bool ignore_index = false);
 
+    // Sort the DataFrame by the frequency of data points in the named column.
+    // If name equals DF_INDEX_COL_NAME, it sorts by index. Otherwise it sorts
+    // by the named column.
+    // If two frequencies are equal, sorting will be based on the value of the
+    // data points.
+    //
+    // NOTE: The order within the same frequency block is implementation
+    //       dependent.
+    //
+    // NOTE: Sort first calls make_consistent() that may add nan values to
+    //       data columns. nan values make sorting nondeterministic.
+    //
+    // T:
+    //   Type of the named column. You always must specify this type,
+    //   even if it is being sorted by the index.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name:
+    //   The name of a column or DF_INDEX_COL_NAME
+    // dir:
+    //   Direction of sorting, ascending or descending
+    // ignore_index:
+    //   If it is true, the index column will not be sorted
+    //
+    template<hashable_equal T, typename ... Ts>
+    void
+    sort_freq(const char *name, sort_spec dir, bool ignore_index = false);
+
+    // Same as sort_freq() above, but executed asynchronously
+    //
+    template<hashable_equal T, typename ... Ts>
+    [[nodiscard]] std::future<void>
+    sort_freq_async(const char *name, sort_spec dir,
+                    bool ignore_index = false);
+
     // This method groups the DataFrame by the named column of type T.
     // The group-by’ing is done by equality.
     // The comparison and equality operators must be well defined for type T.

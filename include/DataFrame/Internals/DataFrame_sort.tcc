@@ -1251,6 +1251,198 @@ sort_async(const char *name1, sort_spec dir1,
                        }));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<hashable_equal T, typename ...Ts>
+void DataFrame<I, H>::
+sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call sort()");
+
+    make_consistent<Ts ...>();
+
+    ColumnVecType<T>    *vec { nullptr};
+    const SpinGuard     guard (lock_);
+
+    if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
+        vec = reinterpret_cast<ColumnVecType<T> *>(&indices_);
+        ignore_index = true;
+    }
+    else
+        vec = &(get_column<T>(name, false));
+
+    const size_type                 idx_s = indices_.size();
+    DFUnorderedMap<T, size_type>    freq_map;
+
+    if (dir == sort_spec::ascen || dir == sort_spec::desce)  {
+        freq_map.reserve(idx_s / 2);
+        for (const auto &item : *vec)
+            freq_map[item] += 1;
+    }
+    else  {
+        freq_map.reserve(idx_s / 3);
+        for (const auto &item : *vec)
+            freq_map[abs__(item)] += 1;
+    }
+
+    auto    a =
+        [&freq_map = std::as_const(freq_map)]
+        (const auto &lhs, const auto &rhs) -> bool {
+            const auto  &lhs_itm = std::get<0>(lhs);
+            const auto  &rhs_itm = std::get<0>(rhs);
+            const auto  lhs_cnt = freq_map.find(lhs_itm)->second;
+            const auto  rhs_cnt = freq_map.find(rhs_itm)->second;
+
+            if (lhs_cnt != rhs_cnt)
+                return (lhs_cnt < rhs_cnt);
+            return (lhs_itm < rhs_itm);
+        };
+    auto    d =
+        [&freq_map = std::as_const(freq_map)]
+        (const auto &lhs, const auto &rhs) -> bool {
+            const auto  &lhs_itm = std::get<0>(lhs);
+            const auto  &rhs_itm = std::get<0>(rhs);
+            const auto  lhs_cnt = freq_map.find(lhs_itm)->second;
+            const auto  rhs_cnt = freq_map.find(rhs_itm)->second;
+
+            if (lhs_cnt != rhs_cnt)
+                return (lhs_cnt > rhs_cnt);
+            return (lhs_itm > rhs_itm);
+        };
+    auto    aa =
+        [&freq_map = std::as_const(freq_map)]
+         (const auto &lhs, const auto &rhs) -> bool {
+            const auto  lhs_itm = abs__(std::get<0>(lhs));
+            const auto  rhs_itm = abs__(std::get<0>(rhs));
+            const auto  lhs_cnt = freq_map.find(lhs_itm)->second;
+            const auto  rhs_cnt = freq_map.find(rhs_itm)->second;
+
+            if (lhs_cnt != rhs_cnt)
+                return (lhs_cnt < rhs_cnt);
+            return (lhs_itm < rhs_itm);
+         };
+    auto    ad = 
+         [&freq_map = std::as_const(freq_map)]
+         (const auto &lhs, const auto &rhs) -> bool {
+            const auto  lhs_itm = abs__(std::get<0>(lhs));
+            const auto  rhs_itm = abs__(std::get<0>(rhs));
+            const auto  lhs_cnt = freq_map.find(lhs_itm)->second;
+            const auto  rhs_cnt = freq_map.find(rhs_itm)->second;
+
+            if (lhs_cnt != rhs_cnt)
+                return (lhs_cnt > rhs_cnt);
+            return (lhs_itm > rhs_itm);
+         };
+
+    StlVecType<size_type>   sorting_idxs(idx_s);
+
+    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+
+    auto        zip = std::ranges::views::zip(*vec, sorting_idxs);
+    auto        zip_idx = std::ranges::views::zip(*vec, indices_, sorting_idxs);
+    const auto  thread_level =
+        (idx_s < (ThreadPool::MUL_THR_THHOLD / 3)) ? 0L : get_thread_level();
+
+    if (dir == sort_spec::ascen)  {
+        if (thread_level > 2)  {
+            if (! ignore_index)
+                thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), a);
+            else
+                thr_pool_.parallel_sort(zip.begin(), zip.end(), a);
+        }
+        else  {
+            if (! ignore_index)
+                std::ranges::sort(zip_idx, a);
+            else
+                std::ranges::sort(zip, a);
+        }
+    }
+    else if (dir == sort_spec::desce)  {
+        if (thread_level > 2)  {
+            if (! ignore_index)
+                thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), d);
+            else
+                thr_pool_.parallel_sort(zip.begin(), zip.end(), d);
+        }
+        else  {
+            if (! ignore_index)
+                std::ranges::sort(zip_idx, d);
+            else
+                std::ranges::sort(zip, d);
+        }
+    }
+    else if (dir == sort_spec::abs_ascen)  {
+        if (thread_level > 2)  {
+            if (! ignore_index)
+                thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), aa);
+            else
+                thr_pool_.parallel_sort(zip.begin(), zip.end(), aa);
+        }
+        else  {
+            if (! ignore_index)
+                std::ranges::sort(zip_idx, aa);
+            else
+                std::ranges::sort(zip, aa);
+        }
+    }
+    else if (dir == sort_spec::abs_desce)  {
+        if (thread_level > 2)  {
+            if (! ignore_index)
+                thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), ad);
+            else
+                thr_pool_.parallel_sort(zip.begin(), zip.end(), ad);
+        }
+        else  {
+            if (! ignore_index)
+                std::ranges::sort(zip_idx, ad);
+            else
+                std::ranges::sort(zip, ad);
+        }
+    }
+
+    if (((column_list_.size() - 1) > 1) && get_thread_level() > 2)  {
+        auto    lbd = [name,
+                       &sorting_idxs = std::as_const(sorting_idxs),
+                       idx_s, this]
+                      (const auto &begin, const auto &end) -> void  {
+            sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+
+            for (auto citer = begin; citer < end; ++citer)
+                if (citer->first != name)
+                    this->data_[citer->second].change(functor);
+        };
+        auto    futures =
+            thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+
+        for (const auto &[this_name, idx] : column_list_) [[likely]]
+            if (this_name != name)  data_[idx].change(functor);
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<hashable_equal T, typename ...Ts>
+std::future<void>
+DataFrame<I, H>::
+sort_freq_async(const char *name, sort_spec dir, bool ignore_index)  {
+
+    return (thr_pool_.dispatch(
+                       true,
+                       [name, dir, ignore_index, this] () -> void {
+                           this->sort_freq<T, Ts ...>(name, dir, ignore_index);
+                       }));
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

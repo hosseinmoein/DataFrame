@@ -54,7 +54,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -4079,7 +4078,6 @@ static void test_pivot()  {
 
     mdf2.write<std::ostream, double>(std::cout, io_format::csv2);
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -4143,7 +4141,6 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -4212,7 +4209,6 @@ int main(int, char *[]) {
     test_CramerVonMisesTestVisitor();
     test_unpivot();
     test_pivot();
-*/
     test_sort_freq();
 
     return (0);

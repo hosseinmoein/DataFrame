@@ -74,7 +74,7 @@ body {
 <span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">bool</span> ignore_index <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td width = "33.3%">
-        Sort the DataFrame by the named column. If name equals DF_INDEX_COL_NAME, it sorts by index. Otherwise it sorts by the named column. Sort first calls make_consistent() that may add nan values to data columns.<BR>
+        Sort the DataFrame by the named column. If name equals DF_INDEX_COL_NAME, it sorts by index. Otherwise it sorts by the named column. Sort first calls <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/make_consistent.html">make_consistent()</a> that may add nan values to data columns.<BR>
         nan values make sorting nondeterministic.
       </td>
       <td>
@@ -97,7 +97,7 @@ body {
       <td width = "33.3%">
         This sort function sorts DataFrame based on two columns, also specified by the two directions. name[n] could be DF_INDEX_COL_NAME in which case the index column is taken as the sorting column.<BR>
         <B>NOTE</B>: The order of T[n] type specifications must match the order of name[n] column names. In addition, all column types must be specified separately. Otherwise, the behavior is undefined.<BR>
-        <B>NOTE</B>: Sort first calls make_consistent() that may add nan values to data columns. nan values make sorting nondeterministic.
+        <B>NOTE</B>: Sort first calls <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/make_consistent.html">make_consistent()</a> that may add nan values to data columns. nan values make sorting nondeterministic.
       </td>
       <td>
         <B>T1</b>: Type of the first named column. You always must specify this type, even if it is being sorted by the index.<BR>

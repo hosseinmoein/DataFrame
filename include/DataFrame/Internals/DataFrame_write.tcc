@@ -85,7 +85,8 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
     if (iof != io_format::csv &&
         iof != io_format::json &&
         iof != io_format::csv2 &&
-        iof != io_format::binary)
+        iof != io_format::binary &&
+        iof != io_format::pretty_prt)
         throw NotImplemented("write(): This io_format is not implemented");
 
     bool    need_pre_comma = false;
@@ -257,7 +258,10 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
 
         if (! params.columns_only)  {
             col_names.push_back(DF_INDEX_COL_NAME);
-            data.push_back(_stringfy_(indices_, params.dt_format));
+            data.push_back(_stringfy_(indices_,
+                                      params.dt_format,
+                                      start_row,
+                                      end_row));
         }
 
         {
@@ -267,14 +271,21 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
                 stringfy_functor_<Ts ...>   functor (data,
                                                      col_names,
                                                      name.c_str(),
-                                                     params.dt_format);
+                                                     params.dt_format,
+                                                     start_row,
+                                                     end_row);
 
                 data_[idx].change(functor);
             }
         }
 
         const auto  widths { _get_max_string_len_(data) };
-        const auto  num_rows { indices_.size() };
+        const auto  num_rows {
+            std::min(params.max_recs < 0
+                         ? long(indices_.size())
+                         : params.max_recs,
+                     long(indices_.size()))
+        };
         const auto  gutter_width {
             num_rows > 0
                 ? static_cast<size_type>(std::ceil(std::log10(num_rows))) + 1
@@ -284,9 +295,9 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
         o << std::boolalpha;
         o << _get_space_(gutter_width);
 
-        const auto  num_columns { col_names.size() };
+        const long  num_columns { long(col_names.size()) };
 
-        for (size_type i = 0; i < num_columns; ++i)  {
+        for (long i = 0; i < num_columns; ++i)  {
             const auto  &name { col_names[i] };
             const auto  width { std::max(widths[i], name.size()) };
 
@@ -295,8 +306,8 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
         o << '\n';
 
         o << _get_horz_rule_(gutter_width);
-        for (size_type i = 0; i < num_columns; ++i) {
-            const auto  width { widths[i] };
+        for (long i = 0; i < num_columns; ++i) {
+            const auto  width { std::max(widths[i], col_names[i].size()) };
 
             o << '|' << _get_horz_rule_(width + 2);
         }
@@ -304,13 +315,15 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
 
         const std::string   blank { " " };
 
-        for (size_type row = 0; row < num_rows; ++row) {
+        for (long row = 0; row < num_rows; ++row) {
             o << std::setw(gutter_width) << row;
-            for (size_type col = 0; col < num_columns; ++col) {
+            for (long col = 0; col < num_columns; ++col) {
                 const std::string   &datum {
-                    (row < data[col].size()) ? data[col][row] : blank
+                    (row < long(data[col].size())) ? data[col][row] : blank
                 };
-                const auto          width { widths[col] };
+                const auto          width {
+                    std::max(widths[col], col_names[col].size())
+	            };
 
                 o << "| " << std::setw(width) << datum << ' ';
             }

@@ -1279,8 +1279,11 @@ void
 DataFrame<I, H>::stringfy_functor_<Ts ...>::
 operator() (const T &vec)  {
 
+    const long  sr = std::min(start_row, long(vec.size()));
+    const long  er = std::min(end_row, long(vec.size()));
+
     names.push_back(name);
-    vvec.push_back(_stringfy_(vec, dt_format));
+    vvec.push_back(_stringfy_(vec, dt_format, sr, er));
 }
 
 } // namespace hmdf

@@ -839,14 +839,23 @@ struct  stringfy_functor_ : DataVec::template visitor_base<Ts ...>  {
     inline stringfy_functor_(std::vector<std::vector<std::string>> &vv,
                              std::vector<std::string> &ns,
                              const char *n,
-                             DT_FORMAT dtf)
-        : vvec(vv), names(ns), name (n), dt_format(dtf)  {   }
+                             DT_FORMAT dtf,
+                             long sr,
+                             long er)
+        : vvec(vv),
+          names(ns),
+          name (n),
+          dt_format(dtf),
+          start_row(sr),
+          end_row(er)  {   }
 
 
     std::vector<std::vector<std::string>>   &vvec;
     std::vector<std::string>                &names;
     const char                              *name;
     const DT_FORMAT                         dt_format;
+    const long                              start_row;
+    const long                              end_row;
 
     template<typename T>
     void operator() (const T &vec);

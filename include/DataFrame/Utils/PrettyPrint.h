@@ -191,7 +191,7 @@ _get_max_string_len_(const std::vector<std::vector<std::string>> &vecs)  {
 
 template<typename V>
 inline static std::vector<std::string>
-_stringfy_(const V &vec, DT_FORMAT dt_format)  {
+_stringfy_(const V &vec, DT_FORMAT dt_format, long start_row, long end_row)  {
 
     using value_type = typename V::value_type;
 
@@ -201,18 +201,19 @@ _stringfy_(const V &vec, DT_FORMAT dt_format)  {
     if constexpr (std::is_same_v<value_type, DateTime>)  {
         String128   buffer;
 
-        for (const auto &dt : vec)  {
-            dt.date_to_str(dt_format, buffer);
+        for (long i { start_row }; i < end_row; ++i)  {
+            vec[i].date_to_str(dt_format, buffer);
             result.push_back(buffer.c_str());
         }
     }
     else  {
         std::stringstream   ss;
 
-        std::transform(std::begin(vec), std::end(vec),
+        std::transform(std::begin(vec) + start_row, std::begin(vec) + end_row,
                        std::back_inserter(result),
                        [&ss](const auto &val) -> std::string  {
                            ss.clear();
+                           ss.seekp(0);
                            ss << val;
                            return (ss.str());
                        });

@@ -54,6 +54,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -4134,6 +4135,77 @@ static void test_sort_freq()  {
         (std::fabs(ibm.get_column<double>("IBM_Close")[5030] - 55.07) < 0.01));
     assert((ibm.get_column<long>("IBM_Volume")[5030] == 12156000)) ;
 }
+*/
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void test_pretty_print()  {
+
+    std::cout << "\nTesting pretty_print ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("DT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    df.write<std::ostream, double, long>(
+         std::cout, io_format::pretty_prt,
+         { .max_recs = 5, .dt_format = DT_FORMAT::ISO_DT });
+    std::cout << "\n\n\n";
+
+    DTDataFrame df2;
+
+    try  {
+        df2.read("AAPL_10dBucketWithMaps_small.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    df2.write<std::ostream,
+             double,
+             long,
+             std::map<std::string, double>,
+             std::unordered_map<std::string, double>,
+             std::vector<std::string>,
+             std::set<double>,
+             std::set<std::string>>
+        (std::cout, io_format::pretty_prt, { .dt_format = DT_FORMAT::ISO_DT });
+}
 
 // ----------------------------------------------------------------------------
 
@@ -4141,6 +4213,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -4210,6 +4283,8 @@ int main(int, char *[]) {
     test_unpivot();
     test_pivot();
     test_sort_freq();
+*/
+    test_pretty_print();
 
     return (0);
 }

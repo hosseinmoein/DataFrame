@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/Utils/PrettyPrint.h>
 
 // ----------------------------------------------------------------------------
 
@@ -1267,6 +1268,19 @@ operator() (const T &vec)  {
         }
     }
     catch (const ColNotFound &)  {   }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::stringfy_functor_<Ts ...>::
+operator() (const T &vec)  {
+
+    names.push_back(name);
+    vvec.push_back(_stringfy_(vec, dt_format));
 }
 
 } // namespace hmdf

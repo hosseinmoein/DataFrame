@@ -833,6 +833,27 @@ struct  difference_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename ... Ts>
+struct  stringfy_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline stringfy_functor_(std::vector<std::vector<std::string>> &vv,
+                             std::vector<std::string> &ns,
+                             const char *n,
+                             DT_FORMAT dtf)
+        : vvec(vv), names(ns), name (n), dt_format(dtf)  {   }
+
+
+    std::vector<std::vector<std::string>>   &vvec;
+    std::vector<std::string>                &names;
+    const char                              *name;
+    const DT_FORMAT                         dt_format;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

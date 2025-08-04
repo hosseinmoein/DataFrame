@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/Utils/Endianness.h>
+#include <DataFrame/Utils/PrettyPrint.h>
 #include <DataFrame/Utils/Utils.h>
 
 // ----------------------------------------------------------------------------
@@ -244,6 +245,79 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
 
             data_[idx].change(functor);
         }
+    }
+    else if (iof == io_format::pretty_prt)  {
+        const std::ios_base::fmtflags   original_f { o.flags() };
+
+        std::vector<std::vector<std::string>>   data;
+        std::vector<std::string>                col_names;
+
+        data.reserve(column_list_.size() + (params.columns_only ? 0 : 1));
+        col_names.reserve(data.capacity());
+
+        if (! params.columns_only)  {
+            col_names.push_back(DF_INDEX_COL_NAME);
+            data.push_back(_stringfy_(indices_, params.dt_format));
+        }
+
+        {
+            const SpinGuard guard(lock_);
+
+            for (const auto &[name, idx] : column_list_) [[likely]]  {
+                stringfy_functor_<Ts ...>   functor (data,
+                                                     col_names,
+                                                     name.c_str(),
+                                                     params.dt_format);
+
+                data_[idx].change(functor);
+            }
+        }
+
+        const auto  widths { _get_max_string_len_(data) };
+        const auto  num_rows { indices_.size() };
+        const auto  gutter_width {
+            num_rows > 0
+                ? static_cast<size_type>(std::ceil(std::log10(num_rows))) + 1
+                : 1
+        };
+
+        o << std::boolalpha;
+        o << _get_space_(gutter_width);
+
+        const auto  num_columns { col_names.size() };
+
+        for (size_type i = 0; i < num_columns; ++i)  {
+            const auto  &name { col_names[i] };
+            const auto  width { std::max(widths[i], name.size()) };
+
+            o << "| " << std::setw(width) << name << ' ';
+        }
+        o << '\n';
+
+        o << _get_horz_rule_(gutter_width);
+        for (size_type i = 0; i < num_columns; ++i) {
+            const auto  width { widths[i] };
+
+            o << '|' << _get_horz_rule_(width + 2);
+        }
+        o << '\n';
+
+        const std::string   blank { " " };
+
+        for (size_type row = 0; row < num_rows; ++row) {
+            o << std::setw(gutter_width) << row;
+            for (size_type col = 0; col < num_columns; ++col) {
+                const std::string   &datum {
+                    (row < data[col].size()) ? data[col][row] : blank
+                };
+                const auto          width { widths[col] };
+
+                o << "| " << std::setw(width) << datum << ' ';
+            }
+            o << '\n';
+        }
+
+        o.flags(original_f);
     }
 
     if (iof == io_format::json)

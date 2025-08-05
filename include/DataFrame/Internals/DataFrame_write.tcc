@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/PrettyPrint.h>
 #include <DataFrame/Utils/Utils.h>
 
+#include <format>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -301,7 +303,8 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             const auto  &name { col_names[i] };
             const auto  width { std::max(widths[i], name.size()) };
 
-            o << "| " << std::setw(width) << name << ' ';
+            // o << "| " << std::setw(width) << name << ' ';
+            o << "| " << std::format("{:^{}}", name, width) << ' ';
         }
         o << '\n';
 

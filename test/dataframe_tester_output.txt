@@ -714,18 +714,18 @@ col_2:1:<double>:8,
 col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
-INDEX:1:<ulong>:123451,
-col_1:1:<double>:2,
-col_2:1:<double>:9,
-col_3:1:<double>:16,
-col_str:1:<string>:22,
-col_4:1:<double>:23,
 INDEX:1:<ulong>:123450,
 col_1:1:<double>:1,
 col_2:1:<double>:8,
 col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
+INDEX:1:<ulong>:123451,
+col_1:1:<double>:2,
+col_2:1:<double>:9,
+col_3:1:<double>:16,
+col_str:1:<string>:22,
+col_4:1:<double>:23,
 
 Testing write(json) ...
 Writing in JSON:
@@ -2487,6 +2487,26 @@ INDEX:7:<ulong>,Chicago:7:<double>,Tehran:7:<double>,Berlin:7:<double>
 5,30,83,30
 6,20,81,45
 7,25,77,47
+
+Testing sort_freq( ) ...
+
+Testing pretty_print ...
+  |      INDEX | IBM_Open | IBM_High | IBM_Low | IBM_Close | IBM_Adj_Close | IBM_Volume 
+__|____________|__________|__________|_________|___________|_______________|____________
+ 0| 2000-11-01 |  98.4375 |   99.875 |   97.25 |   98.5625 |       62.7958 |    7466200 
+ 1| 2000-11-02 |  99.4375 |  102.312 |   98.55 |   101.938 |       64.9461 |    7445100 
+ 2| 2000-11-03 |  102.575 |  102.625 |  99.375 |   100.125 |       63.7913 |    5848500 
+ 3| 2000-11-06 |  99.8755 |  102.375 | 99.4375 |   100.312 |       63.9108 |    4448500 
+ 4| 2000-11-07 |  101.125 |  103.575 | 100.688 |   102.312 |       65.1858 |    5420600 
+
+
+
+  |      INDEX |     Open |     High |      Low |    Close |     Mean |   Median | 25% Quantile |       Std |       MAD |                                                          Map 1 |                                            Unordered Map |             Str Vec |                 Double Set |                      Str Set |     Volume 
+__|____________|__________|__________|__________|__________|__________|__________|______________|___________|___________|________________________________________________________________|__________________________________________________________|_____________________|____________________________|______________________________|____________
+ 0| 2000-01-14 | 0.999442 | 0.999442 |  0.77846 | 0.896763 | 0.881975 |  0.88058 |     0.856027 | 0.0600932 | 0.0436942 |       3{label one 1:123|label one 2:-782.5|label one 3:444.44} |       3{Key one 3:444.44|Key one 2:-782.5|Key one 1:123} |  4[bbb|aaa|zzz|ddd] |       3[-782.5|123|444.44] |       3[-782.5|123.0|444.44] | 6400945600 
+ 1| 2000-01-31 | 0.928013 | 1.013392 | 0.907366 | 0.926339 | 0.963728 | 0.966797 |     0.938337 | 0.0362519 | 0.0313617 |       3{label two 1:123|label two 2:-782.5|label two 3:444.44} |       3{Key two 3:444.44|Key two 2:-782.5|Key two 1:123} |  4[aaa|bbb|ccc|www] |       3[-782.5|0|1]444.44] |    3[-782.5|1:123.0|:444.44] | 6154232000 
+ 2| 2000-02-14 | 0.895089 | 1.034042 | 0.882254 | 1.034049 | 0.973214 | 0.988281 |     0.943367 | 0.0559733 | 0.0462054 | 3{label three 1:123|label three 2:-782.5|label three 3:444.44} | 3{Key three 3:444.44|Key three 2:-782.5|Key three 1:123} | 4[123|abc|345|list] |       3[-782.5|123|444.44] |    3[-782.5|123.0|444.44]44] | 3714592000 
+ 3| 2000-02-29 | 1.062589 | 1.062542 | 0.985491 | 1.023449 | 1.020334 | 1.021211 |     1.013677 | 0.0217114 | 0.0153041 | 3{label four 1:123|label four 2:-782.5|label four 3:444.44}44} | 3{Key four 3:444.44|Key four 2:-782.5|Key four 1:123}23} | 3[bbb|aaa|zzz]list] | 4[-782.5|100.5|123|444.44] | 4[-782.5|100.5|123.0|444.44] | 3605190400 
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2505,6 +2525,6 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: 0.0320770124619, -0.00724342080389, 0.00657760289556, -0.0375663204468, 
+Means of clusters are: 0.0373923431345, 0.0086037635696, -0.00646089130604, -0.0366326208408, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 IBM returns seasonality period is; 2.03272727273

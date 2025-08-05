@@ -197,7 +197,7 @@ _stringfy_(const V &vec, DT_FORMAT dt_format, long start_row, long end_row)  {
 
     std::vector<std::string>    result;
 
-    result.reserve(vec.size());
+    result.reserve(end_row > start_row ? end_row - start_row : 0);
     if constexpr (std::is_same_v<value_type, DateTime>)  {
         String128   buffer;
 

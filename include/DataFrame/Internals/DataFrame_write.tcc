@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Utils.h>
 
 #include <format>
+#include <type_traits>
 
 // ----------------------------------------------------------------------------
 
@@ -254,16 +255,20 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
 
         std::vector<std::vector<std::string>>   data;
         std::vector<std::string>                col_names;
+        std::vector<bool>                       is_numeric;
 
         data.reserve(column_list_.size() + (params.columns_only ? 0 : 1));
         col_names.reserve(data.capacity());
+        is_numeric.reserve(data.capacity());
 
         if (! params.columns_only)  {
             col_names.push_back(DF_INDEX_COL_NAME);
             data.push_back(_stringfy_(indices_,
                                       params.dt_format,
                                       start_row,
-                                      end_row));
+                                      end_row,
+                                      params.precision));
+            is_numeric.push_back(std::is_arithmetic_v<IndexType>);
         }
 
         {
@@ -272,10 +277,12 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             for (const auto &[name, idx] : column_list_) [[likely]]  {
                 stringfy_functor_<Ts ...>   functor (data,
                                                      col_names,
+                                                     is_numeric,
                                                      name.c_str(),
                                                      params.dt_format,
                                                      start_row,
-                                                     end_row);
+                                                     end_row,
+                                                     params.precision);
 
                 data_[idx].change(functor);
             }
@@ -289,9 +296,7 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
                      long(indices_.size()))
         };
         const auto  gutter_width {
-            num_rows > 0
-                ? static_cast<size_type>(std::ceil(std::log10(num_rows))) + 1
-                : 1
+            num_rows > 0 ? size_type(std::ceil(std::log10(num_rows))) + 1 : 1
         };
 
         o << std::boolalpha;
@@ -303,7 +308,6 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             const auto  &name { col_names[i] };
             const auto  width { std::max(widths[i], name.size()) };
 
-            // o << "| " << std::setw(width) << name << ' ';
             o << "| " << std::format("{:^{}}", name, width) << ' ';
         }
         o << '\n';
@@ -326,9 +330,14 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
                 };
                 const auto          width {
                     std::max(widths[col], col_names[col].size())
-	            };
+                };
 
-                o << "| " << std::setw(width) << datum << ' ';
+                o << "| ";
+                if (is_numeric[col])
+                    o << std::format("{:>{}}", datum, width);
+                else
+                    o << std::format("{:<{}}", datum, width);
+                o << ' ';
             }
             o << '\n';
         }

@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/FixedSizeString.h>
 
 #include <algorithm>
+#include <ios>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -118,44 +119,6 @@ _get_space_(std::size_t num)  {
         "                                                                   "
         "                                                                   "
         "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
-        "                                                                   "
         "                                                                   ";
     static constexpr std::size_t    s_size { sizeof(space) - 1 };
 
@@ -191,13 +154,19 @@ _get_max_string_len_(const std::vector<std::vector<std::string>> &vecs)  {
 
 template<typename V>
 inline static std::vector<std::string>
-_stringfy_(const V &vec, DT_FORMAT dt_format, long start_row, long end_row)  {
+_stringfy_(const V &vec,
+           DT_FORMAT dt_format,
+           long start_row,
+           long end_row,
+           std::streamsize precision)  {
 
     using value_type = typename V::value_type;
 
     std::vector<std::string>    result;
+    const auto                  cc_size =
+        end_row > start_row ? end_row - start_row : 0;
 
-    result.reserve(end_row > start_row ? end_row - start_row : 0);
+    result.reserve(cc_size <= long(vec.size()) ? cc_size : long(vec.size()));
     if constexpr (std::is_same_v<value_type, DateTime>)  {
         String128   buffer;
 
@@ -209,6 +178,7 @@ _stringfy_(const V &vec, DT_FORMAT dt_format, long start_row, long end_row)  {
     else  {
         std::stringstream   ss;
 
+        ss << std::fixed << std::setprecision(precision);
         std::transform(std::begin(vec) + start_row, std::begin(vec) + end_row,
                        std::back_inserter(result),
                        [&ss](const auto &val) -> std::string  {

@@ -4153,7 +4153,7 @@ static void test_pretty_print()  {
 
     df.write<std::ostream, double, long>(
          std::cout, io_format::pretty_prt,
-         { .max_recs = 5, .dt_format = DT_FORMAT::ISO_DT });
+         { .precision = 2, .max_recs = 5, .dt_format = DT_FORMAT::ISO_DT });
     std::cout << "\n\n\n";
 
     DTDataFrame df2;
@@ -4174,7 +4174,8 @@ static void test_pretty_print()  {
               std::vector<std::string>,
               std::set<double>,
               std::set<std::string>>
-        (std::cout, io_format::pretty_prt, { .dt_format = DT_FORMAT::ISO_DT });
+        (std::cout, io_format::pretty_prt,
+         { .precision = 6, .dt_format = DT_FORMAT::ISO_DT });
 }
 
 // ----------------------------------------------------------------------------

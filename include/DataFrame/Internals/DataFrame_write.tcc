@@ -29,7 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/Utils/Endianness.h>
+#include <DataFrame/Utils/PrettyPrint.h>
 #include <DataFrame/Utils/Utils.h>
+
+#include <format>
+#include <type_traits>
 
 // ----------------------------------------------------------------------------
 
@@ -84,7 +88,8 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
     if (iof != io_format::csv &&
         iof != io_format::json &&
         iof != io_format::csv2 &&
-        iof != io_format::binary)
+        iof != io_format::binary &&
+        iof != io_format::pretty_prt)
         throw NotImplemented("write(): This io_format is not implemented");
 
     bool    need_pre_comma = false;
@@ -244,6 +249,100 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
 
             data_[idx].change(functor);
         }
+    }
+    else if (iof == io_format::pretty_prt)  {
+        const std::ios_base::fmtflags   original_f { o.flags() };
+
+        std::vector<std::vector<std::string>>   data;
+        std::vector<std::string>                col_names;
+        std::vector<bool>                       is_numeric;
+
+        data.reserve(column_list_.size() + (params.columns_only ? 0 : 1));
+        col_names.reserve(data.capacity());
+        is_numeric.reserve(data.capacity());
+
+        if (! params.columns_only)  {
+            col_names.push_back(DF_INDEX_COL_NAME);
+            data.push_back(_stringfy_(indices_,
+                                      params.dt_format,
+                                      start_row,
+                                      end_row,
+                                      params.precision));
+            is_numeric.push_back(std::is_arithmetic_v<IndexType>);
+        }
+
+        {
+            const SpinGuard guard(lock_);
+
+            for (const auto &[name, idx] : column_list_) [[likely]]  {
+                stringfy_functor_<Ts ...>   functor (data,
+                                                     col_names,
+                                                     is_numeric,
+                                                     name.c_str(),
+                                                     params.dt_format,
+                                                     start_row,
+                                                     end_row,
+                                                     params.precision);
+
+                data_[idx].change(functor);
+            }
+        }
+
+        const auto  widths { _get_max_string_len_(data) };
+        const auto  num_rows {
+            std::min(params.max_recs < 0
+                         ? long(indices_.size())
+                         : params.max_recs,
+                     long(indices_.size()))
+        };
+        const auto  gutter_width {
+            num_rows > 0 ? size_type(std::ceil(std::log10(num_rows))) + 1 : 1
+        };
+
+        o << std::boolalpha;
+        o << _get_space_(gutter_width);
+
+        const long  num_columns { long(col_names.size()) };
+
+        for (long i = 0; i < num_columns; ++i)  {
+            const auto  &name { col_names[i] };
+            const auto  width { std::max(widths[i], name.size()) };
+
+            o << "| " << std::format("{:^{}}", name, width) << ' ';
+        }
+        o << '\n';
+
+        o << _get_horz_rule_(gutter_width);
+        for (long i = 0; i < num_columns; ++i) {
+            const auto  width { std::max(widths[i], col_names[i].size()) };
+
+            o << '|' << _get_horz_rule_(width + 2);
+        }
+        o << '\n';
+
+        const std::string   blank { " " };
+
+        for (long row = 0; row < num_rows; ++row) {
+            o << std::setw(gutter_width) << row;
+            for (long col = 0; col < num_columns; ++col) {
+                const std::string   &datum {
+                    (row < long(data[col].size())) ? data[col][row] : blank
+                };
+                const auto          width {
+                    std::max(widths[col], col_names[col].size())
+                };
+
+                o << "| ";
+                if (is_numeric[col])
+                    o << std::format("{:>{}}", datum, width);
+                else
+                    o << std::format("{:<{}}", datum, width);
+                o << ' ';
+            }
+            o << '\n';
+        }
+
+        o.flags(original_f);
     }
 
     if (iof == io_format::json)

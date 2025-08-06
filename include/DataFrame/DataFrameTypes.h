@@ -312,11 +312,15 @@ enum class  mad_type : unsigned char  {
 
 enum class  io_format : unsigned char  {
 
-    csv = 1,   // DataFrame specific csv format
-    csv2 = 2,  // Regular csv format (similar to Pandas)
+    csv = 1,     // DataFrame specific csv format
+    csv2 = 2,    // Regular csv format (similar to Pandas)
     json = 3,
-    hdf5 = 4,
-    binary = 5,
+    binary = 5,  // DataFrame specific binary format
+
+    // This only applies to write (output) function. It is a somewhat
+    // expensive operation, especially for large datasets.
+    //
+    pretty_prt = 6,
 };
 
 // ----------------------------------------------------------------------------

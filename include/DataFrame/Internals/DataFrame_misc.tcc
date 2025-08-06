@@ -28,6 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/Utils/PrettyPrint.h>
+
+#include <type_traits>
 
 // ----------------------------------------------------------------------------
 
@@ -1267,6 +1270,26 @@ operator() (const T &vec)  {
         }
     }
     catch (const ColNotFound &)  {   }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::stringfy_functor_<Ts ...>::
+operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    const long  sr = std::min(start_row, long(vec.size()));
+    const long  er = std::min(end_row, long(vec.size()));
+
+    names.push_back(name);
+    vvec.push_back(_stringfy_(vec, dt_format, sr, er, precision));
+    is_numeric.push_back(std::is_arithmetic_v<ValueType>);
 }
 
 } // namespace hmdf

@@ -4180,6 +4180,27 @@ static void test_pretty_print()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_markdown()  {
+
+    std::cout << "\nTesting markdown ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("DT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    df.write<std::ostream, double, long>(
+         std::cout, io_format::markdown,
+         { .precision = 2, .max_recs = 10, .dt_format = DT_FORMAT::AMR_DT });
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4254,6 +4275,7 @@ int main(int, char *[]) {
     test_pivot();
     test_sort_freq();
     test_pretty_print();
+    test_markdown();
 
     return (0);
 }

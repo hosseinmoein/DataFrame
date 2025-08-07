@@ -89,7 +89,8 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
         iof != io_format::json &&
         iof != io_format::csv2 &&
         iof != io_format::binary &&
-        iof != io_format::pretty_prt)
+        iof != io_format::pretty_prt &&
+        iof != io_format::markdown)
         throw NotImplemented("write(): This io_format is not implemented");
 
     bool    need_pre_comma = false;
@@ -100,6 +101,8 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
         end_row = std::min(end_row, params.max_recs);
     else
         start_row = std::max(long(0), end_row + params.max_recs);
+
+    const std::ios_base::fmtflags   original_f { o.flags() };
 
     if (iof != io_format::binary)  o.precision(params.precision);
 
@@ -250,9 +253,7 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             data_[idx].change(functor);
         }
     }
-    else if (iof == io_format::pretty_prt)  {
-        const std::ios_base::fmtflags   original_f { o.flags() };
-
+    else if (iof == io_format::pretty_prt || iof == io_format::markdown)  {
         std::vector<std::vector<std::string>>   data;
         std::vector<std::string>                col_names;
         std::vector<bool>                       is_numeric;
@@ -288,67 +289,100 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             }
         }
 
-        const auto  widths { _get_max_string_len_(data) };
-        const auto  num_rows {
+        const auto          num_rows {
             std::min(params.max_recs < 0
                          ? long(indices_.size())
                          : params.max_recs,
                      long(indices_.size()))
         };
-        const auto  gutter_width {
-            num_rows > 0 ? size_type(std::ceil(std::log10(num_rows))) + 1 : 1
-        };
+        const long          num_columns { long(col_names.size()) };
+        const std::string   blank { " " };
+        const char *const   bar_space = "| ";
+        const char *const   bar_nl = "|\n";
 
         o << std::boolalpha;
-        o << _get_space_(gutter_width);
+        if (iof == io_format::pretty_prt)  {
+            const auto  gutter_width {
+                num_rows > 0
+                    ? size_type(std::ceil(std::log10(num_rows))) + 1 : 1
+            };
 
-        const long  num_columns { long(col_names.size()) };
+            o << _get_space_(gutter_width);
 
-        for (long i = 0; i < num_columns; ++i)  {
-            const auto  &name { col_names[i] };
-            const auto  width { std::max(widths[i], name.size()) };
+            const auto  widths { _get_max_string_len_(data) };
 
-            o << "| " << std::format("{:^{}}", name, width) << ' ';
-        }
-        o << '\n';
+            for (long i = 0; i < num_columns; ++i)  {
+                const auto  &name { col_names[i] };
+                const auto  width { std::max(widths[i], name.size()) };
 
-        o << _get_horz_rule_(gutter_width);
-        for (long i = 0; i < num_columns; ++i) {
-            const auto  width { std::max(widths[i], col_names[i].size()) };
-
-            o << '|' << _get_horz_rule_(width + 2);
-        }
-        o << '\n';
-
-        const std::string   blank { " " };
-
-        for (long row = 0; row < num_rows; ++row) {
-            o << std::setw(gutter_width) << row;
-            for (long col = 0; col < num_columns; ++col) {
-                const std::string   &datum {
-                    (row < long(data[col].size())) ? data[col][row] : blank
-                };
-                const auto          width {
-                    std::max(widths[col], col_names[col].size())
-                };
-
-                o << "| ";
-                if (is_numeric[col])
-                    o << std::format("{:>{}}", datum, width);
-                else
-                    o << std::format("{:<{}}", datum, width);
-                o << ' ';
+                o << bar_space << std::format("{:^{}}", name, width) << ' ';
             }
             o << '\n';
-        }
 
-        o.flags(original_f);
+            o << _get_horz_rule_(gutter_width);
+            for (long i = 0; i < num_columns; ++i) {
+                const auto  width { std::max(widths[i], col_names[i].size()) };
+
+                o << '|' << _get_horz_rule_(width + 2);
+            }
+            o << '\n';
+
+
+            for (long row = 0; row < num_rows; ++row) {
+                o << std::setw(gutter_width) << row;
+                for (long col = 0; col < num_columns; ++col) {
+                    const std::string   &datum {
+                        (row < long(data[col].size())) ? data[col][row] : blank
+                    };
+                    const auto          width {
+                        std::max(widths[col], col_names[col].size())
+                    };
+
+                    o << bar_space;
+                    if (is_numeric[col])
+                        o << std::format("{:>{}}", datum, width);
+                    else
+                        o << std::format("{:<{}}", datum, width);
+                    o << ' ';
+                }
+                o << '\n';
+            }
+        }
+        else  {  // io_format::markdown
+            o << bar_space;
+
+            for (long i = 0; i < num_columns; ++i)
+                o << bar_space << col_names[i] << ' ';
+            o << bar_nl;
+
+            o << "|---:";
+            for (long i = 0; i < num_columns; ++i) {
+                o << '|';
+                if (is_numeric[i])
+                    o << "---:";
+                else
+                    o << ":---";
+            }
+            o << bar_nl;
+
+            for (long row = 0; row < num_rows; ++row) {
+                o << bar_space << row;
+                for (long col = 0; col < num_columns; ++col) {
+                    const std::string   &datum {
+                        (row < long(data[col].size())) ? data[col][row] : blank
+                    };
+
+                    o << bar_space << datum << ' ';
+                }
+                o << bar_nl;
+            }
+        }
     }
 
     if (iof == io_format::json)
         o << "\n}";
-    // if (iof != io_format::binary)
-    //     o << std::endl;
+
+    o.flags(original_f);
     return (true);
 }
 

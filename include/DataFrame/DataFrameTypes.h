@@ -317,10 +317,11 @@ enum class  io_format : unsigned char  {
     json = 3,
     binary = 5,  // DataFrame specific binary format
 
-    // This only applies to write (output) function. It is a somewhat
-    // expensive operation, especially for large datasets.
+    // These only apply to write (output) function. They are a somewhat
+    // resource consuming operations, especially for large datasets.
     //
     pretty_prt = 6,
+    markdown = 7,
 };
 
 // ----------------------------------------------------------------------------

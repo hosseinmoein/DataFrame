@@ -714,18 +714,18 @@ col_2:1:<double>:8,
 col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
-INDEX:1:<ulong>:123450,
-col_1:1:<double>:1,
-col_2:1:<double>:8,
-col_3:1:<double>:15,
-col_str:1:<string>:11,
-col_4:1:<double>:22,
-INDEX:1:<ulong>:123450,
-col_1:1:<double>:1,
-col_2:1:<double>:8,
-col_3:1:<double>:15,
-col_str:1:<string>:11,
-col_4:1:<double>:22,
+INDEX:1:<ulong>:123451,
+col_1:1:<double>:2,
+col_2:1:<double>:9,
+col_3:1:<double>:16,
+col_str:1:<string>:22,
+col_4:1:<double>:23,
+INDEX:1:<ulong>:123452,
+col_1:1:<double>:3,
+col_2:1:<double>:10,
+col_3:1:<double>:17,
+col_str:1:<string>:33,
+col_4:1:<double>:24,
 
 Testing write(json) ...
 Writing in JSON:
@@ -2521,6 +2521,19 @@ Testing markdown ...
 | 7| 11/10/00 | 98.002 | 98.380 | 93.009 | 93.000 | 59.33 | 6807900 |
 | 8| 11/13/00 | 91.812 | 99.440 | 91.629 | 97.440 | 62.16 | 8684900 |
 | 9| 11/14/00 | 99.252 | 99.880 | 98.509 | 99.500 | 63.47 | 5150900 |
+
+Testing latex ...
+\begin{tabular}{rlrrrrrr}
+\hline
+ & \verb|INDEX| & \verb|IBM_Open| & \verb|IBM_High| & \verb|IBM_Low| & \verb|IBM_Close| & \verb|IBM_Adj_Close| & \verb|IBM_Volume| \\
+\hline
+0 & \verb|2000-11-01| & 98.4375 & 99.8750 & 97.2500 & 98.5625 & 62.7958 & 7466200 \\
+1 & \verb|2000-11-02| & 99.0000 & 102.3125 & 98.5000 & 101.9375 & 64.9461 & 7445100 \\
+2 & \verb|2000-11-03| & 102.5000 & 102.6250 & 99.3750 & 100.1250 & 63.7913 & 5848500 \\
+3 & \verb|2000-11-06| & 99.87500 & 102.3750 & 99.4375 & 100.3125 & 63.9108 & 4448500 \\
+4 & \verb|2000-11-07| & 101.1250 & 103.5000 & 100.6875 & 102.3125 & 65.1850 & 5420600 \\
+ \hline
+\end{tabular}
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2539,6 +2552,6 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: 0.029693988024, -0.00859090802347, -0.039640231146, 0.0054843952151, 
+Means of clusters are: -0.00641959031801, 0.0371657409051, 0.00861770254284, -0.0359585603715, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 IBM returns seasonality period is; 2.03272727273

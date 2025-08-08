@@ -4201,6 +4201,27 @@ static void test_markdown()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_latex()  {
+
+    std::cout << "\nTesting latex ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("DT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    df.write<std::ostream, double, long>(
+         std::cout, io_format::latex,
+         { .precision = 4, .max_recs = 5, .dt_format = DT_FORMAT::ISO_DT });
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4276,6 +4297,7 @@ int main(int, char *[]) {
     test_sort_freq();
     test_pretty_print();
     test_markdown();
+    test_latex();
 
     return (0);
 }

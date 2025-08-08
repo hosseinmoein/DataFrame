@@ -85,14 +85,6 @@ template<typename S, typename ... Ts>
 bool DataFrame<I, H>::
 write(S &o, io_format iof, const WriteParams<> params) const  {
 
-    if (iof != io_format::csv &&
-        iof != io_format::json &&
-        iof != io_format::csv2 &&
-        iof != io_format::binary &&
-        iof != io_format::pretty_prt &&
-        iof != io_format::markdown)
-        throw NotImplemented("write(): This io_format is not implemented");
-
     bool    need_pre_comma = false;
     long    end_row = indices_.size();
     long    start_row = 0;
@@ -253,7 +245,9 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             data_[idx].change(functor);
         }
     }
-    else if (iof == io_format::pretty_prt || iof == io_format::markdown)  {
+    else if (iof == io_format::pretty_prt ||
+             iof == io_format::markdown ||
+             iof == io_format::latex)  {
         std::vector<std::vector<std::string>>   data;
         std::vector<std::string>                col_names;
         std::vector<bool>                       is_numeric;
@@ -348,7 +342,7 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
                 o << '\n';
             }
         }
-        else  {  // io_format::markdown
+        else if (iof == io_format::markdown)  {
             o << bar_space;
 
             for (long i = 0; i < num_columns; ++i)
@@ -377,6 +371,37 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
                 o << bar_nl;
             }
         }
+        else if (iof == io_format::latex)  {
+            o << "\\begin{tabular}{r";
+            for (const auto num : is_numeric)  {
+                if (num) o << 'r';
+                else o << 'l';
+            }
+            o << "}\n\\hline\n";
+
+            for (const auto &name : col_names)
+                o << " & \\verb|" << name << '|';
+            o << " \\\\\n\\hline\n";
+
+            for (long row = 0; row < num_rows; ++row) {
+                o << row;
+                for (long col = 0; col < num_columns; ++col) {
+                    const std::string   &datum {
+                        (row < long(data[col].size())) ? data[col][row] : blank
+                    };
+
+                    if (is_numeric[col])
+                        o << " & " << datum;
+                    else
+                        o << " & \\verb|" << datum << '|';
+                }
+                o << " \\\\\n";
+            }
+            o << " \\hline\n\\end{tabular}\n";
+        }
+    }
+    else  {
+        throw NotImplemented("write(): This io_format is not implemented");
     }
 
     if (iof == io_format::json)

@@ -1318,6 +1318,10 @@ read_csv2_(S &stream,
                 const size_type token_s = token.size();
                 size_type       token_idx { 0 };
 
+                if (token_s > 0 &&
+                    (token[token_s - 1] == '\r' ||
+                     token[token_s - 1] == '\n')) [[unlikely]]
+                    token.pop_back();
                 value.clear();
                 col_name.clear();
                 type_str.clear();
@@ -1639,6 +1643,12 @@ read_csv2_(S &stream,
                 if (! sstream.eof()) [[likely]]
                     std::getline(sstream, value, delim);
 
+                const auto  val_size = value.size();
+
+                if (val_size > 0 &&
+                    (value[val_size - 1] == '\r' ||
+                     value[val_size - 1] == '\n')) [[unlikely]]
+                    value.pop_back();
                 if (spec_vec_idx >= spec_vec.size()) [[unlikely]]  break;
 
                 _col_data_spec_ &col_spec = spec_vec[spec_vec_idx];
@@ -1646,8 +1656,6 @@ read_csv2_(S &stream,
                 if (col_idx != col_spec.col_idx) [[unlikely]] continue;
 
                 spec_vec_idx += 1;
-
-                const auto  val_size = value.size();
 
                 switch(col_spec.type_spec)  {
                     case file_dtypes::FLOAT: {

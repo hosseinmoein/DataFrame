@@ -720,12 +720,12 @@ col_2:1:<double>:9,
 col_3:1:<double>:16,
 col_str:1:<string>:22,
 col_4:1:<double>:23,
-INDEX:1:<ulong>:123452,
-col_1:1:<double>:3,
-col_2:1:<double>:10,
-col_3:1:<double>:17,
-col_str:1:<string>:33,
-col_4:1:<double>:24,
+INDEX:1:<ulong>:123451,
+col_1:1:<double>:2,
+col_2:1:<double>:9,
+col_3:1:<double>:16,
+col_str:1:<string>:22,
+col_4:1:<double>:23,
 
 Testing write(json) ...
 Writing in JSON:
@@ -2534,6 +2534,178 @@ Testing latex ...
 4 & \verb|2000-11-07| & 101.1250 & 103.5000 & 100.6875 & 102.3125 & 65.1850 & 5420600 \\
  \hline
 \end{tabular}
+
+Testing html ...
+<table border="1" class="DataFrame">
+<thead>
+<tr style="text-align: center;">
+<th></th>
+<th>INDEX</th>
+<th>IBM_Open</th>
+<th>IBM_High</th>
+<th>IBM_Low</th>
+<th>IBM_Close</th>
+<th>IBM_Adj_Close</th>
+<th>IBM_Volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th style="text-align: right;">0</th>
+<td style="text-align: left;">2000-11-01</td>
+<td style="text-align: right;">98.438</td>
+<td style="text-align: right;">99.875</td>
+<td style="text-align: right;">97.250</td>
+<td style="text-align: right;">98.562</td>
+<td style="text-align: right;">62.796</td>
+<td style="text-align: right;">7466200</td>
+</tr>
+<tr>
+<th style="text-align: right;">1</th>
+<td style="text-align: left;">2000-11-02</td>
+<td style="text-align: right;">99.000</td>
+<td style="text-align: right;">102.312</td>
+<td style="text-align: right;">98.500</td>
+<td style="text-align: right;">101.938</td>
+<td style="text-align: right;">64.946</td>
+<td style="text-align: right;">7445100</td>
+</tr>
+<tr>
+<th style="text-align: right;">2</th>
+<td style="text-align: left;">2000-11-03</td>
+<td style="text-align: right;">102.500</td>
+<td style="text-align: right;">102.625</td>
+<td style="text-align: right;">99.375</td>
+<td style="text-align: right;">100.125</td>
+<td style="text-align: right;">63.791</td>
+<td style="text-align: right;">5848500</td>
+</tr>
+<tr>
+<th style="text-align: right;">3</th>
+<td style="text-align: left;">2000-11-06</td>
+<td style="text-align: right;">99.8750</td>
+<td style="text-align: right;">102.375</td>
+<td style="text-align: right;">99.438</td>
+<td style="text-align: right;">100.312</td>
+<td style="text-align: right;">63.911</td>
+<td style="text-align: right;">4448500</td>
+</tr>
+<tr>
+<th style="text-align: right;">4</th>
+<td style="text-align: left;">2000-11-07</td>
+<td style="text-align: right;">101.125</td>
+<td style="text-align: right;">103.500</td>
+<td style="text-align: right;">100.688</td>
+<td style="text-align: right;">102.312</td>
+<td style="text-align: right;">65.185</td>
+<td style="text-align: right;">5420600</td>
+</tr>
+</tbody>
+</table>
+
+
+
+<table border="1" class="DataFrame">
+<thead>
+<tr style="text-align: center;">
+<th></th>
+<th>INDEX</th>
+<th>Open</th>
+<th>High</th>
+<th>Low</th>
+<th>Close</th>
+<th>Mean</th>
+<th>Median</th>
+<th>25% Quantile</th>
+<th>Std</th>
+<th>MAD</th>
+<th>Map 1</th>
+<th>Unordered Map</th>
+<th>Str Vec</th>
+<th>Double Set</th>
+<th>Str Set</th>
+<th>Volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th style="text-align: right;">0</th>
+<td style="text-align: left;">2000-01-14 00:00:00.000000</td>
+<td style="text-align: right;">0.999442</td>
+<td style="text-align: right;">0.999442</td>
+<td style="text-align: right;">0.778460</td>
+<td style="text-align: right;">0.896763</td>
+<td style="text-align: right;">0.881975</td>
+<td style="text-align: right;">0.880580</td>
+<td style="text-align: right;">0.856027</td>
+<td style="text-align: right;">0.060093</td>
+<td style="text-align: right;">0.043694</td>
+<td style="text-align: left;">3{label one 1:123.000000|label one 2:-782.500000|label one 3:444.440000}</td>
+<td style="text-align: left;">3{Key one 3:444.440000|Key one 2:-782.500000|Key one 1:123.000000}</td>
+<td style="text-align: left;">4[bbb|aaa|zzz|ddd]</td>
+<td style="text-align: left;">3[-782.500000|123.000000|444.440000]</td>
+<td style="text-align: left;">3[-782.5|123.0|444.44]</td>
+<td style="text-align: right;">6400945600</td>
+</tr>
+<tr>
+<th style="text-align: right;">1</th>
+<td style="text-align: left;">2000-01-31 00:00:00.000000</td>
+<td style="text-align: right;">0.928013</td>
+<td style="text-align: right;">1.013393</td>
+<td style="text-align: right;">0.907366</td>
+<td style="text-align: right;">0.926339</td>
+<td style="text-align: right;">0.963728</td>
+<td style="text-align: right;">0.966797</td>
+<td style="text-align: right;">0.938337</td>
+<td style="text-align: right;">0.036252</td>
+<td style="text-align: right;">0.031362</td>
+<td style="text-align: left;">3{label two 1:123.000000|label two 2:-782.500000|label two 3:444.440000}</td>
+<td style="text-align: left;">3{Key two 3:444.440000|Key two 2:-782.500000|Key two 1:123.000000}</td>
+<td style="text-align: left;">4[aaa|bbb|ccc|www]</td>
+<td style="text-align: left;">3[-782.500000|0.000000|1.000000]000]</td>
+<td style="text-align: left;">3[-782.5|1:123.0|:444.44]</td>
+<td style="text-align: right;">6154232000</td>
+</tr>
+<tr>
+<th style="text-align: right;">2</th>
+<td style="text-align: left;">2000-02-14 00:00:00.000000</td>
+<td style="text-align: right;">0.895089</td>
+<td style="text-align: right;">1.034040</td>
+<td style="text-align: right;">0.882254</td>
+<td style="text-align: right;">1.034040</td>
+<td style="text-align: right;">0.973214</td>
+<td style="text-align: right;">0.988281</td>
+<td style="text-align: right;">0.943360</td>
+<td style="text-align: right;">0.055973</td>
+<td style="text-align: right;">0.046205</td>
+<td style="text-align: left;">3{label three 1:123.000000|label three 2:-782.500000|label three 3:444.440000}</td>
+<td style="text-align: left;">3{Key three 3:444.440000|Key three 2:-782.500000|Key three 1:123.000000}</td>
+<td style="text-align: left;">4[123|abc|345|list]</td>
+<td style="text-align: left;">3[-782.500000|123.000000|444.440000]</td>
+<td style="text-align: left;">3[-782.5|123.0|444.44]44]</td>
+<td style="text-align: right;">3714592000</td>
+</tr>
+<tr>
+<th style="text-align: right;">3</th>
+<td style="text-align: left;">2000-02-29 00:00:00.000000</td>
+<td style="text-align: right;">1.062500</td>
+<td style="text-align: right;">1.062500</td>
+<td style="text-align: right;">0.985491</td>
+<td style="text-align: right;">1.023438</td>
+<td style="text-align: right;">1.020326</td>
+<td style="text-align: right;">1.021205</td>
+<td style="text-align: right;">1.013672</td>
+<td style="text-align: right;">0.021711</td>
+<td style="text-align: right;">0.015304</td>
+<td style="text-align: left;">3{label four 1:123.000000|label four 2:-782.500000|label four 3:444.440000}00}</td>
+<td style="text-align: left;">3{Key four 3:444.440000|Key four 2:-782.500000|Key four 1:123.000000}00}</td>
+<td style="text-align: left;">3[bbb|aaa|zzz]list]</td>
+<td style="text-align: left;">4[-782.500000|100.500000|123.000000|444.440000]</td>
+<td style="text-align: left;">4[-782.5|100.5|123.0|444.44]</td>
+<td style="text-align: right;">3605190400</td>
+</tr>
+</tbody>
+</table>
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2552,6 +2724,6 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: -0.00641959031801, 0.0371657409051, 0.00861770254284, -0.0359585603715, 
+Means of clusters are: 0.03727885167, -0.00618431987215, 0.00877654056312, -0.0357253958989, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 IBM returns seasonality period is; 2.03272727273

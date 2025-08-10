@@ -129,6 +129,7 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             data_[idx].change(functor);
             need_pre_comma = true;
         }
+        o << "\n}";
     }
     else if (iof == io_format::csv)  {
         if (! params.columns_only) [[likely]]  {
@@ -247,7 +248,8 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
     }
     else if (iof == io_format::pretty_prt ||
              iof == io_format::markdown ||
-             iof == io_format::latex)  {
+             iof == io_format::latex ||
+             iof == io_format::html)  {
         std::vector<std::vector<std::string>>   data;
         std::vector<std::string>                col_names;
         std::vector<bool>                       is_numeric;
@@ -399,14 +401,41 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             }
             o << " \\hline\n\\end{tabular}\n";
         }
+        else if (iof == io_format::html)  {
+            o << "<table border=\"1\" class=\"DataFrame\">\n"
+              << "<thead>\n<tr style=\"text-align: center;\">\n";
+
+            o << "<th></th>\n";
+            for (const auto &name : col_names)
+                o << "<th>" << name << "</th>\n";
+            o << "</tr>\n</thead>\n";
+
+            o << "<tbody>\n";
+            for (long row = 0; row < num_rows; ++row) {
+                o << "<tr>\n<th style=\"text-align: right;\">"
+                  << row << "</th>\n";
+                for (long col = 0; col < num_columns; ++col) {
+                    const std::string   &datum {
+                        (row < long(data[col].size())) ? data[col][row] : blank
+                    };
+
+                    if (is_numeric[col])
+                        o << "<td style=\"text-align: right;\">"
+                          << datum << "</td>\n";
+                    else
+                        o << "<td style=\"text-align: left;\">"
+                          << datum << "</td>\n";
+                }
+                o << "</tr>\n";
+            }
+            o << "</tbody>\n</table>\n";
+        }
     }
     else  {
         throw NotImplemented("write(): This io_format is not implemented");
     }
 
-    if (iof == io_format::json)
-        o << "\n}";
-
+    o << std::flush;
     o.flags(original_f);
     return (true);
 }

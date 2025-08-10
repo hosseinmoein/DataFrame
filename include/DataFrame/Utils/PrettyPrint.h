@@ -175,6 +175,11 @@ _stringfy_(const V &vec,
             result.push_back(buffer.c_str());
         }
     }
+    else if constexpr (std::is_same_v<value_type, std::string>)  {
+        for (long i { start_row }; i < end_row; ++i)  {
+            result.push_back(vec[i]);
+        }
+    }
     else  {
         std::stringstream   ss;
 

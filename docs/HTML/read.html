@@ -49,6 +49,14 @@ body {
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    ColNameType col_name <span style="color:#800080; ">{</span> DF_INDEX_COL_NAME <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    file_dtypes col_type <span style="color:#800080; ">{</span> file_dtypes<span style="color:#800080; ">::</span><span style="color:#603000; ">ULONG</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// This is number of records in the given column. Number of records in</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// header or schema are for efficiently and only once allocate memory for</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// the given column. In other words, the number of records doesn't need to</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// be accurate. I could be zero or an approximation or accurate. Of course</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// if it is not accurate you may allocate more memory than you need or</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// allocate multiple times.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> num_rows <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// 0-based index of columns starting at index column at 0.</span></span>
@@ -98,7 +106,7 @@ body {
 <span class="line_wrapper">    <span style="color:#696969; ">// This only applies to csv and csv2 formats. It specifies the delimiting</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// (separating) character.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
-<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">char</span> delim <span style="color:#800080; ">{</span> <span style="color:#0000e6; ">','</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">char</span>        delim <span style="color:#800080; ">{</span> <span style="color:#0000e6; ">','</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>

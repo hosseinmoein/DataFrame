@@ -319,10 +319,14 @@ enum class  io_format : unsigned char  {
 
     // These only apply to write (output) function. They are somewhat resource
     // consuming operations, especially for large datasets.
+    // NOTE: Currently, special characters for these types are not escaped. So
+    //       you better not have special chars.
+    //       pretty_prt doesn't have any special characters.
     //
     pretty_prt = 6,
     markdown = 7,
     latex = 8,
+    html = 9,
 };
 
 // ----------------------------------------------------------------------------
@@ -837,6 +841,14 @@ struct  ReadSchema  {
 
     ColNameType col_name { DF_INDEX_COL_NAME };
     file_dtypes col_type { file_dtypes::ULONG };
+
+    // This is number of records in the given column. Number of records in
+    // header or schema are for efficiently and only once allocate memory for
+    // the given column. In other words, the number of records doesn't need to
+    // be accurate. I could be zero or an approximation or accurate. Of course
+    // if it is not accurate you may allocate more memory than you need or
+    // allocate multiple times.
+    //
     std::size_t num_rows { 0 };
 
     // 0-based index of columns starting at index column at 0.

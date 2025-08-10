@@ -4222,6 +4222,49 @@ static void test_latex()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_html()  {
+
+    std::cout << "\nTesting html ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("DT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    df.write<std::ostream, double, long>(
+         std::cout, io_format::html,
+         { .precision = 3, .max_recs = 5, .dt_format = DT_FORMAT::ISO_DT });
+    std::cout << "\n\n\n";
+
+    DTDataFrame df2;
+
+    try  {
+        df2.read("AAPL_10dBucketWithMaps_small.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    df2.write<std::ostream,
+              double,
+              long,
+              std::map<std::string, double>,
+              std::unordered_map<std::string, double>,
+              std::vector<std::string>,
+              std::set<double>,
+              std::set<std::string>>
+        (std::cout, io_format::html,
+         { .precision = 6, .dt_format = DT_FORMAT::ISO_DT_TM });
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4298,6 +4341,7 @@ int main(int, char *[]) {
     test_pretty_print();
     test_markdown();
     test_latex();
+    test_html();
 
     return (0);
 }

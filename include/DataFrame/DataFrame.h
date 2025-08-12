@@ -350,6 +350,31 @@ public:  // Load/append/remove interfaces
                 return (static_cast<std::size_t>(t - t_1));
             });
 
+    // This loads a random sample of data given inside the range into a new
+    // column of the DataFrame.
+    //
+    // T:
+    //   Type of the new column
+    // ITR:
+    //   Type of the iterators inside the range
+    // name:
+    //   Name of the new column
+    // range:
+    //   The begin and end iterators for data
+    // num_recs:
+    //   Number of data points sampled and loaded in the new column. The
+    //   default is the same number as the index column.
+    // seed:
+    //   User could specify a seed. The same seed should always produce the
+    //   same random selections.
+    //
+    template<typename T, typename ITR>
+    size_type
+    load_random_sample(const char *name,
+                       Index2D<const ITR &> range,
+                       long num_recs = -1,
+                       seed_t seed = seed_t(-1));
+
     // This method feeds an existing column data, along with index data, into
     // the given functor which for each data point creates a new data point
     // for a new column with the given name

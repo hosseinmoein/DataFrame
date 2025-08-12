@@ -717,6 +717,39 @@ load_column (const char *name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T, typename ITR>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
+load_random_sample(const char *name,
+                   Index2D<const ITR &> range,
+                   long num_recs,
+                   seed_t seed)  {
+
+    using dist_t = std::uniform_int_distribution<unsigned long>;
+
+    const long  data_s = long(std::distance(range.begin, range.end));
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (data_s < 2)
+        throw NotFeasible("load_random_sample: Data sample size is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+    const long  idx_s = long(indices_.size());
+    const long  col_s = (num_recs < 0 || num_recs > idx_s) ? idx_s : num_recs; 
+
+    std::random_device  rd;
+    std::mt19937        gen((seed != seed_t(-1)) ? seed : rd());
+    dist_t              dist(0L, data_s - 1);
+    ColumnVecType<T>    new_col;
+
+    new_col.reserve(col_s);
+    for (long i { 0 }; i < col_s; ++i)
+        new_col.push_back(*(range.begin + dist(gen)));
+
+    return (load_column<T>(name, std::move(new_col)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename NT, typename ET>
 DataFrame<I, H>::size_type DataFrame<I, H>::
 load_column(const char *new_col_name,

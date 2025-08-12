@@ -4265,6 +4265,47 @@ static void test_html()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_load_random_sample()  {
+
+    std::cout << "\nTesting load_random_sample( ) ..." << std::endl;
+
+    using iter_t = std::vector<std::string>::const_iterator;
+	
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const std::vector<std::string>  universe {
+        "AA", "BB", "CC", "DD", "EE", "FF", "GG", "HH", "II", "JJ", "KK",
+        "LL", "MM", "NN", "OO", "PP", "QQ", "RR", "SS", "TT", "UU", "VV",
+        "WW", "XX", "YY", "ZZ",
+    };
+
+    ibm.load_random_sample<std::string, iter_t>(
+        "Random Sample",
+        { universe.cbegin(), universe.cend() },
+        ibm.get_index().size(),
+        123);
+
+    const auto  &str_col = ibm.get_column<std::string>("Random Sample");
+
+    assert(str_col.size() == ibm.get_index().size());
+    assert(str_col[0] == "SS");
+    assert(str_col[5] == "RR");
+    assert(str_col[63] == "AA");
+    assert(str_col[94] == "ZZ");
+    assert(str_col[5011] == "ZZ");
+    assert(str_col[5030] == "CC");
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4342,6 +4383,7 @@ int main(int, char *[]) {
     test_markdown();
     test_latex();
     test_html();
+    test_load_random_sample();
 
     return (0);
 }

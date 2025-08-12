@@ -252,6 +252,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Loads a random sample of a universe into a new column"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/load_column.html">load_random_sample</a>()</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Loads result of a visitor (i.e. algorithm) as a column"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/load_result_as_column.html">load_result_as_column</a>( 5 )</td>
     </tr>
 
@@ -2019,7 +2023,7 @@ table.hovertable td {
 DataFrame uses multithreading extensively and provides granular tools to adjust your environment. Let's divide the multithreading subject in DataFrame into two categories:<BR>
 
   <H4>1. User Multithreading</H4>
-  If you use multithreading, you are responsible for synchronization of shared resources. Generally speaking, DataFrame is not multithreaded-safe. DataFrame has static data and per-instance data, both of which need protection in threads:<BR>
+  If you use multithreading, you are responsible for synchronization of shared resources. Generally speaking, <I><font size="+1">DataFrame is not multithreaded-safe</font></I>. DataFrame has static data and per-instance data, both of which need protection in threads:<BR>
     <UL>
       <LI>DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So, by default there is no locking overhead. If you use DataFrame in a multithreaded program, you must provide a <I>SpinLock</I> defined in <I>ThreadGranularity.h</I> file. DataFrame will use your <I>SpinLock</I> to protect the containers.<BR>Please see above, <I>set_lock()</I>, <I>remove_lock()</I>, and <I>dataframe_tester.cc#3767</I> for code example.<BR>In this case you must go through the above DataFrame API and use the <I>Spinlock</I>. Again, this protects the DataFrame static structures.</LI>
       <LI>In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only.<BR>In this case you must use your own lock and logic. In other words, DataFrame doesn't have an API for this category.</LI>

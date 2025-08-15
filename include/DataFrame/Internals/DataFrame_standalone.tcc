@@ -605,6 +605,185 @@ _load_groupby_data_3_(
 
 // ----------------------------------------------------------------------------
 
+template<typename DV, typename SI, typename SV, typename VIS>
+static inline void
+_resample_core_(DV &dst_vec,
+                const SI &src_idx,
+                const SV &src_vec,
+                std::size_t interval_num,
+                VIS &visitor,
+                std::size_t src_s,
+                time_frequency tf)  {
+
+    const double    int_d { static_cast<double>(interval_num) };
+    std::size_t     marker { 0 };
+
+    dst_vec.reserve(src_s / 5);
+    if (tf == time_frequency::secondly)  {
+        visitor.pre();
+        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+            if (src_idx[i].diff_seconds(src_idx[marker]) >= int_d) {
+                visitor.post();
+                dst_vec.push_back(visitor.get_result());
+                visitor.pre();
+                marker = i;
+            }
+            visitor(src_idx[i], src_vec[i]);
+        }
+    }
+    else if (tf == time_frequency::minutely)  {
+        visitor.pre();
+        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+            if (src_idx[i].diff_minutes(src_idx[marker]) >= int_d) {
+                visitor.post();
+                dst_vec.push_back(visitor.get_result());
+                visitor.pre();
+                marker = i;
+            }
+            visitor(src_idx[i], src_vec[i]);
+        }
+    }
+    else if (tf == time_frequency::hourly)  {
+        visitor.pre();
+        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+            if (src_idx[i].diff_hours(src_idx[marker]) >= int_d) {
+                visitor.post();
+                dst_vec.push_back(visitor.get_result());
+                visitor.pre();
+                marker = i;
+            }
+            visitor(src_idx[i], src_vec[i]);
+        }
+    }
+    else if (tf == time_frequency::daily)  {
+        visitor.pre();
+        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+            if (src_idx[i].diff_days(src_idx[marker]) >= int_d) {
+                visitor.post();
+                dst_vec.push_back(visitor.get_result());
+                visitor.pre();
+                marker = i;
+            }
+            visitor(src_idx[i], src_vec[i]);
+        }
+    }
+    else if (tf == time_frequency::weekly)  {
+        std::size_t count { 0 };
+
+        visitor.pre();
+        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+            if (i > 0 &&
+                (src_idx[i].dweek() <= src_idx[marker].dweek() ||
+                 (src_idx[i].dyear() - src_idx[marker].dyear()) >= 7))  {
+                count += 1;
+                marker = i;
+            }
+            if (count >= interval_num)  {
+                visitor.post();
+                dst_vec.push_back(visitor.get_result());
+                visitor.pre();
+                marker = i;
+                count = 0;
+            }
+            visitor(src_idx[i], src_vec[i]);
+        }
+    }
+    else if (tf == time_frequency::monthly)  {
+        std::size_t count { 0 };
+
+        visitor.pre();
+        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+            if (src_idx[i].month() != src_idx[marker].month())  {
+                count += 1;
+                marker = i;
+            }
+            if (count >= interval_num)  {
+                visitor.post();
+                dst_vec.push_back(visitor.get_result());
+                visitor.pre();
+                marker = i;
+                count = 0;
+            }
+            visitor(src_idx[i], src_vec[i]);
+        }
+    }
+    else if (tf == time_frequency::annual)  {
+        std::size_t count { 0 };
+
+        visitor.pre();
+        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+            if (src_idx[i].year() != src_idx[marker].year())  {
+                count += 1;
+                marker = i;
+            }
+            if (count >= interval_num)  {
+                visitor.post();
+                dst_vec.push_back(visitor.get_result());
+                visitor.pre();
+                marker = i;
+                count = 0;
+            }
+            visitor(src_idx[i], src_vec[i]);
+        }
+    }
+    else  {
+        throw NotImplemented("_resample_core_(): "
+                             "Time frequency is not implemented");
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename DF, typename RES_DF, typename T>
+static inline void
+_load_resample_data_(const DF &source,
+                     RES_DF &dest,
+                     std::size_t interval_num,
+                     time_frequency tf,
+                     T &triple,
+                     std::vector<std::future<void>> &futures) {
+
+    using ValueType = typename std::tuple_element<2, T>::type::value_type;
+
+    const auto          &src_idx = source.get_index();
+    const auto          &src_vec =
+        source.template get_column<ValueType>(std::get<0>(triple));
+    auto                &dst_vec = _create_column_from_triple_(dest, triple);
+    const std::size_t   src_s = std::min(src_vec.size(), src_idx.size());
+    auto                &visitor = std::get<2>(triple);
+    const auto          thread_level =
+        (src_idx.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
+
+    if (thread_level > 3)  {
+        futures.emplace_back(
+            ThreadGranularity::thr_pool_.dispatch(
+                false,
+                _resample_core_<std::decay_t<decltype(dst_vec)>,
+                                std::decay_t<decltype(src_idx)>,
+                                std::decay_t<decltype(src_vec)>,
+                                std::decay_t<decltype(visitor)>>,
+                    std::ref(dst_vec),
+                    std::cref(src_idx),
+                    std::cref(src_vec),
+                    interval_num,
+                    std::ref(visitor),
+                    src_s,
+                    tf));
+    }
+    else  {
+        _resample_core_(dst_vec,
+                        src_idx,
+                        src_vec,
+                        interval_num,
+                        visitor,
+                        src_s,
+                        tf);
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename DV, typename SI, typename SV, typename V, typename VIS>
 static inline void
 _bucketize_core_(DV &dst_vec,

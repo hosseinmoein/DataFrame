@@ -288,33 +288,35 @@ public:
     [[nodiscard]] HMDF_API EpochType compare(const DateTime &rhs) const;
 
     [[nodiscard]] HMDF_API DateType
-    date () const noexcept;       // eg. 20020303
+    date() const noexcept;       // eg. 20020303
     [[nodiscard]] HMDF_API DatePartType
-    year () const noexcept;       // eg. 1990
+    year() const noexcept;       // eg. 1990
     [[nodiscard]] HMDF_API DT_MONTH
-    month () const noexcept;      // JAN - DEC
+    month() const noexcept;      // JAN - DEC
     [[nodiscard]] HMDF_API DatePartType
-    dmonth () const noexcept;     // 1 - 31
+    dmonth() const noexcept;     // 1 - 31
     [[nodiscard]] HMDF_API DatePartType
-    dyear () const noexcept;      // 1 - 366
+    dyear() const noexcept;      // 1 - 366
     [[nodiscard]] HMDF_API DT_WEEKDAY
-    dweek () const noexcept;      // SUN - SAT
+    dweek() const noexcept;      // SUN - SAT
     [[nodiscard]] HMDF_API HourType
-    hour () const noexcept;       // 0 - 23
+    hour() const noexcept;       // 0 - 23
     [[nodiscard]] HMDF_API MinuteType
-    minute () const noexcept;     // 0 - 59
+    minute() const noexcept;     // 0 - 59
     [[nodiscard]] HMDF_API SecondType
-    sec () const noexcept;        // 0 - 59
+    sec() const noexcept;        // 0 - 59
     [[nodiscard]] HMDF_API MillisecondType
-    msec () const noexcept;       // 0 - 999
+    msec() const noexcept;       // 0 - 999
     [[nodiscard]] HMDF_API MicrosecondType
-    microsec () const noexcept;   // 0 - 999,999
+    microsec() const noexcept;   // 0 - 999,999
     [[nodiscard]] HMDF_API NanosecondType
-    nanosec () const noexcept;    // 0 - 999,999,999
+    nanosec() const noexcept;    // 0 - 999,999,999
     [[nodiscard]] HMDF_API EpochType
-    time () const noexcept;       // Like ::time()
+    time() const noexcept;       // Like ::time()
+    [[nodiscard]] HMDF_API EpochType
+    days() const noexcept;       // Total days since epoch
     [[nodiscard]] HMDF_API LongTimeType
-    long_time () const noexcept;  // Nanosec since epoch
+    long_time() const noexcept;  // Nanosec since epoch
 
     HMDF_API operator double() const noexcept;
 
@@ -342,11 +344,12 @@ public:
     HMDF_API void add_months (long months) noexcept;
     HMDF_API void add_years (long years) noexcept;
 
-    [[nodiscard]] HMDF_API bool is_weekend () const noexcept;
-    [[nodiscard]] HMDF_API bool is_newyear () const noexcept;
-    [[nodiscard]] HMDF_API bool is_xmas () const noexcept;
-    [[nodiscard]] HMDF_API bool is_us_business_day () const noexcept;
-    [[nodiscard]] HMDF_API bool is_us_bank_holiday () const noexcept;
+    [[nodiscard]] HMDF_API bool is_weekend() const noexcept;
+    [[nodiscard]] HMDF_API bool is_newyear() const noexcept;
+    [[nodiscard]] HMDF_API bool is_leap_year() const noexcept;
+    [[nodiscard]] HMDF_API bool is_xmas() const noexcept;
+    [[nodiscard]] HMDF_API bool is_us_business_day() const noexcept;
+    [[nodiscard]] HMDF_API bool is_us_bank_holiday() const noexcept;
     [[nodiscard]] HMDF_API bool is_valid () const noexcept;
 
     // Formats date/time into a string based on format parameter

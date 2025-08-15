@@ -1971,7 +1971,7 @@ public:  // Data manipulation
     // The index of each bucket will be determined by idx_visitor.
     //
     // V:
-    //   Type of value to be uased for bucketizing based on bucket_type
+    //   Type of value to be used for bucketizing based on bucket_type
     // I_V:
     //   Type of visitor to be used to bucketize the index column
     // Ts:
@@ -1979,7 +1979,7 @@ public:  // Data manipulation
     // bt:
     //   bucket_type to specify bucketization logic
     // value:
-    //   The value to be uased to bucketize based on bucket_type. For example,
+    //   The value to be used to bucketize based on bucket_type. For example,
     //   if bucket_type is by_distance, then value is the distance between two
     //   index values. If bucket_type is by_count, then value is an integer
     //   count.
@@ -2004,6 +2004,54 @@ public:  // Data manipulation
                     const V &value,
                     I_V &&idx_visitor,
                     Ts&& ... args) const;
+
+    // This is very similar to bucketize() but specialized for DataFrame with
+    // a DateTime index column. It bucketizes the data based on specific time
+    // periods.
+    // You must specify how the index column is bucketized, by providing
+    // a visitor.
+    // You must specify how each column is bucketized, by providing 3-member
+    // tuples (triples). Each triple must have the following members:
+    //    1. Current DataFrame column name
+    //    2. Column name for the new bucketized DataFrame
+    //    3. A visitor to aggregate/bucketize current column to new column
+    //
+    // The result of each bucket will be stored in a new DataFrame and
+    // returned.
+    // Some data at the end of source columns may not be included in the result
+    // columns, because based on time frequency and interval they may not fit
+    // into the bucket. The index of each bucket will be determined by
+    // idx_visitor.
+    //
+    // NOTE: The calling DataFrame must be sorted by index, otherwise the
+    //       behavior is undefined.
+    //
+    // tf:
+    //   Time frequency period to bucketize the data with
+    // interval_num:
+    //   Number of time frequency periods to bucketize the data with
+    // idx_visitor:
+    //   A visitor to specify the index bucketization
+    // args:
+    //   Variable argument list of triples as specified above
+    //
+    template<typename I_V, typename ... Ts>
+    [[nodiscard]] DataFrame<DateTime, H>
+    resample(time_frequency tf,
+             size_type interval_num,
+             I_V &&idx_visitor,
+             Ts && ... args) const
+        requires std::same_as<I, DateTime>;
+
+    // Same as resample() above, but executed asynchronously
+    //
+    template<typename I_V, typename ... Ts>
+    [[nodiscard]] std::future<DataFrame<DateTime, H>>
+    resample_async(time_frequency tf,
+                   size_type interval_num,
+                   I_V &&idx_visitor,
+                   Ts && ... args) const
+        requires std::same_as<I, DateTime>;
 
     // It transposes the data in the DataFrame.
     // The transpose() is only defined for DataFrame's that have a single

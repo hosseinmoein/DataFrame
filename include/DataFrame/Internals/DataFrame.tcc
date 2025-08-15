@@ -1478,6 +1478,88 @@ bucketize_async(bucket_type bt,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename I_V, typename ... Ts>
+DataFrame<DateTime, H>
+DataFrame<I, H>::
+resample(time_frequency tf,
+         size_type interval_num,
+         I_V &&idx_visitor,
+         Ts && ... args) const
+    requires std::same_as<I, DateTime>  {
+
+    using res_t = DataFrame<DateTime, H>;
+
+    res_t           result;
+    auto            &dst_idx = result.get_index();
+    const auto      &src_idx = get_index();
+    const size_type idx_s = src_idx.size();
+
+    _resample_core_(dst_idx,
+                    src_idx,
+                    src_idx,
+                    interval_num,
+                    idx_visitor,
+                    idx_s,
+                    tf);
+
+    std::vector<std::future<void>>  futures;
+    const auto                      thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
+
+    if (thread_level > 2)  futures.reserve(column_list_.size());
+
+    auto    args_tuple = std::tuple<Ts ...>(args ...);
+    auto    func =
+        [this, &result, interval_num, &futures, tf]
+        (auto &triple) mutable -> void  {
+            _load_resample_data_(*this,
+                                 result,
+                                 interval_num,
+                                 tf,
+                                 triple,
+                                 futures);
+        };
+
+    const SpinGuard guard(lock_);
+
+    for_each_in_tuple (args_tuple, func);
+    for (auto &fut : futures)  fut.get();
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename I_V, typename ... Ts>
+std::future<DataFrame<DateTime, H>>
+DataFrame<I, H>::
+resample_async(time_frequency tf,
+               size_type interval_num,
+               I_V &&idx_visitor,
+               Ts && ... args) const
+    requires std::same_as<I, DateTime>  {
+
+    using res_t = DataFrame<DateTime, H>;
+
+    return (thr_pool_.dispatch(
+        true,
+        [tf,
+         interval_num,
+         idx_visitor = std::forward<I_V>(idx_visitor),
+         ... args = std::forward<Ts>(args),
+         this]() mutable -> res_t  {
+            return (this->resample<I_V, Ts ...>(
+                        tf,
+                        interval_num,
+                        std::forward<I_V>(idx_visitor),
+                        std::forward<Ts>(args) ...));
+        }));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename T>
 void
 DataFrame<I, H>::make_stationary(const char *col_name,

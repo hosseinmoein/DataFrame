@@ -4270,7 +4270,7 @@ static void test_load_random_sample()  {
     std::cout << "\nTesting load_random_sample( ) ..." << std::endl;
 
     using iter_t = std::vector<std::string>::const_iterator;
-	
+
     StrDataFrame    ibm;
 
     try  {
@@ -4302,6 +4302,91 @@ static void test_load_random_sample()  {
     assert(str_col[94] == "ZZ");
     assert(str_col[5011] == "ZZ");
     assert(str_col[5030] == "CC");
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_resample()  {
+
+    std::cout << "\nTesting resample ..." << std::endl;
+
+    DTDataFrame df;
+
+    try  {
+        df.read("DT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const auto  buckets1 =
+        df.resample(time_frequency::daily, 75,
+            LastVisitor<DTDataFrame::IndexType, MyDataFrame::IndexType>(),
+            std::make_tuple("IBM_Close", "High", MaxVisitor<double>()),
+            std::make_tuple("IBM_Close", "Low", MinVisitor<double>()),
+            std::make_tuple("IBM_Close", "Open", FirstVisitor<double>()),
+            std::make_tuple("IBM_Close", "Close", LastVisitor<double>()),
+            std::make_tuple("IBM_Close", "Mean", MeanVisitor<double>()),
+            std::make_tuple("IBM_Close", "Std", StdVisitor<double>()),
+            std::make_tuple("IBM_Volume", "Volume", SumVisitor<long>()),
+            std::make_tuple("IBM_Close", "Count", CountVisitor<double>()));
+
+    buckets1.write<std::ostream, double, long, std::size_t>(
+         std::cout, io_format::pretty_prt,
+         { .precision = 2, .dt_format = DT_FORMAT::ISO_DT });
+    std::cout << "\n\n\n";
+
+    const auto  buckets2 =
+        df.resample(time_frequency::weekly, 10,
+            LastVisitor<DTDataFrame::IndexType, MyDataFrame::IndexType>(),
+            std::make_tuple("IBM_Close", "High", MaxVisitor<double>()),
+            std::make_tuple("IBM_Close", "Low", MinVisitor<double>()),
+            std::make_tuple("IBM_Close", "Open", FirstVisitor<double>()),
+            std::make_tuple("IBM_Close", "Close", LastVisitor<double>()),
+            std::make_tuple("IBM_Close", "Mean", MeanVisitor<double>()),
+            std::make_tuple("IBM_Close", "Std", StdVisitor<double>()),
+            std::make_tuple("IBM_Volume", "Volume", SumVisitor<long>()),
+            std::make_tuple("IBM_Close", "Count", CountVisitor<double>()));
+
+    buckets2.write<std::ostream, double, long, std::size_t>(
+         std::cout, io_format::pretty_prt,
+         { .precision = 2, .dt_format = DT_FORMAT::ISO_DT });
+    std::cout << "\n\n\n";
+
+    const auto  buckets3 =
+        df.resample(time_frequency::monthly, 6,
+            LastVisitor<DTDataFrame::IndexType, MyDataFrame::IndexType>(),
+            std::make_tuple("IBM_Close", "High", MaxVisitor<double>()),
+            std::make_tuple("IBM_Close", "Low", MinVisitor<double>()),
+            std::make_tuple("IBM_Close", "Open", FirstVisitor<double>()),
+            std::make_tuple("IBM_Close", "Close", LastVisitor<double>()),
+            std::make_tuple("IBM_Close", "Mean", MeanVisitor<double>()),
+            std::make_tuple("IBM_Close", "Std", StdVisitor<double>()),
+            std::make_tuple("IBM_Volume", "Volume", SumVisitor<long>()),
+            std::make_tuple("IBM_Close", "Count", CountVisitor<double>()));
+
+    buckets3.write<std::ostream, double, long, std::size_t>(
+         std::cout, io_format::pretty_prt,
+         { .precision = 2, .dt_format = DT_FORMAT::ISO_DT });
+    std::cout << "\n\n\n";
+
+    auto        fut =
+        df.resample_async(time_frequency::annual, 2,
+            LastVisitor<DTDataFrame::IndexType, MyDataFrame::IndexType>(),
+            std::make_tuple("IBM_Close", "High", MaxVisitor<double>()),
+            std::make_tuple("IBM_Close", "Low", MinVisitor<double>()),
+            std::make_tuple("IBM_Close", "Open", FirstVisitor<double>()),
+            std::make_tuple("IBM_Close", "Close", LastVisitor<double>()),
+            std::make_tuple("IBM_Close", "Mean", MeanVisitor<double>()),
+            std::make_tuple("IBM_Close", "Std", StdVisitor<double>()),
+            std::make_tuple("IBM_Volume", "Volume", SumVisitor<long>()),
+            std::make_tuple("IBM_Close", "Count", CountVisitor<double>()));
+    const auto  buckets4 = fut.get();
+
+    buckets4.write<std::ostream, double, long, std::size_t>(
+         std::cout, io_format::pretty_prt,
+         { .precision = 2, .dt_format = DT_FORMAT::ISO_DT });
 }
 
 // ----------------------------------------------------------------------------
@@ -4384,6 +4469,7 @@ int main(int, char *[]) {
     test_latex();
     test_html();
     test_load_random_sample();
+    test_resample();
 
     return (0);
 }

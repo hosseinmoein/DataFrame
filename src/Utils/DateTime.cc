@@ -776,6 +776,30 @@ DateTime::EpochType DateTime::time () const noexcept  {
 
 // ----------------------------------------------------------------------------
 
+static inline
+bool _is_leap_year_(DateTime::DatePartType year) noexcept  {
+
+    return (((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0));
+}
+
+// ----------------------------------------------------------------------------
+
+DateTime::EpochType DateTime::days() const noexcept  {
+
+    const EpochType yr { year() };
+    EpochType       total_days { 0 };
+
+    if (yr > 1) [[likely]]  {
+        for (DatePartType y { 1 }; y < yr; ++y)
+            total_days += 365 + (_is_leap_year_(y) ? 1 : 0);
+        total_days += dyear();
+    }
+
+    return (total_days);
+}
+
+// ----------------------------------------------------------------------------
+
 DateTime::LongTimeType DateTime::long_time () const noexcept  {
 
     return (static_cast<LongTimeType>(this->time()) * 1000000000LL +
@@ -1025,6 +1049,13 @@ bool DateTime::is_newyear () const noexcept  {
              mon == DT_MONTH::JAN) ||
             (m_day == 31 && w_day == DT_WEEKDAY::FRI &&
              mon == DT_MONTH::DEC));
+}
+
+// ----------------------------------------------------------------------------
+
+bool DateTime::is_leap_year() const noexcept  {
+
+    return (_is_leap_year_(year()));
 }
 
 // ----------------------------------------------------------------------------

@@ -9120,6 +9120,176 @@ private:
 template<typename T, typename I = unsigned long>
 using cvonm_test_v = CramerVonMisesTestVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+template<std::floating_point T,
+         typename I = unsigned long,
+         typename L = std::string,
+         std::size_t A = 0>
+struct  DivideToBinsVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using label_type = L;
+    using pair_t = std::pair<T, T>;
+    using result_type =
+        std::vector<pair_t, typename allocator_declare<pair_t, A>::type>;
+    using label_vec_t =
+        std::vector<label_type,
+                    typename allocator_declare<label_type, A>::type>;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &column_begin, const H &column_end)  {
+
+        const size_type col_s = std::distance(column_begin, column_end);
+
+        if (bins_ > 0 && bins_list_.empty())  {  // Equal-width bins
+#ifdef HMDF_SANITY_EXCEPTIONS
+            if (bins_ >= col_s)
+                throw DataFrameError("DivideToBinsVisitor: "
+                                     "Number of bins must be < data size");
+            if (bins_ < 2)
+                throw DataFrameError("DivideToBinsVisitor: "
+                                     "Number of bins must be > 1");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+            const auto  [min_val, max_val] {
+                std::minmax_element(column_begin, column_end)
+            };
+
+            // Extend range slightly to include min/max in the first/last bin
+            //
+            const auto  range_extension { (*max_val - *min_val) * T(0.0001) };
+            const auto  adjusted_min { *min_val - range_extension };
+            const auto  adjusted_max { *max_val + range_extension };
+            const auto  bin_width = (adjusted_max - adjusted_min) / T(bins_);
+
+            bins_list_.reserve(bins_ + 1);
+            for (size_type i { 0 }; i <= bins_; ++i)
+                bins_list_.push_back(
+                    value_type(size_type(adjusted_min + T(i) * bin_width)));
+        }
+
+        const bool  labels { ! input_lbls_.empty() };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (labels && (input_lbls_.size() != (bins_list_.size() - 1)))
+            throw DataFrameError("DivideToBinsVisitor: "
+                                 "Number of bins must be = number of labels");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        result_.reserve(col_s);
+        if (labels)  labels_.reserve(col_s);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const auto  val { *(column_begin + i) };
+            bool        assigned { false };
+
+            for (size_type j { 0 }; j < bins_list_.size() - 1; ++j)  {
+                const auto   lower_bound { bins_list_[j] };
+                const auto   upper_bound { bins_list_[j + 1] };
+
+                // Special handling for the first interval if include_lowest
+                // is true
+                //
+                if (include_lowest_ && j == 0)  {
+                    if (right_)  {  // [lower, upper]
+                        if (val >= lower_bound && val <= upper_bound)  {
+                            result_.emplace_back(lower_bound, upper_bound);
+                            if (labels)  labels_.emplace_back(input_lbls_[j]);
+                            assigned = true;
+                            break;
+                        }
+                    }
+                    else  {  // [lower, upper)
+                        if (val >= lower_bound && val < upper_bound)  {
+                            result_.emplace_back(lower_bound, upper_bound);
+                            if (labels)  labels_.emplace_back(input_lbls_[j]);
+                            assigned = true;
+                            break;
+                        }
+                    }
+                }
+                else  {  // Standard interval handling
+                    if (right_)  {  // (lower, upper]
+                        if (val > lower_bound && val <= upper_bound)  {
+                            result_.emplace_back(lower_bound, upper_bound);
+                            if (labels)  labels_.emplace_back(input_lbls_[j]);
+                            assigned = true;
+                            break;
+                        }
+                    }
+                    else  {  // [lower, upper)
+                        if (val >= lower_bound && val < upper_bound)  {
+                            result_.emplace_back(lower_bound, upper_bound);
+                            if (labels)  labels_.emplace_back(input_lbls_[j]);
+                            assigned = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (! assigned)  {
+                result_.emplace_back(std::numeric_limits<T>::quiet_NaN(),
+                                     std::numeric_limits<T>::quiet_NaN());
+                if (labels)  labels_.emplace_back("~N/A~");
+            }
+        }
+    }
+
+    inline void pre()  { result_.clear(); labels_.clear(); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+    inline const label_vec_t &get_labels() const  { return (labels_); }
+    inline label_vec_t &get_labels()  { return (labels_); }
+
+    explicit
+    DivideToBinsVisitor(size_type bins,
+                        label_vec_t &&labels = {  },
+                        bool right = true,
+                        bool include_lowest = false)
+        : input_lbls_(labels),
+          bins_(bins),
+          right_(right),
+          include_lowest_(include_lowest)  {   }
+
+    explicit
+    DivideToBinsVisitor(std::vector<value_type> &&edges,
+                        label_vec_t &&labels = {  },
+                        bool right = true,
+                        bool include_lowest = false)
+        : bins_list_(edges),
+          input_lbls_(labels),
+          bins_(0),
+          right_(right),
+          include_lowest_(include_lowest)  {   }
+
+    DivideToBinsVisitor() = delete;
+    DivideToBinsVisitor(const DivideToBinsVisitor &) = default;
+    DivideToBinsVisitor(DivideToBinsVisitor &&) = default;
+    DivideToBinsVisitor &operator= (const DivideToBinsVisitor &) = default;
+    DivideToBinsVisitor &operator= (DivideToBinsVisitor &&) = default;
+    ~DivideToBinsVisitor() = default;
+
+private:
+
+    result_type             result_ { };
+    label_vec_t             labels_ { };
+    std::vector<value_type> bins_list_ { };
+    const label_vec_t       input_lbls_;
+    const size_type         bins_;
+    const bool              right_;
+    const bool              include_lowest_;
+};
+
+template<std::floating_point T,
+         typename I = unsigned long,
+         typename L = std::string,
+         std::size_t A = 0>
+using cut_v = DivideToBinsVisitor<T, I, L, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

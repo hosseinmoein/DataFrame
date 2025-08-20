@@ -1,0 +1,116 @@
+#define _WIN32_WINNT 0x0601 #include <winsock2.h> #include <ws2tcpip.h> #include <cstdio> #include <cstdlib> #include <string> #include <iostream>
+
+#pragma comment(lib, "Ws2_32.lib")
+
+static const char* HTML = R"(<!DOCTYPE html>
+
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Página Web</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f0f0f0; }
+    header { background:#222; color:#fff; padding:20px; text-align:center; }
+    nav a { margin:0 15px; color:#fff; text-decoration:none; }
+    section { padding:40px; text-align:center; }
+    footer { background:#222; color:#fff; padding:15px; text-align:center; }
+    .card { background:#fff; padding:20px; margin:20px auto; width:80%; max-width:600px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.2);} 
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Bienvenido a mi página</h1>
+    <nav>
+      <a href="#inicio">Inicio</a>
+      <a href="#sobre">Sobre mí</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </header>  <section id="inicio">
+    <div class="card">
+      <h2>Inicio</h2>
+      <p>Esta es mi primera página web creada contigo 🚀</p>
+    </div>
+  </section>  <section id="sobre">
+    <div class="card">
+      <h2>Sobre mí</h2>
+      <p>Aquí puedo escribir quién soy, lo que me gusta o lo que hago.</p>
+    </div>
+  </section>  <section id="contacto">
+    <div class="card">
+      <h2>Contacto</h2>
+      <p>Puedes escribirme a: <b>micorreo@ejemplo.com</b></p>
+    </div>
+  </section>  <footer>
+    <p>© 2025 Mi Página Personal</p>
+  </footer>
+</body>
+</html>
+)";static bool send_all(SOCKET s, const char* data, size_t len) { size_t total = 0; while (total < len) { int n = ::send(s, data + total, static_cast<int>(len - total), 0); if (n == SOCKET_ERROR) return false; total += static_cast<size_t>(n); } return true; }
+
+int main() { WSADATA wsa; if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) { std::fprintf(stderr, "WSAStartup failed\n"); return 1; }
+
+SOCKET server = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+if (server == INVALID_SOCKET) {
+    std::fprintf(stderr, "socket failed: %d\n", WSAGetLastError());
+    WSACleanup();
+    return 1;
+}
+
+BOOL opt = TRUE;
+setsockopt(server, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+
+sockaddr_in addr{};
+addr.sin_family = AF_INET;
+addr.sin_addr.s_addr = htonl(INADDR_ANY);
+addr.sin_port = htons(8080);
+
+if (bind(server, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == SOCKET_ERROR) {
+    std::fprintf(stderr, "bind failed: %d\n", WSAGetLastError());
+    closesocket(server);
+    WSACleanup();
+    return 1;
+}
+
+if (listen(server, SOMAXCONN) == SOCKET_ERROR) {
+    std::fprintf(stderr, "listen failed: %d\n", WSAGetLastError());
+    closesocket(server);
+    WSACleanup();
+    return 1;
+}
+
+std::string header = std::string("HTTP/1.1 200 OK\r\n") +
+                     "Content-Type: text/html; charset=UTF-8\r\n" +
+                     "Content-Length: " + std::to_string(std::char_traits<char>::length(HTML)) + "\r\n" +
+                     "Connection: close\r\n\r\n";
+
+std::cout << "Servidor iniciado en http://localhost:8080" << std::endl;
+
+for(;;) {
+    SOCKET client = accept(server, nullptr, nullptr);
+    if (client == INVALID_SOCKET) {
+        std::fprintf(stderr, "accept failed: %d\n", WSAGetLastError());
+        continue;
+    }
+
+    char buf[1024];
+    recv(client, buf, sizeof(buf), 0);
+
+    std::string resp;
+    resp.reserve(header.size() + std::char_traits<char>::length(HTML));
+    resp.append(header);
+    resp.append(HTML);
+    if (!send_all(client, resp.c_str(), resp.size())) {
+        std::fprintf(stderr, "send failed: %d\n", WSAGetLastError());
+    }
+
+    shutdown(client, SD_SEND);
+    closesocket(client);
+}
+
+closesocket(server);
+WSACleanup();
+return 0;
+
+}
+

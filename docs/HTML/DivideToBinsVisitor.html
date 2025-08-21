@@ -140,7 +140,7 @@ explicit
 DivideToQuantilesVisitor(std::vector<value_type> &&quantiles,
                          label_vec_t &&labels = {  });
         </I> </PRE>
-        In this constructor, user provides <I>n</I> number of quantiles which divides the given column into <I>n – 1</I> bins. The user can also optionally provide a set of labels. The number of labels must be equal to <I>n – 1</I>.<BR><BR>
+        In this constructor, user provides <I>n</I> number of quantiles which divides the given column into <I>n – 1</I> bins. The user can also optionally provide a set of labels. The number of labels must be equal to <I>n – 1</I>. The list of quantiles must start with <I>0</I> and end with <I>1</I>.<BR><BR>
 
 
         This visitor also defines the following types:

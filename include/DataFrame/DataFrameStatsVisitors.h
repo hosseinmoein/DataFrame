@@ -9290,6 +9290,165 @@ template<std::floating_point T,
          std::size_t A = 0>
 using cut_v = DivideToBinsVisitor<T, I, L, A>;
 
+// ----------------------------------------------------------------------------
+
+template<std::floating_point T,
+         typename I = unsigned long,
+         typename L = std::string,
+         std::size_t A = 0>
+struct  DivideToQuantilesVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using label_type = L;
+    using pair_t = std::pair<T, T>;
+    using result_type =
+        std::vector<pair_t, typename allocator_declare<pair_t, A>::type>;
+    using label_vec_t =
+        std::vector<label_type,
+                    typename allocator_declare<label_type, A>::type>;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &column_begin, const H &column_end)  {
+
+        const size_type         col_s = std::distance(column_begin, column_end);
+        std::vector<value_type> sorted(column_begin, column_end);
+        const auto              thread_level =
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level();
+
+        if (thread_level > 2)
+            ThreadGranularity::thr_pool_.parallel_sort(
+                sorted.begin(), sorted.end());
+        else
+            std::sort(sorted.begin(), sorted.end());
+
+
+        const bool  labels { ! input_lbls_.empty() };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 4)
+            throw DataFrameError("DivideToQuantilesVisitor: "
+                                 "Input column is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        std::vector<value_type> edges;
+
+        result_.reserve(col_s);
+        if (labels)  labels_.reserve(col_s);
+        if (quantiles_ > 0)  {  // Number of Q's
+#ifdef HMDF_SANITY_EXCEPTIONS
+            if (quantiles_ < 2)
+                throw DataFrameError("DivideToQuantilesVisitor: "
+                                     "Number of quantiles must be > 1");
+            if (labels && input_lbls_.size() != quantiles_)
+                throw DataFrameError("DivideToQuantilesVisitor: "
+                                     "Number of quantiles must be == number "
+                                     "of labels");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+            edges.reserve(quantiles_ + 1);
+            for (size_type i { 0 }; i <= quantiles_; ++i)
+                edges.push_back(
+                    percentile_(sorted, T(i) / T(quantiles_), col_s));
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  val = *(column_begin + i);
+                size_type   bin =
+                    (std::upper_bound(edges.begin(), edges.end(), val) -
+                     edges.begin()) - 1;
+
+                if (bin == quantiles_)
+                    bin = quantiles_ - 1;
+                result_.emplace_back(edges[bin], edges[bin + 1]);
+                if (labels)  labels_.push_back(input_lbls_[bin]);
+            }
+        }
+        else  {  // Explicit quantiles
+#ifdef HMDF_SANITY_EXCEPTIONS
+            if (labels && input_lbls_.size() != (quantiles_list_.size() - 1))
+                throw DataFrameError("DivideToQuantilesVisitor: "
+                                     "Number of labels must be == number "
+                                     "of quantiles - 1");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+            edges.reserve(quantiles_list_.size());
+            for (const auto q : quantiles_list_)
+                edges.push_back(percentile_(sorted, q, col_s));
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  val = *(column_begin + i);
+                size_type   bin =
+                    (std::upper_bound(edges.begin(), edges.end(), val) -
+                     edges.begin()) - 1;
+
+                if (bin == quantiles_list_.size() - 1)
+                    bin = quantiles_list_.size() - 2;
+                result_.emplace_back(edges[bin], edges[bin + 1]);
+                if (labels)  labels_.push_back(input_lbls_[bin]);
+            }
+        }
+    }
+
+    inline void pre()  { result_.clear(); labels_.clear(); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+    inline const label_vec_t &get_labels() const  { return (labels_); }
+    inline label_vec_t &get_labels()  { return (labels_); }
+
+    explicit
+    DivideToQuantilesVisitor(size_type quantiles, label_vec_t &&labels = {  })
+        : input_lbls_(labels),
+          quantiles_(quantiles)  {   }
+
+    explicit
+    DivideToQuantilesVisitor(std::vector<value_type> &&quantiles,
+                             label_vec_t &&labels = {  })
+        : quantiles_list_(quantiles),
+          input_lbls_(labels),
+          quantiles_(0)  {   }
+
+    DivideToQuantilesVisitor() = delete;
+    DivideToQuantilesVisitor(const DivideToQuantilesVisitor &) = default;
+    DivideToQuantilesVisitor(DivideToQuantilesVisitor &&) = default;
+    DivideToQuantilesVisitor &
+    operator= (const DivideToQuantilesVisitor &) = default;
+    DivideToQuantilesVisitor &
+    operator= (DivideToQuantilesVisitor &&) = default;
+    ~DivideToQuantilesVisitor() = default;
+
+private:
+
+    inline static value_type
+    percentile_(const std::vector<value_type> &data,
+                value_type q,
+                size_type col_s)  {
+
+        const value_type    pos = q * T(col_s - 1);
+        const size_type     idx = static_cast<size_type>(pos);
+        const value_type    frac = pos - T(idx);
+
+        if (idx < (col_s - 1))
+            return (data[idx] * (1 - frac) + data[idx + 1] * frac);
+        return (data.back());
+    }
+
+    result_type             result_ { };
+    label_vec_t             labels_ { };
+    std::vector<value_type> quantiles_list_ { };
+    const label_vec_t       input_lbls_;
+    const size_type         quantiles_;
+};
+
+template<std::floating_point T,
+         typename I = unsigned long,
+         typename L = std::string,
+         std::size_t A = 0>
+using qcut_v = DivideToQuantilesVisitor<T, I, L, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

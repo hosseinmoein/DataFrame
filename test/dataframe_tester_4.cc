@@ -4512,6 +4512,139 @@ static void test_DivideToBinsVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_DivideToQuantilesVisitor()  {
+
+    std::cout << "\nTesting DivideToQuantilesVisitor{ } ..." << std::endl;
+
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    qcut_v<double, std::string> qcut {
+        4, { "Low Bin", "Mid Low Bin", "Mid High Bin", "High Bin" }
+    };
+
+    ibm.single_act_visit<double>("IBM_Close", qcut);
+    ibm.load_column("String Labels", std::move(qcut.get_labels()));
+    ibm.load_column("Edges", std::move(qcut.get_result()));
+
+    // ibm.write<std::ostream,
+    //           double,
+    //           long,
+    //           std::string,
+    //           std::pair<double, double>>(
+    //      std::cout, io_format::pretty_prt, { .precision = 4 });
+
+    const auto  &close_col = ibm.get_column<double>("IBM_Close");
+    const auto  &lables_col = ibm.get_column<std::string>("String Labels");
+    const auto  &edges_col = ibm.get_column<std::pair<double, double>>("Edges");
+
+    assert((std::fabs(close_col[0] - 98.5625) < 0.0001));
+    assert((lables_col[0] == "Mid Low Bin"));
+    assert((edges_col[0] ==
+            std::pair<double, double>{ 94.1899985, 126.470001 }));
+
+    assert((std::fabs(close_col[7] - 93.0) < 0.01));
+    assert((lables_col[7] == "Low Bin"));
+    assert((edges_col[7] == std::pair<double, double>{ 55.07, 94.1899985 }));
+
+    assert((std::fabs(close_col[463] - 74.2) < 0.1));
+    assert((lables_col[463] == "Low Bin"));
+    assert((edges_col[463] == std::pair<double, double>{ 55.07, 94.1899985 }));
+
+    assert((std::fabs(close_col[1570] - 100.38) < 0.01));
+    assert((lables_col[1570] == "Mid Low Bin"));
+    assert((edges_col[1570] ==
+            std::pair<double, double>{ 94.1899985, 126.470001 }));
+
+    assert((std::fabs(close_col[2110] - 94.15) < 0.01));
+    assert((lables_col[2110] == "Low Bin"));
+    assert((edges_col[2110] == std::pair<double, double>{ 55.07, 94.1899985 }));
+
+    assert((std::fabs(close_col[2574] - 159.21) < 0.01));
+    assert((lables_col[2574] == "Mid High Bin"));
+    assert((edges_col[2574] ==
+            std::pair<double, double>{ 126.470001, 159.529999 }));
+
+    assert((std::fabs(close_col[4086] - 174.29) < 0.01));
+    assert((lables_col[4086] == "High Bin"));
+    assert((edges_col[4086] ==
+            std::pair<double, double>{ 159.529999, 215.800003 }));
+
+    assert((std::fabs(close_col[4107] - 180.05) < 0.01));
+    assert((lables_col[4107] == "High Bin"));
+    assert((edges_col[4107] ==
+            std::pair<double, double>{ 159.529999, 215.800003 }));
+
+    assert((std::fabs(close_col[5030] - 111.66) < 0.01));
+    assert((lables_col[5030] == "Mid Low Bin"));
+    assert((edges_col[5030] ==
+            std::pair<double, double>{ 94.1899985, 126.470001 }));
+
+    qcut_v<double, std::string> qcut2 {
+        { 0, 0.66, 1 },
+        { "Low Bin", "High Bin" }
+    };
+
+    ibm.single_act_visit<double>("IBM_Close", qcut2);
+    ibm.load_column("String Labels 2", std::move(qcut2.get_labels()));
+    ibm.load_column("Edges 2", std::move(qcut2.get_result()));
+
+    const auto  &lables_col2 = ibm.get_column<std::string>("String Labels 2");
+    const auto  &edges_col2 =
+        ibm.get_column<std::pair<double, double>>("Edges 2");
+
+    assert((std::fabs(close_col[0] - 98.5625) < 0.0001));
+    assert((lables_col2[0] == "Low Bin"));
+    assert((edges_col2[0] == std::pair<double, double>{ 55.07, 146.589996 }));
+
+    assert((std::fabs(close_col[7] - 93.0) < 0.01));
+    assert((lables_col2[7] == "Low Bin"));
+    assert((edges_col2[7] == std::pair<double, double>{ 55.07, 146.589996 }));
+
+    assert((std::fabs(close_col[463] - 74.2) < 0.1));
+    assert((lables_col2[463] == "Low Bin"));
+    assert((edges_col2[463] == std::pair<double, double>{ 55.07, 146.589996 }));
+
+    assert((std::fabs(close_col[1570] - 100.38) < 0.01));
+    assert((lables_col2[1570] == "Low Bin"));
+    assert((edges_col2[1570] ==
+            std::pair<double, double>{ 55.07, 146.589996 }));
+
+    assert((std::fabs(close_col[2110] - 94.15) < 0.01));
+    assert((lables_col2[2110] == "Low Bin"));
+    assert((edges_col2[2110] ==
+            std::pair<double, double>{ 55.07, 146.589996 }));
+
+    assert((std::fabs(close_col[2574] - 159.21) < 0.01));
+    assert((lables_col2[2574] == "High Bin"));
+    assert((edges_col2[2574] ==
+            std::pair<double, double>{ 146.589996, 215.800003 }));
+
+    assert((std::fabs(close_col[4086] - 174.29) < 0.01));
+    assert((lables_col2[4086] == "High Bin"));
+    assert((edges_col2[4086] ==
+            std::pair<double, double>{ 146.589996, 215.800003 }));
+
+    assert((std::fabs(close_col[4107] - 180.05) < 0.01));
+    assert((lables_col2[4107] == "High Bin"));
+    assert((edges_col2[4107] ==
+            std::pair<double, double>{ 146.589996, 215.800003 }));
+
+    assert((std::fabs(close_col[5030] - 111.66) < 0.01));
+    assert((lables_col2[5030] == "Low Bin"));
+    assert((edges_col2[5030] ==
+            std::pair<double, double>{ 55.07, 146.589996 }));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4592,6 +4725,7 @@ int main(int, char *[]) {
     test_load_random_sample();
     test_resample();
     test_DivideToBinsVisitor();
+    test_DivideToQuantilesVisitor();
 
     return (0);
 }

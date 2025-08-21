@@ -785,7 +785,11 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Categorizes the given column"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DivideToBinsVisitor.html">DivideToBinsVisitor</a>{}</td>
+      <td title="Categorizes the given column based on bins"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DivideToBinsVisitor.html">DivideToBinsVisitor</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Categorizes the given column based on quantiles"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DivideToBinsVisitor.html">DivideToQuantilesVisitor</a>{}</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -2123,7 +2127,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 
   <H2 ID="8"><font color="blue">Code Structure <font size="+4">&#128450;</font></font></H2>
   <P>
-    Starting from the repo’s root directory:<BR><BR>
+    Starting from the repo's root directory:<BR><BR>
 
     <UL type="disc">
       <LI>Root contains README, license, master CMake, and other files</LI>
@@ -2163,11 +2167,12 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
   <H2 ID="9"><font color="blue">Build Instructions <font size="+4">&#x1F6E0;</font></font></H2>
     When building your application with DataFrame, if you define <I>HMDF_SANITY_EXCEPTIONS=1</I> on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, supposed you call to calculate KNN and supposed K is greater than observed datapoints passed in. if <I>HMDF_SANITY_EXCEPTIONS</I> is defined, you get an exception with explanation. If it is not defined, you get garbage or a crash.<BR>
     If you do not define <I>HMDF_SANITY_EXCEPTIONS</I>, it means you are sure you have no bugs in your system. That is a tall order! If you are getting mysterious crashes or results, chances are defining <I>HMDF_SANITY_EXCEPTIONS</I> will help you a lot.<BR><BR>
+
     In general, there are three ways you can build C++ applications and libraries.<BR>
     <OL>
-      <LI><I>Bulidng with debug information and no optimizations.</I> This build allows you to debug your application and walk through the source code as it executes inside a debugger. This build results in bigger executable files and significantly slower execution.</LI>
-      <LI><I>Building with optimizations and no debug information.</I> You cannot debug these applications and if they crash, they don’t leave any meaningful trace. This build results in smaller executable files, and they are significantly faster at runtime.</LI>
-      <LI><I>Something in between.</I> Experiment with that in your own time.</LI>
+      <LI><font size="+1">Bulidng with debug information and no optimizations:</font> This build allows you to debug your application and walk through the source code as it executes inside a debugger. This build results in bigger executable files and significantly slower execution.</LI>
+      <LI><font size="+1">Building with optimizations and no debug information:</font> You cannot debug these applications and if they crash, they don't leave any meaningful trace. This build results in smaller executable files, and they are significantly faster at runtime.</LI>
+      <LI><font size="+1">Something in between:</font> Experiment with that in your own time.</LI>
     </OL>
 
 
@@ -2182,9 +2187,11 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    <span style="color:#005fd2; ">mkdir</span> <span style="color:#0000e6; ">[Debug</span><span style="color:#bb7977; font-weight:bold; ">|</span><span style="color:#005fd2; ">Release]</span></span>
 <span class="line_wrapper">    <span style="color:#005fd2; ">cd</span> <span style="color:#0000e6; ">[Debug</span><span style="color:#bb7977; font-weight:bold; ">|</span><span style="color:#005fd2; ">Release]</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper">    <span style="color:#696969; "># Making the optimized release version</span></span>
+<span class="line_wrapper">    <span style="color:#696969; "># Making the optimized release version.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; "># First example is without sanity checks exceptions. Second example includes sanity checks.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">#</span></span>
 <span class="line_wrapper">    <span style="color:#005fd2; ">cmake</span> <span style="color:#074726; ">-DCMAKE_BUILD_TYPE=Release</span> <span style="color:#074726; ">-DHMDF_BENCHMARKS=1</span> <span style="color:#074726; ">-DHMDF_EXAMPLES=1</span> <span style="color:#074726; ">-DHMDF_TESTING=1</span> <span style="color:#0000e6; ">..</span></span>
+<span class="line_wrapper">    <span style="color:#005fd2; ">cmake</span> <span style="color:#074726; ">-DCMAKE_BUILD_TYPE=Release</span> <span style="color:#074726; ">-DHMDF_SANITY_EXCEPTIONS=1</span> <span style="color:#074726; ">-DHMDF_BENCHMARKS=1</span> <span style="color:#074726; ">-DHMDF_EXAMPLES=1</span> <span style="color:#074726; ">-DHMDF_TESTING=1</span> <span style="color:#0000e6; ">..</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; "># Making the debug version with debug info</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">#</span></span>

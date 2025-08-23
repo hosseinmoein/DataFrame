@@ -5676,6 +5676,28 @@ public:  // Visitors
                            V &visitor,
                            bool in_reverse = false) const;
 
+    // This function allows users to chain a series of transformative functions
+    // into a functional programming notation. The function series may or may
+    // not have side effects. This is more than just a syntactic sugar. This
+    // allows the user to write structured, modular, and easy to read and
+    // understand code. It also enables users to create data processing
+    // pipelines that can start with a single DataFrame as it evolves with or
+    // without side effects while moving through the pipeline.
+    //
+    // Ts:
+    //   The list of types of args
+    // func:
+    //   A function that will operate on the DataFrame with or without
+    //   side effects. The singanure of the F function must be:
+    //       DataFrame &func(DataFrame &, args ...)
+    // args:
+    //   The list of arguments to be passed to func function
+    //
+    template<typename F, typename ... Ts>
+    DataFrame &
+    pipe(F &&func, Ts ... args)
+        requires std::invocable<F, DataFrame &, Ts ...>;
+
 public:  // Operators
 
     // It compares self with rhs. If both have the sanme indices,

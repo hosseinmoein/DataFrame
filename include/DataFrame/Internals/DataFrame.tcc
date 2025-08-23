@@ -416,7 +416,9 @@ detect_and_change(const StlVecType<const char *> &col_names,
         if (d_method == detect_method::fft)  {
             using fftv_t = and_fft_v<T, I, std::size_t(H::align_value)>;
 
-            fftv_t  fft { params.freq_num, params.threshold, params.norm_type };
+            fftv_t  fft {
+                params.freq_num, params.threshold, params.norm_type
+            };
 
             fft.pre();
             fft(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -677,7 +679,7 @@ replace_async(const char *col_name, F &functor)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ...Ts>
+template<typename ... Ts>
 void DataFrame<I, H>::make_consistent ()  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
@@ -693,7 +695,7 @@ void DataFrame<I, H>::make_consistent ()  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ...Ts>
+template<typename ... Ts>
 void DataFrame<I, H>::shrink_to_fit ()  {
 
     indices_.shrink_to_fit();
@@ -711,7 +713,8 @@ void DataFrame<I, H>::shrink_to_fit ()  {
                     citer->change(functor);
             };
         auto    futures =
-            thr_pool_.parallel_loop(data_.begin(), data_.end(), std::move(lbd));
+            thr_pool_.parallel_loop(data_.begin(), data_.end(),
+                                    std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1603,7 +1606,8 @@ DataFrame<I, H>::make_stationary(const char *col_name,
 
         if (thread_level > 2)  {
             auto    futures =
-                thr_pool_.parallel_loop(vec.begin(), vec.end(), std::move(lbd));
+                thr_pool_.parallel_loop(vec.begin(), vec.end(),
+                                        std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -1617,7 +1621,8 @@ DataFrame<I, H>::make_stationary(const char *col_name,
 
         if (thread_level > 2)  {
             auto    futures =
-                thr_pool_.parallel_loop(vec.begin(), vec.end(), std::move(lbd));
+                thr_pool_.parallel_loop(vec.begin(), vec.end(),
+                                        std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -1695,6 +1700,19 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
                                    std::move(trans_cols[i]));
 
     return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename F, typename ... Ts>
+DataFrame<I, H> &DataFrame<I, H>::
+pipe(F &&func, Ts ... args)
+    requires std::invocable<F, DataFrame &, Ts ...>  {
+
+    return (std::invoke(std::forward<F>(func),
+                        *this,
+                        std::forward<Ts>(args) ...));
 }
 
 } // namespace hmdf

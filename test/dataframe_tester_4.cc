@@ -48,6 +48,7 @@ using MyDataFrame = StdDataFrame256<unsigned long>;
 using MyStdDataFrame = StdDataFrame<unsigned long>;
 using StrDataFrame = StdDataFrame<std::string>;
 using DTDataFrame = StdDataFrame256<DateTime>;
+using StrDataFrame2 = StdDataFrame256<std::string>;
 
 template<typename T>
 using StlVecType = typename MyDataFrame::template StlVecType<T>;
@@ -4645,6 +4646,106 @@ static void test_DivideToQuantilesVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static DTDataFrame &
+read_df(DTDataFrame &df)  {
+
+    try  {
+        df.read("DT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+    return (df);
+}
+
+// -------------------------------------
+
+static DTDataFrame &
+multiply_col(DTDataFrame &df, const std::string &col_name, double factor)  {
+
+    df.apply<double>(col_name.c_str(),
+                     [factor](const DateTime &, double &val) -> bool  {
+                         val *= factor;
+                         return (true);
+                     });
+    return (df);
+}
+
+// -------------------------------------
+
+static DTDataFrame &
+add_col(DTDataFrame &dt_df, const StrDataFrame2 &str_df)  {
+
+    const auto  &volume = str_df.get_column<long>("IBM_Volume");
+
+    dt_df.load_column("IBM_Volume 2", volume);
+    return (dt_df);
+}
+
+// -------------------------------------
+
+static auto verify =
+    [](DTDataFrame &df) -> DTDataFrame &  {
+        const auto  &volume1 = df.get_column<long>("IBM_Volume");
+        const auto  &volume2 = df.get_column<long>("IBM_Volume 2");
+        const auto  &open = df.get_column<double>("IBM_Open");
+
+        assert(volume1.size() == 5031);
+        assert(volume1.size() == volume2.size());
+        assert(volume1[500] == volume2[500]);
+        assert(open.size() == 5031);
+        assert((std::fabs(open[5003] - 241.6) < 0.01));
+        return (df);
+    };
+
+// -------------------------------------
+
+struct  PrintDF  {
+
+    PrintDF(long row_count) : row_count_(row_count)  {   }
+
+    DTDataFrame &operator()(DTDataFrame &df)  {
+
+        df.write<std::ostream, double, long>
+            (std::cout, io_format::pretty_prt,
+             { .precision = 2, .max_recs = row_count_ });
+        return(df);
+    }
+
+private:
+
+    const long  row_count_;
+};
+
+// -------------------------------------
+
+static void test_pipe()  {
+
+    std::cout << "\nTesting pipe(  ) ..." << std::endl;
+
+    StrDataFrame2   str_df;
+
+    try  {
+        str_df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    DTDataFrame dt_df;
+    PrintDF     printer(5L);
+
+    dt_df.pipe(read_df)
+        .pipe(multiply_col, "IBM_Open", 2.0)
+        .pipe(add_col, str_df)
+        .pipe(verify)
+        .pipe(std::bind(&PrintDF::operator(), printer, std::placeholders::_1));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4726,6 +4827,7 @@ int main(int, char *[]) {
     test_resample();
     test_DivideToBinsVisitor();
     test_DivideToQuantilesVisitor();
+    test_pipe();
 
     return (0);
 }

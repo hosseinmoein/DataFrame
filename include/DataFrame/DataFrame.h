@@ -5696,7 +5696,9 @@ public:  // Visitors
     template<typename F, typename ... Ts>
     DataFrame &
     pipe(F &&func, Ts ... args)
-        requires std::invocable<F, DataFrame &, Ts ...>;
+        requires std::invocable<F, DataFrame &, Ts ...> &&
+                 std::same_as<std::invoke_result_t<F, DataFrame &, Ts ...>,
+                              DataFrame &>;
 
 public:  // Operators
 

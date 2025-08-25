@@ -1708,7 +1708,9 @@ template<typename I, typename H>
 template<typename F, typename ... Ts>
 DataFrame<I, H> &DataFrame<I, H>::
 pipe(F &&func, Ts ... args)
-    requires std::invocable<F, DataFrame &, Ts ...>  {
+    requires std::invocable<F, DataFrame &, Ts ...> &&
+             std::same_as<std::invoke_result_t<F, DataFrame &, Ts ...>,
+                          DataFrame &>  {
 
     return (std::invoke(std::forward<F>(func),
                         *this,

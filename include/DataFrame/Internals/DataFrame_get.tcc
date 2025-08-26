@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/Utils/Utils.h>
 
+#include<ranges>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -1597,6 +1599,53 @@ MC_station_dist(std::vector<const char *> &&trans_col_names,
             break;
         }
         pi = std::move(new_pi);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+std::pair<typename DataFrame<I, H>::size_type,
+          typename DataFrame<I, H>::size_type>
+DataFrame<I, H>::fl_valid_index(const char *col_name) const  {
+
+    using result_t = std::pair<size_type, size_type>;
+
+    const ColumnVecType<T>  *col { nullptr };
+
+    if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
+        col = (const ColumnVecType<T> *) &(get_index());
+    else
+        col = (const ColumnVecType<T> *) &(get_column<T>(col_name));
+
+    result_t    result { 0, 0 };
+
+    if (! col->empty())  {
+        size_type   idx { 0 };
+        bool        found { false };
+
+        for (const auto &val : *col)  {
+            if (! is_nan<T>(val))  {
+                result.first = idx;
+                found = true;
+                break;
+            }
+            idx += 1;
+        }
+
+        if (found)  {
+            idx = col->size() - 1;
+            for (const auto &val : *col | std::views::reverse)  {
+                if (! is_nan<T>(val))  {
+                    result.second = idx;
+                    break;
+                }
+                idx -= 1;
+            }
+        }
     }
 
     return (result);

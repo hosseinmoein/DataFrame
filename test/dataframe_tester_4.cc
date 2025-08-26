@@ -4746,6 +4746,62 @@ static void test_pipe()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_fl_valid_index()  {
+
+    std::cout << "\nTesting fl_valid_index( ) ..." << std::endl;
+
+    const double               nval = std::numeric_limits<double>::quiet_NaN();
+    MyDataFrame                df;
+    StlVecType<unsigned long>  idxvec =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    StlVecType<double>         dblvec =
+        { 0, 15, -14, 2, 1, 12, 11, 8, 7, 6, 5, 4, 3, 9, 10};
+    StlVecType<double>         dblvec2 =
+        { 100, 101, nval, 103, 104, 103.9, 106.55, 106.34, 1.8, nval, 112,
+          111.5, 114, nval, nval};
+    StlVecType<double>         dblempty { };
+    StlVecType<double>         allnan =
+        { nval, nval, nval, nval, nval, nval, nval, nval, nval, nval, nval,
+          nval, nval, nval, nval};
+    StlVecType<std::string>    strvec =
+        { "", "bb", "cc", "ww", "", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("Empty Col", dblempty),
+                 std::make_pair("All NaN Col", allnan),
+                 std::make_pair("str_col", strvec));
+
+    const auto  res1 = df.fl_valid_index<double>("dbl_col");
+
+    assert(res1.first == 0);
+    assert(res1.second == 14);
+
+    const auto  res2 = df.fl_valid_index<double>("dbl_col_2");
+
+    assert(res2.first == 0);
+    assert(res2.second == 12);
+
+    const auto  res3 = df.fl_valid_index<double>("Empty Col");
+
+    assert(res3.first == 0);
+    assert(res3.second == 0);
+
+    const auto  res4 = df.fl_valid_index<double>("All NaN Col");
+
+    assert(res4.first == 0);
+    assert(res4.second == 0);
+
+    const auto  res5 = df.fl_valid_index<std::string>("str_col");
+
+    assert(res5.first == 1);
+    assert(res5.second == 13);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -4828,6 +4884,7 @@ int main(int, char *[]) {
     test_DivideToBinsVisitor();
     test_DivideToQuantilesVisitor();
     test_pipe();
+    test_fl_valid_index();
 
     return (0);
 }

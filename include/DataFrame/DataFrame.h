@@ -3907,23 +3907,6 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] IndexVecType &
     get_index();
 
-    /*
-    // It prints to stdout n rows of all columns either from the beginning
-    // or end of the DataFrame. Print will be in csv2 format.
-    // If n is positive, n rows from the beginning of DataFrame are printed.
-    // If negative, n rows from the end of DataFrame are printed.
-    //
-    // Ts:
-    //   List all the types of all data columns. A type should be specified in
-    //   the list only once.
-    // n:
-    //   Number of columns to print. It could be positive or negative
-    //
-    template<typename ... Ts>
-    void
-    head(long n) const;
-    */
-
     // It creates and returns a new DataFrame which has the col_to_be_index
     // column as the index. If old_index_name is not null, it will be loaded
     // as a regular column in the result under the name old_index_name.
@@ -3980,6 +3963,20 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] typename DataFrame<T, H>::ConstView
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr) const;
+
+    // This returns a pair containing the first and last indices of
+    // non-NaN/valid values in the requested column. If the column is empty or
+    // contains all NaN values, both indices will be zero.
+    //
+    // T:
+    //   Type of the requested column
+    // col_name:
+    //   Name of the requested column. It can be a data column name or
+    //   DF_INDEX_COL_NAME
+    //
+    template<typename T>
+    [[nodiscard]] std::pair<size_type, size_type>
+    fl_valid_index(const char *col_name) const;
 
     // This returns a new DataFrame with the same index type. But the frequency
     // of the index in the new DataFrame is according to the parameters of this

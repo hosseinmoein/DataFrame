@@ -14,6 +14,7 @@ SRCS = ../test/dataframe_tester.cc \
        ../test/dataframe_tester_2.cc \
        ../test/dataframe_tester_3.cc \
        ../test/dataframe_tester_4.cc \
+       ../test/dataframe_tester_5.cc \
        ../examples/hello_world.cc \
        ../test/dataframe_thread_safety.cc \
        ../test/dataframe_tester_schema.cc \
@@ -93,6 +94,7 @@ TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/dataframe_tester_2 \
            $(LOCAL_BIN_DIR)/dataframe_tester_3 \
            $(LOCAL_BIN_DIR)/dataframe_tester_4 \
+           $(LOCAL_BIN_DIR)/dataframe_tester_5 \
            $(LOCAL_BIN_DIR)/hello_world \
            $(LOCAL_BIN_DIR)/dataframe_thread_safety \
            $(LOCAL_BIN_DIR)/dataframe_tester_schema \
@@ -175,6 +177,10 @@ DATAFRAME_TESTER_OBJ_4 = $(LOCAL_OBJ_DIR)/dataframe_tester_4.o
 $(LOCAL_BIN_DIR)/dataframe_tester_4: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ_4)
 	$(CXX) -o $@ $(DATAFRAME_TESTER_OBJ_4) $(LIBS)
 
+DATAFRAME_TESTER_OBJ_5 = $(LOCAL_OBJ_DIR)/dataframe_tester_5.o
+$(LOCAL_BIN_DIR)/dataframe_tester_5: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ_5)
+	$(CXX) -o $@ $(DATAFRAME_TESTER_OBJ_5) $(LIBS)
+
 HELLO_WORLD_OBJ = $(LOCAL_OBJ_DIR)/hello_world.o
 $(LOCAL_BIN_DIR)/hello_world: $(TARGET_LIB) $(HELLO_WORLD_OBJ)
 	$(CXX) -o $@ $(HELLO_WORLD_OBJ) $(LIBS)
@@ -250,7 +256,7 @@ clean:
           $(DATAFRAME_THREAD_SAFTY_OBJ) $(DATAFRAME_TESTER_SCHEMA_OBJ) \
           $(ALLOCATOR_TESTER_OBJ) $(LINKEDIN_BENCHMARK_OBJ) \
           $(DATAFRAME_READ_LARGE_FILE_OBJ) $(MATRIX_TESTER_OBJ) \
-          $(ISO_TREE_TESTER_OBJ)
+          $(ISO_TREE_TESTER_OBJ) $(DATAFRAME_TESTER_OBJ_5)
 
 clobber:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
@@ -263,7 +269,7 @@ clobber:
           $(DATAFRAME_PERFORMANCE_2_OBJ) \
           $(META_PROG_OBJ) $(LINKEDIN_BENCHMARK_OBJ) \
           $(DATAFRAME_READ_LARGE_FILE_OBJ) $(MATRIX_TESTER_OBJ) \
-          $(ISO_TREE_TESTER_OBJ)
+          $(ISO_TREE_TESTER_OBJ) $(DATAFRAME_TESTER_OBJ_5)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

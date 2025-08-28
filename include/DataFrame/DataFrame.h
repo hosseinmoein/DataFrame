@@ -1527,9 +1527,26 @@ public:  // Data manipulation
     // dir:
     //   Direction of sorting, ascending or descending
     //
-    template<typename T, typename ... Ts>
+    template<comparable T, typename ... Ts>
     void
     sort(const char *name, sort_spec dir, bool ignore_index = false);
+
+    // This doesn’t sort the DataFrame. It leaves self unchanged. It returns
+    // the permutation vector for sorting the given column. A permutation
+    // vector is a vector of indices that, when applied to the original column,
+    // reorders its elements into a sorted sequence.
+    //
+    // T:
+    //   Type of the named column. You always must specify this type,
+    //   even if it is being sorted by the index.
+    // name:
+    //   The name of a data column or DF_INDEX_COL_NAME
+    // dir:
+    //   Direction of sorting, ascending or descending
+    //
+    template<comparable T>
+    [[nodiscard]] std::vector<size_type>
+    permutation_vec(const char *name, sort_spec dir) const;
 
     // This sort function sorts DataFrame based on two columns, also
     // specified by the two directions.
@@ -1560,20 +1577,76 @@ public:  // Data manipulation
     // dir2:
     //   Direction of sorting for the second column
     //
-    template<typename T1, typename T2, typename ... Ts>
+    template<comparable T1, comparable T2, typename ... Ts>
     void
     sort(const char *name1, sort_spec dir1,
          const char *name2, sort_spec dir2,
          bool ignore_index = false);
 
+    // This function returns the same permutation vector as above, but based on
+    // the ordering of two columns. The length of the returned vector will be
+    // the min of the lengths of the columns.
+    //
+    // T1:
+    //   Type of the first named column. You always must specify this type,
+    //   even if it is being sorted by the index.
+    // T2:
+    //   Type of the second named column. You always must specify this type,
+    //   even if it is being sorted by the index.
+    // name1:
+    //   The name of the first data column or DF_INDEX_COL_NAME
+    // name2:
+    //   The name of the second data column or DF_INDEX_COL_NAME
+    // dir1:
+    //   Direction of sorting, ascending or descending, of the first column
+    // dir2:
+    //   Direction of sorting, ascending or descending, of the second column
+    //
+    template<comparable T1, comparable T2>
+    [[nodiscard]] std::vector<size_type>
+    permutation_vec(const char *name1, sort_spec dir1,
+                    const char *name2, sort_spec dir2) const;
+
     // This sort function is similar to above, but it uses 3 columns
     //
-    template<typename T1, typename T2, typename T3, typename ... Ts>
+    template<comparable T1, comparable T2, comparable T3, typename ... Ts>
     void
     sort(const char *name1, sort_spec dir1,
          const char *name2, sort_spec dir2,
          const char *name3, sort_spec dir3,
          bool ignore_index = false);
+
+    // This function returns the same permutation vector as above, but based on
+    // the ordering of three columns. The length of the returned vector will be
+    // the min of the lengths of the columns.
+    //
+    // T1:
+    //   Type of the first named column. You always must specify this type,
+    //   even if it is being sorted by the index.
+    // T2:
+    //   Type of the second named column. You always must specify this type,
+    //   even if it is being sorted by the index.
+    // T3:
+    //   Type of the third named column. You always must specify this type,
+    //   even if it is being sorted by the index.
+    // name1:
+    //   The name of the first data column or DF_INDEX_COL_NAME
+    // name2:
+    //   The name of the second data column or DF_INDEX_COL_NAME
+    // name3:
+    //   The name of the third data column or DF_INDEX_COL_NAME
+    // dir1:
+    //   Direction of sorting, ascending or descending, of the first column
+    // dir2:
+    //   Direction of sorting, ascending or descending, of the second column
+    // dir3:
+    //   Direction of sorting, ascending or descending, of the third column
+    //
+    template<comparable T1, comparable T2, comparable T3>
+    [[nodiscard]] std::vector<size_type>
+    permutation_vec(const char *name1, sort_spec dir1,
+                    const char *name2, sort_spec dir2,
+                    const char *name3, sort_spec dir3) const;
 
     // This sort function is similar to above, but it uses 4 columns
     //

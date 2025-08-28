@@ -35,7 +35,84 @@ namespace hmdf
 {
 
 template<typename I, typename H>
-template<typename T, typename ...Ts>
+template<comparable T>
+std::vector<typename DataFrame<I, H>::size_type>
+DataFrame<I, H>::
+permutation_vec(const char *name, sort_spec dir) const  {
+
+    const ColumnVecType<T>  *vec { nullptr };
+
+    {
+        const SpinGuard guard (lock_);
+
+        if (! ::strcmp(name, DF_INDEX_COL_NAME))
+            vec = reinterpret_cast<const ColumnVecType<T> *>(&indices_);
+        else
+            vec = &(get_column<T>(name, false));
+    }
+
+    const size_type         col_s = vec->size();
+    std::vector<size_type>  result(col_s);
+    const auto              thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    std::iota(result.begin(), result.end(), 0);
+    if (dir == sort_spec::ascen)  {
+        auto    a =
+            [&vec = std::as_const(*vec)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                return (vec[lhs] < vec[rhs]);
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), a);
+        else
+            std::sort(result.begin(), result.end(), a);
+    }
+    else if (dir == sort_spec::desce)  {
+        auto    d =
+            [&vec = std::as_const(*vec)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                return (vec[lhs] > vec[rhs]);
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), d);
+        else
+            std::sort(result.begin(), result.end(), d);
+    }
+    else if (dir == sort_spec::abs_ascen)  {
+        auto    aa =
+            [&vec = std::as_const(*vec)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                return (abs__(vec[lhs]) < abs__(vec[rhs]));
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), aa);
+        else
+            std::sort(result.begin(), result.end(), aa);
+    }
+    else if (dir == sort_spec::abs_desce)  {
+        auto    ad =
+            [&vec = std::as_const(*vec)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                return (abs__(vec[lhs]) > abs__(vec[rhs]));
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), ad);
+        else
+            std::sort(result.begin(), result.end(), ad);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<comparable T, typename ...Ts>
 void DataFrame<I, H>::
 sort(const char *name, sort_spec dir, bool ignore_index)  {
 
@@ -44,7 +121,7 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T>    *vec { nullptr};
+    ColumnVecType<T>    *vec { nullptr };
     const SpinGuard     guard (lock_);
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
@@ -73,7 +150,8 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
     auto        zip = std::ranges::views::zip(*vec, sorting_idxs);
-    auto        zip_idx = std::ranges::views::zip(*vec, indices_, sorting_idxs);
+    auto        zip_idx =
+        std::ranges::views::zip(*vec, indices_, sorting_idxs);
     const auto  thread_level =
         (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
@@ -163,7 +241,7 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename ... Ts>
+template<comparable T1, comparable T2, typename ... Ts>
 void DataFrame<I, H>::
 sort(const char *name1, sort_spec dir1,
      const char *name2, sort_spec dir2,
@@ -174,8 +252,8 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T1>   *vec1 { nullptr};
-    ColumnVecType<T2>   *vec2 { nullptr};
+    ColumnVecType<T1>   *vec1 { nullptr };
+    ColumnVecType<T2>   *vec2 { nullptr };
     const SpinGuard     guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))  {
@@ -555,7 +633,267 @@ sort(const char *name1, sort_spec dir1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename T3, typename ... Ts>
+template<comparable T1, comparable T2>
+std::vector<typename DataFrame<I, H>::size_type>
+DataFrame<I, H>::
+permutation_vec(const char *name1, sort_spec dir1,
+                const char *name2, sort_spec dir2) const  {
+
+    const ColumnVecType<T1> *vec1 { nullptr };
+    const ColumnVecType<T2> *vec2 { nullptr };
+
+    {
+        const SpinGuard guard (lock_);
+
+        if (! ::strcmp(name1, DF_INDEX_COL_NAME))
+            vec1 = reinterpret_cast<const ColumnVecType<T1> *>(&indices_);
+        else
+            vec1 = &(get_column<T1>(name1, false));
+
+        if (! ::strcmp(name2, DF_INDEX_COL_NAME))
+            vec2 = reinterpret_cast<const ColumnVecType<T2> *>(&indices_);
+        else
+            vec2 = &(get_column<T2>(name2, false));
+    }
+
+    const size_type         col_s = std::min(vec1->size(), vec2->size());
+    std::vector<size_type>  result(col_s);
+    const auto              thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    std::iota(result.begin(), result.end(), 0);
+    if (dir1 == sort_spec::ascen && dir2 == sort_spec::ascen)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (vec1[lhs] == vec1[rhs])
+                    return (vec2[lhs] < vec2[rhs]);
+                return (vec1[lhs] < vec1[rhs]);
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::desce)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (vec1[lhs] == vec1[rhs])
+                    return (vec2[lhs] > vec2[rhs]);
+                return (vec1[lhs] > vec1[rhs]);
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::desce)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (vec1[lhs] == vec1[rhs])
+                    return (vec2[lhs] > vec2[rhs]);
+                return (vec1[lhs] < vec1[rhs]);
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::ascen)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (vec1[lhs] == vec1[rhs])
+                    return (vec2[lhs] < vec2[rhs]);
+                return (vec1[lhs] > vec1[rhs]);
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::abs_ascen)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)](
+            const auto &lhs, const auto &rhs) -> bool {
+                if (abs__(vec1[lhs]) == abs__(vec1[rhs]))
+                    return (abs__(vec2[lhs]) < abs__(vec2[rhs]));
+                return (abs__(vec1[lhs]) < abs__(vec1[rhs]));
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::abs_desce)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (abs__(vec1[lhs]) == abs__(vec1[rhs]))
+                    return (abs__(vec2[lhs]) > abs__(vec2[rhs]));
+                return (abs__(vec1[lhs]) > abs__(vec1[rhs]));
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::abs_desce)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (abs__(vec1[lhs]) == abs__(vec1[rhs]))
+                    return (abs__(vec2[lhs]) > abs__(vec2[rhs]));
+                return (abs__(vec1[lhs]) < abs__(vec1[rhs]));
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::abs_ascen)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (abs__(vec1[lhs]) == abs__(vec1[rhs]))
+                    return (abs__(vec2[lhs]) < abs__(vec2[rhs]));
+                return (abs__(vec1[lhs]) > abs__(vec1[rhs]));
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::abs_ascen)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (vec1[lhs] == vec1[rhs])
+                    return (abs__(vec2[lhs]) < abs__(vec2[rhs]));
+                return (vec1[lhs] < vec1[rhs]);
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::abs_desce)  {
+        auto   lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (vec1[lhs] == vec1[rhs])
+                    return (abs__(vec2[lhs]) > abs__(vec2[rhs]));
+                return (vec1[lhs] < vec1[rhs]);
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::abs_ascen)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (vec1[lhs] == vec1[rhs])
+                    return (abs__(vec2[lhs]) < abs__(vec2[rhs]));
+                return (vec1[lhs] > vec1[rhs]);
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::abs_desce)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (vec1[lhs] == vec1[rhs])
+                    return (abs__(vec2[lhs]) > abs__(vec2[rhs]));
+                return (vec1[lhs] > vec1[rhs]);
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::ascen)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (abs__(vec1[lhs]) == abs__(vec1[rhs]))
+                    return (vec2[lhs] < vec2[rhs]);
+                return (abs__(vec1[lhs]) < abs__(vec1[rhs]));
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::ascen)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                    if (abs__(vec1[lhs]) == abs__(vec1[rhs]))
+                    return (vec2[lhs] < vec2[rhs]);
+                return (abs__(vec1[lhs]) > abs__(vec1[rhs]));
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::desce)  {
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (abs__(vec1[lhs]) == abs__(vec1[rhs]))
+                    return (vec2[lhs] > vec2[rhs]);
+                return (abs__(vec1[lhs]) < abs__(vec1[rhs]));
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+    else  {   // dir1 == sort_spec::abs_desce && dir2 == sort_spec::desce
+        auto    lbd =
+            [&vec1 = std::as_const(*vec1), &vec2 = std::as_const(*vec2)]
+            (const auto &lhs, const auto &rhs) -> bool {
+                if (abs__(vec1[lhs]) == abs__(vec1[rhs]))
+                    return (vec2[lhs] > vec2[rhs]);
+                return (abs__(vec1[lhs]) > abs__(vec1[rhs]));
+            };
+
+        if (thread_level > 2)
+            thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+        else
+            std::sort(result.begin(), result.end(), lbd);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<comparable T1, comparable T2, comparable T3, typename ... Ts>
 void DataFrame<I, H>::
 sort(const char *name1, sort_spec dir1,
      const char *name2, sort_spec dir2,
@@ -567,9 +905,9 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T1>   *vec1 { nullptr};
-    ColumnVecType<T2>   *vec2 { nullptr};
-    ColumnVecType<T3>   *vec3 { nullptr};
+    ColumnVecType<T1>   *vec1 { nullptr };
+    ColumnVecType<T2>   *vec2 { nullptr };
+    ColumnVecType<T3>   *vec3 { nullptr };
     const SpinGuard     guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))  {
@@ -714,6 +1052,120 @@ sort(const char *name1, sort_spec dir1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<comparable T1, comparable T2, comparable T3>
+std::vector<typename DataFrame<I, H>::size_type>
+DataFrame<I, H>::
+permutation_vec(const char *name1, sort_spec dir1,
+                const char *name2, sort_spec dir2,
+                const char *name3, sort_spec dir3) const  {
+
+    const ColumnVecType<T1> *vec1 { nullptr };
+    const ColumnVecType<T2> *vec2 { nullptr };
+    const ColumnVecType<T3> *vec3 { nullptr };
+
+    {
+        const SpinGuard guard (lock_);
+
+        if (! ::strcmp(name1, DF_INDEX_COL_NAME))
+            vec1 = reinterpret_cast<const ColumnVecType<T1> *>(&indices_);
+        else
+            vec1 = &(get_column<T1>(name1, false));
+
+        if (! ::strcmp(name2, DF_INDEX_COL_NAME))
+            vec2 = reinterpret_cast<const ColumnVecType<T2> *>(&indices_);
+        else
+            vec2 = &(get_column<T2>(name2, false));
+
+        if (! ::strcmp(name3, DF_INDEX_COL_NAME))
+            vec3 = reinterpret_cast<const ColumnVecType<T3> *>(&indices_);
+        else
+            vec3 = &(get_column<T3>(name3, false));
+    }
+
+    auto    lbd =
+        [dir1, dir2, dir3,
+         &vec1 = std::as_const(*vec1),
+         &vec2 = std::as_const(*vec2),
+         &vec3 = std::as_const(*vec3)]
+        (const auto &lhs, const auto &rhs) -> bool {
+            if (dir1 == sort_spec::ascen)  {
+                if (vec1[lhs] < vec1[rhs])
+                    return (true);
+                else if (vec1[lhs] > vec1[rhs])
+                    return (false);
+            }
+            else if (dir1 == sort_spec::desce)  {
+                if (vec1[lhs] > vec1[rhs])
+                    return (true);
+                else if (vec1[lhs] < vec1[rhs])
+                    return (false);
+            }
+            else if (dir1 == sort_spec::abs_ascen)  {
+                if (abs__(vec1[lhs]) < abs__(vec1[rhs]))
+                    return (true);
+                else if (abs__(vec1[lhs]) > abs__(vec1[rhs]))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec1[lhs]) > abs__(vec1[rhs]))
+                    return (true);
+                else if (abs__(vec1[lhs]) < abs__(vec1[rhs]))
+                    return (false);
+            }
+
+            if (dir2 == sort_spec::ascen)  {
+                if (vec2[lhs] < vec2[rhs])
+                    return (true);
+                else if (vec2[lhs] > vec2[rhs])
+                    return (false);
+            }
+            else if (dir2 == sort_spec::desce)  {
+                if (vec2[lhs] > vec2[rhs])
+                    return (true);
+                else if (vec2[lhs] < vec2[rhs])
+                    return (false);
+            }
+            else if (dir2 == sort_spec::abs_ascen)  {
+                if (abs__(vec2[lhs]) < abs__(vec2[rhs]))
+                    return (true);
+                else if (abs__(vec2[lhs]) > abs__(vec2[rhs]))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec2[lhs]) > abs__(vec2[rhs]))
+                    return (true);
+                else if (abs__(vec2[lhs]) < abs__(vec2[rhs]))
+                    return (false);
+            }
+
+            if (dir3 == sort_spec::ascen)
+                return (vec3[lhs] < vec3[rhs]);
+            else if (dir3 == sort_spec::desce)
+                return (vec3[lhs] > vec3[rhs]);
+            else if (dir3 == sort_spec::abs_ascen)
+                return (abs__(vec3[lhs]) < abs__(vec3[rhs]));
+            else  // sort_spec::abs_desce
+                return (abs__(vec3[lhs]) > abs__(vec3[rhs]));
+        };
+
+    const size_type         col_s =
+        std::min({ vec1->size(), vec2->size(), vec3->size() });
+    std::vector<size_type>  result(col_s);
+    const auto              thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    std::iota(result.begin(), result.end(), 0);
+    if (thread_level > 2)
+        thr_pool_.parallel_sort(result.begin(), result.end(), lbd);
+    else
+        std::sort(result.begin(), result.end(), lbd);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4, typename ... Ts>
 void DataFrame<I, H>::
 sort(const char *name1, sort_spec dir1,
@@ -727,10 +1179,10 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    const ColumnVecType<T1> *vec1 { nullptr};
-    const ColumnVecType<T2> *vec2 { nullptr};
-    const ColumnVecType<T3> *vec3 { nullptr};
-    const ColumnVecType<T4> *vec4 { nullptr};
+    const ColumnVecType<T1> *vec1 { nullptr };
+    const ColumnVecType<T2> *vec2 { nullptr };
+    const ColumnVecType<T3> *vec3 { nullptr };
+    const ColumnVecType<T4> *vec4 { nullptr };
     const SpinGuard         guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))  {
@@ -925,11 +1377,11 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    const ColumnVecType<T1> *vec1 { nullptr};
-    const ColumnVecType<T2> *vec2 { nullptr};
-    const ColumnVecType<T3> *vec3 { nullptr};
-    const ColumnVecType<T4> *vec4 { nullptr};
-    const ColumnVecType<T5> *vec5 { nullptr};
+    const ColumnVecType<T1> *vec1 { nullptr };
+    const ColumnVecType<T2> *vec2 { nullptr };
+    const ColumnVecType<T3> *vec3 { nullptr };
+    const ColumnVecType<T4> *vec4 { nullptr };
+    const ColumnVecType<T5> *vec5 { nullptr };
     const SpinGuard         guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))  {
@@ -1242,12 +1694,13 @@ sort_async(const char *name1, sort_spec dir1,
                        true,
                        [name1, dir1, name2, dir2, name3, dir3, name4, dir4,
                         name5, dir5, ignore_index, this] () -> void {
-                           this->sort<T1, T2, T3, T4, T5, Ts ...>(name1, dir1,
-                                                                  name2, dir2,
-                                                                  name3, dir3,
-                                                                  name4, dir4,
-                                                                  name5, dir5,
-                                                                  ignore_index);
+                           this->sort<T1, T2, T3, T4, T5, Ts ...>(
+                               name1, dir1,
+                               name2, dir2,
+                               name3, dir3,
+                               name4, dir4,
+                               name5, dir5,
+                               ignore_index);
                        }));
 }
 
@@ -1263,7 +1716,7 @@ sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T>    *vec { nullptr};
+    ColumnVecType<T>    *vec { nullptr };
     const SpinGuard     guard (lock_);
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
@@ -1323,7 +1776,7 @@ sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
                 return (lhs_cnt < rhs_cnt);
             return (lhs_itm < rhs_itm);
          };
-    auto    ad = 
+    auto    ad =
          [&freq_map = std::as_const(freq_map)]
          (const auto &lhs, const auto &rhs) -> bool {
             const auto  lhs_itm = abs__(std::get<0>(lhs));
@@ -1341,7 +1794,8 @@ sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
     auto        zip = std::ranges::views::zip(*vec, sorting_idxs);
-    auto        zip_idx = std::ranges::views::zip(*vec, indices_, sorting_idxs);
+    auto        zip_idx =
+        std::ranges::views::zip(*vec, indices_, sorting_idxs);
     const auto  thread_level =
         (idx_s < (ThreadPool::MUL_THR_THHOLD / 3)) ? 0L : get_thread_level();
 

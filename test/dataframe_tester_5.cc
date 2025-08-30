@@ -121,11 +121,95 @@ static void test_permutation_vec()  {
 
 // ----------------------------------------------------------------------------
 
-int main(int, char *[]) {
+static void test_get_data_every_n()  {
+
+    std::cout << "\nTesting get_data_every_n( ) ..." << std::endl;
+
+    MyDataFrame                df;
+    StlVecType<unsigned long>  idxvec =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+          19, 20, 21 };
+    StlVecType<double>         dblvec =
+        { 0, 15, -14, 2, 1, 12, 11, 8, 7, 6, 5, 9, 10, 1, 2, 3, 4, 5 };
+    StlVecType<double>         dblvec2 =
+        { 100, 101, 102, 103, 104, 105, 106.55, 107.34, 1.8, 111, 112, 113,
+          114, 115, 116, 50, 51, 52, 53, 54, 55 };
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    StlVecType<std::string>    strvec =
+        { "zz", "bb", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2));
+    df.load_column("int_col", std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("str_col", std::move(strvec),
+                   nan_policy::dont_pad_with_nans);
+
+    auto    df2 = df.get_data_every_n<double, std::string, int>(3, 1);
+
+    assert(df2.get_index().size() == 7);
+    assert(df2.get_index()[0] == 2);
+    assert(df2.get_index()[3] == 11);
+    assert(df2.get_index()[6] == 20);
+
+    assert(df2.get_column<double>("dbl_col").size() == 7);
+    assert(df2.get_column<double>("dbl_col")[0] == 15.0);
+    assert(df2.get_column<double>("dbl_col")[3] == 5.0);
+    assert(std::isnan(df2.get_column<double>("dbl_col")[6]));
+
+    assert(df2.get_column<double>("dbl_col_2").size() == 7);
+    assert(df2.get_column<double>("dbl_col_2")[0] == 101.0);
+    assert(df2.get_column<double>("dbl_col_2")[3] == 112.0);
+    assert(df2.get_column<double>("dbl_col_2")[6] == 54.0);
+
+    assert(df2.get_column<int>("int_col").size() == 3);
+    assert(df2.get_column<int>("int_col")[0] == 2);
+    assert(df2.get_column<int>("int_col")[1] == 5);
+    assert(df2.get_column<int>("int_col")[2] == 8);
+
+    assert(df2.get_column<std::string>("str_col").size() == 4);
+    assert(df2.get_column<std::string>("str_col")[0] == "bb");
+    assert(df2.get_column<std::string>("str_col")[1] == "ff");
+    assert(df2.get_column<std::string>("str_col")[3] == "ll");
+
+    const auto  view = df.get_view_every_n<double, std::string, int>(3, 1);
+
+    assert(view.get_index().size() == 7);
+    assert(view.get_index()[0] == 2);
+    assert(view.get_index()[3] == 11);
+    assert(view.get_index()[6] == 20);
+
+    assert(view.get_column<double>("dbl_col").size() == 7);
+    assert(view.get_column<double>("dbl_col")[0] == 15.0);
+    assert(view.get_column<double>("dbl_col")[3] == 5.0);
+    assert(std::isnan(view.get_column<double>("dbl_col")[6]));
+
+    assert(view.get_column<double>("dbl_col_2").size() == 7);
+    assert(view.get_column<double>("dbl_col_2")[0] == 101.0);
+    assert(view.get_column<double>("dbl_col_2")[3] == 112.0);
+    assert(view.get_column<double>("dbl_col_2")[6] == 54.0);
+
+    assert(view.get_column<int>("int_col").size() == 3);
+    assert(view.get_column<int>("int_col")[0] == 2);
+    assert(view.get_column<int>("int_col")[1] == 5);
+    assert(view.get_column<int>("int_col")[2] == 8);
+
+    assert(view.get_column<std::string>("str_col").size() == 4);
+    assert(view.get_column<std::string>("str_col")[0] == "bb");
+    assert(view.get_column<std::string>("str_col")[1] == "ff");
+    assert(view.get_column<std::string>("str_col")[3] == "ll");
+}
+
+// ----------------------------------------------------------------------------
+
+int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
 
     test_permutation_vec();
+    test_get_data_every_n();
 
     return (0);
 }

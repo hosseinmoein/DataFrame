@@ -2138,6 +2138,78 @@ get_view_by_rand (random_policy spec, double n, seed_t seed) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+get_data_every_n(size_type n, size_type starting_idx) const  {
+
+    const size_type idx_s = indices_.size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (n >= (idx_s - 1) || starting_idx >= idx_s)
+        throw NotFeasible("get_data_every_n(): "
+                          "n and starting_idx must be < index column length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / n + 1);
+    for (size_type i { starting_idx }; i < idx_s; i += n)
+        col_indices.push_back(i);
+
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_view_every_n(size_type n, size_type starting_idx)  {
+
+    const size_type idx_s = indices_.size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (n >= (idx_s - 1) || starting_idx >= idx_s)
+        throw NotFeasible("get_data_every_n(): "
+                          "n and starting_idx must be < index column length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / n + 1);
+    for (size_type i { starting_idx }; i < idx_s; i += n)
+        col_indices.push_back(i);
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
+get_view_every_n(size_type n, size_type starting_idx) const  {
+
+    const size_type idx_s = indices_.size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (n >= (idx_s - 1) || starting_idx >= idx_s)
+        throw NotFeasible("get_data_every_n(): "
+                          "n and starting_idx must be < index column length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / n + 1);
+    for (size_type i { starting_idx }; i < idx_s; i += n)
+        col_indices.push_back(i);
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data(const StlVecType<const char *> &col_names) const  {
 

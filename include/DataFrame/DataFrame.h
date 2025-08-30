@@ -3365,6 +3365,44 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] ConstPtrView
     get_view_by_rand(random_policy spec, double n, seed_t seed = 0) const;
 
+    // It returns a new DataFrame (including the index and data columns)
+    // starting from starting_idx and including every other n datapoint.
+    // If a data column is shorter than the index column, it will be also
+    // shorter in the returned DataFrame.
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // n:
+    //   Include the data every other n index
+    // starting_idx:
+    //   Starting point of selection
+    //
+    template<typename ... Ts>
+    [[nodiscard]] DataFrame
+    get_data_every_n(size_type n, size_type starting_idx = 0) const;
+
+    // It behaves like get_data_every_n, but it returns a PtrView.
+    // A view is a DataFrame that is a reference to the original DataFrame.
+    // So if you modify anything in the view the original DataFrame will
+    // also be modified.
+    //
+    // NOTE: There are certain operations that you cannot do with a view.
+    //       For example, you cannot add/delete columns, etc.
+    // NOTE: The columns in the result are not padded with NaN.
+    // NOTE: Views could not be const, because you can change original data
+    //       through views.
+    //
+    template<typename ... Ts>
+    [[nodiscard]] PtrView
+    get_view_every_n(size_type n, size_type starting_idx = 0);
+
+    // It behaves like get_data_every_n, but it returns a const PtrView.
+    //
+    template<typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_view_every_n(size_type n, size_type starting_idx = 0) const;
+
     // This returns a DataFrame with index and col_names copied from the
     // original DataFrame
     //

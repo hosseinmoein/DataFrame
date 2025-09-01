@@ -3546,6 +3546,45 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] ConstPtrView
     get_below_quantile_view(const char *col_name, double quantile) const;
 
+    // This returns a new DataFrame corresponding to n largets values in the
+    // named column. The returned DataFrame is sorted in descending order of
+    // named column.
+    // The self is unchanged.
+    //
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   The name of a column or DF_INDEX_COL_NAME
+    // n:
+    //    Number of largest values
+    // abs_value:
+    //    If this is true, absolute values are considered
+    //
+    template<comparable T, typename ... Ts>
+    [[nodiscard]] DataFrame<I, H>
+    get_n_largest_data(const char *col_name,
+                       size_type n,
+                       bool abs_value = false) const;
+
+    // Same as above get_n_largest_data but it returns a View
+    //
+    template<comparable T, typename ... Ts>
+    [[nodiscard]] PtrView
+    get_n_largest_view(const char *col_name,
+                       size_type n,
+                       bool abs_value = false);
+
+    // Same as above get_n_largest_view but it returns a const View
+    //
+    template<comparable T, typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_n_largest_view(const char *col_name,
+                       size_type n,
+                       bool abs_value = false) const;
+
     // This calculates the mean and standard deviation of the named column.
     // It returns a new DataFrame that contains all the data where named column
     // data is between high_stdev and low_stdev from the mean.

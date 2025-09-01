@@ -85,8 +85,7 @@ static const
 std::unordered_map<_TypeInfoRef_,
                    const char *const,
                    _TypeinfoHasher_,
-                   _TypeinfoEqualTo_>
-_typeinfo_name_  {
+                   _TypeinfoEqualTo_>   _typeinfo_name_  {
 
     // Numerics
     //

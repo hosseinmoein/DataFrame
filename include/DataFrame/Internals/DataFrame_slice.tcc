@@ -2607,6 +2607,93 @@ get_n_largest_view(const char *col_name, size_type n, bool abs_value) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<comparable T, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+get_n_smallest_data(const char *col_name, size_type n, bool abs_value) const  {
+
+    const size_type idx_s = indices_.size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (n >= idx_s)
+        throw NotFeasible("get_n_smallest_data(): "
+                          "n  must be < index column length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const auto              per_vec =
+        permutation_vec<T>(
+            col_name,
+            abs_value ? sort_spec::abs_ascen : sort_spec::ascen);
+    StlVecType<size_type>   col_indices;
+    const auto              col_s = std::min(n, per_vec.size());
+
+    col_indices.reserve(col_s);
+    for (size_type i = 0; i < col_s; ++i)
+        col_indices.push_back(per_vec[i]);
+
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<comparable T, typename ... Ts>
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_n_smallest_view(const char *col_name, size_type n, bool abs_value)  {
+
+    const size_type idx_s = indices_.size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (n >= idx_s)
+        throw NotFeasible("get_n_smallest_view(): "
+                          "n  must be < index column length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const auto              per_vec =
+        permutation_vec<T>(
+            col_name,
+            abs_value ? sort_spec::abs_ascen : sort_spec::ascen);
+    StlVecType<size_type>   col_indices;
+    const auto              col_s = std::min(n, per_vec.size());
+
+    col_indices.reserve(col_s);
+    for (size_type i = 0; i < col_s; ++i)
+        col_indices.push_back(per_vec[i]);
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<comparable T, typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
+get_n_smallest_view(const char *col_name, size_type n, bool abs_value) const  {
+
+    const size_type idx_s = indices_.size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (n >= idx_s)
+        throw NotFeasible("get_n_smallest_view(): "
+                          "n  must be < index column length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const auto              per_vec =
+        permutation_vec<T>(
+            col_name,
+            abs_value ? sort_spec::abs_ascen : sort_spec::ascen);
+    StlVecType<size_type>   col_indices;
+    const auto              col_s = std::min(n, per_vec.size());
+
+    col_indices.reserve(col_s);
+    for (size_type i = 0; i < col_s; ++i)
+        col_indices.push_back(per_vec[i]);
+
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<arithmetic T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::

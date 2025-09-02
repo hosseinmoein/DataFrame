@@ -249,6 +249,51 @@ static void test_get_n_largest_data()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_get_n_smallest_data()  {
+
+    std::cout << "\nTesting get_n_smallest_data( ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    auto        res_df =
+        df.get_n_smallest_data<double, double, long>("IBM_Close", 5);
+    const auto  res_vw =
+        df.get_n_smallest_view<double, double, long>("IBM_Close", 5);
+
+    assert(res_df.get_index().size() == 5);
+    assert(res_vw.get_index().size() == 5);
+    assert((res_df.get_index()[0] == "2002-10-09"));
+    assert((res_vw.get_index()[0] == "2002-10-09"));
+    assert((res_df.get_index()[3] == "2002-10-08"));
+    assert((res_vw.get_index()[3] == "2002-10-08"));
+    assert(res_df.get_column<double>("IBM_Low").size() == 5);
+    assert(res_vw.get_column<double>("IBM_Low").size() == 5);
+    assert(res_df.get_column<double>("IBM_Close").size() == 5);
+    assert(res_vw.get_column<double>("IBM_Close").size() == 5);
+    assert((
+        std::fabs(res_df.get_column<double>("IBM_Close")[1] - 56.6) < 0.01));
+    assert((
+        std::fabs(res_vw.get_column<double>("IBM_Close")[1] - 56.6) < 0.01));
+    assert((
+        std::fabs(res_df.get_column<double>("IBM_Close")[2] - 56.86) < 0.01));
+    assert((
+        std::fabs(res_vw.get_column<double>("IBM_Close")[2] - 56.86) < 0.01));
+    assert((res_df.get_column<long>("IBM_Volume")[3] == 14744500));
+    assert((res_vw.get_column<long>("IBM_Volume")[3] == 14744500));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
@@ -256,6 +301,7 @@ int main(int, char *[])  {
     test_permutation_vec();
     test_get_data_every_n();
     test_get_n_largest_data();
+    test_get_n_smallest_data();
 
     return (0);
 }

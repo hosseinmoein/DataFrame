@@ -53,11 +53,13 @@ body {
       </td>
       <td>
         This function determines if each item in the named column is between the given lower and upper bounds. Lower bound is inclusive and upper bound is excluded.<BR>
-        It returns a vector of chars with the same size as the named column. A 0 value means the corresponding element is not between lower and upper bounds. A 1 value means it is.<BR>
+        It returns a vector of chars with the same size as the named column. A 0 value means the corresponding element is not between lower and upper bounds. A 1 value means it is.<BR><BR>
+
+        <B>NOTE</B>: <I>StlVecType</I> is just a <I>std::vector</I> with the applicable allocator for the DataFrame. For example, if you have declared the DataFrame to allocate memory on a particular boundary, then <I>StlVecType</I> is <I>std::vector</I> with an allocator that does so. Otherwise it is just a default <I>std::vector</I>.<BR>
       </td>
       <td width="30%">
         <b>T</b>: Type of the named column T must have the comparison operators (== != > < >= <=) well defined<BR>
-        <b>col_name</b>: Name of the column<BR>
+        <b>col_name</b>: The name of a column or <I>DF_INDEX_COL_NAME</I><BR>
         <b>lower_bound</b>: A lower bound value<BR>
         <b>upper_bound</b>: An upper bound value<BR>
       </td>

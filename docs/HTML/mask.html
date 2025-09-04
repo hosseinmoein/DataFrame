@@ -50,10 +50,11 @@ body {
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
-        This is the generalization of a masking function. Every element of the given column will be passed to the mfunc and the output of mfunc will be stored in the result vector. A typical example would be a Boolean result vector, although the default result is a vector&lt;char&gt;. That’s because std::vector&lt;bool&gt; has an odd implementation that I don’t like.<BR> <BR>
+        This is the generalization of a masking function. Every element of the given column will be passed to the mfunc and the output of mfunc will be stored in the result vector. A typical example would be a Boolean result vector, although the default result is a vector&lt;char&gt;. That’s because std::vector&lt;bool&gt; has an odd implementation that I don’t like.<BR><BR>
 
         <B>NOTE</B>: Type MT must have default constructor<BR>
         <B>NOTE</B>: mfunc must be stateless, because it is used in multithreading<BR>
+        <B>NOTE</B>: <I>StlVecType</I> is just a <I>std::vector</I> with the applicable allocator for the DataFrame. For example, if you have declared the DataFrame to allocate memory on a particular boundary, then <I>StlVecType</I> is <I>std::vector</I> with an allocator that does so. Otherwise it is just a default <I>std::vector</I>.<BR>
       </td>
       <td width="25%">
         <B>T</B>: Type of the "new index" column<BR>

@@ -52,7 +52,9 @@ body {
       </td>
       <td>
         This function determines if each item in the named column is a peak. A peak data point is bigger than <I>n</I> data points before and after it.<BR>
-        It returns a vector of chars with the same size as the named column. A 0 value means the data point is not a peak. 1 means it is. The first and last <I>n</I> values of the returned vector are always 0;<BR>
+        It returns a vector of chars with the same size as the named column. A 0 value means the data point is not a peak. 1 means it is. The first and last <I>n</I> values of the returned vector are always 0;<BR><BR>
+
+        <B>NOTE</B>: <I>StlVecType</I> is just a <I>std::vector</I> with the applicable allocator for the DataFrame. For example, if you have declared the DataFrame to allocate memory on a particular boundary, then <I>StlVecType</I> is <I>std::vector</I> with an allocator that does so. Otherwise it is just a default <I>std::vector</I>.<BR>
       </td>
       <td width="30%">
         <b>T</b>: Type of the named column T must have the comparison operators (== != > < >= <=) well defined<BR>
@@ -71,7 +73,9 @@ body {
       </td>
       <td>
         This function determines if each item in the named column is a valley. A valley data point is smaller than <I>n</I> data points before and after it.<BR>
-        It returns a vector of chars with the same size as the named column. A 0 value means the data point is not a valley. 1 means it is. The first and last <I>n</I> values of the returned vector are always 0;<BR>
+        It returns a vector of chars with the same size as the named column. A 0 value means the data point is not a valley. 1 means it is. The first and last <I>n</I> values of the returned vector are always 0;<BR><BR>
+
+        <B>NOTE</B>: <I>StlVecType</I> is just a <I>std::vector</I> with the applicable allocator for the DataFrame. For example, if you have declared the DataFrame to allocate memory on a particular boundary, then <I>StlVecType</I> is <I>std::vector</I> with an allocator that does so. Otherwise it is just a default <I>std::vector</I>.<BR>
       </td>
       <td width="30%">
         <b>T</b>: Type of the named column T must have the comparison operators (== != > < >= <=) well defined<BR>

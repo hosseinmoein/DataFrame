@@ -1188,9 +1188,7 @@ DataFrame<I, H>::ends_with(const char *col_name, const T &pattern) const  {
 
 template<typename I, typename H>
 template<comparable T>
-typename
-DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template
-    StlVecType<char>
+typename DataFrame<I, H>::template StlVecType<char>
 DataFrame<I, H>::in_between(const char *col_name,
                             const T &lower_bound,
                             const T &upper_bound) const  {
@@ -1228,6 +1226,63 @@ DataFrame<I, H>::in_between(const char *col_name,
         for (auto &fut : futures)  fut.get();
     }
     else  lbd(size_type(0), col_s);
+
+    return(result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<std::floating_point T>
+typename DataFrame<I, H>::template StlVecType<char> DataFrame<I, H>::
+is_nan_mask(const char *col_name, bool not_flag) const  {
+
+    using res_t = StlVecType<char>;
+
+    const ColumnVecType<T>  *vec { nullptr };
+
+    if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
+        vec = (const ColumnVecType<T> *) &(get_index());
+    else
+        vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
+
+    const size_type col_s = vec->size();
+    res_t           result (col_s, not_flag ? char(1) : char{ 0 });
+    const auto      thread_level =
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    auto            lbd =
+        [&result, &vec = std::as_const(*vec)]
+        (size_type begin, size_type end) -> void  {
+            for (auto idx = begin; idx < end; ++idx)
+                if (std::isnan(vec[idx])) [[unlikely]] result[idx] = char{ 1 };
+        };
+    auto            not_lbd =
+        [&result, &vec = std::as_const(*vec)]
+        (size_type begin, size_type end) -> void  {
+            for (auto idx = begin; idx < end; ++idx)
+                if (std::isnan(vec[idx])) [[likely]] result[idx] = char{ 0 };
+        };
+
+    if (thread_level > 2)  {
+        if (not_flag)  {
+            auto    futures =
+                thr_pool_.parallel_loop(size_type(0),
+                                        col_s,
+                                        std::move(not_lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            auto    futures =
+                thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+    }
+    else  {
+        if (not_flag)  not_lbd(size_type(0), col_s);
+        else  lbd(size_type(0), col_s);
+    }
 
     return(result);
 }

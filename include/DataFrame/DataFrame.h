@@ -1966,7 +1966,7 @@ public:  // Data manipulation
     //   Type of the col_name column. T must have the comparison operators
     //   (== != > < >= <=) well defined
     // col_name:
-    //   Name of the column
+    //   The name of a column or DF_INDEX_COL_NAME
     // lower_bound:
     //   A lower bound value
     // upper_bound:
@@ -1974,12 +1974,25 @@ public:  // Data manipulation
     //
     template<comparable T>
     [[nodiscard]]
-    typename
-    DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template
-        StlVecType<char>
+    StlVecType<char>
     in_between(const char *col_name,
                const T &lower_bound,
                const T &upper_bound) const;
+
+    // This function returns mask of NaN values. It returns a vector of chars
+    // with binary 0’s and 1’s values. A 1 indicates a NaN value.
+    //
+    // T:
+    //   Type of the col_name column.
+    // col_name:
+    //   The name of a column or DF_INDEX_COL_NAME
+    // not_flag:
+    //   If the this is true, the returned result is inversed. In other words
+    //   a 0 indicates a NaN value and a 1 indicates a valid value.
+    //
+    template<std::floating_point T>
+    [[nodiscard]] StlVecType<char>
+    is_nan_mask(const char *col_name, bool not_flag = false) const;
 
     // This function determines if each item in the named column is a peak.
     // A peak data point is bigger than data points before and after it.

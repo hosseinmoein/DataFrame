@@ -1994,6 +1994,21 @@ public:  // Data manipulation
     [[nodiscard]] StlVecType<char>
     is_nan_mask(const char *col_name, bool not_flag = false) const;
 
+    // This function returns mask of infinity values. It returns a vector of
+    // chars with binary 0’s and 1’s values. A 1 indicates an infinity value.
+    //
+    // T:
+    //   Type of the col_name column.
+    // col_name:
+    //   The name of a column or DF_INDEX_COL_NAME
+    // not_flag:
+    //   If the this is true, the returned result is inversed. In other words
+    //   a 0 indicates a infinity value and a 1 indicates a valid value.
+    //
+    template<std::floating_point T>
+    [[nodiscard]] StlVecType<char>
+    is_infinity_mask(const char *col_name, bool not_flag = false) const;
+
     // This function determines if each item in the named column is a peak.
     // A peak data point is bigger than data points before and after it.
     //

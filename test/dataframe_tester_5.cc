@@ -350,6 +350,67 @@ static void test_is_nan_mask()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_is_infinity_mask()  {
+
+    std::cout << "\nTesting is_infinity_mask( ) ..." << std::endl;
+
+    const double                ival = std::numeric_limits<double>::infinity();
+    ULDataFrame                 df;
+    std::vector<unsigned long>  idxvec =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    std::vector<double>         dblvec =
+        { 0, 15, -14, 2, 1, 12, 11, 8, 7, 6, 5, 4, 3, 9, 10};
+    std::vector<double>         dblvec2 =
+        { 100, 101, ival, 103, 104, 103.9, 106.55, 106.34, 1.8, ival, 112,
+          111.5, 114, ival, ival};
+    std::vector<double>         dblempty { };
+    std::vector<double>         allinfinity =
+        { ival, ival, ival, ival, ival, ival, ival, ival, ival, ival, ival,
+          ival, ival, ival, ival };
+    std::vector<std::string>    strvec =
+        { "", "bb", "cc", "ww", "", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("All NaN Col", allinfinity),
+                 std::make_pair("str_col", strvec));
+    df.load_column("Empty Col", std::move(dblempty),
+                   nan_policy::dont_pad_with_nans);
+
+    const auto  res1 = df.is_infinity_mask<double>("dbl_col");
+
+    assert((res1 ==
+            std::vector<char>{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+
+    const auto  res2 = df.is_infinity_mask<double>("dbl_col", true);
+
+    assert((res2 ==
+            std::vector<char>{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }));
+
+    const auto  res3 = df.is_infinity_mask<double>("dbl_col_2");
+
+    assert((res3 ==
+            std::vector<char>{ 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1 }));
+
+    const auto  res4 = df.is_infinity_mask<double>("dbl_col_2", true);
+
+    assert((res4 ==
+            std::vector<char>{ 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0 }));
+
+    const auto  res5 = df.is_infinity_mask<double>("All NaN Col", true);
+
+    assert((res5 ==
+            std::vector<char>{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+
+    const auto  res6 = df.is_infinity_mask<double>("Empty Col");
+
+    assert(res6.empty());
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
@@ -359,6 +420,7 @@ int main(int, char *[])  {
     test_get_n_largest_data();
     test_get_n_smallest_data();
     test_is_nan_mask();
+    test_is_infinity_mask();
 
     return (0);
 }

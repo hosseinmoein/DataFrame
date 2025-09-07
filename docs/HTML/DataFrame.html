@@ -26,8 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <!DOCTYPE html>
 <html>
-<head>
 
+<head>
 <style>
 
 * {
@@ -71,28 +71,232 @@ table {
 @media screen and (min-width: 768px) {
   .left-container {
     flex-grow: 1;
-    width: 16%;
+    width: 18%;
     overflow-y: scroll;
+    overflow-x: scroll;
     height: 100vh;
   }
   .right-container {
     flex-shrink: 0;
-    width: 84%;
+    width: 82%;
     overflow-y: scroll;
     height: 100vh;
   }
 }
 
-</style>
+.collapsible-container {
+    # max-width: 500px;
+    # margin: 0 auto;
+    # border-radius: 8px;
+    text-align: left;
+    background-color: #ffffff00;
+}
 
+.collapsible-header {
+    background-color: #ffffff00;
+    color: blue;
+    cursor: pointer;
+    # width: 75%;
+    border: none;
+    text-align: left;
+    # outline: none;
+    display: flex;
+    # justify-content: space-between;
+    align-items: center;
+}
+
+.collapsible-header:hover {
+    background-color: yellow
+}
+
+.collapsible-header.active {
+    background-color: yellow
+}
+
+.collapsible-header.active .arrow {
+    transform: rotate(90deg);
+}
+
+.collapsible-content {
+    padding: 0 10px;
+    background-color: #ffffff00;
+    max-height: 0;
+    overflow: hidden;
+}
+
+.collapsible-content li {
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+}
+        
+.collapsible-content li:last-child {
+    border-bottom: none;
+}
+
+</style>
 </head>
+
 <body style="font-family: Georgia, serif">
 
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+      const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
+
+      collapsibleHeaders.forEach(header => {
+          header.addEventListener('click', () => {
+              // Toggle the 'active' class on the header
+              header.classList.toggle('active');
+                    
+              // Select the content div immediately following the header
+              const content = header.nextElementSibling;
+                    
+              // Animate the max-height
+              if (content.style.maxHeight) {
+                  content.style.maxHeight = null; // Collapse the content
+              }
+              else {
+                  // Expand the content by setting max-height to its scrollHeight
+                  content.style.maxHeight = content.scrollHeight + '20px';
+              }
+          });
+      });
+  });
+</script>
+    
 <div class="content-wrapper">
   <div class="left-container">
   <P><font size="+3">&#8592;</font> <a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">Back to Github</a></LI>
   <P><font size="+3">&#9730;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#1">Introduction</a></P>
-  <P><font size="+3">&#128477;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#2">API Reference</a></P>
+  <P>
+    <div class="collapsible-container">
+      <button class="collapsible-header">
+        <span style="font-family: Georgia, serif;"><font size="+3">&#128477;</font><font size="+0.5">API Reference</font></span>
+        <span style="font-family: Georgia, serif;" class="arrow"><font size="+2">&ensp;&#9656;</font></span>
+      </button>
+        <div class="collapsible-content">
+          <UL style="font-family: Georgia, serif;">
+
+            <LI><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#2">Master Table</a></LI>
+
+            <LI>
+              <div class="collapsible-container">
+                <button class="collapsible-header">
+                  <span style="font-family: Georgia, serif;"><font size="+0.5">DataFrame<BR>Memebr Functions</font></span>
+                  <span style="font-family: Georgia, serif;" class="arrow"><font size="+1">&ensp;&#9656;</font></span>
+                </button>
+                <div class="collapsible-content">
+                  <UL>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#211">Loading Data</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#212">Getting Data</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#213">Getting<BR>Information</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#214">Masks</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#215">Slicing Data</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#216">Sorting Data</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#217">Cooking Data</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#218">Altering Data</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#219">Input/Output</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#2110">Gears &amp; Stuff </a></li>
+                  </UL>
+                </div>
+              </div>
+            </LI>
+
+            <LI>
+              <div class="collapsible-container">
+                <button class="collapsible-header">
+                  <span style="font-family: Georgia, serif;"><font size="+0.5">Statistical Visitors</font></span>
+                  <span style="font-family: Georgia, serif;" class="arrow"><font size="+1">&ensp;&#9656;</font></span>
+                </button>
+                <div class="collapsible-content">
+                  <UL>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#221">Bread &amp; Butter</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#222">Boilerplates</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#223">Tests</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#224">Averages</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#225">Min/Max<BR>Algorithms</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#226">Cumulative<BR>Algorithms</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#227">Transformers &amp;<BR>Filters</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#228">Adopters</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#229">Miscellaneous</a></li>
+                  </UL>
+                </div>
+              </div>
+            </LI>
+
+            <LI>
+              <div class="collapsible-container">
+                <button class="collapsible-header">
+                  <span style="font-family: Georgia, serif;"><font size="+0.5">Artificial-Intelligence<BR>Visitors</font></span>
+                  <span style="font-family: Georgia, serif;" class="arrow"><font size="+1">&ensp;&#9656;</font></span>
+                </button>
+                <div class="collapsible-content">
+                  <UL>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#231">Machine<BR>Learning</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#232">Anomaly<BR>Detection</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#233">Fitting<BR>Algorithms</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#234">Clustering<BR>Algorithms</a></li>
+                  </UL>
+                </div>
+              </div>
+            </LI>
+
+            <LI>
+              <div class="collapsible-container">
+                <button class="collapsible-header">
+                  <span style="font-family: Georgia, serif;"><font size="+0.5">Financial Visitors</font></span>
+                  <span style="font-family: Georgia, serif;" class="arrow"><font size="+1">&ensp;&#9656;</font></span>
+                </button>
+                <div class="collapsible-content">
+                  <UL>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#241">Bread &amp; Butter</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#242">Volatility Based</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#243">Volume Based</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#244">Oscillators</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#245">Momentum Based</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#246">Smoothers</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#247">Trends</a></li>
+                  </UL>
+                </div>
+              </div>
+            </LI>
+
+            <LI>
+              <div class="collapsible-container">
+                <button class="collapsible-header">
+                  <span style="font-family: Georgia, serif;"><font size="+0.5">Types/Objects</font></span>
+                  <span style="font-family: Georgia, serif;" class="arrow"><font size="+1">&ensp;&#9656;</font></span>
+                </button>
+                <div class="collapsible-content">
+                  <UL>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#251">Enum Types</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#252">Objects</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#253">Arithmetic<BR>Operators</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#254">Exceptions</a></li>
+                  </UL>
+                </div>
+              </div>
+            </LI>
+
+            <LI>
+              <div class="collapsible-container">
+                <button class="collapsible-header">
+                  <span style="font-family: Georgia, serif;"><font size="+0.5">Stand-alone<BR>Functions</font></span>
+                  <span style="font-family: Georgia, serif;" class="arrow"><font size="+1">&ensp;&#9656;</font></span>
+                </button>
+                <div class="collapsible-content">
+                  <UL>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#261">Random Numbers</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#262">Non-Random<BR>Numbers</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#263">Multithreading<BR>Controls</a></li>
+                  </UL>
+                </div>
+              </div>
+            </LI>
+
+        </UL>
+      </div>
+    </div>
+  </P>
   <P><font size="+3">&#128640;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#3">Multithreading</a><PLI>
   <P><font size="+3">&#128269;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#4">Views</a></P>
   <P><font size="+3">&#128109;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#5">Visitors</a></P>
@@ -104,7 +308,6 @@ table {
 
   <div class="right-container">
   <center>
-    <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="60" height="60"/>
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="90" height="90"/>
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="120" height="120"/>
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="150" height="150"/>
@@ -112,10 +315,9 @@ table {
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="150" height="150"/>
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="120" height="120"/>
     <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="90" height="90"/>
-    <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="60" height="60"/>
   </center>
 
-  <p id="hmdf_time"></p>
+  <p ID="hmdf_time"></p>
     <script>
       function update_time() {
         const d = new Date();
@@ -2226,8 +2428,8 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 
     In general, there are three ways you can build C++ applications and libraries.<BR>
     <OL>
-      <LI><font size="+1">Bulidng with debug information and no optimizations:</font> This build allows you to debug your application and walk through the source code as it executes inside a debugger. This build results in bigger executable files and significantly slower execution.</LI>
-      <LI><font size="+1">Building with optimizations and no debug information:</font> You cannot debug these applications and if they crash, they don't leave any meaningful trace. This build results in smaller executable files, and they are significantly faster at runtime.</LI>
+      <LI><font size="+1">Building with debug information and no optimizations:</font> This build allows you to debug your application and walk through the source code as it executes inside a debugger. This build results in bigger executable files and significantly slower execution.</LI>
+      <LI><font size="+1">Building with full optimizations and no debug information:</font> You cannot debug these applications and if they crash, they don't leave any meaningful trace. This build results in smaller executable files, and they are significantly faster at runtime.</LI>
       <LI><font size="+1">Something in between:</font> Experiment with that in your own time.</LI>
     </OL>
 
@@ -2273,8 +2475,11 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     <font size="+1"><B>Running the test executables:</B></font><BR>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Almost all test programs in <I>test/</I>, <I>example/</I>, and <I> benchmarks/</I> directories need to open mocked datafiles that exist in <I>data/</I> directory. They also assume the datafiles are in the <I>current directory</I>. If you use CMake to build the project, it copies the datafiles into the execution directory. If you are running the tests by yourself, <I>data/</I> directory must be your current directory.<BR><BR>
 
-</div> </div>
-</body></html>
+</div>
+</div>
+
+</body>
+</html>
 
 <!--
 Local Variables:

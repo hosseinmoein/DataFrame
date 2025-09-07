@@ -85,7 +85,7 @@ table {
 }
 
 .collapsible-container {
-    # max-width: 500px;
+    max-width: 500px;
     # margin: 0 auto;
     # border-radius: 8px;
     text-align: left;
@@ -96,7 +96,7 @@ table {
     background-color: #ffffff00;
     color: blue;
     cursor: pointer;
-    # width: 75%;
+    width: 100%;
     border: none;
     text-align: left;
     # outline: none;
@@ -118,7 +118,7 @@ table {
 }
 
 .collapsible-content {
-    padding: 0 10px;
+    padding: 0 5px;
     background-color: #ffffff00;
     max-height: 0;
     overflow: hidden;
@@ -128,7 +128,7 @@ table {
     padding: 8px 0;
     border-bottom: 1px solid #ddd;
 }
-        
+
 .collapsible-content li:last-child {
     border-bottom: none;
 }
@@ -146,10 +146,10 @@ table {
           header.addEventListener('click', () => {
               // Toggle the 'active' class on the header
               header.classList.toggle('active');
-                    
+
               // Select the content div immediately following the header
               const content = header.nextElementSibling;
-                    
+
               // Animate the max-height
               if (content.style.maxHeight) {
                   content.style.maxHeight = null; // Collapse the content
@@ -162,7 +162,7 @@ table {
       });
   });
 </script>
-    
+
 <div class="content-wrapper">
   <div class="left-container">
   <P><font size="+3">&#8592;</font> <a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">Back to Github</a></LI>
@@ -188,7 +188,7 @@ table {
                   <UL>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#211">Loading Data</a></li>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#212">Getting Data</a></li>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#213">Getting<BR>Information</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#213">Getting Information</a></li>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#214">Masks</a></li>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#215">Slicing Data</a></li>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#216">Sorting Data</a></li>
@@ -213,9 +213,9 @@ table {
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#222">Boilerplates</a></li>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#223">Tests</a></li>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#224">Averages</a></li>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#225">Min/Max<BR>Algorithms</a></li>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#226">Cumulative<BR>Algorithms</a></li>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#227">Transformers &amp;<BR>Filters</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#225">Min/Max Algorithms</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#226">Cumulative Algorithms</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#227">Transformers &amp; Filters</a></li>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#228">Adopters</a></li>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#229">Miscellaneous</a></li>
                   </UL>
@@ -231,10 +231,10 @@ table {
                 </button>
                 <div class="collapsible-content">
                   <UL>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#231">Machine<BR>Learning</a></li>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#232">Anomaly<BR>Detection</a></li>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#233">Fitting<BR>Algorithms</a></li>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#234">Clustering<BR>Algorithms</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#231">Machine Learning</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#232">Anomaly Detection</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#233">Fitting Algorithms</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#234">Clustering Algorithms</a></li>
                   </UL>
                 </div>
               </div>
@@ -270,7 +270,7 @@ table {
                   <UL>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#251">Enum Types</a></li>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#252">Objects</a></li>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#253">Arithmetic<BR>Operators</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#253">Arithmetic Operators</a></li>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#254">Exceptions</a></li>
                   </UL>
                 </div>
@@ -286,8 +286,8 @@ table {
                 <div class="collapsible-content">
                   <UL>
                     <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#261">Random Numbers</a></li>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#262">Non-Random<BR>Numbers</a></li>
-                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#263">Multithreading<BR>Controls</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#262">Non-Random Numbers</a></li>
+                    <li><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html#263">Multithreading Controls</a></li>
                   </UL>
                 </div>
               </div>

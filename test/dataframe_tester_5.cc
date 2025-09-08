@@ -475,6 +475,33 @@ static void test_is_default_mask()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_SkewVisitor()  {
+
+    std::cout << "\nTesting SkewVisitor{ } ..." << std::endl;
+
+    ULDataFrame                 df;
+    std::vector<unsigned long>  idxvec =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    std::vector<double>         dblvec =
+        { 2.2, 4, 5, 15.5, 7, 8, 4.4, 12, 12.6, 11, 6.8, 5.5, 10.1, 9.8, 1.2 };
+    std::vector<double>         dblvec2 =
+        { 100, 101, 0, 103, 104, 103.9, 106.55, 106.34, 1.8, 0, 112,
+          111.5, 114, 1.2, 3.3 };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2));
+
+    SkewVisitor<double, unsigned long>  skew;
+
+    df.visit<double>("dbl_col", skew);
+    assert(std::fabs(skew.get_result() - 0.2049) < 0.0001);
+    df.visit<double>("dbl_col_2", skew);
+    assert(std::fabs(skew.get_result() - -0.6896) < 0.0001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
@@ -486,6 +513,7 @@ int main(int, char *[])  {
     test_is_nan_mask();
     test_is_infinity_mask();
     test_is_default_mask();
+    test_SkewVisitor();
 
     return (0);
 }

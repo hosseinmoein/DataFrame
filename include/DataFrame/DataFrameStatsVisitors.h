@@ -2284,6 +2284,31 @@ private:
 // ----------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long>
+struct  KurtosisVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    inline void operator()(const index_type &idx, const value_type &val)  {
+
+        stats_(idx, val);
+    }
+    PASS_DATA_ONE_BY_ONE
+
+    inline void pre()  { stats_.pre(); }
+    inline void post()  { stats_.post();  }
+    inline result_type get_result() const  { return (stats_.get_kurtosis()); }
+
+    explicit
+    KurtosisVisitor(bool skipnan = false) : stats_(skipnan)  {   }
+
+private:
+
+    StatsVisitor<T, I>  stats_;
+};
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long>
 struct  TTestVisitor  {
 
 public:

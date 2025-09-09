@@ -51,11 +51,11 @@ body {
 <span class="line_wrapper">             <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>same_as<span style="color:#808030; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invoke_result_t<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span> DataFrame <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> Ts <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">&gt;</span><span style="color:#808030; ">,</span> DataFrame <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</font></span></span>
 <span class="line_wrapper"></span></pre>
       </td>
-      <td width>
+      <td>
         This function allows users to chain a series of transformative functions into a functional programming notation. The function series may or may not have side effects.<BR>
         This is more than just a syntactic sugar. This allows the user to write structured, modular, and easy to read and understand code. It also enables users to create data processing pipelines that can start with a single DataFrame as it evolves with or without side effects while moving through the pipeline.<BR>
       </td>
-      <td width =>
+      <td width="30%">
         <B>Ts</B>: The list of types of args<BR>
         <B>func</B>: A function that will operate on the DataFrame with or without side effects. The singanure of the F function must be:
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">    DataFrame <span style="color:#808030; ">&amp;</span>func<span style="color:#808030; ">(</span>DataFrame <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> args <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span></pre>

@@ -1647,7 +1647,6 @@ public:
         GET_COL_SIZE
 
         RangeDataVec        buckets;
-        MeanVisitor<T, I>   mv;
         StdVisitor<T, I>    sv;
 
         // Calculate each range basic stats
@@ -1663,16 +1662,12 @@ public:
                 rd.begin = ch_size * i;
                 rd.end = ch_size * i + ch_size;
 
-                mv.pre();
                 sv.pre();
-                mv(idx_begin, idx_end,
-                   column_begin + rd.begin, column_begin + rd.end);
                 sv(idx_begin, idx_end,
                    column_begin + rd.begin, column_begin + rd.end);
-                mv.post();
                 sv.post();
 
-                rd.mean = mv.get_result();
+                rd.mean = sv.get_mean();
                 rd.st_dev = sv.get_result();
                 buckets.push_back(rd);
             }

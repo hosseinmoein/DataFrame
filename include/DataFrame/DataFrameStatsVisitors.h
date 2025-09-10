@@ -2337,14 +2337,11 @@ public:
         if (skip_nan_ && (is_nan__(x) || is_nan__(y)))  return;
 
         if (! related_ts_)  {
-            m_x_(idx, x);
-            m_y_(idx, y);
             v_x_(idx, x);
             v_y_(idx, y);
             deg_freedom_ += 2;
         }
         else  {
-            m_x_(idx, x - y);
             v_x_(idx, x - y);
             deg_freedom_ += 1;
         }
@@ -2373,23 +2370,7 @@ public:
                         vis(idx_begin, idx_begin, begin, end);
                     };
 
-                futures.reserve(4);
-                futures.emplace_back(
-                    ThreadGranularity::thr_pool_.dispatch(
-                        false,
-                        lbd,
-                            std::ref(m_x_),
-                            std::cref(x_begin),
-                            std::cref(x_begin + col_s),
-                            std::cref(idx_begin)));
-                futures.emplace_back(
-                    ThreadGranularity::thr_pool_.dispatch(
-                        false,
-                        lbd,
-                            std::ref(m_y_),
-                            std::cref(y_begin),
-                            std::cref(y_begin + col_s),
-                            std::cref(idx_begin)));
+                futures.reserve(2);
                 futures.emplace_back(
                     ThreadGranularity::thr_pool_.dispatch(
                         false,
@@ -2421,15 +2402,7 @@ public:
                         }
                     };
 
-                futures.reserve(2);
-                futures.emplace_back(
-                    ThreadGranularity::thr_pool_.dispatch(
-                        false,
-                        lbd,
-                            std::ref(m_x_),
-                            std::cref(x_begin),
-                            std::cref(y_begin),
-                            std::cref(idx_begin)));
+                futures.reserve(1);
                 futures.emplace_back(
                     ThreadGranularity::thr_pool_.dispatch(
                         false,
@@ -2444,17 +2417,12 @@ public:
         }
         else  {
             if (! related_ts_)  {
-                m_x_(idx_begin, idx_end, x_begin, x_begin + col_s);
-                m_y_(idx_begin, idx_end, y_begin, y_begin + col_s);
                 v_x_(idx_begin, idx_end, x_begin, x_begin + col_s);
                 v_y_(idx_begin, idx_end, y_begin, y_begin + col_s);
             }
             else  {
                 for (size_type i = 0; i < col_s; ++i)  {
-                    const value_type    val = *(x_begin + i) - *(y_begin + i);
-
-                    m_x_(*idx_begin, val);
-                    v_x_(*idx_begin, val);
+                    v_x_(*idx_begin, *(x_begin + i) - *(y_begin + i));
                 }
             }
         }
@@ -2466,8 +2434,6 @@ public:
 
     inline void pre ()  {
 
-        m_x_.pre();
-        m_y_.pre();
         v_x_.pre();
         v_y_.pre();
         result_ = 0;
@@ -2475,22 +2441,20 @@ public:
     }
     inline void post ()  {
 
-        m_x_.post();
-        m_y_.post();
         v_x_.post();
         v_y_.post();
         if (! related_ts_)  {
             result_ =
-                (m_x_.get_result() - m_y_.get_result()) /
-                std::sqrt(v_x_.get_result() / value_type(m_x_.get_count()) +
-                          v_y_.get_result() / value_type(m_y_.get_count()));
+                (v_x_.get_mean() - v_y_.get_mean()) /
+                std::sqrt(v_x_.get_result() / value_type(v_x_.get_count()) +
+                          v_y_.get_result() / value_type(v_y_.get_count()));
             deg_freedom_ -= 2;
         }
         else  {
             result_ =
-                m_x_.get_result() /
+                v_x_.get_mean() /
                 (std::sqrt(v_x_.get_result()) /
-                 std::sqrt(value_type(m_x_.get_count())));
+                 std::sqrt(value_type(v_x_.get_count())));
             deg_freedom_ -= 1;
         }
     }
@@ -2499,17 +2463,13 @@ public:
     inline size_type get_deg_freedom () const  { return (deg_freedom_); }
 
     explicit TTestVisitor(bool is_related_ts, bool skipnan = false)
-        : m_x_(skipnan),
-          m_y_(skipnan),
-          v_x_(false, skipnan),
+        : v_x_(false, skipnan),
           v_y_(false, skipnan),
           related_ts_(is_related_ts),
           skip_nan_(skipnan)  {  }
 
 private:
 
-    MeanVisitor<T, I>   m_x_;
-    MeanVisitor<T, I>   m_y_;
     VarVisitor<T, I>    v_x_;
     VarVisitor<T, I>    v_y_;
     result_type         result_ { 0 };
@@ -4590,44 +4550,17 @@ struct  ZScoreVisitor  {
 
         GET_COL_SIZE2
 
-        MeanVisitor<T, I>   mvisit { skip_nan_ };
         StdVisitor<T, I>    svisit;
-        const auto          thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
 
-        mvisit.pre();
         svisit.pre();
-        if (thread_level > 2)  {
-            auto    fut1 =
-                ThreadGranularity::thr_pool_.dispatch(
-                      false,
-                      [&svisit,
-                       &idx_begin, &idx_end,
-                       &column_begin, &column_end]() -> void  {
-                          svisit(idx_begin, idx_end, column_begin, column_end);
-                      });
-            auto    fut2 =
-                ThreadGranularity::thr_pool_.dispatch(
-                      false,
-                      [&mvisit,
-                       &idx_begin, &idx_end,
-                       &column_begin, &column_end]() -> void  {
-                          mvisit(idx_begin, idx_end, column_begin, column_end);
-                      });
-
-            fut1.get();
-            fut2.get();
-        }
-        else  {
-            mvisit(idx_begin, idx_end, column_begin, column_end);
-            svisit(idx_begin, idx_end, column_begin, column_end);
-        }
-        mvisit.post();
+        svisit(idx_begin, idx_end, column_begin, column_end);
         svisit.post();
 
-        const value_type    m = mvisit.get_result();
+        const value_type    m = svisit.get_mean();
         const value_type    s = svisit.get_result();
         result_type         result(col_s);
+        const auto          thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
         if (thread_level > 2)  {
             auto    futures =
@@ -4691,11 +4624,9 @@ struct  SampleZScoreVisitor  {
 
         const size_type s_col_s = std::distance(sample_begin, sample_end);
 
-        MeanVisitor<T, I>   p_mvisit { skip_nan_ };
         StdVisitor<T, I>    p_svisit;
         MeanVisitor<T, I>   s_mvisit { skip_nan_ };
 
-        p_mvisit.pre();
         p_svisit.pre();
         s_mvisit.pre();
         if (s_col_s >= ThreadPool::MUL_THR_THHOLD &&
@@ -4712,15 +4643,6 @@ struct  SampleZScoreVisitor  {
             auto    fut2 =
                 ThreadGranularity::thr_pool_.dispatch(
                       false,
-                      [&p_mvisit,
-                       &idx_begin, &idx_end,
-                       &population_begin, &population_end]() -> void  {
-                          p_mvisit(idx_begin, idx_end,
-                                   population_begin, population_end);
-                      });
-            auto    fut3 =
-                ThreadGranularity::thr_pool_.dispatch(
-                      false,
                       [&s_mvisit,
                        &idx_begin, &idx_end,
                        &sample_begin, &sample_end]() -> void  {
@@ -4730,18 +4652,15 @@ struct  SampleZScoreVisitor  {
 
             fut1.get();
             fut2.get();
-            fut3.get();
         }
         else  {
-            p_mvisit(idx_begin, idx_end, population_begin, population_end);
             p_svisit(idx_begin, idx_end, population_begin, population_end);
             s_mvisit(idx_begin, idx_end, sample_begin, sample_end);
         }
-        p_mvisit.post();
         p_svisit.post();
         s_mvisit.post();
 
-        result_ = (s_mvisit.get_result() - p_mvisit.get_result()) /
+        result_ = (s_mvisit.get_result() - p_svisit.get_mean()) /
                   (p_svisit.get_result() / ::sqrt(s_col_s));
     }
 
@@ -5535,14 +5454,10 @@ private:
     z_score_(const K &idx_begin, const K &idx_end,
              const H &column_begin, const H &column_end)  {
 
-        MeanVisitor<T, I>   meanv;
         StdVisitor<T, I>    stdv;
 
-        meanv.pre();
         stdv.pre();
-        meanv(idx_begin, idx_end, column_begin, column_end);
         stdv(idx_begin, idx_end, column_begin, column_end);
-        meanv.post();
         stdv.post();
 
         const size_type col_s = std::distance(column_begin, column_end);
@@ -5554,7 +5469,7 @@ private:
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
                     col_s,
-                    [meanv = meanv.get_result(), stdv = stdv.get_result(),
+                    [meanv = stdv.get_mean(), stdv = stdv.get_result(),
                      &column_begin, this]
                     (auto begin, auto end) -> void  {
                         for (size_type i = begin; i < end; ++i)
@@ -5567,7 +5482,7 @@ private:
         else  {
             std::transform(column_begin, column_end,
                            result_.begin(),
-                           [meanv = meanv.get_result(),
+                           [meanv = stdv.get_mean(),
                             stdv = stdv.get_result()]
                            (const auto &val) -> value_type  {
                                return ((val - meanv) / stdv);
@@ -5690,14 +5605,10 @@ struct  StandardizeVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        MeanVisitor<T, I>   mv;
         StdVisitor<T, I>    sv;
 
-        mv.pre();
         sv.pre();
-        mv(idx_begin, idx_end, column_begin, column_end);
         sv(idx_begin, idx_end, column_begin, column_end);
-        mv.post();
         sv.post();
 
         const size_type col_s = std::distance(column_begin, column_end);
@@ -5709,7 +5620,7 @@ struct  StandardizeVisitor  {
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
                     col_s,
-                    [mv = mv.get_result(), sv = sv.get_result(),
+                    [mv = sv.get_mean(), sv = sv.get_result(),
                      &column_begin, this]
                     (auto begin, auto end) -> void  {
                         for (size_type i = begin; i < end; ++i)
@@ -5721,7 +5632,7 @@ struct  StandardizeVisitor  {
         else  {
             std::transform(column_begin, column_end,
                            result_.begin(),
-                           [mv = mv.get_result(), sv = sv.get_result()]
+                           [mv = sv.get_mean(), sv = sv.get_result()]
                            (const auto &val) -> value_type  {
                                return ((val - mv) / sv);
                            });
@@ -8203,16 +8114,6 @@ private:
                     *(column_begin + i) - (intercept + slope * times[i]);
         }
 
-        MeanVisitor<T, I>   mean;
-
-        mean.pre();
-        if (params_.adf_with_trend)
-            mean(idx_begin, idx_end,
-                 detrended_data.begin(), detrended_data.end());
-        else
-            mean(idx_begin, idx_end, column_begin, column_end);
-        mean.post();
-
         VarVisitor<T, I>    variance { true };
 
         variance.pre();
@@ -8230,14 +8131,14 @@ private:
         if (params_.adf_with_trend)
             for (size_type i = params_.adf_lag; i < col_s; ++i)
                 autocovar +=
-                    (detrended_data[i] - mean.get_result()) *
-                    (detrended_data[i - params_.adf_lag] - mean.get_result());
+                    (detrended_data[i] - variance.get_mean()) *
+                    (detrended_data[i - params_.adf_lag] - variance.get_mean());
         else
             for (size_type i = params_.adf_lag; i < col_s; ++i)
                 autocovar +=
-                    (*(column_begin + i) - mean.get_result()) *
+                    (*(column_begin + i) - variance.get_mean()) *
                     (*(column_begin + (i - params_.adf_lag)) -
-                     mean.get_result());
+                     variance.get_mean());
         autocovar /= T(col_s - params_.adf_lag - 1);
 
         adf_stat_ = autocovar / variance.get_result();
@@ -9093,14 +8994,10 @@ struct  CramerVonMisesTestVisitor  {
                                  "Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        MeanVisitor<T, I>   mv;
         StdVisitor<T, I>    sv;
 
-        mv.pre();
         sv.pre();
-        mv(idx_begin, idx_end, column_begin, column_end);
         sv(idx_begin, idx_end, column_begin, column_end);
-        mv.post();
         sv.post();
 
         std::vector<value_type> sorted(column_begin, column_end);
@@ -9110,7 +9007,7 @@ struct  CramerVonMisesTestVisitor  {
         result_type             sum { 0 };
         auto                    lbd =
             [&sorted, col_s,
-             mean = mv.get_result(), stdev = sv.get_result()]
+             mean = sv.get_mean(), stdev = sv.get_result()]
             (auto begin, auto end) -> result_type {
                 result_type res { 0 };
 

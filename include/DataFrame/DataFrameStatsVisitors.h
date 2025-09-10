@@ -1004,7 +1004,7 @@ private:
                 const value_type    &val1 = *iter1;
                 const value_type    &val2 = *iter2;
 
-                if (! is_nan__(val1) && ! is_nan__(val2)) [[unlikely]]  {
+                if (! is_nan__(val1) && ! is_nan__(val2)) [[likely]]  {
                     const value_type    total1_y = val1 - total1_c;
                     const value_type    total1_t = result.total1 + total1_y;
 
@@ -1076,7 +1076,7 @@ private:
                 const value_type    &val1 = *iter1;
                 const value_type    &val2 = *iter2;
 
-                if (! is_nan__(val1) && ! is_nan__(val2)) [[unlikely]]  {
+                if (! is_nan__(val1) && ! is_nan__(val2)) [[likely]]  {
                     result.total1 += val1;
                     result.total2 += val2;
                     result.dot_prod += (val1 * val2);
@@ -1191,6 +1191,15 @@ public:
     }
     inline size_type get_count() const  { return (inter_result_.cnt); }
 
+    inline result_type get_mean1() const  {
+
+        return (inter_result_.total1 / value_type(inter_result_.cnt));
+    }
+    inline result_type get_mean2() const  {
+
+        return (inter_result_.total2 / value_type(inter_result_.cnt));
+    }
+
     explicit CovVisitor (bool biased = false,
                          bool skipnan = false,
                          bool stable_algo = false)
@@ -1231,6 +1240,7 @@ struct  VarVisitor  {
     inline void post ()  { cov_.post(); }
     inline result_type get_result () const  { return (cov_.get_result()); }
     inline size_type get_count() const  { return (cov_.get_count()); }
+    inline result_type get_mean() const  { return (cov_.get_mean1()); }
 
     explicit VarVisitor (bool biased = false, bool skip_nan = false,
                          bool stable_algo = false)
@@ -1276,6 +1286,9 @@ struct  BetaVisitor  {
     }
     inline result_type get_result () const  { return (result_); }
     inline size_type get_count() const  { return (cov_.get_count()); }
+    inline result_type get_data_mean() const  { return (cov_.get_mean1()); }
+    inline result_type
+    get_benchmark_mean() const  { return (cov_.get_mean2()); }
 
     explicit
     BetaVisitor (bool biased = false, bool skip_nan = false,
@@ -1311,6 +1324,7 @@ struct  StdVisitor   {
     inline void post ()  { var_.post(); result_ = ::sqrt(var_.get_result()); }
     inline result_type get_result () const  { return (result_); }
     inline size_type get_count() const  { return (var_.get_count()); }
+    inline result_type get_mean() const  { return (var_.get_mean()); }
 
     explicit StdVisitor (bool biased = false, bool skip_nan = false,
                          bool stable_algo = false)
@@ -1644,6 +1658,8 @@ public:
         }
     }
     inline result_type get_result () const  { return (result_); }
+    inline result_type get_data_mean1() const  { return (cov_.get_mean1()); }
+    inline result_type get_data_mean2() const  { return (cov_.get_mean2()); }
 
     explicit
     CorrVisitor (correlation_type t = correlation_type::pearson,

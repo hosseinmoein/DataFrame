@@ -61,7 +61,15 @@ body {
         </I>
         <B>bias</B>: If true it divides by n - 1, otherwise by n.<BR>
         <B>skip_nan</B>: If true it skips over nan numbers as if they didn't exist.<BR>
-        <B>stable_algo</B>: If true, it uses a version of Kahan summation that is numerically stable for data with very large values. Kahan summation is slower than regular summation, so only use it, if your data contains very large values.<BR>
+        <B>stable_algo</B>: If true, it uses a version of Kahan summation that is numerically stable for data with very large values. Kahan summation is slower than regular summation, so only use it, if your data contains very large values.<BR><BR>
+
+        There are also the following member functions:<BR>
+        <PRE>
+  <I>get_result()</I>: Returns the beta
+  <I>get_count()</I>: Returns the number of valid datapoints (none NaN)
+  <I>get_data_mean()</I>: Returns the mean of the data time-series
+  <I>get_benchmark_mean()</I>: Returns the mean of the benchmark time-series
+        </PRE>
       </td>
       <td width="18%">
         <B>T</B>: Column data type<BR>

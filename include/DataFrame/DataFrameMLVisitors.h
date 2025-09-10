@@ -3521,42 +3521,13 @@ struct  AnomalyDetectByZScoreVisitor  {
                                 "Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        MeanVisitor<T, I>   mvisit { true };
         StdVisitor<T, I>    svisit;
-        const auto          thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
 
-        mvisit.pre();
         svisit.pre();
-        if (thread_level > 2)  {
-            auto    fut1 =
-                ThreadGranularity::thr_pool_.dispatch(
-                      false,
-                      [&svisit,
-                       &idx_begin, &idx_end,
-                       &column_begin, &column_end]() -> void  {
-                          svisit(idx_begin, idx_end, column_begin, column_end);
-                      });
-            auto    fut2 =
-                ThreadGranularity::thr_pool_.dispatch(
-                      false,
-                      [&mvisit,
-                       &idx_begin, &idx_end,
-                       &column_begin, &column_end]() -> void  {
-                          mvisit(idx_begin, idx_end, column_begin, column_end);
-                      });
-
-            fut1.get();
-            fut2.get();
-        }
-        else  {
-            mvisit(idx_begin, idx_end, column_begin, column_end);
-            svisit(idx_begin, idx_end, column_begin, column_end);
-        }
-        mvisit.post();
+        svisit(idx_begin, idx_end, column_begin, column_end);
         svisit.post();
 
-        const value_type    m = mvisit.get_result();
+        const value_type    m = svisit.get_mean();
         const value_type    s = svisit.get_result();
 
         result_.reserve(32);

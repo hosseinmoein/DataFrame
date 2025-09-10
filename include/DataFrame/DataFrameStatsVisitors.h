@@ -1665,7 +1665,7 @@ public:
     CorrVisitor (correlation_type t = correlation_type::pearson,
                  bool biased = false, bool skip_nan = false,
                  bool stable_algo = false)
-        : cov_ (biased, skip_nan, stable_algo), type_(t)  {  }
+        : cov_(biased, skip_nan, stable_algo), type_(t)  {  }
 
 private:
 

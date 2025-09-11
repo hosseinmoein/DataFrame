@@ -1193,11 +1193,17 @@ public:
 
     inline result_type get_mean1() const  {
 
-        return (inter_result_.total1 / value_type(inter_result_.cnt));
+        if (inter_result_.cnt | 0x0) [[likely]]
+            return (inter_result_.total1 / value_type(inter_result_.cnt));
+        else
+            return (std::numeric_limits<value_type>::quiet_NaN());
     }
     inline result_type get_mean2() const  {
 
-        return (inter_result_.total2 / value_type(inter_result_.cnt));
+        if (inter_result_.cnt | 0x0) [[likely]]
+            return (inter_result_.total2 / value_type(inter_result_.cnt));
+        else
+            return (std::numeric_limits<value_type>::quiet_NaN());
     }
 
     explicit CovVisitor (bool biased = false,

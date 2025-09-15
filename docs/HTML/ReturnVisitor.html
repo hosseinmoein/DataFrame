@@ -34,27 +34,6 @@ body {
 </head>
 
 
-<style>
-.frac {
-    display: inline-block;
-    position: relative;
-    vertical-align: middle;
-    letter-spacing: 0.001em;
-    text-align: center;
-}
-.frac > span {
-    display: block;
-    padding-top: 0.01em;
-    padding-bottom: 0.01em;
-}
-.frac span.bottom {
-    border-top: thin solid white;
-    padding-top: 0.4em;
-    padding-bottom: 0.3em;
-}
-.frac span.symbol { display: none; }
-</style>
-
 <body style="font-family: Georgia, serif">
 
   <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
@@ -65,15 +44,21 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class return_policy : unsigned char  {
-    log = 1,         // log <div class="frac"> <span>X<sub>t</sub></span> <span class="symbol">/</span> <span class="bottom">X<sub>t-1</sub></span> </div>
-    percentage = 2,  // <div class="frac"> <span>X<sub>t</sub> - X<sub>t-1</sub></span> <span class="symbol">/</span> <span class="bottom">X<sub>t-1</sub></span> </div>
-    monetary = 3,    // X<sub>t</sub> - X<sub>t-1</sub>
-    trinary = 4,     // 1 if X<sub>t</sub> - X<sub>t-1</sub> > 0, -1 if X<sub>t</sub> - X<sub>t-1</sub> < 0, else 0
-};
-        </B></PRE></font>
+      <td> <font color="white">
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> return_policy <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                     <span style="color:#696969; ">//        X<sub>t</sub></span></span>
+<span class="line_wrapper">    <span style="color:#603000; ">log</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>         <span style="color:#696969; ">// log<sub>e</sub> ------</span></span>
+<span class="line_wrapper">                     <span style="color:#696969; ">//       X<sub>t-1</sub></span></span>
+<span class="line_wrapper">  </span>
+<span class="line_wrapper">                     <span style="color:#696969; ">//     X<sub>t-1</sub></span></span>
+<span class="line_wrapper">    percentage <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// ------------  </span></span>
+<span class="line_wrapper">                     <span style="color:#696969; ">//   X<sub>t</sub> - X<sub>t-1</sub></span></span>
+<span class="line_wrapper">  </span>
+<span class="line_wrapper"> </span>
+<span class="line_wrapper">    monetary <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// X<sub>t</sub> - X<sub>t-1</sub></span></span>
+<span class="line_wrapper">    trinary <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span>     <span style="color:#696969; ">// 1 if X<sub>t</sub> - X<sub>t-1</sub> &gt; 0, -1 if X<sub>t</sub> - X<sub>t-1</sub> &lt; 0, else 0</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This policy specifies the type of return to be calculated<BR>
@@ -90,13 +75,13 @@ enum class return_policy : unsigned char  {
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-struct ReturnVisitor;
-        </B></PRE></font>
+      <td> <font color="white">
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">include <span style="color:#808030; ">&lt;</span>DataFrame<span style="color:#808030; ">/</span>DataFrameFinancialVisitors<span style="color:#808030; ">.</span>h<span style="color:#808030; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> ReturnVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>

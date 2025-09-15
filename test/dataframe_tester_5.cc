@@ -529,6 +529,49 @@ static void test_KurtosisVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_ConfIntervalVisitor()  {
+
+    std::cout << "\nTesting ConfIntervalVisitor{ } ..." << std::endl;
+
+    using StrDataFrame = StdDataFrame<std::string>;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+    df.load_column("Extra Col",
+                   std::vector<double> { 5.1, 4.9, 5.0, 5.3, 5.2, 4.8 },
+                   nan_policy::dont_pad_with_nans);
+
+    ConfIntervalVisitor<double, std::string>    ci_v1 { 0.95 };
+
+    df.single_act_visit<double>("Extra Col", ci_v1);
+    assert(std::fabs(ci_v1.get_error_margin() - 0.149697) < 0.000001);
+    assert(std::fabs(ci_v1.get_result().first - 4.9003) < 0.0001);
+    assert(std::fabs(ci_v1.get_result().second - 5.1997) < 0.0001);
+
+    ConfIntervalVisitor<double, std::string>    ci_v2 { 0.96 };
+
+    df.single_act_visit<double>("Extra Col", ci_v2);
+    assert(std::fabs(ci_v2.get_error_margin() - 0.159023) < 0.000001);
+    assert(std::fabs(ci_v2.get_result().first - 4.89098) < 0.00001);
+    assert(std::fabs(ci_v2.get_result().second - 5.20902) < 0.00001);
+
+    coni_v<double, std::string> ci_v3 { 0.99 };
+
+    df.single_act_visit<double>("IBM_Close", ci_v3);
+    assert(std::fabs(ci_v3.get_error_margin() - 1.39119) < 0.00001);
+    assert(std::fabs(ci_v3.get_result().first - 128.601) < 0.001);
+    assert(std::fabs(ci_v3.get_result().second - 131.383) < 0.001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
@@ -542,6 +585,7 @@ int main(int, char *[])  {
     test_is_default_mask();
     test_SkewVisitor();
     test_KurtosisVisitor();
+    test_ConfIntervalVisitor();
 
     return (0);
 }

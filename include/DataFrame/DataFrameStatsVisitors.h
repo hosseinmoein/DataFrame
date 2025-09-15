@@ -9418,6 +9418,102 @@ template<std::floating_point T,
          std::size_t A = 0>
 using qcut_v = DivideToQuantilesVisitor<T, I, L, A>;
 
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long>
+struct  ConfIntervalVisitor   {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = std::pair<value_type, value_type>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end) {
+
+        const size_type col_s = std::distance(column_begin, column_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 4)
+            throw DataFrameError("ConfIntervalVisitor: "
+                                 "Input column is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        StdVisitor<T, I>    sv;
+
+        sv.pre();
+        sv(idx_begin, idx_end, column_begin, column_end);
+        sv.post();
+
+        error_m_ = (z_score_(clvl_) * sv.get_result()) / std::sqrt(T(col_s));
+        upper_bound_ = sv.get_mean() + error_m_;
+        lower_bound_ = sv.get_mean() - error_m_;
+    }
+
+    inline void pre ()  { upper_bound_ = lower_bound_ = 0; error_m_ = 0; }
+    inline void post ()  {  }
+    inline value_type get_error_margin() const  { return (error_m_); }
+    inline result_type get_result () const  {
+
+        return (result_type { lower_bound_, upper_bound_ });
+    }
+
+    explicit
+    ConfIntervalVisitor (value_type conf_level = 0.95) // 95% confidence level
+        : clvl_ (conf_level)  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (clvl_ < 0.8 || clvl_ > 0.999)
+            throw DataFrameError("ConfIntervalVisitor: "
+                "Confidence level must be between 80% and 99.9% inclusive");
+#endif // HMDF_SANITY_EXCEPTIONS
+    }
+
+private:
+
+    static inline value_type
+    z_score_(value_type confidence_level)  {
+
+        const static std::map<value_type, value_type>    z_table {
+            { T(0.80), T(1.2816) },
+            { T(0.85), T(1.4395) },
+            { T(0.90), T(1.6449) },
+            { T(0.95), T(1.96) },
+            { T(0.98), T(2.3263) },
+            { T(0.99), T(2.5758) },
+            { T(0.999), T(3.2905) }
+        };
+
+        const auto  it = z_table.find(confidence_level);
+
+        if (it != z_table.end()) [[likely]]
+            return (it->second);
+
+        auto        low_it = z_table.lower_bound(confidence_level);
+        const auto  high_it = z_table.upper_bound(confidence_level);
+
+        if (low_it != z_table.end() &&
+            high_it != z_table.end() &&
+            low_it != z_table.begin())  { [[likely]]
+            --low_it;
+            return (low_it->second + ((confidence_level - low_it->first) /
+                                      (high_it->first - low_it->first)) *
+                    (high_it->second - low_it->second));
+        }
+        return (std::numeric_limits<T>::quiet_NaN());
+    }
+
+    value_type          upper_bound_ { 0 };
+    value_type          lower_bound_ { 0 };
+    value_type          error_m_ { 0 };
+    const value_type    clvl_;
+};
+
+template<std::floating_point T, typename I = unsigned long>
+using coni_v = ConfIntervalVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -9511,8 +9511,49 @@ private:
     const value_type    clvl_;
 };
 
-template<std::floating_point T, typename I = unsigned long>
+template<arithmetic T, typename I = unsigned long>
 using coni_v = ConfIntervalVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long>
+struct  CoeffVariationVisitor   {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end) {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type col_s = std::distance(column_begin, column_end);
+
+        if (col_s < 4)
+            throw DataFrameError("CoeffVariationVisitor: "
+                                 "Input column is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        StdVisitor<T, I>    sv;
+
+        sv.pre();
+        sv(idx_begin, idx_end, column_begin, column_end);
+        sv.post();
+
+        result_ = sv.get_result() / sv.get_mean();
+    }
+
+    inline void pre ()  { result_ = 0; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (result_); }
+
+private:
+
+    result_type result_ { 0 };
+};
+
+template<arithmetic T, typename I = unsigned long>
+using cffv_v = CoeffVariationVisitor<T, I>;
 
 } // namespace hmdf
 

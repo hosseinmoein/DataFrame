@@ -572,6 +572,38 @@ static void test_ConfIntervalVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_CoeffVariationVisitor()  {
+
+    std::cout << "\nTesting ConfIntervalVisitor{ } ..." << std::endl;
+
+    using StrDataFrame = StdDataFrame<std::string>;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+    df.load_column("Extra Col",
+                   std::vector<double> { 5.1, 4.9, 5.0, 5.3, 5.2, 4.8 },
+                   nan_policy::dont_pad_with_nans);
+
+    CoeffVariationVisitor<double, std::string>    cv_v1;
+
+    df.single_act_visit<double>("Extra Col", cv_v1);
+    assert(std::fabs(cv_v1.get_result() - 0.037046) < 0.000001);
+
+    cffv_v<double, std::string> cv_v2;
+
+    df.single_act_visit<double>("IBM_Close", cv_v2);
+    assert(std::fabs(cv_v2.get_result() - 0.294703) < 0.000001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
@@ -586,6 +618,7 @@ int main(int, char *[])  {
     test_SkewVisitor();
     test_KurtosisVisitor();
     test_ConfIntervalVisitor();
+    test_CoeffVariationVisitor();
 
     return (0);
 }

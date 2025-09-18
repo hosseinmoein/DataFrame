@@ -221,23 +221,56 @@ static void test_in_between()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    const auto  res1 = df.in_between<double>("col_3", 15.0, 19.0);
-
     {
+        const auto  res = df.in_between<double>("col_3", 15.0, 19.0);
+
         StlVecType<char>    out_res =
             { 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-        assert(res1 == out_res);
+        assert(res == out_res);
     }
 
-    const auto  res2 =
-        df.in_between<unsigned long>(DF_INDEX_COL_NAME, 123453, 123460);
-
     {
+        const auto  res =
+            df.in_between<unsigned long>(DF_INDEX_COL_NAME, 123453, 123460);
+
         StlVecType<char>    out_res =
             { 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0 };
 
-        assert(res2 == out_res);
+        assert(res == out_res);
+    }
+
+    {
+        const auto  res =
+            df.in_between<unsigned long>(DF_INDEX_COL_NAME, 123453, 123460,
+                                         inclusiveness::end);
+
+        StlVecType<char>    out_res =
+            { 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0 };
+
+        assert(res == out_res);
+    }
+
+    {
+        const auto  res =
+            df.in_between<unsigned long>(DF_INDEX_COL_NAME, 123453, 123460,
+                                         inclusiveness::both);
+
+        StlVecType<char>    out_res =
+            { 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0 };
+
+        assert(res == out_res);
+    }
+
+    {
+        const auto  res =
+            df.in_between<unsigned long>(DF_INDEX_COL_NAME, 123453, 123460,
+                                         inclusiveness::neither);
+
+        StlVecType<char>    out_res =
+            { 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0 };
+
+        assert(res == out_res);
     }
 }
 

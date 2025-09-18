@@ -1971,13 +1971,16 @@ public:  // Data manipulation
     //   A lower bound value
     // upper_bound:
     //   An upper bound value
+    // incld:
+    //   How to include beginning and end of the bounds
     //
     template<comparable T>
     [[nodiscard]]
     StlVecType<char>
     in_between(const char *col_name,
                const T &lower_bound,
-               const T &upper_bound) const;
+               const T &upper_bound,
+               inclusiveness incld = inclusiveness::begin) const;
 
     // This function returns mask of NaN values. It returns a vector of chars
     // with binary 0’s and 1’s values. A 1 indicates a NaN value.

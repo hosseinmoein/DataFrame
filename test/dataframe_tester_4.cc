@@ -1196,26 +1196,72 @@ static void test_get_data_between_times()  {
         ::exit(-1);
     }
 
-    // Between 11am and 11:30am
-    //
-    const auto  result =
-        df.get_view_between_times<double, long>(11, 11, 0, 30);
+    {
+        // Between 11am and 11:30am
+        //
+        const auto  result =
+            df.get_view_between_times<double, long>(11, 11, 0, 30);
 
-    assert(result.get_index().size() == 207);
-    assert(result.get_index()[0].date() == 19861116);
-    assert(result.get_index()[10].date() == 19861125);
-    assert(result.get_index()[100].date() == 19870303);
-    assert(result.get_index()[206].date() == 19870623);
-    assert(result.get_column<double>("dbl value").size() == 207);
-    assert(result.get_column<double>("dbl value")[0] == 21.0);
-    assert(result.get_column<double>("dbl value")[10] == 225.5);
-    assert(result.get_column<double>("dbl value")[100] == 2438.0);
-    assert(result.get_column<double>("dbl value")[206] == 4984.5);
-    assert(result.get_column<long>("lng value").size() == 207);
-    assert(result.get_column<long>("lng value")[0] == 420);
-    assert(result.get_column<long>("lng value")[10] == 4510);
-    assert(result.get_column<long>("lng value")[100] == 48760);
-    assert(result.get_column<long>("lng value")[206] == 99690);
+        assert(result.get_index().size() == 207);
+        assert(result.get_index()[0].date() == 19861116);
+        assert(result.get_index()[10].date() == 19861125);
+        assert(result.get_index()[100].date() == 19870303);
+        assert(result.get_index()[206].date() == 19870623);
+        assert(result.get_column<double>("dbl value").size() == 207);
+        assert(result.get_column<double>("dbl value")[0] == 21.0);
+        assert(result.get_column<double>("dbl value")[10] == 225.5);
+        assert(result.get_column<double>("dbl value")[100] == 2438.0);
+        assert(result.get_column<double>("dbl value")[206] == 4984.5);
+        assert(result.get_column<long>("lng value").size() == 207);
+        assert(result.get_column<long>("lng value")[0] == 420);
+        assert(result.get_column<long>("lng value")[10] == 4510);
+        assert(result.get_column<long>("lng value")[100] == 48760);
+        assert(result.get_column<long>("lng value")[206] == 99690);
+    }
+
+    {
+        const auto  result =
+            df.get_view_between_times<double, long>(11, 11, 0, 30, 0, 0, 0, 0,
+                                                    inclusiveness::both);
+
+        assert(result.get_index().size() == 226);
+        assert(result.get_index()[0].date() == 19861116);
+        assert(result.get_index()[10].date() == 19861125);
+        assert(result.get_index()[100].date() == 19870224);
+        assert(result.get_index()[225].date() == 19870623);
+        assert(result.get_column<double>("dbl value").size() == 226);
+        assert(result.get_column<double>("dbl value")[0] == 21.0);
+        assert(result.get_column<double>("dbl value")[10] == 225.0);
+        assert(result.get_column<double>("dbl value")[100] == 2283.5);
+        assert(result.get_column<double>("dbl value")[225] == 4984.5);
+        assert(result.get_column<long>("lng value").size() == 226);
+        assert(result.get_column<long>("lng value")[0] == 420);
+        assert(result.get_column<long>("lng value")[10] == 4500);
+        assert(result.get_column<long>("lng value")[100] == 45670);
+        assert(result.get_column<long>("lng value")[225] == 99690);
+    }
+
+    {
+        const auto  result =
+            df.get_data_between_times<double, long>(11, 11, 0, 30, 0, 0, 0, 0,
+                                                    inclusiveness::end);
+
+        assert(result.get_index().size() == 218);
+        assert(result.get_index()[0].date() == 19861116);
+        assert(result.get_index()[10].date() == 19861125);
+        assert(result.get_index()[100].date() == 19870226);
+        assert(result.get_index()[217].date() == 19870623);
+        assert(result.get_column<double>("dbl value").size() == 218);
+        assert(result.get_column<double>("dbl value")[0] == 21.0);
+        assert(result.get_column<double>("dbl value")[10] == 225.5);
+        assert(result.get_column<double>("dbl value")[100] == 2331.0);
+        assert(result.get_column<double>("dbl value")[217] == 4984.5);
+        assert(result.get_column<long>("lng value").size() == 218);
+        assert(result.get_column<long>("lng value")[0] == 420);
+        assert(result.get_column<long>("lng value")[10] == 4510);
+        assert(result.get_column<long>("lng value")[100] == 46620);
+        assert(result.get_column<long>("lng value")[217] == 99690);
+    }
 }
 
 // ----------------------------------------------------------------------------

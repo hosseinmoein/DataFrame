@@ -3475,12 +3475,38 @@ _DT_before_times_(DateTime::HourType b_hr,
                   DateTime::HourType d_hr,
                   DateTime::MinuteType d_mn,
                   DateTime::SecondType d_sc,
-                  DateTime::MillisecondType d_msc)  {
+                  DateTime::MillisecondType d_msc,
+                  bool incld = false)  {
 
-    return ((d_hr < b_hr) ||
-            (d_hr == b_hr && d_mn < b_mn) ||
-            (d_mn == b_mn && d_sc < b_sc) ||
-            (d_sc == b_sc && d_msc < b_msc));
+    if (! incld) [[likely]]
+        return ((d_hr < b_hr) ||
+                (d_hr == b_hr && d_mn < b_mn) ||
+                (d_mn == b_mn && d_sc < b_sc) ||
+                (d_sc == b_sc && d_msc < b_msc));
+    return (d_hr <= b_hr && d_mn <= b_mn && d_sc <= b_sc && d_msc <= b_msc);
+}
+
+// ----------------------------------------------------------------------------
+
+// Benchmark time vs. Data time
+//
+inline static bool
+_DT_after_times_(DateTime::HourType b_hr,
+                 DateTime::MinuteType b_mn,
+                 DateTime::SecondType b_sc,
+                 DateTime::MillisecondType b_msc,
+                 DateTime::HourType d_hr,
+                 DateTime::MinuteType d_mn,
+                 DateTime::SecondType d_sc,
+                 DateTime::MillisecondType d_msc,
+                 bool incld = false)  {
+
+    if (! incld) [[likely]]
+        return ((d_hr > b_hr) ||
+                (d_hr == b_hr && d_mn > b_mn) ||
+                (d_mn == b_mn && d_sc > b_sc) ||
+                (d_sc == b_sc && d_msc > b_msc));
+    return (d_hr >= b_hr && d_mn >= b_mn && d_sc >= b_sc && d_msc >= b_msc);
 }
 
 // ----------------------------------------------------------------------------
@@ -3569,26 +3595,6 @@ get_view_before_times(DateTime::HourType hr,
     }
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
-}
-
-// ----------------------------------------------------------------------------
-
-// Benchmark time vs. Data time
-//
-inline static bool
-_DT_after_times_(DateTime::HourType b_hr,
-                 DateTime::MinuteType b_mn,
-                 DateTime::SecondType b_sc,
-                 DateTime::MillisecondType b_msc,
-                 DateTime::HourType d_hr,
-                 DateTime::MinuteType d_mn,
-                 DateTime::SecondType d_sc,
-                 DateTime::MillisecondType d_msc)  {
-
-    return ((d_hr > b_hr) ||
-            (d_hr == b_hr && d_mn > b_mn) ||
-            (d_mn == b_mn && d_sc > b_sc) ||
-            (d_sc == b_sc && d_msc > b_msc));
 }
 
 // ----------------------------------------------------------------------------
@@ -3692,7 +3698,8 @@ get_data_between_times(DateTime::HourType start_hr,
                        DateTime::SecondType start_sc,
                        DateTime::SecondType end_sc,
                        DateTime::MillisecondType start_msc,
-                       DateTime::MillisecondType end_msc) const  {
+                       DateTime::MillisecondType end_msc,
+                       inclusiveness incld) const  {
 
     static_assert(
         std::is_base_of<DateTime, I>::value,
@@ -3700,17 +3707,33 @@ get_data_between_times(DateTime::HourType start_hr,
 
     const size_type         idx_s = indices_.size();
     StlVecType<size_type>   col_indices;
+    const bool              incld_before =
+        incld == inclusiveness::end || incld == inclusiveness::both;
+    const bool              incld_after =
+        incld == inclusiveness::begin || incld == inclusiveness::both;
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
         const auto  &idx = indices_[i];
 
-        if (_DT_after_times_(
-                start_hr, start_mn, start_sc, start_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()) &&
-            _DT_before_times_(
-                end_hr, end_mn, end_sc, end_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()))
+        if (_DT_after_times_(start_hr,
+                             start_mn,
+                             start_sc,
+                             start_msc,
+                             idx.hour(),
+                             idx.minute(),
+                             idx.sec(),
+                             idx.msec(),
+                             incld_after) &&
+            _DT_before_times_(end_hr,
+                              end_mn,
+                              end_sc,
+                              end_msc,
+                              idx.hour(),
+                              idx.minute(),
+                              idx.sec(),
+                              idx.msec(),
+                              incld_before))
             col_indices.push_back(i);
     }
 
@@ -3729,7 +3752,8 @@ get_view_between_times(DateTime::HourType start_hr,
                        DateTime::SecondType start_sc,
                        DateTime::SecondType end_sc,
                        DateTime::MillisecondType start_msc,
-                       DateTime::MillisecondType end_msc)  {
+                       DateTime::MillisecondType end_msc,
+                       inclusiveness incld)  {
 
     static_assert(
         std::is_base_of<DateTime, I>::value,
@@ -3737,17 +3761,33 @@ get_view_between_times(DateTime::HourType start_hr,
 
     const size_type         idx_s = indices_.size();
     StlVecType<size_type>   col_indices;
+    const bool              incld_before =
+        incld == inclusiveness::end || incld == inclusiveness::both;
+    const bool              incld_after =
+        incld == inclusiveness::begin || incld == inclusiveness::both;
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
         const auto  &idx = indices_[i];
 
-        if (_DT_after_times_(
-                start_hr, start_mn, start_sc, start_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()) &&
-            _DT_before_times_(
-                end_hr, end_mn, end_sc, end_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()))
+        if (_DT_after_times_(start_hr,
+                             start_mn,
+                             start_sc,
+                             start_msc,
+                             idx.hour(),
+                             idx.minute(),
+                             idx.sec(),
+                             idx.msec(),
+                             incld_after) &&
+            _DT_before_times_(end_hr,
+                              end_mn,
+                              end_sc,
+                              end_msc,
+                              idx.hour(),
+                              idx.minute(),
+                              idx.sec(),
+                              idx.msec(),
+                              incld_before))
             col_indices.push_back(i);
     }
 
@@ -3766,7 +3806,8 @@ get_view_between_times(DateTime::HourType start_hr,
                        DateTime::SecondType start_sc,
                        DateTime::SecondType end_sc,
                        DateTime::MillisecondType start_msc,
-                       DateTime::MillisecondType end_msc) const  {
+                       DateTime::MillisecondType end_msc,
+                       inclusiveness incld) const  {
 
     static_assert(
         std::is_base_of<DateTime, I>::value,
@@ -3774,17 +3815,33 @@ get_view_between_times(DateTime::HourType start_hr,
 
     const size_type         idx_s = indices_.size();
     StlVecType<size_type>   col_indices;
+    const bool              incld_before =
+        incld == inclusiveness::end || incld == inclusiveness::both;
+    const bool              incld_after =
+        incld == inclusiveness::begin || incld == inclusiveness::both;
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
         const auto  &idx = indices_[i];
 
-        if (_DT_after_times_(
-                start_hr, start_mn, start_sc, start_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()) &&
-            _DT_before_times_(
-                end_hr, end_mn, end_sc, end_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()))
+        if (_DT_after_times_(start_hr,
+                             start_mn,
+                             start_sc,
+                             start_msc,
+                             idx.hour(),
+                             idx.minute(),
+                             idx.sec(),
+                             idx.msec(),
+                             incld_after) &&
+            _DT_before_times_(end_hr,
+                              end_mn,
+                              end_sc,
+                              end_msc,
+                              idx.hour(),
+                              idx.minute(),
+                              idx.sec(),
+                              idx.msec(),
+                              incld_before))
             col_indices.push_back(i);
     }
 

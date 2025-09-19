@@ -5043,8 +5043,7 @@ public: // Read/access and slicing interfaces
 
     // This selects the rows using the index column that happen between the
     // specified start and end time. It returns another DataFrame with selected
-    // data indexed by DateTime. The specified start/end times are excluded.
-    // Self is unchanged.
+    // data indexed by DateTime. Self is unchanged.
     //
     // NOTE: The index column type must be DateTime or it won’t compile
     //
@@ -5067,6 +5066,8 @@ public: // Read/access and slicing interfaces
     //   Specified start milli-second
     // end_msc:
     //   Specified end milli-second
+    // incld:
+    //   How to include/exclude start and end times
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
@@ -5077,7 +5078,8 @@ public: // Read/access and slicing interfaces
                            DateTime::SecondType start_sc = 0,
                            DateTime::SecondType end_sc = 0,
                            DateTime::MillisecondType start_msc = 0,
-                           DateTime::MillisecondType end_msc = 0) const;
+                           DateTime::MillisecondType end_msc = 0,
+                           inclusiveness incld = inclusiveness::neither) const;
 
     // Same as get_view_after_times() above, but it returns a view
     //
@@ -5090,7 +5092,8 @@ public: // Read/access and slicing interfaces
                            DateTime::SecondType start_sc = 0,
                            DateTime::SecondType end_sc = 0,
                            DateTime::MillisecondType start_msc = 0,
-                           DateTime::MillisecondType end_msc = 0);
+                           DateTime::MillisecondType end_msc = 0,
+                           inclusiveness incld = inclusiveness::neither);
 
     // Same as get_view_after_times() above, but it returns a const view
     //
@@ -5103,7 +5106,8 @@ public: // Read/access and slicing interfaces
                            DateTime::SecondType start_sc = 0,
                            DateTime::SecondType end_sc = 0,
                            DateTime::MillisecondType start_msc = 0,
-                           DateTime::MillisecondType end_msc = 0) const;
+                           DateTime::MillisecondType end_msc = 0,
+                           inclusiveness incld = inclusiveness::neither) const;
 
     // This selects the rows using the index column that happen on the specified
     // days of the week. It returns another DataFrame with selected data

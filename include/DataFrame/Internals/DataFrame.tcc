@@ -1191,7 +1191,8 @@ template<comparable T>
 typename DataFrame<I, H>::template StlVecType<char>
 DataFrame<I, H>::in_between(const char *col_name,
                             const T &lower_bound,
-                            const T &upper_bound) const  {
+                            const T &upper_bound,
+                            inclusiveness incld) const  {
 
     using res_t = StlVecType<char>;
 
@@ -1202,21 +1203,59 @@ DataFrame<I, H>::in_between(const char *col_name,
     else
         vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
 
-    const size_type col_s = vec->size();
-    res_t           result (col_s, char{ 0 });
-    const auto      thread_level =
+    const size_type                             col_s = vec->size();
+    res_t                                       result (col_s, char{ 0 });
+    const auto                                  thread_level =
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-    auto            lbd =
-        [&result, vec,
-         &lower_bound = std::as_const(lower_bound),
-         &upper_bound = std::as_const(upper_bound)]
-        (size_type begin, size_type end) -> void  {
-            for (auto idx = begin; idx < end; ++idx)  {
-                const auto  &val = (*vec)[idx];
+    std::function<void(size_type, size_type)>   lbd { };
 
-                if (val >= lower_bound && val < upper_bound)
-                    result[idx] = char{ 1 };
-            }
+    if (incld == inclusiveness::begin) [[likely]]
+        lbd = [&result, vec,
+               &lower_bound = std::as_const(lower_bound),
+               &upper_bound = std::as_const(upper_bound)]
+              (size_type begin, size_type end) -> void  {
+                  for (auto idx = begin; idx < end; ++idx)  {
+                      const auto  &val = (*vec)[idx];
+
+                      if (val >= lower_bound && val < upper_bound)
+                          result[idx] = char{ 1 };
+                  }
+        };
+    else if (incld == inclusiveness::end)
+        lbd = [&result, vec,
+               &lower_bound = std::as_const(lower_bound),
+               &upper_bound = std::as_const(upper_bound)]
+              (size_type begin, size_type end) -> void  {
+                  for (auto idx = begin; idx < end; ++idx)  {
+                      const auto  &val = (*vec)[idx];
+
+                      if (val > lower_bound && val <= upper_bound)
+                          result[idx] = char{ 1 };
+                  }
+        };
+    else if (incld == inclusiveness::both)
+        lbd = [&result, vec,
+               &lower_bound = std::as_const(lower_bound),
+               &upper_bound = std::as_const(upper_bound)]
+              (size_type begin, size_type end) -> void  {
+                  for (auto idx = begin; idx < end; ++idx)  {
+                      const auto  &val = (*vec)[idx];
+
+                      if (val >= lower_bound && val <= upper_bound)
+                          result[idx] = char{ 1 };
+                  }
+        };
+    else if (incld == inclusiveness::neither)
+        lbd = [&result, vec,
+               &lower_bound = std::as_const(lower_bound),
+               &upper_bound = std::as_const(upper_bound)]
+              (size_type begin, size_type end) -> void  {
+                  for (auto idx = begin; idx < end; ++idx)  {
+                      const auto  &val = (*vec)[idx];
+
+                      if (val > lower_bound && val < upper_bound)
+                          result[idx] = char{ 1 };
+                  }
         };
 
     if (thread_level > 2)  {

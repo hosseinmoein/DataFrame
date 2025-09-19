@@ -776,6 +776,16 @@ enum class  file_dtypes : std::size_t  {
 
 // ----------------------------------------------------------------------------
 
+enum class  inclusiveness : unsigned char  {
+
+    begin = 1,   // Include the beginning of the range and exclude the end
+    end = 2,     // Exclude the beginning of the range and include the end
+    both = 3,    // Include both tne beginning and end of the range
+    neither = 4, // Exclude both tne beginning and end of the range
+};
+
+// ----------------------------------------------------------------------------
+
 // Different methods of detecting anomalous data points. Anomalous data don’t
 // mean NaN or missing datapoints. The best description is unusual datapoints.
 //

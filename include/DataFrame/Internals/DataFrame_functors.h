@@ -128,14 +128,16 @@ struct  load_functor_ : DataVec::template visitor_base<Ts ...>  {
                           std::size_t b,
                           std::size_t e,
                           LHS &d,
-                          nan_policy np = nan_policy::pad_with_nans)
-    : name (n), begin (b), end (e), df(d), nan_p(np)  {   }
+                          nan_policy np = nan_policy::pad_with_nans,
+                          inclusiveness incld = inclusiveness::begin)
+        : name (n), begin (b), end (e), df(d), nan_p(np), incld_(incld)  {   }
 
     const char          *name;
     const std::size_t   begin;
     const std::size_t   end;
     LHS                 &df;
     const nan_policy    nan_p;
+    const inclusiveness incld_;
 
     template<typename T>
     void operator() (const T &vec);
@@ -193,13 +195,15 @@ struct  view_setup_functor_ : DataVec::template visitor_base<Ts ...>  {
     inline view_setup_functor_ (const char *n,
                                 std::size_t b,
                                 std::size_t e,
-                                LHS &d)
-        : name (n), begin (b), end (e), dfv(d)  {   }
+                                LHS &d,
+                                inclusiveness incld = inclusiveness::begin)
+        : name (n), begin (b), end (e), dfv(d), incld_(incld)  {   }
 
     const char          *name;
     const std::size_t   begin;
     const std::size_t   end;
     LHS                 &dfv;
+    const inclusiveness incld_;
 
     template<typename T>
     void operator() (T &vec);

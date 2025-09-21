@@ -2642,11 +2642,14 @@ public: // Read/access and slicing interfaces
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // range:
-    //   The begin and end iterators for data
+    //   The begin and end indices of data
+    // incld:
+    //   How to include/exclude start and end indices
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-    get_data_by_loc(Index2D<long> range) const;
+    get_data_by_loc(Index2D<long> range,
+                    inclusiveness incld = inclusiveness::begin) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from locations, specified in locations vector.
@@ -2680,15 +2683,19 @@ public: // Read/access and slicing interfaces
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // range:
-    //   The begin and end iterators for data
+    //   The begin and end indices of data
+    // incld:
+    //   How to include/exclude start and end indices
     //
     template<typename ... Ts>
     [[nodiscard]] View
-    get_view_by_loc(Index2D<long> range);
+    get_view_by_loc(Index2D<long> range,
+                    inclusiveness incld = inclusiveness::begin);
 
     template<typename ... Ts>
     [[nodiscard]] ConstView
-    get_view_by_loc(Index2D<long> range) const;
+    get_view_by_loc(Index2D<long> range,
+                    inclusiveness incld = inclusiveness::begin) const;
 
     // It behaves like get_data_by_loc(locations), but it returns a PtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.

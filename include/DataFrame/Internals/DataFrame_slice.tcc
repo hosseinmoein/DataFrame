@@ -346,8 +346,8 @@ get_view_by_idx(const StlVecType<IndexType> &values) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+get_data_by_loc (Index2D<long> range, inclusiveness incld) const  {
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
@@ -358,54 +358,75 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
     if (range.end <= static_cast<long>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0) [[likely]]  {
-        res_t   df;
+        res_t       df;
+        const long  col_s = indices_.size();
+        long        col_begin = range.begin < col_s ? range.begin : col_s;
+        long        col_end = col_begin < range.end ? range.end : col_begin;
 
-        df.load_index(indices_.begin() + static_cast<size_type>(range.begin),
-                      indices_.begin() + static_cast<size_type>(range.end));
-
-        const SpinGuard guard(lock_);
-
-        for (const auto &[name, idx] : column_list_) [[likely]]  {
-            create_col_functor_<res_t, Ts ...>  functor(name.c_str(), df);
-
-            data_[idx].change(functor);
+        if (col_end > col_s)  col_end = col_s;
+        if (incld == inclusiveness::end)  {
+            if (col_begin < col_s)  col_begin += 1;
+            if (col_end < col_s)  col_end += 1;
+        }
+        else if (incld == inclusiveness::both)  {
+            if (col_end < col_s)  col_end += 1;
+        }
+        else if (incld == inclusiveness::neither)  {
+            if (col_begin < col_s)  col_begin += 1;
         }
 
-        const auto  thread_level =
-            (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-                ? 0L : get_thread_level();
+        if (col_begin < col_s)  {
+            df.load_index(indices_.begin() + col_begin,
+                          indices_.begin() + col_end);
 
-        if (thread_level > 2)  {
-            auto    lbd =
-                [&range = std::as_const(range), &df, this]
-                (const auto &begin, const auto &end) -> void  {
-                    for (auto citer = begin; citer < end; ++citer)  {
-                        load_functor_<res_t, Ts ...>    functor(
-                            citer->first.c_str(),
-                            static_cast<size_type>(range.begin),
-                            static_cast<size_type>(range.end),
-                            df);
+            const SpinGuard guard(lock_);
 
-                        this->data_[citer->second].change(functor);
-                    }
-                };
-
-            auto    futuers =
-                thr_pool_.parallel_loop(column_list_.begin(),
-                                        column_list_.end(),
-                                        std::move(lbd));
-
-            for (auto &fut : futuers)  fut.get();
-        }
-        else  {
             for (const auto &[name, idx] : column_list_) [[likely]]  {
-                load_functor_<res_t, Ts ...>    functor(
-                    name.c_str(),
-                    static_cast<size_type>(range.begin),
-                    static_cast<size_type>(range.end),
-                    df);
+                create_col_functor_<res_t, Ts ...>  functor(name.c_str(), df);
 
                 data_[idx].change(functor);
+            }
+
+            const auto  thread_level =
+                (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+                    ? 0L : get_thread_level();
+
+            if (thread_level > 2)  {
+                auto    lbd =
+                [&range = std::as_const(range), &df, this, incld]
+                    (const auto &begin, const auto &end) -> void  {
+                        for (auto citer = begin; citer < end; ++citer)  {
+                            load_functor_<res_t, Ts ...>    functor(
+                                citer->first.c_str(),
+                                static_cast<size_type>(range.begin),
+                                static_cast<size_type>(range.end),
+                                df,
+                                nan_policy::pad_with_nans,
+                                incld);
+
+                            this->data_[citer->second].change(functor);
+                        }
+                    };
+
+                auto    futuers =
+                    thr_pool_.parallel_loop(column_list_.begin(),
+                                            column_list_.end(),
+                                            std::move(lbd));
+
+                for (auto &fut : futuers)  fut.get();
+            }
+            else  {
+                for (const auto &[name, idx] : column_list_) [[likely]]  {
+                    load_functor_<res_t, Ts ...>    functor(
+                        name.c_str(),
+                        static_cast<size_type>(range.begin),
+                        static_cast<size_type>(range.end),
+                        df,
+                        nan_policy::pad_with_nans,
+                        incld);
+
+                    data_[idx].change(functor);
+                }
             }
         }
 
@@ -494,8 +515,8 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-typename DataFrame<I, H>::View
-DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
+typename DataFrame<I, H>::View DataFrame<I, H>::
+get_view_by_loc (Index2D<long> range, inclusiveness incld)  {
 
     const long  idx_s = static_cast<long>(indices_.size());
 
@@ -506,24 +527,41 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
     if (range.end <= idx_s && range.begin <= range.end &&
         range.begin >= 0) [[likely]]  {
-        View    dfv;
+        View        dfv;
+        const long  col_s = indices_.size();
+        long        col_begin = range.begin < col_s ? range.begin : col_s;
+        long        col_end = col_begin < range.end ? range.end : col_begin;
 
-        dfv.indices_ =
-            typename View::IndexVecType(&(indices_[0]) + range.begin,
-                                        &(indices_[0]) + range.end);
-
-        const SpinGuard guard(lock_);
-
-        for (const auto &[name, idx] : column_list_) [[likely]]  {
-            view_setup_functor_<View, Ts ...>   functor (
-                name.c_str(),
-                static_cast<size_type>(range.begin),
-                static_cast<size_type>(range.end),
-                dfv);
-
-            data_[idx].change(functor);
+        if (col_end > col_s)  col_end = col_s;
+        if (incld == inclusiveness::end)  {
+            if (col_begin < col_s)  col_begin += 1;
+            if (col_end < col_s)  col_end += 1;
+        }
+        else if (incld == inclusiveness::both)  {
+            if (col_end < col_s)  col_end += 1;
+        }
+        else if (incld == inclusiveness::neither)  {
+            if (col_begin < col_s)  col_begin += 1;
         }
 
+        if (col_begin < col_s)  {
+            dfv.indices_ =
+                typename View::IndexVecType(&(indices_[0]) + col_begin,
+                                            &(indices_[0]) + col_end);
+
+            const SpinGuard guard(lock_);
+
+            for (const auto &[name, idx] : column_list_) [[likely]]  {
+                view_setup_functor_<View, Ts ...>   functor (
+                    name.c_str(),
+                    static_cast<size_type>(range.begin),
+                    static_cast<size_type>(range.end),
+                    dfv,
+                    incld);
+
+                data_[idx].change(functor);
+            }
+        }
         return (dfv);
     }
 
@@ -540,8 +578,8 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-typename DataFrame<I, H>::ConstView
-DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
+typename DataFrame<I, H>::ConstView DataFrame<I, H>::
+get_view_by_loc (Index2D<long> range, inclusiveness incld) const  {
 
     const long  idx_s = static_cast<long>(indices_.size());
 
@@ -553,21 +591,39 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
     if (range.end <= idx_s && range.begin <= range.end &&
         range.begin >= 0) [[likely]]  {
         ConstView   dfcv;
+        const long  col_s = indices_.size();
+        long        col_begin = range.begin < col_s ? range.begin : col_s;
+        long        col_end = col_begin < range.end ? range.end : col_begin;
 
-        dfcv.indices_ =
-            typename ConstView::IndexVecType(&(indices_[0]) + range.begin,
-                                             &(indices_[0]) + range.end);
+        if (col_end > col_s)  col_end = col_s;
+        if (incld == inclusiveness::end)  {
+            if (col_begin < col_s)  col_begin += 1;
+            if (col_end < col_s)  col_end += 1;
+        }
+        else if (incld == inclusiveness::both)  {
+            if (col_end < col_s)  col_end += 1;
+        }
+        else if (incld == inclusiveness::neither)  {
+            if (col_begin < col_s)  col_begin += 1;
+        }
 
-        const SpinGuard guard(lock_);
+        if (col_begin < col_s)  {
+            dfcv.indices_ =
+                typename ConstView::IndexVecType(&(indices_[0]) + col_begin,
+                                                 &(indices_[0]) + col_end);
 
-        for (const auto &[name, idx] : column_list_) [[likely]]  {
-            view_setup_functor_<ConstView, Ts ...>  functor (
-                name.c_str(),
-                static_cast<size_type>(range.begin),
-                static_cast<size_type>(range.end),
-                dfcv);
+            const SpinGuard guard(lock_);
 
-            data_[idx].change(functor);
+            for (const auto &[name, idx] : column_list_) [[likely]]  {
+                view_setup_functor_<ConstView, Ts ...>  functor (
+                    name.c_str(),
+                    static_cast<size_type>(range.begin),
+                    static_cast<size_type>(range.end),
+                    dfcv,
+                    incld);
+
+                data_[idx].change(functor);
+            }
         }
 
         return (dfcv);

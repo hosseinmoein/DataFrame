@@ -116,28 +116,14 @@ DataFrame<I, H>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const size_type col_s = vec.size();
-    size_type       col_begin = begin < col_s ? begin : col_s;
-    size_type       col_end = col_begin < end ? end : col_begin;
+    const auto  [col_begin, col_end] =
+		_get_inclusive_indices_(vec, begin, end, incld_);
 
-    if (col_end > col_s)  col_end = col_s;
-    if (incld_ == inclusiveness::end)  {
-        if (col_begin < col_s)  col_begin += 1;
-        if (col_end < col_s)  col_end += 1;
-    }
-    else if (incld_ == inclusiveness::both)  {
-        if (col_end < col_s)  col_end += 1;
-    }
-    else if (incld_ == inclusiveness::neither)  {
-        if (col_begin < col_s)  col_begin += 1;
-    }
-
-    if (col_begin < col_s)
-        df.template load_column<ValueType>(
-            name,
-            { vec.begin() + col_begin, vec.begin() + col_end },
-            nan_p,
-            false);
+    df.template load_column<ValueType>(
+        name,
+        { vec.begin() + col_begin, vec.begin() + col_end },
+        nan_p,
+        false);
 }
 
 // ----------------------------------------------------------------------------
@@ -194,26 +180,12 @@ operator() (T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const size_type col_s = vec.size();
-    size_type       col_begin = begin < col_s ? begin : col_s;
-    size_type       col_end = col_begin < end ? end : col_begin;
+    const auto  [col_begin, col_end] =
+		_get_inclusive_indices_(vec, begin, end, incld_);
 
-    if (col_end > col_s)  col_end = col_s;
-    if (incld_ == inclusiveness::end)  {
-        if (col_begin < col_s)  col_begin += 1;
-        if (col_end < col_s)  col_end += 1;
-    }
-    else if (incld_ == inclusiveness::both)  {
-        if (col_end < col_s)  col_end += 1;
-    }
-    else if (incld_ == inclusiveness::neither)  {
-        if (col_begin < col_s)  col_begin += 1;
-    }
-
-    if (col_begin < col_s)
-        dfv.template setup_view_column_<ValueType, typename VecType::iterator>(
-            name,
-            { vec.begin() + col_begin, vec.begin() + col_end });
+    dfv.template setup_view_column_<ValueType, typename VecType::iterator>(
+        name,
+        { vec.begin() + col_begin, vec.begin() + col_end });
 }
 
 // ----------------------------------------------------------------------------

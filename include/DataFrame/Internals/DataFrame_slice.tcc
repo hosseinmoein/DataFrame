@@ -359,23 +359,10 @@ get_data_by_loc (Index2D<long> range, inclusiveness incld) const  {
     if (range.end <= static_cast<long>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0) [[likely]]  {
         res_t       df;
-        const long  col_s = indices_.size();
-        long        col_begin = range.begin < col_s ? range.begin : col_s;
-        long        col_end = col_begin < range.end ? range.end : col_begin;
+        const auto  [col_begin, col_end] =
+		    _get_inclusive_indices_(indices_, range.begin, range.end, incld);
 
-        if (col_end > col_s)  col_end = col_s;
-        if (incld == inclusiveness::end)  {
-            if (col_begin < col_s)  col_begin += 1;
-            if (col_end < col_s)  col_end += 1;
-        }
-        else if (incld == inclusiveness::both)  {
-            if (col_end < col_s)  col_end += 1;
-        }
-        else if (incld == inclusiveness::neither)  {
-            if (col_begin < col_s)  col_begin += 1;
-        }
-
-        if (col_begin < col_s)  {
+        if (col_begin < col_end)  {
             df.load_index(indices_.begin() + col_begin,
                           indices_.begin() + col_end);
 
@@ -528,23 +515,10 @@ get_view_by_loc (Index2D<long> range, inclusiveness incld)  {
     if (range.end <= idx_s && range.begin <= range.end &&
         range.begin >= 0) [[likely]]  {
         View        dfv;
-        const long  col_s = indices_.size();
-        long        col_begin = range.begin < col_s ? range.begin : col_s;
-        long        col_end = col_begin < range.end ? range.end : col_begin;
+        const auto  [col_begin, col_end] =
+		    _get_inclusive_indices_(indices_, range.begin, range.end, incld);
 
-        if (col_end > col_s)  col_end = col_s;
-        if (incld == inclusiveness::end)  {
-            if (col_begin < col_s)  col_begin += 1;
-            if (col_end < col_s)  col_end += 1;
-        }
-        else if (incld == inclusiveness::both)  {
-            if (col_end < col_s)  col_end += 1;
-        }
-        else if (incld == inclusiveness::neither)  {
-            if (col_begin < col_s)  col_begin += 1;
-        }
-
-        if (col_begin < col_s)  {
+        if (col_begin < col_end)  {
             dfv.indices_ =
                 typename View::IndexVecType(&(indices_[0]) + col_begin,
                                             &(indices_[0]) + col_end);
@@ -591,23 +565,10 @@ get_view_by_loc (Index2D<long> range, inclusiveness incld) const  {
     if (range.end <= idx_s && range.begin <= range.end &&
         range.begin >= 0) [[likely]]  {
         ConstView   dfcv;
-        const long  col_s = indices_.size();
-        long        col_begin = range.begin < col_s ? range.begin : col_s;
-        long        col_end = col_begin < range.end ? range.end : col_begin;
+        const auto  [col_begin, col_end] =
+		    _get_inclusive_indices_(indices_, range.begin, range.end, incld);
 
-        if (col_end > col_s)  col_end = col_s;
-        if (incld == inclusiveness::end)  {
-            if (col_begin < col_s)  col_begin += 1;
-            if (col_end < col_s)  col_end += 1;
-        }
-        else if (incld == inclusiveness::both)  {
-            if (col_end < col_s)  col_end += 1;
-        }
-        else if (incld == inclusiveness::neither)  {
-            if (col_begin < col_s)  col_begin += 1;
-        }
-
-        if (col_begin < col_s)  {
+        if (col_begin < col_end)  {
             dfcv.indices_ =
                 typename ConstView::IndexVecType(&(indices_[0]) + col_begin,
                                                  &(indices_[0]) + col_end);

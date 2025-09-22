@@ -2656,6 +2656,32 @@ static inline T _atoi_(const char *str, int len)  {
     return (static_cast<T>(value * sign));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename V, typename N>
+static inline std::pair<N, N>
+_get_inclusive_indices_(const V &vec, N begin, N end, inclusiveness incld)  {
+
+    const N col_s = vec.size();
+    N       col_begin = begin < col_s ? begin : col_s;
+    N       col_end = col_begin < end ? end : col_begin;
+
+    if (col_end > col_s)  col_end = col_s;
+    if (incld == inclusiveness::end)  {
+        if (col_begin < col_s)  col_begin += 1;
+        if (col_end < col_s)  col_end += 1;
+    }
+    else if (incld == inclusiveness::both)  {
+        if (col_end < col_s)  col_end += 1;
+    }
+    else if (incld == inclusiveness::neither)  {
+        if (col_begin < col_s)  col_begin += 1;
+    }
+
+    return (std::pair<N, N>{ col_begin, col_end });
+}
+
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

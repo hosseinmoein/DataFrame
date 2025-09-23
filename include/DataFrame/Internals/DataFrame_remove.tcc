@@ -92,7 +92,8 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
+void DataFrame<I, H>::
+remove_data_by_loc(Index2D<long> range, inclusiveness incld)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call remove_data_by_loc()");
@@ -104,38 +105,43 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
 
     if (range.end <= static_cast<long>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0) [[likely]]  {
-        make_consistent<Ts ...>();
-        indices_.erase(indices_.begin() + range.begin,
-                       indices_.begin() + range.end);
+        const auto  [col_begin, col_end] =
+            _get_inclusive_indices_(indices_, range.begin, range.end, incld);
 
-        const auto      thread_level =
-            (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-                ? 0L : get_thread_level();
-        const SpinGuard guard(lock_);
+        if (col_begin < col_end)  {
+            make_consistent<Ts ...>();
+            indices_.erase(indices_.begin() + col_begin,
+                           indices_.begin() + col_end);
 
-        if (thread_level > 2)  {
-            auto    lbd =
-                [&range = std::as_const(range), this]
-                (const auto &begin, const auto &end) -> void  {
-                    remove_functor_<Ts ...> functor (size_type(range.begin),
-                                                     size_type(range.end));
+            const auto      thread_level =
+                (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+                    ? 0L : get_thread_level();
+            const SpinGuard guard(lock_);
 
-                    for (auto citer = begin; citer < end; ++citer)
-                        this->data_[citer->second].change(functor);
-                };
-            auto    futures =
-                thr_pool_.parallel_loop(column_list_.begin(),
-                                        column_list_.end(),
-                                        std::move(lbd));
+            if (thread_level > 2)  {
+                auto    lbd =
+                    [col_begin, col_end, this]
+                    (const auto &begin, const auto &end) -> void  {
+                        remove_functor_<Ts ...> functor { size_type(col_begin),
+                                                          size_type(col_end) };
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            remove_functor_<Ts ...> functor (size_type(range.begin),
-                                             size_type(range.end));
+                        for (auto citer = begin; citer < end; ++citer)
+                            this->data_[citer->second].change(functor);
+                    };
+                auto    futures =
+                    thr_pool_.parallel_loop(column_list_.begin(),
+                                            column_list_.end(),
+                                            std::move(lbd));
 
-            for (const auto &citer : column_list_) [[likely]]
-                data_[citer.second].change(functor);
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                remove_functor_<Ts ...> functor { size_type(col_begin),
+                                                  size_type(col_end) };
+
+                for (const auto &citer : column_list_) [[likely]]
+                    data_[citer.second].change(functor);
+            }
         }
 
         return;

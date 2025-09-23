@@ -360,7 +360,7 @@ get_data_by_loc (Index2D<long> range, inclusiveness incld) const  {
         range.begin <= range.end && range.begin >= 0) [[likely]]  {
         res_t       df;
         const auto  [col_begin, col_end] =
-		    _get_inclusive_indices_(indices_, range.begin, range.end, incld);
+            _get_inclusive_indices_(indices_, range.begin, range.end, incld);
 
         if (col_begin < col_end)  {
             df.load_index(indices_.begin() + col_begin,
@@ -516,7 +516,7 @@ get_view_by_loc (Index2D<long> range, inclusiveness incld)  {
         range.begin >= 0) [[likely]]  {
         View        dfv;
         const auto  [col_begin, col_end] =
-		    _get_inclusive_indices_(indices_, range.begin, range.end, incld);
+            _get_inclusive_indices_(indices_, range.begin, range.end, incld);
 
         if (col_begin < col_end)  {
             dfv.indices_ =
@@ -566,7 +566,7 @@ get_view_by_loc (Index2D<long> range, inclusiveness incld) const  {
         range.begin >= 0) [[likely]]  {
         ConstView   dfcv;
         const auto  [col_begin, col_end] =
-		    _get_inclusive_indices_(indices_, range.begin, range.end, incld);
+            _get_inclusive_indices_(indices_, range.begin, range.end, incld);
 
         if (col_begin < col_end)  {
             dfcv.indices_ =

@@ -701,10 +701,13 @@ public:  // Load/append/remove interfaces
     //   the list only once.
     // range:
     //   The begin and end iterators for data
+    // incld:
+    //   How to include beginning and end of the range
     //
     template<typename ... Ts>
     void
-    remove_data_by_loc(Index2D<long> range);
+    remove_data_by_loc(Index2D<long> range,
+                       inclusiveness incld = inclusiveness::begin);
 
     // It removes data rows by boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda).

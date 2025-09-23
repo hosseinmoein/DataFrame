@@ -37,30 +37,6 @@ body {
 
   <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
   
-    <table border="1">
-
-    <tr bgcolor="lightblue">
-      <th>Signature</th> <th>Description</th>
-    </tr>
-    <tr bgcolor="Azure">
-      <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span> join_policy <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
-<span class="line_wrapper">    inner_join <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">    left_join <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">    right_join <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">    left_right_join <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span> <span style="color:#696969; ">// This is merge</span></span>
-<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span></pre>
-      </td>
-      <td>
-        Enumerated type to specify joining two DataFrames
-      </td>
-    </tr>
-
-    </table>
-
-    <BR>
-
   <table border="1">
 
     <tr bgcolor="lightblue">
@@ -73,11 +49,11 @@ body {
 <span class="line_wrapper">StdDataFrame<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">join_by_column<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> RHS_T <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">               <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>name<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">               join_policy jp<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">               <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/join_policy.html">join_policy</a> jp<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
-        It joins the data between self (lhs) and rhs and returns the joined data in a StdDataFrame, based on specification in join_policy.<BR>
+        It joins the data between self (lhs) and rhs and returns the joined data in a StdDataFrame, based on specification in <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/join_policy.html">join_policy</a>.<BR>
         The returned DataFrame is indexed by a sequence of unsigned long from 0 to N. The returned DataFrame will at least have two columns names lhs.INDEX and rhs.INDEX containing the lhs and rhs indices based on join policy.<BR>
         The following conditions must be met for this method<BR>
         to compile and work properly:<BR>
@@ -93,7 +69,7 @@ body {
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>rhs</B>: The rhs DataFrame<BR>
         <B>name</B>: Name of the column which the join will be based on<BR>
-        <B>join_policy</B>: Specifies how to join. For example inner join, or left join, etc.  (See join_policy definition)
+        <B>jp</B>: Specifies how to join. For example inner join, or left join, etc.  (See join_policy definition)
       </td>
     </tr>
 
@@ -101,12 +77,12 @@ body {
       <td>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> RHS_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">StdDataFrame<span style="color:#800080; ">&lt;</span>I<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper">join_by_index<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> RHS_T <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">,</span> join_policy jp<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">join_by_index<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> RHS_T <span style="color:#808030; ">&amp;</span>rhs<span style="color:#808030; ">,</span> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/join_policy.html">join_policy</a> jp<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
         It joins the data between self (lhs) and rhs and returns the joined data<BR>
-        in a StdDataFrame, based on specification in join_policy.<BR>
+        in a StdDataFrame, based on specification in <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/join_policy.html">join_policy</a>.<BR>
         The following conditions must be met for this method<BR>
         to compile and work properly:<BR>
         <OL>
@@ -119,7 +95,7 @@ body {
         <B>RHS_T</B>: Type of DataFrame rhs<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>rhs</B>: The rhs DataFrame<BR>
-        <B>join_policy</B>: Specifies how to join. For example inner join, or left join, etc.  (See join_policy definition)
+        <B>jp</B>: Specifies how to join. For example inner join, or left join, etc.  (See join_policy definition)
       </td>
     </tr>
 

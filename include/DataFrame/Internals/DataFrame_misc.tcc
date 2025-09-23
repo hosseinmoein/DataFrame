@@ -116,11 +116,12 @@ DataFrame<I, H>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const size_type col_s = vec.size() >= end ? end : vec.size();
+    const auto  [col_begin, col_end] =
+		_get_inclusive_indices_(vec, begin, end, incld_);
 
     df.template load_column<ValueType>(
         name,
-        { vec.begin() + begin, vec.begin() + col_s },
+        { vec.begin() + col_begin, vec.begin() + col_end },
         nan_p,
         false);
 }
@@ -179,11 +180,12 @@ operator() (T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const size_type col_s = vec.size() >= end ? end : vec.size();
+    const auto  [col_begin, col_end] =
+		_get_inclusive_indices_(vec, begin, end, incld_);
 
     dfv.template setup_view_column_<ValueType, typename VecType::iterator>(
         name,
-        { vec.begin() + begin, vec.begin() + col_s });
+        { vec.begin() + col_begin, vec.begin() + col_end });
 }
 
 // ----------------------------------------------------------------------------

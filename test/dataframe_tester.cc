@@ -622,13 +622,13 @@ static void test_get_data_by_loc_slicing()  {
 
     std::cout << "\nTesting get_data_by_loc()/slicing ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    StlVecType<unsigned long>   idx =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    StlVecType<double> d4 = { 22, 23, 24, 25 };
-    MyDataFrame         df;
+    StlVecType<double>          d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double>          d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double>          d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double>          d4 = { 22, 23, 24, 25 };
+    MyDataFrame                 df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -639,13 +639,62 @@ static void test_get_data_by_loc_slicing()  {
     MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<long> { 3, 6 });
     MyDataFrame df3 = df.get_data_by_loc<double>(Index2D<long> { 0, 7 });
     MyDataFrame df4 = df.get_data_by_loc<double>(Index2D<long> { -4, -1 });
-    MyDataFrame df5 = df.get_data_by_loc<double>(Index2D<long> { -4, 6 });
+    auto        vw5 = df.get_view_by_loc<double>(Index2D<long> { -4, 6 });
 
     df.write<std::ostream, double>(std::cout);
     df2.write<std::ostream, double>(std::cout);
     df3.write<std::ostream, double>(std::cout);
     df4.write<std::ostream, double>(std::cout);
-    df5.write<std::ostream, double>(std::cout);
+    vw5.write<std::ostream, double>(std::cout);
+
+    const auto  vw6 =
+        df.get_view_by_loc<double>(Index2D<long> { 3, 6 },
+                                   inclusiveness::end);
+
+    assert(vw6.get_index().size() == 3);
+    assert(vw6.get_index()[1] == 123450);
+    assert(vw6.get_index()[2] == 123449);
+    assert(vw6.get_column<double>("col_2").size() == 3);
+    assert(vw6.get_column<double>("col_2")[0] == 12.0);
+    assert(vw6.get_column<double>("col_1")[1] == 6.0);
+    assert(vw6.get_column<double>("col_3")[2] == 21.0);
+    assert(vw6.get_column<double>("col_4").size() == 3);
+    assert(std::isnan(vw6.get_column<double>("col_4")[0]));
+    assert(std::isnan(vw6.get_column<double>("col_4")[1]));
+    assert(std::isnan(vw6.get_column<double>("col_4")[2]));
+
+    const auto  df7 =
+        df.get_data_by_loc<double>(Index2D<long> { 3, 6 },
+                                   inclusiveness::both);
+
+    assert(df7.get_index().size() == 4);
+    assert(df7.get_index()[1] == 123455);
+    assert(df7.get_index()[3] == 123449);
+    assert(df7.get_column<double>("col_2").size() == 4);
+    assert(df7.get_column<double>("col_2")[0] == 11.0);
+    assert(df7.get_column<double>("col_1")[1] == 5.0);
+    assert(df7.get_column<double>("col_3")[0] == 18.0);
+    assert(df7.get_column<double>("col_3")[3] == 21.0);
+    assert(df7.get_column<double>("col_4").size() == 4);
+    assert(df7.get_column<double>("col_4")[0] == 25.0);
+    assert(std::isnan(df7.get_column<double>("col_4")[1]));
+    assert(std::isnan(df7.get_column<double>("col_4")[2]));
+    assert(std::isnan(df7.get_column<double>("col_4")[3]));
+
+    auto    vw8 =
+        df.get_view_by_loc<double>(Index2D<long> { 3, 6 },
+                                   inclusiveness::neither);
+
+    assert(vw8.get_index().size() == 2);
+    assert(vw8.get_index()[0] == 123455);
+    assert(vw8.get_index()[1] == 123450);
+    assert(vw8.get_column<double>("col_2").size() == 2);
+    assert(vw8.get_column<double>("col_2")[0] == 12.0);
+    assert(vw8.get_column<double>("col_1")[1] == 6.0);
+    assert(vw8.get_column<double>("col_3")[1] == 20.0);
+    assert(vw8.get_column<double>("col_4").size() == 2);
+    assert(std::isnan(vw8.get_column<double>("col_4")[0]));
+    assert(std::isnan(vw8.get_column<double>("col_4")[1]));
 
     try  {
         MyDataFrame df6 = df.get_data_by_loc<double>(Index2D<long> { 3, 8 });
@@ -809,16 +858,17 @@ static void test_remove_data_by_loc()  {
 
     std::cout << "\nTesting remove_data_by_loc() ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    StlVecType<unsigned long>   idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    StlVecType<double> d2 =
+    StlVecType<double>          d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double>          d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    StlVecType<double> d3 =
+    StlVecType<double>          d3 =
         { 15, 16, 17, 18, 19, 20, 21, 0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
-    MyDataFrame        df;
+    StlVecType<int>             i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -826,10 +876,79 @@ static void test_remove_data_by_loc()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    df.write<std::ostream, double, int>(std::cout);
-    std::cout << "After removing by ibdex { 3, -3 }" << std::endl;
-    df.remove_data_by_loc<double, int>({ 3, -3 });
-    df.write<std::ostream, double, int>(std::cout);
+    {
+        df.write<std::ostream, double, int>(std::cout);
+        std::cout << "After removing by ibdex { 3, -3 }" << std::endl;
+
+        auto    df2 = df;
+
+        df2.remove_data_by_loc<double, int>({ 3, -3 });
+        df2.write<std::ostream, double, int>(std::cout);
+    }
+
+    {
+        auto    df2 = df;
+
+        df2.remove_data_by_loc<double, int>({ 3, 10 });
+        assert(df2.get_index().size() == 7);
+        assert(df2.get_index()[0] == 123450);
+        assert(df2.get_index()[3] == 123460);
+        assert(df2.get_index()[6] == 123466);
+        assert(df2.get_column<double>("col_3").size() == 7);
+        assert(df2.get_column<double>("col_3")[0] == 15.0);
+        assert(df2.get_column<double>("col_3")[6] == 0.45);
+        assert(df2.get_column<int>("col_4").size() == 7);
+        assert(df2.get_column<int>("col_4")[0] == 22);
+        assert(df2.get_column<int>("col_4")[6] == 0);
+    }
+
+    {
+        auto    df2 = df;
+
+        df2.remove_data_by_loc<double, int>({ 3, 10 }, inclusiveness::end);
+        assert(df2.get_index().size() == 7);
+        assert(df2.get_index()[0] == 123450);
+        assert(df2.get_index()[3] == 123453);
+        assert(df2.get_index()[6] == 123466);
+        assert(df2.get_column<double>("col_3").size() == 7);
+        assert(df2.get_column<double>("col_3")[0] == 15.0);
+        assert(df2.get_column<double>("col_3")[6] == 0.45);
+        assert(df2.get_column<int>("col_4").size() == 7);
+        assert(df2.get_column<int>("col_4")[0] == 22);
+        assert(df2.get_column<int>("col_4")[6] == 0);
+    }
+
+    {
+        auto    df2 = df;
+
+        df2.remove_data_by_loc<double, int>({ 3, 10 }, inclusiveness::both);
+        assert(df2.get_index().size() == 6);
+        assert(df2.get_index()[0] == 123450);
+        assert(df2.get_index()[3] == 123461);
+        assert(df2.get_index()[5] == 123466);
+        assert(df2.get_column<double>("col_3").size() == 6);
+        assert(df2.get_column<double>("col_3")[0] == 15.0);
+        assert(df2.get_column<double>("col_3")[5] == 0.45);
+        assert(df2.get_column<int>("col_4").size() == 6);
+        assert(df2.get_column<int>("col_4")[0] == 22);
+        assert(df2.get_column<int>("col_4")[5] == 0);
+    }
+
+    {
+        auto    df2 = df;
+
+        df2.remove_data_by_loc<double, int>({ 3, 10 }, inclusiveness::neither);
+        assert(df2.get_index().size() == 8);
+        assert(df2.get_index()[0] == 123450);
+        assert(df2.get_index()[3] == 123453);
+        assert(df2.get_index()[7] == 123466);
+        assert(df2.get_column<double>("col_3").size() == 8);
+        assert(df2.get_column<double>("col_3")[0] == 15.0);
+        assert(df2.get_column<double>("col_3")[7] == 0.45);
+        assert(df2.get_column<int>("col_4").size() == 8);
+        assert(df2.get_column<int>("col_4")[0] == 22);
+        assert(df2.get_column<int>("col_4")[7] == 0);
+    }
 }
 
 // -----------------------------------------------------------------------------

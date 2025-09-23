@@ -346,8 +346,8 @@ get_view_by_idx(const StlVecType<IndexType> &values) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+get_data_by_loc (Index2D<long> range, inclusiveness incld) const  {
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
@@ -358,54 +358,62 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
     if (range.end <= static_cast<long>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0) [[likely]]  {
-        res_t   df;
+        res_t       df;
+        const auto  [col_begin, col_end] =
+            _get_inclusive_indices_(indices_, range.begin, range.end, incld);
 
-        df.load_index(indices_.begin() + static_cast<size_type>(range.begin),
-                      indices_.begin() + static_cast<size_type>(range.end));
+        if (col_begin < col_end)  {
+            df.load_index(indices_.begin() + col_begin,
+                          indices_.begin() + col_end);
 
-        const SpinGuard guard(lock_);
+            const SpinGuard guard(lock_);
 
-        for (const auto &[name, idx] : column_list_) [[likely]]  {
-            create_col_functor_<res_t, Ts ...>  functor(name.c_str(), df);
-
-            data_[idx].change(functor);
-        }
-
-        const auto  thread_level =
-            (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-                ? 0L : get_thread_level();
-
-        if (thread_level > 2)  {
-            auto    lbd =
-                [&range = std::as_const(range), &df, this]
-                (const auto &begin, const auto &end) -> void  {
-                    for (auto citer = begin; citer < end; ++citer)  {
-                        load_functor_<res_t, Ts ...>    functor(
-                            citer->first.c_str(),
-                            static_cast<size_type>(range.begin),
-                            static_cast<size_type>(range.end),
-                            df);
-
-                        this->data_[citer->second].change(functor);
-                    }
-                };
-
-            auto    futuers =
-                thr_pool_.parallel_loop(column_list_.begin(),
-                                        column_list_.end(),
-                                        std::move(lbd));
-
-            for (auto &fut : futuers)  fut.get();
-        }
-        else  {
             for (const auto &[name, idx] : column_list_) [[likely]]  {
-                load_functor_<res_t, Ts ...>    functor(
-                    name.c_str(),
-                    static_cast<size_type>(range.begin),
-                    static_cast<size_type>(range.end),
-                    df);
+                create_col_functor_<res_t, Ts ...>  functor(name.c_str(), df);
 
                 data_[idx].change(functor);
+            }
+
+            const auto  thread_level =
+                (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+                    ? 0L : get_thread_level();
+
+            if (thread_level > 2)  {
+                auto    lbd =
+                [&range = std::as_const(range), &df, this, incld]
+                    (const auto &begin, const auto &end) -> void  {
+                        for (auto citer = begin; citer < end; ++citer)  {
+                            load_functor_<res_t, Ts ...>    functor(
+                                citer->first.c_str(),
+                                static_cast<size_type>(range.begin),
+                                static_cast<size_type>(range.end),
+                                df,
+                                nan_policy::pad_with_nans,
+                                incld);
+
+                            this->data_[citer->second].change(functor);
+                        }
+                    };
+
+                auto    futuers =
+                    thr_pool_.parallel_loop(column_list_.begin(),
+                                            column_list_.end(),
+                                            std::move(lbd));
+
+                for (auto &fut : futuers)  fut.get();
+            }
+            else  {
+                for (const auto &[name, idx] : column_list_) [[likely]]  {
+                    load_functor_<res_t, Ts ...>    functor(
+                        name.c_str(),
+                        static_cast<size_type>(range.begin),
+                        static_cast<size_type>(range.end),
+                        df,
+                        nan_policy::pad_with_nans,
+                        incld);
+
+                    data_[idx].change(functor);
+                }
             }
         }
 
@@ -494,8 +502,8 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-typename DataFrame<I, H>::View
-DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
+typename DataFrame<I, H>::View DataFrame<I, H>::
+get_view_by_loc (Index2D<long> range, inclusiveness incld)  {
 
     const long  idx_s = static_cast<long>(indices_.size());
 
@@ -506,24 +514,28 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
     if (range.end <= idx_s && range.begin <= range.end &&
         range.begin >= 0) [[likely]]  {
-        View    dfv;
+        View        dfv;
+        const auto  [col_begin, col_end] =
+            _get_inclusive_indices_(indices_, range.begin, range.end, incld);
 
-        dfv.indices_ =
-            typename View::IndexVecType(&(indices_[0]) + range.begin,
-                                        &(indices_[0]) + range.end);
+        if (col_begin < col_end)  {
+            dfv.indices_ =
+                typename View::IndexVecType(&(indices_[0]) + col_begin,
+                                            &(indices_[0]) + col_end);
 
-        const SpinGuard guard(lock_);
+            const SpinGuard guard(lock_);
 
-        for (const auto &[name, idx] : column_list_) [[likely]]  {
-            view_setup_functor_<View, Ts ...>   functor (
-                name.c_str(),
-                static_cast<size_type>(range.begin),
-                static_cast<size_type>(range.end),
-                dfv);
+            for (const auto &[name, idx] : column_list_) [[likely]]  {
+                view_setup_functor_<View, Ts ...>   functor (
+                    name.c_str(),
+                    static_cast<size_type>(range.begin),
+                    static_cast<size_type>(range.end),
+                    dfv,
+                    incld);
 
-            data_[idx].change(functor);
+                data_[idx].change(functor);
+            }
         }
-
         return (dfv);
     }
 
@@ -540,8 +552,8 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-typename DataFrame<I, H>::ConstView
-DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
+typename DataFrame<I, H>::ConstView DataFrame<I, H>::
+get_view_by_loc (Index2D<long> range, inclusiveness incld) const  {
 
     const long  idx_s = static_cast<long>(indices_.size());
 
@@ -553,21 +565,26 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
     if (range.end <= idx_s && range.begin <= range.end &&
         range.begin >= 0) [[likely]]  {
         ConstView   dfcv;
+        const auto  [col_begin, col_end] =
+            _get_inclusive_indices_(indices_, range.begin, range.end, incld);
 
-        dfcv.indices_ =
-            typename ConstView::IndexVecType(&(indices_[0]) + range.begin,
-                                             &(indices_[0]) + range.end);
+        if (col_begin < col_end)  {
+            dfcv.indices_ =
+                typename ConstView::IndexVecType(&(indices_[0]) + col_begin,
+                                                 &(indices_[0]) + col_end);
 
-        const SpinGuard guard(lock_);
+            const SpinGuard guard(lock_);
 
-        for (const auto &[name, idx] : column_list_) [[likely]]  {
-            view_setup_functor_<ConstView, Ts ...>  functor (
-                name.c_str(),
-                static_cast<size_type>(range.begin),
-                static_cast<size_type>(range.end),
-                dfcv);
+            for (const auto &[name, idx] : column_list_) [[likely]]  {
+                view_setup_functor_<ConstView, Ts ...>  functor (
+                    name.c_str(),
+                    static_cast<size_type>(range.begin),
+                    static_cast<size_type>(range.end),
+                    dfcv,
+                    incld);
 
-            data_[idx].change(functor);
+                data_[idx].change(functor);
+            }
         }
 
         return (dfcv);
@@ -3475,12 +3492,38 @@ _DT_before_times_(DateTime::HourType b_hr,
                   DateTime::HourType d_hr,
                   DateTime::MinuteType d_mn,
                   DateTime::SecondType d_sc,
-                  DateTime::MillisecondType d_msc)  {
+                  DateTime::MillisecondType d_msc,
+                  bool incld = false)  {
 
-    return ((d_hr < b_hr) ||
-            (d_hr == b_hr && d_mn < b_mn) ||
-            (d_mn == b_mn && d_sc < b_sc) ||
-            (d_sc == b_sc && d_msc < b_msc));
+    if (! incld) [[likely]]
+        return ((d_hr < b_hr) ||
+                (d_hr == b_hr && d_mn < b_mn) ||
+                (d_mn == b_mn && d_sc < b_sc) ||
+                (d_sc == b_sc && d_msc < b_msc));
+    return (d_hr <= b_hr && d_mn <= b_mn && d_sc <= b_sc && d_msc <= b_msc);
+}
+
+// ----------------------------------------------------------------------------
+
+// Benchmark time vs. Data time
+//
+inline static bool
+_DT_after_times_(DateTime::HourType b_hr,
+                 DateTime::MinuteType b_mn,
+                 DateTime::SecondType b_sc,
+                 DateTime::MillisecondType b_msc,
+                 DateTime::HourType d_hr,
+                 DateTime::MinuteType d_mn,
+                 DateTime::SecondType d_sc,
+                 DateTime::MillisecondType d_msc,
+                 bool incld = false)  {
+
+    if (! incld) [[likely]]
+        return ((d_hr > b_hr) ||
+                (d_hr == b_hr && d_mn > b_mn) ||
+                (d_mn == b_mn && d_sc > b_sc) ||
+                (d_sc == b_sc && d_msc > b_msc));
+    return (d_hr >= b_hr && d_mn >= b_mn && d_sc >= b_sc && d_msc >= b_msc);
 }
 
 // ----------------------------------------------------------------------------
@@ -3569,26 +3612,6 @@ get_view_before_times(DateTime::HourType hr,
     }
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
-}
-
-// ----------------------------------------------------------------------------
-
-// Benchmark time vs. Data time
-//
-inline static bool
-_DT_after_times_(DateTime::HourType b_hr,
-                 DateTime::MinuteType b_mn,
-                 DateTime::SecondType b_sc,
-                 DateTime::MillisecondType b_msc,
-                 DateTime::HourType d_hr,
-                 DateTime::MinuteType d_mn,
-                 DateTime::SecondType d_sc,
-                 DateTime::MillisecondType d_msc)  {
-
-    return ((d_hr > b_hr) ||
-            (d_hr == b_hr && d_mn > b_mn) ||
-            (d_mn == b_mn && d_sc > b_sc) ||
-            (d_sc == b_sc && d_msc > b_msc));
 }
 
 // ----------------------------------------------------------------------------
@@ -3692,7 +3715,8 @@ get_data_between_times(DateTime::HourType start_hr,
                        DateTime::SecondType start_sc,
                        DateTime::SecondType end_sc,
                        DateTime::MillisecondType start_msc,
-                       DateTime::MillisecondType end_msc) const  {
+                       DateTime::MillisecondType end_msc,
+                       inclusiveness incld) const  {
 
     static_assert(
         std::is_base_of<DateTime, I>::value,
@@ -3700,17 +3724,33 @@ get_data_between_times(DateTime::HourType start_hr,
 
     const size_type         idx_s = indices_.size();
     StlVecType<size_type>   col_indices;
+    const bool              incld_before =
+        incld == inclusiveness::end || incld == inclusiveness::both;
+    const bool              incld_after =
+        incld == inclusiveness::begin || incld == inclusiveness::both;
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
         const auto  &idx = indices_[i];
 
-        if (_DT_after_times_(
-                start_hr, start_mn, start_sc, start_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()) &&
-            _DT_before_times_(
-                end_hr, end_mn, end_sc, end_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()))
+        if (_DT_after_times_(start_hr,
+                             start_mn,
+                             start_sc,
+                             start_msc,
+                             idx.hour(),
+                             idx.minute(),
+                             idx.sec(),
+                             idx.msec(),
+                             incld_after) &&
+            _DT_before_times_(end_hr,
+                              end_mn,
+                              end_sc,
+                              end_msc,
+                              idx.hour(),
+                              idx.minute(),
+                              idx.sec(),
+                              idx.msec(),
+                              incld_before))
             col_indices.push_back(i);
     }
 
@@ -3729,7 +3769,8 @@ get_view_between_times(DateTime::HourType start_hr,
                        DateTime::SecondType start_sc,
                        DateTime::SecondType end_sc,
                        DateTime::MillisecondType start_msc,
-                       DateTime::MillisecondType end_msc)  {
+                       DateTime::MillisecondType end_msc,
+                       inclusiveness incld)  {
 
     static_assert(
         std::is_base_of<DateTime, I>::value,
@@ -3737,17 +3778,33 @@ get_view_between_times(DateTime::HourType start_hr,
 
     const size_type         idx_s = indices_.size();
     StlVecType<size_type>   col_indices;
+    const bool              incld_before =
+        incld == inclusiveness::end || incld == inclusiveness::both;
+    const bool              incld_after =
+        incld == inclusiveness::begin || incld == inclusiveness::both;
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
         const auto  &idx = indices_[i];
 
-        if (_DT_after_times_(
-                start_hr, start_mn, start_sc, start_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()) &&
-            _DT_before_times_(
-                end_hr, end_mn, end_sc, end_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()))
+        if (_DT_after_times_(start_hr,
+                             start_mn,
+                             start_sc,
+                             start_msc,
+                             idx.hour(),
+                             idx.minute(),
+                             idx.sec(),
+                             idx.msec(),
+                             incld_after) &&
+            _DT_before_times_(end_hr,
+                              end_mn,
+                              end_sc,
+                              end_msc,
+                              idx.hour(),
+                              idx.minute(),
+                              idx.sec(),
+                              idx.msec(),
+                              incld_before))
             col_indices.push_back(i);
     }
 
@@ -3766,7 +3823,8 @@ get_view_between_times(DateTime::HourType start_hr,
                        DateTime::SecondType start_sc,
                        DateTime::SecondType end_sc,
                        DateTime::MillisecondType start_msc,
-                       DateTime::MillisecondType end_msc) const  {
+                       DateTime::MillisecondType end_msc,
+                       inclusiveness incld) const  {
 
     static_assert(
         std::is_base_of<DateTime, I>::value,
@@ -3774,17 +3832,33 @@ get_view_between_times(DateTime::HourType start_hr,
 
     const size_type         idx_s = indices_.size();
     StlVecType<size_type>   col_indices;
+    const bool              incld_before =
+        incld == inclusiveness::end || incld == inclusiveness::both;
+    const bool              incld_after =
+        incld == inclusiveness::begin || incld == inclusiveness::both;
 
     col_indices.reserve(idx_s / 5);
     for (size_type i = 0; i < idx_s; ++i)  {
         const auto  &idx = indices_[i];
 
-        if (_DT_after_times_(
-                start_hr, start_mn, start_sc, start_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()) &&
-            _DT_before_times_(
-                end_hr, end_mn, end_sc, end_msc,
-                idx.hour(), idx.minute(), idx.sec(), idx.msec()))
+        if (_DT_after_times_(start_hr,
+                             start_mn,
+                             start_sc,
+                             start_msc,
+                             idx.hour(),
+                             idx.minute(),
+                             idx.sec(),
+                             idx.msec(),
+                             incld_after) &&
+            _DT_before_times_(end_hr,
+                              end_mn,
+                              end_sc,
+                              end_msc,
+                              idx.hour(),
+                              idx.minute(),
+                              idx.sec(),
+                              idx.msec(),
+                              incld_before))
             col_indices.push_back(i);
     }
 

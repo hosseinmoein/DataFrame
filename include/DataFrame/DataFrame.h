@@ -701,10 +701,13 @@ public:  // Load/append/remove interfaces
     //   the list only once.
     // range:
     //   The begin and end iterators for data
+    // incld:
+    //   How to include beginning and end of the range
     //
     template<typename ... Ts>
     void
-    remove_data_by_loc(Index2D<long> range);
+    remove_data_by_loc(Index2D<long> range,
+                       inclusiveness incld = inclusiveness::begin);
 
     // It removes data rows by boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda).
@@ -1971,13 +1974,16 @@ public:  // Data manipulation
     //   A lower bound value
     // upper_bound:
     //   An upper bound value
+    // incld:
+    //   How to include beginning and end of the bounds
     //
     template<comparable T>
     [[nodiscard]]
     StlVecType<char>
     in_between(const char *col_name,
                const T &lower_bound,
-               const T &upper_bound) const;
+               const T &upper_bound,
+               inclusiveness incld = inclusiveness::begin) const;
 
     // This function returns mask of NaN values. It returns a vector of chars
     // with binary 0’s and 1’s values. A 1 indicates a NaN value.
@@ -2639,11 +2645,14 @@ public: // Read/access and slicing interfaces
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // range:
-    //   The begin and end iterators for data
+    //   The begin and end indices of data
+    // incld:
+    //   How to include/exclude start and end indices
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-    get_data_by_loc(Index2D<long> range) const;
+    get_data_by_loc(Index2D<long> range,
+                    inclusiveness incld = inclusiveness::begin) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from locations, specified in locations vector.
@@ -2677,15 +2686,19 @@ public: // Read/access and slicing interfaces
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // range:
-    //   The begin and end iterators for data
+    //   The begin and end indices of data
+    // incld:
+    //   How to include/exclude start and end indices
     //
     template<typename ... Ts>
     [[nodiscard]] View
-    get_view_by_loc(Index2D<long> range);
+    get_view_by_loc(Index2D<long> range,
+                    inclusiveness incld = inclusiveness::begin);
 
     template<typename ... Ts>
     [[nodiscard]] ConstView
-    get_view_by_loc(Index2D<long> range) const;
+    get_view_by_loc(Index2D<long> range,
+                    inclusiveness incld = inclusiveness::begin) const;
 
     // It behaves like get_data_by_loc(locations), but it returns a PtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.
@@ -5040,8 +5053,7 @@ public: // Read/access and slicing interfaces
 
     // This selects the rows using the index column that happen between the
     // specified start and end time. It returns another DataFrame with selected
-    // data indexed by DateTime. The specified start/end times are excluded.
-    // Self is unchanged.
+    // data indexed by DateTime. Self is unchanged.
     //
     // NOTE: The index column type must be DateTime or it won’t compile
     //
@@ -5064,6 +5076,8 @@ public: // Read/access and slicing interfaces
     //   Specified start milli-second
     // end_msc:
     //   Specified end milli-second
+    // incld:
+    //   How to include/exclude start and end times
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame<DateTime, HeteroVector<std::size_t(H::align_value)>>
@@ -5074,7 +5088,8 @@ public: // Read/access and slicing interfaces
                            DateTime::SecondType start_sc = 0,
                            DateTime::SecondType end_sc = 0,
                            DateTime::MillisecondType start_msc = 0,
-                           DateTime::MillisecondType end_msc = 0) const;
+                           DateTime::MillisecondType end_msc = 0,
+                           inclusiveness incld = inclusiveness::neither) const;
 
     // Same as get_view_after_times() above, but it returns a view
     //
@@ -5087,7 +5102,8 @@ public: // Read/access and slicing interfaces
                            DateTime::SecondType start_sc = 0,
                            DateTime::SecondType end_sc = 0,
                            DateTime::MillisecondType start_msc = 0,
-                           DateTime::MillisecondType end_msc = 0);
+                           DateTime::MillisecondType end_msc = 0,
+                           inclusiveness incld = inclusiveness::neither);
 
     // Same as get_view_after_times() above, but it returns a const view
     //
@@ -5100,7 +5116,8 @@ public: // Read/access and slicing interfaces
                            DateTime::SecondType start_sc = 0,
                            DateTime::SecondType end_sc = 0,
                            DateTime::MillisecondType start_msc = 0,
-                           DateTime::MillisecondType end_msc = 0) const;
+                           DateTime::MillisecondType end_msc = 0,
+                           inclusiveness incld = inclusiveness::neither) const;
 
     // This selects the rows using the index column that happen on the specified
     // days of the week. It returns another DataFrame with selected data

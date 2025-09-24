@@ -213,6 +213,7 @@ index_join_helper_(const LHS_T &lhs,
         };
 
     // Load the index
+    //
     if (len >= ThreadPool::MUL_THR_THHOLD && get_thread_level() > 2)  {
         auto    futures =
             thr_pool_.parallel_loop(size_type(0), len, std::move(lbd));

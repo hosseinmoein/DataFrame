@@ -2347,6 +2347,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
       <LI>To have one source of truth, while having different datasets <I>without copying</I> data </LI>
     </UL>
 
+    <B>NOTE:</B>: If a DataFrame goes out of scope, all views based on that DataFrame will be invalidated. That means access to those views will result in <I>undefined behavior</I>.  This is similar to iterator logic in STL.<BR><BR>
     For more understanding, look at this document further and/or the test files.
   </P>
 

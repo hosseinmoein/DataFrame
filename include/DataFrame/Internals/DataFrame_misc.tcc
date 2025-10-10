@@ -241,7 +241,7 @@ DataFrame<I, H>::print_binary_functor_<Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    char    col_name[64];
+    char    col_name[MAX_COL_NAME_SIZE];
 
     std::strncpy(col_name, name, sizeof(col_name) - 1);
     os.write(col_name, sizeof(col_name));

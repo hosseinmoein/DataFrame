@@ -106,11 +106,11 @@ table {
 }
 
 .collapsible-header:hover {
-    background-color: yellow
+    background-color: skyblue
 }
 
 .collapsible-header.active {
-    background-color: yellow
+    background-color: skyblue
 }
 
 .collapsible-header.active .arrow {
@@ -131,6 +131,36 @@ table {
 
 .collapsible-content li:last-child {
     border-bottom: none;
+}
+
+table.hovertable {
+    font-family: Georgia,serif;
+    font-weight:bold;
+    font-size:14px;
+    color:#333333;
+    border-width: 3px;
+    border-color: #999999;
+    border-collapse: collapse;
+}
+table.hovertable th {
+    background-color:SlateGrey;
+    border-width: 5px;
+    padding: 10px;
+    border-style: solid;
+    border-color: SlateGrey;
+}
+table.hovertable tr {
+    background-color:Azure;
+#     transition: background-color 0.3s ease;
+}
+# table.hovertable hover {
+#     background-color:Azure;
+# }
+table.hovertable td {
+    border-width: 1px;
+    padding: 6px;
+    border-style: solid;
+    border-color: SlateGrey;
 }
 
 </style>
@@ -380,35 +410,6 @@ table {
 </P>
 <BR>
 
-<!-- CSS goes in the document HEAD or added to your external stylesheet -->
-<style type="text/css">
-table.hovertable {
-    font-family: Georgia,serif;
-    font-weight:bold;
-    font-size:14px;
-    color:#333333;
-    border-width: 3px;
-    border-color: #999999;
-    border-collapse: collapse;
-}
-table.hovertable th {
-    background-color:SlateGrey;
-    border-width: 5px;
-    padding: 10px;
-    border-style: solid;
-    border-color: SlateGrey;
-}
-table.hovertable tr {
-    background-color:Azure;
-}
-table.hovertable td {
-    border-width: 1px;
-    padding: 6px;
-    border-style: solid;
-    border-color: SlateGrey;
-}
-</style>
-
 <div class="row">
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
@@ -418,7 +419,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="These are used to load data into the DataFrame" style="text-align:center;background-color:LightGrey;color:DarkBlue" ID="211">Loading Data &nbsp;&nbsp; <font size="+3">&#128666;</font></td>
+      <td title="These are used to load data into a DataFrame" style="text-align:center;background-color:LightGrey;color:DarkBlue" ID="211">Loading Data &nbsp;&nbsp; <font size="+3">&#128666;</font></td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">

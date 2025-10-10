@@ -95,6 +95,15 @@ column_join_helper_(const LHS_T &lhs,
                     const char *col_name,
                     const IndexIdxVector &joined_index_idx);
 
+template<typename LHS_T, typename RHS_T, typename T1, typename T2,
+         typename ... Ts>
+static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
+column_join_helper2_(const LHS_T &lhs,
+                     const RHS_T &rhs,
+                     const char *lhs_col_name,
+                     const char *rhs_col_name,
+                     const IndexIdxVector &joined_index_idx);
+
 template<typename T>
 static IndexIdxVector
 get_inner_index_idx_vector_(const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
@@ -675,7 +684,8 @@ join_helper_common_(
     const RHS_T &rhs,
     const IndexIdxVector &joined_index_idx,
     DataFrame<IDX_T, HeteroVector<std::size_t(H::align_value)>> &result,
-    const char *skip_col_name = nullptr)  {
+    const char *lhs_skip_name = nullptr,
+    const char *rhs_skip_name = nullptr)  {
 
     using res_t = decltype(result);
 
@@ -689,67 +699,56 @@ join_helper_common_(
         futures.reserve(lhs.column_list_.size() + rhs.column_list_.size());
 
     const SpinGuard guard(lock_);
+    char            buffer[MAX_COL_NAME_SIZE];
 
     // NOTE: I had to do this in two separate loops. Otherwise, it would
     //       occasionally crash in multithreaded mode under MacOS.
     //
     for (const auto &[name, idx] : lhs.column_list_) [[likely]]  {
-        if (skip_col_name && name == skip_col_name)  continue;
+        if (lhs_skip_name && name == lhs_skip_name)  continue;
 
-        if (rhs.column_tb_.find(name) != rhs.column_tb_.end())  {
-            create_join_common_col_functor_<res_t, Ts ...>   create_f(
-                name.c_str(), result);
+        if (rhs_skip_name && name == rhs_skip_name)  {
+            ::snprintf(buffer, sizeof(buffer) - 1, "lhs.%s", rhs_skip_name);
+
+            create_col_functor_<res_t, Ts ...>  create_f(buffer, result);
 
             lhs.data_[idx].change(create_f);
         }
         else  {
-            create_col_functor_<res_t, Ts ...>  create_f(name.c_str(), result);
+            if (rhs.column_tb_.find(name) != rhs.column_tb_.end())  {
+                create_join_common_col_functor_<res_t, Ts ...>   create_f(
+                    name.c_str(), result);
 
-            lhs.data_[idx].change(create_f);
+                lhs.data_[idx].change(create_f);
+            }
+            else  {
+                create_col_functor_<res_t, Ts ...>  create_f(
+                    name.c_str(), result);
+
+                lhs.data_[idx].change(create_f);
+            }
         }
     }
 
     // Load the common and lhs columns
     //
     for (const auto &[name, idx] : lhs.column_list_) [[likely]]  {
-        if (skip_col_name && name == skip_col_name)  continue;
+        if (lhs_skip_name && name == lhs_skip_name)  continue;
 
-        // Common column between two frames
-        //
-        if (rhs.column_tb_.find(name) != rhs.column_tb_.end())  {
-            auto    jcomm_lbd =
-                [&name = std::as_const(name),
-                 idx,
-                 &lhs = std::as_const(lhs),
-                 &rhs = std::as_const(rhs),
-                 &joined_index_idx = std::as_const(joined_index_idx),
-                 &result] () -> void  {
-                    index_join_functor_common_<res_t, RHS_T, Ts ...>   functor(
-                        name.c_str(),
-                        rhs,
-                        joined_index_idx,
-                        result);
+        if (rhs_skip_name && name == rhs_skip_name)  {
+            ::snprintf(buffer, sizeof(buffer) - 1, "lhs.%s", rhs_skip_name);
 
-                    lhs.data_[idx].change(functor);
-                };
-
-            if (thread_level > 2)
-                futures.emplace_back(thr_pool_.dispatch(false, jcomm_lbd));
-            else
-                jcomm_lbd();
-        }
-        else  {  // lhs only column
             auto    jlhs_lbd =
-                [&name = std::as_const(name),
+                [&buffer = std::as_const(buffer),
                  idx,
                  &lhs = std::as_const(lhs),
                  &joined_index_idx = std::as_const(joined_index_idx),
                  &result] () -> void  {
                     // 0 = Left
-                    index_join_functor_oneside_<0, res_t, Ts ...>   functor (
-                        name.c_str(),
-                        joined_index_idx,
-                        result);
+                    index_join_functor_oneside_<0, res_t, Ts ...>
+                        functor (buffer,
+                                 joined_index_idx,
+                                 result);
 
                     lhs.data_[idx].change(functor);
                 };
@@ -759,41 +758,97 @@ join_helper_common_(
             else
                 jlhs_lbd();
         }
+        else  {
+            // Common column between two frames
+            //
+            if (rhs.column_tb_.find(name) != rhs.column_tb_.end())  {
+                auto    jcomm_lbd =
+                    [&name = std::as_const(name),
+                     idx,
+                     &lhs = std::as_const(lhs),
+                     &rhs = std::as_const(rhs),
+                     &joined_index_idx = std::as_const(joined_index_idx),
+                     &result] () -> void  {
+                        index_join_functor_common_<res_t, RHS_T, Ts ...>
+                            functor(name.c_str(),
+                                    rhs,
+                                    joined_index_idx,
+                                    result);
+
+                        lhs.data_[idx].change(functor);
+                    };
+
+                if (thread_level > 2)
+                    futures.emplace_back(thr_pool_.dispatch(false, jcomm_lbd));
+                else
+                    jcomm_lbd();
+            }
+            else  {  // lhs only column
+                auto    jlhs_lbd =
+                    [&name = std::as_const(name),
+                     idx,
+                     &lhs = std::as_const(lhs),
+                     &joined_index_idx = std::as_const(joined_index_idx),
+                     &result] () -> void  {
+                        // 0 = Left
+                        index_join_functor_oneside_<0, res_t, Ts ...>
+                            functor (name.c_str(),
+                                     joined_index_idx,
+                                     result);
+
+                        lhs.data_[idx].change(functor);
+                    };
+
+                if (thread_level > 2)
+                    futures.emplace_back(thr_pool_.dispatch(false, jlhs_lbd));
+                else
+                    jlhs_lbd();
+            }
+        }
     }
 
     // Load the rhs columns
     //
     for (const auto &[name, idx] : rhs.column_list_) [[likely]]  {
-        const auto  lhs_citer = lhs.column_tb_.find(name);
+        if (rhs_skip_name && name == rhs_skip_name)  continue;
 
-        if (skip_col_name && name == skip_col_name)  continue;
+        if (lhs_skip_name && rhs_skip_name && name == lhs_skip_name)  {
+            ::snprintf(buffer, sizeof(buffer) - 1, "rhs.%s", lhs_skip_name);
 
-        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
-            create_col_functor_<res_t, Ts ...>  create_f(name.c_str(), result);
+            index_join_functor_oneside_<1, res_t, Ts ...>
+                functor(buffer, joined_index_idx, result);
 
-            rhs.data_[idx].change(create_f);
+            rhs.data_[idx].change(functor);
         }
+        else  {
+            const auto  lhs_citer = lhs.column_tb_.find(name);
 
-        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
-            auto    jrhs_lbd =
-                [&name = std::as_const(name),
-                 idx,
-                 &rhs = std::as_const(rhs),
-                 &joined_index_idx = std::as_const(joined_index_idx),
-                 &result] () -> void  {
-                    // 1 = Right
-                    index_join_functor_oneside_<1, res_t, Ts ...>   functor (
-                        name.c_str(),
-                        joined_index_idx,
-                        result);
+            if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
+                create_col_functor_<res_t, Ts ...>
+                    create_f(name.c_str(), result);
 
-                    rhs.data_[idx].change(functor);
-                };
+                rhs.data_[idx].change(create_f);
+            }
 
-            if (thread_level > 2)
-                futures.emplace_back(thr_pool_.dispatch(false, jrhs_lbd));
-            else
-                jrhs_lbd();
+            if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
+                auto    jrhs_lbd =
+                    [&name = std::as_const(name),
+                     idx,
+                     &rhs = std::as_const(rhs),
+                     &joined_index_idx = std::as_const(joined_index_idx),
+                     &result] () -> void  {
+                        // 1 = Right
+                        index_join_functor_oneside_<1, res_t, Ts ...>
+                            functor (name.c_str(), joined_index_idx, result);
+
+                        rhs.data_[idx].change(functor);
+                    };
+
+                if (thread_level > 2)
+                    futures.emplace_back(thr_pool_.dispatch(false, jrhs_lbd));
+                else
+                    jrhs_lbd();
+            }
         }
     }
 

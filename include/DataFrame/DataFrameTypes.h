@@ -110,7 +110,8 @@ struct  NotImplemented : public DataFrameError  {
 
 // ----------------------------------------------------------------------------
 
-inline constexpr const char *DF_INDEX_COL_NAME = "INDEX";
+inline constexpr const char     *DF_INDEX_COL_NAME = "INDEX";
+inline constexpr std::size_t    MAX_COL_NAME_SIZE = 64;
 
 // ----------------------------------------------------------------------------
 
@@ -146,6 +147,16 @@ enum class  join_policy : unsigned char  {
     left_join = 2,
     right_join = 3,
     left_right_join = 4,  // This is merge
+};
+
+// ----------------------------------------------------------------------------
+
+enum class  gen_join_type : unsigned char  {
+
+    no_match = 1,
+    include_left = 2,
+    include_right = 3,
+    include_both = 4,
 };
 
 // ----------------------------------------------------------------------------

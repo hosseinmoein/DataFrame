@@ -128,21 +128,25 @@ gen_join(const RHS_T &rhs,
 
     static_assert(comparable<I>, "Index type must have comparison operators");
 
-    const ColumnVecType<LHS_COL_T>  *lhs_col { nullptr };
+    const ColumnVecType<LHS_COL_T>  *lhs_col = nullptr;
 
-    if (! ::strcmp(lhs_col_name, DF_INDEX_COL_NAME))
+    if (! ::strcmp(lhs_col_name, DF_INDEX_COL_NAME))  {
         lhs_col = (const ColumnVecType<LHS_COL_T> *) &(get_index());
-    else
+    }
+    else  {
         lhs_col = &(get_column<LHS_COL_T>(lhs_col_name));
+    }
 
-    const typename RHS_T::ColumnVecType<RHS_COL_T>  *rhs_col { nullptr };
+    const typename RHS_T::ColumnVecType<RHS_COL_T>  *rhs_col = nullptr;
 
-    if (! ::strcmp(rhs_col_name, DF_INDEX_COL_NAME))
+    if (! ::strcmp(rhs_col_name, DF_INDEX_COL_NAME))  {
         rhs_col = (const typename RHS_T::ColumnVecType<RHS_COL_T> *)
                       &(rhs.get_index());
-    else
+    }
+    else  {
         rhs_col = (const typename RHS_T::ColumnVecType<RHS_COL_T> *)
                       &(rhs.template get_column<RHS_COL_T>(rhs_col_name));
+    }
 
     const auto      &lhs_index = get_index();
     const auto      &rhs_index = rhs.get_index();

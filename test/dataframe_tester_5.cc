@@ -44,7 +44,7 @@ using namespace hmdf;
 // A DataFrame with ulong index type
 //
 using ULDataFrame = StdDataFrame<unsigned long>;
-using MyDataFrame = StdDataFrame256<unsigned long>;
+using MyDataFrame = StdDataFrame<unsigned long>;
 using MyStdDataFrame = StdDataFrame<unsigned long>;
 using StrDataFrame = StdDataFrame<std::string>;
 using DTDataFrame = StdDataFrame256<DateTime>;
@@ -604,6 +604,172 @@ static void test_CoeffVariationVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_gen_join()  {
+
+    std::cout << "\nTesting gen_join( ) ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double>         d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double>         d2 =
+        { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
+    std::vector<double>         d3 =
+        { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    auto    vw =
+        df.get_view<double, int>( { "col_1", "col_2", "col_3", "col_4" });
+
+    std::vector<unsigned long>  idx2 =
+        { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
+          223454, 223456, 223457, 223459, 223460, 223461, 223462 };
+    std::vector<double>         d12 =
+        { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
+    std::vector<double>         d22 =
+        { 8, 19, 110, 111, 9, 113, 114, 99, 122, 123, 130, 131, 20, 11.89 };
+    std::vector<double>         d32 =
+        { 115, 116, 115, 118, 119, 116, 121, 10.34, 11.56, 10.34, 12.3, 10.34,
+          119.0 };
+    std::vector<int>            i12 = { 122, 123, 124, 125, 199 };
+    MyDataFrame                 df2;
+
+    df2.load_data(std::move(idx2),
+                  std::make_pair("xcol_1", d12),
+                  std::make_pair("col_2", d22),
+                  std::make_pair("xcol_3", d32),
+                  std::make_pair("col_4", i12));
+
+    auto    vw2 =
+        df2.get_view<double, int>( { "xcol_1", "col_2", "xcol_3", "col_4" });
+
+    auto    predicate =
+        [](const unsigned long &, const unsigned long &,
+           const double &lhs_val, const double &rhs_val) -> gen_join_type  {
+            if (lhs_val == rhs_val)
+                return (gen_join_type::include_both);
+            return (gen_join_type::no_match);
+        };
+
+    // df.write<std::ostream, double, int>(
+    //      std::cout, io_format::pretty_prt, { .precision = 2 });
+    // std::cout << "\n\n\n";
+
+    // df2.write<std::ostream, double, int>(
+    //      std::cout, io_format::pretty_prt, { .precision = 2 });
+    // std::cout << "\n\n\n";
+
+    auto    inner_result =
+        df.gen_join<decltype(df2), double, double, double, int>
+            (df2, "col_2", "col_2", predicate);
+    auto    inner_result_vw =
+        vw.gen_join<decltype(df2), double, double, double, int>
+            (df2, "col_2", "col_2", predicate);
+
+    // inner_result.write<std::ostream, double, int, unsigned long>(
+    //      std::cout, io_format::pretty_prt, { .precision = 2 });
+    // std::cout << "\n\n\n";
+
+    assert(inner_result.get_index().size() == 1);
+    assert(inner_result.get_column<double>("xcol_1")[0] == 11.0);
+    assert(inner_result.get_column<double>("xcol_3")[0] == 115.0);
+    assert(inner_result.get_column<int>("lhs.col_4")[0] == 22);
+    assert(inner_result.get_column<unsigned long>("rhs.INDEX")[0] == 123452);
+    assert(inner_result.get_column<unsigned long>("lhs.INDEX")[0] == 123450);
+
+    assert(inner_result_vw.get_index().size() == 1);
+    assert(inner_result_vw.get_column<double>("col_1")[0] == 1.0);
+    assert(inner_result_vw.get_column<int>("lhs.col_4")[0] == 22);
+    assert(inner_result_vw.get_column<unsigned long>("rhs.INDEX")[0] == 123452);
+
+    auto    predicate2 =
+        [](const unsigned long &, const unsigned long &,
+           const double &lhs_val, const double &rhs_val) -> gen_join_type  {
+            if (lhs_val == rhs_val)
+                return (gen_join_type::include_both);
+            return (gen_join_type::include_right);
+        };
+
+    auto    result_vw2 =
+        vw.gen_join<decltype(df2), double, double, double, int>
+            (df2, "col_2", "col_2", predicate2);
+
+    // result_vw2.write<std::ostream, double, int, unsigned long>(
+    //      std::cout, io_format::pretty_prt, { .precision = 2 });
+    // std::cout << "\n\n\n";
+
+    assert(result_vw2.get_index().size() == 14);
+    assert(result_vw2.get_column<double>("xcol_1")[0] == 11.0);
+    assert(result_vw2.get_column<double>("xcol_1")[7] == 18.0);
+    assert(result_vw2.get_column<double>("xcol_1")[13] == 114.0);
+    assert(result_vw2.get_column<double>("xcol_3")[0] == 115.0);
+    assert(result_vw2.get_column<double>("xcol_3")[10] == 12.3);
+    assert(result_vw2.get_column<int>("lhs.col_4")[0] == 22);
+    assert(result_vw2.get_column<int>("lhs.col_4")[6] == 0);
+    assert(result_vw2.get_column<int>("lhs.col_4")[12] == 0);
+    assert(result_vw2.get_column<int>("rhs.col_4")[0] == 122);
+    assert(result_vw2.get_column<int>("rhs.col_4")[6] == 0);
+    assert(result_vw2.get_column<int>("rhs.col_4")[12] == 0);
+    assert(result_vw2.get_column<unsigned long>("rhs.INDEX")[0] == 123452);
+    assert(result_vw2.get_column<unsigned long>("lhs.INDEX")[0] == 123450);
+    assert(result_vw2.get_column<unsigned long>("lhs.INDEX")[8] == 0 );
+
+    auto    predicate3 =
+        [](const unsigned long &, const unsigned long &,
+           const int &col_4, const double &xcol_1) -> gen_join_type  {
+            if ((col_4 < 23 && col_4 != 0) || xcol_1 > 112.0)
+                return (gen_join_type::include_both);
+            return (gen_join_type::no_match);
+        };
+
+    auto    result_vw3 =
+        vw.gen_join<MyDataFrame, int, double, double, int>
+            (df2, "col_4", "xcol_1", predicate3);
+
+    // result_vw3.write<std::ostream, double, int, unsigned long>(
+    //      std::cout, io_format::pretty_prt, { .precision = 2 });
+    // std::cout << "\n\n\n";
+
+    assert(result_vw3.get_index().size() == 3);
+    assert(result_vw3.get_column<double>("xcol_1")[0] == 11.0);
+    assert(result_vw3.get_column<double>("xcol_1")[1] == 113.0);
+    assert(result_vw3.get_column<double>("xcol_1")[2] == 114.0);
+    assert(result_vw3.get_column<unsigned long>("lhs.INDEX")[0] == 123450);
+    assert(result_vw3.get_column<unsigned long>("lhs.INDEX")[1] == 123462);
+    assert(result_vw3.get_column<unsigned long>("lhs.INDEX")[2] == 123466);
+    assert(result_vw3.get_column<unsigned long>("rhs.INDEX")[0] == 123452);
+    assert(result_vw3.get_column<unsigned long>("rhs.INDEX")[1] == 223461);
+    assert(result_vw3.get_column<unsigned long>("rhs.INDEX")[2] == 223462);
+    assert(result_vw3.get_column<int>("lhs.col_4")[0] == 22);
+    assert(result_vw3.get_column<int>("lhs.col_4")[1] == 0);
+    assert(result_vw3.get_column<int>("lhs.col_4")[2] == 0);
+    assert(result_vw3.get_column<int>("rhs.col_4")[0] == 122);
+    assert(result_vw3.get_column<int>("rhs.col_4")[1] == 0);
+    assert(result_vw3.get_column<int>("rhs.col_4")[2] == 0);
+    assert(result_vw3.get_column<double>("lhs.col_2")[0] == 8.0);
+    assert(result_vw3.get_column<double>("lhs.col_2")[1] == 32.0);
+    assert(result_vw3.get_column<double>("lhs.col_2")[2] == 1.89);
+    assert(result_vw3.get_column<double>("rhs.col_2")[0] == 8.0);
+    assert(result_vw3.get_column<double>("rhs.col_2")[1] == 20.0);
+    assert(result_vw3.get_column<double>("rhs.col_2")[2] == 11.89);
+    assert(result_vw3.get_column<double>("col_3")[0] == 15.0);
+    assert(result_vw3.get_column<double>("col_3")[1] == 19.0);
+    assert(std::isnan(result_vw3.get_column<double>("col_3")[2]));
+    assert(result_vw3.get_column<double>("xcol_3")[0] == 115.0);
+    assert(result_vw3.get_column<double>("xcol_3")[1] == 119.0);
+    assert(std::isnan(result_vw3.get_column<double>("xcol_3")[2]));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
@@ -619,6 +785,7 @@ int main(int, char *[])  {
     test_KurtosisVisitor();
     test_ConfIntervalVisitor();
     test_CoeffVariationVisitor();
+    test_gen_join();
 
     return (0);
 }

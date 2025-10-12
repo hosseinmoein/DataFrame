@@ -2258,6 +2258,72 @@ public:  // Data manipulation
     DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
     join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
 
+    // This is the most general method to join two DataFrames. It requires the
+    // name of two columns, one from self and one from rhs. The columns may or
+    // may not have the same type. It also takes a function called predicate.
+    // Datapoints from both self and rhs indices and the two columns are passed
+    // to predicate one by one.
+    //
+    // NOTE: The datapoints are passed to predicate in the same order that they
+    //       are. So DataFrames' order (sorting) and predicate logic must
+    //       match.
+    // NOTE: The columns are processed until the minimum length of the two
+    //       columns. If you have columns of different length, you may consider
+    //       calling make_consistent() before joining.
+    //
+    // The predicate has the following parameters:
+    //     1. A const reference to the index datapoint of self
+    //     2. A const reference to the index datapoint of rhs
+    //     3. A const reference to the lhs (self) column datapoint
+    //     4. A const reference to the rhs column datapoint
+    // The predicate may return one of the following values of type
+    // gen_join_type:
+    //     1. no_match: The datapoints are not included in the result
+    //     2. include_left: only the self (lhs) datapoint is included in
+    //        the result
+    //     3. include_right: only the rhs datapoint is included in the result
+    //     4. include_both: both lhs (self) and rhs datapoints are included in
+    //        the result
+    //
+    // The result DataFrame will at least have two column names lhs.INDEX and
+    // rhs.INDEX containing the lhs and rhs indices datapoints
+    //
+    // NOTE: This join is done by what is called in the industry a table-scan
+    //
+    // RHS_T:
+    //   Type of the rhs DataFrame
+    // LHS_COL_T:
+    //   Type of the lhs column
+    // RHS_COL_T:
+    //   Type of the rhs column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // rhs:
+    //   rhs DataFrame
+    // lhs_col_name:
+    //   lhs (self) column name. It can be any of the data column names or
+    //   DF_INDEX_COL_NAME
+    // rhs_col_name:
+    //   rhs column name. It can be any of the data column names or
+    //   DF_INDEX_COL_NAME
+    // predicate:
+    //   A function described above that determines the result
+    //
+    template<typename RHS_T,
+             comparable LHS_COL_T, comparable RHS_COL_T,
+             typename ... Ts>
+    [[nodiscard]]
+    DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
+    gen_join(const RHS_T &rhs,
+             const char *lhs_col_name,
+             const char *rhs_col_name,
+             std::function<gen_join_type(
+                 const IndexType &,
+                 const typename RHS_T::IndexType &,
+                 const LHS_COL_T &,
+                 const RHS_COL_T &)> &&predicate) const;
+
     // It concatenates rhs to the end of self and returns the result as
     // another DataFrame.
     // Concatenation is done based on policy

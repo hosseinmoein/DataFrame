@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/FixedSizeString.h>
 
 #include <algorithm>
+#include <cstdio>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -178,6 +179,20 @@ _stringfy_(const V &vec,
     else if constexpr (std::is_same_v<value_type, std::string>)  {
         for (long i { start_row }; i < end_row; ++i)  {
             result.push_back(vec[i]);
+        }
+    }
+    else if constexpr (std::is_floating_point_v<value_type>)  {
+        char    buffer[256];
+
+        for (long i { start_row }; i < end_row; ++i)  {
+            ::snprintf(buffer, sizeof(buffer) - 1, "%.*f",
+                       int(precision), double(vec[i]));
+            result.push_back(buffer);
+        }
+    }
+    else if constexpr (std::is_integral_v<value_type>)  {
+        for (long i { start_row }; i < end_row; ++i)  {
+            result.push_back(std::to_string(vec[i]));
         }
     }
     else  {

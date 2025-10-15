@@ -770,6 +770,45 @@ static void test_gen_join()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ChiSquaredTestVisitor()  {
+
+    std::cout << "\nTesting ChiSquaredTestVisitor{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454 };
+    std::vector<double>         ob1 = { 1, 2, 3, 4, 5 };
+    std::vector<double>         ex1 = { 8, 9, 10, 11, 12 };
+    std::vector<double>         ob2 = { 5, 18, 42, 27, 8 };
+    std::vector<double>         ex2 = { 8, 20, 36, 24, 12 };
+    std::vector<double>         ob3 = { 2, 5, 6, 8, 4 };
+    std::vector<double>         ex3 = { 5, 5, 5, 5, 5 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("observation 1", ob1),
+                 std::make_pair("expected 1", ex1),
+                 std::make_pair("observation 2", ob2),
+                 std::make_pair("expected 2", ex2),
+                 std::make_pair("observation 3", ob3),
+                 std::make_pair("expected 3", ex3));
+
+    ChiSquaredTestVisitor<double>   chi;
+
+    df.single_act_visit<double, double>("observation 1", "expected 1", chi);
+    assert(std::fabs(chi.get_result() - 25.0073) < 0.0001);
+    assert(chi.get_p_value(4) < 0.0000000001);
+
+    df.single_act_visit<double, double>("observation 2", "expected 2", chi);
+    assert(std::fabs(chi.get_result() - 4.0333) < 0.0001);
+    assert(std::fabs(chi.get_p_value(4) - 0.4953) < 0.0001);
+
+    df.single_act_visit<double, double>("observation 3", "expected 3", chi);
+    assert(std::fabs(chi.get_result() - 4.0) < 0.0001);
+    assert(std::fabs(chi.get_p_value(4) - 0.5) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
@@ -786,6 +825,7 @@ int main(int, char *[])  {
     test_ConfIntervalVisitor();
     test_CoeffVariationVisitor();
     test_gen_join();
+    test_ChiSquaredTestVisitor();
 
     return (0);
 }

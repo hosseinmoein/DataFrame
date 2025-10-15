@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 #include <cmath>
 
-// E
+// e
 //
 #ifndef M_E
 #  define M_E 2.71828182845904523536
@@ -9554,6 +9554,86 @@ private:
 
 template<arithmetic T, typename I = unsigned long>
 using cffv_v = CoeffVariationVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+// Chi-squared test
+//
+template<arithmetic T, typename I = unsigned long>
+struct  ChiSquaredTestVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
+                const H &observed_begin, const H &observed_end,
+                const H &expected_begin, const H &expected_end)  {
+
+        const size_type col_s = std::distance(observed_begin, observed_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type col2_s = std::distance(expected_begin, expected_end);
+
+        if (col_s < 4 || col2_s < 4)
+            throw DataFrameError("ChiSquaredTestVisitor: "
+                                 "Time-series is too short");
+        if (col_s != col2_s)
+            throw DataFrameError("ChiSquaredTestVisitor: "
+                                 "Observed and expected time-series must "
+                                 "have the same length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        const auto  thread_level =
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level();
+        auto        lbd =
+            [observed_begin = std::as_const(observed_begin),
+             expected_begin = std::as_const(expected_begin)]
+            (auto begin, auto end) -> result_type {
+                result_type res { 0 };
+
+                for (size_type i { begin }; i < end; ++i)  {
+                    const result_type   expt { *(expected_begin + i) };
+
+                    if (expt == 0)  continue;
+
+                    const result_type   val = { *(observed_begin + i) - expt };
+
+                    res += (val * val) / expt;
+                }
+                return (res);
+            };
+
+        if (thread_level > 2)  {
+            auto    futures = ThreadGranularity::thr_pool_.parallel_loop(
+                                  size_type(0), col_s, std::move(lbd));
+
+            for (auto &fut : futures)  result_ += fut.get();
+        }
+        else  {
+            result_ = lbd(size_type(0), col_s);
+        }
+    }
+
+    inline void pre ()  { result_ = 0; }
+    inline void post ()  {  }
+    inline result_type get_result() const  { return (result_); }
+    inline result_type get_p_value(size_type deg_of_freedom) const  {
+
+        const result_type   val =
+            (result_ - T(deg_of_freedom)) / sqrt(T(2.0) * T(deg_of_freedom));
+
+        return (T(0.5) * std::erfc(val / T(M_SQRT2)));
+    }
+
+private:
+
+    result_type result_ { 0 };  // Chi squared
+};
+
+template<typename T, typename I = unsigned long>
+using chis_test_v = ChiSquaredTestVisitor<T, I>;
 
 } // namespace hmdf
 

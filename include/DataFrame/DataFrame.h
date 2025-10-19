@@ -2605,6 +2605,32 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] HeteroVector<std::size_t(H::align_value)>
     get_row(size_type row_num) const;
 
+
+
+
+
+
+
+
+
+    template<typename T>
+    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    get_matrix() const;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // It returns a vector of unique values in the named column in the same
     // order that exists in the column.
     // For this method to compile and work, 3 conditions must be met:

@@ -3920,9 +3920,9 @@ struct  SHAPValuesVisitor  {
     using model_func_t = std::function<T(const std::vector<T> &features)>;
     using matrix_t = Matrix<T, matrix_orient::column_major>;
 
-    template<typename IV, typename H>
+    template<typename K, typename H>
     inline void
-    operator()(const IV & /*idx_begin*/, const IV & /*idx_end*/,
+    operator()(const K & /*idx_begin*/, const K & /*idx_end*/,
                const H &column_begin, const H &column_end)  {
 
         const size_type col_s = std::distance(column_begin, column_end);

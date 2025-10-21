@@ -63,6 +63,8 @@ struct  HeteroConstPtrView {
     //
     template<typename T>
     void set_begin_end_special(const T *bp, const T *ep_1);
+    template<typename T>
+    void set_empty_vec();
 
     template<typename T>
     HeteroConstPtrView(VectorConstPtrView<T, A> &vec);

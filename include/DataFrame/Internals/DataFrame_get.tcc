@@ -293,6 +293,36 @@ get_row(size_type row_num) const {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T>
+Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+get_matrix() const {
+
+    using ret_t = Matrix<T, matrix_orient::column_major>;
+
+    gather_vecs_functor_<T> functor { };
+
+    functor.vecs.reserve(column_list_.size());
+
+    {
+        const SpinGuard guard(lock_);
+
+        for (const auto &citer : column_list_) [[likely]]
+            data_[citer.second].change(functor);
+    }
+
+    ret_t   result {
+        long(functor.max_rows), long(functor.vecs.size()), get_nan<T>() };
+
+    for (size_type col { 0 }; col < functor.vecs.size(); ++col)
+        for (size_type row { 0 }; row < functor.vecs[col]->size(); ++row)
+            result[row, col] = (*(functor.vecs[col]))[row];
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<hashable_equal T>
 typename DataFrame<I, H>::template StlVecType<T> DataFrame<I, H>::
 get_col_unique_values(const char *name) const  {

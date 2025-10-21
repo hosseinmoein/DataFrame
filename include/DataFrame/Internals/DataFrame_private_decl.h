@@ -202,13 +202,16 @@ setup_view_column_(const char *name, Index2D<ITR> range)  {
 
     DataVec dv;
 
-    dv.set_begin_end_special(&*(range.begin), &*(range.end - 1));
+    if (range.begin < range.end)
+        dv.set_begin_end_special(&*(range.begin), &*(range.end - 1));
+    else
+        dv.template set_empty_vec<T>();
 
     const SpinGuard guard(lock_);
 
-    data_.emplace_back (dv);
-    column_tb_.emplace (name, data_.size() - 1);
-    column_list_.emplace_back (name, data_.size() - 1);
+    data_.emplace_back(dv);
+    column_tb_.emplace(name, data_.size() - 1);
+    column_list_.emplace_back(name, data_.size() - 1);
 
     return;
 }

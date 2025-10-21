@@ -809,6 +809,129 @@ static void test_ChiSquaredTestVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_get_matrix()  {
+
+    std::cout << "\nTesting get_matrix( ) ..." << std::endl;
+
+    ULDataFrame                 df;
+    std::vector<unsigned long>  idxvec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    std::vector<double>         dblvec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    std::vector<double>         dblvec2 =
+        { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+    std::vector<double>         dblvec3 =
+        { 100, 200, 300, 400, 500, 600, 700, 800 };
+    std::vector<double>         dblempty { };
+    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    std::vector<std::string>    strvec =
+        { "aa", "bb", "cc", "dd", "ee", "ff", "gg", "hh", "ii", "jj" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("int_col", intvec),
+                 std::make_pair("str_col", strvec));
+    df.load_column("Empty Col", std::move(dblempty),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("dbl_col_3", std::move(dblvec3),
+                   nan_policy::dont_pad_with_nans);
+
+    const auto  matrix = df.get_matrix();
+
+    // for (long r = 0; r < matrix.rows(); ++r)  {
+    //     for (long c = 0; c < matrix.cols(); ++c)  {
+    //         std::cout << matrix(r, c) << ", ";
+    //     }
+    //     std::cout << '\n';
+    // }
+    // std::cout << "\n\n";
+
+    assert(matrix.cols() == 4);
+    assert(matrix.rows() == 10);
+
+    // dbl_col
+    //
+    assert(matrix(0, 0) == 1.0);
+    assert(matrix(1, 0) == 2.0);
+    assert(matrix(2, 0) == 3.0);
+    assert(matrix(3, 0) == 4.0);
+    assert(matrix(8, 0) == 9.0);
+    assert(matrix(9, 0) == 10.0);
+
+    // dbl_col_2
+    //
+    assert(matrix(0, 1) == 10.0);
+    assert(matrix(1, 1) == 20.0);
+    assert(matrix(2, 1) == 30.0);
+    assert(matrix(3, 1) == 40.0);
+    assert(matrix(8, 1) == 90.0);
+    assert(matrix(9, 1) == 100.0);
+
+    // Empty Col
+    //
+    assert(std::isnan(matrix(0, 2)));
+    assert(std::isnan(matrix(1, 2)));
+    assert(std::isnan(matrix(2, 2)));
+    assert(std::isnan(matrix(3, 2)));
+    assert(std::isnan(matrix(8, 2)));
+    assert(std::isnan(matrix(9, 2)));
+
+    // dbl_col_3
+    //
+    assert(matrix(0, 3) == 100.0);
+    assert(matrix(1, 3) == 200.0);
+    assert(matrix(2, 3) == 300.0);
+    assert(matrix(3, 3) == 400.0);
+    assert(std::isnan(matrix(8, 3)));
+    assert(std::isnan(matrix(9, 3)));
+
+    const auto  view = df.get_view<double, int, std::string>(
+        { "dbl_col", "dbl_col_2", "int_col", "str_col",
+          "Empty Col", "dbl_col_3" });
+    const auto  matrix2 = view.get_matrix();
+
+
+    assert(matrix2.cols() == 4);
+    assert(matrix2.rows() == 10);
+
+    // dbl_col
+    //
+    assert(matrix2(0, 0) == 1.0);
+    assert(matrix2(1, 0) == 2.0);
+    assert(matrix2(2, 0) == 3.0);
+    assert(matrix2(3, 0) == 4.0);
+    assert(matrix2(8, 0) == 9.0);
+    assert(matrix2(9, 0) == 10.0);
+
+    // dbl_col_2
+    //
+    assert(matrix2(0, 1) == 10.0);
+    assert(matrix2(1, 1) == 20.0);
+    assert(matrix2(2, 1) == 30.0);
+    assert(matrix2(3, 1) == 40.0);
+    assert(matrix2(8, 1) == 90.0);
+    assert(matrix2(9, 1) == 100.0);
+
+    // Empty Col
+    //
+    assert(std::isnan(matrix2(0, 2)));
+    assert(std::isnan(matrix2(1, 2)));
+    assert(std::isnan(matrix2(2, 2)));
+    assert(std::isnan(matrix2(3, 2)));
+    assert(std::isnan(matrix2(8, 2)));
+    assert(std::isnan(matrix2(9, 2)));
+
+    // dbl_col_3
+    //
+    assert(matrix2(0, 3) == 100.0);
+    assert(matrix2(1, 3) == 200.0);
+    assert(matrix2(2, 3) == 300.0);
+    assert(matrix2(3, 3) == 400.0);
+    assert(std::isnan(matrix2(8, 3)));
+    assert(std::isnan(matrix2(9, 3)));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
@@ -826,6 +949,7 @@ int main(int, char *[])  {
     test_CoeffVariationVisitor();
     test_gen_join();
     test_ChiSquaredTestVisitor();
+    test_get_matrix();
 
     return (0);
 }

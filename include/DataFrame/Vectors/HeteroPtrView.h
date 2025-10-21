@@ -63,6 +63,8 @@ struct HeteroPtrView {
     //
     template<typename T>
     void set_begin_end_special(T *bp, T *ep_1);
+    template<typename T>
+    void set_empty_vec();
 
     template<typename T>
     HeteroPtrView(VectorPtrView<T, A> &vec);

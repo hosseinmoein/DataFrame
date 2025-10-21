@@ -117,7 +117,7 @@ DataFrame<I, H>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
     using ValueType = typename VecType::value_type;
 
     const auto  [col_begin, col_end] =
-		_get_inclusive_indices_(vec, begin, end, incld_);
+        _get_inclusive_indices_(vec, begin, end, incld_);
 
     df.template load_column<ValueType>(
         name,
@@ -180,12 +180,19 @@ operator() (T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const auto  [col_begin, col_end] =
-		_get_inclusive_indices_(vec, begin, end, incld_);
+    if (! vec.empty()) [[likely]]  {
+        const auto  [col_begin, col_end] =
+            _get_inclusive_indices_(vec, begin, end, incld_);
 
-    dfv.template setup_view_column_<ValueType, typename VecType::iterator>(
-        name,
-        { vec.begin() + col_begin, vec.begin() + col_end });
+        dfv.template setup_view_column_<ValueType, typename VecType::iterator>(
+            name,
+            { vec.begin() + col_begin, vec.begin() + col_end });
+    }
+    else  {
+        dfv.template setup_view_column_<ValueType, typename VecType::iterator>(
+            name,
+            { vec.begin(), vec.begin() });
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -1292,6 +1299,17 @@ operator() (const T &vec)  {
     names.push_back(name);
     vvec.push_back(_stringfy_(vec, dt_format, sr, er, precision));
     is_numeric.push_back(std::is_arithmetic_v<ValueType>);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+void DataFrame<I, H>::gather_vecs_functor_<T>::
+operator()(const ColumnVecType<T> &vec)  {
+
+    if (max_rows < vec.size())  max_rows = vec.size();
+    vecs.push_back(&vec);
 }
 
 } // namespace hmdf

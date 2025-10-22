@@ -873,6 +873,19 @@ struct  stringfy_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename T>
+struct  gather_vecs_functor_ : DataVec::template visitor_base<T>  {
+
+    inline gather_vecs_functor_()  {   }
+
+    std::vector<const ColumnVecType<T> *>   vecs { };
+    size_type                               max_rows { 0 };
+
+    void operator()(const ColumnVecType<T> &vec);
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

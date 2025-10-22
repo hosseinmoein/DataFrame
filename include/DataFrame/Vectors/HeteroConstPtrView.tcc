@@ -73,6 +73,26 @@ void HeteroConstPtrView<A>::set_begin_end_special(const T *bp, const T *ep_1)  {
 
 template<std::size_t A>
 template<typename T>
+void HeteroConstPtrView<A>::set_empty_vec()  {
+
+    clear_function_ = [](HeteroConstPtrView &hv) { views_<T>.erase(&hv); };
+    copy_function_  = [](const HeteroConstPtrView &from,
+                        HeteroConstPtrView &to)  {
+                          views_<T>[&to] = views_<T>[&from];
+                      };
+    move_function_ = [](HeteroConstPtrView &from, HeteroConstPtrView &to)  {
+                         views_<T>[&to] = std::move(views_<T>[&from]);
+                     };
+
+    VectorConstPtrView<T, A>    vv;
+
+    views_<T>.emplace(this, vv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+template<typename T>
 HeteroConstPtrView<A>::HeteroConstPtrView(VectorConstPtrView<T, A> &vec)
     : clear_function_([](HeteroConstPtrView &hv) { views_<T>.erase(&hv); }),
       copy_function_([](const HeteroConstPtrView &from,

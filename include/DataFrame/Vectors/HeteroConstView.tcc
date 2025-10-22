@@ -74,6 +74,25 @@ void HeteroConstView<A>::set_begin_end_special(const T *bp, const T *ep_1)  {
 
 template<std::size_t A>
 template<typename T>
+void HeteroConstView<A>::set_empty_vec()  {
+
+    clear_function_ = [](HeteroConstView &hv) { views_<T>.erase(&hv); };
+    copy_function_  = [](const HeteroConstView &from, HeteroConstView &to)  {
+                          views_<T>[&to] = views_<T>[&from];
+                      };
+    move_function_ = [](HeteroConstView &from, HeteroConstView &to)  {
+                         views_<T>[&to] = std::move(views_<T>[&from]);
+                     };
+
+    VectorConstView<T, A>   vcv;
+
+    views_<T>.emplace(this, vcv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+template<typename T>
 VectorConstView<T, A> &HeteroConstView<A>::get_vector()  {
 
     auto    iter = views_<T>.find (this);

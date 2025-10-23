@@ -51,7 +51,9 @@ body {
       </td>
       <td>
         This copies all the columns of type <I>T</I> in self into a matrix and returns the matrix. This could be used to structure the DataFrame data for more in-depth numerical and linear algebra analysis.<BR>
-        Every column of type <I>T</I> in self will be a column in the matrix. The number of rows in the matrix will be the max of length of all type <I>T</I> columns. The shorter columns in matrix will be padded with <I>NaN</I>. The best is if all type <I>T</I> columns have the same length<BR>
+        Every column of type <I>T</I> in self will be a column in the matrix. The number of rows in the matrix will be the max of length of all type <I>T</I> columns. The shorter columns in matrix will be padded with <I>NaN</I>. The best is if all type <I>T</I> columns have the same length<BR><BR>
+
+        <B>NOTE</B>: The order of columns in the returned matrix is the same as the order of columns in the DataFrame (self).<BR>
       </td>
       <td width="30%">
         <b>T</b>: Type of the named data columns to copy<BR>

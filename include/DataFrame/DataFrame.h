@@ -2611,7 +2611,9 @@ public: // Read/access and slicing interfaces
     // Every column of type T in self will be a column in the matrix. The
     // number of rows in the matrix will be the max of length of all type T
     // columns. The shorter columns in matrix will be padded with NaN. The best
-    // is if all type T columns have the same length
+    // is if all type T columns have the same length.
+    // The order of columns in the returned matrix is the same as the
+    // order of columns in the DataFrame (self).
     //
     // T:
     //   Types of the columns to copy, defaulted to double
@@ -2619,6 +2621,20 @@ public: // Read/access and slicing interfaces
     template<typename T = double>
     [[nodiscard]] Matrix<T, matrix_orient::column_major>
     get_matrix() const;
+
+    // This does the same as get_matrix() above, but only copies the named
+    // columns.
+    // The order of columns in the returned matrix is the same as the
+    // order of names in col_names.
+    //
+    // T:
+    //   Types of the columns to copy, defaulted to double
+    // col_names:
+    //   Names of columns to copy
+    //
+    template<typename T = double>
+    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    get_matrix(std::vector<const char *> &&col_names) const;
 
     // It returns a vector of unique values in the named column in the same
     // order that exists in the column.

@@ -302,7 +302,6 @@ get_matrix() const {
     gather_vecs_functor_<T> functor { };
 
     functor.vecs.reserve(column_list_.size());
-
     {
         const SpinGuard guard(lock_);
 
@@ -316,6 +315,40 @@ get_matrix() const {
     for (size_type col { 0 }; col < functor.vecs.size(); ++col)
         for (size_type row { 0 }; row < functor.vecs[col]->size(); ++row)
             result[row, col] = (*(functor.vecs[col]))[row];
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+get_matrix(std::vector<const char *> &&col_names) const {
+
+    using ret_t = Matrix<T, matrix_orient::column_major>;
+
+    std::vector<const ColumnVecType<T> *>   vecs { };
+    size_type                               max_rows { 0 };
+    gather_vecs_functor_<T>                 functor { };
+
+    vecs.reserve(col_names.size());
+    {
+        const SpinGuard guard(lock_);
+
+        for (const auto &col_name : col_names) [[likely]]  {
+            const auto  &col = get_column<T>(col_name, false);
+
+            if (max_rows < col.size())  max_rows = col.size();
+            vecs.push_back(&col);
+		}
+    }
+
+    ret_t   result { long(max_rows), long(vecs.size()), get_nan<T>() };
+
+    for (size_type col { 0 }; col < vecs.size(); ++col)
+        for (size_type row { 0 }; row < vecs[col]->size(); ++row)
+            result[row, col] = (*(vecs[col]))[row];
 
     return (result);
 }

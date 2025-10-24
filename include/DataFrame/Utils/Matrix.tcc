@@ -3087,6 +3087,459 @@ get_whiten(MA &that, bool do_center) const noexcept  {
     return (that.whiten(do_center));
 }
 
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+static inline bool
+operator != (const Matrix<T, MO1, IS_SYM1> &lhs,
+             const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    if (lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols())  {
+        if constexpr (IS_SYM1 && IS_SYM2)  {
+            if constexpr (MO1 == matrix_orient::column_major)  {
+                for (long c = 0; c < lhs.cols(); ++c)
+                    for (long r = c; r < lhs.rows(); ++r)
+                        if (lhs(r, c) != rhs(r, c))
+                            return (true);
+            }
+            else  {
+                for (long r = 0; r < lhs.rows(); ++r)
+                    for (long c = r; c < lhs.cols(); ++c)
+                        if (lhs(r, c) != rhs(r, c))
+                            return (true);
+            }
+        }
+        else  {
+            if constexpr (MO1 == matrix_orient::column_major)  {
+                for (long c = 0; c < lhs.cols(); ++c)
+                    for (long r = 0; r < lhs.rows(); ++r)
+                        if (lhs(r, c) != rhs(r, c))
+                            return (true);
+            }
+            else  {
+                for (long r = 0; r < lhs.rows(); ++r)
+                    for (long c = 0; c < lhs.cols(); ++c)
+                        if (lhs(r, c) != rhs(r, c))
+                            return (true);
+            }
+        }
+    }
+    else  return (true);
+
+    return (false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+static inline bool
+operator == (const Matrix<T, MO1, IS_SYM1> &lhs,
+             const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    return (! (lhs != rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+static inline typename std::conditional<IS_SYM1 && IS_SYM2,
+                                        Matrix<T, MO1, true>,
+                                        Matrix<T, MO1, false>>::type
+operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
+            const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    using result_t =
+        typename std::conditional<IS_SYM1 && IS_SYM2,
+                                  Matrix<T, MO1, true>,
+                                  Matrix<T, MO1, false>>::type;
+
+    const long  lhs_rows = lhs.rows();
+    const long  lhs_cols = lhs.cols();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
+        throw NotFeasible(
+            "+ operation between these two metrices is not feasible");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    result_t    result;
+
+    if constexpr (IS_SYM1 && (! IS_SYM2))  {
+        result.resize(lhs.rows(), lhs.cols());
+        for (long r = 0; r < lhs.rows(); ++r)
+            for (long c = 0; c < lhs.cols(); ++c)
+                result(r, c) = lhs(r, c);
+    }
+    else  {
+        result = lhs;
+    }
+
+    auto        col_lbd =
+        [lhs_rows, &result, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = c; r < lhs_rows; ++r)
+                        result(r, c) += rhs(r, c);
+            }
+            else  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = 0; r < lhs_rows; ++r)
+                        result(r, c) += rhs(r, c);
+            }
+        };
+    auto        row_lbd =
+        [lhs_cols, &result, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = r; c < lhs_cols; ++c)
+                        result(r, c) += rhs(r, c);
+            }
+            else  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = 0; c < lhs_cols; ++c)
+                        result(r, c) += rhs(r, c);
+            }
+        };
+    const long  thread_level =
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, lhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+static inline typename std::conditional<IS_SYM1 && IS_SYM2,
+                                        Matrix<T, MO1, true>,
+                                        Matrix<T, MO1, false>>::type
+operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
+            const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    using result_t =
+        typename std::conditional<IS_SYM1 && IS_SYM2,
+                                  Matrix<T, MO1, true>,
+                                  Matrix<T, MO1, false>>::type;
+
+    const long  lhs_rows = lhs.rows();
+    const long  lhs_cols = lhs.cols();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
+        throw NotFeasible(
+            "- operation between these two metrices is not feasible");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    result_t    result;
+
+    if constexpr (IS_SYM1 && (! IS_SYM2))  {
+        result.resize(lhs.rows(), lhs.cols());
+        for (long r = 0; r < lhs.rows(); ++r)
+            for (long c = 0; c < lhs.cols(); ++c)
+                result(r, c) = lhs(r, c);
+    }
+    else  {
+        result = lhs;
+    }
+
+    auto        col_lbd =
+        [lhs_rows, &result, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = c; r < lhs_rows; ++r)
+                        result(r, c) -= rhs(r, c);
+            }
+            else  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = 0; r < lhs_rows; ++r)
+                        result(r, c) -= rhs(r, c);
+            }
+        };
+    auto        row_lbd =
+        [lhs_cols, &result, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = r; c < lhs_cols; ++c)
+                        result(r, c) -= rhs(r, c);
+            }
+            else  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = 0; c < lhs_cols; ++c)
+                        result(r, c) -= rhs(r, c);
+            }
+        };
+    const long  thread_level =
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, lhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+Matrix<T, MO1, IS_SYM1> &
+operator += (Matrix<T, MO1, IS_SYM1> &lhs,
+             const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    static_assert((IS_SYM1 && IS_SYM2) ||
+                  ((! IS_SYM1) && IS_SYM2) ||
+                  ((! IS_SYM1) && (! IS_SYM2)),
+                  "+= operation between these two metrices is not feasible");
+
+    const long  lhs_rows = lhs.rows();
+    const long  lhs_cols = lhs.cols();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
+        throw NotFeasible(
+            "+= operation between these two metrices is not feasible");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    auto        col_lbd =
+        [lhs_rows, &lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = c; r < lhs_rows; ++r)
+                        lhs(r, c) += rhs(r, c);
+            }
+            else  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = 0; r < lhs_rows; ++r)
+                        lhs(r, c) += rhs(r, c);
+            }
+        };
+    auto        row_lbd =
+        [lhs_cols, &lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = r; c < lhs_cols; ++c)
+                        lhs(r, c) += rhs(r, c);
+            }
+            else  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = 0; c < lhs_cols; ++c)
+                        lhs(r, c) += rhs(r, c);
+            }
+        };
+    const long  thread_level =
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, lhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
+    }
+
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+Matrix<T, MO1, IS_SYM1> &
+operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
+             const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    static_assert((IS_SYM1 && IS_SYM2) ||
+                  ((! IS_SYM1) && IS_SYM2) ||
+                  ((! IS_SYM1) && (! IS_SYM2)),
+                  "-= operation between these two metrices is not feasible");
+
+    const long  lhs_rows = lhs.rows();
+    const long  lhs_cols = lhs.cols();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
+        throw NotFeasible(
+            "-= operation between these two metrices is not feasible");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    auto        col_lbd =
+        [lhs_rows, &lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = c; r < lhs_rows; ++r)
+                        lhs(r, c) -= rhs(r, c);
+            }
+            else  {
+                for (long c = begin; c < end; ++c)
+                    for (long r = 0; r < lhs_rows; ++r)
+                        lhs(r, c) -= rhs(r, c);
+            }
+        };
+    auto        row_lbd =
+        [lhs_cols, &lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            if constexpr (IS_SYM1 && IS_SYM2)  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = r; c < lhs_cols; ++c)
+                        lhs(r, c) -= rhs(r, c);
+            }
+            else  {
+                for (long r = begin; r < end; ++r)
+                    for (long c = 0; c < lhs_cols; ++c)
+                        lhs(r, c) -= rhs(r, c);
+            }
+        };
+    const long  thread_level =
+        (lhs_cols >= 2000L || lhs_rows >= 2000L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, lhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
+    }
+
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+// Naïve but cache friendly O(n^3) algorithm
+//
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+static Matrix<T, MO1, false>
+operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
+            const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    const long  lhs_rows { lhs.rows() };
+    const long  lhs_cols { lhs.cols() };
+    const long  rhs_cols { rhs.cols() };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (lhs_cols != rhs.rows())
+        throw NotFeasible(
+            "* operation between these two metrices is not feasible");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    Matrix<T, MO1, false>   result { lhs_rows, rhs_cols, 0 };
+    const long              thread_level =
+        (lhs_cols >= 400L || rhs_cols >= 400L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    auto    col_lbd =
+        [lhs_rows, lhs_cols, &result,
+         &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long c = begin; c < end; ++c)
+                for (long r = 0; r < lhs_rows; ++r)
+                    for (long k = 0; k < lhs_cols; ++k)
+                        result(r, c) += lhs(r, k) * rhs(k, c);
+        };
+    auto    row_lbd =
+        [lhs_cols, rhs_cols, &result,
+         &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long r = begin; r < end; ++r)
+                for (long c = 0; c < rhs_cols; ++c)
+                    for (long k = 0; k < lhs_cols; ++k)
+                        result(r, c) += lhs(r, k) * rhs(k, c);
+        };
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, rhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, rhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
+    }
+
+    return (result);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

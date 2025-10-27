@@ -35,24 +35,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <img src="docs/LionLookingUp.jpg" alt="DataFrame Lion" width="400"/>
 
-## <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html" target="_blank"><B>DataFrame documentation with code samples</B></a>
+## <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html" target="_blank"><B>DataFrame documentation with code samples</B></a>
 
 This is a C++ analytical library designed for data analysis similar to libraries in Python and R. For example, you would compare this to [Pandas](https://pandas.pydata.org) or [R data.frame](https://www.w3schools.com/r/r_data_frames.asp). The depth and breadth of functionalities offered by C++ DataFrame alone are greater than functionalities offered by packages such as Pandas, data.frame, and Polars combined.<BR>
 You can slice the data in many different ways. You can join, merge, group-by the data. You can run various statistical, summarization, financial, and ML algorithms on the data. You can add your custom algorithms easily. You can multi-column sort, custom pick and delete the data. And more …<BR>
 DataFrame also includes a large collection of analytical algorithms in form of visitors. These are from basic stats such as <I>Mean</I>, <I>STDEV</I>, <I>Moving Averages</I>, ... to more involved analysis such as <I>PCA</I>, <I>Polynomial Fit</I>, <I>FFT</I>, <I>Eigens</I> ... including a good collection of trading indicators. You can also easily add your own algorithms.<BR>
 DataFrame also employs extensive multithreading in almost all its API’s, for large datasets. That makes DataFrame especially suitable for analyzing large datasets.<BR>
-For basic operations to start you off, see [Hello World](examples/hello_world.cc) and/or [Cheat Sheet](https://docs.google.com/viewer?url=https://raw.githubusercontent.com/hosseinmoein/DataFrame/master/docs/CheatSheet.pdf). For a complete list of features with code samples, see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html" target="_blank">documentation</a>.
+For basic operations to start you off, see [Hello World](examples/hello_world.cc) and/or [Cheat Sheet](https://docs.google.com/viewer?url=https://raw.githubusercontent.com/hosseinmoein/DataFrame/master/docs/CheatSheet.pdf). For a complete list of features with code samples, see <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html" target="_blank">documentation</a>.
 
 I have followed a few <B>principles in this library</B>:<BR>
 
-1. [Support any type either built-in or user defined without needing new code](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/any_type.html)
-2. [Never chase pointers ala _linked lists_, _std::any_, _pointer to base_, ...](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/pointers.html)
-3. [Have all column data in contiguous memory space](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/contiguous_memory.html)
-4. [Never use more space than you need ala _unions_, _std::variant_, ...](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/std_variant.html)
-5. [Avoid copying data as much as possible](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/copying_data.html)
-6. [Use multi-threading but only when it makes sense](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/multithreading.html)
-7. [Do not attempt to protect the user against _garbage in_, _garbage out_](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/garbage_in_garbage_out.html)
-8. [Keep DataFrame library self-contained, meaning DataFrame must only depend on _C++ language_ and its _standard library_](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/self_contained.html)
+1. [Support any type either built-in or user defined without needing new code](https://hosseinmoein.github.io/DataFrame/docs/HTML/any_type.html)
+2. [Never chase pointers ala _linked lists_, _std::any_, _pointer to base_, ...](https://hosseinmoein.github.io/DataFrame/docs/HTML/pointers.html)
+3. [Have all column data in contiguous memory space](https://hosseinmoein.github.io/DataFrame/docs/HTML/contiguous_memory.html)
+4. [Never use more space than you need ala _unions_, _std::variant_, ...](https://hosseinmoein.github.io/DataFrame/docs/HTML/std_variant.html)
+5. [Avoid copying data as much as possible](https://hosseinmoein.github.io/DataFrame/docs/HTML/copying_data.html)
+6. [Use multi-threading but only when it makes sense](https://hosseinmoein.github.io/DataFrame/docs/HTML/multithreading.html)
+7. [Do not attempt to protect the user against _garbage in_, _garbage out_](https://hosseinmoein.github.io/DataFrame/docs/HTML/garbage_in_garbage_out.html)
+8. [Keep DataFrame library self-contained, meaning DataFrame must only depend on _C++ language_ and its _standard library_](https://hosseinmoein.github.io/DataFrame/docs/HTML/self_contained.html)
 
 ---
 

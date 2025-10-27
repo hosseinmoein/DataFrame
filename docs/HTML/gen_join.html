@@ -34,7 +34,7 @@ body {
 </head>
 
 <body style="font-family: Georgia, serif">
-  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  <font size="+3">&#8592;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
   
   <table border="1">
 
@@ -86,7 +86,7 @@ body {
         This is the most general method to join two DataFrames. It requires the name of two columns, one from self (lhs) and one from rhs. The columns may or may not have the same type. It also takes a function called <I>predicate</I>. Datapoints from both self and rhs indices and the two columns are passed to predicate one by one.<BR><BR>
 
         <B>NOTE</B>: The datapoints are passed to predicate in the same order that they are. So DataFrames' order (sorting) and predicate logic must match.<BR>
-        <B>NOTE</B>: The columns are processed until the minimum length of the two columns. If you have columns of different length, you may consider calling <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/make_consistent.html">make_consistent()</a> before joining.<BR>
+        <B>NOTE</B>: The columns are processed until the minimum length of the two columns. If you have columns of different length, you may consider calling <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/make_consistent.html">make_consistent()</a> before joining.<BR>
         <B>NOTE</B>: All same name columns in lhs and rhs will have <I>lhs.</I> and <I>rhs.</I> prefixes in their names in the returned DataFrame.<BR>
         <B>NOTE</B>: The result DataFrame will at least have two column names <I>lhs.INDEX</I> and <I>rhs.INDEX</I> containing the lhs and rhs indices datapoints<BR><BR>
 

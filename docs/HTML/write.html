@@ -34,7 +34,7 @@ body {
 </head>
 
 <body style="font-family: Georgia, serif">
-  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  <font size="+3">&#8592;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
 
   <table border="1">
 
@@ -43,7 +43,7 @@ body {
     </tr>
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>DT_ALLOWABLE_FORMATS DT_F <span style="color:#808030; ">=</span> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html">DT_FORMAT</a><span style="color:#800080; ">&gt;</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span>DT_ALLOWABLE_FORMATS DT_F <span style="color:#808030; ">=</span> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DateTime.html">DT_FORMAT</a><span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  WriteParams  <span style="color:#800080; ">{</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Floating-point values precision when written to a file</span></span>
@@ -62,7 +62,7 @@ body {
 <span class="line_wrapper">    <span style="color:#696969; ">// file. This only applies to csv2 format.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// The only permitted formats are <I>DT_PRECISE</I>, <I>ISO_DT_TM</I>, <I>AMR_DT_TM</I>,</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// <I>EUR_DT_TM</I>, <I>ISO_DT</I>, <I>AMR_DT</I>, and <I>EUR_DT</I>.</span></span>
-<span class="line_wrapper">    <span style="color:#696969; ">// See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DateTime.html">Dateitme docs (DT_FORMAT)</a> for more info.</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DateTime.html">Dateitme docs (DT_FORMAT)</a> for more info.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// The default format is seconds since Epoch.nanoseconds.</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    DT_F            dt_format <span style="color:#800080; ">{</span> DT_FORMAT<span style="color:#800080; ">::</span>DT_PRECISE <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
@@ -92,7 +92,7 @@ body {
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> S<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">bool</span></span>
 <span class="line_wrapper"><span style="color:#603000; ">write</span><span style="color:#808030; ">(</span>S <span style="color:#808030; ">&amp;</span>o<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> WriteParams params <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
@@ -233,7 +233,7 @@ DateTimeISO -- ISO style (YYYY-MM-DD HH:MM:SS.mmm)
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">bool</span><span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#603000; ">write</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>file_name<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">      <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">      <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">      <span style="color:#800000; font-weight:bold; ">const</span> WriteParams params <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
@@ -250,7 +250,7 @@ DateTimeISO -- ISO style (YYYY-MM-DD HH:MM:SS.mmm)
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> S<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">bool</span><span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">write_async<span style="color:#808030; ">(</span>S <span style="color:#808030; ">&amp;</span>o<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">            <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> WriteParams params <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
@@ -266,7 +266,7 @@ DateTimeISO -- ISO style (YYYY-MM-DD HH:MM:SS.mmm)
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">bool</span><span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">write_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>file_name<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">            <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> WriteParams params <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>

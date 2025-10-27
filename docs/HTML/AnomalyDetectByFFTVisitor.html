@@ -34,7 +34,7 @@ body {
 </head>
 
 <body style="font-family: Georgia, serif">
-  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  <font size="+3">&#8592;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
   
   <table border="1">
 
@@ -58,7 +58,7 @@ body {
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This visitor applies <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/FastFourierTransVisitor.html">Fast Fourier Transform (FFT)</a>, which is an implementation of discrete Fourier transform to find outliers in the given column. It is easy to find anomalies in data, if the data is a repeating pattern such as a sine wave. It is more difficult (you must really tune the two parameters) to find anomalies in more random data such as a stock’s market data – see the code sample below.<BR><BR>
+        This visitor applies <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/FastFourierTransVisitor.html">Fast Fourier Transform (FFT)</a>, which is an implementation of discrete Fourier transform to find outliers in the given column. It is easy to find anomalies in data, if the data is a repeating pattern such as a sine wave. It is more difficult (you must really tune the two parameters) to find anomalies in more random data such as a stock’s market data – see the code sample below.<BR><BR>
         This visitor goes through the following steps<BR>
         1. It optionally normalizes the data<BR>
         2. It converts either the original column or the normalized data to frequency domain by running FFT<BR>
@@ -72,7 +72,7 @@ body {
 explicit
 AnomalyDetectByFFTVisitor(size_type freq_num,
                           value_type anomaly_threshold = T(1),
-                          <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">normalization_type</a> norm_type = normalization_type::none);
+                          <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/NormalizeVisitor.html">normalization_type</a> norm_type = normalization_type::none);
 
 <B>freq_num</B>: Number of dominant frequencies to keep when performing IFFT on the result of FFT
 <B>anomaly_threshold</B>: The difference threshold between original data and the result of IFFT

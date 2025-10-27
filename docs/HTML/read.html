@@ -34,7 +34,7 @@ body {
 </head>
 
 <body style="font-family: Georgia, serif; margin:0; padding:0; height:100%;">
-  <font size="+3">&#8592;</font> <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  <font size="+3">&#8592;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
 
   <table border="1">
 
@@ -127,12 +127,12 @@ body {
       <td>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">bool</span></span>
 <span class="line_wrapper"><span style="color:#603000; ">read</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>file_name<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">     <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> ReadParams params <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
-        It inputs the contents of a text/binary file/stream into itself (i.e. DataFrame). Currently 4 formats (i.e. csv, csv2, json, binray) are supported. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/io_format.html">io_format</a> documentation page<BR>
+        It inputs the contents of a text/binary file/stream into itself (i.e. DataFrame). Currently 4 formats (i.e. csv, csv2, json, binray) are supported. See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/io_format.html">io_format</a> documentation page<BR>
   <B>NOTE</B>: If the DataFrame that is reading the file already has existing data columns, the file data will be <I>added</I> to the existing DataFrame columns.
         If the file has a data column with the same name and type as a column in the DataFrame, the file data will <I>replace</I> the existing data column in the DataFrame.
         If the file has a data column with the same name but different type as a column in the DataFrame, the behavior is undefined.
@@ -270,7 +270,7 @@ DateTimeISO -- ISO style (YYYY-MM-DD HH:MM:SS.mmm)
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> S<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">bool</span></span>
 <span class="line_wrapper"><span style="color:#603000; ">read</span><span style="color:#808030; ">(</span>S <span style="color:#808030; ">&amp;</span>in_s<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">     <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">     <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">     <span style="color:#800000; font-weight:bold; ">const</span> ReadParams params <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
@@ -286,7 +286,7 @@ DateTimeISO -- ISO style (YYYY-MM-DD HH:MM:SS.mmm)
       <td>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">bool</span><span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">read_async<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>file_name<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">           <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> ReadParams params <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
@@ -302,7 +302,7 @@ DateTimeISO -- ISO style (YYYY-MM-DD HH:MM:SS.mmm)
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> S<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>future<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">bool</span><span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">read_async<span style="color:#808030; ">(</span>S <span style="color:#808030; ">&amp;</span>in_s<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">           <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">           <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/io_format.html">io_format</a> iof <span style="color:#808030; ">=</span> io_format<span style="color:#800080; ">::</span>csv<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">           <span style="color:#800000; font-weight:bold; ">const</span> ReadParams params <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>

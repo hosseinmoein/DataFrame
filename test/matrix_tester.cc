@@ -746,7 +746,7 @@ int main(int, char *[]) {
         rhs(1, 0) = 17.0;
         rhs(2, 0) = 12.0;
 
-		const auto result = coefs.solve(rhs);
+        const auto result = coefs.solve(rhs);
 
         assert(result(0, 0) == 2.0);
         assert(result(1, 0) == 1.0);
@@ -769,7 +769,7 @@ int main(int, char *[]) {
         matrix(2, 2) = 2.0;
         matrix(2, 3) = 12.0;
 
-		const auto result2 = matrix.solve();
+        const auto result2 = matrix.solve();
 
         assert(result2(0, 0) == 2.0);
         assert(result2(1, 0) == 1.0);

@@ -3878,6 +3878,123 @@ private:
 template<typename T, typename I = unsigned long>
 using mut_i_v = MutualInfoVisitor<T, I>;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+// AutoRegressive Integrated Moving Average
+//
+template<arithmetic T, typename I = unsigned long>
+struct  ARIMAVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = std::vector<T>;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
+                const H &column_begin, const H &column_end)  {
+
+        const size_type col_s = std::distance(column_begin, column_end);
+
+    }
+
+    inline void pre()  {
+
+        n_ = 0;
+        sigma2_ = 0;
+        y_.clear();
+        residuals_.clear();
+        ar_coeffs_.clear();
+        ma_coeffs_.clear();
+    }
+    inline void post()  {  }
+    // inline result_type get_result() const  { return (result_); }
+
+    explicit
+    ARIMAVisitor(size_type autoreg_order = 2,
+                 size_type diff = 1,
+                 size_type mav_order = 1)
+        : p_(autoreg_order), d_(diff), q_(mav_order)  {   }
+
+private:
+
+    // AutoRegressive order: Number of lagged observations (past values)
+    // included in the model. Determines how many previous time steps are
+    // linearly combined.
+    //
+    const size_type    p_;
+
+    // Integration order (differencing): Number of times the original series
+    // is differenced to make it stationary. d=1 means use first differences
+    // (i.e., Ytₜ - Yt-1₁).
+    //
+    const size_type    d_;
+
+    // Moving Average order: Number of lagged forecast errors (residuals) used
+    // to model the noise structure.
+    const size_type    q_;
+
+    // The length of the working time series after differencing
+    //
+    size_type          n_ { 0 };
+    value_type         sigma2_ { 0 };
+
+    std::vector<T>     y_ { };
+    std::vector<T>     residuals_ { };
+    std::vector<T>     ar_coeffs_ { };
+    std::vector<T>     ma_coeffs_ { };
+};
+
+template<typename T, typename I = unsigned long>
+using arima_v = ARIMAVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

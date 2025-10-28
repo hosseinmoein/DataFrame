@@ -561,6 +561,44 @@ Matrix<T, MO, IS_SYM>::inverse() const  {
 // ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
+inline Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::rref(size_type &rank) noexcept  {
+
+    rank = 0;
+    for (size_type r = 0; r < rows(); ++r)  {
+        if (r >= cols() || ppivot_ (r) == NOPOS_)
+            break;
+
+        const value_type    diag = at(r, r);
+
+        for (size_type c = r; c < cols(); ++c)
+            at(r, c) /= diag;
+
+        for (size_type rr = r + 1; rr < rows(); ++rr)  {
+            const value_type    below_diag = at(rr, r);
+
+            for (size_type c = r; c < cols(); ++c)
+                at(rr, c) -= below_diag * at(r, c);
+        }
+        rank += 1;
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+inline Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::rref(Matrix &that, size_type &rank) const noexcept  {
+
+    that = *this;
+    return (that.rref(rank));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM>::value_type
 Matrix<T, MO, IS_SYM>::norm() const noexcept  {
 
@@ -2205,6 +2243,48 @@ lud(MA1 &L, MA2 &U) const  {
     U.swap(u_tmp);
 
     return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+template<typename MA>
+MA Matrix<T, MO, IS_SYM>::
+solve(const MA &rhs) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (! is_square () || cols () != rhs.rows ())
+        throw NotFeasible("Matrix::solve(): Matrix must be squared and "
+                          "compatible with rhs");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    MA  tmp { rows(), cols() + rhs.col() };
+
+    for (size_type r = 0; r < rows(); ++r)  {
+        for (size_type c = 0; c < cols(); ++c)
+            tmp(r, c) = at(r, c);
+        for (size_type c = 0; c < rhs.cols(); ++c)
+            tmp(r, cols() + c) = rhs(r, c);
+    }
+
+    size_type   rank { 0 };
+
+    tmp.rref(rank);
+
+    if (rank != rows())
+        throw NotFeasible("Matrix::solve(): Matrix is singular");
+
+    MA  sol { rhs.rows(), rhs.cols() };
+
+    for (size_type rhsc = 0; rhsc < rhs.cols(); ++rhsc)  {
+        for (size_type r = rows() - 1; r >= 0; --r)  {
+            sol(r, rhsc) = tmp(r, cols() + rhsc);
+            for (size_type c = r + 1; c < cols(); ++c)
+                sol(r, rhsc) -= tmp(r, c) * sol(c, rhsc);
+        }
+    }
+
+    return (sol);
 }
 
 // ----------------------------------------------------------------------------

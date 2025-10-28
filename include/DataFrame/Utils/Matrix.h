@@ -352,6 +352,7 @@ public:
     //
     template<typename MA>
     inline MA solve(const MA &rhs) const;
+    inline Matrix solve() const;  // rhs is the last column
 
     // In 2-D, when you talk about the point (2, 4), you can think of the
     // 2 and 4 as directions to get from the origin to the point

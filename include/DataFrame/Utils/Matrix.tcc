@@ -566,7 +566,7 @@ Matrix<T, MO, IS_SYM>::rref(size_type &rank) noexcept  {
 
     rank = 0;
     for (size_type r = 0; r < rows(); ++r)  {
-        if (r >= cols() || ppivot_ (r) == NOPOS_)
+        if (r >= cols() || ppivot_(r, rows(), cols()) == NOPOS_)
             break;
 
         const value_type    diag = at(r, r);
@@ -2253,12 +2253,12 @@ MA Matrix<T, MO, IS_SYM>::
 solve(const MA &rhs) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (! is_square () || cols () != rhs.rows ())
+    if (! is_square() || cols() != rhs.rows())
         throw NotFeasible("Matrix::solve(): Matrix must be squared and "
                           "compatible with rhs");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    MA  tmp { rows(), cols() + rhs.col() };
+    MA  tmp { rows(), cols() + rhs.cols() };
 
     for (size_type r = 0; r < rows(); ++r)  {
         for (size_type c = 0; c < cols(); ++c)
@@ -2282,6 +2282,43 @@ solve(const MA &rhs) const  {
             for (size_type c = r + 1; c < cols(); ++c)
                 sol(r, rhsc) -= tmp(r, c) * sol(c, rhsc);
         }
+    }
+
+    return (sol);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> Matrix<T, MO, IS_SYM>::
+solve() const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (rows() != (cols() - 1))
+        throw NotFeasible("Matrix::solve(): Matrix must be squared and "
+                          "and last column is the rhs");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    Matrix  tmp { rows(), cols() };
+    for (size_type r = 0; r < rows(); ++r)  {
+        for (size_type c = 0; c < cols() - 1; ++c)
+            tmp(r, c) = at(r, c);
+        tmp(r, cols() - 1) = at(r, cols() - 1);
+    }
+
+    size_type   rank { 0 };
+
+    tmp.rref(rank);
+
+    if (rank != rows())
+        throw NotFeasible("Matrix::solve(): Matrix is singular");
+
+    Matrix  sol { rows(), 1 };
+
+    for (size_type r = rows() - 1; r >= 0; --r)  {
+        sol(r, 0) = tmp(r, cols() - 1);
+        for (size_type c = r + 1; c < cols() - 1; ++c)
+            sol(r, 0) -= tmp(r, c) * sol(c, 0);
     }
 
     return (sol);

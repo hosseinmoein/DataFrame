@@ -671,8 +671,8 @@ int main(int, char *[]) {
         using col_mat_t = Matrix<int, matrix_orient::column_major>;
         using row_mat_t = Matrix<int, matrix_orient::row_major>;
 
-		col_mat_t   col_mat { 10, 10 };
-		row_mat_t   row_mat { 10, 10 };
+        col_mat_t   col_mat { 10, 10 };
+        row_mat_t   row_mat { 10, 10 };
         int         value { 0 };
 
         for (long r = 0; r < row_mat.rows(); ++r)
@@ -685,37 +685,95 @@ int main(int, char *[]) {
         const auto  col_res1 = col_mat.get_row_vec(2);
 
         assert((row_res1 ==
-                std::vector<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 })); 
+                std::vector<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 }));
         assert((col_res1 ==
-                std::vector<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 })); 
+                std::vector<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 }));
 
         const auto  row_res2 = row_mat.get_column_vec(9);
         const auto  col_res2 = col_mat.get_column_vec(9);
 
         assert((row_res2 ==
-                std::vector<int> { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 })); 
+                std::vector<int> { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 }));
         assert((col_res2 ==
-                std::vector<int> { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 })); 
+                std::vector<int> { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 }));
 
         const auto  row_res3 = row_mat.get_row_mat(2);
         const auto  col_res3 = col_mat.get_row_mat(2);
 
-		assert(row_res3.rows() == 1);
-		assert(row_res3.cols() == 10);
-		assert(col_res3.rows() == 1);
-		assert(col_res3.cols() == 10);
-		assert(row_res3(0, 8) == 29);
-		assert(col_res3(0, 5) == 26);
+        assert(row_res3.rows() == 1);
+        assert(row_res3.cols() == 10);
+        assert(col_res3.rows() == 1);
+        assert(col_res3.cols() == 10);
+        assert(row_res3(0, 8) == 29);
+        assert(col_res3(0, 5) == 26);
 
         const auto  row_res4 = row_mat.get_column_mat(9);
         const auto  col_res4 = col_mat.get_column_mat(9);
 
-		assert(row_res4.rows() == 10);
-		assert(row_res4.cols() == 1);
-		assert(col_res4.rows() == 10);
-		assert(col_res4.cols() == 1);
-		assert(row_res4(8, 0) == 90);
-		assert(col_res4(5, 0) == 60);
+        assert(row_res4.rows() == 10);
+        assert(row_res4.cols() == 1);
+        assert(col_res4.rows() == 10);
+        assert(col_res4.cols() == 1);
+        assert(row_res4(8, 0) == 90);
+        assert(col_res4(5, 0) == 60);
+    }
+
+    // Test solve and get_column
+    //
+    {
+        // 2x + 3y + 2z = 13
+        // 3x + 2y + 3z = 17
+        // 4x - 2y + 2z = 12
+
+        using row_mat_t = Matrix<double, matrix_orient::row_major>;
+
+        row_mat_t   coefs { 3, 3 };
+        row_mat_t   rhs { 3, 1 };
+
+        coefs(0, 0) = 2.0;
+        coefs(0, 1) = 3.0;
+        coefs(0, 2) = 2.0;
+
+        coefs(1, 0) = 3.0;
+        coefs(1, 1) = 2.0;
+        coefs(1, 2) = 3.0;
+
+        coefs(2, 0) = 4.0;
+        coefs(2, 1) = -2.0;
+        coefs(2, 2) = 2.0;
+
+        rhs(0, 0) = 13.0;
+        rhs(1, 0) = 17.0;
+        rhs(2, 0) = 12.0;
+
+		const auto result = coefs.solve(rhs);
+
+        assert(result(0, 0) == 2.0);
+        assert(result(1, 0) == 1.0);
+        assert(result(2, 0) == 3.0);
+
+        row_mat_t   matrix { 3, 4 };
+
+        matrix(0, 0) = 2.0;
+        matrix(0, 1) = 3.0;
+        matrix(0, 2) = 2.0;
+        matrix(0, 3) = 13.0;
+
+        matrix(1, 0) = 3.0;
+        matrix(1, 1) = 2.0;
+        matrix(1, 2) = 3.0;
+        matrix(1, 3) = 17.0;
+
+        matrix(2, 0) = 4.0;
+        matrix(2, 1) = -2.0;
+        matrix(2, 2) = 2.0;
+        matrix(2, 3) = 12.0;
+
+		const auto result2 = matrix.solve();
+
+        assert(result2(0, 0) == 2.0);
+        assert(result2(1, 0) == 1.0);
+        assert(result2(2, 0) == 3.0);
     }
 
     test_thread_pool();

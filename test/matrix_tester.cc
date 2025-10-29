@@ -718,7 +718,7 @@ int main(int, char *[]) {
         assert(col_res4(5, 0) == 60);
     }
 
-    // Test solve and get_column
+    // Test solve
     //
     {
         // 2x + 3y + 2z = 13
@@ -774,6 +774,57 @@ int main(int, char *[]) {
         assert(result2(0, 0) == 2.0);
         assert(result2(1, 0) == 1.0);
         assert(result2(2, 0) == 3.0);
+    }
+
+    // Test lud
+    //
+    {
+        using col_mat_t = Matrix<double, matrix_orient::row_major>;
+
+        col_mat_t   mat { 8, 8 };
+
+        for (long row = 0; row < 8; ++row)
+            for (long col = 0; col < 8; ++col)
+                mat(row, col) = double(rand() % 1000);
+
+        col_mat_t   lower;
+        col_mat_t   upper;
+
+        mat.lud(lower, upper);
+
+        const auto  prod = lower * upper;
+
+        for (long row = 0; row < 8; ++row)
+            for (long col = 0; col < 8; ++col)
+                assert(std::fabs(mat(row, col) - prod(row, col)) < 0.00001);
+    }
+
+    // Test ldlt
+    //
+    {
+        using col_mat_t = Matrix<double, matrix_orient::row_major>;
+
+        col_mat_t   mat { 8, 8 };
+
+        for (long c = 0; c < 8; ++c)
+            for (long r = c; r < 8; ++r)
+                mat(r, c) = mat(c, r) = double(rand() % 1000);
+
+        std::vector<double> diag;
+        col_mat_t           lower;
+
+        mat.ldlt(diag, lower);
+
+        col_mat_t   D { 8L, 8L, 0.0 };
+
+        for (std::size_t i = 0; i < diag.size(); ++i)
+            D(i, i) = diag[i];
+
+        const auto  prod = lower * D * lower.transpose();
+
+        for (long row = 0; row < 8; ++row)
+            for (long col = 0; col < 8; ++col)
+                assert(std::fabs(mat(row, col) - prod(row, col)) < 0.00001);
     }
 
     test_thread_pool();

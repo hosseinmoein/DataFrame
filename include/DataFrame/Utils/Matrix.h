@@ -347,6 +347,23 @@ public:
     template<typename MA1, typename MA2>
     inline void lud(MA1 &L, MA2 &U) const;
 
+    // LDLT factorization is a matrix decomposition that expresses a real
+    // symmetric matrix S as the product of a lower unit triangular matrix
+    // L, a diagonal matrix D, and the transpose of lower triangular matrix
+    // L^T. This decomposition is computationally efficient and useful for
+    // determining the definiteness of a matrix, as the signs of the diagonal
+    // entries in D indicate whether the matrix is positive definite, negative
+    // definite, or indefinite. It is often called the "square-root-free
+    // Cholesky decomposition" because it achieves a similar result without
+    // the square roots required in the standard Cholesky method.
+    //
+    // The LDLT factorization is particularly useful for solving linear
+    // systems and for determining the definiteness of a symmetric matrix
+    // without a full eigenspace calculation. 
+    //
+    template<typename MA>
+    inline void ldlt(std::vector<value_type> &D, MA &L) const;
+
     // Solve the simultaneous equation Ax = rhs by Gaussian elimination.
     // It returns the x vector.
     //

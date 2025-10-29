@@ -2188,59 +2188,89 @@ lud(MA1 &L, MA2 &U) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square())
-        throw NotFeasible("Matrix::lud(): Matrix must be squared");
+        throw NotFeasible("Matrix::lud(): Matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    Matrix  tmp = *this;
-
-    for (size_type c = 0; c < cols(); ++c)  {
-        // Find pivot.
-        //
-        size_type   p { c };
-
-        for (size_type r = c + 1; r < rows(); ++r)
-            if (tmp(r, c) < tmp(p, c))
-                p = r;
-
-        // Exchange if necessary.
-        //
-        if (p != c)
-            for (size_type cc = 0; cc < cols(); ++cc)
-                std::swap(tmp(p, cc), tmp(c, cc));
-
-        // Compute multipliers and eliminate c-th column.
-        //
-        if (tmp(c, c) != value_type(0))
-            for (size_type r = c + 1; r < rows(); ++r)  {
-                tmp(r, c) /= tmp(c, c);
-
-                for (size_type cc = c + 1; cc < cols(); ++cc)
-                    tmp(r, cc) -= tmp(r, c) * tmp(c, cc);
-            }
-    }
-
     MA1 l_tmp { rows(), cols(), 0 };
-
-    for (size_type r = 0; r < rows(); ++r)  {
-        for (size_type c = 0; c < cols(); ++c)  {
-            if (r > c)
-                l_tmp(r, c) = tmp(r, c);
-            else if (r == c)
-                l_tmp(r, c) = value_type(1);
-        }
-    }
-
     MA2 u_tmp { rows(), cols(), 0 };
 
-    for (size_type c = 0; c < cols(); ++c)  {
-        for (size_type r = 0; r < rows(); ++r)  {
-            if (c <= r)
-                u_tmp(c, r) = tmp(c, r);
+    for (size_type i { 0 }; i < rows(); ++i) {
+        value_type  sum { 0 };
+
+        // Upper Triangular
+        //
+        for (size_type k { i }; k < rows(); ++k) {
+            sum = 0;
+            for (size_type j { 0 }; j < i; ++j)
+                sum += l_tmp(i, j) * u_tmp(j, k);
+            u_tmp(i, k) = at(i, k) - sum;
+        }
+
+        // Lower Triangular
+        //
+        l_tmp(i, i) = 1;  // Diagonal of L is 1
+        for (size_type k { i + 1 }; k < rows(); ++k) {
+            sum = 0;
+            for (size_type j { 0 }; j < i; ++j)
+                sum += l_tmp(k, j) * u_tmp(j, i);
+
+            if (std::fabs(u_tmp(i, i)) < std::numeric_limits<T>::epsilon())
+                throw NotFeasible("Matrix::lud(): Matrix is singular");
+
+            l_tmp(k, i) = (at(k, i) - sum) / u_tmp(i, i);
         }
     }
 
     L.swap(l_tmp);
     U.swap(u_tmp);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+template<typename MA>
+void Matrix<T, MO, IS_SYM>::
+ldlt(std::vector<T> &D, MA &L) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (! is_symmetric())
+        throw NotFeasible("Matrix::ldlt(): Matrix must be symmetric");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+	std::vector<value_type> d_tmp (rows(), 0);
+    MA                      l_tmp { rows(), cols(), 0 };
+
+    // Initialize L as identity
+    //
+    for (size_type i { 0 }; i < rows(); ++i)  l_tmp(i, i) = 1;
+
+    for (size_type k { 0 }; k < rows(); ++k) {
+        value_type  sum { 0 };
+
+        // Compute D[k]
+        //
+        for (size_type j { 0 }; j < k; ++j)
+            sum += l_tmp(k, j) * l_tmp(k, j) * d_tmp[j];
+        d_tmp[k] = at(k, k) - sum;
+
+        if (std::fabs(d_tmp[k]) < std::numeric_limits<T>::epsilon())
+            throw NotFeasible("Matrix::ldlt(): Matrix is singular");
+
+        // Compute L(i,k) for i = k+1 .. rows-1
+        //
+        for (size_type i { k + 1 }; i < rows(); ++i) {
+            value_type  sum2 { 0 };
+
+            for (size_type j { 0 }; j < k; ++j)
+                sum2 += l_tmp(i, j) * l_tmp(k, j) * d_tmp[j];
+            l_tmp(i, k) = (at(i, k) - sum2) / d_tmp[k];
+        }
+    }
+
+    D.swap(d_tmp);
+    L.swap(l_tmp);
 
     return;
 }

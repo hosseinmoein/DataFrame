@@ -3878,54 +3878,6 @@ private:
 template<typename T, typename I = unsigned long>
 using mut_i_v = MutualInfoVisitor<T, I>;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ----------------------------------------------------------------------------
 
 // AutoRegressive Integrated Moving Average
@@ -3940,8 +3892,6 @@ struct  ARIMAVisitor  {
     inline void
     operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
                const H &column_begin, const H &column_end)  {
-
-        const size_type col_s = std::distance(column_begin, column_end);
 
         y_ = difference_(column_begin, column_end, d_);
         n_ = y_.size();
@@ -4017,8 +3967,9 @@ private:
     using matrix_t = Matrix<value_type, matrix_orient::row_major>;
     using vec_t = std::vector<value_type>;
 
+    template<typename MA1, typename MA2>
     static inline result_type
-    solve_(const matrix_t &L, const result_type &D, const matrix_t &b) {
+    solve_(const MA1 &L, const result_type &D, const MA2 &b) {
 
         long        n { long(D.size()) };
         result_type y(n, 0), z(n, 0), x(n, 0);
@@ -4053,7 +4004,7 @@ private:
 
         if (p_ <= 0 || y_.size() <= size_type(p_))
             throw DataFrameError("ARIMAVisitor::fit_ar_(): "
-                                 "Invalid p or data length");
+                                 "Invalid AutoRegressive order or data size");
 
         long        m { n_ - p_ };
         matrix_t    X { m, p_, 0 };
@@ -4068,21 +4019,19 @@ private:
         const auto  XtX { X.transpose() * X };
         const auto  XtY { X.transpose() * Y };
 
-        /*
-        matrix_t    D;   // Diagonal matrix
+        result_type D;   // Diagonal matrix
         matrix_t    L;   // Lower matrix
 
         XtX.ldlt(D, L);
-        ar_coeffs_ = solve_(L, D, XtY);
-        */
+        ar_coeffs_ = solve_(L, D, XtY.transpose());
 
+        // Simpler but not numerically stable version
+        //
+        // const auto  coefs_mat { XtX.solve(XtY) };
 
-
-        const auto  coefs_mat { XtX.solve(XtY) };
-
-        ar_coeffs_.reserve(coefs_mat.rows());
-        for (long r { 0 }; r < coefs_mat.rows(); ++r)
-            ar_coeffs_.push_back(coefs_mat(r, 0));
+        // ar_coeffs_.reserve(coefs_mat.rows());
+        // for (long r { 0 }; r < coefs_mat.rows(); ++r)
+        //     ar_coeffs_.push_back(coefs_mat(r, 0));
     }
 
     // 2) Fit MA coefficients iteratively (simplified)
@@ -4104,15 +4053,15 @@ private:
             // Update each MA coefficient with small step toward correlation
             //
             for (long j { 0 }; j < q_; ++j)  {
-                value_type  num { 0 };
-                value_type  den { 0 };
+                value_type  numer { 0 };
+                value_type  denom { 0 };
 
                 for (long t { j }; t < n_; ++t) {
-                    num += residuals_[t] * residuals_[t - j];
-                    den += residuals_[t - j] * residuals_[t - j];
+                    numer += residuals_[t] * residuals_[t - j];
+                    denom += residuals_[t - j] * residuals_[t - j];
                 }
-                if (den != 0)
-                    ma_coeffs_[j] = num / den;
+                if (denom != 0)
+                    ma_coeffs_[j] = numer / denom;
             }
 
             value_type  diff { 0 };
@@ -4166,10 +4115,10 @@ private:
         return (diff);
     }
 
-    template<typename H>
+    template<typename H, typename K>
     static inline result_type
-    invert_difference_(const H &history_begin, const H &history_end,
-                       const H &diffed_begin, const H &diffed_end,
+    invert_difference_(const H &/*history_begin*/, const H &history_end,
+                       const K &diffed_begin, const K &diffed_end,
                        long d)  {
 
         if (d == 0)  {
@@ -4179,10 +4128,10 @@ private:
         }
 
         const size_type diff_s = std::distance(diffed_begin, diffed_end);
-        result_type     inverted(history_begin, history_end);
+        result_type     inverted;
         value_type      last { *(history_end - 1) };
 
-        inverted.reserve(inverted.size() + diff_s);
+        inverted.reserve(diff_s);
         for (size_type i { 0 }; i < diff_s; ++i)  {
             last += *(diffed_begin + i);
             inverted.push_back(last);
@@ -4199,7 +4148,7 @@ private:
 
     // Integration order (differencing): Number of times the original series
     // is differenced to make it stationary. d=1 means use first differences
-    // (i.e., Ytₜ - Yt-1₁).
+    // (i.e., Yt - Yt-1₁).
     //
     const long  d_;
 

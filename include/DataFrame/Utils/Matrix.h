@@ -1474,6 +1474,20 @@ Matrix<T, MO1, IS_SYM1> &
 operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
              const Matrix<T, MO2, IS_SYM2> &rhs);
 
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO, bool IS_SYM>
+static Matrix<T, MO, false>
+operator * (const std::vector<T> &lhs,
+            const Matrix<T, MO, IS_SYM> &rhs);
+
+// -------------------------------------
+
+template<typename T, matrix_orient MO, bool IS_SYM>
+static Matrix<T, MO, false>
+operator * (const Matrix<T, MO, IS_SYM> &lhs,
+            const std::vector<T> &rhs);
+
 // -------------------------------------
 
 // Naïve but cache friendly O(n^3) algorithm

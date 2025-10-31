@@ -2215,6 +2215,7 @@ lud(MA1 &L, MA2 &U) const  {
                 sum += l_tmp(k, j) * u_tmp(j, i);
 
             if (std::fabs(u_tmp(i, i)) < std::numeric_limits<T>::epsilon())
+                    [[unlikely]]
                 throw NotFeasible("Matrix::lud(): Matrix is singular");
 
             l_tmp(k, i) = (at(k, i) - sum) / u_tmp(i, i);
@@ -2239,7 +2240,7 @@ ldlt(std::vector<T> &D, MA &L) const  {
         throw NotFeasible("Matrix::ldlt(): Matrix must be symmetric");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-	std::vector<value_type> d_tmp (rows(), 0);
+    std::vector<value_type> d_tmp (rows(), 0);
     MA                      l_tmp { rows(), cols(), 0 };
 
     // Initialize L as identity
@@ -2256,6 +2257,7 @@ ldlt(std::vector<T> &D, MA &L) const  {
         d_tmp[k] = at(k, k) - sum;
 
         if (std::fabs(d_tmp[k]) < std::numeric_limits<T>::epsilon())
+                [[unlikely]]
             throw NotFeasible("Matrix::ldlt(): Matrix is singular");
 
         // Compute L(i,k) for i = k+1 .. rows-1
@@ -3623,6 +3625,131 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
 
 // ----------------------------------------------------------------------------
 
+template<typename T, matrix_orient MO, bool IS_SYM>
+static Matrix<T, MO, false>
+operator * (const std::vector<T> &lhs,
+            const Matrix<T, MO, IS_SYM> &rhs)  {
+
+    constexpr long  lhs_rows { 1 };
+    const long      lhs_cols { long(lhs.size()) };
+    const long      rhs_cols { rhs.cols() };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (lhs_cols != rhs.rows())
+        throw NotFeasible("Incompatible vector * matrix operation");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    Matrix<T, MO, false>    result { lhs_rows, rhs_cols, 0 };
+    const long              thread_level =
+        (lhs_cols >= 400L || rhs_cols >= 400L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    auto    col_lbd =
+        [lhs_rows, lhs_cols, &result,
+         &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long c = begin; c < end; ++c)
+                for (long r = 0; r < lhs_rows; ++r)
+                    for (long k = 0; k < lhs_cols; ++k)
+                        result(r, c) += lhs[k] * rhs(k, c);
+        };
+    auto    row_lbd =
+        [lhs_cols, rhs_cols, &result,
+         &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long r = begin; r < end; ++r)
+                for (long c = 0; c < rhs_cols; ++c)
+                    for (long k = 0; k < lhs_cols; ++k)
+                        result(r, c) += lhs[k] * rhs(k, c);
+        };
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, rhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            col_lbd(0L, rhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO, bool IS_SYM>
+static Matrix<T, MO, false>
+operator * (const Matrix<T, MO, IS_SYM> &lhs,
+            const std::vector<T> &rhs)  {
+
+    const long      lhs_rows { lhs.rows() };
+    const long      lhs_cols { lhs.cols() };
+    constexpr long  rhs_cols { 1 };
+    const long      rhs_rows { long(rhs.size()) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (lhs_cols != rhs_rows)
+        throw NotFeasible("Incompatible matrix * vector operation");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    Matrix<T, MO, false>    result { lhs_rows, rhs_cols, 0 };
+    const long              thread_level =
+        (lhs_cols >= 400L || rhs_rows >= 400L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    auto    col_lbd =
+        [lhs_rows, lhs_cols, rhs_rows, &result,
+         &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long c = begin; c < end; ++c)
+                for (long r = 0; r < lhs_rows; ++r)
+                    for (long k = 0; k < rhs_rows; ++k)
+                        result(r, c) += lhs(r, k) * rhs[k];
+        };
+    auto    row_lbd =
+        [lhs_cols, rhs_cols, rhs_rows, &result,
+         &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long r = begin; r < end; ++r)
+                for (long c = 0; c < rhs_cols; ++c)
+                    for (long k = 0; k < rhs_rows; ++k)
+                        result(r, c) += lhs(r, k) * rhs[k];
+        };
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, rhs_cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, lhs_rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        if constexpr (MO == matrix_orient::column_major)
+            col_lbd(0L, rhs_cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, lhs_rows);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
 // Naïve but cache friendly O(n^3) algorithm
 //
 template<typename T, matrix_orient MO1, matrix_orient MO2,
@@ -3637,8 +3764,7 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_cols != rhs.rows())
-        throw NotFeasible(
-            "* operation between these two metrices is not feasible");
+        throw NotFeasible("Incompatible matrix * matrix operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix<T, MO1, false>   result { lhs_rows, rhs_cols, 0 };

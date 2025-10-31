@@ -270,6 +270,31 @@ int main(int, char *[]) {
         assert(big_multi_mat(2, 5) == 30300);
     }
 
+    // Testing vector matrix multilications
+    //
+    {
+        row_mat_t                   row_mat { 5, 6 };
+        col_mat_t                   col_mat { 5, 6 };
+        std::vector<std::size_t>    lhs(5);
+        std::vector<std::size_t>    rhs(6);
+        std::size_t                 value { 0 };
+
+        for (long r = 0; r < row_mat.rows(); ++r)  {
+            for (long c = 0; c < row_mat.cols(); ++c)  {
+                row_mat(r, c) = ++value;
+                col_mat(r, c) = value;
+            }
+            lhs[r] = value;
+            rhs[r] = value;
+        }
+        rhs[5] = 10;
+
+        const auto  result1 = lhs * row_mat;
+        const auto  result2 = lhs * col_mat;
+        const auto  result3 = row_mat * rhs;
+        const auto  result4 = col_mat * rhs;
+    }
+
     // Test Inverse
     //
     {

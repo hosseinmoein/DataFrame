@@ -55,7 +55,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_permutation_vec()  {
 
     std::cout << "\nTesting permutation_vec( ) ..." << std::endl;
@@ -1037,7 +1036,6 @@ static void test_get_matrix_2()  {
     assert(matrix2(8, 2) == 90.0);
     assert(matrix2(9, 2) == 100.0);
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -1133,14 +1131,17 @@ static void test_ARIMAVisitor()  {
         ::exit(-1);
     }
 
-    df2.single_act_visit<double>("IBM_Close", ari);
+    ARIMAVisitor<double>   ari2 { 4, 3 };
 
-    const auto  result5 = ari.get_result();
+    df2.single_act_visit<double>("IBM_Close", ari2);
 
-    assert(result5.size() == 3);
-    assert(std::fabs(result5[0] - 111.63) < 0.001);
-    assert(std::fabs(result5[1] - 111.658) < 0.001);
-    assert(std::fabs(result5[2] - 111.657) < 0.001);
+    const auto  result5 = ari2.get_result();
+
+    assert(result5.size() == 4);
+    assert(std::fabs(result5[0] - 111.658) < 0.001);
+    assert(std::fabs(result5[1] - 111.669) < 0.001);
+    assert(std::fabs(result5[2] - 111.649) < 0.001);
+    assert(std::fabs(result5[3] - 111.649) < 0.001);
 }
 
 // ----------------------------------------------------------------------------
@@ -1149,7 +1150,6 @@ int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_permutation_vec();
     test_get_data_every_n();
     test_get_n_largest_data();
@@ -1165,7 +1165,6 @@ int main(int, char *[])  {
     test_ChiSquaredTestVisitor();
     test_get_matrix();
     test_get_matrix_2();
-*/
     test_ARIMAVisitor();
 
     return (0);

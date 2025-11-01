@@ -3893,6 +3893,13 @@ struct  ARIMAVisitor  {
     operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
                const H &column_begin, const H &column_end)  {
 
+        GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 5)
+           throw DataFrameError("ARIMAVisitor: Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
         y_ = difference_(column_begin, column_end, d_);
         n_ = y_.size();
 
@@ -3936,7 +3943,7 @@ struct  ARIMAVisitor  {
             diffed.push_back(pred);
         }
 
-        result_ = invert_difference_(column_begin, column_end,
+        result_ = invert_difference_(*(column_end - 1),
                                      preds.begin(), preds.end(),
                                      d_);
     }
@@ -3954,6 +3961,11 @@ struct  ARIMAVisitor  {
     inline void post()  {  }
     inline const result_type &get_result() const  { return (result_); }
     inline result_type &get_result()  { return (result_); }
+
+    inline value_type &get_sigma_sq() const  { return (sigma2_); }
+    inline const result_type &get_phi() const  { return (ar_coeffs_); }
+    inline const result_type &get_theta() const  { return (ma_coeffs_); }
+    inline const result_type &get_residuals() const  { return (residuals_); }
 
     explicit
     ARIMAVisitor(long periods = 3,
@@ -3974,7 +3986,7 @@ private:
         long        n { long(D.size()) };
         result_type y(n, 0), z(n, 0), x(n, 0);
 
-        // Forward substitution: L y = b
+        // Forward substitution: LY = b
         //
         for (long i { 0 }; i < n; ++i) {
             y[i] = b(0, i);
@@ -3982,12 +3994,12 @@ private:
                 y[i] -= L(i, j) * y[j];
         }
 
-        // Diagonal solve: D z = y
+        // Diagonal solve: DZ = Y
         //
         for (long i { 0 }; i < n; ++i)
             z[i] = y[i] / D[i];
 
-        // Backward substitution: Lᵀ x = z
+        // Backward substitution: LtX = Z
         //
         for (long i { n - 1 }; i >= 0; --i) {
             x[i] = z[i];
@@ -3998,7 +4010,7 @@ private:
         return (x);
     }
 
-    // 1) Fit AR coefficients via OLS
+    // 1) Fit AutoRegressive coefficients via Ordinary Least Squares (OLS)
     //
     void fit_ar_() {
 
@@ -4034,7 +4046,7 @@ private:
         //     ar_coeffs_.push_back(coefs_mat(r, 0));
     }
 
-    // 2) Fit MA coefficients iteratively (simplified)
+    // 2) Fit Moving Average coefficients iteratively (simplified)
     //
     void fit_ma_() {
 
@@ -4115,9 +4127,9 @@ private:
         return (diff);
     }
 
-    template<typename H, typename K>
+    template<typename K>
     static inline result_type
-    invert_difference_(const H &/*history_begin*/, const H &history_end,
+    invert_difference_(value_type last_data,
                        const K &diffed_begin, const K &diffed_end,
                        long d)  {
 
@@ -4129,12 +4141,11 @@ private:
 
         const size_type diff_s = std::distance(diffed_begin, diffed_end);
         result_type     inverted;
-        value_type      last { *(history_end - 1) };
 
         inverted.reserve(diff_s);
         for (size_type i { 0 }; i < diff_s; ++i)  {
-            last += *(diffed_begin + i);
-            inverted.push_back(last);
+            last_data += *(diffed_begin + i);
+            inverted.push_back(last_data);
         }
 
         return (inverted);
@@ -4164,7 +4175,7 @@ private:
     // The length of the working time series after differencing
     //
     long        n_ { 0 };
-    value_type  sigma2_ { 0 };
+    value_type  sigma2_ { 0 };  // variance of the residuals
 
     result_type y_ { };
     result_type residuals_ { };

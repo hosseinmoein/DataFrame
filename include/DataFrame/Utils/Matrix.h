@@ -148,6 +148,22 @@ public:
     //
     Matrix inverse() const;
 
+    // Row Reduced Echelon Form:
+    // A matrix that has undergone Gaussian elimination is said to be in
+    // row reduced echelon form.
+    // Such a matrix has the following characteristics:
+    // 1. All zero rows are at the bottom of the matrix
+    // 2. The leading entry of each nonzero row occurs to the right of the
+    //    leading entry of the previous row.
+    // 3. The leading entry in any nonzero row is 1.
+    // 4. All entries in the column above and below a leading 1 are zero.
+    //
+    // RREF is an important technique in solving simultaneous equations and
+    // finding the rank of a matrix.
+    //
+    inline Matrix &rref(size_type &rank) noexcept;
+    inline Matrix &rref(Matrix &that, size_type &rank) const noexcept;
+
     // Frobenius Norm:
     // The Frobenius norm of a matrix is the square root of the sum of
     // the squares of the values of the elements of the matrix.
@@ -330,6 +346,30 @@ public:
     //
     template<typename MA1, typename MA2>
     inline void lud(MA1 &L, MA2 &U) const;
+
+    // LDLT factorization is a matrix decomposition that expresses a real
+    // symmetric matrix S as the product of a lower unit triangular matrix
+    // L, a diagonal matrix D, and the transpose of lower triangular matrix
+    // L^T. This decomposition is computationally efficient and useful for
+    // determining the definiteness of a matrix, as the signs of the diagonal
+    // entries in D indicate whether the matrix is positive definite, negative
+    // definite, or indefinite. It is often called the "square-root-free
+    // Cholesky decomposition" because it achieves a similar result without
+    // the square roots required in the standard Cholesky method.
+    //
+    // The LDLT factorization is particularly useful for solving linear
+    // systems and for determining the definiteness of a symmetric matrix
+    // without a full eigenspace calculation. 
+    //
+    template<typename MA>
+    inline void ldlt(std::vector<value_type> &D, MA &L) const;
+
+    // Solve the simultaneous equation Ax = rhs by Gaussian elimination.
+    // It returns the x vector.
+    //
+    template<typename MA>
+    inline MA solve(const MA &rhs) const;
+    inline Matrix solve() const;  // rhs is the last column
 
     // In 2-D, when you talk about the point (2, 4), you can think of the
     // 2 and 4 as directions to get from the origin to the point
@@ -1433,6 +1473,20 @@ template<typename T, matrix_orient MO1, matrix_orient MO2,
 Matrix<T, MO1, IS_SYM1> &
 operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
              const Matrix<T, MO2, IS_SYM2> &rhs);
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO, bool IS_SYM>
+static Matrix<T, MO, false>
+operator * (const std::vector<T> &lhs,
+            const Matrix<T, MO, IS_SYM> &rhs);
+
+// -------------------------------------
+
+template<typename T, matrix_orient MO, bool IS_SYM>
+static Matrix<T, MO, false>
+operator * (const Matrix<T, MO, IS_SYM> &lhs,
+            const std::vector<T> &rhs);
 
 // -------------------------------------
 

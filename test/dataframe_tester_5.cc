@@ -1039,6 +1039,113 @@ static void test_get_matrix_2()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_ARIMAVisitor()  {
+
+    std::cout << "\nTesting ARIMAVisitor{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idxvec = {
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
+    };
+    std::vector<double>         col1 = {
+        266.0, 145.9, 183.1, 119.3, 180.3, 168.5, 231.8, 224.5, 192.8, 122.9,
+        336.5, 185.9, 194.3
+    };
+    std::vector<double>         oscil = {
+        1.5, 1.8, 1.62, 1.78, 1.5, 1.68, 1.6, 1.8, 1.71, 1.9, 1.78, 1.84, 1.69
+    };
+    std::vector<double>         constant = {
+        10.56, 10.56, 10.56, 10.56, 10.56, 10.56, 10.56, 10.56, 10.56, 10.56,
+        10.56, 10.56, 10.56
+    };
+    std::vector<double>         increasing = {
+        10.56, 10.68, 10.78, 10.90, 11.01, 11.45, 11.99, 12.01, 12.21, 12.35,
+        12.67, 13.89, 13.01
+    };
+    std::vector<double>         decreasing = {
+        10.56, 10.30, 10.12, 10.01, 9.80, 9.74, 9.41, 9.03, 9.0, 8.20,
+        8.01, 7.9, 7.55
+    };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("col1", col1),
+                 std::make_pair("oscil", oscil),
+                 std::make_pair("constant", constant),
+                 std::make_pair("increasing", increasing),
+                 std::make_pair("decreasing", decreasing));
+
+    ARIMAVisitor<double>   ari;
+
+    df.single_act_visit<double>("col1", ari);
+
+    const auto  result1 = ari.get_result();
+
+    assert(result1.size() == 3);
+    assert(std::fabs(result1[0] - 247.175) < 0.001);
+    assert(std::fabs(result1[1] - 197.294) < 0.001);
+    assert(std::fabs(result1[2] - 220.021) < 0.001);
+
+    df.single_act_visit<double>("oscil", ari);
+
+    const auto  result2 = ari.get_result();
+
+    assert(result2.size() == 3);
+    assert(std::fabs(result2[0] - 1.77088) < 0.00001);
+    assert(std::fabs(result2[1] - 1.67015) < 0.00001);
+    assert(std::fabs(result2[2] - 1.74417) < 0.00001);
+
+    try  {
+        df.single_act_visit<double>("constant", ari);
+    }
+    catch (const NotFeasible &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    df.single_act_visit<double>("increasing", ari);
+
+    const auto  result3 = ari.get_result();
+
+    assert(result3.size() == 3);
+    assert(std::fabs(result3[0] - 14.3335) < 0.0001);
+    assert(std::fabs(result3[1] - 13.09) < 0.0001);
+    assert(std::fabs(result3[2] - 14.6469) < 0.0001);
+
+    df.single_act_visit<double>("decreasing", ari);
+
+    const auto  result4 = ari.get_result();
+
+    assert(result4.size() == 3);
+    assert(std::fabs(result4[0] - 7.42058) < 0.00001);
+    assert(std::fabs(result4[1] - 7.21897) < 0.00001);
+    assert(std::fabs(result4[2] - 7.11158) < 0.00001);
+
+    // Now some real data
+    //
+    StrDataFrame    df2;
+
+    try  {
+        df2.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    ARIMAVisitor<double>   ari2 { 4, 3 };
+
+    df2.single_act_visit<double>("IBM_Close", ari2);
+
+    const auto  result5 = ari2.get_result();
+
+    assert(result5.size() == 4);
+    assert(std::fabs(result5[0] - 111.658) < 0.001);
+    assert(std::fabs(result5[1] - 111.669) < 0.001);
+    assert(std::fabs(result5[2] - 111.649) < 0.001);
+    assert(std::fabs(result5[3] - 111.649) < 0.001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
@@ -1058,6 +1165,7 @@ int main(int, char *[])  {
     test_ChiSquaredTestVisitor();
     test_get_matrix();
     test_get_matrix_2();
+    test_ARIMAVisitor();
 
     return (0);
 }

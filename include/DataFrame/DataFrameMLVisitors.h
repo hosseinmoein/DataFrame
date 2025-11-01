@@ -3878,6 +3878,315 @@ private:
 template<typename T, typename I = unsigned long>
 using mut_i_v = MutualInfoVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// AutoRegressive Integrated Moving Average
+//
+template<arithmetic T, typename I = unsigned long>
+struct  ARIMAVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = std::vector<T>;
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 5)
+           throw DataFrameError("ARIMAVisitor: Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        y_ = difference_(column_begin, column_end, d_);
+        n_ = y_.size();
+
+        if (n_ <= (std::max(p_, q_) + 1))
+            throw DataFrameError("ARIMAVisitor: "
+                                 "Not enough data after differencing");
+
+        // Fit AR part via OLS
+        //
+        fit_ar_();
+
+        // Fit MA part by iterative refinement (very simplified)
+        //
+        fit_ma_();
+
+        // Compute residual variance
+        //
+        compute_residuals_();
+
+        //
+        // Now forecast
+        //
+
+        result_type diffed = y_;
+        result_type preds;
+
+        preds.reserve(periods_);
+        for (long t { 0 }; t < periods_; ++t) {
+            value_type  ar_part { 0 };
+            value_type  ma_part { 0 };
+
+            for (long i { 1 }; i <= p_; ++i)
+                if (long(diffed.size()) >= i)
+                    ar_part += ar_coeffs_[i - 1] * diffed[diffed.size() - i];
+
+            // assume future residuals = 0 for MA forecast
+            //
+            const value_type    pred { ar_part + ma_part};
+
+            preds.push_back(pred);
+            diffed.push_back(pred);
+        }
+
+        result_ = invert_difference_(*(column_end - 1),
+                                     preds.begin(), preds.end(),
+                                     d_);
+    }
+
+    inline void pre()  {
+
+        n_ = 0;
+        sigma2_ = 0;
+        y_.clear();
+        residuals_.clear();
+        ar_coeffs_.clear();
+        ma_coeffs_.clear();
+        result_.clear();
+    }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+
+    inline value_type &get_sigma_sq() const  { return (sigma2_); }
+    inline const result_type &get_phi() const  { return (ar_coeffs_); }
+    inline const result_type &get_theta() const  { return (ma_coeffs_); }
+    inline const result_type &get_residuals() const  { return (residuals_); }
+
+    explicit
+    ARIMAVisitor(long periods = 3,
+                 long autoreg_order = 2,
+                 long diff = 1,
+                 long mav_order = 1)
+        : p_(autoreg_order), d_(diff), q_(mav_order), periods_(periods)  {   }
+
+private:
+
+    using matrix_t = Matrix<value_type, matrix_orient::row_major>;
+    using vec_t = std::vector<value_type>;
+
+    template<typename MA1, typename MA2>
+    static inline result_type
+    solve_(const MA1 &L, const result_type &D, const MA2 &b) {
+
+        long        n { long(D.size()) };
+        result_type y(n, 0), z(n, 0), x(n, 0);
+
+        // Forward substitution: LY = b
+        //
+        for (long i { 0 }; i < n; ++i) {
+            y[i] = b(0, i);
+            for (long j = 0; j < i; ++j)
+                y[i] -= L(i, j) * y[j];
+        }
+
+        // Diagonal solve: DZ = Y
+        //
+        for (long i { 0 }; i < n; ++i)
+            z[i] = y[i] / D[i];
+
+        // Backward substitution: LtX = Z
+        //
+        for (long i { n - 1 }; i >= 0; --i) {
+            x[i] = z[i];
+            for (long j = i + 1; j < n; ++j)
+                x[i] -= L(j, i) * x[j];
+        }
+
+        return (x);
+    }
+
+    // 1) Fit AutoRegressive coefficients via Ordinary Least Squares (OLS)
+    //
+    void fit_ar_() {
+
+        if (p_ <= 0 || y_.size() <= size_type(p_))
+            throw DataFrameError("ARIMAVisitor::fit_ar_(): "
+                                 "Invalid AutoRegressive order or data size");
+
+        long        m { n_ - p_ };
+        matrix_t    X { m, p_, 0 };
+        vec_t       Y (m);
+
+        for (long i { 0 }; i < m; ++i) {
+            for (long j { 0 }; j < p_; ++j)
+                X(i, j) = y_[i + p_ - j - 1];  // Lagged values
+            Y[i] = y_[i + p_];  // Current value
+        }
+
+        const auto  XtX { X.transpose() * X };
+        const auto  XtY { X.transpose() * Y };
+
+        result_type D;   // Diagonal matrix
+        matrix_t    L;   // Lower matrix
+
+        XtX.ldlt(D, L);
+        ar_coeffs_ = solve_(L, D, XtY.transpose());
+
+        // Simpler but not numerically stable version
+        //
+        // const auto  coefs_mat { XtX.solve(XtY) };
+
+        // ar_coeffs_.reserve(coefs_mat.rows());
+        // for (long r { 0 }; r < coefs_mat.rows(); ++r)
+        //     ar_coeffs_.push_back(coefs_mat(r, 0));
+    }
+
+    // 2) Fit Moving Average coefficients iteratively (simplified)
+    //
+    void fit_ma_() {
+
+        if (q_ == 0)  return;
+
+        ma_coeffs_.assign(q_, 0);
+        residuals_.assign(n_, 0);
+
+        result_type             prev_ma = ma_coeffs_;
+        constexpr long          max_iter { 50 };
+        constexpr value_type    tol { T(1e-6) };
+
+        for (long iter = 0; iter < max_iter; ++iter) {
+            compute_residuals_();
+
+            // Update each MA coefficient with small step toward correlation
+            //
+            for (long j { 0 }; j < q_; ++j)  {
+                value_type  numer { 0 };
+                value_type  denom { 0 };
+
+                for (long t { j }; t < n_; ++t) {
+                    numer += residuals_[t] * residuals_[t - j];
+                    denom += residuals_[t - j] * residuals_[t - j];
+                }
+                if (denom != 0)
+                    ma_coeffs_[j] = numer / denom;
+            }
+
+            value_type  diff { 0 };
+
+            for (long j { 0 }; j < q_; ++j)
+                diff += std::fabs(ma_coeffs_[j] - prev_ma[j]);
+            if (diff < tol)  break;
+            prev_ma = ma_coeffs_;
+        }
+    }
+
+    // 3) Compute residuals using AR and MA parts
+    //
+    void compute_residuals_()  {
+
+        residuals_.assign(n_, 0);
+        for (long t { 0 }; t < n_; ++t) {
+            value_type  ar_part { 0 };
+            value_type  ma_part { 0 };
+
+            for (long i { 1 }; i <= p_; ++i)
+                if (t >= i)
+                    ar_part += ar_coeffs_[i - 1] * y_[t - i];
+            for (long j { 1 }; j <= q_; ++j)
+                if (t >= j)
+                    ma_part += ma_coeffs_[j - 1] * residuals_[t - j];
+            residuals_[t] = y_[t] - (ar_part + ma_part);
+        }
+
+        value_type  ss { 0 };
+
+        for (const value_type r : residuals_)  ss += r * r;
+        sigma2_ = ss / n_;
+    }
+
+    template<typename H>
+    static inline result_type
+    difference_(const H &column_begin, const H &column_end, long d)  {
+
+        result_type diff(column_begin, column_end);
+
+        for (long i { 0 }; i < d; ++i) {
+            result_type tmp;
+
+            tmp.reserve(diff.size());
+            for (size_t j { 1 }; j < diff.size(); ++j)
+                tmp.push_back(diff[j] - diff[j - 1]);
+            diff = std::move(tmp);
+        }
+
+        return (diff);
+    }
+
+    template<typename K>
+    static inline result_type
+    invert_difference_(value_type last_data,
+                       const K &diffed_begin, const K &diffed_end,
+                       long d)  {
+
+        if (d == 0)  {
+            const result_type   inverted(diffed_begin, diffed_end);
+
+            return (inverted);
+        }
+
+        const size_type diff_s = std::distance(diffed_begin, diffed_end);
+        result_type     inverted;
+
+        inverted.reserve(diff_s);
+        for (size_type i { 0 }; i < diff_s; ++i)  {
+            last_data += *(diffed_begin + i);
+            inverted.push_back(last_data);
+        }
+
+        return (inverted);
+    }
+
+    // AutoRegressive order: Number of lagged observations (past values)
+    // included in the model. Determines how many previous time steps are
+    // linearly combined.
+    //
+    const long  p_;
+
+    // Integration order (differencing): Number of times the original series
+    // is differenced to make it stationary. d=1 means use first differences
+    // (i.e., Yt - Yt-1₁).
+    //
+    const long  d_;
+
+    // Moving Average order: Number of lagged forecast errors (residuals) used
+    // to model the noise structure.
+    //
+    const long  q_;
+
+    // Number of periods to forecast
+    //
+    const long periods_ { 0 };
+
+    // The length of the working time series after differencing
+    //
+    long        n_ { 0 };
+    value_type  sigma2_ { 0 };  // variance of the residuals
+
+    result_type y_ { };
+    result_type residuals_ { };
+    result_type ar_coeffs_ { };
+    result_type ma_coeffs_ { };
+    result_type result_ { };
+};
+
+template<typename T, typename I = unsigned long>
+using arima_v = ARIMAVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

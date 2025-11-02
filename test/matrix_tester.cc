@@ -84,21 +84,21 @@ int main(int, char *[]) {
 
     // Print the stuff out
     //
-    std::cout << "Row matrix\n";
-    for (long r = 0; r < row_mat.rows(); ++r)  {
-        for (long c = 0; c < row_mat.cols(); ++c)  {
-            std::cout << row_mat(r, c) << ", ";
-        }
-        std::cout << '\n';
-    }
-    std::cout << "\n\n";
-    std::cout << "Column matrix\n";
-    for (long r = 0; r < col_mat.rows(); ++r)  {
-        for (long c = 0; c < col_mat.cols(); ++c)  {
-            std::cout << col_mat(r, c) << ", ";
-        }
-        std::cout << '\n';
-    }
+    // std::cout << "Row matrix\n";
+    // for (long r = 0; r < row_mat.rows(); ++r)  {
+    //     for (long c = 0; c < row_mat.cols(); ++c)  {
+    //         std::cout << row_mat(r, c) << ", ";
+    //     }
+    //     std::cout << '\n';
+    // }
+    // std::cout << "\n\n";
+    // std::cout << "Column matrix\n";
+    // for (long r = 0; r < col_mat.rows(); ++r)  {
+    //     for (long c = 0; c < col_mat.cols(); ++c)  {
+    //         std::cout << col_mat(r, c) << ", ";
+    //     }
+    //     std::cout << '\n';
+    // }
 
     // Testing symmetrix matrices
     //
@@ -270,7 +270,7 @@ int main(int, char *[]) {
         assert(big_multi_mat(2, 5) == 30300);
     }
 
-    // Testing vector matrix multilications
+    // Testing vector matrix multiplication
     //
     {
         row_mat_t                   row_mat { 5, 6 };
@@ -290,9 +290,36 @@ int main(int, char *[]) {
         rhs[5] = 10;
 
         const auto  result1 = lhs * row_mat;
+
+        assert(result1.rows() == 1);
+        assert(result1.cols() == 6);
+        assert(result1(0, 0) == 1530);
+        assert(result1(0, 3) == 1800);
+        assert(result1(0, 5) == 1980);
+
         const auto  result2 = lhs * col_mat;
+
+        assert(result2.rows() == 1);
+        assert(result2.cols() == 6);
+        assert(result2(0, 0) == 1530);
+        assert(result2(0, 3) == 1800);
+        assert(result2(0, 5) == 1980);
+
         const auto  result3 = row_mat * rhs;
+
+        assert(result3.rows() == 5);
+        assert(result3.cols() == 1);
+        assert(result3(0, 0) == 390);
+        assert(result3(2, 0) == 1590);
+        assert(result3(4, 0) == 2790);
+
         const auto  result4 = col_mat * rhs;
+
+        assert(result4.rows() == 5);
+        assert(result4.cols() == 1);
+        assert(result4(0, 0) == 390);
+        assert(result4(2, 0) == 1590);
+        assert(result4(4, 0) == 2790);
     }
 
     // Test Inverse

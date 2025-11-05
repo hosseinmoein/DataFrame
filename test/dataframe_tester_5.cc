@@ -1131,17 +1131,128 @@ static void test_ARIMAVisitor()  {
         ::exit(-1);
     }
 
-    ARIMAVisitor<double>   ari2 { 4, 3 };
+    ARIMAVisitor<double, std::string>   ari2 { 4 };
 
     df2.single_act_visit<double>("IBM_Close", ari2);
 
     const auto  result5 = ari2.get_result();
 
     assert(result5.size() == 4);
-    assert(std::fabs(result5[0] - 111.658) < 0.001);
-    assert(std::fabs(result5[1] - 111.669) < 0.001);
-    assert(std::fabs(result5[2] - 111.649) < 0.001);
-    assert(std::fabs(result5[3] - 111.649) < 0.001);
+    assert(std::fabs(result5[0] - 111.63) < 0.001);
+    assert(std::fabs(result5[1] - 111.658) < 0.001);
+    assert(std::fabs(result5[2] - 111.657) < 0.001);
+    assert(std::fabs(result5[3] - 111.658) < 0.001);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_HWESForecastVisitor()  {
+
+    std::cout << "\nTesting HWESForecastVisitor{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idxvec = {
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
+    };
+    std::vector<double>         col1 = {
+        266.0, 145.9, 183.1, 119.3, 180.3, 168.5, 231.8, 224.5, 192.8, 122.9,
+        336.5, 185.9, 194.3
+    };
+    std::vector<double>         oscil = {
+        1.5, 1.8, 1.62, 1.78, 1.5, 1.68, 1.6, 1.8, 1.71, 1.9, 1.78, 1.84, 1.69
+    };
+    std::vector<double>         constant = {
+        10.56, 10.56, 10.56, 10.56, 10.56, 10.56, 10.56, 10.56, 10.56, 10.56,
+        10.56, 10.56, 10.56
+    };
+    std::vector<double>         increasing = {
+        10.56, 10.68, 10.78, 10.90, 11.01, 11.45, 11.99, 12.01, 12.21, 12.35,
+        12.67, 13.89, 13.01
+    };
+    std::vector<double>         decreasing = {
+        10.56, 10.30, 10.12, 10.01, 9.80, 9.74, 9.41, 9.03, 9.0, 8.20,
+        8.01, 7.9, 7.55
+    };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("col1", col1),
+                 std::make_pair("oscil", oscil),
+                 std::make_pair("constant", constant),
+                 std::make_pair("increasing", increasing),
+                 std::make_pair("decreasing", decreasing));
+
+    HWESForecastVisitor<double>   hwes;
+
+    df.single_act_visit<double>("col1", hwes);
+
+    const auto  result1 = hwes.get_result();
+
+    assert(result1.size() == 3);
+    assert(std::fabs(result1[0] - 208.351) < 0.001);
+    assert(std::fabs(result1[1] - 208.69) < 0.001);
+    assert(std::fabs(result1[2] - 209.03) < 0.001);
+
+    HWESForecastVisitor<double>   hwes2 { 3, 2 };
+
+    df.single_act_visit<double>("oscil", hwes2);
+
+    const auto  result2 = hwes2.get_result();
+
+    assert(result2.size() == 3);
+    assert(std::fabs(result2[0] - 1.73499) < 0.00001);
+    assert(std::fabs(result2[1] - 1.9216) < 0.00001);
+    assert(std::fabs(result2[2] - 1.76383) < 0.00001);
+
+    df.single_act_visit<double>("constant", hwes);
+
+    const auto  result3 = hwes.get_result();
+
+    assert(result3.size() == 3);
+    assert(std::fabs(result3[0] - 10.56) < 0.00001);
+    assert(std::fabs(result3[1] - 10.56) < 0.00001);
+    assert(std::fabs(result3[2] - 10.56) < 0.00001);
+
+    df.single_act_visit<double>("increasing", hwes);
+
+    const auto  result4 = hwes.get_result();
+
+    assert(result4.size() == 3);
+    assert(std::fabs(result4[0] - 13.4675) < 0.0001);
+    assert(std::fabs(result4[1] - 13.6977) < 0.0001);
+    assert(std::fabs(result4[2] - 13.928) < 0.0001);
+
+    df.single_act_visit<double>("decreasing", hwes);
+
+    const auto  result5 = hwes.get_result();
+
+    assert(result5.size() == 3);
+    assert(std::fabs(result5[0] - 7.41545) < 0.00001);
+    assert(std::fabs(result5[1] - 7.16314) < 0.00001);
+    assert(std::fabs(result5[2] - 6.91084) < 0.00001);
+
+    // Now some real data
+    //
+    StrDataFrame    df2;
+
+    try  {
+        df2.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    HWESForecastVisitor<double, std::string>    hwes3 { 4 };
+
+    df2.single_act_visit<double>("IBM_Close", hwes3);
+
+    const auto  result6 = hwes3.get_result();
+
+    assert(result6.size() == 4);
+    assert(std::fabs(result6[0] - 109.264) < 0.001);
+    assert(std::fabs(result6[1] - 108.313) < 0.001);
+    assert(std::fabs(result6[2] - 107.361) < 0.001);
+    assert(std::fabs(result6[3] - 106.41) < 0.001);
 }
 
 // ----------------------------------------------------------------------------
@@ -1166,6 +1277,7 @@ int main(int, char *[])  {
     test_get_matrix();
     test_get_matrix_2();
     test_ARIMAVisitor();
+    test_HWESForecastVisitor();
 
     return (0);
 }

@@ -155,7 +155,7 @@ public:
     Matrix scale(value_type factor) const noexcept;
 
     // It applies the function to all elements. There is no particular or
-    // guaranteed order t0 the function application.
+    // guaranteed order to the function application.
     // This is a more general form of above scale().
     //
     Matrix &self_apply(std::function<value_type (const value_type &)> &&fn);

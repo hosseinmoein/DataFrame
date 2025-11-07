@@ -322,6 +322,27 @@ int main(int, char *[]) {
         assert(result4(4, 0) == 2790);
     }
 
+    // Testing Hadamard multiplication
+    //
+    {
+        col_mat_t   mat { 4, 3 };
+        std::size_t value { 0 };
+
+        for (long r = 0; r < mat.rows(); ++r)
+            for (long c = 0; c < mat.cols(); ++c)
+                mat(r, c) = ++value;
+
+        const auto  prod = hadamard(mat, mat);
+
+        assert(prod.rows() == 4);
+        assert(prod.cols() == 3);
+        assert(prod(0, 0) == 1);
+        assert(prod(0, 2) == 9);
+        assert(prod(2, 1) == 64);
+        assert(prod(3, 0) == 100);
+        assert(prod(3, 2) == 144);
+    }
+
     // Test Inverse
     //
     {
@@ -883,6 +904,53 @@ int main(int, char *[]) {
         for (long row = 0; row < 8; ++row)
             for (long col = 0; col < 8; ++col)
                 assert(std::fabs(mat(row, col) - prod(row, col)) < 0.00001);
+    }
+
+    // Test scale
+    //
+    {
+        using mat_t = Matrix<int, matrix_orient::row_major>;
+
+        mat_t   mat { 2, 3 };
+        int     count { 0 };
+
+        for (long r = 0; r < 2; ++r)
+            for (long c = 0; c < 3; ++c)
+                mat(r, c) = ++count;
+
+        const auto  scaled = mat.scale(2);
+
+        assert(scaled.rows() == 2);
+        assert(scaled.cols() == 3);
+        assert(scaled(0, 0) == 2);
+        assert(scaled(0, 2) == 6);
+        assert(scaled(1, 1) == 10);
+        assert(scaled(1, 2) == 12);
+    }
+
+    // Test apply
+    //
+    {
+        using mat_t = Matrix<int, matrix_orient::row_major>;
+
+        mat_t   mat { 2, 3 };
+        int     count { 0 };
+
+        for (long r = 0; r < 2; ++r)
+            for (long c = 0; c < 3; ++c)
+                mat(r, c) = ++count;
+
+        const int   factor { 2 };
+        auto        lbd =
+            [factor](const int &val) -> int { return (val * factor); };
+        const auto  applied = mat.apply(lbd);
+
+        assert(applied.rows() == 2);
+        assert(applied.cols() == 3);
+        assert(applied(0, 0) == 2);
+        assert(applied(0, 2) == 6);
+        assert(applied(1, 1) == 10);
+        assert(applied(1, 2) == 12);
     }
 
     test_thread_pool();

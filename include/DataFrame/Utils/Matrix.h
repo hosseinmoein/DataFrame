@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
+#include <functional>
 #include <vector>
 
 // ----------------------------------------------------------------------------
@@ -147,6 +148,18 @@ public:
     //                 Determinant(A)
     //
     Matrix inverse() const;
+
+    // It multiplies all elements by factor
+    //
+    Matrix &self_scale(value_type factor) noexcept;
+    Matrix scale(value_type factor) const noexcept;
+
+    // It applies the function to all elements. There is no particular or
+    // guaranteed order t0 the function application.
+    // This is a more general form of above scale().
+    //
+    Matrix &self_apply(std::function<value_type (const value_type &)> &&fn);
+    Matrix apply(std::function<value_type (const value_type &)> &&fn) const;
 
     // Row Reduced Echelon Form:
     // A matrix that has undergone Gaussian elimination is said to be in
@@ -359,7 +372,7 @@ public:
     //
     // The LDLT factorization is particularly useful for solving linear
     // systems and for determining the definiteness of a symmetric matrix
-    // without a full eigenspace calculation. 
+    // without a full eigenspace calculation.
     //
     template<typename MA>
     inline void ldlt(std::vector<value_type> &D, MA &L) const;
@@ -477,6 +490,14 @@ public:
     Matrix &ew_minus(value_type val) noexcept;
     Matrix &ew_multiply(value_type val) noexcept;
     Matrix &ew_divide(value_type val) noexcept;
+
+    // Get a matrix filled with real uniform random numbers. T can only be a
+    // floating point type
+    //`
+    static Matrix
+    get_random(size_type rows, size_type cols, T low, T high,
+               unsigned int seed = static_cast<unsigned int>(-1))
+        requires std::floating_point<T>;
 
 private:
 
@@ -1476,27 +1497,40 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
 
 // ----------------------------------------------------------------------------
 
+// Vector * Matrix
+//
 template<typename T, matrix_orient MO, bool IS_SYM>
 static Matrix<T, MO, false>
-operator * (const std::vector<T> &lhs,
-            const Matrix<T, MO, IS_SYM> &rhs);
+operator * (const std::vector<T> &lhs, const Matrix<T, MO, IS_SYM> &rhs);
 
 // -------------------------------------
 
+// Matrix * Vector
+//
 template<typename T, matrix_orient MO, bool IS_SYM>
 static Matrix<T, MO, false>
-operator * (const Matrix<T, MO, IS_SYM> &lhs,
-            const std::vector<T> &rhs);
+operator * (const Matrix<T, MO, IS_SYM> &lhs, const std::vector<T> &rhs);
 
 // -------------------------------------
 
-// Naïve but cache friendly O(n^3) algorithm
+// Matrix * Matrix
+// Naïve but cache friendly and multi-threaded O(n^3) algorithm
 //
 template<typename T, matrix_orient MO1, matrix_orient MO2,
          bool IS_SYM1, bool IS_SYM2>
 static Matrix<T, MO1, false>
 operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
             const Matrix<T, MO2, IS_SYM2> &rhs);
+
+// -------------------------------------
+
+// Element-wise multiplication
+//
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+static Matrix<T, MO1, false>
+hadamard(const Matrix<T, MO1, IS_SYM1> &lhs,
+         const Matrix<T, MO2, IS_SYM2> &rhs);
 
 } // namespace hmdf
 

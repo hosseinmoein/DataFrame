@@ -27,6 +27,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <DataFrame/RandGen.h>
 #include <DataFrame/Utils/Matrix.h>
 
 #include <cmath>
@@ -555,6 +556,72 @@ Matrix<T, MO, IS_SYM>::inverse() const  {
         }
     }
 
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+inline Matrix<T, MO, IS_SYM> &
+Matrix<T, MO, IS_SYM>::self_scale(value_type factor) noexcept  {
+
+    const size_type msize = matrix_.size();
+    const long      thread_level =
+        (msize >= 10000L) ? ThreadGranularity::get_thread_level() : 0;
+    auto            lbd =
+        [factor, this]
+        (auto begin, auto end) -> void  {
+            for (size_type i = begin; i < end; ++i)
+                matrix_[i] *= factor;
+        };
+
+    if (thread_level > 2)  {
+        auto    futures =
+            ThreadGranularity::thr_pool_.parallel_loop(
+                0L, msize, std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, msize);
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+inline Matrix<T, MO, IS_SYM>
+Matrix<T, MO, IS_SYM>::scale(value_type factor) const noexcept  {
+
+    Matrix  result = *this;
+
+    result.self_scale(factor);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+inline Matrix<T, MO, IS_SYM> &Matrix<T, MO, IS_SYM>::
+self_apply(std::function<value_type (const value_type &)> &&fn)  {
+
+    for (auto &val : matrix_)  val = fn(val);
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+inline Matrix<T, MO, IS_SYM> Matrix<T, MO, IS_SYM>::
+apply(std::function<value_type (const value_type &)> &&fn) const  {
+
+    using func_t = std::function<value_type (const value_type &)>;
+
+    Matrix  result = *this;
+
+    result.self_apply(std::forward<func_t>(fn));
     return (result);
 }
 
@@ -3237,6 +3304,27 @@ get_whiten(MA &that, bool do_center) const noexcept  {
 }
 
 // ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+Matrix<T, MO, IS_SYM> Matrix<T, MO, IS_SYM>::
+get_random(size_type rows, size_type cols, T low, T high, unsigned int seed)
+    requires std::floating_point<T>  {
+
+    Matrix                  result;
+    RandGenParams<double>   rp;
+
+    rp.min_value = low;
+    rp.max_value = high;
+    rp.seed = seed;
+    if constexpr (IS_SYM)
+        result.matrix_ = gen_uniform_real_dist<T>((rows * (rows + 1)) / 2, rp);
+    else
+        result.matrix_ = gen_uniform_real_dist<T>(rows * cols, rp);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
 template<typename T, matrix_orient MO1, matrix_orient MO2,
@@ -3808,6 +3896,64 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
             col_lbd(0L, rhs_cols);
         else  // matrix_orient::row_major
             row_lbd(0L, lhs_rows);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, matrix_orient MO1, matrix_orient MO2,
+         bool IS_SYM1, bool IS_SYM2>
+static Matrix<T, MO1, false>
+hadamard(const Matrix<T, MO1, IS_SYM1> &lhs,
+         const Matrix<T, MO2, IS_SYM2> &rhs)  {
+
+    const long  rows { lhs.rows() };
+    const long  cols { lhs.cols() };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (cols != rhs.cols() || rows != rhs.rows())
+        throw NotFeasible("Incompatible matrices for Hadamard multiplication");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    Matrix<T, MO1, false>   result { rows, cols, 0 };
+    const long              thread_level =
+        (cols >= 1000L || rows >= 1000L)
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    auto    col_lbd =
+        [rows, &result, &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long c = begin; c < end; ++c)
+                for (long r = 0; r < rows; ++r)
+                    result(r, c) = lhs(r, c) * rhs(r, c);
+        };
+    auto    row_lbd =
+        [cols, &result, &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            for (long r = begin; r < end; ++r)
+                for (long c = 0; c < cols; ++c)
+                    result(r, c) = lhs(r, c) * rhs(r, c);
+        };
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO1 == matrix_orient::column_major)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, cols, std::move(col_lbd));
+        else  // matrix_orient::row_major
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, rows, std::move(row_lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        if constexpr (MO1 == matrix_orient::column_major)
+            col_lbd(0L, cols);
+        else  // matrix_orient::row_major
+            row_lbd(0L, rows);
     }
 
     return (result);

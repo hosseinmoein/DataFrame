@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 #include <cmath>
 #include <complex>
+#include <cstdlib>
 // #include <flat_map>
 #include <functional>
 #include <limits>
@@ -4548,6 +4549,524 @@ private:
 
 template<typename T, typename I = unsigned long>
 using hwes_v = HWESForecastVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+// Long Short-Term Memory (LSTM) forecasting
+//
+template<arithmetic T, typename I = unsigned long>
+struct  LSTMForecastVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = std::vector<T>;
+
+private:
+
+    using matrix_t = Matrix<value_type, matrix_orient::column_major>;
+
+    static inline value_type
+    sigmoid_(value_type x)  { return (T(1) / (T(1) + std::exp(-x))); }
+    static inline value_type
+    dsigmoid_from_out_(value_type y)  { return (y * (T(1) - y)); }
+    static inline value_type
+    dtanh_from_out_(value_type y)  { return (T(1) - y * y); }
+
+    // LSTM cell
+    //
+    struct  LSTMCell  {
+
+        const long  input_size, hidden_size;
+        matrix_t    W, U, b, dW, dU, db;
+
+        LSTMCell(long in, long hid)
+            : input_size(in),
+              hidden_size(hid),
+              W(matrix_t::get_random(in, 4 * hid, -0.1, 0.1)),
+              U(matrix_t::get_random(hid, 4 * hid, -0.1, 0.1)),
+              b(1, 4 * hid, 0),
+              dW(in, 4 * hid, 0),
+              dU(hid, 4 * hid, 0),
+              db(1, 4 * hid, 0)  {   }
+
+        struct  Cache  {
+            matrix_t    x, h_prev, c_prev, i, f, g, o, c, h;
+        };
+
+        Cache
+        forward(const matrix_t &x,
+                const matrix_t &h_prev,
+                const matrix_t &c_prev)  {
+
+            const long  batch { x.rows() }, H { hidden_size };
+            matrix_t    gates = x * W + h_prev * U;
+
+            for (long r { 0 }; r < batch; ++r)
+                for (long c { 0 }; c < b.cols(); ++c)
+                    gates(r, c) += b(0, c);
+
+            matrix_t    i { batch, H }, f { batch, H },
+                        g { batch, H }, o { batch, H };
+
+            for (long r { 0 }; r < batch; ++r)
+                for (long c { 0 }; c < H; ++c)  {
+                    i(r, c) = sigmoid_(gates(r, c));
+                    f(r, c) = sigmoid_(gates(r, H + c));
+                    g(r, c) = std::tanh(gates(r, 2 * H + c));
+                    o(r, c) = sigmoid_(gates(r, 3 * H + c));
+                }
+
+            matrix_t    c { batch ? matrix_t { batch, H } : matrix_t { } };
+
+            for (long r { 0 }; r < batch; ++r)
+                for (long j { 0 }; j < H; ++j)
+                    c(r, j) = f(r, j) * c_prev(r, j) + i(r, j) * g(r, j);
+
+            const matrix_t  tanh_c {
+                c.apply([](const value_type &v) -> value_type {
+                            return (std::tanh(v));
+                        })
+            };
+            const matrix_t  h { hadamard(o, tanh_c) };
+
+            return (Cache { x, h_prev, c_prev, i, f, g, o, c, h });
+        }
+
+        std::tuple<matrix_t, matrix_t, matrix_t>
+        backward(const matrix_t &dht,
+                 const matrix_t &dct,
+                 const Cache &cache)  {
+
+            const long  batch { cache.x.rows() }, H { hidden_size };
+            matrix_t    tanh_c {
+                cache.c.apply([](const value_type &v) -> value_type {
+                                  return (std::tanh(v));
+                              })
+            };
+            const matrix_t  do_ { hadamard(dht, tanh_c) };
+            const matrix_t  dc {
+                dct +
+                hadamard(
+                    dht,
+                    hadamard(
+                        cache.o,
+                        tanh_c.apply([](const value_type &v) -> value_type {
+                                         return (T(1) - v * v);
+                                     })))
+            };
+            const matrix_t  di { hadamard(dc, cache.g) };
+            const matrix_t  df { hadamard(dc, cache.c_prev) };
+            const matrix_t  dg { hadamard(dc, cache.i) };
+            matrix_t        di_pre { batch, H }, df_pre { batch, H },
+                            dg_pre { batch, H }, do_pre { batch, H };
+
+            for (long r { 0 }; r < batch; ++r)
+                for (long j { 0 }; j < H; ++j)  {
+                    di_pre(r, j) = di(r, j) * dsigmoid_from_out_(cache.i(r, j));
+                    df_pre(r, j) = df(r, j) * dsigmoid_from_out_(cache.f(r, j));
+                    dg_pre(r, j) = dg(r, j) * dtanh_from_out_(cache.g(r, j));
+                    do_pre(r, j) =
+                        do_(r, j) * dsigmoid_from_out_(cache.o(r, j));
+                }
+
+            matrix_t    dG { batch, 4 * H };
+
+            for (long r { 0 }; r < batch; ++r)
+                for (long j { 0 }; j < H; ++j)  {
+                    dG(r, j) = di_pre(r, j);
+                    dG(r, H + j) = df_pre(r, j);
+                    dG(r, 2 * H + j) = dg_pre(r, j);
+                    dG(r, 3 * H + j) = do_pre(r, j);
+                }
+
+            const matrix_t  xT { cache.x.transpose() },
+                            hprevT { cache.h_prev.transpose() };
+
+            dW += xT * dG;
+            dU += hprevT * dG;
+
+            matrix_t    db_inc { 1, 4 * H };
+
+            for (long j { 0 }; j < (4 * H); ++j)  {
+                value_type  s { 0 };
+
+                for (long r { 0 }; r < batch; ++r)
+                    s += dG(r, j);
+                db_inc(0, j) = s;
+            }
+            db += db_inc;
+
+            const matrix_t  dx { dG * W.tranpose() };
+            const matrix_t  dh_prev { dG * U.transpose() };
+            matrix_t        dc_prev {
+                batch ? matrix_t { batch, H } : matrix_t { }
+            };
+
+            for (long r { 0 }; r < batch; ++r)
+                for (long j { 0 }; j < H; ++j)
+                    dc_prev(r, j) = dc(r, j) * cache.f(r, j);
+
+            return (std::make_tuple(dx, dh_prev, dc_prev));
+        }
+
+        void zero_grad()  {
+
+            dW.scale(0);
+            dU.scale(0);
+            db.scale(0);
+        }
+        void step(value_type lr)  {
+
+            for (long c { 0 }; c < W.cols(); ++c)
+                for (long r { 0 }; r < W.rows(); ++r)
+                    W(r, c) -= lr * dW(r, c);
+
+            for (long c { 0 }; c < U.cols(); ++c)
+                for (long r { 0 }; r < U.rows(); ++r)
+                    U(r, c) -= lr * dU(r, c);
+
+            for (long c { 0 }; c < b.cols(); ++c)
+                for (long r { 0 }; r < b.rows(); ++r)
+                    b(r, c) -= lr * db(r, c);
+        }
+    };
+
+    // Linear layer
+    //
+    struct  Linear {
+
+        const long  in, out;
+        matrix_t    W, b, dW, db;
+
+        Linear(long in_,long out_)
+            : in(in_),
+              out(out_),
+              W(matrix_t::get_random(in_, out_, -0.1, 0.1)),
+              b(1, out_, 0),
+              dW(in_, out_, 0),
+              db(1, out_, 0)  {   }
+
+        matrix_t forward(const matrix_t&x)  {
+
+            matrix_t    y { x * W };
+
+            for (long r { 0 }; r < x.rows(); ++r)
+                for (long c { 0 }; c < out; ++c)
+                    y(r, c) += b(0, c);
+
+            return (y);
+        }
+
+        matrix_t backward(const matrix_t &x, const matrix_t &dy)  {
+
+            dW += x.transpose() * dy;
+            for (long j { 0 }; j < out; ++j){
+                value_type  s { 0 };
+
+                for (long r { 0 }; r < dy.rows(); ++r)
+                    s += dy(r, j);
+                db(0, j) += s;
+            }
+
+            return (dy * W.tranpose());
+        }
+
+        void zero_grad()  {
+
+            dW.scale(0);
+            db.scale(0);
+        }
+        void step(value_type lr) {
+
+            for (long c { 0 }; c < W.cols(); ++c)
+                for (long r { 0 }; r < W.rows(); ++r)
+                    W(r, c) -= lr * dW(r, c);
+
+            for (long c { 0 }; c < b.cols(); ++c)
+                for (long r { 0 }; r < b.rows(); ++r)
+                    b(r, c) -= lr * db(r, c);
+        }
+    };
+
+    // LSTM layer (sequence processing)
+    //
+    struct LSTMLayer {
+
+        using cache_t = typename LSTMForecastVisitor<T, I>::LSTMCell::Cache;
+
+        LSTMCell                cell;
+        std::vector<cache_t>    caches;
+        matrix_t                h_last { }, c_last { };
+
+        LSTMLayer(long in_sz, long hid_sz)
+            : cell (in_sz, hid_sz)  {   }
+
+        std::vector<matrix_t>
+        forward(const std::vector<matrix_t> &X)  {
+
+            const long              time_steps { X.size() },
+                                    batch { X[0].rows() },
+                                    H { cell.hidden_size };
+            matrix_t                h { batch, H, 0 }, c { batch, H, 0 };
+            std::vector<matrix_t>   outs;
+
+            caches.clear();
+            for (long t { 0 }; t < time_steps; ++t)  {
+                auto    cache { cell.forward(X[t], h, c) };
+
+                h = cache.h;
+                c = cache.c;
+                caches.push_back(cache);
+                outs.push_back(h);
+            }
+
+            h_last = h;
+            c_last = c;
+            return (outs);
+        }
+
+        std::vector<matrix_t>
+        backward(const std::vector<matrix_t> &douts)  {
+
+            const long  time_steps { douts.size() },
+                        batch { caches[0].x.rows() },
+                        H { cell.hidden_size };
+
+            cell.zero_grad();
+
+            std::vector<matrix_t>   dxs(time_steps);
+            matrix_t                dh_next { batch, H, 0 },
+                                    dc_next { batch, H, 0 };
+
+            for (long t { time_steps - 1 }; t >= 0; --t)  {
+                const matrix_t  dh_total { douts[t] + dh_next };
+                const auto      [dx, dh_prev, dc_prev] =
+                    cell.backward(dh_total, dc_next, caches[t]);
+
+                dxs[t] = dx;
+                dh_next = dh_prev;
+                dc_next = dc_prev;
+            }
+
+            return (dxs);
+        }
+
+        void zero_grad()  { cell.zero_grad(); }
+        void step(double lr)  { cell.step(lr); }
+    };
+
+public:
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 5)
+           throw DataFrameError("LSTMForecastVisitor: "
+                                "Time-series is too short");
+        if (col_s < size_type(double(seq_len_) * 1.5))
+           throw DataFrameError("LSTMForecastVisitor: "
+                                "Time-series is too short for Number of time "
+                                "steps fed to the LSTM");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        StdVisitor<T, I>    stdv;
+
+        stdv.pre();
+        stdv(idx_begin, idx_end, column_begin, column_end);
+        stdv.post();
+
+        // Create model
+        //
+        LSTMLayer               lstm { input_size_, hidden_size_ };
+        Linear                  linear { hidden_size_, input_size_ };
+        std::vector<value_type> norm_data(col_s);
+
+        for (long i { 0 }; i < col_s; ++i)
+            norm_data[i] =
+                (*(column_begin + i) - stdv.get_mean()) / stdv.get_result();
+
+        // Training loop over dataset
+        //
+        for (long epoch { 0 }; epoch < epochs_; ++epoch)  {
+            value_type  total_loss { 0 };
+
+            for (long i { 0 }; i < (col_s - seq_len_ - 3); ++i) {
+                // Build input sequence (10 timesteps)
+                //
+                std::vector<matrix_t>   inputs(seq_len_);
+
+                for (long t { 0 }; t < seq_len_; ++t)
+                    inputs[t] =
+                        matrix_t { batch_size_, input_size_, norm_data[i + t] };
+
+                // Target is the *next* value after the sequence
+                //
+                const matrix_t  target {
+                    batch_size_, input_size_, norm_data[i + seq_len_]
+                };
+
+                // Zero gradients
+                //
+                lstm.zero_grad();
+                linear.zero_grad();
+
+                // Forward pass
+                //
+                const std::vector<matrix_t> outputs = lstm.forward(inputs);
+                const matrix_t              y_pred {
+                    linear.forward(outputs.back())
+                };
+
+                // Compute loss
+                //
+                matrix_t            dloss;
+                const value_type    loss {
+                    mse_loss_and_grad(y_pred, target, dloss)
+                };
+
+                total_loss += loss;
+
+                // Backward pass
+                //
+                const matrix_t  d_linear {
+                    linear.backward(dloss, learning_rate_)
+                };
+
+                lstm.backward({ d_linear }, learning_rate_);
+            }
+
+            std::cout << "Epoch " << (epoch + 1)
+                      << " -- Avg Loss: "
+                      << (total_loss / (col_s - seq_len_ - 3))
+                      << std::endl;
+        }
+
+        // Forecast next periods_ prices
+        //
+        // Start with last known seq_len_ points
+        //
+        std::vector<matrix_t>   sequence(seq_len_);
+
+        for (long t { 0 }; t < seq_len_; ++t)
+            sequence[t] = matrix_t {
+                batch_size_, input_size_, norm_data[col_s - seq_len_ + t]
+            };
+
+        result_.reserve(periods_);
+        for (long step { 0 }; step < periods_; ++step)  {
+            const std::vector<matrix_t> outputs = lstm.forward(sequence);
+            const matrix_t              next_pred {
+                linear.forward(outputs.back())
+            };
+            const value_type            norm_pred { next_pred(0, 0) };
+
+            // Denormalize prediction
+            //
+            result_.push_back(norm_pred * stdv.get_result() + stdv.get_mean());
+
+            // Feed predicted value as next input
+            //
+            sequence.erase(sequence.begin());
+            sequence.push_back(
+                matrix_t { batch_size_, input_size_, norm_pred });
+        }
+    }
+
+    inline void pre()  { result_.clear(); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+
+    explicit
+    LSTMForecastVisitor(long input_size = 1,
+                        long hidden_size = 32,
+                        long seq_len = 10,
+                        long batch_size = 1,
+                        long epochs = 20,
+                        value_type learning_rate = 0.01,
+                        long periods = 3)
+        : input_size_(input_size),
+          hidden_size_(hidden_size),
+          seq_len_(seq_len),
+          batch_size_(batch_size),
+          epochs_(epochs),
+          learning_rate_(learning_rate),
+          periods_(periods)  {   }
+
+private:
+
+    static inline value_type
+    mse_loss_and_grad_(const matrix_t &pred,
+                       const matrix_t &target,
+                       matrix_t &dout)  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (pred.rows() != target.rows() || pred.cols() != target.cols())
+            throw DataFrameError("LSTMForecastVisitor::mse_loss_and_grad_(): "
+                                 "MSE shape mismatch");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        dout = matrix_t { pred.rows(), pred.cols(), 0 };
+
+        value_type          sum { 0 };
+        const value_type    data_s { pred.rows() * pred.cols() };
+
+        for (long c { 0 }; c < pred.cols(); ++c)
+            for (long r { 0 }; r < pred.rows(); ++r)  {
+                const value_type    diff = pred(r, c) - target(r, c);
+
+                sum += diff * diff;
+                dout(r, c) = T(2) * diff / data_s;
+            }
+
+        return (sum / data_s);
+    }
+
+    // Number of features per time step. Each input vector Xt has one feature.
+    // For example, if you’re forecasting a univariate time series (like daily
+    // temperature), each step is a single number.
+    //
+    const long          input_size_;
+
+    // Number of LSTM hidden units (neurons). Controls how much "memory" or
+    // capacity the LSTM has. Larger values -> can learn more complex temporal
+    // patterns, but need more data.
+    //
+    const long          hidden_size_;
+
+    // Length of input sequence (T). Number of time steps fed to the LSTM
+    // before forecasting the next one. Example: using 10 days of data to
+    // predict day 11.
+    //
+    const long          seq_len_;
+
+    // Number of sequences processed together. 1 means one sequence at a time
+    // (simple for demonstration).
+    //
+    const long          batch_size_;
+
+    // Number of training passes. How many times the model sees the full
+    // dataset. More epochs = more training iterations.
+    //
+    const long          epochs_;
+
+    // Step size for gradient descent. Controls how much weights are updated
+    // during training. Too high = unstable; too low = slow learning.
+    //
+    const value_type    learning_rate_;
+
+    const long          periods_;  // Number of periods to forecast
+    result_type         result_ { };
+};
+
+template<typename T, typename I = unsigned long>
+using lstm_v = LSTMForecastVisitor<T, I>;
 
 } // namespace hmdf
 

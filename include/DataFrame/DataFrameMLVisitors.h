@@ -4573,6 +4573,33 @@ private:
     static inline value_type
     dtanh_from_out_(value_type y)  { return (T(1) - y * y); }
 
+    static inline value_type
+    mse_loss_and_grad_(const matrix_t &pred,
+                       const matrix_t &target,
+                       matrix_t &dout)  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (pred.rows() != target.rows() || pred.cols() != target.cols())
+            throw DataFrameError("LSTMForecastVisitor::mse_loss_and_grad_(): "
+                                 "MSE shape mismatch");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        dout = matrix_t { pred.rows(), pred.cols(), 0 };
+
+        value_type          sum { 0 };
+        const value_type    data_s { T(pred.rows() * pred.cols()) };
+
+        for (long c { 0 }; c < pred.cols(); ++c)
+            for (long r { 0 }; r < pred.rows(); ++r)  {
+                const value_type    diff = pred(r, c) - target(r, c);
+
+                sum += diff * diff;
+                dout(r, c) = T(2) * diff / data_s;
+            }
+
+        return (sum / data_s);
+    }
+
     // LSTM cell
     //
     struct  LSTMCell  {
@@ -4680,8 +4707,8 @@ private:
                     dG(r, 3 * H + j) = do_pre(r, j);
                 }
 
-            const matrix_t  xT { cache.x.transpose() },
-                            hprevT { cache.h_prev.transpose() };
+            const auto  xT { cache.x.transpose() };
+            const auto  hprevT { cache.h_prev.transpose() };
 
             dW += xT * dG;
             dU += hprevT * dG;
@@ -4697,7 +4724,7 @@ private:
             }
             db += db_inc;
 
-            const matrix_t  dx { dG * W.tranpose() };
+            const matrix_t  dx { dG * W.transpose() };
             const matrix_t  dh_prev { dG * U.transpose() };
             matrix_t        dc_prev {
                 batch ? matrix_t { batch, H } : matrix_t { }
@@ -4769,7 +4796,7 @@ private:
                 db(0, j) += s;
             }
 
-            return (dy * W.tranpose());
+            return (dy * W.transpose());
         }
 
         void zero_grad()  {
@@ -4805,7 +4832,7 @@ private:
         std::vector<matrix_t>
         forward(const std::vector<matrix_t> &X)  {
 
-            const long              time_steps { X.size() },
+            const long              time_steps { long(X.size()) },
                                     batch { X[0].rows() },
                                     H { cell.hidden_size };
             matrix_t                h { batch, H, 0 }, c { batch, H, 0 };
@@ -4829,7 +4856,7 @@ private:
         std::vector<matrix_t>
         backward(const std::vector<matrix_t> &douts)  {
 
-            const long  time_steps { douts.size() },
+            const long  time_steps { long(douts.size()) },
                         batch { caches[0].x.rows() },
                         H { cell.hidden_size };
 
@@ -4887,7 +4914,7 @@ public:
         Linear                  linear { hidden_size_, input_size_ };
         std::vector<value_type> norm_data(col_s);
 
-        for (long i { 0 }; i < col_s; ++i)
+        for (long i { 0 }; i < long(col_s); ++i)
             norm_data[i] =
                 (*(column_begin + i) - stdv.get_mean()) / stdv.get_result();
 
@@ -4896,7 +4923,7 @@ public:
         for (long epoch { 0 }; epoch < epochs_; ++epoch)  {
             value_type  total_loss { 0 };
 
-            for (long i { 0 }; i < (col_s - seq_len_ - 3); ++i) {
+            for (long i { 0 }; i < (long(col_s) - seq_len_ - 3); ++i) {
                 // Build input sequence (10 timesteps)
                 //
                 std::vector<matrix_t>   inputs(seq_len_);
@@ -4927,7 +4954,7 @@ public:
                 //
                 matrix_t            dloss;
                 const value_type    loss {
-                    mse_loss_and_grad(y_pred, target, dloss)
+                    mse_loss_and_grad_(y_pred, target, dloss)
                 };
 
                 total_loss += loss;
@@ -4935,15 +4962,20 @@ public:
                 // Backward pass
                 //
                 const matrix_t  d_linear {
-                    linear.backward(dloss, learning_rate_)
+                    linear.backward(lstm.h_last, dloss)
                 };
 
-                lstm.backward({ d_linear }, learning_rate_);
+                lstm.backward({ d_linear });
+
+                // Now update parameters (separate from backward)
+                //
+                linear.step(learning_rate_);
+                lstm.step(learning_rate_);
             }
 
             std::cout << "Epoch " << (epoch + 1)
                       << " -- Avg Loss: "
-                      << (total_loss / (col_s - seq_len_ - 3))
+                      << (total_loss / (long(col_s) - seq_len_ - 3))
                       << std::endl;
         }
 
@@ -4955,7 +4987,7 @@ public:
 
         for (long t { 0 }; t < seq_len_; ++t)
             sequence[t] = matrix_t {
-                batch_size_, input_size_, norm_data[col_s - seq_len_ + t]
+                batch_size_, input_size_, norm_data[long(col_s) - seq_len_ + t]
             };
 
         result_.reserve(periods_);
@@ -4989,7 +5021,7 @@ public:
                         long seq_len = 10,
                         long batch_size = 1,
                         long epochs = 20,
-                        value_type learning_rate = 0.01,
+                        value_type learning_rate = 0.001,
                         long periods = 3)
         : input_size_(input_size),
           hidden_size_(hidden_size),
@@ -5000,33 +5032,6 @@ public:
           periods_(periods)  {   }
 
 private:
-
-    static inline value_type
-    mse_loss_and_grad_(const matrix_t &pred,
-                       const matrix_t &target,
-                       matrix_t &dout)  {
-
-#ifdef HMDF_SANITY_EXCEPTIONS
-        if (pred.rows() != target.rows() || pred.cols() != target.cols())
-            throw DataFrameError("LSTMForecastVisitor::mse_loss_and_grad_(): "
-                                 "MSE shape mismatch");
-#endif // HMDF_SANITY_EXCEPTIONS
-
-        dout = matrix_t { pred.rows(), pred.cols(), 0 };
-
-        value_type          sum { 0 };
-        const value_type    data_s { pred.rows() * pred.cols() };
-
-        for (long c { 0 }; c < pred.cols(); ++c)
-            for (long r { 0 }; r < pred.rows(); ++r)  {
-                const value_type    diff = pred(r, c) - target(r, c);
-
-                sum += diff * diff;
-                dout(r, c) = T(2) * diff / data_s;
-            }
-
-        return (sum / data_s);
-    }
 
     // Number of features per time step. Each input vector Xt has one feature.
     // For example, if you’re forecasting a univariate time series (like daily

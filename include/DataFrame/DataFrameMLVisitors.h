@@ -4607,15 +4607,16 @@ private:
         const long  input_size, hidden_size;
         matrix_t    W, U, b, dW, dU, db;
 
-        LSTMCell(long in, long hid)
+        LSTMCell(long in, long hid, unsigned int seed)
             : input_size(in),
               hidden_size(hid),
-              W(matrix_t::get_random(in, 4 * hid, -0.1, 0.1)),
-              U(matrix_t::get_random(hid, 4 * hid, -0.1, 0.1)),
+              W(matrix_t::get_random(in, 4 * hid, T(-0.1), T(0.1), seed)),
+              U(matrix_t::get_random(hid, 4 * hid, T(-0.1), T(0.1), seed)),
               b(1, 4 * hid, 0),
               dW(in, 4 * hid, 0),
               dU(hid, 4 * hid, 0),
               db(1, 4 * hid, 0)  {   }
+        LSTMCell() = delete;
 
         struct  Cache  {
             matrix_t    x, h_prev, c_prev, i, f, g, o, c, h;
@@ -4766,13 +4767,13 @@ private:
         const long  in, out;
         matrix_t    W, b, dW, db;
 
-        Linear(long in_,long out_)
-            : in(in_),
-              out(out_),
-              W(matrix_t::get_random(in_, out_, -0.1, 0.1)),
-              b(1, out_, 0),
-              dW(in_, out_, 0),
-              db(1, out_, 0)  {   }
+        Linear(long in_dim, long out_dim, unsigned int seed)
+            : in(in_dim),
+              out(out_dim),
+              W(matrix_t::get_random(in_dim, out_dim, T(-0.1), T(0.1), seed)),
+              b(1, out_dim, 0),
+              dW(in_dim, out_dim, 0),
+              db(1, out_dim, 0)  {   }
 
         matrix_t forward(const matrix_t&x)  {
 
@@ -4787,13 +4788,13 @@ private:
 
         matrix_t backward(const matrix_t &x, const matrix_t &dy)  {
 
-            dW += x.transpose() * dy;
-            for (long j { 0 }; j < out; ++j){
+            dW = x.transpose() * dy;
+            for (long c { 0 }; c < dy.cols(); ++c){
                 value_type  s { 0 };
 
                 for (long r { 0 }; r < dy.rows(); ++r)
-                    s += dy(r, j);
-                db(0, j) += s;
+                    s += dy(r, c);
+                db(0, c) += s;
             }
 
             return (dy * W.transpose());
@@ -4826,8 +4827,8 @@ private:
         std::vector<cache_t>    caches;
         matrix_t                h_last { }, c_last { };
 
-        LSTMLayer(long in_sz, long hid_sz)
-            : cell (in_sz, hid_sz)  {   }
+        LSTMLayer(long in_sz, long hid_sz, unsigned int seed)
+            : cell (in_sz, hid_sz, seed)  {   }
 
         std::vector<matrix_t>
         forward(const std::vector<matrix_t> &X)  {
@@ -4839,6 +4840,8 @@ private:
             std::vector<matrix_t>   outs;
 
             caches.clear();
+            caches.reserve(time_steps);
+            outs.reserve(time_steps);
             for (long t { 0 }; t < time_steps; ++t)  {
                 auto    cache { cell.forward(X[t], h, c) };
 
@@ -4908,15 +4911,16 @@ public:
         stdv(idx_begin, idx_end, column_begin, column_end);
         stdv.post();
 
-        // Create model
-        //
-        LSTMLayer               lstm { input_size_, hidden_size_ };
-        Linear                  linear { hidden_size_, input_size_ };
         std::vector<value_type> norm_data(col_s);
 
         for (long i { 0 }; i < long(col_s); ++i)
             norm_data[i] =
                 (*(column_begin + i) - stdv.get_mean()) / stdv.get_result();
+
+        // Create model
+        //
+        LSTMLayer   lstm { input_size_, hidden_size_, seed_ };
+        Linear      linear { hidden_size_, input_size_, seed_ };
 
         // Training loop over dataset
         //
@@ -4973,10 +4977,10 @@ public:
                 lstm.step(learning_rate_);
             }
 
-            std::cout << "Epoch " << (epoch + 1)
-                      << " -- Avg Loss: "
-                      << (total_loss / (long(col_s) - seq_len_ - 3))
-                      << std::endl;
+            // std::cout << "Epoch " << (epoch + 1)
+            //           << " -- Avg Loss: "
+            //           << (total_loss / (long(col_s) - seq_len_ - 3))
+            //           << std::endl;
         }
 
         // Forecast next periods_ prices
@@ -5022,14 +5026,16 @@ public:
                         long batch_size = 1,
                         long epochs = 20,
                         value_type learning_rate = 0.001,
-                        long periods = 3)
+                        long periods = 3,
+                        unsigned int seed = static_cast<unsigned int>(-1))
         : input_size_(input_size),
           hidden_size_(hidden_size),
           seq_len_(seq_len),
           batch_size_(batch_size),
           epochs_(epochs),
           learning_rate_(learning_rate),
-          periods_(periods)  {   }
+          periods_(periods),
+          seed_(seed)  {   }
 
 private:
 
@@ -5067,6 +5073,7 @@ private:
     const value_type    learning_rate_;
 
     const long          periods_;  // Number of periods to forecast
+    const unsigned int  seed_;     // Seed for random number generator
     result_type         result_ { };
 };
 

@@ -1279,7 +1279,7 @@ static void test_LSTMForecastVisitor()  {
     };
     std::vector<double>         increasing = {
         10.56, 10.68, 10.78, 10.90, 11.01, 11.45, 11.99, 12.01, 12.21, 12.35,
-        12.67, 13.89, 13.01
+        12.67, 13.89, 14.01
     };
     std::vector<double>         decreasing = {
         10.56, 10.30, 10.12, 10.01, 9.80, 9.74, 9.41, 9.03, 9.0, 8.20,
@@ -1294,28 +1294,27 @@ static void test_LSTMForecastVisitor()  {
                  std::make_pair("increasing", increasing),
                  std::make_pair("decreasing", decreasing));
 
-    lstm_v<double>  lstm { 1, 8, 4, 1, 100, 0.01 };
+    lstm_v<double>  lstm { 1, 40, 4, 1, 100, 0.001, 3, 123 };
 
     df.single_act_visit<double>("col1", lstm);
 
     const auto  result1 = lstm.get_result();
 
     assert(result1.size() == 3);
-    assert(std::fabs(result1[0] - 208.351) < 0.001);
-    assert(std::fabs(result1[1] - 208.69) < 0.001);
-    assert(std::fabs(result1[2] - 209.03) < 0.001);
+    assert(std::fabs(result1[0] - 177.075) < 0.001);
+    assert(std::fabs(result1[1] - 181.576) < 0.001);
+    assert(std::fabs(result1[2] - 185.103) < 0.001);
 
-/*
-    HWESForecastVisitor<double>   lstm2 { 3, 2 };
+    lstm_v<double>  lstm2 { 1, 40, 4, 1, 1000, 0.001, 3, 123 };
 
     df.single_act_visit<double>("oscil", lstm2);
 
     const auto  result2 = lstm2.get_result();
 
     assert(result2.size() == 3);
-    assert(std::fabs(result2[0] - 1.73499) < 0.00001);
-    assert(std::fabs(result2[1] - 1.9216) < 0.00001);
-    assert(std::fabs(result2[2] - 1.76383) < 0.00001);
+    assert(std::fabs(result2[0] - 1.7698) < 0.00001);
+    assert(std::fabs(result2[1] - 1.64903) < 0.00001);
+    assert(std::fabs(result2[2] - 1.74927) < 0.00001);
 
     df.single_act_visit<double>("constant", lstm);
 
@@ -1326,24 +1325,36 @@ static void test_LSTMForecastVisitor()  {
     assert(std::fabs(result3[1] - 10.56) < 0.00001);
     assert(std::fabs(result3[2] - 10.56) < 0.00001);
 
-    df.single_act_visit<double>("increasing", lstm);
+    lstm_v<double>  lstm3 { 1, 100, 4, 1, 100, 0.001, 3, 123 };
 
-    const auto  result4 = lstm.get_result();
+    df.single_act_visit<double>("increasing", lstm3);
 
+    const auto  result4 = lstm3.get_result();
+
+    // It doesn't see the pattern here
+    //
     assert(result4.size() == 3);
-    assert(std::fabs(result4[0] - 13.4675) < 0.0001);
-    assert(std::fabs(result4[1] - 13.6977) < 0.0001);
-    assert(std::fabs(result4[2] - 13.928) < 0.0001);
+    assert(std::fabs(result4[0] - 13.4408) < 0.0001);
+    assert(std::fabs(result4[1] - 13.4358) < 0.0001);
+    assert(std::fabs(result4[2] - 13.4193) < 0.0001);
 
-    df.single_act_visit<double>("decreasing", lstm);
+    df.single_act_visit<double>("decreasing", lstm3);
 
-    const auto  result5 = lstm.get_result();
+    const auto  result5 = lstm3.get_result();
 
+    std::cout << "\n\n";
+    for (const auto v : result5)
+        std::cout << v << ", ";
+    std::cout << std::endl;
+
+    // Strangely, it sees the pattern here
+    //
     assert(result5.size() == 3);
-    assert(std::fabs(result5[0] - 7.41545) < 0.00001);
-    assert(std::fabs(result5[1] - 7.16314) < 0.00001);
-    assert(std::fabs(result5[2] - 6.91084) < 0.00001);
+    assert(std::fabs(result5[0] - 7.23448) < 0.00001);
+    assert(std::fabs(result5[1] - 7.14929) < 0.00001);
+    assert(std::fabs(result5[2] - 7.10167) < 0.00001);
 
+/*
     // Now some real data
     //
     StrDataFrame    df2;

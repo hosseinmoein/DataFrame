@@ -3317,6 +3317,8 @@ get_random(size_type rows, size_type cols, T low, T high, unsigned int seed)
     rp.min_value = low;
     rp.max_value = high;
     rp.seed = seed;
+    result.rows_ = rows;
+    result.cols_ = cols;
     if constexpr (IS_SYM)  {
         assert(rows == cols);
         result.matrix_ = gen_uniform_real_dist<T>((rows * (rows + 1)) / 2, rp);

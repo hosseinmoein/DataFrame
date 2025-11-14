@@ -1342,11 +1342,6 @@ static void test_LSTMForecastVisitor()  {
 
     const auto  result5 = lstm3.get_result();
 
-    std::cout << "\n\n";
-    for (const auto v : result5)
-        std::cout << v << ", ";
-    std::cout << std::endl;
-
     // Strangely, it sees the pattern here
     //
     assert(result5.size() == 3);
@@ -1354,31 +1349,34 @@ static void test_LSTMForecastVisitor()  {
     assert(std::fabs(result5[1] - 7.14929) < 0.00001);
     assert(std::fabs(result5[2] - 7.10167) < 0.00001);
 
-/*
+    //
+    // This test needs bigger hidden layers and more iterations. It takes too
+    // long for a unit test.
+    //
+
     // Now some real data
     //
-    StrDataFrame    df2;
+    // StrDataFrame    df2;
 
-    try  {
-        df2.read("IBM.csv", io_format::csv2);
-    }
-    catch (const DataFrameError &ex)  {
-        std::cout << ex.what() << std::endl;
-        ::exit(-1);
-    }
+    // try  {
+        // df2.read("IBM.csv", io_format::csv2);
+    // }
+    // catch (const DataFrameError &ex)  {
+        // std::cout << ex.what() << std::endl;
+        // ::exit(-1);
+    // }
 
-    HWESForecastVisitor<double, std::string>    lstm3 { 4 };
+    // lstm_v<double>  lstm4 { 1, 50, 4, 1, 100, 0.001, 4, 123 };
 
-    df2.single_act_visit<double>("IBM_Close", lstm3);
+    // df2.single_act_visit<double>("IBM_Close", lstm4);
 
-    const auto  result6 = lstm3.get_result();
+    // const auto  result6 = lstm4.get_result();
 
-    assert(result6.size() == 4);
-    assert(std::fabs(result6[0] - 109.264) < 0.001);
-    assert(std::fabs(result6[1] - 108.313) < 0.001);
-    assert(std::fabs(result6[2] - 107.361) < 0.001);
-    assert(std::fabs(result6[3] - 106.41) < 0.001);
-*/
+    // assert(result6.size() == 4);
+    // assert(std::fabs(result6[0] - 175.419) < 0.001);
+    // assert(std::fabs(result6[1] - 100.078) < 0.001);
+    // assert(std::fabs(result6[2] - 186.713) < 0.001);
+    // assert(std::fabs(result6[3] - 99.2631) < 0.0001);
 }
 
 // ----------------------------------------------------------------------------

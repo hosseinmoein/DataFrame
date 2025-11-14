@@ -568,7 +568,7 @@ Matrix<T, MO, IS_SYM>::self_scale(value_type factor) noexcept  {
 
     const size_type msize = matrix_.size();
     const long      thread_level =
-        (msize >= 10000L) ? ThreadGranularity::get_thread_level() : 0;
+        (msize >= 500L) ? ThreadGranularity::get_thread_level() : 0;
     auto            lbd =
         [factor, this]
         (auto begin, auto end) -> void  {
@@ -3925,7 +3925,7 @@ hadamard(const Matrix<T, MO1, IS_SYM1> &lhs,
 
     Matrix<T, MO1, false>   result { rows, cols, 0 };
     const long              thread_level =
-        (cols >= 1000L || rows >= 1000L)
+        (cols >= 500L || rows >= 500L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     auto    col_lbd =

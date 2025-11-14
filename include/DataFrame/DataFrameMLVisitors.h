@@ -4645,20 +4645,20 @@ private:
                     o(r, c) = sigmoid_(gates(r, 3 * H + c));
                 }
 
-            matrix_t    c { batch ? matrix_t { batch, H } : matrix_t { } };
+            matrix_t    c_mat { batch ? matrix_t { batch, H } : matrix_t { } };
 
             for (long r { 0 }; r < batch; ++r)
-                for (long j { 0 }; j < H; ++j)
-                    c(r, j) = f(r, j) * c_prev(r, j) + i(r, j) * g(r, j);
+                for (long c { 0 }; c < H; ++c)
+                    c_mat(r, c) = f(r, c) * c_prev(r, c) + i(r, c) * g(r, c);
 
             const matrix_t  tanh_c {
-                c.apply([](const value_type &v) -> value_type {
-                            return (std::tanh(v));
-                        })
+                c_mat.apply([](const value_type &v) -> value_type {
+                                return (std::tanh(v));
+                            })
             };
             const matrix_t  h { hadamard(o, tanh_c) };
 
-            return (Cache { x, h_prev, c_prev, i, f, g, o, c, h });
+            return (Cache { x, h_prev, c_prev, i, f, g, o, c_mat, h });
         }
 
         std::tuple<matrix_t, matrix_t, matrix_t>
@@ -4690,52 +4690,49 @@ private:
                             dg_pre { batch, H }, do_pre { batch, H };
 
             for (long r { 0 }; r < batch; ++r)
-                for (long j { 0 }; j < H; ++j)  {
-                    di_pre(r, j) = di(r, j) * dsigmoid_from_out_(cache.i(r, j));
-                    df_pre(r, j) = df(r, j) * dsigmoid_from_out_(cache.f(r, j));
-                    dg_pre(r, j) = dg(r, j) * dtanh_from_out_(cache.g(r, j));
-                    do_pre(r, j) =
-                        do_(r, j) * dsigmoid_from_out_(cache.o(r, j));
+                for (long c { 0 }; c < H; ++c)  {
+                    di_pre(r, c) = di(r, c) * dsigmoid_from_out_(cache.i(r, c));
+                    df_pre(r, c) = df(r, c) * dsigmoid_from_out_(cache.f(r, c));
+                    dg_pre(r, c) = dg(r, c) * dtanh_from_out_(cache.g(r, c));
+                    do_pre(r, c) =
+                        do_(r, c) * dsigmoid_from_out_(cache.o(r, c));
                 }
 
             matrix_t    dG { batch, 4 * H };
 
             for (long r { 0 }; r < batch; ++r)
-                for (long j { 0 }; j < H; ++j)  {
-                    dG(r, j) = di_pre(r, j);
-                    dG(r, H + j) = df_pre(r, j);
-                    dG(r, 2 * H + j) = dg_pre(r, j);
-                    dG(r, 3 * H + j) = do_pre(r, j);
+                for (long c { 0 }; c < H; ++c)  {
+                    dG(r, c) = di_pre(r, c);
+                    dG(r, H + c) = df_pre(r, c);
+                    dG(r, 2 * H + c) = dg_pre(r, c);
+                    dG(r, 3 * H + c) = do_pre(r, c);
                 }
 
-            const auto  xT { cache.x.transpose() };
-            const auto  hprevT { cache.h_prev.transpose() };
-
-            dW += xT * dG;
-            dU += hprevT * dG;
+            dW += cache.x.transpose() * dG;
+            dU += cache.h_prev.transpose() * dG;
 
             matrix_t    db_inc { 1, 4 * H };
 
-            for (long j { 0 }; j < (4 * H); ++j)  {
+            for (long c { 0 }; c < (4 * H); ++c)  {
                 value_type  s { 0 };
 
                 for (long r { 0 }; r < batch; ++r)
-                    s += dG(r, j);
-                db_inc(0, j) = s;
+                    s += dG(r, c);
+                db_inc(0, c) = s;
             }
             db += db_inc;
 
-            const matrix_t  dx { dG * W.transpose() };
-            const matrix_t  dh_prev { dG * U.transpose() };
             matrix_t        dc_prev {
                 batch ? matrix_t { batch, H } : matrix_t { }
             };
 
             for (long r { 0 }; r < batch; ++r)
-                for (long j { 0 }; j < H; ++j)
-                    dc_prev(r, j) = dc(r, j) * cache.f(r, j);
+                for (long c { 0 }; c < H; ++c)
+                    dc_prev(r, c) = dc(r, c) * cache.f(r, c);
 
-            return (std::make_tuple(dx, dh_prev, dc_prev));
+            return (std::make_tuple(dG * W.transpose(),
+                                    dG * U.transpose(),
+                                    dc_prev));
         }
 
         void zero_grad()  {
@@ -4919,8 +4916,9 @@ public:
 
         // Create model
         //
-        LSTMLayer   lstm { input_size_, hidden_size_, seed_ };
-        Linear      linear { hidden_size_, input_size_, seed_ };
+        LSTMLayer               lstm { input_size_, hidden_size_, seed_ };
+        Linear                  linear { hidden_size_, input_size_, seed_ };
+        std::vector<matrix_t>   inputs(seq_len_); // Build input sequence
 
         // Training loop over dataset
         //
@@ -4928,10 +4926,6 @@ public:
             value_type  total_loss { 0 };
 
             for (long i { 0 }; i < (long(col_s) - seq_len_ - 3); ++i) {
-                // Build input sequence (10 timesteps)
-                //
-                std::vector<matrix_t>   inputs(seq_len_);
-
                 for (long t { 0 }; t < seq_len_; ++t)
                     inputs[t] =
                         matrix_t { batch_size_, input_size_, norm_data[i + t] };

@@ -4588,14 +4588,34 @@ private:
 
         value_type          sum { 0 };
         const value_type    data_s { T(pred.rows() * pred.cols()) };
+        auto                lbd =
+            [&dout, data_s,
+             &pred = std::as_const(pred), &target = std::as_const(target)]
+            (long begin, long end) -> value_type  {
+                value_type  sum { 0 };
 
-        for (long c { 0 }; c < pred.cols(); ++c)
-            for (long r { 0 }; r < pred.rows(); ++r)  {
-                const value_type    diff = pred(r, c) - target(r, c);
+                for (long c { begin }; c < end; ++c)
+                    for (long r { 0 }; r < pred.rows(); ++r)  {
+                        const value_type    diff = pred(r, c) - target(r, c);
 
-                sum += diff * diff;
-                dout(r, c) = T(2) * diff / data_s;
-            }
+                        sum += diff * diff;
+                        dout(r, c) = T(2) * diff / data_s;
+                    }
+                return (sum);
+            };
+        const auto          thread_level =
+            (pred.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
+
+        if (thread_level > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    0L, pred.cols(), std::move(lbd));
+
+            for (auto &fut : futures)  sum += fut.get();
+        }
+        else  {
+            sum = lbd(0L, pred.cols());
+        }
 
         return (sum / data_s);
     }
@@ -4630,25 +4650,45 @@ private:
             const long  batch { x.rows() }, H { hidden_size };
             matrix_t    gates = x * W + h_prev * U;
 
-            for (long r { 0 }; r < batch; ++r)
-                for (long c { 0 }; c < b.cols(); ++c)
-                    gates(r, c) += b(0, c);
+            for (long c { 0 }; c < b.cols(); ++c)  {
+                const auto  val = b(0, c);
+
+                for (long r { 0 }; r < batch; ++r)
+                    gates(r, c) += val;
+            }
 
             matrix_t    i { batch, H }, f { batch, H },
                         g { batch, H }, o { batch, H };
+            auto        lbd1 =
+                [H, batch, &i, &f, &g, &o, &gates = std::as_const(gates)]
+                (long begin, long end) -> void  {
+                    for (long c { begin }; c < end; ++c)  {
+                        for (long r { 0 }; r < batch; ++r)  {
+                            i(r, c) = sigmoid_(gates(r, c));
+                            f(r, c) = sigmoid_(gates(r, H + c));
+                            g(r, c) = std::tanh(gates(r, 2 * H + c));
+                            o(r, c) = sigmoid_(gates(r, 3 * H + c));
+                        }
+                    }
+                };
+            const auto  thread_level =
+                (H < 500) ? 0L : ThreadGranularity::get_thread_level();
 
-            for (long r { 0 }; r < batch; ++r)
-                for (long c { 0 }; c < H; ++c)  {
-                    i(r, c) = sigmoid_(gates(r, c));
-                    f(r, c) = sigmoid_(gates(r, H + c));
-                    g(r, c) = std::tanh(gates(r, 2 * H + c));
-                    o(r, c) = sigmoid_(gates(r, 3 * H + c));
-                }
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        0L, H, std::move(lbd1));
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                lbd1(0L, H);
+            }
 
             matrix_t    c_mat { batch ? matrix_t { batch, H } : matrix_t { } };
 
-            for (long r { 0 }; r < batch; ++r)
-                for (long c { 0 }; c < H; ++c)
+            for (long c { 0 }; c < H; ++c)
+                for (long r { 0 }; r < batch; ++r)
                     c_mat(r, c) = f(r, c) * c_prev(r, c) + i(r, c) * g(r, c);
 
             const matrix_t  tanh_c {
@@ -4679,34 +4719,79 @@ private:
                     dht,
                     hadamard(
                         cache.o,
-                        tanh_c.apply([](const value_type &v) -> value_type {
-                                         return (T(1) - v * v);
-                                     })))
+                        tanh_c.self_apply(
+                            [](const value_type &v) -> value_type {
+                                return (T(1) - v * v);
+                            })))
             };
             const matrix_t  di { hadamard(dc, cache.g) };
             const matrix_t  df { hadamard(dc, cache.c_prev) };
             const matrix_t  dg { hadamard(dc, cache.i) };
             matrix_t        di_pre { batch, H }, df_pre { batch, H },
                             dg_pre { batch, H }, do_pre { batch, H };
+            auto            lbd1 =
+                [batch, &di_pre, &df_pre, &dg_pre, &do_pre,
+                 &cache = std::as_const(cache),
+                 &df = std::as_const(df),
+                 &dg = std::as_const(dg),
+                 &do_ = std::as_const(do_),
+                 &di = std::as_const(di)]
+                (long begin, long end) -> void  {
+                    for (long c { begin }; c < end; ++c)  {
+                        for (long r { 0 }; r < batch; ++r)  {
+                            di_pre(r, c) =
+                                di(r, c) * dsigmoid_from_out_(cache.i(r, c));
+                            df_pre(r, c) =
+                                df(r, c) * dsigmoid_from_out_(cache.f(r, c));
+                            dg_pre(r, c) =
+                                dg(r, c) * dtanh_from_out_(cache.g(r, c));
+                            do_pre(r, c) =
+                                do_(r, c) * dsigmoid_from_out_(cache.o(r, c));
+                        }
+                    }
+                };
+            const auto      thread_level =
+                (H < 500) ? 0L : ThreadGranularity::get_thread_level();
 
-            for (long r { 0 }; r < batch; ++r)
-                for (long c { 0 }; c < H; ++c)  {
-                    di_pre(r, c) = di(r, c) * dsigmoid_from_out_(cache.i(r, c));
-                    df_pre(r, c) = df(r, c) * dsigmoid_from_out_(cache.f(r, c));
-                    dg_pre(r, c) = dg(r, c) * dtanh_from_out_(cache.g(r, c));
-                    do_pre(r, c) =
-                        do_(r, c) * dsigmoid_from_out_(cache.o(r, c));
-                }
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        0L, H, std::move(lbd1));
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                lbd1(0L, H);
+            }
 
             matrix_t    dG { batch, 4 * H };
+            auto        lbd2 =
+                [H, batch, &dG,
+                 &di_pre = std::as_const(di_pre),
+                 &df_pre = std::as_const(df_pre),
+                 &do_pre = std::as_const(do_pre),
+                 &dg_pre = std::as_const(dg_pre)]
+                (long begin, long end) -> void  {
+                    for (long c { begin }; c < end; ++c)  {
+                        for (long r { 0 }; r < batch; ++r)  {
+                            dG(r, c) = di_pre(r, c);
+                            dG(r, H + c) = df_pre(r, c);
+                            dG(r, 2 * H + c) = dg_pre(r, c);
+                            dG(r, 3 * H + c) = do_pre(r, c);
+                        }
+                    }
+                };
 
-            for (long r { 0 }; r < batch; ++r)
-                for (long c { 0 }; c < H; ++c)  {
-                    dG(r, c) = di_pre(r, c);
-                    dG(r, H + c) = df_pre(r, c);
-                    dG(r, 2 * H + c) = dg_pre(r, c);
-                    dG(r, 3 * H + c) = do_pre(r, c);
-                }
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        0L, H, std::move(lbd2));
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                lbd2(0L, H);
+            }
 
             dW += cache.x.transpose() * dG;
             dU += cache.h_prev.transpose() * dG;
@@ -4722,12 +4807,10 @@ private:
             }
             db += db_inc;
 
-            matrix_t        dc_prev {
-                batch ? matrix_t { batch, H } : matrix_t { }
-            };
+            matrix_t dc_prev { batch ? matrix_t { batch, H } : matrix_t { } };
 
-            for (long r { 0 }; r < batch; ++r)
-                for (long c { 0 }; c < H; ++c)
+            for (long c { 0 }; c < H; ++c)
+                for (long r { 0 }; r < batch; ++r)
                     dc_prev(r, c) = dc(r, c) * cache.f(r, c);
 
             return (std::make_tuple(dG * W.transpose(),
@@ -4737,23 +4820,72 @@ private:
 
         void zero_grad()  {
 
-            dW.scale(0);
-            dU.scale(0);
-            db.scale(0);
+            dW.self_scale(0);
+            dU.self_scale(0);
+            db.self_scale(0);
         }
         void step(value_type lr)  {
 
-            for (long c { 0 }; c < W.cols(); ++c)
-                for (long r { 0 }; r < W.rows(); ++r)
-                    W(r, c) -= lr * dW(r, c);
+            auto    lbd1 =
+                [this, lr, &dW = std::as_const(dW)]
+                (long begin, long end) -> void  {
+                    for (long c { begin }; c < end; ++c)
+                        for (long r { 0 }; r < W.rows(); ++r)
+                            W(r, c) -= lr * dW(r, c);
+                };
+            auto    lbd2 =
+                [this, lr, &dU = std::as_const(dU)]
+                (long begin, long end) -> void  {
+                    for (long c { begin }; c < end; ++c)
+                        for (long r { 0 }; r < U.rows(); ++r)
+                            U(r, c) -= lr * dU(r, c);
+                };
+            auto    lbd3 =
+                [this, lr, &db = std::as_const(db)]
+                (long begin, long end) -> void  {
+                    for (long c { begin }; c < end; ++c)
+                        for (long r { 0 }; r < b.rows(); ++r)
+                            b(r, c) -= lr * db(r, c);
+                };
+            auto    thread_level =
+                (W.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
 
-            for (long c { 0 }; c < U.cols(); ++c)
-                for (long r { 0 }; r < U.rows(); ++r)
-                    U(r, c) -= lr * dU(r, c);
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        0L, W.cols(), std::move(lbd1));
 
-            for (long c { 0 }; c < b.cols(); ++c)
-                for (long r { 0 }; r < b.rows(); ++r)
-                    b(r, c) -= lr * db(r, c);
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                lbd1(0L, W.cols());
+            }
+
+            thread_level =
+                (U.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        0L, U.cols(), std::move(lbd2));
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                lbd2(0L, U.cols());
+            }
+
+            thread_level =
+                (b.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        0L, b.cols(), std::move(lbd3));
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                lbd3(0L, b.cols());
+            }
         }
     };
 
@@ -4776,9 +4908,12 @@ private:
 
             matrix_t    y { x * W };
 
-            for (long r { 0 }; r < x.rows(); ++r)
-                for (long c { 0 }; c < out; ++c)
-                    y(r, c) += b(0, c);
+            for (long c { 0 }; c < out; ++c)  {
+                const auto  val = b(0, c);
+
+                for (long r { 0 }; r < x.rows(); ++r)
+                    y(r, c) += val;
+            }
 
             return (y);
         }
@@ -4799,18 +4934,51 @@ private:
 
         void zero_grad()  {
 
-            dW.scale(0);
-            db.scale(0);
+            dW.self_scale(0);
+            db.self_scale(0);
         }
         void step(value_type lr) {
 
-            for (long c { 0 }; c < W.cols(); ++c)
-                for (long r { 0 }; r < W.rows(); ++r)
-                    W(r, c) -= lr * dW(r, c);
+            auto    lbd1 =
+                [this, lr, &dW = std::as_const(dW)]
+                (long begin, long end) -> void  {
+                    for (long c { begin }; c < end; ++c)
+                        for (long r { 0 }; r < W.rows(); ++r)
+                            W(r, c) -= lr * dW(r, c);
+                };
+            auto    lbd2 =
+                [this, lr, &db = std::as_const(db)]
+                (long begin, long end) -> void  {
+                    for (long c { begin }; c < end; ++c)
+                        for (long r { 0 }; r < b.rows(); ++r)
+                            b(r, c) -= lr * db(r, c);
+                };
+            auto    thread_level =
+                (W.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
 
-            for (long c { 0 }; c < b.cols(); ++c)
-                for (long r { 0 }; r < b.rows(); ++r)
-                    b(r, c) -= lr * db(r, c);
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        0L, W.cols(), std::move(lbd1));
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                lbd1(0L, W.cols());
+            }
+
+            thread_level =
+                (b.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        0L, b.cols(), std::move(lbd2));
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                lbd2(0L, b.cols());
+            }
         }
     };
 
@@ -4840,7 +5008,7 @@ private:
             caches.reserve(time_steps);
             outs.reserve(time_steps);
             for (long t { 0 }; t < time_steps; ++t)  {
-                auto    cache { cell.forward(X[t], h, c) };
+                const auto  cache { cell.forward(X[t], h, c) };
 
                 h = cache.h;
                 c = cache.c;
@@ -4860,7 +5028,7 @@ private:
                         batch { caches[0].x.rows() },
                         H { cell.hidden_size };
 
-            cell.zero_grad();
+            // cell.zero_grad();
 
             std::vector<matrix_t>   dxs(time_steps);
             matrix_t                dh_next { batch, H, 0 },
@@ -4938,8 +5106,8 @@ public:
 
                 // Zero gradients
                 //
-                lstm.zero_grad();
-                linear.zero_grad();
+                // lstm.zero_grad();
+                // linear.zero_grad();
 
                 // Forward pass
                 //

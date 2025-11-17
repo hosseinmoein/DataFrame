@@ -58,6 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html" target="_blank"><B>DataFrame documentation with code samples</B></a>
 
 DataFrame is a high-performance C++ library for in-memory data exploration, transformation, and statistical analysis — designed for data scientists, quant traders, and C++ developers who need efficient tabular data processing without Python overhead.
+This library is designed to provide similar functionalities to data manipulation and analysis tools found in other languages, such as Python's Pandas or R's data.frame. It aims to offer a robust and efficient way to handle tabular data in C++.
 The depth and breadth of functionalities offered by C++ DataFrame alone are greater than functionalities offered by packages such as Pandas, data.frame, and Polars combined.<BR>
 You can slice the data in many different ways. You can join, merge, group-by the data. You can run various statistical, summarization, financial, and ML algorithms on the data. You can add your custom algorithms easily. You can multi-column sort, custom pick and delete the data. And more …<BR>
 DataFrame also includes a large collection of analytical algorithms in form of visitors. These are from basic stats such as <I>Mean</I>, <I>STDEV</I>, <I>Moving Averages</I>, ... to more involved analysis such as <I>PCA</I>, <I>Polynomial Fit</I>, <I>FFT</I>, <I>Eigens</I> ... including a good collection of trading indicators. You can also easily add your own algorithms.<BR>

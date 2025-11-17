@@ -82,11 +82,11 @@ public:
 
     void clear() noexcept;
     void swap(Matrix &rhs) noexcept;
-    bool empty() const noexcept;
+    [[nodiscard]] bool empty() const noexcept;
     void reserve(size_type rows, size_type cols);
 
-    size_type rows() const noexcept;
-    size_type cols() const noexcept;
+    [[nodiscard]] size_type rows() const noexcept;
+    [[nodiscard]] size_type cols() const noexcept;
 
     static constexpr matrix_orient orientation();
 
@@ -94,18 +94,18 @@ public:
 
     void resize(size_type rows, size_type cols, const_reference def_v = T());
 
-    reference at(size_type r, size_type c);
-    const_reference at(size_type r, size_type c) const;
-    reference operator() (size_type r, size_type c);
-    const_reference operator() (size_type r, size_type c) const;
+    [[nodiscard]] reference at(size_type r, size_type c);
+    [[nodiscard]] const_reference at(size_type r, size_type c) const;
+    [[nodiscard]] reference operator() (size_type r, size_type c);
+    [[nodiscard]] const_reference operator() (size_type r, size_type c) const;
 
-    reference operator[] (size_type r, size_type c);
-    const_reference operator[] (size_type r, size_type c) const;
+    [[nodiscard]] reference operator[] (size_type r, size_type c);
+    [[nodiscard]] const_reference operator[] (size_type r, size_type c) const;
 
     // This returns another matrix with top n-rows and n-columns of self.
     // Rows starts at top (index 0) and columns start at left (index 0).
     //
-    Matrix corner(size_type nrows, size_type ncols) const;
+    [[nodiscard]] Matrix corner(size_type nrows, size_type ncols) const;
 
     // Set the given column or row from the given iterator.
     // col_data/row_Data iterators must be valid for the length of
@@ -119,15 +119,19 @@ public:
 
     // They return requested row or column in std::vector
     //
+    [[nodiscard]]
     std::vector<value_type> get_column_vec(size_type col) const noexcept;
+    [[nodiscard]]
     std::vector<value_type> get_row_vec(size_type row) const noexcept;
 
     // It returns requested column in a one-column matrix
     //
+    [[nodiscard]]
     Matrix<T, MO> get_column_mat(size_type col) const noexcept;
 
     // It returns requested row in a one-row matrix
     //
+    [[nodiscard]]
     Matrix<T, MO> get_row_mat(size_type row) const noexcept;
 
     bool is_square() const noexcept;
@@ -135,10 +139,10 @@ public:
     // A matrix is either structurally symmetric (IS_SYM is true) or the data
     // in the matrix is symmetric. In both cases this returns true.
     //
-    bool is_symmetric() const noexcept;
+    [[nodiscard]] bool is_symmetric() const noexcept;
 
-    trans_result_t transpose() const noexcept;
-    Matrix transpose2() const noexcept;
+    [[nodiscard]] trans_result_t transpose() const noexcept;
+    [[nodiscard]] Matrix transpose2() const noexcept;
 
     // Inverse(A) * A = A * Inverse(A) = I
     //
@@ -147,18 +151,19 @@ public:
     //   Inverse(A) = ---------------- * Adjoint(A)
     //                 Determinant(A)
     //
-    Matrix inverse() const;
+    [[nodiscard]] Matrix inverse() const;
 
     // It multiplies all elements by factor
     //
     Matrix &self_scale(value_type factor) noexcept;
-    Matrix scale(value_type factor) const noexcept;
+    [[nodiscard]] Matrix scale(value_type factor) const noexcept;
 
     // It applies the function to all elements. There is no particular or
     // guaranteed order to the function application.
     // This is a more general form of above scale().
     //
     Matrix &self_apply(std::function<value_type (const value_type &)> &&fn);
+    [[nodiscard]]
     Matrix apply(std::function<value_type (const value_type &)> &&fn) const;
 
     // Row Reduced Echelon Form:
@@ -181,11 +186,11 @@ public:
     // The Frobenius norm of a matrix is the square root of the sum of
     // the squares of the values of the elements of the matrix.
     //
-    value_type norm() const noexcept;
+    [[nodiscard]] value_type norm() const noexcept;
 
     // Mean of the entire values in the matrix
     //
-    value_type mean() const noexcept;
+    [[nodiscard]] value_type mean() const noexcept;
 
     // Degree matrix is a square diagonal matrix where each diagonal value
     // represents the number of connections in a row of an adjacency matrix.
@@ -199,7 +204,7 @@ public:
     //
     // degree_matrix() assumes self is an Adjacency matrix.
     //
-    Matrix degree_matrix() const;
+    [[nodiscard]] Matrix degree_matrix() const;
 
     // A Laplacian matrix is a square matrix that represents a graph, where
     // each entry signifies the relationship between vertices based on their
@@ -211,7 +216,7 @@ public:
     //
     // laplacian_matrix() assumes self is an Adjacency matrix.
     //
-    Matrix laplacian_matrix() const;
+    [[nodiscard]] Matrix laplacian_matrix() const;
 
     // Variance/Covariance matrix.
     // The columns of the matrix are assumed to be observations of some
@@ -230,7 +235,7 @@ public:
     //
     // For a nXm matrix, you will get a mXm covariance matrix
     //
-    Matrix
+    [[nodiscard]] Matrix
     covariance(bool is_unbiased = true) const;
 
     // Let A be an nXn matrix. The number l is an eigenvalue of A if there
@@ -381,8 +386,8 @@ public:
     // It returns the x vector.
     //
     template<typename MA>
-    inline MA solve(const MA &rhs) const;
-    inline Matrix solve() const;  // rhs is the last column
+    [[nodiscard]] inline MA solve(const MA &rhs) const;
+    [[nodiscard]] inline Matrix solve() const;  // rhs is the last column
 
     // In 2-D, when you talk about the point (2, 4), you can think of the
     // 2 and 4 as directions to get from the origin to the point
@@ -419,7 +424,7 @@ public:
     // NOTE: This is a relatively _expensive_ calculation. Its complexity
     //       is O(n!), where n is the number of rows or columns.
     //
-    inline value_type determinant() const;
+    [[nodiscard]] inline value_type determinant() const;
 
     // Minor of a matrix is the same matrix with the specified row
     // and column taken out.
@@ -435,6 +440,7 @@ public:
     // A Cofactor of a matrix is the determinant of a minor of the matrix.
     // You can also say cofactor is the signed minor of the matrix.
     //
+    [[nodiscard]]
     inline value_type cofactor(size_type row, size_type column) const;
 
     // The Adjoint of a matrix is formed by taking the transpose of the
@@ -493,7 +499,8 @@ public:
 
     // Get a matrix filled with real uniform random numbers. T can only be a
     // floating point type
-    //`
+    //
+    [[nodiscard]]
     static Matrix
     get_random(size_type rows, size_type cols, T low, T high,
                unsigned int seed = static_cast<unsigned int>(-1))
@@ -514,7 +521,7 @@ private:
     // sorting of the rows of the matrix so that row r contains the maximum
     // absolute column value for column c, among all rows r ... n.
     //
-    inline size_type
+    [[nodiscard]] inline size_type
     ppivot_(size_type pivot_row,
             size_type self_rows,
             size_type self_cols) noexcept;

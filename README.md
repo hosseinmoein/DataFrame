@@ -25,6 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<HTML>
 <head>
   <title>C++ DataFrame Library README</title>
 
@@ -44,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <link rel="icon" type="image/jpeg" href="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg">
   <link rel="canonical" href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">
 </head>
+</HTML>
 
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://isocpp.org/std/the-standard )
 [![Build status](https://ci.appveyor.com/api/projects/status/hjw01qui3bvxs8yi?svg=true)](https://ci.appveyor.com/project/hosseinmoein/dataframe)

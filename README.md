@@ -25,6 +25,26 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<head>
+  <title>C++ DataFrame Library README</title>
+
+  <meta charset="UTF-8">
+  <meta name="description" content="DataFrame is a templatized and heterogeneous C++ container designed for data analysis for statistical, machine-learning, or financial applications. You can think of data-frame as a two-dimensional data structure of columns and rows just like an Excel spreadsheet, or a SQL table. But in case of C++ DataFrame, your data needn't be two-dimensional necessarily. Columns in the C++ DataFrame could be vectors of any type, including DataFrames or other containers. So, a C++ DataFrame can be of any dimension. Columns are the first-class citizens of DataFrame, meaning operations and access to columns is far more efficient and easier than dealing with data row by row. That's the logical layout of the data. C++ DataFrame also includes an intuitive API for data analysis and analytics. The API is designed to be open-ended meaning you can easily include your own custom algorithms.">
+  <meta name="keywords" content="CPP, C++, DataFrame, data-science, machine-learning, AI, statistical-analysis, data-analysis, trading-strategies, statistical, numerical-analysis, tensorboard, financial-engineering, large-data, tensorboard, financial-data-analysis, multidimensional-data">
+  <meta name="author" content="Hossein Moein">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- OpenGraph for social sharing -->
+  <meta property="og:title" content="DataFrame — High-Performance Data Analysis in C++">
+  <meta property="og:description" content="Fast C++ DataFrame library for tabular data analysis, filtering, grouping, and numerical computation.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hosseinmoein.github.io/DataFrame/">
+  <meta property="og:image" content="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg">
+
+  <link rel="icon" type="image/jpeg" href="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg">
+  <link rel="canonical" href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">
+</head>
+
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://isocpp.org/std/the-standard )
 [![Build status](https://ci.appveyor.com/api/projects/status/hjw01qui3bvxs8yi?svg=true)](https://ci.appveyor.com/project/hosseinmoein/dataframe)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/db646376a4014c3788c7224e670fe451)](https://app.codacy.com/organizations/gh/hosseinmoein/repositories)
@@ -37,7 +57,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html" target="_blank"><B>DataFrame documentation with code samples</B></a>
 
-This is a C++ analytical library designed for data analysis similar to libraries in Python and R. For example, you would compare this to [Pandas](https://pandas.pydata.org) or [R data.frame](https://www.w3schools.com/r/r_data_frames.asp). The depth and breadth of functionalities offered by C++ DataFrame alone are greater than functionalities offered by packages such as Pandas, data.frame, and Polars combined.<BR>
+DataFrame is a high-performance C++ library for in-memory data exploration, transformation, and statistical analysis — designed for data scientists, quant traders, and C++ developers who need efficient tabular data processing without Python overhead.
+The depth and breadth of functionalities offered by C++ DataFrame alone are greater than functionalities offered by packages such as Pandas, data.frame, and Polars combined.<BR>
 You can slice the data in many different ways. You can join, merge, group-by the data. You can run various statistical, summarization, financial, and ML algorithms on the data. You can add your custom algorithms easily. You can multi-column sort, custom pick and delete the data. And more …<BR>
 DataFrame also includes a large collection of analytical algorithms in form of visitors. These are from basic stats such as <I>Mean</I>, <I>STDEV</I>, <I>Moving Averages</I>, ... to more involved analysis such as <I>PCA</I>, <I>Polynomial Fit</I>, <I>FFT</I>, <I>Eigens</I> ... including a good collection of trading indicators. You can also easily add your own algorithms.<BR>
 DataFrame also employs extensive multithreading in almost all its API’s, for large datasets. That makes DataFrame especially suitable for analyzing large datasets.<BR>

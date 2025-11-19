@@ -736,7 +736,9 @@ public:  // Load/append/remove interfaces
     //
     template<typename T, typename F, typename ... Ts>
     void
-    remove_data_by_sel(const char *name, F &sel_functor);
+    remove_data_by_sel(const char *name, F &sel_functor) requires
+    std::invocable<F, const IndexType &, const T &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>;
 
     // This does the same function as above remove_data_by_sel() but operating
     // on two columns.
@@ -761,7 +763,12 @@ public:  // Load/append/remove interfaces
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
     void
-    remove_data_by_sel(const char *name1, const char *name2, F &sel_functor);
+    remove_data_by_sel(const char *name1, const char *name2,
+                       F &sel_functor) requires
+    std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &>,
+                 bool>;
 
     // This does the same function as above remove_data_by_sel() but operating
     // on three columns.
@@ -794,7 +801,12 @@ public:  // Load/append/remove interfaces
     remove_data_by_sel(const char *name1,
                        const char *name2,
                        const char *name3,
-                       F &sel_functor);
+                       F &sel_functor) requires
+    std::invocable<F, const IndexType &, const T1 &, const T2 &, const T3 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &>,
+                 bool>;
 
     // This removes data rows by basic Glob-like pattern matching (also similar
     // to SQL like clause) to filter data in the named column. Each element of

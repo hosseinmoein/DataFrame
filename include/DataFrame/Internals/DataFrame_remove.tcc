@@ -160,7 +160,11 @@ remove_data_by_loc(Index2D<long> range, inclusiveness incld)  {
 
 template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
-void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
+void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)
+    requires std::invocable<F, const IndexType &, const T &> &&
+             std::same_as<std::invoke_result_t<F, const IndexType &,
+                                                  const T &>,
+                          bool>  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
                   std::is_base_of<HeteroPtrView<align_value>, H>::value,
@@ -185,7 +189,12 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
 template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
 void DataFrame<I, H>::
-remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
+remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)
+    requires std::invocable<F, const IndexType &,
+                               const T1 &, const T2 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &>,
+                 bool>  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
                   std::is_base_of<HeteroPtrView<align_value>, H>::value,
@@ -223,7 +232,13 @@ void DataFrame<I, H>::
 remove_data_by_sel (const char *name1,
                     const char *name2,
                     const char *name3,
-                    F &sel_functor)  {
+                    F &sel_functor)
+    requires std::invocable<F, const IndexType &,
+                               const T1 &, const T2 &, const T3 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &>,
+                 bool>  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
                   std::is_base_of<HeteroPtrView<align_value>, H>::value,

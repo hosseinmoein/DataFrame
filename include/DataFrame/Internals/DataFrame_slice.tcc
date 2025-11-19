@@ -681,7 +681,9 @@ get_view_by_loc (const StlVecType<long> &locations) const  {
 template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
-get_data_by_sel (const char *name, F &sel_functor) const  {
+get_data_by_sel (const char *name, F &sel_functor) const requires
+std::invocable<F, const IndexType &, const T &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
@@ -701,7 +703,9 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
 template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
-get_view_by_sel (const char *name, F &sel_functor)  {
+get_view_by_sel (const char *name, F &sel_functor) requires
+std::invocable<F, const IndexType &, const T &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
@@ -721,7 +725,9 @@ get_view_by_sel (const char *name, F &sel_functor)  {
 template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
-get_view_by_sel (const char *name, F &sel_functor) const  {
+get_view_by_sel (const char *name, F &sel_functor) const requires
+std::invocable<F, const IndexType &, const T &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
@@ -741,7 +747,11 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
 template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
-get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
+get_data_by_sel (const char *name1, const char *name2,
+                 F &sel_functor) const requires
+std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                  const T1 &, const T2 &>, bool>  {
 
     const size_type         idx_s = indices_.size();
     const SpinGuard         guard (lock_);
@@ -770,7 +780,11 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
-get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
+get_view_by_sel (const char *name1, const char *name2,
+                 F &sel_functor) requires
+std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                  const T1 &, const T2 &>, bool>  {
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -800,7 +814,11 @@ template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
-get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
+get_view_by_sel (const char *name1, const char *name2,
+                 F &sel_functor) const requires
+std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                  const T1 &, const T2 &>, bool>  {
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -832,7 +850,11 @@ DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_sel (const char *name1,
                  const char *name2,
                  const char *name3,
-                 F &sel_functor) const  {
+                 F &sel_functor) const requires
+std::invocable<F, const IndexType &, const T1 &, const T2 &, const T3 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                     const T1 &, const T2 &,
+                                     const T3 &>, bool>  {
 
     const size_type         idx_s = indices_.size();
     const SpinGuard         guard (lock_);
@@ -1061,7 +1083,11 @@ typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_by_sel (const char *name1,
                  const char *name2,
                  const char *name3,
-                 F &sel_functor)  {
+                 F &sel_functor) requires
+std::invocable<F, const IndexType &, const T1 &, const T2 &, const T3 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                     const T1 &, const T2 &,
+                                     const T3 &>, bool>  {
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1097,7 +1123,11 @@ DataFrame<I, H>::
 get_view_by_sel (const char *name1,
                  const char *name2,
                  const char *name3,
-                 F &sel_functor) const  {
+                 F &sel_functor) const requires
+std::invocable<F, const IndexType &, const T1 &, const T2 &, const T3 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                     const T1 &, const T2 &,
+                                     const T3 &>, bool>  {
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1134,7 +1164,12 @@ get_data_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
                 const char *name4,
-                F &sel_functor) const  {
+                F &sel_functor) const requires
+std::invocable<F, const IndexType &,
+                  const T1 &, const T2 &, const T3 &, const T4 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                     const T1 &, const T2 &,
+                                     const T3 &, const T4 &>, bool>  {
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1176,7 +1211,12 @@ get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
                 const char *name4,
-                F &sel_functor)  {
+                F &sel_functor) requires
+std::invocable<F, const IndexType &,
+                  const T1 &, const T2 &, const T3 &, const T4 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                     const T1 &, const T2 &,
+                                     const T3 &, const T4 &>, bool>  {
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1219,7 +1259,12 @@ get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
                 const char *name4,
-                F &sel_functor) const  {
+                F &sel_functor) const requires
+std::invocable<F, const IndexType &,
+                  const T1 &, const T2 &, const T3 &, const T4 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                     const T1 &, const T2 &,
+                                     const T3 &, const T4 &>, bool>  {
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1262,7 +1307,14 @@ get_data_by_sel(const char *name1,
                 const char *name3,
                 const char *name4,
                 const char *name5,
-                F &sel_functor) const  {
+                F &sel_functor) const requires
+std::invocable<F, const IndexType &,
+                  const T1 &, const T2 &, const T3 &,
+                  const T4 &, const T5 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                     const T1 &, const T2 &,
+                                     const T3 &, const T4 &,
+                                     const T5 &>, bool>  {
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1549,7 +1601,14 @@ get_view_by_sel(const char *name1,
                 const char *name3,
                 const char *name4,
                 const char *name5,
-                F &sel_functor)  {
+                F &sel_functor) requires
+std::invocable<F, const IndexType &,
+                  const T1 &, const T2 &, const T3 &,
+                  const T4 &, const T5 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                     const T1 &, const T2 &,
+                                     const T3 &, const T4 &,
+                                     const T5 &>, bool>  {
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1596,7 +1655,14 @@ get_view_by_sel(const char *name1,
                 const char *name3,
                 const char *name4,
                 const char *name5,
-                F &sel_functor) const  {
+                F &sel_functor) const requires
+std::invocable<F, const IndexType &,
+                  const T1 &, const T2 &, const T3 &,
+                  const T4 &, const T5 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                     const T1 &, const T2 &,
+                                     const T3 &, const T4 &,
+                                     const T5 &>, bool>  {
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);

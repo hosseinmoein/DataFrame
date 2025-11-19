@@ -2861,7 +2861,9 @@ public: // Read/access and slicing interfaces
     //
     template<typename T, typename F, typename ... Ts>
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-    get_data_by_sel(const char *name, F &sel_functor) const;
+    get_data_by_sel(const char *name, F &sel_functor) const requires
+    std::invocable<F, const IndexType &, const T &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>;
 
     // This is identical with above get_data_by_sel(), but:
     //   1) The result is a view
@@ -2882,11 +2884,15 @@ public: // Read/access and slicing interfaces
     //
     template<typename T, typename F, typename ... Ts>
     [[nodiscard]] PtrView
-    get_view_by_sel(const char *name, F &sel_functor);
+    get_view_by_sel(const char *name, F &sel_functor) requires
+    std::invocable<F, const IndexType &, const T &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>;
 
     template<typename T, typename F, typename ... Ts>
     [[nodiscard]] ConstPtrView
-    get_view_by_sel(const char *name, F &sel_functor) const;
+    get_view_by_sel(const char *name, F &sel_functor) const requires
+    std::invocable<F, const IndexType &, const T &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>;
 
     // This does the same function as above get_data_by_sel() but operating
     // on two columns.
@@ -2913,7 +2919,10 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_sel(const char *name1,
                     const char *name2,
-                    F &sel_functor) const;
+                    F &sel_functor) const requires
+    std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &>, bool>;
 
     // This is identical with above get_data_by_sel(), but:
     //   1) The result is a view
@@ -2941,11 +2950,19 @@ public: // Read/access and slicing interfaces
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
     [[nodiscard]] PtrView
-    get_view_by_sel(const char *name1, const char *name2, F &sel_functor);
+    get_view_by_sel(const char *name1, const char *name2,
+                    F &sel_functor) requires
+    std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &>, bool>;
 
     template<typename T1, typename T2, typename F, typename ... Ts>
     [[nodiscard]] ConstPtrView
-    get_view_by_sel(const char *name1, const char *name2, F &sel_functor) const;
+    get_view_by_sel(const char *name1, const char *name2,
+                    F &sel_functor) const requires
+    std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &>, bool>;
 
     // This does the same function as above get_data_by_sel() but operating
     // on three columns.
@@ -2978,7 +2995,11 @@ public: // Read/access and slicing interfaces
     get_data_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
-                    F &sel_functor) const;
+                    F &sel_functor) const requires
+    std::invocable<F, const IndexType &, const T1 &, const T2 &, const T3 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &>, bool>;
 
     // This is identical with above get_data_by_sel(), but:
     //   1) The result is a view
@@ -3014,7 +3035,11 @@ public: // Read/access and slicing interfaces
     get_view_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
-                    F &sel_functor);
+                    F &sel_functor) requires
+    std::invocable<F, const IndexType &, const T1 &, const T2 &, const T3 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &>, bool>;
 
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
@@ -3022,7 +3047,11 @@ public: // Read/access and slicing interfaces
     get_view_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
-                    F &sel_functor) const;
+                    F &sel_functor) const requires
+    std::invocable<F, const IndexType &, const T1 &, const T2 &, const T3 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &>, bool>;
 
     // This does the same function as above get_data_by_sel() but operating
     // on four columns.
@@ -3061,7 +3090,12 @@ public: // Read/access and slicing interfaces
                     const char *name2,
                     const char *name3,
                     const char *name4,
-                    F &sel_functor) const;
+                    F &sel_functor) const requires
+    std::invocable<F, const IndexType &,
+                      const T1 &, const T2 &, const T3 &, const T4 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &, const T4 &>, bool>;
 
     // This is identical with above get_data_by_sel(), but:
     //   1) The result is a view
@@ -3102,7 +3136,12 @@ public: // Read/access and slicing interfaces
                     const char *name2,
                     const char *name3,
                     const char *name4,
-                    F &sel_functor);
+                    F &sel_functor) requires
+    std::invocable<F, const IndexType &,
+                      const T1 &, const T2 &, const T3 &, const T4 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &, const T4 &>, bool>;
 
     template<typename T1, typename T2, typename T3, typename T4, typename F,
              typename ... Ts>
@@ -3111,7 +3150,12 @@ public: // Read/access and slicing interfaces
                     const char *name2,
                     const char *name3,
                     const char *name4,
-                    F &sel_functor) const;
+                    F &sel_functor) const requires
+    std::invocable<F, const IndexType &,
+                      const T1 &, const T2 &, const T3 &, const T4 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &, const T4 &>, bool>;
 
     // This does the same function as above get_data_by_sel() but operating
     // on five columns.
@@ -3155,7 +3199,14 @@ public: // Read/access and slicing interfaces
                     const char *name3,
                     const char *name4,
                     const char *name5,
-                    F &sel_functor) const;
+                    F &sel_functor) const requires
+    std::invocable<F, const IndexType &,
+                      const T1 &, const T2 &, const T3 &,
+                      const T4 &, const T5 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &, const T4 &,
+                                         const T5 &>, bool>;
 
     // This is identical with above get_data_by_sel(), but:
     //   1) The result is a view
@@ -3201,7 +3252,14 @@ public: // Read/access and slicing interfaces
                     const char *name3,
                     const char *name4,
                     const char *name5,
-                    F &sel_functor);
+                    F &sel_functor) requires
+    std::invocable<F, const IndexType &,
+                      const T1 &, const T2 &, const T3 &,
+                      const T4 &, const T5 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &, const T4 &,
+                                         const T5 &>, bool>;
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename F, typename ... Ts>
@@ -3211,7 +3269,14 @@ public: // Read/access and slicing interfaces
                     const char *name3,
                     const char *name4,
                     const char *name5,
-                    F &sel_functor) const;
+                    F &sel_functor) const requires
+    std::invocable<F, const IndexType &,
+                      const T1 &, const T2 &, const T3 &,
+                      const T4 &, const T5 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const T1 &, const T2 &,
+                                         const T3 &, const T4 &,
+                                         const T5 &>, bool>;
 
     // Data by select for larger number of columns
     //

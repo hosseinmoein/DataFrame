@@ -341,7 +341,7 @@ get_matrix(std::vector<const char *> &&col_names) const {
 
             if (max_rows < col.size())  max_rows = col.size();
             vecs.push_back(&col);
-		}
+        }
     }
 
     ret_t   result { long(max_rows), long(vecs.size()), get_nan<T>() };
@@ -787,7 +787,9 @@ pattern_match(const char *col_name,
 template<typename I, typename H>
 template<typename T, typename DF, typename F>
 typename DataFrame<I, H>::template StlVecType<T> DataFrame<I, H>::
-combine(const char *col_name, const DF &rhs, F &functor) const  {
+combine(const char *col_name, const DF &rhs, F &functor) const requires
+std::invocable<F, const T &, const T &> &&
+std::same_as<std::invoke_result_t<F, const T &, const T &>, T>  {
 
     SpinGuard   guard (lock_);
     const auto  &lhs_col = get_column<T>(col_name, false);
@@ -813,7 +815,9 @@ typename DataFrame<I, H>::template StlVecType<T> DataFrame<I, H>::
 combine(const char *col_name,
         const DF1 &df1,
         const DF2 &df2,
-        F &functor) const  {
+        F &functor) const requires
+std::invocable<F, const T &, const T &, const T &> &&
+std::same_as<std::invoke_result_t<F, const T &, const T &, const T &>, T>  {
 
     SpinGuard   guard (lock_);
     const auto  &lhs_col = get_column<T>(col_name, false);
@@ -844,7 +848,10 @@ combine(const char *col_name,
         const DF1 &df1,
         const DF2 &df2,
         const DF3 &df3,
-        F &functor) const  {
+        F &functor) const requires
+std::invocable<F, const T &, const T &, const T &, const T &> &&
+std::same_as<std::invoke_result_t<F, const T &, const T &,
+                                     const T &, const T &>, T>  {
 
     SpinGuard   guard (lock_);
     const auto  &lhs_col = get_column<T>(col_name, false);

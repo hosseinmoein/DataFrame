@@ -4715,7 +4715,9 @@ public: // Read/access and slicing interfaces
     //
     template<typename T, typename DF, typename F>
     [[nodiscard]] StlVecType<T>
-    combine(const char *col_name, const DF &rhs, F &functor) const;
+    combine(const char *col_name, const DF &rhs, F &functor) const requires
+    std::invocable<F, const T &, const T &> &&
+    std::same_as<std::invoke_result_t<F, const T &, const T &>, T>;
 
     // Same as the combine() above but it combines 3 columns.
     //
@@ -4745,7 +4747,9 @@ public: // Read/access and slicing interfaces
     combine(const char *col_name,
             const DF1 &df1,
             const DF2 &df2,
-            F &functor) const;
+            F &functor) const requires
+    std::invocable<F, const T &, const T &, const T &> &&
+    std::same_as<std::invoke_result_t<F, const T &, const T &, const T &>, T>;
 
     // Same as the combine() above but it combines 4 columns.
     //
@@ -4784,7 +4788,10 @@ public: // Read/access and slicing interfaces
             const DF1 &df1,
             const DF2 &df2,
             const DF3 &df3,
-            F &functor) const;
+            F &functor) const requires
+    std::invocable<F, const T &, const T &, const T &, const T &> &&
+    std::same_as<std::invoke_result_t<F, const T &, const T &,
+                                         const T &, const T &>, T>;
 
     // This method feeds old_col_name1 and old_col_name2 of types OLD_T1 and
     // OLD_T2 to functor which returns a StlVecType<NEW_T> which will be

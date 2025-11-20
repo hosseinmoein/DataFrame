@@ -4835,7 +4835,22 @@ public: // Read/access and slicing interfaces
                 const char *old_col_name2,
                 const char *new_col_name,
                 F &functor,
-                bool delete_old_cols = true);
+                bool delete_old_cols = true) requires
+    std::invocable<F, typename IndexVecType::const_iterator,
+                      typename IndexVecType::const_iterator,
+                      typename StlVecType<OLD_T1>::iterator,
+                      typename StlVecType<OLD_T1>::iterator,
+                      typename StlVecType<OLD_T2>::iterator,
+                      typename StlVecType<OLD_T2>::iterator> &&
+    std::same_as<std::invoke_result_t<
+                     F,
+                     typename IndexVecType::const_iterator,
+                     typename IndexVecType::const_iterator,
+                     typename StlVecType<OLD_T1>::iterator,
+                     typename StlVecType<OLD_T1>::iterator,
+                     typename StlVecType<OLD_T2>::iterator,
+                     typename StlVecType<OLD_T2>::iterator>,
+                 StlVecType<NEW_T>>;
 
     // This is the same as above consolidate(), but it consolidates 3 columns
     // into one.
@@ -4883,7 +4898,26 @@ public: // Read/access and slicing interfaces
                 const char *old_col_name3,
                 const char *new_col_name,
                 F &functor,
-                bool delete_old_cols = true);
+                bool delete_old_cols = true) requires
+    std::invocable<F, typename IndexVecType::const_iterator,
+                      typename IndexVecType::const_iterator,
+                      typename StlVecType<OLD_T1>::iterator,
+                      typename StlVecType<OLD_T1>::iterator,
+                      typename StlVecType<OLD_T2>::iterator,
+                      typename StlVecType<OLD_T2>::iterator,
+                      typename StlVecType<OLD_T3>::iterator,
+                      typename StlVecType<OLD_T3>::iterator> &&
+    std::same_as<std::invoke_result_t<
+                     F,
+                     typename IndexVecType::const_iterator,
+                     typename IndexVecType::const_iterator,
+                     typename StlVecType<OLD_T1>::iterator,
+                     typename StlVecType<OLD_T1>::iterator,
+                     typename StlVecType<OLD_T2>::iterator,
+                     typename StlVecType<OLD_T2>::iterator,
+                     typename StlVecType<OLD_T3>::iterator,
+                     typename StlVecType<OLD_T3>::iterator>,
+                 StlVecType<NEW_T>>;
 
     // This is the same as above consolidate(), but it consolidates 4 columns
     // into one.
@@ -4939,7 +4973,30 @@ public: // Read/access and slicing interfaces
                 const char *old_col_name4,
                 const char *new_col_name,
                 F &functor,
-                bool delete_old_cols = true);
+                bool delete_old_cols = true) requires
+    std::invocable<F, typename IndexVecType::const_iterator,
+                      typename IndexVecType::const_iterator,
+                      typename StlVecType<OLD_T1>::iterator,
+                      typename StlVecType<OLD_T1>::iterator,
+                      typename StlVecType<OLD_T2>::iterator,
+                      typename StlVecType<OLD_T2>::iterator,
+                      typename StlVecType<OLD_T3>::iterator,
+                      typename StlVecType<OLD_T3>::iterator,
+                      typename StlVecType<OLD_T4>::iterator,
+                      typename StlVecType<OLD_T4>::iterator> &&
+    std::same_as<std::invoke_result_t<
+                     F,
+                     typename IndexVecType::const_iterator,
+                     typename IndexVecType::const_iterator,
+                     typename StlVecType<OLD_T1>::iterator,
+                     typename StlVecType<OLD_T1>::iterator,
+                     typename StlVecType<OLD_T2>::iterator,
+                     typename StlVecType<OLD_T2>::iterator,
+                     typename StlVecType<OLD_T3>::iterator,
+                     typename StlVecType<OLD_T3>::iterator,
+                     typename StlVecType<OLD_T4>::iterator,
+                     typename StlVecType<OLD_T4>::iterator>,
+                 StlVecType<NEW_T>>;
 
     // This is the same as above consolidate(), but it consolidates 5 columns
     // into one.
@@ -5001,7 +5058,34 @@ public: // Read/access and slicing interfaces
                 const char *old_col_name5,
                 const char *new_col_name,
                 F &functor,
-                bool delete_old_cols = true);
+                bool delete_old_cols = true) requires
+    std::invocable<F, typename IndexVecType::const_iterator,
+                      typename IndexVecType::const_iterator,
+                      typename StlVecType<OLD_T1>::iterator,
+                      typename StlVecType<OLD_T1>::iterator,
+                      typename StlVecType<OLD_T2>::iterator,
+                      typename StlVecType<OLD_T2>::iterator,
+                      typename StlVecType<OLD_T3>::iterator,
+                      typename StlVecType<OLD_T3>::iterator,
+                      typename StlVecType<OLD_T4>::iterator,
+                      typename StlVecType<OLD_T4>::iterator,
+                      typename StlVecType<OLD_T5>::iterator,
+                      typename StlVecType<OLD_T5>::iterator> &&
+    std::same_as<std::invoke_result_t<
+                     F,
+                     typename IndexVecType::const_iterator,
+                     typename IndexVecType::const_iterator,
+                     typename StlVecType<OLD_T1>::iterator,
+                     typename StlVecType<OLD_T1>::iterator,
+                     typename StlVecType<OLD_T2>::iterator,
+                     typename StlVecType<OLD_T2>::iterator,
+                     typename StlVecType<OLD_T3>::iterator,
+                     typename StlVecType<OLD_T3>::iterator,
+                     typename StlVecType<OLD_T4>::iterator,
+                     typename StlVecType<OLD_T4>::iterator,
+                     typename StlVecType<OLD_T5>::iterator,
+                     typename StlVecType<OLD_T5>::iterator>,
+                 StlVecType<NEW_T>>;
 
     // This transforms a column of containers into column of container’s value
     // types. For each data point in each container, index and data columns

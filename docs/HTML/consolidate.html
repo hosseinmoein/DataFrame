@@ -43,31 +43,43 @@ body {
     </tr>
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> NEW_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> NEW_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
 <span class="line_wrapper">consolidate<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name1<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name2<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper"></span></pre>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">requires</span></span>
+<span class="line_wrapper">  <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invocable<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">  <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>same_as<span style="color:#808030; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invoke_result_t<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">&gt;</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">               StlVecType<span style="color:#808030; ">&lt;</span>NEW_T<span style="color:#808030; ">&gt;</span><span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span></pre>
       </td>
       <td>
         This method feeds old_col_name1 and old_col_name2 of types OLD_T1 and OLD_T2 to functor which returns a std::vector<NEW_T> which will be loaded into self as column new_col_name. Both old columns will be removed, if delete_old_cols is true<BR>
         Functor "functor" should implement the logic of consolidating two columns into one. Functor signature is:<BR>
         <I><PRE>
-  template&lt;typename ITR1, typename ITR2&gt;
-  std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
-                      IndexVecType::const_iterator idx_end,
-                      ITR1 col1_begin, ITR1 col1_end,
-                      ITR2 col2_begin, ITR2 col2_end);
-  Where ITR[12] are iterators for columns 1 and 2.
-  They are iterators of std::vector.
+template&lt;typename ITR1, typename ITR2&gt;
+std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
+                    IndexVecType::const_iterator idx_end,
+                    ITR1 col1_begin, ITR1 col1_end,
+                    ITR2 col2_begin, ITR2 col2_end);
+Where ITR[12] are iterators for columns 1 and 2.
+They are iterators of std::vector.
         </PRE></I>
         <B>NOTE</B>: This method could not be called from views.
       </td>
-      <td width="35%">
+      <td width="33%">
         <B>OLD_T1</B>: Type of existing column named old_col_name1<BR>
         <B>OLD_T2</B>: Type of existing column named old_col_name2<BR>
         <B>NEW_T</B>: Type of the new column new_col_name which is the consolidation of the two existing columns<BR>
@@ -82,8 +94,7 @@ body {
 
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T3<span style="color:#808030; ">,</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T3<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> NEW_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
 <span class="line_wrapper">consolidate<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name1<span style="color:#808030; ">,</span></span>
@@ -91,25 +102,43 @@ body {
 <span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name3<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">requires</span></span>
+<span class="line_wrapper">  <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invocable<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">  <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>same_as<span style="color:#808030; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invoke_result_t<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">&gt;</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">               StlVecType<span style="color:#808030; ">&lt;</span>NEW_T<span style="color:#808030; ">&gt;</span><span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is the same as above consolidate(), but it consolidates 3 columns into one.<BR>
         Functor signature is:<BR>
         <I><PRE>
-  template&lt;typename ITR1, typename ITR2, typename ITR3&gt;
-  std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
-                      IndexVecType::const_iterator idx_end,
-                      ITR1 col1_begin, ITR1 col1_end,
-                      ITR2 col2_begin, ITR2 col2_end,
-                      ITR3 col3_begin, ITR3 col3_end);
-  Where ITR[123] are iterators for columns 1, 2, and 3. They are
-  iterators of std::vector.
+template&lt;typename ITR1, typename ITR2, typename ITR3&gt;
+std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
+                    IndexVecType::const_iterator idx_end,
+                    ITR1 col1_begin, ITR1 col1_end,
+                    ITR2 col2_begin, ITR2 col2_end,
+                    ITR3 col3_begin, ITR3 col3_end);
+Where ITR[123] are iterators for columns 1, 2, and 3.
+They are iterators of std::vector.
         </PRE></I>
         <B>NOTE</B>: This method could not be called from views.
       </td>
-      <td>
+      <td width="33%">
         <B>OLD_T1</B>: Type of existing column named old_col_name1<BR>
         <B>OLD_T2</B>: Type of existing column named old_col_name2<BR>
         <B>OLD_T3</B>: Type of existing column named old_col_name3<BR>
@@ -126,8 +155,7 @@ body {
 
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T4<span style="color:#808030; ">,</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T4<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> NEW_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
 <span class="line_wrapper">consolidate<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name1<span style="color:#808030; ">,</span></span>
@@ -136,26 +164,49 @@ body {
 <span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name4<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">requires</span></span>
+<span class="line_wrapper">  <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invocable<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T4<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T4<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">  <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>same_as<span style="color:#808030; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invoke_result_t<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T4<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T4<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">&gt;</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">               StlVecType<span style="color:#808030; ">&lt;</span>NEW_T<span style="color:#808030; ">&gt;</span><span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is the same as above consolidate(), but it consolidates 4 columns into one.<BR>
         Functor signature is:<BR>
         <I><PRE>
-  template&lt;typename ITR1, typename ITR2, typename ITR3, typename ITR4&gt;
-  std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
-                      IndexVecType::const_iterator idx_end,
-                      ITR1 col1_begin, ITR1 col1_end,
-                      ITR2 col2_begin, ITR2 col2_end,
-                      ITR3 col3_begin, ITR3 col3_end,
-                      ITR4 col4_begin, ITR4 col4_end);
-  Where ITR[1234] are iterators for columns 1, 2, 3, and 4. They are
-  iterators of std::vector.
+template&lt;typename ITR1, typename ITR2, typename ITR3,
+         typename ITR4&gt;
+std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
+                    IndexVecType::const_iterator idx_end,
+                    ITR1 col1_begin, ITR1 col1_end,
+                    ITR2 col2_begin, ITR2 col2_end,
+                    ITR3 col3_begin, ITR3 col3_end,
+                    ITR4 col4_begin, ITR4 col4_end);
+Where ITR[1234] are iterators for columns 1, 2, 3, and 4.
+They are iterators of std::vector.
         </PRE></I>
         <B>NOTE</B>: This method could not be called from views.
       </td>
-      <td>
+      <td width="33%">
         <B>OLD_T1</B>: Type of existing column named old_col_name1<BR>
         <B>OLD_T2</B>: Type of existing column named old_col_name2<BR>
         <B>OLD_T3</B>: Type of existing column named old_col_name3<BR>
@@ -174,9 +225,8 @@ body {
 
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T4<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T5<span style="color:#808030; ">,</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> OLD_T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T3<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T4<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> OLD_T5<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> NEW_T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">void</span></span>
 <span class="line_wrapper">consolidate<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name1<span style="color:#808030; ">,</span></span>
@@ -186,27 +236,54 @@ body {
 <span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>old_col_name5<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>new_col_name<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">            F <span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">bool</span> delete_old_cols <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">requires</span></span>
+<span class="line_wrapper">  <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invocable<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T4<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T4<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T5<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T5<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper">  <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>same_as<span style="color:#808030; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invoke_result_t<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> IndexVecType<span style="color:#800080; ">::</span><span style="color:#603000; ">const_iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T1<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T2<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T3<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T4<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T4<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T5<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">typename</span> StlVecType<span style="color:#800080; ">&lt;</span>OLD_T5<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span><span style="color:#603000; ">iterator</span><span style="color:#808030; ">&gt;</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">               StlVecType<span style="color:#808030; ">&lt;</span>NEW_T<span style="color:#808030; ">&gt;</span><span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
         This is the same as above consolidate(), but it consolidates 5 columns into one.<BR>
         Functor signature is:<BR>
         <I><PRE>
-  template&lt;typename ITR1, typename ITR2, typename ITR3, typename ITR4, typename ITR5&gt;
-  std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
-                      IndexVecType::const_iterator idx_end,
-                      ITR1 col1_begin, ITR1 col1_end,
-                      ITR2 col2_begin, ITR2 col2_end,
-                      ITR3 col3_begin, ITR3 col3_end,
-                      ITR4 col4_begin, ITR4 col4_end,
-                      ITR5 col5_begin, ITR5 col5_end);
-  Where ITR[12345] are iterators for columns 1, 2, 3, 4, and 5. They are
-  iterators of std::vector.
+template&lt;typename ITR1, typename ITR2, typename ITR3,
+          typename ITR4, typename ITR5&gt;
+std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
+                    IndexVecType::const_iterator idx_end,
+                    ITR1 col1_begin, ITR1 col1_end,
+                    ITR2 col2_begin, ITR2 col2_end,
+                    ITR3 col3_begin, ITR3 col3_end,
+                    ITR4 col4_begin, ITR4 col4_end,
+                    ITR5 col5_begin, ITR5 col5_end);
+Where ITR[12345] are iterators for columns 1, 2, 3, 4,
+and 5. They are iterators of std::vector.
         </PRE></I>
         <B>NOTE</B>: This method could not be called from views.
       </td>
-      <td>
+      <td width="33%">
         <B>OLD_T1</B>: Type of existing column named old_col_name1<BR>
         <B>OLD_T2</B>: Type of existing column named old_col_name2<BR>
         <B>OLD_T3</B>: Type of existing column named old_col_name3<BR>

@@ -3844,6 +3844,10 @@ operator * (const Matrix<T, MO, IS_SYM> &lhs,
 
 // ----------------------------------------------------------------------------
 
+static constexpr long   HMDF_MAT_BLOCK = 64L;
+
+// ----------------------------------------------------------------------------
+
 // Naïve but cache friendly O(n^3) algorithm
 //
 template<typename T, matrix_orient MO1, matrix_orient MO2,
@@ -3863,26 +3867,58 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
 
     Matrix<T, MO1, false>   result { lhs_rows, rhs_cols, 0 };
     const long              thread_level =
-        (lhs_cols >= 400L || rhs_cols >= 400L)
+        (lhs_cols >= 600L || rhs_cols >= 600L)
             ? ThreadGranularity::get_thread_level() : 0;
 
     auto    col_lbd =
         [lhs_rows, lhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long c = begin; c < end; ++c)
-                for (long r = 0; r < lhs_rows; ++r)
-                    for (long k = 0; k < lhs_cols; ++k)
-                        result(r, c) += lhs(r, k) * rhs(k, c);
+            for (long rc = begin; rc < end; rc += HMDF_MAT_BLOCK) {
+                for (long lc = 0; lc < lhs_cols; lc += HMDF_MAT_BLOCK) {
+                    for (long r = 0; r < lhs_rows; r += HMDF_MAT_BLOCK) {
+                        const long  r_max =
+                            std::min(r + HMDF_MAT_BLOCK, lhs_rows);
+                        const long  rc_max = std::min(rc + HMDF_MAT_BLOCK, end);
+                        const long  lc_max =
+                            std::min(lc + HMDF_MAT_BLOCK, lhs_cols);
+
+                        for (long rr = rc; rr < rc_max; ++rr) {
+                            for (long cc = lc; cc < lc_max; ++cc) {
+                                const T val = rhs(cc, rr);
+
+                                for (long i = r; i < r_max; ++i)
+                                    result(i, rr) += lhs(i, cc) * val;
+                            }
+                        }
+                    }
+                }
+            }
         };
     auto    row_lbd =
         [lhs_cols, rhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; ++r)
-                for (long c = 0; c < rhs_cols; ++c)
-                    for (long k = 0; k < lhs_cols; ++k)
-                        result(r, c) += lhs(r, k) * rhs(k, c);
+            for (long r = begin; r < end; r += HMDF_MAT_BLOCK) {
+                for (long c = 0; c < rhs_cols; c += HMDF_MAT_BLOCK) {
+                    for (long k = 0; k < lhs_cols; k += HMDF_MAT_BLOCK) {
+                        const long  r_max = std::min(r + HMDF_MAT_BLOCK, end);
+                        const long  c_max =
+                            std::min(c + HMDF_MAT_BLOCK, rhs_cols);
+                        const long  k_max =
+                            std::min(k + HMDF_MAT_BLOCK, lhs_cols);
+
+                        for (long rr = r; rr < r_max; ++rr) {
+                            for (long kk = k; kk < k_max; ++kk) {
+                                const T val = lhs(rr, kk);
+
+                                for (long j = c; j < c_max; ++j)
+                                    result(rr, j) += val * rhs(kk, j);
+                            }
+                        }
+                    }
+                }
+            }
         };
 
     if (thread_level > 2)  {

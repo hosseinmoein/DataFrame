@@ -27,12 +27,17 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
+
 #include <DataFrame/RandGen.h>
 #include <DataFrame/Utils/Matrix.h>
 
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
+#include <ranges>
 
 // ----------------------------------------------------------------------------
 
@@ -350,9 +355,9 @@ Matrix<T, MO, IS_SYM>::get_column_vec(size_type col) const noexcept  {
         result.insert(result.begin(), &(at(0, col)), (&(at(0, col))) + rows());
     }
     else  {
-        result.reserve(rows());
+        result.resize(rows());
         for (size_type r = 0; r < rows(); ++r)
-            result.push_back(at(r, col));
+            result[r] = at(r, col);
     }
 
     return (result);
@@ -370,9 +375,9 @@ Matrix<T, MO, IS_SYM>::get_row_vec(size_type row) const noexcept  {
         result.insert(result.begin(), &(at(row, 0)), (&(at(row, 0))) + cols());
     }
     else  {
-        result.reserve(cols());
+        result.resize(cols());
         for (size_type c = 0; c < cols(); ++c)
-            result.push_back(at(row, c));
+            result[c] = at(row, c);
     }
 
     return (result);
@@ -3387,6 +3392,10 @@ operator == (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 // ----------------------------------------------------------------------------
 
+static constexpr long   HMDF_MAT_BLOCK = 64L;
+
+// ----------------------------------------------------------------------------
+
 template<typename T, matrix_orient MO1, matrix_orient MO2,
          bool IS_SYM1, bool IS_SYM2>
 static inline typename std::conditional<IS_SYM1 && IS_SYM2,
@@ -3405,11 +3414,11 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw NotFeasible(
-            "+ operation between these two metrices is not feasible");
+        throw NotFeasible("Incompatible matrix + matrix operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    result_t    result;
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result;
 
     if constexpr (IS_SYM1 && (! IS_SYM2))  {
         result.resize(lhs.rows(), lhs.cols());
@@ -3421,6 +3430,23 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
         result = lhs;
     }
 
+    auto        lbd__eq =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result.matrix_[i + j] += rhs.matrix_[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result.matrix_[i] += rhs.matrix_[i];
+        };
     auto        col_lbd =
         [lhs_rows, &result, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -3456,7 +3482,10 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        if constexpr (MO1 == matrix_orient::column_major)
+        if constexpr (MO1 == MO2 && IS_SYM1 == IS_SYM2)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, long(lhs.matrix_.size()), std::move(lbd__eq));
+        else if constexpr (MO1 == matrix_orient::column_major)
             futures = ThreadGranularity::thr_pool_.parallel_loop(
                           0L, lhs_cols, std::move(col_lbd));
         else  // matrix_orient::row_major
@@ -3466,7 +3495,9 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
         for (auto &fut : futures)  fut.get();
     }
     else  {
-        if constexpr (MO1 == matrix_orient::column_major)
+        if constexpr (MO1 == MO2 && IS_SYM1 == IS_SYM2)
+            lbd__eq(0L, long(lhs.matrix_.size()));
+        else if constexpr (MO1 == matrix_orient::column_major)
             col_lbd(0L, lhs_cols);
         else  // matrix_orient::row_major
             row_lbd(0L, lhs_rows);
@@ -3495,11 +3526,11 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw NotFeasible(
-            "- operation between these two metrices is not feasible");
+        throw NotFeasible("Incompatible matrix - matrix operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    result_t    result;
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result;
 
     if constexpr (IS_SYM1 && (! IS_SYM2))  {
         result.resize(lhs.rows(), lhs.cols());
@@ -3511,6 +3542,23 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
         result = lhs;
     }
 
+    auto        lbd__eq =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result.matrix_[i + j] -= rhs.matrix_[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result.matrix_[i] -= rhs.matrix_[i];
+        };
     auto        col_lbd =
         [lhs_rows, &result, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -3546,7 +3594,10 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        if constexpr (MO1 == matrix_orient::column_major)
+        if constexpr (MO1 == MO2 && IS_SYM1 == IS_SYM2)
+            futures = ThreadGranularity::thr_pool_.parallel_loop(
+                          0L, long(lhs.matrix_.size()), std::move(lbd__eq));
+        else if constexpr (MO1 == matrix_orient::column_major)
             futures = ThreadGranularity::thr_pool_.parallel_loop(
                           0L, lhs_cols, std::move(col_lbd));
         else  // matrix_orient::row_major
@@ -3556,7 +3607,9 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
         for (auto &fut : futures)  fut.get();
     }
     else  {
-        if constexpr (MO1 == matrix_orient::column_major)
+        if constexpr (MO1 == MO2 && IS_SYM1 == IS_SYM2)
+            lbd__eq(0L, long(lhs.matrix_.size()));
+        else if constexpr (MO1 == matrix_orient::column_major)
             col_lbd(0L, lhs_cols);
         else  // matrix_orient::row_major
             row_lbd(0L, lhs_rows);
@@ -3576,15 +3629,14 @@ operator += (Matrix<T, MO1, IS_SYM1> &lhs,
     static_assert((IS_SYM1 && IS_SYM2) ||
                   ((! IS_SYM1) && IS_SYM2) ||
                   ((! IS_SYM1) && (! IS_SYM2)),
-                  "+= operation between these two metrices is not feasible");
+                  "Incompatible matrix += matrix operation");
 
     const long  lhs_rows = lhs.rows();
     const long  lhs_cols = lhs.cols();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw NotFeasible(
-            "+= operation between these two metrices is not feasible");
+        throw NotFeasible("Incompatible matrix += matrix operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     auto        col_lbd =
@@ -3652,15 +3704,14 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
     static_assert((IS_SYM1 && IS_SYM2) ||
                   ((! IS_SYM1) && IS_SYM2) ||
                   ((! IS_SYM1) && (! IS_SYM2)),
-                  "-= operation between these two metrices is not feasible");
+                  "Incompatible matrix -= matrix operation");
 
     const long  lhs_rows = lhs.rows();
     const long  lhs_cols = lhs.cols();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
-        throw NotFeasible(
-            "-= operation between these two metrices is not feasible");
+        throw NotFeasible("Incompatible matrix -= matrix operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     auto        col_lbd =
@@ -3742,19 +3793,29 @@ operator * (const std::vector<T> &lhs,
         [lhs_rows, lhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long c = begin; c < end; ++c)
-                for (long r = 0; r < lhs_rows; ++r)
+            for (long c = begin; c < end; ++c)  {
+                for (long r = 0; r < lhs_rows; ++r)  {
+                    T   sum { 0 };
+
                     for (long k = 0; k < lhs_cols; ++k)
-                        result(r, c) += lhs[k] * rhs(k, c);
+                        sum += lhs[k] * rhs(k, c);
+                    result(r, c) = sum;
+                }
+            }
         };
     auto    row_lbd =
         [lhs_cols, rhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; ++r)
-                for (long c = 0; c < rhs_cols; ++c)
+            for (long r = begin; r < end; ++r)  {
+                for (long c = 0; c < rhs_cols; ++c)  {
+                    T   sum { 0 };
+
                     for (long k = 0; k < lhs_cols; ++k)
-                        result(r, c) += lhs[k] * rhs(k, c);
+                        sum += lhs[k] * rhs(k, c);
+                    result(r, c) = sum;
+                }
+            }
         };
 
     if (thread_level > 2)  {
@@ -3805,19 +3866,29 @@ operator * (const Matrix<T, MO, IS_SYM> &lhs,
         [lhs_rows, lhs_cols, rhs_rows, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long c = begin; c < end; ++c)
-                for (long r = 0; r < lhs_rows; ++r)
+            for (long c = begin; c < end; ++c)  {
+                for (long r = 0; r < lhs_rows; ++r)  {
+                    T   sum { 0 };
+
                     for (long k = 0; k < rhs_rows; ++k)
-                        result(r, c) += lhs(r, k) * rhs[k];
+                        sum += lhs(r, k) * rhs[k];
+                    result(r, c) = sum;
+                }
+            }
         };
     auto    row_lbd =
         [lhs_cols, rhs_cols, rhs_rows, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; ++r)
-                for (long c = 0; c < rhs_cols; ++c)
+            for (long r = begin; r < end; ++r)  {
+                for (long c = 0; c < rhs_cols; ++c)  {
+                    T   sum { 0 };
+
                     for (long k = 0; k < rhs_rows; ++k)
-                        result(r, c) += lhs(r, k) * rhs[k];
+                        sum += lhs(r, k) * rhs[k];
+                    result(r, c) = sum;
+                }
+            }
         };
 
     if (thread_level > 2)  {
@@ -3841,10 +3912,6 @@ operator * (const Matrix<T, MO, IS_SYM> &lhs,
 
     return (result);
 }
-
-// ----------------------------------------------------------------------------
-
-static constexpr long   HMDF_MAT_BLOCK = 64L;
 
 // ----------------------------------------------------------------------------
 
@@ -3887,6 +3954,9 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
                             for (long cc = lc; cc < lc_max; ++cc) {
                                 const T val = rhs(cc, rr);
 
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
                                 for (long i = r; i < r_max; ++i)
                                     result(i, rr) += lhs(i, cc) * val;
                             }
@@ -3912,6 +3982,9 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
                             for (long kk = k; kk < k_max; ++kk) {
                                 const T val = lhs(rr, kk);
 
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
                                 for (long j = c; j < c_max; ++j)
                                     result(rr, j) += val * rhs(kk, j);
                             }

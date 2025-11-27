@@ -86,7 +86,7 @@ In both cases, I created a dataframe with 3 random columns. The C++ DataFrame al
 Each program has three identical parts. First it generates and populates 3 columns with 300m random numbers each (in case of C++ DataFrame, it must also generate a sequential index column of the same size). That is the part I am _not_ interested in. In the second part, it calculates the mean of the first column, the variance of the second column, and the Pearson correlation of the second and third columns. In the third part, it does a select (or filter as Polars calls it) on one of the columns.
 
 **Results**:<BR>
-The maximum dataset I could load into Polars was 300m rows per column. Any bigger dataset blew up the memory and caused OS to kill it. I ran C++ DataFrame with 10b rows per column and I am sure it would have run with bigger datasets too. So, I was forced to run both with 300m rows to compare.
+The maximum dataset I could load into Polars was 300m rows per column. Any bigger dataset blew up the memory and caused OS to kill it. I ran C++ DataFrame with 2b rows per column and I am sure it would have run with bigger datasets too. So, I was forced to run both with 300m rows to compare.
 I ran each test 4 times and took the best time. Polars numbers varied a lot from one run to another, especially calculation and selection times. C++ DataFrame numbers were significantly more consistent.
 
 

@@ -1584,11 +1584,11 @@ private:
         }
         else  {
             result.clear();
-            result.reserve(col_s);
+            result.resize(col_s);
             for (size_type i { 0 }; i < col_s; ++i) [[likely]]
-                result.push_back(
+                result[i] =
                     (T(100) * ewm_pos_.get_result()[i]) /
-                    (ewm_pos_.get_result()[i] + ewm_neg_.get_result()[i]));
+                    (ewm_pos_.get_result()[i] + ewm_neg_.get_result()[i]);
             }
     }
 
@@ -2108,16 +2108,16 @@ struct  DrawdownVisitor  {
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            drawdown_.reserve(col_s);
-            pct_drawdown_.reserve(col_s);
-            log_drawdown_.reserve(col_s);
+            drawdown_.resize(col_s);
+            pct_drawdown_.resize(col_s);
+            log_drawdown_.resize(col_s);
             for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
                 const value_type    col_val { *(column_begin + i) };
                 const value_type    cm_val { cm_result[i] };
 
-                drawdown_.push_back(cm_val - col_val);
-                pct_drawdown_.push_back(one - col_val / cm_val);
-                log_drawdown_.push_back(std::log(cm_val / col_val));
+                drawdown_[i] = cm_val - col_val;
+                pct_drawdown_[i] = one - col_val / cm_val;
+                log_drawdown_[i] = std::log(cm_val / col_val);
             }
         }
     }
@@ -2299,12 +2299,11 @@ struct  PSLVisitor  {
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            result_.reserve(col_s);
-            result_.push_back(0);
+            result_.resize(col_s, 0);
             for (size_type i { 1 }; i < col_s; ++i) [[likely]]
-                result_.push_back(
+                result_[i] =
                     (*(close_begin + i) - *(close_begin + (i - 1)) > 0)
-                    ? 1 : 0);
+                        ? 1 : 0;
         }
         calculate_(idx_begin, idx_end);
     }
@@ -2453,11 +2452,11 @@ struct  CCIVisitor  {
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            result.reserve(col_s);
+            result.resize(col_s);
             for (size_type i { 0 }; i < col_s; ++i) [[likely]]
-                result.push_back((*(low_begin + i) +
-                                  *(high_begin + i) +
-                                  *(close_begin + i)) / T(3));
+                result[i] = (*(low_begin + i) +
+                             *(high_begin + i) +
+                             *(close_begin + i)) / T(3);
         }
 
         SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   avg_v {

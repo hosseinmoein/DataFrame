@@ -12,7 +12,7 @@ CXX = /usr/local/bin/g++-15
 INCLUDES =
 
 LFLAGS =
-CXXFLAGS = -O3 -march=native $(INCLUDES) $(DEFINES) -Wno-strict-aliasing -std=c++23
+CXXFLAGS = -O3 -march=native -fvect-cost-model=unlimited $(INCLUDES) $(DEFINES) -Wno-strict-aliasing -std=c++23
 
 PLATFORM_LIBS = -lpthread -ldl -lm -lstdc++
 

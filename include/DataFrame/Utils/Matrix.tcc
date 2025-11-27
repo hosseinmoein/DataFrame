@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma warning( disable : 4068 )
 #pragma clang diagnostic ignored "-Wunknown-pragmas"
 
 #include <DataFrame/RandGen.h>

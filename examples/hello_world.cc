@@ -196,6 +196,11 @@ int main(int, char *[])  {
     //
     ibm_dt_df.fill_missing<double>({ "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" }, fill_policy::linear_interpolate);
 
+    // Now make the Apple and IBM close prices stationary, so the following statistics are stable
+    //
+    ibm_dt_df.make_stationary<double>("IBM_Close", stationary_method::differencing);
+    aapl_dt_df.make_stationary<double>("AAPL_Close", stationary_method::differencing);
+
     // Now we join the AAPL and IBM DataFrames using their indices and applying inner-join policy.
     //
     DTDataFrame aapl_ibm = ibm_dt_df.join_by_index<DTDataFrame, double, long>(aapl_dt_df, join_policy::inner_join);

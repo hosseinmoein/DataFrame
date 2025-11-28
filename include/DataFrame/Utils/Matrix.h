@@ -506,6 +506,26 @@ public:
                unsigned int seed = static_cast<unsigned int>(-1))
         requires std::floating_point<T>;
 
+    //
+    // Friends
+    //
+
+    template<typename TT, matrix_orient MO1, matrix_orient MO2,
+             bool IS_SYM1, bool IS_SYM2>
+    friend typename std::conditional<IS_SYM1 && IS_SYM2,
+                                            Matrix<TT, MO1, true>,
+                                            Matrix<TT, MO1, false>>::type
+    operator + (const Matrix<TT, MO1, IS_SYM1> &lhs,
+                const Matrix<TT, MO2, IS_SYM2> &rhs);
+
+    template<typename TT, matrix_orient MO1, matrix_orient MO2,
+             bool IS_SYM1, bool IS_SYM2>
+    friend typename std::conditional<IS_SYM1 && IS_SYM2,
+                                            Matrix<TT, MO1, true>,
+                                            Matrix<TT, MO1, false>>::type
+    operator - (const Matrix<TT, MO1, IS_SYM1> &lhs,
+                const Matrix<TT, MO2, IS_SYM2> &rhs);
+
 private:
 
     static constexpr size_type  NOPOS_ = static_cast<size_type>(-9);

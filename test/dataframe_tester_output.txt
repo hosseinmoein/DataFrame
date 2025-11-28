@@ -720,12 +720,12 @@ col_2:1:<double>:9,
 col_3:1:<double>:16,
 col_str:1:<string>:22,
 col_4:1:<double>:23,
-INDEX:1:<ulong>:123451,
-col_1:1:<double>:2,
-col_2:1:<double>:9,
-col_3:1:<double>:16,
-col_str:1:<string>:22,
-col_4:1:<double>:23,
+INDEX:1:<ulong>:123452,
+col_1:1:<double>:3,
+col_2:1:<double>:10,
+col_3:1:<double>:17,
+col_str:1:<string>:33,
+col_4:1:<double>:24,
 
 Testing write(json) ...
 Writing in JSON:
@@ -3017,3 +3017,12 @@ Testing gen_join( ) ...
 Testing ChiSquaredTestVisitor{ } ...
 
 Testing get_matrix( ) ...
+
+Testing get_matrix_2( ) ...
+
+Testing ARIMAVisitor{ } ...
+Matrix::ldlt(): Matrix is singular
+
+Testing HWESForecastVisitor{ } ...
+
+Testing LSTMForecastVisitor{ } ...

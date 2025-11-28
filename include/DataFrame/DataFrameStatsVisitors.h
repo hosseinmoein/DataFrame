@@ -3019,7 +3019,7 @@ struct  FixedAutoCorrVisitor  {
         if (policy_ == roll_policy::blocks)  {
             const size_type calc_size { col_s / lag_ };
 
-            result.reserve(calc_size);
+            result.resize(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
                 auto    far_end = i * lag_ + 2 * lag_;
                 auto    near_end = i * lag_ + lag_;
@@ -3040,13 +3040,13 @@ struct  FixedAutoCorrVisitor  {
                       column_begin + far_end);
                 corr.post();
 
-                result.push_back(corr.get_result());
+                result[i] = corr.get_result();
             }
         }
         else  {  // roll_policy::continuous
             const size_type calc_size { col_s - lag_ };
 
-            result.reserve(calc_size);
+            result.resize(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
                 auto    far_end = i + 2 * lag_;
                 auto    near_end = i + lag_;
@@ -3066,7 +3066,7 @@ struct  FixedAutoCorrVisitor  {
                       column_begin + far_end);
                 corr.post();
 
-                result.push_back(corr.get_result());
+                result[i] = corr.get_result();
             }
 
         }
@@ -4328,10 +4328,10 @@ private:
         MedianVisitor<T, I, A>  median_mean_visitor;
         vec_t                   mean_dists;
 
-        mean_dists.reserve(col_s);
+        mean_dists.resize(col_s);
         for (std::size_t i = 0; i < col_s; ++i) [[likely]]
-            mean_dists.push_back(
-                std::fabs(*(column_begin + i) - mean_visitor.get_result()));
+            mean_dists[i] =
+                std::fabs(*(column_begin + i) - mean_visitor.get_result());
         median_mean_visitor.pre();
         median_mean_visitor(idx_begin, idx_end,
                             mean_dists.begin(), mean_dists.end());
@@ -4360,10 +4360,10 @@ private:
         MedianVisitor<T, I, A>  median_median_visitor;
         vec_t                   median_dists;
 
-        median_dists.reserve(col_s);
+        median_dists.resize(col_s);
         for (std::size_t i = 0; i < col_s; ++i) [[likely]]
-            median_dists.push_back(
-                std::fabs(*(column_begin + i) - median_visitor.get_result()));
+            median_dists[i] =
+                std::fabs(*(column_begin + i) - median_visitor.get_result());
         median_median_visitor.pre();
         median_median_visitor(idx_begin, idx_end,
                               median_dists.begin(), median_dists.end());
@@ -5855,13 +5855,13 @@ public:
             coeffs_[i] = coeffs_[i] / eq_mat[index_(i, i, nrows)];
         }
 
-        y_fits_.reserve(col_s);
+        y_fits_.resize(col_s);
         for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             value_type  pred = 0;
 
             for (size_type j = 0; j < deg; ++j)
                 pred += coeffs_[j] * std::pow(*(x_begin + i), j);
-            y_fits_.push_back(pred);
+            y_fits_[i] = pred;
 
             const value_type    w = weights_(*(idx_begin + i), i);
 
@@ -6726,9 +6726,9 @@ struct  CubicSplineFitVisitor  {
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            h.reserve(col_s - 1);
+            h.resize(col_s - 1);
             for(size_type i = 0; i < col_s - 1; ++i) [[likely]]
-                h.push_back (*(x_begin + (i + 1)) - *(x_begin + i));
+                h[i] = *(x_begin + (i + 1)) - *(x_begin + i);
         }
 
         result_type             mu (col_s, 0);
@@ -7150,7 +7150,6 @@ private:
         dist_i_j_.clear();
         x_j_.reserve(right_end - left_end);
         dist_i_j_.reserve(right_end - left_end);
-
         for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
             x_j_.push_back(*(x_begin + j));
             dist_i_j_.push_back(std::fabs(*(x_begin + j) - xval) / radius);
@@ -7943,12 +7942,12 @@ struct  NonZeroRangeVisitor  {
             }
         }
         else  {
-            result.reserve(col_s);
+            result.resize(col_s);
             for (size_type i = 0; i < col_s; ++i) [[likely]]  {
                 const value_type    v =
                     *(column1_begin + i) - *(column2_begin + i);
 
-                result.push_back(v);
+                result[i] = v;
                 if (v == 0)  there_is_zero = true;
             }
             if (there_is_zero)
@@ -9135,10 +9134,10 @@ struct  DivideToBinsVisitor  {
             const auto  adjusted_max { *max_val + range_extension };
             const auto  bin_width = (adjusted_max - adjusted_min) / T(bins_);
 
-            bins_list_.reserve(bins_ + 1);
+            bins_list_.resize(bins_ + 1);
             for (size_type i { 0 }; i <= bins_; ++i)
-                bins_list_.push_back(
-                    value_type(size_type(adjusted_min + T(i) * bin_width)));
+                bins_list_[i] =
+                    value_type(size_type(adjusted_min + T(i) * bin_width));
         }
 
         const bool  labels { ! input_lbls_.empty() };
@@ -9305,8 +9304,8 @@ struct  DivideToQuantilesVisitor  {
 
         std::vector<value_type> edges;
 
-        result_.reserve(col_s);
-        if (labels)  labels_.reserve(col_s);
+        result_.resize(col_s);
+        if (labels)  labels_.resize(col_s);
         if (quantiles_ > 0)  {  // Number of Q's
 #ifdef HMDF_SANITY_EXCEPTIONS
             if (quantiles_ < 2)
@@ -9318,10 +9317,9 @@ struct  DivideToQuantilesVisitor  {
                                      "of labels");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-            edges.reserve(quantiles_ + 1);
+            edges.resize(quantiles_ + 1);
             for (size_type i { 0 }; i <= quantiles_; ++i)
-                edges.push_back(
-                    percentile_(sorted, T(i) / T(quantiles_), col_s));
+                edges[i] = percentile_(sorted, T(i) / T(quantiles_), col_s);
 
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const auto  val = *(column_begin + i);
@@ -9331,8 +9329,8 @@ struct  DivideToQuantilesVisitor  {
 
                 if (bin == quantiles_)
                     bin = quantiles_ - 1;
-                result_.emplace_back(edges[bin], edges[bin + 1]);
-                if (labels)  labels_.push_back(input_lbls_[bin]);
+                result_[i] = { edges[bin], edges[bin + 1] };
+                if (labels)  labels_[i] = input_lbls_[bin];
             }
         }
         else  {  // Explicit quantiles
@@ -9343,9 +9341,9 @@ struct  DivideToQuantilesVisitor  {
                                      "of quantiles - 1");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-            edges.reserve(quantiles_list_.size());
-            for (const auto q : quantiles_list_)
-                edges.push_back(percentile_(sorted, q, col_s));
+            edges.resize(quantiles_list_.size());
+            for (size_type i { 0 }; const auto q : quantiles_list_)
+                edges[i++] = percentile_(sorted, q, col_s);
 
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const auto  val = *(column_begin + i);
@@ -9355,8 +9353,8 @@ struct  DivideToQuantilesVisitor  {
 
                 if (bin == quantiles_list_.size() - 1)
                     bin = quantiles_list_.size() - 2;
-                result_.emplace_back(edges[bin], edges[bin + 1]);
-                if (labels)  labels_.push_back(input_lbls_[bin]);
+                result_[i] = { edges[bin], edges[bin + 1] };
+                if (labels)  labels_[i] = input_lbls_[bin];
             }
         }
     }

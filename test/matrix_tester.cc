@@ -234,6 +234,19 @@ int main(int, char *[]) {
         assert(sum_mat(1, 1) == 19);
         assert(sum_mat(3, 4) == 68);
 
+        auto    sum_mat2 = col_mat + col_mat;
+
+        assert(sum_mat2.cols() == 6);
+        assert(sum_mat2.rows() == 5);
+        assert(sum_mat2(0, 0) == 0);
+        assert(sum_mat2(0, 3) == 30);
+        assert(sum_mat2(1, 2) == 22);
+        assert(sum_mat2(2, 5) == 54);
+        assert(sum_mat2(3, 1) == 16);
+        assert(sum_mat2(3, 3) == 36);
+        assert(sum_mat2(4, 4) == 48);
+        assert(sum_mat2(4, 5) == 58);
+
         row_mat_t   lhs_mat { ROWS, COLS };
         col_mat_t   rhs_mat { COLS, COLS };
 

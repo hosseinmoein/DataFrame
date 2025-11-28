@@ -3927,7 +3927,7 @@ struct  ARIMAVisitor  {
         result_type diffed = y_;
         result_type preds;
 
-        preds.reserve(periods_);
+        preds.resize(periods_);
         for (long t { 0 }; t < periods_; ++t) {
             value_type  ar_part { 0 };
             value_type  ma_part { 0 };
@@ -3940,7 +3940,7 @@ struct  ARIMAVisitor  {
             //
             const value_type    pred { ar_part + ma_part};
 
-            preds.push_back(pred);
+            preds[t] = pred;
             diffed.push_back(pred);
         }
 
@@ -4143,10 +4143,10 @@ private:
         const size_type diff_s = std::distance(diffed_begin, diffed_end);
         result_type     inverted;
 
-        inverted.reserve(diff_s);
+        inverted.resize(diff_s);
         for (size_type i { 0 }; i < diff_s; ++i)  {
             last_data += *(diffed_begin + i);
-            inverted.push_back(last_data);
+            inverted[i] = last_data;
         }
 
         return (inverted);
@@ -5004,16 +5004,15 @@ private:
             matrix_t                h { batch, H, 0 }, c { batch, H, 0 };
             std::vector<matrix_t>   outs;
 
-            caches.clear();
-            caches.reserve(time_steps);
-            outs.reserve(time_steps);
+            caches.resize(time_steps);
+            outs.resize(time_steps);
             for (long t { 0 }; t < time_steps; ++t)  {
                 const auto  cache { cell.forward(X[t], h, c) };
 
                 h = cache.h;
                 c = cache.c;
-                caches.push_back(cache);
-                outs.push_back(h);
+                caches[t] = cache;
+                outs[t] = h;
             }
 
             h_last = h;
@@ -5156,7 +5155,7 @@ public:
                 batch_size_, input_size_, norm_data[long(col_s) - seq_len_ + t]
             };
 
-        result_.reserve(periods_);
+        result_.resize(periods_);
         for (long step { 0 }; step < periods_; ++step)  {
             const std::vector<matrix_t> outputs = lstm.forward(sequence);
             const matrix_t              next_pred {
@@ -5166,7 +5165,7 @@ public:
 
             // Denormalize prediction
             //
-            result_.push_back(norm_pred * stdv.get_result() + stdv.get_mean());
+            result_[step] = norm_pred * stdv.get_result() + stdv.get_mean();
 
             // Feed predicted value as next input
             //

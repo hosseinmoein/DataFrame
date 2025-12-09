@@ -59,7 +59,7 @@ struct  MyData  {
 
 // The main purpose of this file is to introduce the basic operations of DataFrame.
 // For more advanced operations and a complete list of features with code samples, see documentation at:
-// https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html
+// https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html
 //
 int main(int, char *[])  {
 
@@ -194,7 +194,7 @@ int main(int, char *[])  {
 
     // First let’s make sure if there are missing data in our important columns, we fill them up.
     //
-    ibm_dt_df.fill_missing<double>({ "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" }, fill_policy::linear_interpolate);
+    ibm_dt_df.fill_missing<double>({ "IBM_Close", "IBM_Open", "IBM_High", "IBM_Low" }, fill_policy::fill_forward);
 
     // Now make the Apple and IBM close prices stationary, so the following statistics are stable
     //

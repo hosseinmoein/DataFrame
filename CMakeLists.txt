@@ -57,6 +57,7 @@ target_compile_options(
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4996>
+           $<$<CXX_COMPILER_ID:MSVC>:/wd4068>
 )
 set_target_properties(
     DataFrame

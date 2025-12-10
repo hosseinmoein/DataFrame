@@ -64,17 +64,27 @@ body {
       <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>
-enum class  correlation_type : unsigned char  {
-
-    pearson = 1,   // &Rho; = <div class="frac"> <span>COV(X, Y)</span> <span class="symbol">/</span> <span class="bottom">&sigma;(X) * &sigma;(Y)</span> </div>
-
-    // Non-parametric (rank-based) correlations
-    //
-    spearman = 2,  // &Rho; = 1 - <div class="frac"> <span>6 * &sum;d<sub>i</sub><sup>2</sup></span> <span class="symbol">/</span> <span class="bottom">n * (n<sup>2</sup> - 1)</span> </div>    d<sub>i</sub> = Difference in rank of X member vs. Y member
-    kendall_tau = 3,  // &Rho; = <div class="frac"> <span>C - D</span> <span class="symbol">/</span> <span class="bottom">(n * (n - 1)) / 2</span> </div>    C = Concordant pairs,  D = Discordant pairs
-}; </font></B></PRE>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  correlation_type <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">                  <span style="color:#696969; ">//       COV(X, Y)</span></span>
+<span class="line_wrapper">    pearson <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Ρ = -------------</span></span>
+<span class="line_wrapper">                  <span style="color:#696969; ">//      σ(X) * σ(Y)</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Non-parametric (rank-based) correlations</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// d<sub>i</sub> = Difference in rank of X member vs. Y member</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">                   <span style="color:#696969; ">//           6 * ∑d<sub>i</sub><sup>2</sup></span></span>
+<span class="line_wrapper">    spearman <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Ρ = 1 - --------------</span></span>
+<span class="line_wrapper">                   <span style="color:#696969; ">//          n * (n<sup>2</sup> - 1)</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// C = Concordant pairs,  D = Discordant pairs</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">                      <span style="color:#696969; ">//           C - D</span></span>
+<span class="line_wrapper">    kendall_tau <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span>  <span style="color:#696969; ">// Ρ = --------------------</span></span>
+<span class="line_wrapper">                      <span style="color:#696969; ">//      (n * (n - 1)) / 2</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> </span></pre>
       </td>
       <td>
         This specifies different correlation types.<BR>
@@ -89,12 +99,12 @@ enum class  correlation_type : unsigned char  {
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long&gt;
-struct CorrVisitor;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> CorrVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This functor class calculates the correlation of two given columns.<BR>
@@ -126,13 +136,13 @@ struct CorrVisitor;
     </tr>
 
     <tr bgcolor="Azure">
-      <td bgcolor="blue"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-struct CrossCorrVisitor;
-        </B></PRE></font>
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> CrossCorrVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
       </td>
       <td>
         This functor calculates a series of above correlations between lagged vectors of the first and second time-series. Lags are from <I>min_lag</I> (included) to <I>max_lag</I> (excluded) and incremented by 1. The result  is a vector of correlations containing "<I>max_lag – min_lag</I>" values.<BR>

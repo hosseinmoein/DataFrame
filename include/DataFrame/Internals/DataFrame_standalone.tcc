@@ -2681,6 +2681,178 @@ _get_inclusive_indices_(const V &vec, N begin, N end, inclusiveness incld)  {
     return (std::pair<N, N>{ col_begin, col_end });
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename V>
+static inline
+V _shift_vector_(const V &vec, long shift)  {
+
+    using value_type = typename V::value_type;
+
+    const long  col_s = static_cast<long>(vec.size());
+    V           shifted(col_s, value_type { 0 });
+
+    for (long i { 0 }; i < col_s; ++i)  {
+        const auto  j { i - shift };
+
+        if (j >= 0 && j < col_s) [[likely]]  shifted[i] = vec[j];
+    }
+
+    return (shifted);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+static inline
+V _kshape_cross_corr_(const V &x, const V &y)  {
+
+    using value_type = typename V::value_type;
+
+    const long  col_s = static_cast<long>(x.size());
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (col_s != static_cast<long>(y.size()))
+        throw DataFrameError("_kshape_cross_corr_(): "
+                             "x and y vectors must be of the same length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    V   cc (2L * col_s - 1L, value_type { 0 });
+
+    // Lag ranges from -(n-1) to (n-1)
+    //
+    for (long lag = -(col_s - 1); lag <= (col_s - 1); ++lag)  {
+        double  sum { 0 };
+
+        // For each position in x
+        //
+        for (long i = 0; i < col_s; ++i)  {
+            // Corresponding position in y after applying lag
+            //
+            const auto  j { i - lag };
+
+            // Only multiply if both indices are valid
+            //
+            if (j >= 0 && j < col_s) [[likely]]  sum += x[i] * y[j];
+        }
+
+        // Store at index (lag + n - 1) to map [-n+1, n-1] to [0, 2n-2]
+        //
+        cc[lag + col_s - 1L] = sum;
+    }
+
+    return (cc);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V, typename NT>
+static inline
+std::pair<typename V::value_type, long>
+_shape_based_dist_(const V &x, const V &y, NT &norm_v) {
+
+    using value_type = typename V::value_type;
+
+    const long  col_s = static_cast<long>(x.size());
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (col_s != static_cast<long>(y.size()))
+        throw DataFrameError("_kshape_dist_(): "
+                             "x and y vectors must be of the same length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const std::vector<long> fake_index;
+
+    norm_v.pre();
+    norm_v(fake_index.begin(), fake_index.end(), x.begin(), x.end());
+    norm_v.post();
+
+    const V nx = std::move(norm_v.get_result());
+
+    norm_v.pre();
+    norm_v(fake_index.begin(), fake_index.end(), y.begin(), y.end());
+    norm_v.post();
+
+    const V ny = std::move(norm_v.get_result());
+    const V cc = _kshape_cross_corr_(nx, ny);
+
+    // Find maximum cross-correlation
+    //
+    const long          max_idx =
+        long(std::max_element(cc.begin(), cc.end()) - cc.begin());
+    const value_type    max_cc = cc[max_idx];
+
+    // Normalize by sequence lengths
+    //
+    const value_type    ncc = max_cc / value_type(col_s);
+
+    // shape based distance (1 - normalized cross-correlation)
+    //
+    const value_type    sbd = value_type(1) - ncc;
+
+    // Shift amount
+    //
+    const long  shift = max_idx - (col_s - 1L);
+
+    return (std::make_pair(sbd, shift));
+}
+
+// ----------------------------------------------------------------------------
+
+// Extract centroid (shape) from cluster members
+template<typename V, typename NT>
+static inline
+V _kshape_extract_shape_(const std::vector<V> &cluster,
+                         long max_iter,
+                         NT &norm_v) {
+
+    if (cluster.empty())   return (std::vector<double>());
+
+    using value_type = typename V::value_type;
+
+    const long              col_s = static_cast<long>(cluster[0].size());
+    V                       centroid = cluster[0];
+    const std::vector<long> fake_index;
+
+    // Iterative refinement
+    //
+    for (long iter = 0; iter < max_iter; ++iter) {
+        std::vector<V>  aligned;
+
+        // Align all series to current centroid
+        //
+        aligned.reserve(cluster.size());
+        for (const auto &series : cluster)  {
+            const auto  [dist, shift] = _shape_based_dist_(series, centroid);
+
+            aligned.push_back(_shift_vector_(series, shift));
+        }
+
+        // Compute mean of aligned series
+        //
+        std::fill(centroid.begin(), centroid.end(), value_type { 0 });
+        for (const auto &series : aligned)  {
+            for (long i = 0; i < col_s; ++i)
+                centroid[i] += series[i];
+        }
+
+        const auto  align_s = static_cast<value_type>(aligned.size());
+
+        for (long i = 0; i < col_s; ++i)
+            centroid[i] /= align_s;
+
+        norm_v.pre();
+        norm_v(fake_index.begin(), fake_index.end(),
+               centroid.begin(), centroid.end());
+        norm_v.post();
+
+        // Normalize centroid
+        //
+        centroid = std::move(norm_v.get_result());
+    }
+
+    return (centroid);
+}
 
 } // namespace hmdf
 

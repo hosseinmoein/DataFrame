@@ -4666,6 +4666,60 @@ public: // Read/access and slicing interfaces
                     size_type max_iter = 1000,
                     T epsilon = T(1e-8)) const;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    template<typename T>
+    [[nodiscard]] std::vector<std::vector<std::string>>
+    kshape_groups(std::vector<const char *> &&col_names,
+                  long k,
+                  normalization_type norm_t = normalization_type::z_score,
+                  long shape_iter = 10,
+                  long max_iter = 1000,
+                  T epsilon = T(1e-8)) const;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.
     // The statistics are:

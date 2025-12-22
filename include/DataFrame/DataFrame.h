@@ -4686,13 +4686,9 @@ public: // Read/access and slicing interfaces
 
     template<typename T>
     [[nodiscard]] std::vector<std::vector<std::string>>
-    kshape_groups(std::vector<const char *> &&col_names,
+    kshape_groups(const std::vector<const char *> &col_names,
                   long k,
-                  normalization_type norm_t = normalization_type::z_score,
-                  long shape_iter = 10,
-                  long max_iter = 1000,
-                  T epsilon = T(1e-8),
-                  seed_t seed = seed_t(-1)) const;
+                  const KShapeParams<T> params = { }) const;
 
 
 

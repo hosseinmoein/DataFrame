@@ -1050,6 +1050,34 @@ struct  SeasonalityParams  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
+struct  KShapeParams  {
+
+    using seed_t = std::random_device::result_type;
+
+    // Parameter for how to normalize the columns
+    //
+    normalization_type  norm_t { normalization_type::z_score };
+
+    // Max iteration to extract the centroid for a shape
+    //
+    long                shape_iter { 10L };
+
+    // Max iteration for main algorithm
+    //
+    long                max_iter { 1000L };
+
+    // The min difference in the main loop to break out
+    //
+    T                   epsilon { T(1e-8) };
+
+    // Seed for the random number generator. The default is random seed
+    //
+    seed_t              seed { seed_t(-1) };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
 struct  RandGenParams  {
 
     T   min_value { std::numeric_limits<T>::min() };

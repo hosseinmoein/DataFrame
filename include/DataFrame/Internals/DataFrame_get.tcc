@@ -1723,42 +1723,12 @@ DataFrame<I, H>::fl_valid_index(const char *col_name) const  {
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 template<typename I, typename H>
 template<typename T>
 std::vector<std::vector<std::string>>
-DataFrame<I, H>::kshape_groups(std::vector<const char *> &&col_names,
+DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
                                long k,
-                               normalization_type norm_t,
-                               long shape_iter,
-                               long max_iter,
-                               T epsilon,
-                               seed_t seed) const  {
+                               const KShapeParams<T> params) const  {
 
     const long  name_s { long(col_names.size()) };
 
@@ -1767,7 +1737,7 @@ DataFrame<I, H>::kshape_groups(std::vector<const char *> &&col_names,
     {
         const SpinGuard guard { lock_ };
 
-        for (size_type i { 0 }; i < name_s; ++i)
+        for (long i { 0 }; i < name_s; ++i)
             columns[i] = &get_column<T>(col_names[i], false);
     }
 
@@ -1776,24 +1746,24 @@ DataFrame<I, H>::kshape_groups(std::vector<const char *> &&col_names,
     std::vector<long>                   labels(name_s, 0L);
     std::random_device                  rd;
     std::mt19937                        gen {
-        (seed != seed_t(-1)) ? seed : rd()
+        (params.seed != seed_t(-1)) ? params.seed : rd()
     };
     std::uniform_int_distribution<long> dis { 0, k - 1 };
 
     for (long i { 0 }; i < name_s; i++)
         labels[i] = dis(gen);
 
-    std::vector<ColumnVecType<T>>           centroids(k, nullptr);
+    std::vector<ColumnVecType<T>>           centroids(k);
     T                                       prev_intertia {
         std::numeric_limits<T>::max()
     };
-    NormalizeVisitor<T, long>               norm_v { norm_t };
+    NormalizeVisitor<T, long>               norm_v { params.norm_t };
     std::vector<const ColumnVecType<T> *>   cluster;
 
     // Main K-Shape iteration
     //
     cluster.reserve(name_s);
-    for (long iter { 0 }; iter < max_iter; iter++)  {
+    for (long iter { 0 }; iter < params.max_iter; iter++)  {
         // Update centroids (shapes)
         //
         for (long c { 0 }; c < k; c++)  {
@@ -1805,7 +1775,7 @@ DataFrame<I, H>::kshape_groups(std::vector<const char *> &&col_names,
 
             if (! cluster.empty())
                 centroids[c] =
-                    _kshape_extract_shape_(cluster, shape_iter, norm_v);
+                    _kshape_extract_shape_(cluster, params.shape_iter, norm_v);
             else  // Reinitialize empty cluster
                 centroids[c] = *(columns[dis(gen)]);
         }
@@ -1838,7 +1808,7 @@ DataFrame<I, H>::kshape_groups(std::vector<const char *> &&col_names,
 
         // Check convergence
         //
-        if (std::abs(prev_intertia - inertia) < epsilon)
+        if (std::abs(prev_intertia - inertia) < params.epsilon)
             break;
 
         prev_intertia = inertia;

@@ -55,6 +55,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_permutation_vec()  {
 
     std::cout << "\nTesting permutation_vec( ) ..." << std::endl;
@@ -1371,6 +1372,110 @@ static void test_LSTMForecastVisitor()  {
     // assert(std::fabs(result6[2] - 132.311) < 0.001);
     // assert(std::fabs(result6[3] - 132.382) < 0.001);
 }
+*/
+
+// ----------------------------------------------------------------------------
+
+static void test_kshape_groups()  {
+
+    std::cout << "\nTesting kshape_groups( ) ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const std::size_t   data_s = df.get_index().size();
+
+    // Cluster 1: Sine wave pattern
+    //
+    for (std::size_t i = 0; i < 5; ++i)  {
+        std::vector<double> series(data_s);
+        const std::string   col_name { "Sine Wave " };
+
+        for (std::size_t j = 0; j < data_s; ++j)
+            series[j] =
+                std::sin(2 * M_PI * j / 25.0) + (std::rand() % 100) / 500.0;
+
+        df.load_column((col_name + std::to_string(i)).c_str(),
+                       std::move(series),
+                       nan_policy::dont_pad_with_nans);
+    }
+
+    // Cluster 2: Exponential growth pattern
+    //
+    for (std::size_t i = 0; i < 5; ++i)  {
+        std::vector<double> series(data_s);
+        const std::string   col_name { "Exponential Inc " };
+
+        for (std::size_t j = 0; j < data_s; ++j)
+            series[j] =
+                std::exp(j / 25.0) - 1.0 + (std::rand() % 100) / 500.0;
+
+        df.load_column((col_name + std::to_string(i)).c_str(),
+                       std::move(series),
+                       nan_policy::dont_pad_with_nans);
+    }
+
+    // Cluster 3: Linear increasing pattern
+    //
+    for (std::size_t i = 0; i < 5; ++i) {
+        std::vector<double> series(data_s);
+        const std::string   col_name { "Linear Inc " };
+
+        for (std::size_t j = 0; j < data_s; ++j)
+            series[j] = j / 25.0 + (std::rand() % 100) / 500.0;
+
+        df.load_column((col_name + std::to_string(i)).c_str(),
+                       std::move(series),
+                       nan_policy::dont_pad_with_nans);
+    }
+
+    const auto result =
+        df.kshape_groups<double>(
+            { "IBM_Open", "IBM_High", "IBM_Low", "IBM_Close",
+              "Sine Wave 0", "Sine Wave 1", "Sine Wave 2", "Sine Wave 3",
+              "Sine Wave 4",
+              "Exponential Inc 0", "Exponential Inc 1", "Exponential Inc 2",
+              "Exponential Inc 3", "Exponential Inc 4",
+              "Linear Inc 0", "Linear Inc 1", "Linear Inc 2", "Linear Inc 3",
+              "Linear Inc 4" },
+            4L,
+            { .seed = 123 });
+
+    std::cout << "\n\nINFO: \n";
+    for (const auto &vec : result)  {
+        for (const auto &str : vec)
+            std::cout << str << ", ";
+        std::cout <<std::endl;
+    }
+
+    assert(result.size() == 4);
+    assert((result[0] ==
+            std::vector<std::string> { "Linear Inc 0", "Linear Inc 1",
+                                       "Linear Inc 2", "Linear Inc 3",
+                                       "Linear Inc 4"
+            }));
+    assert((result[1] ==
+            std::vector<std::string> { "Sine Wave 0", "Sine Wave 1",
+                                       "Sine Wave 2", "Sine Wave 3",
+                                       "Sine Wave 4"
+            }));
+    assert((result[2] ==
+            std::vector<std::string> { "Exponential Inc 0", "Exponential Inc 1",
+                                       "Exponential Inc 2", "Exponential Inc 3",
+                                       "Exponential Inc 4"
+            }));
+    assert((result[3] ==
+            std::vector<std::string> { "IBM_Open", "IBM_High", "IBM_Low",
+                                       "IBM_Close"
+            }));
+}
 
 // ----------------------------------------------------------------------------
 
@@ -1378,6 +1483,7 @@ int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_permutation_vec();
     test_get_data_every_n();
     test_get_n_largest_data();
@@ -1396,6 +1502,8 @@ int main(int, char *[])  {
     test_ARIMAVisitor();
     test_HWESForecastVisitor();
     test_LSTMForecastVisitor();
+*/
+    test_kshape_groups();
 
     return (0);
 }

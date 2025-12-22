@@ -2703,6 +2703,76 @@ V _shift_vector_(const V &vec, long shift)  {
 
 // ----------------------------------------------------------------------------
 
+// If n is already a power of 2, return n
+//
+static inline
+std::int64_t _next_pow2_(std::int64_t n) {
+
+    // Set all bits to 1 from the most significant set bit to the right
+    //
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n |= n >> 32;
+
+    // Incrementing the number is next power of 2
+    //
+    return (n + 1L);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static inline void
+_kshape_fft_(std::vector<std::complex<T>> &x, bool inverse = false) {
+
+    const long  col_s = x.size();
+
+    if (col_s <= 1) return;
+
+    // Bit-reversal permutation
+    //
+    for (long i { 0 }, j { 0 }; i < col_s; ++i) {
+        if (j > i)  std::swap(x[i], x[j]);
+
+        long    m = col_s >> 1;
+
+        while (j >= m && m >= 2)  {
+            j -= m;
+            m >>= 1;
+        }
+        j += m;
+    }
+
+    // Cooley-Tukey FFT
+    //
+    for (long s { 2 }; s <= col_s; s *= 2)  {
+        T               angle { (inverse ? 1 : -1) * 2 * M_PI / s };
+        std::complex<T> wlen { std::cos(angle), std::sin(angle) };
+
+        for (long k { 0 }; k < col_s; k += s)  {
+            std::complex<T> w { 1, 0 };
+            const auto      half_s { s / 2 };
+
+            for (long j { 0 }; j < half_s; ++j)  {
+                std::complex<T> t { w * x[k + j + half_s] };
+                std::complex<T> u { x[k + j] };
+
+                x[k + j] = u + t;
+                x[k + j + half_s] = u - t;
+                w *= wlen;
+            }
+        }
+    }
+
+    if (inverse)
+        for (auto &val : x)  val /= col_s;
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename V>
 static inline
 V _kshape_cross_corr_(const V &x, const V &y)  {
@@ -2722,11 +2792,11 @@ V _kshape_cross_corr_(const V &x, const V &y)  {
     // Lag ranges from -(n-1) to (n-1)
     //
     for (long lag = -(col_s - 1); lag <= (col_s - 1); ++lag)  {
-        double  sum { 0 };
+        value_type  sum { 0 };
 
         // For each position in x
         //
-        for (long i = 0; i < col_s; ++i)  {
+        for (long i { 0 }; i < col_s; ++i)  {
             // Corresponding position in y after applying lag
             //
             const auto  j { i - lag };
@@ -2773,8 +2843,7 @@ _shape_based_dist_(const V &x, const V &y, NT &norm_v) {
     norm_v(fake_index.begin(), fake_index.end(), y.begin(), y.end());
     norm_v.post();
 
-    const V ny = std::move(norm_v.get_result());
-    const V cc = _kshape_cross_corr_(nx, ny);
+    const V cc = _kshape_cross_corr_(nx, std::move(norm_v.get_result()));
 
     // Find maximum cross-correlation
     //
@@ -2816,29 +2885,30 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
 
     // Iterative refinement
     //
-    for (long iter = 0; iter < max_iter; ++iter) {
+    for (long iter { 0 }; iter < max_iter; ++iter) {
         std::vector<V>  aligned;
 
         // Align all series to current centroid
         //
-        aligned.reserve(cluster->size());
+        aligned.reserve(cluster.size());
         for (const auto &series : cluster)  {
-            const auto  [dist, shift] = _shape_based_dist_(*series, centroid);
+            const auto  [dist, shift] =
+                _shape_based_dist_(*series, centroid, norm_v);
 
-            aligned.push_back(_shift_vector_(series, shift));
+            aligned.emplace_back(_shift_vector_(*series, shift));
         }
 
         // Compute mean of aligned series
         //
         std::fill(centroid.begin(), centroid.end(), value_type { 0 });
         for (const auto &series : aligned)  {
-            for (long i = 0; i < col_s; ++i)
+            for (long i { 0 }; i < col_s; ++i)
                 centroid[i] += series[i];
         }
 
         const auto  align_s = static_cast<value_type>(aligned.size());
 
-        for (long i = 0; i < col_s; ++i)
+        for (long i { 0 }; i < col_s; ++i)
             centroid[i] /= align_s;
 
         norm_v.pre();

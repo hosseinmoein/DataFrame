@@ -4691,7 +4691,8 @@ public: // Read/access and slicing interfaces
                   normalization_type norm_t = normalization_type::z_score,
                   long shape_iter = 10,
                   long max_iter = 1000,
-                  T epsilon = T(1e-8)) const;
+                  T epsilon = T(1e-8),
+                  seed_t seed = seed_t(-1)) const;
 
 
 

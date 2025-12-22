@@ -2802,16 +2802,16 @@ _shape_based_dist_(const V &x, const V &y, NT &norm_v) {
 // Extract centroid (shape) from cluster members
 template<typename V, typename NT>
 static inline
-V _kshape_extract_shape_(const std::vector<V> &cluster,
+V _kshape_extract_shape_(const std::vector<const V *> &cluster,
                          long max_iter,
                          NT &norm_v) {
 
-    if (cluster.empty())   return (std::vector<double>());
+    if (cluster.empty())   return (V());
 
     using value_type = typename V::value_type;
 
-    const long              col_s = static_cast<long>(cluster[0].size());
-    V                       centroid = cluster[0];
+    const long              col_s = static_cast<long>(cluster[0]->size());
+    V                       centroid = *(cluster[0]);
     const std::vector<long> fake_index;
 
     // Iterative refinement
@@ -2821,9 +2821,9 @@ V _kshape_extract_shape_(const std::vector<V> &cluster,
 
         // Align all series to current centroid
         //
-        aligned.reserve(cluster.size());
+        aligned.reserve(cluster->size());
         for (const auto &series : cluster)  {
-            const auto  [dist, shift] = _shape_based_dist_(series, centroid);
+            const auto  [dist, shift] = _shape_based_dist_(*series, centroid);
 
             aligned.push_back(_shift_vector_(series, shift));
         }

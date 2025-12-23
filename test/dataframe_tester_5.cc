@@ -55,7 +55,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_permutation_vec()  {
 
     std::cout << "\nTesting permutation_vec( ) ..." << std::endl;
@@ -1372,7 +1371,6 @@ static void test_LSTMForecastVisitor()  {
     // assert(std::fabs(result6[2] - 132.311) < 0.001);
     // assert(std::fabs(result6[3] - 132.382) < 0.001);
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -1448,13 +1446,6 @@ static void test_kshape_groups()  {
             4L,
             { .seed = 123 });
 
-    std::cout << "\n\nINFO: \n";
-    for (const auto &vec : result)  {
-        for (const auto &str : vec)
-            std::cout << str << ", ";
-        std::cout <<std::endl;
-    }
-
     assert(result.size() == 4);
     assert((result[0] ==
             std::vector<std::string> { "Linear Inc 0", "Linear Inc 1",
@@ -1483,7 +1474,6 @@ int main(int, char *[])  {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_permutation_vec();
     test_get_data_every_n();
     test_get_n_largest_data();
@@ -1502,7 +1492,6 @@ int main(int, char *[])  {
     test_ARIMAVisitor();
     test_HWESForecastVisitor();
     test_LSTMForecastVisitor();
-*/
     test_kshape_groups();
 
     return (0);

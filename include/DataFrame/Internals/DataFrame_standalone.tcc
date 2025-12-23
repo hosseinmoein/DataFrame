@@ -2681,6 +2681,264 @@ _get_inclusive_indices_(const V &vec, N begin, N end, inclusiveness incld)  {
     return (std::pair<N, N>{ col_begin, col_end });
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename V>
+static inline
+V _shift_vector_(const V &vec, long shift)  {
+
+    using value_type = typename V::value_type;
+
+    const long  col_s = static_cast<long>(vec.size());
+    V           shifted(col_s, value_type { 0 });
+
+    for (long i { 0 }; i < col_s; ++i)  {
+        const auto  j { i - shift };
+
+        if (j >= 0 && j < col_s) [[likely]]  shifted[i] = vec[j];
+    }
+
+    return (shifted);
+}
+
+// ----------------------------------------------------------------------------
+
+// If n is already a power of 2, return n
+//
+static inline
+std::int64_t _next_pow2_(std::int64_t n) {
+
+    // Set all bits to 1 from the most significant set bit to the right
+    //
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n |= n >> 32;
+
+    // Incrementing the number is next power of 2
+    //
+    return (n + 1L);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static inline void
+_kshape_fft_(std::vector<std::complex<T>> &x, bool inverse = false) {
+
+    const long  col_s = x.size();
+
+    if (col_s <= 1)  return;
+
+    // Bit-reversal permutation
+    //
+    for (long i { 0 }, j { 0 }; i < col_s; ++i) {
+        if (j > i)  std::swap(x[i], x[j]);
+
+        long    m = col_s >> 1;
+
+        while (j >= m && m >= 2)  {
+            j -= m;
+            m >>= 1;
+        }
+        j += m;
+    }
+
+    // Cooley-Tukey FFT
+    //
+    for (long s { 2 }; s <= col_s; s *= 2L)  {
+        T               angle { (inverse ? 1 : -1) * T(2) * T(M_PI) / T(s) };
+        std::complex<T> wlen { T(std::cos(angle)), T(std::sin(angle)) };
+        const auto      half_s { s / 2L };
+
+        for (long k { 0 }; k < col_s; k += s)  {
+            std::complex<T> w { 1, 0 };
+
+            for (long j { 0 }; j < half_s; ++j)  {
+                const auto      the_idx { k + j + half_s };
+                std::complex<T> t { w * x[the_idx] };
+                std::complex<T> u { x[k + j] };
+
+                x[k + j] = u + t;
+                x[the_idx] = u - t;
+                w *= wlen;
+            }
+        }
+    }
+
+    if (inverse)
+        for (auto &val : x)  val /= col_s;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+static inline
+V _kshape_cross_corr_(const V &x, const V &y)  {
+
+    using value_type = typename V::value_type;
+    using allocator_type = typename V::allocator_type;
+
+    const long  col_s = static_cast<long>(x.size());
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (col_s != static_cast<long>(y.size()))
+        throw DataFrameError("_kshape_cross_corr_(): "
+                             "x and y vectors must be of the same length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const long  fft_s = _next_pow2_(2 * col_s);
+        
+    // Prepare FFT inputs
+    //
+    std::vector<std::complex<value_type>>   X(fft_s, 0);
+    std::vector<std::complex<value_type>>   Y(fft_s, 0);
+
+    for (long i { 0 }; i < col_s; i++) {
+        X[i] = x[i];
+        Y[i] = y[i];
+    }
+        
+    // Forward FFT
+    //
+    _kshape_fft_(X, false);
+    _kshape_fft_(Y, false);
+        
+    // Multiply in frequency domain (element-wise)
+    //
+    for (long i { 0 }; i < fft_s; ++i)
+        X[i] = X[i] * std::conj(Y[i]);
+        
+    // Inverse FFT
+    //
+    _kshape_fft_(X, true);
+        
+    // Extract real parts for cross-correlation
+    //
+    std::vector<value_type, allocator_type> cc(2L * col_s - 1L);
+
+    for (long i { 0 }; i < col_s; ++i)  {
+        const auto  idx = fft_s - col_s + 1L + i;
+
+        if (idx < fft_s) [[likely]]
+            cc[i] = X[fft_s - col_s + 1L + i].real();
+    }
+    for (long i { col_s }; i < (2L * col_s - 1L); ++i)
+        cc[i] = X[i - col_s + 1].real();
+        
+    return (cc);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+static inline
+std::pair<typename V::value_type, long>
+_shape_based_dist_(const V &x, const V &y) {
+
+    using value_type = typename V::value_type;
+
+    const long  col_s = static_cast<long>(x.size());
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (col_s != static_cast<long>(y.size()))
+        throw DataFrameError("_kshape_dist_(): "
+                             "x and y vectors must be of the same length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const V cc = _kshape_cross_corr_(x, y);
+
+    // Find maximum cross-correlation
+    //
+    const long          max_idx =
+        long(std::max_element(cc.begin(), cc.end()) - cc.begin());
+    const value_type    max_cc = cc[max_idx];
+
+    // Normalize by sequence lengths
+    //
+    const value_type    ncc = max_cc / value_type(col_s);
+
+    // shape based distance (1 - normalized cross-correlation)
+    //
+    const value_type    sbd = value_type(1) - ncc;
+
+    // Shift amount
+    //
+    const long  shift = max_idx - (col_s - 1L);
+
+    return (std::make_pair(sbd, shift));
+}
+
+// ----------------------------------------------------------------------------
+
+// Extract centroid (shape) from cluster members
+template<typename V, typename NT>
+static inline
+V _kshape_extract_shape_(const std::vector<const V *> &cluster,
+                         long max_iter,
+                         NT &norm_v) {
+
+    if (cluster.empty())   return (V());
+
+    using value_type = typename V::value_type;
+
+    const long              col_s = static_cast<long>(cluster[0]->size());
+    V                       centroid = *(cluster[0]);
+    const std::vector<long> fake_index;
+    NT                      norm_v2 { norm_v };
+
+    norm_v.pre();
+    norm_v(fake_index.begin(), fake_index.end(),
+           centroid.begin(), centroid.end());
+    norm_v.post();
+
+    // Iterative refinement
+    //
+    for (long iter { 0 }; iter < max_iter; ++iter) {
+        std::vector<V>  aligned;
+
+        // Align all series to current centroid
+        //
+        aligned.reserve(cluster.size());
+        for (const auto &series : cluster)  {
+            norm_v2.pre();
+            norm_v2(fake_index.begin(), fake_index.end(),
+                    series->begin(), series->end());
+            norm_v2.post();
+
+            const auto  [dist, shift] =
+                _shape_based_dist_(norm_v2.get_result(), norm_v.get_result());
+
+            aligned.emplace_back(_shift_vector_(*series, shift));
+        }
+
+        // Compute mean of aligned series
+        //
+        std::fill(centroid.begin(), centroid.end(), value_type { 0 });
+        for (const auto &series : aligned)  {
+            for (long i { 0 }; i < col_s; ++i)
+                centroid[i] += series[i];
+        }
+
+        const auto  align_s = static_cast<value_type>(aligned.size());
+
+        for (long i { 0 }; i < col_s; ++i)
+            centroid[i] /= align_s;
+
+        norm_v.pre();
+        norm_v(fake_index.begin(), fake_index.end(),
+               centroid.begin(), centroid.end());
+        norm_v.post();
+
+        // Normalize centroid
+        //
+        centroid = norm_v.get_result();
+    }
+
+    return (centroid);
+}
 
 } // namespace hmdf
 

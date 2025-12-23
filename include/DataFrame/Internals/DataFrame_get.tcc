@@ -1721,6 +1721,144 @@ DataFrame<I, H>::fl_valid_index(const char *col_name) const  {
     return (result);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+std::vector<std::vector<std::string>>
+DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
+                               long k,
+                               const KShapeParams<T> params) const  {
+
+    const long  name_s { long(col_names.size()) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (k > name_s)
+        throw DataFrameError("kshape_groups(): k must be < number of columns");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    std::vector<const ColumnVecType<T> *>   columns (name_s, nullptr);
+
+    {
+        const SpinGuard guard { lock_ };
+
+        columns[0] = &get_column<T>(col_names[0], false);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type col_s = columns[0]->size();
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        for (long i { 1 }; i < name_s; ++i)  {
+            columns[i] = &get_column<T>(col_names[i], false);
+#ifdef HMDF_SANITY_EXCEPTIONS
+            if (col_s != columns[i]->size())
+                throw DataFrameError("kshape_groups(): "
+                                     "All columns must be of the same size");
+#endif // HMDF_SANITY_EXCEPTIONS
+        }
+    }
+
+    // Initialize cluster assignments randomly
+    //
+    std::vector<long>                   labels(name_s, 0L);
+    std::random_device                  rd;
+    std::mt19937                        gen {
+        (params.seed != seed_t(-1)) ? params.seed : rd()
+    };
+    std::uniform_int_distribution<long> dis { 0, k - 1 };
+
+    for (long i { 0 }; i < name_s; ++i)
+        labels[i] = dis(gen);
+
+    std::vector<ColumnVecType<T>>           centroids(k);
+    T                                       prev_intertia {
+        std::numeric_limits<T>::max()
+    };
+    NormalizeVisitor<T, long, align_value>  norm_v { params.norm_t };
+    std::vector<const ColumnVecType<T> *>   cluster;
+    const std::vector<long>                 fake_index;
+    std::vector<ColumnVecType<T>>           ncolumns (name_s);
+
+    for (long i { 0 }; i < name_s; ++i)  {
+        norm_v.pre();
+        norm_v(fake_index.begin(), fake_index.end(),
+               columns[i]->begin(), columns[i]->end());
+        norm_v.post();
+ 
+        ncolumns[i] = std::move(norm_v.get_result());
+    }
+
+    // Main K-Shape iteration
+    //
+    cluster.reserve(name_s);
+    for (long iter { 0 }; iter < params.max_iter; ++iter)  {
+        // Update centroids (shapes)
+        //
+        for (long c { 0 }; c < k; c++)  {
+            cluster.clear();
+            for (long i { 0 }; i < name_s; ++i)  {
+                if (labels[i] == c)
+                    cluster.push_back(columns[i]);
+            }
+
+            if (! cluster.empty())
+                centroids[c] =
+                    _kshape_extract_shape_(cluster, params.shape_iter, norm_v);
+            else  // Reinitialize empty cluster
+                centroids[c] = *(columns[dis(gen)]);
+        }
+
+        // Assign series to nearest centroid
+        //
+        T                               inertia { 0 };
+        std::vector<ColumnVecType<T>>   ncentroids(k);
+
+        for (long c { 0 }; c < k; ++c)  {
+            norm_v.pre();
+            norm_v(fake_index.begin(), fake_index.end(),
+                   centroids[c].begin(), centroids[c].end());
+            norm_v.post();
+ 
+            ncentroids[c] = std::move(norm_v.get_result());
+        }
+
+        for (long i { 0 }; i < name_s; ++i)  {
+            T       min_dist { std::numeric_limits<T>::max() };
+            long    best_cluster { 0 };
+
+            for (long c { 0 }; c < k; ++c)  {
+                if (! centroids[c].empty())  {
+                    const auto  [dist, shift] =
+                        _shape_based_dist_(ncolumns[i], ncentroids[c]);
+
+                    if (dist < min_dist) {
+                        min_dist = dist;
+                        best_cluster = c;
+                    }
+                }
+            }
+
+            labels[i] = best_cluster;
+            inertia += min_dist;
+        }
+
+        // Check convergence
+        //
+        if (std::abs(prev_intertia - inertia) < params.epsilon)
+            break;
+
+        prev_intertia = inertia;
+    }
+
+    std::vector<std::vector<std::string>>   result(k);
+
+    for (auto &vec : result)  vec.reserve(4);
+    for (long i { 0 }; i < name_s; ++i)
+        result[labels[i]].push_back(col_names[i]);
+
+    return (result);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

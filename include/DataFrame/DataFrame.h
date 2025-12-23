@@ -4666,6 +4666,35 @@ public: // Read/access and slicing interfaces
                     size_type max_iter = 1000,
                     T epsilon = T(1e-8)) const;
 
+    // K-shape is a powerful, unsupervised time-series clustering algorithm
+    // that groups sequences based on their shape, not just magnitude, by
+    // using a novel distance measure derived from normalized
+    // cross-correlation, making it great for finding similar patterns (like
+    // energy use, heartbeats, or sensor data) regardless of shifts or scaling,
+    // and it works like k-means but with shape-specific logic. 
+    // Instead of Euclidean distance (which focuses on absolute values),
+    // k-Shape uses Normalized Cross-Correlation (NCC) to find the best
+    // alignment (shift) between two time series, measuring how similar their
+    // patterns are.
+    // Like-means, you must specify the number of clusters.
+    // The return result is a vector of k vectors of column names. Each vector
+    // contains a specific cluster.
+    //
+    // NOTE: All specified columns must be of the same length
+    //
+    // T:
+    //   Type of the named columns
+    // k:
+    //   Number of expected clusters
+    // params:
+    //   rest of parameters necessary for this operation
+    //
+    template<typename T>
+    [[nodiscard]] std::vector<std::vector<std::string>>
+    kshape_groups(const std::vector<const char *> &col_names,
+                  long k,
+                  const KShapeParams<T> params = { }) const;
+
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.
     // The statistics are:

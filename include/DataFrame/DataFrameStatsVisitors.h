@@ -1617,15 +1617,14 @@ public:
                         //
                         value_type  diff { 0 };
 
-                        for (size_type i { begin }; i < end - 1; ++i)  {
+                        for (size_type i { begin }; i < (end - 1); ++i)  {
                             for (size_type j { i + 1 }; j < end; ++j)  {
                                 diff +=
-                                    std::copysign(
-                                        T(1),
-                                        (*(column_begin1 + i) -
-                                         *(column_begin1 + j)) *
-                                        (*(column_begin2 + i) -
-                                         *(column_begin2 + j)));
+                                    std::copysign(T(1),
+                                                  (*(column_begin1 + i) -
+                                                   *(column_begin1 + j)) *
+                                                  (*(column_begin2 + i) -
+                                                   *(column_begin2 + j)));
                             }
                         }
 

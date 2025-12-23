@@ -1757,7 +1757,7 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
     T                                       prev_intertia {
         std::numeric_limits<T>::max()
     };
-    NormalizeVisitor<T, long>               norm_v { params.norm_t };
+    NormalizeVisitor<T, long, align_value>  norm_v { params.norm_t };
     std::vector<const ColumnVecType<T> *>   cluster;
 
     // Main K-Shape iteration

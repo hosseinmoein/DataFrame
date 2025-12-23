@@ -1462,18 +1462,18 @@ static void test_kshape_groups()  {
                                        "Linear Inc 4"
             }));
     assert((result[1] ==
-            std::vector<std::string> { "Sine Wave 0", "Sine Wave 1",
-                                       "Sine Wave 2", "Sine Wave 3",
-                                       "Sine Wave 4"
-            }));
-    assert((result[2] ==
             std::vector<std::string> { "Exponential Inc 0", "Exponential Inc 1",
                                        "Exponential Inc 2", "Exponential Inc 3",
                                        "Exponential Inc 4"
             }));
-    assert((result[3] ==
+    assert((result[2] ==
             std::vector<std::string> { "IBM_Open", "IBM_High", "IBM_Low",
                                        "IBM_Close"
+            }));
+    assert((result[3] ==
+            std::vector<std::string> { "Sine Wave 0", "Sine Wave 1",
+                                       "Sine Wave 2", "Sine Wave 3",
+                                       "Sine Wave 4"
             }));
 }
 

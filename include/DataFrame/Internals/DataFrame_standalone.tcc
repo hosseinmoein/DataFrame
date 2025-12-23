@@ -2730,7 +2730,7 @@ _kshape_fft_(std::vector<std::complex<T>> &x, bool inverse = false) {
 
     const long  col_s = x.size();
 
-    if (col_s <= 1) return;
+    if (col_s <= 1)  return;
 
     // Bit-reversal permutation
     //
@@ -2748,20 +2748,21 @@ _kshape_fft_(std::vector<std::complex<T>> &x, bool inverse = false) {
 
     // Cooley-Tukey FFT
     //
-    for (long s { 2 }; s <= col_s; s *= 2)  {
-        T               angle { (inverse ? 1 : -1) * 2 * M_PI / s };
-        std::complex<T> wlen { std::cos(angle), std::sin(angle) };
+    for (long s { 2 }; s <= col_s; s *= 2L)  {
+        T               angle { (inverse ? 1 : -1) * T(2) * T(M_PI) / T(s) };
+        std::complex<T> wlen { T(std::cos(angle)), T(std::sin(angle)) };
+        const auto      half_s { s / 2L };
 
         for (long k { 0 }; k < col_s; k += s)  {
             std::complex<T> w { 1, 0 };
-            const auto      half_s { s / 2 };
 
             for (long j { 0 }; j < half_s; ++j)  {
-                std::complex<T> t { w * x[k + j + half_s] };
+                const auto      the_idx { k + j + half_s };
+                std::complex<T> t { w * x[the_idx] };
                 std::complex<T> u { x[k + j] };
 
                 x[k + j] = u + t;
-                x[k + j + half_s] = u - t;
+                x[the_idx] = u - t;
                 w *= wlen;
             }
         }
@@ -2778,6 +2779,7 @@ static inline
 V _kshape_cross_corr_(const V &x, const V &y)  {
 
     using value_type = typename V::value_type;
+    using allocator_type = typename V::allocator_type;
 
     const long  col_s = static_cast<long>(x.size());
 
@@ -2787,30 +2789,45 @@ V _kshape_cross_corr_(const V &x, const V &y)  {
                              "x and y vectors must be of the same length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    V   cc (2L * col_s - 1L, value_type { 0 });
-
-    // Lag ranges from -(n-1) to (n-1)
+    const long  fft_s = _next_pow2_(2 * col_s);
+        
+    // Prepare FFT inputs
     //
-    for (long lag = -(col_s - 1); lag <= (col_s - 1); ++lag)  {
-        value_type  sum { 0 };
+    std::vector<std::complex<value_type>>   X(fft_s, 0);
+    std::vector<std::complex<value_type>>   Y(fft_s, 0);
 
-        // For each position in x
-        //
-        for (long i { 0 }; i < col_s; ++i)  {
-            // Corresponding position in y after applying lag
-            //
-            const auto  j { i - lag };
-
-            // Only multiply if both indices are valid
-            //
-            if (j >= 0 && j < col_s) [[likely]]  sum += x[i] * y[j];
-        }
-
-        // Store at index (lag + n - 1) to map [-n+1, n-1] to [0, 2n-2]
-        //
-        cc[lag + col_s - 1L] = sum;
+    for (long i { 0 }; i < col_s; i++) {
+        X[i] = x[i];
+        Y[i] = y[i];
     }
+        
+    // Forward FFT
+    //
+    _kshape_fft_(X, false);
+    _kshape_fft_(Y, false);
+        
+    // Multiply in frequency domain (element-wise)
+    //
+    for (long i { 0 }; i < fft_s; ++i)
+        X[i] = X[i] * std::conj(Y[i]);
+        
+    // Inverse FFT
+    //
+    _kshape_fft_(X, true);
+        
+    // Extract real parts for cross-correlation
+    //
+    std::vector<value_type, allocator_type> cc(2L * col_s - 1L);
 
+    for (long i { 0 }; i < col_s; ++i)  {
+        const auto  idx = fft_s - col_s + 1L + i;
+
+        if (idx < fft_s) [[likely]]
+            cc[i] = X[fft_s - col_s + 1L + i].real();
+    }
+    for (long i { col_s }; i < (2L * col_s - 1L); ++i)
+        cc[i] = X[i - col_s + 1].real();
+        
     return (cc);
 }
 

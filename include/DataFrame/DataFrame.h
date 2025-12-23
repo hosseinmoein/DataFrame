@@ -4680,6 +4680,8 @@ public: // Read/access and slicing interfaces
     // The return result is a vector of k vectors of column names. Each vector
     // contains a specific cluster.
     //
+    // NOTE: All specified columns must of the same length
+    //
     // T:
     //   Type of the named columns
     // k:

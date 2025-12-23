@@ -2833,10 +2833,10 @@ V _kshape_cross_corr_(const V &x, const V &y)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename V, typename NT>
+template<typename V>
 static inline
 std::pair<typename V::value_type, long>
-_shape_based_dist_(const V &x, const V &y, NT &norm_v) {
+_shape_based_dist_(const V &x, const V &y) {
 
     using value_type = typename V::value_type;
 
@@ -2848,19 +2848,7 @@ _shape_based_dist_(const V &x, const V &y, NT &norm_v) {
                              "x and y vectors must be of the same length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const std::vector<long> fake_index;
-
-    norm_v.pre();
-    norm_v(fake_index.begin(), fake_index.end(), x.begin(), x.end());
-    norm_v.post();
-
-    const V nx = std::move(norm_v.get_result());
-
-    norm_v.pre();
-    norm_v(fake_index.begin(), fake_index.end(), y.begin(), y.end());
-    norm_v.post();
-
-    const V cc = _kshape_cross_corr_(nx, std::move(norm_v.get_result()));
+    const V cc = _kshape_cross_corr_(x, y);
 
     // Find maximum cross-correlation
     //
@@ -2899,6 +2887,12 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
     const long              col_s = static_cast<long>(cluster[0]->size());
     V                       centroid = *(cluster[0]);
     const std::vector<long> fake_index;
+    NT                      norm_v2 { norm_v };
+
+    norm_v.pre();
+    norm_v(fake_index.begin(), fake_index.end(),
+           centroid.begin(), centroid.end());
+    norm_v.post();
 
     // Iterative refinement
     //
@@ -2909,8 +2903,13 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
         //
         aligned.reserve(cluster.size());
         for (const auto &series : cluster)  {
+            norm_v2.pre();
+            norm_v2(fake_index.begin(), fake_index.end(),
+                    series->begin(), series->end());
+            norm_v2.post();
+
             const auto  [dist, shift] =
-                _shape_based_dist_(*series, centroid, norm_v);
+                _shape_based_dist_(norm_v2.get_result(), norm_v.get_result());
 
             aligned.emplace_back(_shift_vector_(*series, shift));
         }
@@ -2935,7 +2934,7 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
 
         // Normalize centroid
         //
-        centroid = std::move(norm_v.get_result());
+        centroid = norm_v.get_result();
     }
 
     return (centroid);

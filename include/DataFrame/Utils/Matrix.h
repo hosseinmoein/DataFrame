@@ -1559,6 +1559,78 @@ static Matrix<T, MO1, false>
 hadamard(const Matrix<T, MO1, IS_SYM1> &lhs,
          const Matrix<T, MO2, IS_SYM2> &rhs);
 
+// ----------------------------------------------------------------------------
+
+// Vector + Vector
+//
+template<typename T, typename A1, typename A2>
+static inline
+std::vector<T, A1>
+operator + (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs);
+
+// -------------------------------------
+
+// Vector - Vector
+//
+template<typename T, typename A1, typename A2>
+static inline
+std::vector<T, A1>
+operator - (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs);
+
+// -------------------------------------
+
+// Vector * Vector
+//
+template<typename T, typename A1, typename A2>
+static inline
+std::vector<T, A1>
+operator * (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs);
+
+// -------------------------------------
+
+// Vector / Vector
+//
+template<typename T, typename A1, typename A2>
+static inline
+std::vector<T, A1>
+operator / (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs);
+
+// -------------------------------------
+
+// Vector += Vector
+//
+template<typename T, typename A1, typename A2>
+static inline
+std::vector<T, A1> &
+operator += (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs);
+
+// -------------------------------------
+
+// Vector -= Vector
+//
+template<typename T, typename A1, typename A2>
+static inline
+std::vector<T, A1> &
+operator -= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs);
+
+// -------------------------------------
+
+// Vector *= Vector
+//
+template<typename T, typename A1, typename A2>
+static inline
+std::vector<T, A1> &
+operator *= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs);
+
+// -------------------------------------
+
+// Vector /= Vector
+//
+template<typename T, typename A1, typename A2>
+static inline
+std::vector<T, A1> &
+operator /= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs);
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

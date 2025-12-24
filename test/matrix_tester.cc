@@ -966,6 +966,25 @@ int main(int, char *[]) {
         assert(applied(1, 2) == 12);
     }
 
+    // Test vector arithmetic functions
+    //
+    {
+        std::vector<double> vec1 { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        std::vector<double> vec2 { 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+        const auto          result1 = vec1 + vec2;
+
+        assert((result1 == std::vector<double> { 12, 14, 16, 18, 20, 22, 24,
+                                                 26, 28, 30 }));
+
+        const auto  result2 = vec1 * vec2;
+
+        assert((result2 == std::vector<double> { 11, 24, 39, 56, 75, 96, 119,
+                                                 144, 171, 200 }));
+        vec1 += vec2;
+        assert((vec1 == std::vector<double> { 12, 14, 16, 18, 20, 22, 24, 26,
+                                              28, 30 }));
+    }
+
     test_thread_pool();
     return (0);
 }

@@ -761,28 +761,30 @@ enum class  file_dtypes : std::size_t  {
     BOOL = 13,            // bool
 
     STRING = 14,          // std::string
-    VSTR32 = 15,          // FixedSizeString<31> == String32
-    VSTR64 = 16,          // FixedSizeString<63> == String64
-    VSTR128 = 17,         // FixedSizeString<127> == String128
-    VSTR512 = 18,         // FixedSizeString<511> == String512
-    VSTR1K = 19,          // FixedSizeString<1023> == String1K
-    VSTR2K = 20,          // FixedSizeString<2047> == String2K
+    VSTR8 = 15,           // FixedSizeString<7> == String8
+    VSTR16 = 16,          // FixedSizeString<15> == String16
+    VSTR32 = 17,          // FixedSizeString<31> == String32
+    VSTR64 = 18,          // FixedSizeString<63> == String64
+    VSTR128 = 19,         // FixedSizeString<127> == String128
+    VSTR512 = 20,         // FixedSizeString<511> == String512
+    VSTR1K = 21,          // FixedSizeString<1023> == String1K
+    VSTR2K = 22,          // FixedSizeString<2047> == String2K
 
-    DATETIME = 21,        // DateTime
-    DATETIME_AME = 22,    // DateTime
-    DATETIME_EUR = 23,    // DateTime
-    DATETIME_ISO = 24,    // DateTime
+    DATETIME = 23,        // DateTime
+    DATETIME_AME = 24,    // DateTime
+    DATETIME_EUR = 25,    // DateTime
+    DATETIME_ISO = 26,    // DateTime
 
-    STR_DBL_PAIR = 25,    // std::pair<std::string, double>
-    STR_STR_PAIR = 26,    // std::pair<std::string, std::string>
-    DBL_DBL_PAIR = 27,    // std::pair<double, double>
+    STR_DBL_PAIR = 27,    // std::pair<std::string, double>
+    STR_STR_PAIR = 28,    // std::pair<std::string, std::string>
+    DBL_DBL_PAIR = 29,    // std::pair<double, double>
 
-    DBL_VEC = 28,         // std::vector<double>
-    STR_VEC = 29,         // std::vector<std::string>
-    DBL_SET = 30,         // std::set<double>
-    STR_SET = 31,         // std::set<std::string>
-    STR_DBL_MAP = 32,     // std::map<std::string, double>
-    STR_DBL_UNOMAP = 33,  // std::unordered_map<std::string, double>
+    DBL_VEC = 30,         // std::vector<double>
+    STR_VEC = 31,         // std::vector<std::string>
+    DBL_SET = 32,         // std::set<double>
+    STR_SET = 33,         // std::set<std::string>
+    STR_DBL_MAP = 34,     // std::map<std::string, double>
+    STR_DBL_UNOMAP = 35,  // std::unordered_map<std::string, double>
 };
 
 // ----------------------------------------------------------------------------

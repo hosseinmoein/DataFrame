@@ -257,6 +257,8 @@ DataFrame<I, H>::print_binary_functor_<Ts ...>::operator() (const T &vec)  {
     const long  local_end_row = std::min (long(vec.size()), end_row);
 
     if constexpr (std::is_same_v<ValueType, std::string> ||
+                  std::is_same_v<ValueType, String8> ||
+                  std::is_same_v<ValueType, String16> ||
                   std::is_same_v<ValueType, String32> ||
                   std::is_same_v<ValueType, String64> ||
                   std::is_same_v<ValueType, String128> ||
@@ -1201,12 +1203,11 @@ operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    VecType         new_col;
     const size_type total_cnt = idx_mask.size();
+    VecType         new_col(total_cnt);
 
-    new_col.reserve(total_cnt);
     for (size_type i { 0 }; i < total_cnt; ++i)
-        new_col.push_back(vec[idx_mask[i]]);
+        new_col[i] = vec[idx_mask[i]];
 
     res.template load_column<ValueType>(name,
                                         std::move(new_col),

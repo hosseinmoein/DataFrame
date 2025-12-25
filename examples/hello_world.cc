@@ -198,8 +198,10 @@ int main(int, char *[])  {
 
     // Now make the Apple and IBM close prices stationary, so the following statistics are stable
     //
-    ibm_dt_df.make_stationary<double>("IBM_Close", stationary_method::differencing);
-    aapl_dt_df.make_stationary<double>("AAPL_Close", stationary_method::differencing);
+    ibm_dt_df.load_column("IBM_Close Stationary", ibm_dt_df.get_column<double>("IBM_Close"));
+    aapl_dt_df.load_column("AAPL_Close Stationary", aapl_dt_df.get_column<double>("AAPL_Close"));
+    ibm_dt_df.make_stationary<double>("IBM_Close Stationary", stationary_method::differencing);
+    aapl_dt_df.make_stationary<double>("AAPL_Close Stationary", stationary_method::differencing);
 
     // Now we join the AAPL and IBM DataFrames using their indices and applying inner-join policy.
     //
@@ -211,7 +213,7 @@ int main(int, char *[])  {
     CorrVisitor<double, DateTime>   corrl_v;
 
     std::cout << "Correlation between AAPL and IBM close prices: "
-              << aapl_ibm.visit<double, double>("AAPL_Close", "IBM_Close", corrl_v).get_result()
+              << aapl_ibm.visit<double, double>("AAPL_Close Stationary", "IBM_Close Stationary", corrl_v).get_result()
               << std::endl;
 
     // Now let’s do something more sophisticated and calculate rolling exponentially weighted correlations between IBM and
@@ -219,7 +221,7 @@ int main(int, char *[])  {
     // correlations for each date in the data stream.
     //
     ewm_corr_v<double>  ewmcorr { exponential_decay_spec::span, 3 };
-    const auto          &ewmcorr_result = aapl_ibm.single_act_visit<double, double>("AAPL_Close", "IBM_Close", ewmcorr).get_result();
+    const auto          &ewmcorr_result = aapl_ibm.single_act_visit<double, double>("AAPL_Close Stationary", "IBM_Close Stationary", ewmcorr).get_result();
 
     std::cout << "The last exponentailly weighted correlation between AAPL and IBM close prices: "
               << ewmcorr_result.back() << std::endl;

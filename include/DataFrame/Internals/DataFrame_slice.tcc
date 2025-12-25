@@ -922,11 +922,10 @@ get_data_by_sel (F &sel_functor) const  {
 
     // Get the records based on indices
     DataFrame       df;
-    IndexVecType    new_index;
+    IndexVecType    new_index(col_indices.size());
 
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(indices_[citer]);
+    for (size_type i { 0 }; const auto &citer: col_indices)
+        new_index[i++] = indices_[citer];
     df.load_index(std::move(new_index));
 
     const SpinGuard guard(lock_);
@@ -1018,12 +1017,10 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
     }
 
     DataFrame       df;
-    IndexVecType    new_index;
+    IndexVecType    new_index(col_indices.size());
 
-    // Get the records based on indices
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(indices_[citer]);
+    for (size_type i { 0 }; const auto &citer: col_indices)
+        new_index[i++] = indices_[citer];
     df.load_index(std::move(new_index));
 
     const SpinGuard guard(lock_);
@@ -2619,12 +2616,11 @@ get_n_largest_data(const char *col_name, size_type n, bool abs_value) const  {
         permutation_vec<T>(
             col_name,
             abs_value ? sort_spec::abs_desce : sort_spec::desce);
-    StlVecType<size_type>   col_indices;
     const auto              col_s = std::min(n, per_vec.size());
+    StlVecType<size_type>   col_indices(col_s);
 
-    col_indices.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
-        col_indices.push_back(per_vec[i]);
+        col_indices[i] = per_vec[i];
 
     return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2648,12 +2644,11 @@ get_n_largest_view(const char *col_name, size_type n, bool abs_value)  {
         permutation_vec<T>(
             col_name,
             abs_value ? sort_spec::abs_desce : sort_spec::desce);
-    StlVecType<size_type>   col_indices;
     const auto              col_s = std::min(n, per_vec.size());
+    StlVecType<size_type>   col_indices(col_s);
 
-    col_indices.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
-        col_indices.push_back(per_vec[i]);
+        col_indices[i] = per_vec[i];
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2677,12 +2672,11 @@ get_n_largest_view(const char *col_name, size_type n, bool abs_value) const  {
         permutation_vec<T>(
             col_name,
             abs_value ? sort_spec::abs_desce : sort_spec::desce);
-    StlVecType<size_type>   col_indices;
     const auto              col_s = std::min(n, per_vec.size());
+    StlVecType<size_type>   col_indices(col_s);
 
-    col_indices.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
-        col_indices.push_back(per_vec[i]);
+        col_indices[i] = per_vec[i];
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2706,12 +2700,11 @@ get_n_smallest_data(const char *col_name, size_type n, bool abs_value) const  {
         permutation_vec<T>(
             col_name,
             abs_value ? sort_spec::abs_ascen : sort_spec::ascen);
-    StlVecType<size_type>   col_indices;
     const auto              col_s = std::min(n, per_vec.size());
+    StlVecType<size_type>   col_indices(col_s);
 
-    col_indices.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
-        col_indices.push_back(per_vec[i]);
+        col_indices[i] = per_vec[i];
 
     return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2735,12 +2728,11 @@ get_n_smallest_view(const char *col_name, size_type n, bool abs_value)  {
         permutation_vec<T>(
             col_name,
             abs_value ? sort_spec::abs_ascen : sort_spec::ascen);
-    StlVecType<size_type>   col_indices;
     const auto              col_s = std::min(n, per_vec.size());
+    StlVecType<size_type>   col_indices(col_s);
 
-    col_indices.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
-        col_indices.push_back(per_vec[i]);
+        col_indices[i] = per_vec[i];
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2764,12 +2756,11 @@ get_n_smallest_view(const char *col_name, size_type n, bool abs_value) const  {
         permutation_vec<T>(
             col_name,
             abs_value ? sort_spec::abs_ascen : sort_spec::ascen);
-    StlVecType<size_type>   col_indices;
     const auto              col_s = std::min(n, per_vec.size());
+    StlVecType<size_type>   col_indices(col_s);
 
-    col_indices.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
-        col_indices.push_back(per_vec[i]);
+        col_indices[i] = per_vec[i];
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }

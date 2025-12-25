@@ -377,6 +377,22 @@ void DataFrame<I, H>::read_json_(S &stream, bool columns_only)  {
                     json_str_col_vector_push_back_(vec, stream, delim);
                     break;
                 }
+                case file_dtypes::VSTR8: {
+                    StlVecType<String8>    &vec =
+                        create_column<String8>(col_name.c_str(), false);
+
+                    vec.reserve(col_size);
+                    json_str_col_vector_push_back_(vec, stream, delim);
+                    break;
+                }
+                case file_dtypes::VSTR16: {
+                    StlVecType<String16>    &vec =
+                        create_column<String16>(col_name.c_str(), false);
+
+                    vec.reserve(col_size);
+                    json_str_col_vector_push_back_(vec, stream, delim);
+                    break;
+                }
                 case file_dtypes::VSTR32: {
                     StlVecType<String32>    &vec =
                         create_column<String32>(col_name.c_str(), false);
@@ -710,6 +726,36 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only, char delim)  {
                         };
                     const ColVectorPushBack_
                         <const char *, StlVecType<std::string>> slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, converter, io_format::csv, delim);
+                    break;
+                }
+                case file_dtypes::VSTR8: {
+                    StlVecType<String8> &vec =
+                        create_column<String8>(col_name.c_str(), false);
+                    auto                converter =
+                        [](const char *s, char **)-> const char * {
+                            return s;
+                        };
+                    const ColVectorPushBack_
+                        <const char *, StlVecType<String8>> slug;
+
+                    vec.reserve(_atoi_<size_type>(value.c_str(),
+                                                  value.size()));
+                    slug(vec, stream, converter, io_format::csv, delim);
+                    break;
+                }
+                case file_dtypes::VSTR16: {
+                    StlVecType<String16>    &vec =
+                        create_column<String16>(col_name.c_str(), false);
+                    auto                    converter =
+                        [](const char *s, char **)-> const char * {
+                            return s;
+                        };
+                    const ColVectorPushBack_
+                        <const char *, StlVecType<String16>>    slug;
 
                     vec.reserve(_atoi_<size_type>(value.c_str(),
                                                   value.size()));
@@ -1157,6 +1203,22 @@ read_csv2_(S &stream,
                                               entry.col_idx);
                         break;
                     }
+                    case file_dtypes::VSTR8: {
+                        spec_vec.emplace_back(StlVecType<String8>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows,
+                                              entry.col_idx);
+                        break;
+                    }
+                    case file_dtypes::VSTR16: {
+                        spec_vec.emplace_back(StlVecType<String16>{ },
+                                              entry.col_type,
+                                              entry.col_name.c_str(),
+                                              entry.num_rows,
+                                              entry.col_idx);
+                        break;
+                    }
                     case file_dtypes::VSTR32: {
                         spec_vec.emplace_back(StlVecType<String32>{ },
                                               entry.col_type,
@@ -1461,6 +1523,22 @@ read_csv2_(S &stream,
                     }
                     case file_dtypes::STRING: {
                         spec_vec.emplace_back(StlVecType<std::string>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows,
+                                              requested_col_count++);
+                        break;
+                    }
+                    case file_dtypes::VSTR8: {
+                        spec_vec.emplace_back(StlVecType<String8>{ },
+                                              citer->second,
+                                              col_name.c_str(),
+                                              nrows,
+                                              requested_col_count++);
+                        break;
+                    }
+                    case file_dtypes::VSTR16: {
+                        spec_vec.emplace_back(StlVecType<String16>{ },
                                               citer->second,
                                               col_name.c_str(),
                                               nrows,
@@ -1805,6 +1883,16 @@ read_csv2_(S &stream,
                         }
                         std::any_cast<StlVecType<std::string> &>
                             (col_spec.col_vec).emplace_back(value);
+                        break;
+                    }
+                    case file_dtypes::VSTR8: {
+                        std::any_cast<StlVecType<String8> &>
+                            (col_spec.col_vec).emplace_back(value.c_str());
+                        break;
+                    }
+                    case file_dtypes::VSTR16: {
+                        std::any_cast<StlVecType<String16> &>
+                            (col_spec.col_vec).emplace_back(value.c_str());
                         break;
                     }
                     case file_dtypes::VSTR32: {
@@ -2190,6 +2278,22 @@ read_csv2_(S &stream,
                         nan_policy::dont_pad_with_nans);
                     break;
                 }
+                case file_dtypes::VSTR8: {
+                    load_column<String8>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<String8> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
+                case file_dtypes::VSTR16: {
+                    load_column<String16>(
+                        col_spec.col_name.c_str(),
+                        std::move(std::any_cast<StlVecType<String16> &>
+                            (col_spec.col_vec)),
+                        nan_policy::dont_pad_with_nans);
+                    break;
+                }
                 case file_dtypes::VSTR32: {
                     load_column<String32>(
                         col_spec.col_name.c_str(),
@@ -2385,6 +2489,12 @@ read_binary_(S &stream,
         if constexpr (std::is_same_v<IndexType, std::string>)
             _read_binary_string_<std::string>(stream, idx_vec, needs_flipping,
                                               starting_row, num_rows);
+        else if constexpr (std::is_same_v<IndexType, String8>)
+            _read_binary_string_<String8>(stream, idx_vec, needs_flipping,
+                                          starting_row, num_rows);
+        else if constexpr (std::is_same_v<IndexType, String16>)
+            _read_binary_string_<String16>(stream, idx_vec, needs_flipping,
+                                           starting_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, String32>)
             _read_binary_string_<String32>(stream, idx_vec, needs_flipping,
                                            starting_row, num_rows);
@@ -2549,6 +2659,24 @@ read_binary_(S &stream,
 
                 _read_binary_string_<std::string>(stream, vec, needs_flipping,
                                                   starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::VSTR8: {
+                ColumnVecType<String8>  vec;
+
+                _read_binary_string_<String8>(stream, vec, needs_flipping,
+                                              starting_row, num_rows);
+                load_column(col_name, std::move(vec),
+                            nan_policy::dont_pad_with_nans);
+                break;
+            }
+            case file_dtypes::VSTR16: {
+                ColumnVecType<String16> vec;
+
+                _read_binary_string_<String16>(stream, vec, needs_flipping,
+                                               starting_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;

@@ -829,12 +829,10 @@ std::same_as<std::invoke_result_t<F, const T &, const T &, const T &>, T>  {
     const size_type col_s =
         std::min<size_type>({ lhs_col.size(), df1_col.size(),
                               df2_col.size() });
-    StlVecType<T>   result;
+    StlVecType<T>   result(col_s);
 
-    result.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i) [[likely]]
-        result.push_back(
-            std::move(functor(lhs_col[i], df1_col[i], df2_col[i])));
+        result[i] = std::move(functor(lhs_col[i], df1_col[i], df2_col[i]));
 
     return (result);
 }
@@ -863,13 +861,11 @@ std::same_as<std::invoke_result_t<F, const T &, const T &,
 
     const size_type col_s = std::min<size_type>(
         { lhs_col.size(), df1_col.size(), df2_col.size(), df3_col.size() });
-    StlVecType<T>   result;
+    StlVecType<T>   result(col_s);
 
-    result.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i) [[likely]]
-        result.push_back(
-            std::move(functor(lhs_col[i], df1_col[i], df2_col[i],
-                              df3_col[i])));
+        result[i] = std::move(functor(lhs_col[i], df1_col[i], df2_col[i],
+                                      df3_col[i]));
 
     return (result);
 }
@@ -1011,7 +1007,7 @@ DataFrame<I, H>::unpivot(const char *pvt_col_name,
                          const char *value_name) const  {
 
     if (value_col_names.empty() && (! column_list_.empty()))  {
-        SpinGuard   guard (lock_);
+        const SpinGuard guard (lock_);
 
         value_col_names.reserve(column_list_.size() - 1);
         for (const auto &[col_name, idx]: column_list_)  {
@@ -1022,24 +1018,24 @@ DataFrame<I, H>::unpivot(const char *pvt_col_name,
         };
     }
 
-    const size_type             new_col_s =
-        indices_.size() * value_col_names.size();
-    ColumnVecType<std::string>  new_var_col;
-    ColumnVecType<IndexType>    new_idx;
+    const size_type             new_col_s {
+        indices_.size() * value_col_names.size()
+    };
+    ColumnVecType<std::string>  new_var_col(new_col_s);
+    ColumnVecType<IndexType>    new_idx(new_col_s);
+    size_type                   vec_idx { 0 };
 
-    new_var_col.reserve(new_col_s);
-    new_idx.reserve(new_col_s);
     for (const auto col_name : value_col_names)  {
         for (const auto &idx : indices_)  {
-            new_var_col.push_back(col_name);
-            new_idx.push_back(idx);
+            new_var_col[vec_idx] = col_name;
+            new_idx[vec_idx++] = idx;
         }
     }
 
     const auto              &pvt_col = get_column<VAR_T>(pvt_col_name);
     ColumnVecType<VAR_T>    new_pvt_col;
 
-    new_pvt_col.reserve(new_col_s);
+    new_pvt_col.reserve(new_col_s + pvt_col.size() * value_col_names.size());
     for (size_type i = 0; i < value_col_names.size(); ++i)  {
         size_type   j = 0;
 
@@ -1051,15 +1047,19 @@ DataFrame<I, H>::unpivot(const char *pvt_col_name,
 
     ColumnVecType<VAL_T>    new_val_col;
 
-    new_val_col.reserve(new_col_s);
-    for (const auto col_name : value_col_names)  {
-        const auto  &val_col = get_column<VAL_T>(col_name);
-        size_type   j = 0;
+    new_val_col.reserve(new_col_s + pvt_col.size() * value_col_names.size());
+    {
+        const SpinGuard guard (lock_);
 
-        for ( ; j < val_col.size(); ++j)
-            new_val_col.push_back(val_col[j]);
-        for ( ; j < indices_.size(); ++j)
-            new_val_col.push_back(get_nan<VAL_T>());
+        for (const auto col_name : value_col_names)  {
+            const auto  &val_col = get_column<VAL_T>(col_name);
+            size_type   j = 0;
+
+            for ( ; j < val_col.size(); ++j)
+                new_val_col.push_back(val_col[j]);
+            for ( ; j < indices_.size(); ++j)
+                new_val_col.push_back(get_nan<VAL_T>());
+        }
     }
 
     DataFrame   result;
@@ -1186,11 +1186,10 @@ DataFrame<I, H>::difference(const DataFrame &other) const  {
         }
     }
 
-    IndexVecType    new_index;
+    IndexVecType    new_index(idx_set.size());
 
-    new_index.reserve(idx_set.size());
-    for (const auto idx : idx_set)
-        new_index.push_back(indices_[idx]);
+    for (size_type i { 0 }; const auto idx : idx_set)
+        new_index[i++] = indices_[idx];
     result.load_index(std::move(new_index));
 
     return (result);
@@ -1480,17 +1479,16 @@ knn(std::vector<const char *> &&col_names,
                   });
     }
 
-    KNNResult<T>    result;
+    KNNResult<T>    result(k);
 
-    result.reserve(k);
     for (size_type i { 0 }; i < k; ++i)  {
         KNNPair<T>  item;
 
-        item.first.reserve(fet_s);
+        item.first.resize(fet_s);
         for (size_type j { 0 }; j < fet_s; ++j)
-            item.first.push_back(columns[j]->at(distances[i].second));
+            item.first[j] = columns[j]->at(distances[i].second);
         item.second = distances[i].second;
-        result.push_back(std::move(item));
+        result[i] = std::move(item);
     }
 
     return (result);
@@ -1663,9 +1661,9 @@ MC_station_dist(std::vector<const char *> &&trans_col_names,
 
         normalize(new_pi);
         if ((new_pi - pi).norm() < epsilon)  {
-            result.reserve(pi.cols());
+            result.resize(pi.cols());
             for (long c { 0 }; c < pi.cols(); ++c)
-                result.push_back(pi(0, c));
+                result[c] = pi(0, c);
             break;
         }
         pi = std::move(new_pi);

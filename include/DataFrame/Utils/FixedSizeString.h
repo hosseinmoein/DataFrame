@@ -408,6 +408,8 @@ inline S &operator << (S &lhs, const VirtualString &rhs)  {
 
 // Convenient typedefs
 //
+using String8 = FixedSizeString<7>;
+using String16 = FixedSizeString<15>;
 using String32 = FixedSizeString<31>;
 using String64 = FixedSizeString<63>;
 using String128 = FixedSizeString<127>;

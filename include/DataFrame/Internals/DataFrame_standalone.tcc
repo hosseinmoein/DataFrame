@@ -109,6 +109,8 @@ std::unordered_map<_TypeInfoRef_,
     { typeid(std::string), "string" },
     { typeid(const char *), "string" },
     { typeid(char *), "string" },
+    { typeid(String8), "vstr8" },
+    { typeid(String16), "vstr16" },
     { typeid(String32), "vstr32" },
     { typeid(String64), "vstr64" },
     { typeid(String128), "vstr128" },
@@ -163,6 +165,8 @@ std::unordered_map<std::string, file_dtypes>    _typename_id_  {
     // Strings
     //
     { "string", file_dtypes::STRING },
+    { "vstr8", file_dtypes::VSTR8 },
+    { "vstr16", file_dtypes::VSTR16 },
     { "vstr32", file_dtypes::VSTR32 },
     { "vstr64", file_dtypes::VSTR64 },
     { "vstr128", file_dtypes::VSTR128 },
@@ -2809,7 +2813,7 @@ V _kshape_cross_corr_(const V &x, const V &y)  {
     // Multiply in frequency domain (element-wise)
     //
     for (long i { 0 }; i < fft_s; ++i)
-        X[i] = X[i] * std::conj(Y[i]);
+        X[i] *= std::conj(Y[i]);
         
     // Inverse FFT
     //
@@ -2897,12 +2901,11 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
     // Iterative refinement
     //
     for (long iter { 0 }; iter < max_iter; ++iter) {
-        std::vector<V>  aligned;
+        std::vector<V>  aligned(cluster.size());
 
         // Align all series to current centroid
         //
-        aligned.reserve(cluster.size());
-        for (const auto &series : cluster)  {
+        for (long i { 0 }; const auto &series : cluster)  {
             norm_v2.pre();
             norm_v2(fake_index.begin(), fake_index.end(),
                     series->begin(), series->end());
@@ -2911,16 +2914,14 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
             const auto  [dist, shift] =
                 _shape_based_dist_(norm_v2.get_result(), norm_v.get_result());
 
-            aligned.emplace_back(_shift_vector_(*series, shift));
+            aligned[i++] = _shift_vector_(*series, shift);
         }
 
         // Compute mean of aligned series
         //
         std::fill(centroid.begin(), centroid.end(), value_type { 0 });
-        for (const auto &series : aligned)  {
-            for (long i { 0 }; i < col_s; ++i)
-                centroid[i] += series[i];
-        }
+        for (const auto &series : aligned)
+            centroid += series;
 
         const auto  align_s = static_cast<value_type>(aligned.size());
 

@@ -416,10 +416,10 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename S>
-inline S &operator << (S &lhs, const VirtualString &rhs)  {
-
-    return (lhs << rhs.c_str ());
+template<typename CharT, typename Traits>
+inline std::basic_ostream<CharT, Traits>& 
+operator << (std::basic_ostream<CharT, Traits> &lhs, const VirtualString &rhs) {
+    return (lhs << rhs.c_str());
 }
 
 // ----------------------------------------------------------------------------

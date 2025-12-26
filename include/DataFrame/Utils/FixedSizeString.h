@@ -254,19 +254,37 @@ public:
 
         return (compare (rhs) > 0);
     }
+    [[nodiscard]] inline bool operator >= (const_pointer rhs) const noexcept  {
+
+        return (compare (rhs) >= 0);
+    }
     [[nodiscard]] inline bool
     operator > (const VirtualString &rhs) const noexcept  {
 
         return (*this > rhs.c_str ());
     }
+    [[nodiscard]] inline bool
+    operator >= (const VirtualString &rhs) const noexcept  {
+
+        return (*this >= rhs.c_str ());
+    }
     [[nodiscard]] inline bool operator < (const_pointer rhs) const noexcept  {
 
         return (compare (rhs) < 0);
+    }
+    [[nodiscard]] inline bool operator <= (const_pointer rhs) const noexcept  {
+
+        return (compare (rhs) <= 0);
     }
     [[nodiscard]] inline bool
     operator < (const VirtualString &rhs) const noexcept  {
 
         return (*this < rhs.c_str ());
+    }
+    [[nodiscard]] inline bool
+    operator <= (const VirtualString &rhs) const noexcept  {
+
+        return (*this <= rhs.c_str ());
     }
 
     // char based access methods.

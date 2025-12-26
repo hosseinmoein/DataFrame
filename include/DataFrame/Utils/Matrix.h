@@ -1631,6 +1631,78 @@ static inline
 std::vector<T, A1> &
 operator /= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs);
 
+// ----------------------------------------------------------------------------
+
+// Vector + Value
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator + (const std::vector<T, A> &lhs, T rhs);
+
+// -------------------------------------
+
+// Vector - Value
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator - (const std::vector<T, A> &lhs, T rhs);
+
+// -------------------------------------
+
+// Vector * Value
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator * (const std::vector<T, A> &lhs, T rhs);
+
+// -------------------------------------
+
+// Vector / Value
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator / (const std::vector<T, A> &lhs, T rhs);
+
+// -------------------------------------
+
+// Vector += Value
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A> &
+operator += (std::vector<T, A> &lhs, T rhs);
+
+// -------------------------------------
+
+// Vector -= Value
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A> &
+operator -= (std::vector<T, A> &lhs, T rhs);
+
+// -------------------------------------
+
+// Vector *= Value
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A> &
+operator *= (std::vector<T, A> &lhs, T rhs);
+
+// -------------------------------------
+
+// Vector /= Value
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A> &
+operator /= (std::vector<T, A> &lhs, T rhs);
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

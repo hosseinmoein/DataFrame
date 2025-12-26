@@ -973,16 +973,23 @@ int main(int, char *[]) {
         std::vector<double> vec2 { 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
         const auto          result1 = vec1 + vec2;
 
-        assert((result1 == std::vector<double> { 12, 14, 16, 18, 20, 22, 24,
-                                                 26, 28, 30 }));
+        assert((result1 == std::vector<double>{ 12, 14, 16, 18, 20, 22, 24,
+                                                26, 28, 30 }));
 
         const auto  result2 = vec1 * vec2;
 
-        assert((result2 == std::vector<double> { 11, 24, 39, 56, 75, 96, 119,
-                                                 144, 171, 200 }));
+        assert((result2 == std::vector<double>{ 11, 24, 39, 56, 75, 96, 119,
+                                                144, 171, 200 }));
         vec1 += vec2;
-        assert((vec1 == std::vector<double> { 12, 14, 16, 18, 20, 22, 24, 26,
-                                              28, 30 }));
+        assert((vec1 == std::vector<double>{ 12, 14, 16, 18, 20, 22, 24, 26,
+                                             28, 30 }));
+
+        const auto  result3 = vec2 - 10.0;
+
+        assert((result3 == std::vector<double>{ 1, 2, 3, 4, 5, 6, 7, 8,
+                                                9, 10 }));
+        vec2 -= 10.0;
+        assert((vec2 == std::vector<double>{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }));
     }
 
     test_thread_pool();
@@ -1025,12 +1032,12 @@ void test_thread_pool()  {
         for (int i = 0; i < int(values2.size()); ++i)
             assert((values2[i] == i + 2));
 
-        std::vector<int>    values3 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-        auto                lbd3 = [&values3] (auto begin, auto end) -> void  {
+        std::vector<int>   values3 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        auto               lbd3 = [&values3] (auto begin, auto end) -> void  {
             for (auto i = begin; i < end; ++i)
                 values3[i] += 1;
         };
-        auto                futures3 =
+        auto               futures3 =
             ThreadGranularity::thr_pool_.parallel_loop(0, int(values3.size()),
                                                        std::move(lbd3));
 
@@ -1066,12 +1073,12 @@ void test_thread_pool()  {
         for (int i = 0; i < int(values2.size()); ++i)
             assert((values2[i] == i + 2));
 
-        std::vector<int>    values3 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-        auto                lbd3 = [&values3] (auto begin, auto end) -> void  {
+        std::vector<int>   values3 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        auto               lbd3 = [&values3] (auto begin, auto end) -> void  {
             for (auto i = end; i >= begin; --i)
                 values3[i] += 1;
         };
-        auto                futures3 =
+        auto               futures3 =
             ThreadGranularity::thr_pool_.parallel_loop(
                 int(values3.size()) - 1, 0, std::move(lbd3));
 

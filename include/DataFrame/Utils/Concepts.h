@@ -245,15 +245,6 @@ concept DT_ALLOWABLE_FORMATS = std::is_enum_v<F> && requires(F format)  {
     } -> std::same_as<bool>;
 };
 
-// ----------------------------------------------------------------------------
-
-template <typename T>
-concept HasStdHardwareDestInterfaceSize = requires {
-    std::hardware_destructive_interference_size;
-    { std::hardware_destructive_interference_size } ->
-        std::same_as<std::size_t const &>; 
-};
-
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -36,6 +36,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+std::pair<typename ThreadPool::size_type, typename ThreadPool::size_type>
+inline
+ThreadPool::cline_aligned_blocks_(size_type data_size,
+                                  size_type num_blocks,
+                                  size_type divisor)  {
+
+    // Calculate base block size (divisible by divisor)
+    //
+    const size_type base_size { (data_size / num_blocks / divisor) * divisor };
+
+    // Calculate remainder
+    //
+    const size_type remainder { data_size - (base_size * num_blocks) };
+
+    return (std::make_pair(base_size, remainder));
+}
+
+// ----------------------------------------------------------------------------
+
 inline ThreadPool::ThreadPool(size_type thr_num)  {
 
     threads_.reserve(thr_num * 2);
@@ -143,7 +162,7 @@ ThreadPool::dispatch(bool immediately, F &&routine, As && ... args)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename F, typename I, typename ... As>
+template<typename T, typename F, typename I, typename ... As>
 ThreadPool::loop_res_t<F, I, As ...>
 ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
 
@@ -168,55 +187,35 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
     else
         n = std::distance(begin, end);
 
+    constexpr size_type     cline_divisor { CLINE_SIZE / long(sizeof(T)) };
     const size_type         cap_thrs { capacity_threads() };
-    const size_type         block_size { (n > cap_thrs) ? n / cap_thrs : n };
+    const auto              blocks {
+        cline_aligned_blocks_(n, cap_thrs - 1, cline_divisor)
+    };
     std::vector<future_t>   ret;
 
-    if (block_size == n)  {
-        ret.reserve(n);
+    ret.reserve(blocks.first > 0 ? cap_thrs : size_type(1));
+    if (blocks.first > 0)  {
         if (backward)  {
-            for (size_type i = n - 1; i >= 0; --i)  {
-                ret.emplace_back(dispatch(false,
-                                          std::forward<F>(routine),
-                                              end + i,
-                                              end + i,
-                                              std::forward<As>(args) ...));
-            }
-        }
-        else  {
-            for (size_type i = 0; i < n; ++i)  {
-                ret.emplace_back(dispatch(false,
-                                          std::forward<F>(routine),
-                                              begin + i,
-                                              begin + (i + 1),
-                                              std::forward<As>(args) ...));
-            }
-        }
-    }
-    else  {
-        ret.reserve(cap_thrs + 1);
-        if (backward)  {
-            for (size_type i = n; i >= 0; i -= block_size)  {
-                size_type   block_end {
-                    ((i - block_size) <= 0) ? 0 : i - block_size
-                };
+            for (size_type i = n; i >= 0; i -= blocks.first)  {
+                size_type   block_end { i - blocks.first };
 
                 if (size_type((end + i) - (end + block_end + 1)) <
-                        (block_size - 1))
+                        (blocks.first - 1))
                     block_end = -1;
+                if (block_end < 0)  break;
                 ret.emplace_back(dispatch(false,
                                           std::forward<F>(routine),
-                                              end + block_end + 1,
+                                              end + block_end,
                                               end + i,
                                               std::forward<As>(args) ...));
             }
         }
         else  {
-            for (size_type i = 0; i < n; i += block_size)  {
-                const size_type block_end {
-                    ((i + block_size) > n) ? n : i + block_size
-                };
+            for (size_type i = 0; i < n; i += blocks.first)  {
+                size_type block_end { i + blocks.first };
 
+                if (block_end > n)  break;
                 ret.emplace_back(dispatch(false,
                                           std::forward<F>(routine),
                                               begin + i,
@@ -224,6 +223,21 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
                                               std::forward<As>(args) ...));
             }
         }
+    }
+    if (blocks.second > 0)  {
+        if (backward)
+            ret.emplace_back(dispatch(false,
+                                      std::forward<F>(routine),
+                                          end,
+                                          end + blocks.second,
+                                          std::forward<As>(args) ...));
+        else
+            ret.emplace_back(dispatch(
+                false,
+                std::forward<F>(routine),
+                    begin + (blocks.first * (cap_thrs - 1)),
+                    end,
+                    std::forward<As>(args) ...));
     }
 
     return (ret);
@@ -301,12 +315,12 @@ ThreadPool::parallel_sort(const I begin, const I end)  {
 
 template<std::random_access_iterator I, typename P>
 static inline I
-_median_of_three_(I a, I b, I c, P &compare) {
+_median_of_three_(I begin, I mid, I last, P &compare)  {
 
-    if (compare(*b, *a))  std::swap(a, b);
-    if (compare(*c, *b))  std::swap(b, c);
-    if (compare(*b, *a))  std::swap(a, b);
-    return (b); // *a <= *b <= *c under compare
+    if (compare(*mid, *begin))  std::iter_swap(begin, mid);
+    if (compare(*last, *mid))  std::iter_swap(mid, last);
+    if (compare(*mid, *begin))  std::iter_swap(begin, mid);
+    return (mid); // *begin <= *mid <= *last under compare
 }
 
 // --------------------------------------

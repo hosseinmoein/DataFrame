@@ -185,7 +185,7 @@ struct  ClipVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<T>(
                     size_type(0),
                     col_s,
                     [&column_begin, this]
@@ -264,7 +264,7 @@ struct  AbsVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<T>(
                     size_type(0),
                     col_s,
                     [&column_begin]

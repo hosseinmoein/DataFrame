@@ -224,8 +224,8 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
                     this->data_[citer->second].change(functor);
         };
         auto    futures =
-            thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -615,8 +615,8 @@ sort(const char *name1, sort_spec dir1,
                     this->data_[citer->second].change(functor);
         };
         auto    futures =
-            thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1032,8 +1032,8 @@ sort(const char *name1, sort_spec dir1,
                     this->data_[citer->second].change(functor);
         };
         auto    futures =
-            thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1341,8 +1341,8 @@ sort(const char *name1, sort_spec dir1,
                     this->data_[citer->second].change(functor);
         };
         auto    futures =
-            thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1575,8 +1575,8 @@ sort(const char *name1, sort_spec dir1,
                     this->data_[citer->second].change(functor);
         };
         auto    futures =
-            thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1717,14 +1717,13 @@ sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
     make_consistent<Ts ...>();
 
     ColumnVecType<T>    *vec { nullptr };
-    const SpinGuard     guard (lock_);
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
         vec = reinterpret_cast<ColumnVecType<T> *>(&indices_);
         ignore_index = true;
     }
     else
-        vec = &(get_column<T>(name, false));
+        vec = &(get_column<T>(name));
 
     const size_type                 idx_s = indices_.size();
     DFUnorderedMap<T, size_type>    freq_map;
@@ -1856,7 +1855,7 @@ sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
         }
     }
 
-    if (((column_list_.size() - 1) > 1) && get_thread_level() > 2)  {
+    if ((column_list_.size() > 3) && get_thread_level() > 2)  {
         auto    lbd = [name,
                        &sorting_idxs = std::as_const(sorting_idxs),
                        idx_s, this]
@@ -1868,8 +1867,8 @@ sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
                     this->data_[citer->second].change(functor);
         };
         auto    futures =
-            thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1879,6 +1878,7 @@ sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
         for (const auto &[this_name, idx] : column_list_) [[likely]]
             if (this_name != name)  data_[idx].change(functor);
     }
+
     return;
 }
 

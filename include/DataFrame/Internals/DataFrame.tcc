@@ -713,8 +713,8 @@ void DataFrame<I, H>::shrink_to_fit ()  {
                     citer->change(functor);
             };
         auto    futures =
-            thr_pool_.parallel_loop(data_.begin(), data_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(data_.begin(), data_.end(),
+                                            std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1126,7 +1126,7 @@ DataFrame<I, H>::starts_with(const char *col_name, const T &pattern) const  {
 
     if (thread_level > 2)  {
         auto    futures =
-            thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+            thr_pool_.parallel_loop<char>(size_type(0), col_s, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1175,7 +1175,7 @@ DataFrame<I, H>::ends_with(const char *col_name, const T &pattern) const  {
 
     if (thread_level > 2)  {
         auto    futures =
-            thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+            thr_pool_.parallel_loop<char>(size_type(0), col_s, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1260,7 +1260,7 @@ DataFrame<I, H>::in_between(const char *col_name,
 
     if (thread_level > 2)  {
         auto    futures =
-            thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+            thr_pool_.parallel_loop<char>(size_type(0), col_s, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1305,15 +1305,15 @@ is_nan_mask(const char *col_name, bool not_flag) const  {
     if (thread_level > 2)  {
         if (not_flag)  {
             auto    futures =
-                thr_pool_.parallel_loop(size_type(0),
-                                        col_s,
-                                        std::move(not_lbd));
+                thr_pool_.parallel_loop<char>(
+                    size_type(0), col_s, std::move(not_lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+                thr_pool_.parallel_loop<char>(
+                    size_type(0), col_s, std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -1362,15 +1362,15 @@ is_infinity_mask(const char *col_name, bool not_flag) const  {
     if (thread_level > 2)  {
         if (not_flag)  {
             auto    futures =
-                thr_pool_.parallel_loop(size_type(0),
-                                        col_s,
-                                        std::move(not_lbd));
+                thr_pool_.parallel_loop<char>(
+                    size_type(0), col_s, std::move(not_lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+                thr_pool_.parallel_loop<char>(
+                    size_type(0), col_s, std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -1422,15 +1422,15 @@ is_default_mask(const char *col_name, bool not_flag) const  {
     if (thread_level > 2)  {
         if (not_flag)  {
             auto    futures =
-                thr_pool_.parallel_loop(size_type(0),
-                                        col_s,
-                                        std::move(not_lbd));
+                thr_pool_.parallel_loop<char>(
+                    size_type(0), col_s, std::move(not_lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+                thr_pool_.parallel_loop<char>(
+                    size_type(0), col_s, std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -1512,11 +1512,14 @@ DataFrame<I, H>::peaks(const char *col_name, size_type n) const  {
         std::vector<std::future<void>>  futures;
 
         if (n == 1)
-            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbd1));
+            futures = thr_pool_.parallel_loop<char>(
+                n, col_s - n, std::move(lbd1));
         else if (n == 2)
-            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbd2));
+            futures = thr_pool_.parallel_loop<char>(
+                n, col_s - n, std::move(lbd2));
         else
-            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbdn));
+            futures = thr_pool_.parallel_loop<char>(
+                n, col_s - n, std::move(lbdn));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1601,11 +1604,14 @@ DataFrame<I, H>::valleys(const char *col_name, size_type n) const  {
         std::vector<std::future<void>>  futures;
 
         if (n == 1)
-            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbd1));
+            futures = thr_pool_.parallel_loop<char>(
+                n, col_s - n, std::move(lbd1));
         else if (n == 2)
-            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbd2));
+            futures = thr_pool_.parallel_loop<char>(
+                n, col_s - n, std::move(lbd2));
         else
-            futures = thr_pool_.parallel_loop(n, col_s - n, std::move(lbdn));
+            futures = thr_pool_.parallel_loop<char>(
+                n, col_s - n, std::move(lbdn));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1801,7 +1807,8 @@ DataFrame<I, H>::make_stationary(const char *col_name,
 
         if (thread_level > 2)  {
             auto    futures =
-                thr_pool_.parallel_loop(size_type(1), col_s, std::move(lbd));
+                thr_pool_.parallel_loop<T>(
+                    size_type(1), col_s, std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -1817,8 +1824,8 @@ DataFrame<I, H>::make_stationary(const char *col_name,
 
         if (thread_level > 2)  {
             auto    futures =
-                thr_pool_.parallel_loop(vec.begin(), vec.end(),
-                                        std::move(lbd));
+                thr_pool_.parallel_loop<T>(
+                    vec.begin(), vec.end(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -1832,8 +1839,8 @@ DataFrame<I, H>::make_stationary(const char *col_name,
 
         if (thread_level > 2)  {
             auto    futures =
-                thr_pool_.parallel_loop(vec.begin(), vec.end(),
-                                        std::move(lbd));
+                thr_pool_.parallel_loop<T>(
+                    vec.begin(), vec.end(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }

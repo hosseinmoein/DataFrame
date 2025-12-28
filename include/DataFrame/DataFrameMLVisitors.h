@@ -992,7 +992,7 @@ private:
 
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     size_type(col_s),
                     [&xvec, &yvec](auto begin, auto end) -> void  {
@@ -1013,7 +1013,7 @@ private:
 
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     size_type(col_s),
                     [&xvec, col_s](auto begin, auto end) -> void  {
@@ -1063,7 +1063,7 @@ private:
 
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     half_col_s,
                     [&exp_table, two_pi, col_s]
@@ -1122,7 +1122,7 @@ private:
 
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&exp_table, pi, col_s, col_s_2]
@@ -1157,7 +1157,7 @@ private:
 
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&exp_table, &xvec, &column]
@@ -1178,7 +1178,7 @@ private:
         yvec[0] = exp_table[0];
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(1),
                     col_s,
                     [&exp_table, &yvec, m]
@@ -1204,7 +1204,7 @@ private:
         //
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     exp_table.size(),
                     [&exp_table, &conv, &column]
@@ -1244,7 +1244,7 @@ private:
         //
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column]
@@ -1278,7 +1278,7 @@ private:
         //
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column]
@@ -1292,7 +1292,7 @@ private:
 
             for (auto &fut : futures)  fut.get();
             futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column, col_s]
@@ -1332,7 +1332,7 @@ public:
 
             if constexpr (is_complex<T>::value)  {
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&column_begin, &result]
@@ -1343,7 +1343,7 @@ public:
             }
             else  {
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&column_begin, &result]
@@ -1406,7 +1406,7 @@ public:
                 magnitude_.resize(col_s);
 
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [this]
@@ -1442,7 +1442,7 @@ public:
                 angle_.resize(col_s);
 
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [this]
@@ -1571,7 +1571,7 @@ struct  EntropyVisitor  {
         if (result.size() >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         result.size(),
                         [&column_begin, &result, log_log_base]
@@ -1764,7 +1764,7 @@ private:
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column_begin, this]
@@ -1790,7 +1790,7 @@ private:
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column_begin, this]
@@ -1819,7 +1819,7 @@ private:
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column_begin, this]
@@ -1844,7 +1844,7 @@ private:
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column_begin, this]
@@ -1869,7 +1869,7 @@ private:
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column_begin, this]
@@ -1894,7 +1894,7 @@ private:
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column_begin, this]
@@ -1920,7 +1920,7 @@ private:
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column_begin, this]
@@ -2030,7 +2030,7 @@ public:
             result_.resize(col_s);
             if (rtype_ == rectify_type::ReLU)  {
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&column_begin, this]
@@ -2042,7 +2042,7 @@ public:
             }
             else if (rtype_ == rectify_type::param_ReLU)  {
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&column_begin, this]
@@ -2057,7 +2057,7 @@ public:
             }
             else if (rtype_ == rectify_type::GeLU)  {
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&column_begin, this]
@@ -2077,7 +2077,7 @@ public:
                 sigm(idx_begin, idx_end, column_begin, column_end);
                 sigm.post();
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&column_begin, &sigm = std::as_const(sigm), this]
@@ -2092,7 +2092,7 @@ public:
             }
             else if (rtype_ == rectify_type::softplus)  {
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&column_begin, this]
@@ -2106,7 +2106,7 @@ public:
             }
             else if (rtype_ == rectify_type::elu)  {
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&column_begin, this]
@@ -2124,7 +2124,7 @@ public:
             }
             else if (rtype_ == rectify_type::mish)  {
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&column_begin, this]
@@ -2139,7 +2139,7 @@ public:
             }
             else if (rtype_ == rectify_type::metallic_mean)  {
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&column_begin, this]
@@ -2294,7 +2294,7 @@ struct  PolicyLearningLossVisitor  {
             ThreadGranularity::get_thread_level() > 2)  {
 
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&action_prob_begin, &reward_begin, this]
@@ -2377,7 +2377,7 @@ public:
 
             if (lft_ == loss_function_type::kullback_leibler)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&actual_begin, &model_begin]
@@ -2397,7 +2397,7 @@ public:
             }
             else if (lft_ == loss_function_type::mean_abs_error)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&actual_begin, &model_begin]
@@ -2418,7 +2418,7 @@ public:
             }
             else if (lft_ == loss_function_type::mean_sqr_error)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&actual_begin, &model_begin]
@@ -2439,7 +2439,7 @@ public:
             }
             else if (lft_ == loss_function_type::mean_sqr_log_error)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&actual_begin, &model_begin]
@@ -2461,7 +2461,7 @@ public:
             }
             else if (lft_ == loss_function_type::cross_entropy)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&actual_begin, &model_begin]
@@ -2482,7 +2482,7 @@ public:
             }
             else if (lft_ == loss_function_type::binary_cross_entropy)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&actual_begin, &model_begin]
@@ -2504,7 +2504,7 @@ public:
             }
             else if (lft_ == loss_function_type::categorical_hinge)  {
                 auto        futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&actual_begin, &model_begin]
@@ -2523,7 +2523,7 @@ public:
 
                 for (auto &fut : futures)  neg += fut.get();
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&actual_begin, &model_begin]
@@ -2546,7 +2546,7 @@ public:
             }
             else if (lft_ == loss_function_type::log_cosh)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&actual_begin, &model_begin]
@@ -3058,9 +3058,8 @@ struct  SeasonalPeriodVisitor  {
             if (col_s >= ThreadPool::MUL_THR_THHOLD &&
                 ThreadGranularity::get_thread_level() > 2)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(size_type(0),
-                                                               data.size(),
-                                                               std::move(lbd));
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        size_type(0), data.size(), std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -3327,32 +3326,14 @@ private:
         aggr(idx_begin, idx_end, column_begin, column_end);
         aggr.post();
 
-        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
-        vec_t       diff(col_s);
+        vec_t   diff(col_s, 0);
 
-        if (thread_level > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
-                    size_type(0),
-                    col_s,
-                    [&aggr = std::as_const(aggr.get_result()), &diff,
-                     &column_begin]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                            diff[i] = aggr[i] - *(column_begin + i);
-                    });
-
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            std::transform(aggr.get_result().begin(), aggr.get_result().end(),
-                           column_begin,
-                           diff.begin(),
-                           [](const T &agr, const T &col) -> T  {
-                               return (std::fabs(agr - col));
-                           });
-        }
+        std::transform(aggr.get_result().begin(), aggr.get_result().end(),
+                       column_begin,
+                       diff.begin(),
+                       [](const T &agr, const T &col) -> T  {
+                           return (std::fabs(agr - col));
+                       });
 
         // Calculate median absolute deviation
         //
@@ -3363,7 +3344,7 @@ private:
         const value_type    factor = num_of_std_ * unbiased_factor_;
         const auto          &aggr_res = aggr.get_result();
 
-        result_.reserve(32);
+        result_.reserve(diff.size() / 10);
         for (size_type i = 0; i < col_s; ++i)  {
             if (diff[i] > (aggr_res[i] * factor))
                 result_.push_back(i);
@@ -3667,7 +3648,7 @@ private:
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0), col_s, std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
@@ -3819,7 +3800,7 @@ struct  MutualInfoVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0), col_s, std::move(lbd));
 
             for (auto &fut : futures)  mi += fut.get();
@@ -4608,7 +4589,7 @@ private:
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     0L, pred.cols(), std::move(lbd));
 
             for (auto &fut : futures)  sum += fut.get();
@@ -4676,7 +4657,7 @@ private:
 
             if (thread_level > 2)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         0L, H, std::move(lbd1));
 
                 for (auto &fut : futures)  fut.get();
@@ -4755,7 +4736,7 @@ private:
 
             if (thread_level > 2)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         0L, H, std::move(lbd1));
 
                 for (auto &fut : futures)  fut.get();
@@ -4784,7 +4765,7 @@ private:
 
             if (thread_level > 2)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         0L, H, std::move(lbd2));
 
                 for (auto &fut : futures)  fut.get();
@@ -4852,7 +4833,7 @@ private:
 
             if (thread_level > 2)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         0L, W.cols(), std::move(lbd1));
 
                 for (auto &fut : futures)  fut.get();
@@ -4865,7 +4846,7 @@ private:
                 (U.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
             if (thread_level > 2)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         0L, U.cols(), std::move(lbd2));
 
                 for (auto &fut : futures)  fut.get();
@@ -4878,7 +4859,7 @@ private:
                 (b.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
             if (thread_level > 2)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         0L, b.cols(), std::move(lbd3));
 
                 for (auto &fut : futures)  fut.get();
@@ -4958,7 +4939,7 @@ private:
 
             if (thread_level > 2)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         0L, W.cols(), std::move(lbd1));
 
                 for (auto &fut : futures)  fut.get();
@@ -4971,7 +4952,7 @@ private:
                 (b.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
             if (thread_level > 2)  {
                 auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop(
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         0L, b.cols(), std::move(lbd2));
 
                 for (auto &fut : futures)  fut.get();

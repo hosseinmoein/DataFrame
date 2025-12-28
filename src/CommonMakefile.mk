@@ -117,7 +117,8 @@ LFLAGS += -Bstatic -L$(LOCAL_LIB_DIR) -L$(PROJECT_LIB_DIR)
 
 LIBS = $(LFLAGS) -l$(LIB_NAME) $(PLATFORM_LIBS)
 INCLUDES += -I. -I$(LOCAL_INCLUDE_DIR) -I$(PROJECT_INCLUDE_DIR)
-DEFINES = -Wall -DHMDF_HAVE_CLOCK_GETTIME -DDMS_$(BUILD_DEFINE)__
+DEFINES = -Wall -Wno-interference-size -DHMDF_HAVE_CLOCK_GETTIME \
+          -DDMS_$(BUILD_DEFINE)__
 
 # -----------------------------------------------------------------------------
 

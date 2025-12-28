@@ -71,9 +71,9 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
                         this->data_[citer->second].change(functor);
                 };
             auto    futures =
-                thr_pool_.parallel_loop(column_list_.begin(),
-                                        column_list_.end(),
-                                        std::move(lbd));
+                thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                                column_list_.end(),
+                                                std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -129,9 +129,9 @@ remove_data_by_loc(Index2D<long> range, inclusiveness incld)  {
                             this->data_[citer->second].change(functor);
                     };
                 auto    futures =
-                    thr_pool_.parallel_loop(column_list_.begin(),
-                                            column_list_.end(),
-                                            std::move(lbd));
+                    thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                                    column_list_.end(),
+                                                    std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }

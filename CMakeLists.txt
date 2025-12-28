@@ -53,11 +53,13 @@ target_compile_options(
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
             $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
+            $<$<CXX_COMPILER_ID:GNU>:-Wno-interference-size>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4996>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4068>
+           $<$<CXX_COMPILER_ID:GNU>:-Wno-interference-size>
 )
 set_target_properties(
     DataFrame

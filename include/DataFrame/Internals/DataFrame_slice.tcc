@@ -83,9 +83,8 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
             };
 
         if (thread_level > 2)  {
-            auto    futuers = thr_pool_.parallel_loop(column_list_.begin(),
-                                                      column_list_.end(),
-                                                      std::move(lbd));
+            auto    futuers = thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd));
 
             for (auto &fut : futuers)  fut.get();
         }
@@ -153,9 +152,9 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
             };
 
         auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                            column_list_.end(),
+                                            std::move(lbd));
 
         for (auto &fut : futuers)  fut.get();
     }
@@ -396,9 +395,9 @@ get_data_by_loc (Index2D<long> range, inclusiveness incld) const  {
                     };
 
                 auto    futuers =
-                    thr_pool_.parallel_loop(column_list_.begin(),
-                                            column_list_.end(),
-                                            std::move(lbd));
+                    thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                                    column_list_.end(),
+                                                    std::move(lbd));
 
                 for (auto &fut : futuers)  fut.get();
             }
@@ -478,9 +477,9 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
             };
 
         auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                            column_list_.end(),
+                                            std::move(lbd));
 
         for (auto &fut : futuers)  fut.get();
     }
@@ -956,9 +955,9 @@ get_data_by_sel (F &sel_functor) const  {
             };
 
         auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                            column_list_.end(),
+                                            std::move(lbd));
 
         for (auto &fut : futuers)  fut.get();
     }
@@ -1051,9 +1050,9 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
             };
 
         auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                            column_list_.end(),
+                                            std::move(lbd));
 
         for (auto &fut : futuers)  fut.get();
     }
@@ -2032,9 +2031,9 @@ get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
                 };
 
             auto    futuers =
-                thr_pool_.parallel_loop(column_list_.begin(),
-                                        column_list_.end(),
-                                        std::move(lbd));
+                thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                                column_list_.end(),
+                                                std::move(lbd));
 
             for (auto &fut : futuers)  fut.get();
         }

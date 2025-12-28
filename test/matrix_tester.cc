@@ -1006,14 +1006,15 @@ void test_thread_pool()  {
     //
     std::this_thread::sleep_for(std::chrono::seconds(2));
     {
-        std::vector<int>    values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        std::vector<int>    values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                       13, 14, 15, 16, 17 };
         auto                lbd = [&values] (auto begin, auto end) -> void  {
             for (auto i = begin; i < end; ++i)
                 values[i] += 1;
         };
         auto                futures =
-            ThreadGranularity::thr_pool_.parallel_loop(0, int(values.size()),
-                                                       std::move(lbd));
+            ThreadGranularity::thr_pool_.parallel_loop<int>(
+                0, int(values.size()), std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
         for (int i = 0; i < int(values.size()); ++i)
@@ -1025,8 +1026,8 @@ void test_thread_pool()  {
                 values2[i] += 1;
         };
         auto                futures2 =
-            ThreadGranularity::thr_pool_.parallel_loop(0, int(values2.size()),
-                                                       std::move(lbd2));
+            ThreadGranularity::thr_pool_.parallel_loop<int>(
+                0, int(values2.size()), std::move(lbd2));
 
         for (auto &fut : futures2)  fut.get();
         for (int i = 0; i < int(values2.size()); ++i)
@@ -1038,8 +1039,8 @@ void test_thread_pool()  {
                 values3[i] += 1;
         };
         auto               futures3 =
-            ThreadGranularity::thr_pool_.parallel_loop(0, int(values3.size()),
-                                                       std::move(lbd3));
+            ThreadGranularity::thr_pool_.parallel_loop<int>(
+                0, int(values3.size()), std::move(lbd3));
 
         for (auto &fut : futures3)  fut.get();
         for (int i = 0; i < int(values3.size()); ++i)
@@ -1053,7 +1054,7 @@ void test_thread_pool()  {
                 values[i] += 1;
         };
         auto                futures =
-            ThreadGranularity::thr_pool_.parallel_loop(
+            ThreadGranularity::thr_pool_.parallel_loop<int>(
                 int(values.size()) - 1, 0, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -1066,7 +1067,7 @@ void test_thread_pool()  {
                 values2[i] += 1;
         };
         auto                futures2 =
-            ThreadGranularity::thr_pool_.parallel_loop(
+            ThreadGranularity::thr_pool_.parallel_loop<int>(
                 int(values2.size()) - 1, 0, std::move(lbd2));
 
         for (auto &fut : futures2)  fut.get();
@@ -1079,7 +1080,7 @@ void test_thread_pool()  {
                 values3[i] += 1;
         };
         auto               futures3 =
-            ThreadGranularity::thr_pool_.parallel_loop(
+            ThreadGranularity::thr_pool_.parallel_loop<int>(
                 int(values3.size()) - 1, 0, std::move(lbd3));
 
         for (auto &fut : futures3)  fut.get();

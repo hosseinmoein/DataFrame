@@ -584,7 +584,7 @@ Matrix<T, MO, IS_SYM>::self_scale(value_type factor) noexcept  {
 
     if (thread_level > 2)  {
         auto    futures =
-            ThreadGranularity::thr_pool_.parallel_loop(
+            ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                 0L, msize, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -736,15 +736,15 @@ Matrix<T, MO, IS_SYM>::norm() const noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  result += fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  result += fut.get();
         }
@@ -806,15 +806,15 @@ Matrix<T, MO, IS_SYM>::mean() const noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  result += fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  result += fut.get();
         }
@@ -1795,8 +1795,8 @@ covariance(bool is_unbiased) const  {
 
     if (thread_level > 2)  {
         auto    futures =
-            ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                       std::move(lbd));
+            ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                0L, cols(), std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -2550,8 +2550,8 @@ inline MA &Matrix<T, MO, IS_SYM>::adjoint (MA &that) const  {
 
     if (thread_level > 2)  {
         auto    futures =
-            ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                       std::move(lbd));
+            ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                0L, cols(), std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -2656,15 +2656,15 @@ Matrix<T, MO, IS_SYM>::ew_square() noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2734,15 +2734,15 @@ Matrix<T, MO, IS_SYM>::ew_cube() noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2812,15 +2812,15 @@ Matrix<T, MO, IS_SYM>::ew_sqrt() noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2890,15 +2890,15 @@ Matrix<T, MO, IS_SYM>::ew_tanh() noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2968,15 +2968,15 @@ Matrix<T, MO, IS_SYM>::ew_inverse() noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3030,15 +3030,15 @@ Matrix<T, MO, IS_SYM>::ew_add(value_type val) noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3092,15 +3092,15 @@ Matrix<T, MO, IS_SYM>::ew_minus(value_type val) noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3154,15 +3154,15 @@ Matrix<T, MO, IS_SYM>::ew_multiply(value_type val) noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3216,15 +3216,15 @@ Matrix<T, MO, IS_SYM>::ew_divide(value_type val) noexcept  {
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, cols(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(0L, rows(),
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, rows(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3393,7 +3393,7 @@ operator == (const Matrix<T, MO1, IS_SYM1> &lhs,
 
 // ----------------------------------------------------------------------------
 
-static constexpr long   HMDF_MAT_BLOCK = 64L;
+static constexpr long   HMDF_MAT_BLOCK = ThreadPool::CLINE_SIZE;
 
 // ----------------------------------------------------------------------------
 
@@ -3484,13 +3484,13 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
         std::vector<std::future<void>>  futures;
 
         if constexpr (MO1 == MO2 && IS_SYM1 == IS_SYM2)
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, long(lhs.matrix_.size()), std::move(lbd__eq));
         else if constexpr (MO1 == matrix_orient::column_major)
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_cols, std::move(col_lbd));
         else  // matrix_orient::row_major
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_rows, std::move(row_lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -3596,13 +3596,13 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
         std::vector<std::future<void>>  futures;
 
         if constexpr (MO1 == MO2 && IS_SYM1 == IS_SYM2)
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, long(lhs.matrix_.size()), std::move(lbd__eq));
         else if constexpr (MO1 == matrix_orient::column_major)
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_cols, std::move(col_lbd));
         else  // matrix_orient::row_major
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_rows, std::move(row_lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -3676,10 +3676,10 @@ operator += (Matrix<T, MO1, IS_SYM1> &lhs,
         std::vector<std::future<void>>  futures;
 
         if constexpr (MO1 == matrix_orient::column_major)
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_cols, std::move(col_lbd));
         else  // matrix_orient::row_major
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_rows, std::move(row_lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -3751,10 +3751,10 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
         std::vector<std::future<void>>  futures;
 
         if constexpr (MO1 == matrix_orient::column_major)
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_cols, std::move(col_lbd));
         else  // matrix_orient::row_major
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_rows, std::move(row_lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -3823,10 +3823,10 @@ operator * (const std::vector<T> &lhs,
         std::vector<std::future<void>>  futures;
 
         if constexpr (MO == matrix_orient::column_major)
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, rhs_cols, std::move(col_lbd));
         else  // matrix_orient::row_major
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_rows, std::move(row_lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -3896,10 +3896,10 @@ operator * (const Matrix<T, MO, IS_SYM> &lhs,
         std::vector<std::future<void>>  futures;
 
         if constexpr (MO == matrix_orient::column_major)
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, rhs_cols, std::move(col_lbd));
         else  // matrix_orient::row_major
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_rows, std::move(row_lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -3999,10 +3999,10 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
         std::vector<std::future<void>>  futures;
 
         if constexpr (MO1 == matrix_orient::column_major)
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, rhs_cols, std::move(col_lbd));
         else  // matrix_orient::row_major
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, lhs_rows, std::move(row_lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4057,10 +4057,10 @@ hadamard(const Matrix<T, MO1, IS_SYM1> &lhs,
         std::vector<std::future<void>>  futures;
 
         if constexpr (MO1 == matrix_orient::column_major)
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, cols, std::move(col_lbd));
         else  // matrix_orient::row_major
-            futures = ThreadGranularity::thr_pool_.parallel_loop(
+            futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                           0L, rows, std::move(row_lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4119,7 +4119,7 @@ operator + (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4175,7 +4175,7 @@ operator - (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4231,7 +4231,7 @@ operator * (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4287,7 +4287,7 @@ operator / (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4341,7 +4341,7 @@ operator += (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4395,7 +4395,7 @@ operator -= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4449,7 +4449,7 @@ operator *= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4503,7 +4503,7 @@ operator /= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4553,7 +4553,7 @@ operator + (const std::vector<T, A> &lhs, T rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4602,7 +4602,7 @@ operator - (const std::vector<T, A> &lhs, T rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4651,7 +4651,7 @@ operator * (const std::vector<T, A> &lhs, T rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4700,7 +4700,7 @@ operator / (const std::vector<T, A> &lhs, T rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4746,7 +4746,7 @@ operator += (std::vector<T, A> &lhs, T rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4792,7 +4792,7 @@ operator -= (std::vector<T, A> &lhs, T rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4838,7 +4838,7 @@ operator *= (std::vector<T, A> &lhs, T rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
@@ -4884,7 +4884,7 @@ operator /= (std::vector<T, A> &lhs, T rhs)  {
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
-        futures = ThreadGranularity::thr_pool_.parallel_loop(
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
                       0L, lhs_size, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();

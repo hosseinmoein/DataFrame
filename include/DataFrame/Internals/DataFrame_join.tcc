@@ -263,7 +263,8 @@ column_join_helper2_(const LHS_T &lhs,
 
     if (col_s >= ThreadPool::MUL_THR_THHOLD && get_thread_level() > 2)  {
         auto    futures =
-            thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+            thr_pool_.parallel_loop<double>(
+                size_type(0), col_s, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -443,7 +444,8 @@ index_join_helper_(const LHS_T &lhs,
     //
     if (len >= ThreadPool::MUL_THR_THHOLD && get_thread_level() > 2)  {
         auto    futures =
-            thr_pool_.parallel_loop(size_type(0), len, std::move(lbd));
+            thr_pool_.parallel_loop<IndexType>(
+                size_type(0), len, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -521,7 +523,8 @@ column_join_helper_(const LHS_T &lhs,
 
     if (col_s >= ThreadPool::MUL_THR_THHOLD && get_thread_level() > 2)  {
         auto    futures =
-            thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+            thr_pool_.parallel_loop<double>(
+                size_type(0), col_s, std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }

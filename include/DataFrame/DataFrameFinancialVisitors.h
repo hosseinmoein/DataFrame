@@ -97,9 +97,8 @@ struct  ReturnVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(period_,
-                                                           col_s,
-                                                           std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    period_, col_s, std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
@@ -142,6 +141,8 @@ template<typename S_RT,  // Short duration rolling adopter
          typename I = unsigned long, std::size_t A = 0>
 struct  DoubleCrossOver  {
 
+    DEFINE_VISIT_BASIC_TYPES_3
+
 private:
 
     S_RT    short_roller_;
@@ -166,7 +167,7 @@ private:
         col_to_short_term_.resize(col_s);
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, &prices_begin, this]
@@ -207,7 +208,7 @@ private:
         col_to_long_term_.resize(col_s);
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, &prices_begin, this]
@@ -231,8 +232,6 @@ private:
     }
 
 public:
-
-    DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
     inline void
@@ -280,7 +279,7 @@ public:
         short_term_to_long_term_.resize(col_s);
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [this]
@@ -441,7 +440,7 @@ public:
             raw_to_lower_band_.resize(col_s);
 
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&prices_begin,
@@ -1460,7 +1459,7 @@ private:
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [this]
@@ -1512,7 +1511,7 @@ private:
         if (thread_level > 2)  {
             result.resize(col_s);
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, this]
@@ -1852,7 +1851,7 @@ struct  HullRollingMeanVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s - 1,
                     [&wma_full = std::as_const(wma_full.get_result()),
@@ -2011,7 +2010,7 @@ struct  DrawdownVisitor  {
             log_drawdown_.resize(col_s);
 
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column_begin,
@@ -2135,7 +2134,7 @@ struct  WilliamPrcRVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&min_v = std::as_const(min_v.get_result()),
@@ -2203,7 +2202,7 @@ struct  PSLVisitor  {
         result_.resize(col_s, 0);
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(1),
                     col_s,
                     [&close_begin, this]
@@ -2244,7 +2243,7 @@ struct  PSLVisitor  {
         result_.resize(col_s);
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&close_begin, &open_begin, this]
@@ -2294,7 +2293,7 @@ private:
 
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [this, &sum_r = std::as_const(sum_r.get_result())]
@@ -2354,7 +2353,7 @@ struct  CCIVisitor  {
         result.resize(col_s);
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result,
@@ -2394,7 +2393,7 @@ struct  CCIVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result,
@@ -2472,7 +2471,7 @@ struct  GarmanKlassVolVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_count_,
                     col_s,
                     [this, &result,
@@ -2576,7 +2575,7 @@ struct  YangZhangVolVisitor  {
         if (col_s >= (ThreadPool::MUL_THR_THHOLD / 2) &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_count_,
                     col_s,
                     [this, &result,
@@ -2714,7 +2713,7 @@ struct  KamaVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(1),
                     col_s,
                     [&peer_diff, &column_begin]
@@ -2725,6 +2724,7 @@ struct  KamaVisitor  {
                                           *(column_begin + i));
                     });
 
+            for (auto &fut : futures)  fut.get();
         }
         else  {
             for (size_type i { 1 }; i < col_s; ++i) [[likely]]
@@ -2813,7 +2813,7 @@ struct  FisherTransVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&mid_hl, &low_begin, &high_begin]
@@ -2846,7 +2846,7 @@ struct  FisherTransVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&min_v = std::as_const(min_v.get_result()),
@@ -2950,7 +2950,7 @@ struct  PercentPriceOSCIVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result,
@@ -3054,7 +3054,7 @@ struct  SlopeVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, this]
@@ -3146,7 +3146,7 @@ struct  UltimateOSCIVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(1),
                     col_s,
                     [&max_high, &min_low,
@@ -3177,7 +3177,7 @@ struct  UltimateOSCIVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&max_high, &min_low, &close_begin,
@@ -3240,7 +3240,7 @@ struct  UltimateOSCIVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [this, &result, total_weights,
@@ -3350,7 +3350,7 @@ struct  UlcerIndexVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, &column_begin]
@@ -3399,7 +3399,7 @@ struct  UlcerIndexVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, &vec = std::as_const(vec), this]
@@ -3482,7 +3482,7 @@ struct  TTMTrendVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     bar_periods_,
                     col_s,
                     [&trend_avg, &high_begin, &low_begin]
@@ -3513,7 +3513,7 @@ struct  TTMTrendVisitor  {
         result_.resize(col_s);
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [this, &close_begin, &trend_avg = std::as_const(trend_avg)]
@@ -3945,7 +3945,7 @@ struct  VarIdxDynAvgVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&positive, &negative]
@@ -3983,7 +3983,7 @@ struct  VarIdxDynAvgVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_period_,
                     col_s,
                     [&positive, &negative, &result]
@@ -4087,7 +4087,7 @@ struct  PivotPointSRVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&close_begin, &low_begin, &high_begin,
@@ -4217,13 +4217,13 @@ struct  AvgDirMovIdxVisitor  {
             ? 0L : ThreadGranularity::get_thread_level();
         result_type pos_di(col_s);
         result_type neg_di(col_s);
-        result_type true_range(col_s);
+        result_type true_range(col_s, 0);
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
-                    col_s,
+                    col_s - 1,
                     [&close_begin, &low_begin, &high_begin,
                      &pos_di, &neg_di, &true_range]
                     (auto begin, auto end) -> void  {
@@ -4549,7 +4549,7 @@ struct  CenterOfGravityVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_count_ - 1,
                     col_s,
                     [this, &column_begin, &result]
@@ -4643,7 +4643,7 @@ struct  ArnaudLegouxMAVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_count_,
                     col_s,
                     [this, &column_begin, &result]
@@ -4747,7 +4747,7 @@ struct  RateOfChangeVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     period_,
                     col_s,
                     [this, &column_begin, &result]
@@ -4823,7 +4823,7 @@ struct  AccumDistVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result,
@@ -5019,7 +5019,7 @@ struct  VertHorizFilterVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&diff = diff.get_result()]
@@ -5047,7 +5047,7 @@ struct  VertHorizFilterVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     period_,
                     col_s,
                     [&result,
@@ -5129,7 +5129,7 @@ struct  OnBalanceVolumeVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, &volume_begin]
@@ -5190,7 +5190,7 @@ struct  TrueRangeVisitor  {
         result[0] = *high_begin - *low_begin;
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(1),
                     col_s,
                     [&low_begin, &high_begin, &close_begin, &result]
@@ -5234,7 +5234,7 @@ struct  TrueRangeVisitor  {
             if (normalize_)  {
                 if (thread_level > 2)  {
                     auto    futures =
-                        ThreadGranularity::thr_pool_.parallel_loop(
+                        ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                             size_type(0),
                             col_s,
                             [&close_begin, &result]
@@ -5309,7 +5309,7 @@ struct  DecayVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(1),
                     col_s,
                     [&result, &column_begin, decay]
@@ -5459,7 +5459,7 @@ struct  ParkinsonVolVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, &low_begin, &high_begin, factor]
@@ -5497,7 +5497,7 @@ struct  ParkinsonVolVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_count_ - 1,
                     col_s,
                     [&result, this]
@@ -5651,9 +5651,9 @@ struct  BalanceOfPowerVisitor  {
                 const H &open_begin, const H &open_end,
                 const H &close_begin, const H &close_end)  {
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         const size_type col_s = std::distance(close_begin, close_end);
 
-#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(open_begin, open_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)))
@@ -5780,7 +5780,7 @@ struct  ChandeKrollStopVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&atr = std::as_const(atr.get_result()),
@@ -5837,7 +5837,7 @@ struct  ChandeKrollStopVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&atr = std::as_const(atr.get_result()),
@@ -5949,7 +5949,7 @@ struct  VortexVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(1),
                     col_s,
                     [&high_begin, &low_begin,
@@ -5995,7 +5995,7 @@ struct  VortexVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&tr_sum = std::as_const(tr_sum.get_result()),
@@ -6134,7 +6134,7 @@ struct  KeltnerChannelsVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&basis = std::as_const(basis.get_result()),
@@ -6157,7 +6157,7 @@ struct  KeltnerChannelsVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&band = std::as_const(band.get_result()),
@@ -6379,7 +6379,7 @@ struct  PrettyGoodOsciVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, &close_begin]
@@ -6494,7 +6494,7 @@ struct  T3MovingMeanVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&e5 = std::as_const(e5.get_result()),
@@ -6604,7 +6604,7 @@ struct  TreynorRatioVisitor  {
                                  benchmark_ret_begin, benchmark_ret_end);
                     });
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&asset_ret_begin, &benchmark_ret_begin]
@@ -6729,9 +6729,9 @@ struct  RelativeVigorIndexVisitor  {
                 const H &open_begin, const H &open_end,
                 const H &close_begin, const H &close_end)  {
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         const size_type col_s = std::distance(close_begin, close_end);
 
-#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(open_begin, open_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
@@ -6856,7 +6856,7 @@ struct  ElderRayIndexVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&bulls, &bears, &low_begin, &high_begin]
@@ -7006,7 +7006,7 @@ struct  ChopIndexVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&atr_sum = std::as_const(atr_sum.get_result()), &diff,
@@ -7088,7 +7088,7 @@ struct  DetrendPriceOsciVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     shift,
                     col_s,
                     [&savg = std::as_const(savg.get_result()),
@@ -7173,7 +7173,7 @@ struct  AccelerationBandsVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&nzr = std::as_const(nzr.get_result()),
@@ -7300,9 +7300,9 @@ struct  PriceDistanceVisitor  {
             std::numeric_limits<T>::quiet_NaN();
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(1),
-                    col_s,
+                    col_s - 1,
                     [&nzr = std::as_const(nzr.get_result()), &result]
                     (auto begin, auto end) mutable -> void  {
                         for (size_type i = begin; i < end; ++i) [[likely]]
@@ -7321,7 +7321,7 @@ struct  PriceDistanceVisitor  {
         nzr.post();
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&nzr = std::as_const(nzr.get_result()), &result]
@@ -7387,7 +7387,7 @@ struct  EldersThermometerVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(1),
                     col_s,
                     [&result, &low_begin, &high_begin]
@@ -7428,7 +7428,7 @@ struct  EldersThermometerVisitor  {
 
         if (thread_level > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&ewm = std::as_const(ewm.get_result()),
@@ -7536,7 +7536,7 @@ struct  EldersForceIndexVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, &volume_begin]
@@ -7609,7 +7609,7 @@ struct  EaseOfMovementVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(1),
                     col_s,
                     [&result, &low_begin, &high_begin, &volume_begin, this]
@@ -7706,7 +7706,7 @@ struct  PriceVolumeTrendVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&result, &volume_begin]
@@ -7805,7 +7805,7 @@ struct  QuantQualEstimationVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&ewm3 = std::as_const(ewm3.get_result()),

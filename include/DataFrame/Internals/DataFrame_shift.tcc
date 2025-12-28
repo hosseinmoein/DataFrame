@@ -57,8 +57,8 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
                             this->data_[idx].change(functor);
                     };
                 auto    futuers =
-                    thr_pool_.parallel_loop(size_type(0), num_cols,
-                                            std::move(lbd));
+                    thr_pool_.parallel_loop<double>(
+                        size_type(0), num_cols, std::move(lbd));
 
                 for (auto &fut : futuers)  fut.get();
             }

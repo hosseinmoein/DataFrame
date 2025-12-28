@@ -432,9 +432,9 @@ duplication_mask (bool include_index, bool binary) const  {
         };
 
     if (thread_level > 2)  {
-        auto    futuers = thr_pool_.parallel_loop(column_list_.begin(),
-                                                  column_list_.end(),
-                                                  std::move(lbd));
+        auto    futuers = thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                                          column_list_.end(),
+                                                          std::move(lbd));
 
         for (auto &fut : futuers)  fut.get();
     }
@@ -467,8 +467,8 @@ mask(const char *col_name, std::function<MT(const T &val)> &&mfunc) const  {
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
     if (thread_level > 2)  {
-        auto    futuers = thr_pool_.parallel_loop(size_type(0), col_s,
-                                                  std::move(lbd));
+        auto    futuers = thr_pool_.parallel_loop<double>(size_type(0), col_s,
+                                                          std::move(lbd));
 
         for (auto &fut : futuers)  fut.get();
     }
@@ -534,9 +534,9 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
             };
 
         auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                            column_list_.end(),
+                                            std::move(lbd));
 
         for (auto &fut : futuers)  fut.get();
     }
@@ -1463,7 +1463,7 @@ knn(std::vector<const char *> &&col_names,
 
     if (thread_level > 2)  {
         auto    futuers =
-            thr_pool_.parallel_loop(size_type(0), col_s, std::move(lbd));
+            thr_pool_.parallel_loop<T>(size_type(0), col_s, std::move(lbd));
 
         for (auto &fut : futuers)  fut.get();
         thr_pool_.parallel_sort(distances.begin(), distances.end(),

@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <list>
 #include <mutex>
+#include <new>
 #include <ranges>
 #include <thread>
 #include <type_traits>
@@ -64,6 +65,8 @@ public:
     using thread_type = std::thread;
 
     inline static constexpr size_type   MUL_THR_THHOLD = 250'000L;
+    inline static constexpr size_type   CLINE_SIZE =
+        size_type(std::hardware_destructive_interference_size);
 
     ThreadPool(const ThreadPool &) = delete;
     ThreadPool &operator = (const ThreadPool &) = delete;
@@ -102,8 +105,10 @@ public:
 
     // It dispatches n / number_of_capacity_threads tasks where n is the
     // distance between begin and end.
+    // T is the type that is involved in the loop. That helps to align the
+    // cache line width.
     //
-    template<typename F, typename I, typename ... As>
+    template<typename T, typename F, typename I, typename ... As>
     loop_res_t<F, I, As ...>
     parallel_loop(I begin, I end, F &&routine, As && ... args);
 
@@ -135,6 +140,15 @@ public:
     bool shutdown() noexcept;
 
 private:
+
+    // Returns size of the main blocks (cache line aligned)
+    // and the remaining block
+    //
+    std::pair<size_type, size_type>
+    inline static
+    cline_aligned_blocks_(size_type data_size,
+                          size_type num_blocks,
+                          size_type divisor);
 
     using routine_type = std::function<void()>;
 

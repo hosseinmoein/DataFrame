@@ -647,14 +647,14 @@ void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
                         this->indices_.erase(col_indices[i] - del_count++);
                 }
             };
-            auto    future_idx = thr_pool_.dispatch(false, lbd_idx);
             auto    futures =
-                thr_pool_.parallel_loop(column_list_.begin(),
-                                        column_list_.end(),
-                                        std::move(lbd));
+                thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                                column_list_.end(),
+                                                std::move(lbd));
+            auto    future_idx = thr_pool_.dispatch(false, lbd_idx);
 
-            future_idx.get();
             for (auto &fut : futures)  fut.get();
+            future_idx.get();
     }
     else  {
         const sel_remove_functor_<Ts ...>   functor (col_indices);
@@ -936,9 +936,9 @@ remove_dups_common_(const DataFrame &s_df,
                 }
             };
         auto    futures =
-            thr_pool_.parallel_loop(s_df.column_list_.begin(),
-                                    s_df.column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(s_df.column_list_.begin(),
+                                            s_df.column_list_.end(),
+                                            std::move(lbd));
 
         for (auto &fut : futures)  fut.get();
     }
@@ -999,9 +999,9 @@ data_by_sel_common_(const StlVecType<size_type> &col_indices,
             };
 
         auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
+            thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                            column_list_.end(),
+                                            std::move(lbd));
 
         for (auto &fut : futuers)  fut.get();
     }
@@ -1243,9 +1243,9 @@ replace_vector_vals_(V &data_vec,
         };
 
     if (thread_level > 2)  {
-        auto    futuers = thr_pool_.parallel_loop(data_vec.begin(),
-                                                  data_vec.end(),
-                                                  std::move(lbd));
+        auto    futuers = thr_pool_.parallel_loop<T>(data_vec.begin(),
+                                                     data_vec.end(),
+                                                     std::move(lbd));
 
         for (auto &fut : futuers)  count += fut.get();
     }
@@ -1966,7 +1966,7 @@ get_scaled_data_matrix_(std::vector<const char *> &&col_names,
 
     if (thread_level > 2)  {
         auto    futuers =
-            thr_pool_.parallel_loop(size_type(0), col_num, std::move(lbd));
+            thr_pool_.parallel_loop<T>(size_type(0), col_num, std::move(lbd));
 
         for (auto &fut : futuers)  fut.get();
     }

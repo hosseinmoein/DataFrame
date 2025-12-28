@@ -912,9 +912,8 @@ truncate(IndexType &&before, IndexType &&after)  {
         const SpinGuard guard(lock_);
 
         if (thread_level > 2)  {
-            auto    futures = thr_pool_.parallel_loop(column_list_.begin(),
-                                                      column_list_.end(),
-                                                      std::move(lbd));
+            auto    futures = thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }

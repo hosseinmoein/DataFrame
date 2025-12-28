@@ -64,9 +64,11 @@ public:
     using size_type = long;
     using thread_type = std::thread;
 
-    inline static constexpr size_type   MUL_THR_THHOLD = 250'000L;
+    inline static constexpr size_type   MUL_THR_THHOLD = size_type(250'000);
     inline static constexpr size_type   CLINE_SIZE =
-        size_type(std::hardware_destructive_interference_size);
+        (HasStdHardwareDestInterfaceSize<void>)
+           ? size_type(std::hardware_destructive_interference_size)
+           : size_type(64);
 
     ThreadPool(const ThreadPool &) = delete;
     ThreadPool &operator = (const ThreadPool &) = delete;

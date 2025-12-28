@@ -64,11 +64,13 @@ public:
     using size_type = long;
     using thread_type = std::thread;
 
-    inline static constexpr size_type   MUL_THR_THHOLD = size_type(250'000);
+    inline static constexpr size_type   MUL_THR_THHOLD = 250'000L;
+#ifdef __cpp_lib_hardware_interference_size
     inline static constexpr size_type   CLINE_SIZE =
-        (HasStdHardwareDestInterfaceSize<void>)
-           ? size_type(std::hardware_destructive_interference_size)
-           : size_type(64);
+        size_type(std::hardware_destructive_interference_size);
+#else
+    inline static constexpr size_type   CLINE_SIZE = size_type(64);
+#endif // __cpp_lib_hardware_interference_size
 
     ThreadPool(const ThreadPool &) = delete;
     ThreadPool &operator = (const ThreadPool &) = delete;

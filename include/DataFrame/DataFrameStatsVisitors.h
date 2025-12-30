@@ -1636,8 +1636,7 @@ public:
                         ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                             size_type(0), col_s, std::move(lbd));
 
-                    for (auto &fut : futures)
-                        concordant_diff += fut.get();
+                    for (auto &fut : futures)  concordant_diff += fut.get();
                 }
                 else  {
                     concordant_diff = lbd(size_type(0), col_s);
@@ -3217,7 +3216,7 @@ struct  ExponentiallyWeightedVarVisitor  {
             value_type  sum_weighted_input = 0;
 
             for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    weight = std::pow(decay_comp, j);
 
                 sum_weights += weight;
                 sum_weighted_input += weight * *(column_begin + (i - j));
@@ -3233,7 +3232,7 @@ struct  ExponentiallyWeightedVarVisitor  {
                 const value_type    input = *(column_begin + (i - j));
 
                 factor_sum +=
-                    ::pow(decay_comp, j) * (input - ewma) * (input - ewma);
+                    std::pow(decay_comp, j) * (input - ewma) * (input - ewma);
             }
 
             // Calculate exponential moving variance and standard deviation
@@ -3319,7 +3318,7 @@ struct  ExponentiallyWeightedCovVisitor  {
             value_type  sum_weighted_inputy = 0;
 
             for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    weight = std::pow(decay_comp, j);
 
                 sum_weights += weight;
                 sum_weighted_inputx += weight * *(x_begin + (i - j));
@@ -3328,12 +3327,13 @@ struct  ExponentiallyWeightedCovVisitor  {
             }
 
             // Calculate exponential moving average
+            //
             const value_type    ewmax = sum_weighted_inputx / sum_weights;
             const value_type    ewmay = sum_weighted_inputy / sum_weights;
             value_type          factor_sum = 0;
 
             for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    weight = std::pow(decay_comp, j);
                 const value_type    inputx = *(x_begin + (i - j));
                 const value_type    inputy = *(y_begin + (i - j));
 
@@ -3341,6 +3341,7 @@ struct  ExponentiallyWeightedCovVisitor  {
             }
 
             // Calculate exponential moving covariance with bias
+            //
             const value_type    sum_weights_sq = sum_weights * sum_weights;
             const value_type    bias =
                     sum_weights_sq / (sum_weights_sq - sum_sq_weights);
@@ -3417,7 +3418,7 @@ struct  ExponentiallyWeightedCorrVisitor  {
             value_type  sum_weighted_inputy = 0;
 
             for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    weight = std::pow(decay_comp, j);
 
                 sum_weights += weight;
                 sum_weighted_inputx += weight * *(x_begin + (i - j));
@@ -3426,6 +3427,7 @@ struct  ExponentiallyWeightedCorrVisitor  {
             }
 
             // Calculate exponential moving average
+            //
             const value_type    ewmax = sum_weighted_inputx / sum_weights;
             const value_type    ewmay = sum_weighted_inputy / sum_weights;
             value_type          factor_sum = 0;
@@ -3433,7 +3435,7 @@ struct  ExponentiallyWeightedCorrVisitor  {
             value_type          factor_sumy = 0;
 
             for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    weight = std::pow(decay_comp, j);
                 const value_type    inputx = *(x_begin + (i - j));
                 const value_type    inputy = *(y_begin + (i - j));
 
@@ -3443,6 +3445,7 @@ struct  ExponentiallyWeightedCorrVisitor  {
             }
 
             // Calculate exponential moving correlation with bias
+            //
             const value_type    sum_weights_sq = sum_weights * sum_weights;
             const value_type    bias =
                     sum_weights_sq / (sum_weights_sq - sum_sq_weights);
@@ -4702,7 +4705,7 @@ private:
                                 const value_type    sign =
                                     std::signbit(val) ? -1 : 1;
                                 const value_type    v =
-                                    (std::pow(std::fabs(val) + (1),
+                                    (std::pow(std::fabs(val) + T(1),
                                               this->lambda_) -
                                      T(1)) / this->lambda_;
 
@@ -5706,8 +5709,8 @@ public:
                             value_type  sum { 0 };
 
                             for (auto j = begin; j < end; ++j)  {
-                               const value_type    w =
-                                   this->weights_(*(idx_begin + j), j);
+                                const value_type    w =
+                                    this->weights_(*(idx_begin + j), j);
 
                                 sum += std::pow(*(x_begin + j), i) * w;
                             }
@@ -5758,8 +5761,8 @@ public:
                             value_type  sum { 0 };
 
                             for (auto j = begin; j < end; ++j)  {
-                               const value_type    w =
-                                   this->weights_(*(idx_begin + j), j);
+                                const value_type    w =
+                                    this->weights_(*(idx_begin + j), j);
 
                                 sum += std::pow(*(x_begin + j), i) *
                                        *(y_begin + j) * w;
@@ -7339,14 +7342,29 @@ public:
             result_type     sorting_idxs (col_s);
 
             std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
-            std::sort(sorting_idxs.begin(), sorting_idxs.end(),
-                      [&xvals] (auto lhs, auto rhs) -> bool  {
-                          return (xvals[lhs] < xvals[rhs]);
-                      });
-            std::sort(xvals.begin(), xvals.end(),
-                      [] (auto lhs, auto rhs) -> bool  {
-                          return (lhs < rhs);
-                      });
+            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                ThreadGranularity::thr_pool_.parallel_sort(
+                    sorting_idxs.begin(), sorting_idxs.end(),
+                    [&xvals] (auto lhs, auto rhs) -> bool  {
+                        return (xvals[lhs] < xvals[rhs]);
+                    });
+                ThreadGranularity::thr_pool_.parallel_sort(
+                    xvals.begin(), xvals.end(),
+                    [] (auto lhs, auto rhs) -> bool  {
+                        return (lhs < rhs);
+                    });
+            }
+            else  {
+                std::sort(sorting_idxs.begin(), sorting_idxs.end(),
+                          [&xvals] (auto lhs, auto rhs) -> bool  {
+                              return (xvals[lhs] < xvals[rhs]);
+                          });
+                std::sort(xvals.begin(), xvals.end(),
+                          [] (auto lhs, auto rhs) -> bool  {
+                              return (lhs < rhs);
+                          });
+            }
 
             bool_vec_t  done_vec (col_s);
 
@@ -7489,56 +7507,14 @@ private:
     }
 
     inline void
-    do_residual_(const result_type &detrended, size_type col_s)  {
+    do_residual_(const result_type &detrended)  {
 
         // What is left is residual
         //
-        residual_.resize(col_s, 0);
-        if (detrended.size() >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            std::vector<std::future<void>>  futures;
-
-            if (type_ == decompose_type::additive)
-                futures =
-                    ThreadGranularity::thr_pool_.parallel_loop2(
-                        size_type(0),
-                        detrended.size(),
-                        size_type(0),
-                        seasonal_.size(),
-                        [this, &detrended]
-                        (auto begin, auto end, auto) -> void  {
-                            for (size_type i = begin; i < end; ++i) [[likely]]
-                                this->residual_[i] =
-                                    detrended[i] - this->seasonal_[i];
-                        });
-            else
-                futures =
-                    ThreadGranularity::thr_pool_.parallel_loop2(
-                        size_type(0),
-                        detrended.size(),
-                        size_type(0),
-                        seasonal_.size(),
-                        [this, &detrended]
-                        (auto begin, auto end, auto) -> void  {
-                            for (size_type i = begin; i < end; ++i) [[likely]]
-                                this->residual_[i] =
-                                    detrended[i] / this->seasonal_[i];
-                        });
-
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            if (type_ == decompose_type::additive)
-                std::transform(detrended.begin(), detrended.end(),
-                               seasonal_.begin(),
-                               residual_.begin(),
-                               std::minus<value_type>());
-            else
-                std::transform(detrended.begin(), detrended.end(),
-                               seasonal_.begin(),
-                               residual_.begin(),
-                               std::divides<value_type>());
-        }
+        if (type_ == decompose_type::additive)
+            residual_ = detrended - seasonal_;
+        else
+            residual_ = detrended / seasonal_;
     }
 
 public:
@@ -7620,7 +7596,7 @@ public:
             do_seasonal_<GeometricMeanVisitor<T, I>>
                 (col_s, idx_begin, idx_end, detrended);
 
-        do_residual_(detrended, col_s);
+        do_residual_(detrended);
     }
 
     inline void pre ()  {
@@ -8208,8 +8184,8 @@ struct  KolmoSmirnovTestVisitor  {
             std::sort(data2.begin(), data2.end());
 
         size_type   i { 0 }, j { 0 };
-        double      cdf1 { 0 }, cdf2 { 0 };
-        double      max_diff { 0 };
+        result_type cdf1 { 0 }, cdf2 { 0 };
+        result_type max_diff { 0 };
 
         while (i < col1_s && j < col2_s) [[likely]]  {
             const auto  &val1 = data1[i];
@@ -8217,20 +8193,20 @@ struct  KolmoSmirnovTestVisitor  {
 
             if (val1 < val2)  {
                 i += 1;
-                cdf1 = double(i) / double(col1_s);
+                cdf1 = result_type(i) / result_type(col1_s);
             }
             else if (val1 > val2)  {
                 j += 1;
-                cdf2 = double(j) / double(col2_s);
+                cdf2 = result_type(j) / result_type(col2_s);
             }
             else [[unlikely]]  {
                 i += 1;
                 while (i < col1_s && data1[i] == val1) [[unlikely]]  i += 1;
-                cdf1 = double(i) / double(col1_s);
+                cdf1 = result_type(i) / result_type(col1_s);
 
                 j += 1;
                 while (j < col2_s && data2[j] == val2) [[unlikely]]  j += 1;
-                cdf2 = double(j) / double(col2_s);
+                cdf2 = result_type(j) / result_type(col2_s);
             }
             max_diff = std::max(max_diff, std::fabs(cdf1 - cdf2));
         }
@@ -8239,9 +8215,11 @@ struct  KolmoSmirnovTestVisitor  {
 
         // Now calculate p-value
         //
-        const double    n { double(col1_s * col2_s) / double(col1_s + col2_s) };
-        const double    lambda { std::sqrt(n) * result_ };
-        const double    value { 2.0 * std::exp(-2.0 * lambda * lambda) };
+        const result_type    n {
+            result_type(col1_s * col2_s) / result_type(col1_s + col2_s)
+        };
+        const result_type    lambda { std::sqrt(n) * result_ };
+        const result_type    value { 2.0 * std::exp(-2.0 * lambda * lambda) };
 
         p_value_ = (value > 1.0) ? 1.0 : value;
     }
@@ -8313,7 +8291,7 @@ struct  MannWhitneyUTestVisitor  {
 
         // Calculate the rank
         //
-        std::vector<double> ranks(com_s, 0);
+        std::vector<result_type>    ranks(com_s, 0);
 
         {
             size_type   i { 0 };
@@ -8327,7 +8305,7 @@ struct  MannWhitneyUTestVisitor  {
 
                 // ranks are 1-based
                 //
-                const double    avg_rank { double(i + j + 2) / 2.0 };
+                const result_type   avg_rank { result_type(i + j + 2) / 2.0 };
 
                 for (size_type k = i; k <= j; ++k)
                     ranks[k] = avg_rank;
@@ -8337,7 +8315,7 @@ struct  MannWhitneyUTestVisitor  {
 
         // Calculate rank sum for group 1
         //
-        double  r1 { 0 };
+        result_type  r1 { 0 };
 
         for (size_type i = 0; i < com_s; ++i) {
             if (combined[i].second == char(0))
@@ -8346,8 +8324,8 @@ struct  MannWhitneyUTestVisitor  {
 
         // U statistics
         //
-        u1_ = r1 - double(col1_s * (col1_s + 1)) / 2.0;
-        u2_ = double(col1_s * col2_s) - u1_;
+        u1_ = r1 - result_type(col1_s * (col1_s + 1)) / 2.0;
+        u2_ = result_type(col1_s * col2_s) - u1_;
         result_ = std::min(u1_, u2_); // U
 
         // Mean and stdev of U
@@ -8355,9 +8333,10 @@ struct  MannWhitneyUTestVisitor  {
         // The division by 12.0 in the formula for stdev comes from the
         // variance of the ranks used in the Mann-Whitney U test.
         //
-        const double    mu_u = double(col1_s * col2_s) / 2.0;
-        const double    sigma_u =
-            std::sqrt(double(col1_s * col2_s * (col1_s + col2_s + 1)) / 12.0);
+        const result_type    mu_u = result_type(col1_s * col2_s) / 2.0;
+        const result_type    sigma_u =
+            std::sqrt(result_type(col1_s * col2_s * (col1_s + col2_s + 1)) /
+                      result_type(12));
 
         zscore_ = (result_ - mu_u) / sigma_u;
         p_val_ =

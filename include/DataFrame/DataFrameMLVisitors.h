@@ -741,67 +741,67 @@ public:
         std::vector<size_type, typename allocator_declare<size_type, A>::type>;
     using order_type = std::vector<inner_order_t>;
     using distance_func =
-        std::function<double(const value_type &x, const value_type &y)>;
+        std::function<value_type(const value_type &x, const value_type &y)>;
 
 private:
 
-    inline static double uniform_kernel_(double d)  {
+    inline static value_type uniform_kernel_(value_type d)  {
 
         return (d <= 1.0 ? 1.0 : 0.0);
     }
 
-    inline static double triangular_kernel_(double d)  {
+    inline static value_type triangular_kernel_(value_type d)  {
 
         return (d <= 1.0 ? 1.0 - std::fabs(d) : 0.0);
     }
 
-    inline static double parabolic_kernel_(double d)  {
+    inline static value_type parabolic_kernel_(value_type d)  {
 
         return (d <= 1.0 ? 1.0 - d * d : 0.0);
     }
 
-    inline static double biweight_kernel_(double d)  {
+    inline static value_type biweight_kernel_(value_type d)  {
 
         const auto  x = 1.0 - d * d;
 
         return (d <= 1.0 ? x * x : 0.0);
     }
 
-    inline static double triweight_kernel_(double d)  {
+    inline static value_type triweight_kernel_(value_type d)  {
 
         const auto  x = 1.0 - d * d;
 
         return (d <= 1.0 ? x * x * x : 0.0);
     }
 
-    inline static double tricube_kernel_(double d)  {
+    inline static value_type tricube_kernel_(value_type d)  {
 
         const auto  x = 1.0 - d * d * d;
 
         return (d <= 1.0 ? x * x * x : 0.0);
     }
 
-    inline static double gaussian_kernel_(double d)  {
+    inline static value_type gaussian_kernel_(value_type d)  {
 
         return (std::exp(-0.5 * d * d));
     }
 
-    inline static double cosin_kernel_(double d)  {
+    inline static value_type cosin_kernel_(value_type d)  {
 
         return (d <= 1.0 ? std::cos(M_PI_2 * d) : 0.0);
     }
 
-    inline static double logistic_kernel_(double d)  {
+    inline static value_type logistic_kernel_(value_type d)  {
 
         return (1.0 / (2.0 + std::exp(d) + std::exp(-d)));
     }
 
-    inline static double sigmoid_kernel_(double d)  {
+    inline static value_type sigmoid_kernel_(value_type d)  {
 
         return (1.0 / (std::exp(d) + std::exp(-d)));
     }
 
-    inline static double silverman_kernel_(double d)  {
+    inline static value_type silverman_kernel_(value_type d)  {
 
         const auto  x = M_SQRT1_2 * std::abs(d);
 
@@ -892,8 +892,8 @@ public:
         vec_t<value_type>   shifted (column_begin, column_end);
         vec_t<bool>         shifting (col_s, true);
         size_type           iterations { 0 };
-        const double        radius { kband_ * 3.0 };
-        const double        dbl_sq_bw { 2.0 * kband_ * kband_ };
+        const value_type    radius { kband_ * 3.0 };
+        const value_type    dbl_sq_bw { 2.0 * kband_ * kband_ };
 
         while (iterations++ < max_iter_ &&
                std::any_of(shifting.begin(), shifting.end(),
@@ -903,14 +903,14 @@ public:
 
                 value_type          new_val { };
                 const value_type    &val_to_shift { shifted[i] };
-                double              total_w { 0 };
+                value_type          total_w { 0 };
 
                 for (size_type j = 0; j < col_s; ++j)  {
                     const value_type    &this_val = *(column_begin + j);
-                    const double        dist = d_func_(val_to_shift, this_val);
+                    const value_type    dist = d_func_(val_to_shift, this_val);
 
                     if (dist <= radius)  {
-                        const double    weight = k_func(dist) / dbl_sq_bw;
+                        const value_type    weight = k_func(dist) / dbl_sq_bw;
 
                         new_val = new_val + this_val * weight;
                         total_w += weight;
@@ -936,11 +936,11 @@ public:
     get_clusters_idxs () const  { return (clusters_idxs_); }
 
     MeanShiftVisitor(
-        double kernel_bandwidth,
-        double max_dist,
+        value_type kernel_bandwidth,
+        value_type max_dist,
         mean_shift_kernel kernel = mean_shift_kernel::gaussian,
         distance_func &&f =
-            [](const value_type &x, const value_type &y) -> double  {
+            [](const value_type &x, const value_type &y) -> value_type  {
                 return ((x - y) * (x - y));
             },
         size_type max_iteration = 50)
@@ -952,10 +952,10 @@ public:
 
 private:
 
-    const double            kband_; // Kernel is fancy name for distance weight
+    const value_type        kband_; // Kernel is fancy name for distance weight
     const mean_shift_kernel kernel_;
     const size_type         max_iter_;
-    const double            max_dist_;
+    const value_type        max_dist_;
     distance_func           d_func_;
     result_type             clusters_ { };       // Clusters
     order_type              clusters_idxs_ { };  // Clusters indices
@@ -987,49 +987,12 @@ private:
 
         transform_(xvec, false, thread_level);
         transform_(yvec, false, thread_level);
-
-        const real_t    col_s = real_t(xvec.size());
-
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    size_type(col_s),
-                    [&xvec, &yvec](auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]
-                            xvec[i] *= yvec[i];
-                    });
-
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            std::transform(xvec.begin(), xvec.end(),
-                           yvec.begin(),
-                           xvec.begin(),
-                           std::multiplies<cplx_t>());
-        }
-
+        xvec *= yvec;
         transform_(xvec, true, thread_level);
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    size_type(col_s),
-                    [&xvec, col_s](auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]
-                            xvec[i] /= col_s;
-                    });
+        using data_t = typename result_type::value_type;
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            std::transform(xvec.begin(), xvec.end(),
-                           xvec.begin(),
-                           [col_s] (const cplx_t &v) -> cplx_t  {
-                               return (v / col_s);
-                           });
-        }
+        xvec /= data_t(value_type(xvec.size()));
         return (xvec);
     }
 
@@ -1291,16 +1254,6 @@ private:
                     });
 
             for (auto &fut : futures)  fut.get();
-            futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&column, col_s]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]
-                            column[i] /= real_t(col_s);
-                    });
-            for (auto &fut : futures)  fut.get();
         }
         else  {
             std::transform(column.begin(), column.end(),
@@ -1308,12 +1261,11 @@ private:
                            [] (const cplx_t &v) -> cplx_t  {
                                return (std::conj(v));
                            });
-            std::transform(column.begin(), column.end(),
-                           column.begin(),
-                           [col_s] (const cplx_t &v) -> cplx_t  {
-                               return (v / real_t(col_s));
-                           });
         }
+
+        using data_t = typename result_type::value_type;
+
+        column /= data_t(value_type(col_s));
     }
 
 public:
@@ -1481,71 +1433,6 @@ using fft_v = FastFourierTransVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-/*
-template<std::signed_integral T, typename I = unsigned long, std::size_t A = 0>
-struct  NumTheoreticTransVisitor  {
-
-public:
-
-    DEFINE_VISIT_BASIC_TYPES_2
-
-public:
-
-    // Inverse = false — Turns a vector of coefficients into its NTT form
-    //                   (evaluation at roots of unity).
-    // Inverse = true — Turns back from NTT domain to original coefficients.
-    //
-    //
-    // Vectors will be resized to the smallest power of 2 equal or larger than
-    // vector size. They will be appended with zeros.
-    //
-    template <typename K, typename H>
-    inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
-
-
-    }
-
-    // Multiply two polynomials
-    // {1, 2, 3} represents 1 + 2x + 3x^2
-    // {4, 5, 6} represents 4 + 5x + 6x^2
-    //
-    // Vectors will be resized to the smallest power of 2 equal or larger than
-    // vector size. They will be appended with zeros.
-    //
-    template <typename K, typename H>
-    inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column1_begin, const H &column1_end,
-                const H &column2_begin, const H &column2_end)  {
-
-
-    }
-
-    inline void pre ()  {  }
-    inline void post ()  {  }
-
-    DEFINE_RESULT
-
-    explicit
-    NumTheoreticTransVisitor(bool inverse = false)
-        : inverse_(inverse),
-          thread_level_(ThreadGranularity::get_thread_level())  {   }
-
-private:
-
-    const bool      inverse_;
-    const long      thread_level_;
-    result_type     result_ {  };
-};
-
-template<std::signed_integral T, typename I = unsigned long, std::size_t A = 0>
-using ntt_v = NumTheoreticTransVisitor<T, I, A>;
-*/
-
-// ----------------------------------------------------------------------------
-
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  EntropyVisitor  {
 
@@ -1558,8 +1445,8 @@ struct  EntropyVisitor  {
 
         if (roll_count_ == 0)  return;
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>  sum_v(SumVisitor<T, I>(),
-                                                            roll_count_);
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>  sum_v(
+            SumVisitor<T, I>(), roll_count_);
 
         sum_v.pre();
         sum_v (idx_begin, idx_end, column_begin, column_end);
@@ -3047,23 +2934,7 @@ struct  SeasonalPeriodVisitor  {
                  data.begin(), data.end(), xvals.begin(), xvals.end());
             l_v.post();
 
-            auto    lbd =
-                [&data, &l_v = std::as_const(l_v)]
-                (auto begin, auto end) -> void  {
-
-                for (size_type i { begin }; i < end; ++i)
-                    data[i] -= l_v.get_result()[i];
-            };
-
-            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-                ThreadGranularity::get_thread_level() > 2)  {
-                auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0), data.size(), std::move(lbd));
-
-                for (auto &fut : futures)  fut.get();
-            }
-            else lbd (size_type(0), data.size());
+            data -= l_v.get_result();
         }
 
         if (params_.de_serial_corr)  {  // Take serial correlation out

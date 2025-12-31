@@ -675,7 +675,7 @@ struct  VWAPVisitor  {
     }
     PASS_DATA_ONE_BY_ONE_2
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_.clear();
         vw_price_accumulator_ = 0;
@@ -692,7 +692,7 @@ struct  VWAPVisitor  {
         cum_volume_accumulator_ = 0;
         cum_event_count_ = 0;
     }
-    inline void post ()  {
+    inline void post()  {
 
         if (event_count_ > 0)  {
             if (volume_accumulator_ > 0)  {
@@ -721,8 +721,7 @@ struct  VWAPVisitor  {
             }
         }
     }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
 
     explicit
     VWAPVisitor(double interval,
@@ -875,7 +874,7 @@ struct  VWBASVisitor  {
                     *bid_size_begin++, *ask_size_begin++);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_.clear();
         vw_bid_price_accumulator_ = 0;
@@ -901,7 +900,7 @@ struct  VWBASVisitor  {
         cum_ask_volume_accumulator_ = 0;
         cum_event_count_ = 0;
     }
-    inline void post ()  {
+    inline void post()  {
 
         if (event_count_ > 0)  {
             if (bid_volume_accumulator_ > 0 && ask_volume_accumulator_ > 0)  {
@@ -959,8 +958,7 @@ struct  VWBASVisitor  {
             }
         }
     }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
 
     explicit
     VWBASVisitor(double interval,
@@ -1125,9 +1123,9 @@ struct  SharpeRatioVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = 0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
     explicit
     SharpeRatioVisitor(bool biased = false,
@@ -1679,9 +1677,9 @@ public:
         exponent_ = pfv.get_slope();
     }
 
-    inline void pre ()  { exponent_ = -1; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (exponent_); }
+    inline void pre()  { exponent_ = -1; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (exponent_); }
 
     explicit
     HurstExponentVisitor(RangeVec &&ranges) : ranges_ (std::move(ranges))  {  }
@@ -2044,21 +2042,19 @@ struct  DrawdownVisitor  {
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         drawdown_.clear();
         pct_drawdown_.clear();
         log_drawdown_.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (drawdown_); }
-    inline result_type &get_result ()  { return (drawdown_); }
-    inline const result_type &
-    get_log_drawdown () const  { return (log_drawdown_); }
-    inline result_type &get_log_drawdown ()  { return (log_drawdown_); }
-    inline const result_type &
-    get_pct_drawdown () const  { return (pct_drawdown_); }
-    inline result_type &get_pct_drawdown ()  { return (pct_drawdown_); }
+    inline void post()  {  }
+
+    inline auto &get_result(this auto &&self)  { return (self.drawdown_); }
+    inline auto &
+    get_log_drawdown(this auto &&self)  { return (self.log_drawdown_); }
+    inline auto &
+    get_pct_drawdown(this auto &&self)  { return (self.pct_drawdown_); }
 
 private:
 
@@ -5866,19 +5862,16 @@ struct  ChandeKrollStopVisitor  {
         short_stop_ = std::move(short_stop);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         long_stop_.clear();
         short_stop_.clear();
     }
-    inline void post ()  {   }
-
-    const result_type &get_result() const  { return (long_stop_); }
-    result_type &get_result()  { return (long_stop_); }
-    const result_type &get_long_stop() const  { return (long_stop_); }
-    result_type &get_long_stop()  { return (long_stop_); }
-    const result_type &get_short_stop() const  { return (short_stop_); }
-    result_type &get_short_stop()  { return (short_stop_); }
+    inline void post()  {   }
+    inline auto &get_result(this auto &&self)  { return (self.long_stop_); }
+    inline auto &get_long_stop(this auto &&self)  { return (self.long_stop_); }
+    inline auto &
+    get_short_stop(this auto &&self)  { return (self.short_stop_); }
 
     explicit
     ChandeKrollStopVisitor(size_type p_period = 10,
@@ -6024,20 +6017,18 @@ struct  VortexVisitor  {
         minus_indicator_ = std::move(minus_indicator);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         plus_indicator_.clear();
         minus_indicator_.clear();
     }
-    inline void post ()  {   }
-
-    const result_type &get_result() const  { return (plus_indicator_); }
-    result_type &get_result()  { return (plus_indicator_); }
-    const result_type &get_plus_indicator() const  { return(plus_indicator_); }
-    result_type &get_plus_indicator()  { return (plus_indicator_); }
-    const result_type &
-    get_minus_indicator() const  { return (minus_indicator_); }
-    result_type &get_minus_indicator()  { return (minus_indicator_); }
+    inline void post()  {   }
+    inline auto &
+    get_result(this auto &&self)  { return (self.plus_indicator_); }
+    inline auto &
+    get_plus_indicator(this auto &&self)  { return (self.plus_indicator_); }
+    inline auto &
+    get_minus_indicator(this auto &&self)  { return (self.minus_indicator_); }
 
     explicit
     VortexVisitor(size_type roll_period = 14) : roll_period_(roll_period)  {  }
@@ -6184,18 +6175,17 @@ struct  KeltnerChannelsVisitor  {
         lower_band_ = std::move(lower_band);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         upper_band_.clear();
         lower_band_.clear();
     }
-    inline void post ()  {  }
-    const result_type &get_result() const  { return (upper_band_); }
-    result_type &get_result()  { return (upper_band_); }
-    const result_type &get_upper_band() const  { return (upper_band_); }
-    result_type &get_upper_band()  { return (upper_band_); }
-    const result_type &get_lower_band() const  { return (lower_band_); }
-    result_type &get_lower_band()  { return (lower_band_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.upper_band_); }
+    inline auto &
+    get_upper_band(this auto &&self)  { return (self.upper_band_); }
+    inline auto &
+    get_lower_band(this auto &&self)  { return (self.lower_band_); }
 
     explicit
     KeltnerChannelsVisitor(size_type roll_period = 20,
@@ -6634,9 +6624,9 @@ struct  TreynorRatioVisitor  {
         result_ = (cum_return / T(col_s)) / beta_vis.get_result();
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = 0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
     explicit
     TreynorRatioVisitor(bool biased = false) : biased_ (biased)  {  }
@@ -6886,13 +6876,10 @@ struct  ElderRayIndexVisitor  {
         bear_vec_.swap(bears);
     }
 
-    inline void pre ()  { result_.clear(); bear_vec_.clear(); }
-    inline void post ()  {  }
-
-    const result_type &get_result() const  { return (result_); }
-    result_type &get_result()  { return (result_); }
-    const result_type &get_bears() const  { return (bear_vec_); }
-    result_type &get_bears()  { return (bear_vec_); }
+    inline void pre()  { result_.clear(); bear_vec_.clear(); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &get_bears(this auto &&self)  { return (self.bear_vec_); }
 
     explicit
     ElderRayIndexVisitor (size_type roll_period = 13)
@@ -7226,19 +7213,18 @@ struct  AccelerationBandsVisitor  {
         upper_band_ = std::move(savg.get_result());
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_.clear();
         lower_band_.clear();
         upper_band_.clear();
     }
-    inline void post ()  {  }
-    const result_type &get_result() const  { return (result_); }
-    result_type &get_result()  { return (result_); }
-    const result_type &get_lower_band() const  { return (lower_band_); }
-    result_type &get_lower_band()  { return (lower_band_); }
-    const result_type &get_upper_band() const  { return (upper_band_); }
-    result_type &get_upper_band()  { return (upper_band_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &
+    get_upper_band(this auto &&self)  { return (self.upper_band_); }
+    inline auto &
+    get_lower_band(this auto &&self)  { return (self.lower_band_); }
 
     explicit
     AccelerationBandsVisitor(size_type roll_period = 20,
@@ -7462,22 +7448,20 @@ struct  EldersThermometerVisitor  {
         sell_signal_.swap(t_short);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_.clear();
         result_ma_.clear();
         buy_signal_.clear();
         sell_signal_.clear();
     }
-    inline void post ()  {  }
-    const result_type &get_result() const  { return (result_); }
-    result_type &get_result()  { return (result_); }
-    const result_type &get_result_ma() const  { return (result_ma_); }
-    result_type &get_result_ma()  { return (result_ma_); }
-    const bool_vec &get_buy_signal() const  { return (buy_signal_); }
-    bool_vec &get_buy_signal()  { return (buy_signal_); }
-    const bool_vec &get_sell_signal() const  { return (sell_signal_); }
-    bool_vec &get_sell_signal()  { return (sell_signal_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &get_result_ma(this auto &&self)  { return (self.result_ma_); }
+    inline auto &
+    get_buy_signal(this auto &&self)  { return (self.buy_signal_); }
+    inline auto &
+    get_sell_signal(this auto &&self)  { return (self.sell_signal_); }
 
     explicit
     EldersThermometerVisitor(size_type roll_period = 20,
@@ -7879,22 +7863,19 @@ struct  QuantQualEstimationVisitor  {
         short_line_ = std::move(short_line);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_.clear();
         rsi_ewm_.clear();
         long_line_.clear();
         short_line_.clear();
     }
-    inline void post ()  {  }
-    const result_type &get_result() const  { return (result_); }
-    result_type &get_result()  { return (result_); }
-    const result_type &get_rsi_ma() const  { return (rsi_ewm_); }
-    result_type &get_rsi_ma()  { return (rsi_ewm_); }
-    const result_type &get_long_line() const  { return (long_line_); }
-    result_type &get_long_line()  { return (long_line_); }
-    const result_type &get_short_line() const  { return (short_line_); }
-    result_type &get_short_line()  { return (short_line_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &get_rsi_ma(this auto &&self)  { return (self.rsi_ewm_); }
+    inline auto &get_long_line(this auto &&self)  { return (self.long_line_); }
+    inline auto &
+    get_short_line(this auto &&self)  { return (self.short_line_); }
 
     explicit
     QuantQualEstimationVisitor(size_type avg_period = 14,
@@ -7985,18 +7966,15 @@ struct  PeaksAndValleysVisitor  {
         valleys_.swap(valleys);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         peaks_.clear();
         valleys_.clear();
     }
-    inline void post ()  {  }
-    const result_type &get_result() const  { return (peaks_); }
-    result_type &get_result()  { return (peaks_); }
-    const result_type &get_peaks() const  { return (peaks_); }
-    result_type &get_peaks()  { return (peaks_); }
-    const result_type &get_valleys() const  { return (valleys_); }
-    result_type &get_valleys()  { return (valleys_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.peaks_); }
+    inline auto &get_peaks(this auto &&self)  { return (self.peaks_); }
+    inline auto &get_valleys(this auto &&self)  { return (self.valleys_); }
 
 private:
 

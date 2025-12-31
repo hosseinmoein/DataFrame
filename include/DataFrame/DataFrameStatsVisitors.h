@@ -123,8 +123,7 @@ namespace hmdf
     inline void post ()  {  }
 
 #define DEFINE_RESULT \
-    inline const result_type &get_result () const  { return (result_); } \
-    inline result_type &get_result ()  { return (result_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
 
 #define PASS_DATA_ONE_BY_ONE \
     template <typename K, typename H> \
@@ -217,9 +216,9 @@ struct  LastVisitor  {
             }
     }
 
-    inline void pre ()  { result_ = result_type { }; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = result_type { }; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
     DECL_CTOR(LastVisitor)
 
@@ -258,9 +257,9 @@ struct  FirstVisitor  {
             }
     }
 
-    inline void pre ()  { result_ = result_type { }; started_ = false; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = result_type { }; started_ = false; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
     DECL_CTOR(FirstVisitor)
 
@@ -291,9 +290,9 @@ struct  CountVisitor  {
         result_ = result_type(std::distance(column_begin, column_end));
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = 0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
     DECL_CTOR(CountVisitor)
 
@@ -357,9 +356,9 @@ struct  SumVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = value_type { }; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = value_type { }; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
     DECL_CTOR(SumVisitor)
 
@@ -376,10 +375,10 @@ struct  MeanBase  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    inline void pre ()  { sum_.pre(); mean_ = 0; cnt_ = 0; }
-    inline size_type get_count () const  { return (cnt_); }
-    inline value_type get_sum () const  { return (sum_.get_result()); }
-    inline result_type get_result () const  { return (mean_); }
+    inline void pre()  { sum_.pre(); mean_ = 0; cnt_ = 0; }
+    inline size_type get_count() const  { return (cnt_); }
+    inline value_type get_sum() const  { return (sum_.get_result()); }
+    inline result_type get_result() const  { return (mean_); }
 
     DECL_CTOR(MeanBase)
 
@@ -448,10 +447,10 @@ struct  StableMeanVisitor  {
     }
     PASS_DATA_ONE_BY_ONE
 
-    inline void pre ()  { mean_ = 0; cnt_ = 0; }
-    inline size_type get_count () const  { return (cnt_); }
-    inline result_type get_result () const  { return (mean_); }
-    inline void post ()  {  }
+    inline void pre()  { mean_ = 0; cnt_ = 0; }
+    inline size_type get_count() const  { return (cnt_); }
+    inline result_type get_result() const  { return (mean_); }
+    inline void post()  {  }
 
     StableMeanVisitor(bool skipnan = false) : skip_nan_(skipnan)  {   }
 
@@ -630,9 +629,9 @@ struct  ProdVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = 1; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = 1; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
     DECL_CTOR(ProdVisitor)
 
@@ -768,10 +767,10 @@ struct  ExtremumVisitor  {
         counter_ = 0;
         extremum_ = value_type { };
     }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (extremum_); }
-    inline index_type get_index () const  { return (index_); }
-    inline size_type get_position () const  { return (pos_); }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (extremum_); }
+    inline index_type get_index() const  { return (index_); }
+    inline size_type get_position() const  { return (pos_); }
 
     DECL_CTOR(ExtremumVisitor)
 
@@ -865,8 +864,7 @@ struct  NExtremumVisitor  {
         for (; ! p_queue_.empty(); p_queue_.pop())
             result_.push_back(p_queue_.top());
     }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
 
     inline void sort_by_index_val()  {
 
@@ -1161,8 +1159,8 @@ public:
         else  { result_ = std::numeric_limits<value_type>::quiet_NaN(); }
     }
 
-    inline result_type get_result () const  { return (result_); }
-    inline value_type get_var1 () const  {
+    inline result_type get_result() const  { return (result_); }
+    inline value_type get_var1() const  {
 
         const value_type    d = value_type(inter_result_.cnt) - b_;
 
@@ -1174,7 +1172,7 @@ public:
         }
         else { return (std::numeric_limits<value_type>::quiet_NaN()); }
     }
-    inline value_type get_var2 () const  {
+    inline value_type get_var2() const  {
 
         const value_type    d = value_type(inter_result_.cnt) - b_;
 
@@ -1239,9 +1237,9 @@ struct  VarVisitor  {
               column_begin, column_end, column_begin, column_end);
     }
 
-    inline void pre ()  { cov_.pre(); }
-    inline void post ()  { cov_.post(); }
-    inline result_type get_result () const  { return (cov_.get_result()); }
+    inline void pre()  { cov_.pre(); }
+    inline void post()  { cov_.post(); }
+    inline result_type get_result() const  { return (cov_.get_result()); }
     inline size_type get_count() const  { return (cov_.get_count()); }
     inline result_type get_mean() const  { return (cov_.get_mean1()); }
 
@@ -1287,7 +1285,7 @@ struct  BetaVisitor  {
                       ? cov_.get_result() / v
                       : std::numeric_limits<value_type>::quiet_NaN();
     }
-    inline result_type get_result () const  { return (result_); }
+    inline result_type get_result() const  { return (result_); }
     inline size_type get_count() const  { return (cov_.get_count()); }
     inline result_type get_data_mean() const  { return (cov_.get_mean1()); }
     inline result_type
@@ -1323,9 +1321,9 @@ struct  StdVisitor   {
         var_ (idx_begin, idx_end, column_begin, column_end);
     }
 
-    inline void pre ()  { var_.pre(); result_ = 0; }
-    inline void post ()  { var_.post(); result_ = ::sqrt(var_.get_result()); }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { var_.pre(); result_ = 0; }
+    inline void post()  { var_.post(); result_ = ::sqrt(var_.get_result()); }
+    inline result_type get_result() const  { return (result_); }
     inline size_type get_count() const  { return (var_.get_count()); }
     inline result_type get_mean() const  { return (var_.get_mean()); }
 
@@ -1360,13 +1358,13 @@ struct  SEMVisitor   {
         std_ (idx_begin, idx_end, column_begin, column_end);
     }
 
-    inline void pre ()  { std_.pre(); result_ = 0; }
-    inline void post ()  {
+    inline void pre()  { std_.pre(); result_ = 0; }
+    inline void post()  {
 
         std_.post();
         result_ = std_.get_result() / ::sqrt(get_count());
     }
-    inline result_type get_result () const  { return (result_); }
+    inline result_type get_result() const  { return (result_); }
     inline size_type get_count() const  { return (std_.get_count()); }
 
     explicit SEMVisitor (bool biased = false) : std_ (biased)  {   }
@@ -1394,11 +1392,11 @@ struct  TrackingErrorVisitor  {
     }
     PASS_DATA_ONE_BY_ONE_2
 
-    inline void pre ()  { std_.pre(); }
-    inline void post ()  { std_.post();  }
-    inline result_type get_result () const  { return (std_.get_result()); }
+    inline void pre()  { std_.pre(); }
+    inline void post()  { std_.post();  }
+    inline result_type get_result() const  { return (std_.get_result()); }
 
-    explicit TrackingErrorVisitor (bool biased = false) : std_ (biased)  {  }
+    explicit TrackingErrorVisitor(bool biased = false) : std_ (biased)  {  }
 
 private:
 
@@ -1656,7 +1654,7 @@ public:
                       (::sqrt(cov_.get_var1()) * ::sqrt(cov_.get_var2()));
         }
     }
-    inline result_type get_result () const  { return (result_); }
+    inline result_type get_result() const  { return (result_); }
     inline result_type get_data_mean1() const  { return (cov_.get_mean1()); }
     inline result_type get_data_mean2() const  { return (cov_.get_mean2()); }
 
@@ -1725,8 +1723,7 @@ struct  CrossCorrVisitor  {
     inline void pre()  { result_.clear(); }
     inline void post ()  {  }
 
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
 
 private:
 
@@ -1833,18 +1830,18 @@ struct  DotProdVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = mag1_ = mag2_ = euc_dist_ = man_dist_ = 0; }
-    inline void post ()  {
+    inline void pre()  { result_ = mag1_ = mag2_ = euc_dist_ = man_dist_ = 0; }
+    inline void post()  {
 
         mag1_ = std::sqrt(mag1_);
         mag2_ = std::sqrt(mag2_);
         euc_dist_ = std::sqrt(euc_dist_);
     }
-    inline result_type get_result () const  { return (result_); }
-    inline result_type get_magnitude1 () const  { return (mag1_); }
-    inline result_type get_magnitude2 () const  { return (mag2_); }
-    inline result_type get_euclidean_dist () const  { return (euc_dist_); }
-    inline result_type get_manhattan_dist () const  { return (man_dist_); }
+    inline result_type get_result() const  { return (result_); }
+    inline result_type get_magnitude1() const  { return (mag1_); }
+    inline result_type get_magnitude2() const  { return (mag2_); }
+    inline result_type get_euclidean_dist() const  { return (euc_dist_); }
+    inline result_type get_manhattan_dist() const  { return (man_dist_); }
 
 private:
 
@@ -1887,7 +1884,7 @@ struct  ExtremumSubArrayVisitor  {
     }
     PASS_DATA_ONE_BY_ONE
 
-    inline void pre ()  {
+    inline void pre()  {
 
         best_sum_ = cmp_(-std::numeric_limits<value_type>::max(),
                          std::numeric_limits<value_type>::max())
@@ -1902,10 +1899,10 @@ struct  ExtremumSubArrayVisitor  {
                                 ? -std::numeric_limits<value_type>::max()
                                 : std::numeric_limits<value_type>::max();
     }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (best_sum_); }
-    inline size_type get_begin_idx () const  { return (best_begin_idx_); }
-    inline size_type get_end_idx () const  { return (best_end_idx_); }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (best_sum_); }
+    inline size_type get_begin_idx() const  { return (best_begin_idx_); }
+    inline size_type get_end_idx() const  { return (best_end_idx_); }
 
     explicit ExtremumSubArrayVisitor(
         value_type min_to_consider = -std::numeric_limits<value_type>::max(),
@@ -1997,8 +1994,7 @@ struct  NExtremumSubArrayVisitor  {
         extremum_sub_array_.post();
         result_ = std::move(q_.data());
     }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
 
     explicit NExtremumSubArrayVisitor(
         value_type min_to_consider = -std::numeric_limits<value_type>::max(),
@@ -2070,10 +2066,9 @@ public:
         }
     }
 
-    inline void pre ()  { visitor_.pre(); result_.clear(); }
-    inline void post ()  { visitor_.post(); }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline void pre()  { visitor_.pre(); result_.clear(); }
+    inline void post()  { visitor_.post(); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
 
     SimpleRollAdopter(F &&functor, size_type r_count)
         : visitor_(std::move(functor)), roll_count_(r_count)  {   }
@@ -2121,11 +2116,10 @@ public:
             visitor_(idx_begin[i], column_begin[i]);
     }
 
-    inline void pre ()  { visitor_.pre(); }
-    inline void post ()  { visitor_.post(); }
-    inline const result_type &
-    get_result () const  { return (visitor_.get_result()); }
-    inline result_type get_result ()  { return (visitor_.get_result()); }
+    inline void pre()  { visitor_.pre(); }
+    inline void post()  { visitor_.post(); }
+    inline auto
+    get_result(this auto &&self)  { return (self.visitor_.get_result()); }
 
     StepRollAdopter(F &&functor, size_type period)
         : visitor_(std::move(functor)), period_(period)  {   }
@@ -2431,14 +2425,14 @@ public:
             deg_freedom_ = col_s;
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         v_x_.pre();
         v_y_.pre();
         result_ = 0;
         deg_freedom_ = 0;
     }
-    inline void post ()  {
+    inline void post()  {
 
         v_x_.post();
         v_y_.post();
@@ -2458,8 +2452,8 @@ public:
         }
     }
 
-    inline result_type get_result () const  { return (result_); }
-    inline size_type get_deg_freedom () const  { return (deg_freedom_); }
+    inline result_type get_result() const  { return (result_); }
+    inline size_type get_deg_freedom() const  { return (deg_freedom_); }
 
     explicit TTestVisitor(bool is_related_ts, bool skipnan = false)
         : v_x_(false, skipnan),
@@ -3251,13 +3245,12 @@ struct  ExponentiallyWeightedVarVisitor  {
         ewmstd_.swap(ewmstd);
     }
 
-    inline const result_type &get_result () const  { return (ewmvar_); }
-    inline result_type &get_result ()  { return (ewmvar_); }
-    inline const result_type &get_std () const  { return (ewmstd_); }
-    inline result_type &get_std ()  { return (ewmstd_); }
+    inline void pre()  { ewmvar_.clear(); ewmstd_.clear(); }
+    inline void post()  {  }
 
-    inline void pre ()  { ewmvar_.clear(); ewmstd_.clear(); }
-    inline void post ()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.ewmvar_); }
+    inline const result_type &get_std() const  { return (ewmstd_); }
+    inline result_type &get_std()  { return (ewmstd_); }
 
     ExponentiallyWeightedVarVisitor(exponential_decay_spec eds, value_type val)
         : decay_(eds == exponential_decay_spec::center_of_gravity
@@ -3353,11 +3346,10 @@ struct  ExponentiallyWeightedCovVisitor  {
         ewmcov_.swap(ewmcov);
     }
 
-    inline const result_type &get_result () const  { return (ewmcov_); }
-    inline result_type &get_result ()  { return (ewmcov_); }
+    inline void pre()  { ewmcov_.clear(); }
+    inline void post()  {  }
 
-    inline void pre ()  { ewmcov_.clear(); }
-    inline void post ()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.ewmcov_); }
 
     ExponentiallyWeightedCovVisitor(exponential_decay_spec eds,
                                     value_type value)
@@ -3459,11 +3451,10 @@ struct  ExponentiallyWeightedCorrVisitor  {
         ewmcorr_.swap(ewmcorr);
     }
 
-    inline const result_type &get_result () const  { return (ewmcorr_); }
-    inline result_type &get_result ()  { return (ewmcorr_); }
+    inline void pre()  { ewmcorr_.clear(); }
+    inline void post()  {  }
 
-    inline void pre ()  { ewmcorr_.clear(); }
-    inline void post ()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.ewmcorr_); }
 
     ExponentiallyWeightedCorrVisitor(exponential_decay_spec eds,
                                      value_type value)
@@ -3802,12 +3793,12 @@ struct  KthValueVisitor  {
         result_ = find_kth_element_(aux, 0, compute_size_ - 1, kth);
     }
 
-    inline void pre ()  { result_ = value_type(); }
-    inline void post ()  {   }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = value_type(); }
+    inline void post()  {   }
+    inline result_type get_result() const  { return (result_); }
     inline size_type get_compute_size() const  { return (compute_size_); }
 
-    explicit KthValueVisitor (size_type ke, bool skipnan = false)
+    explicit KthValueVisitor(size_type ke, bool skipnan = false)
         : kth_element_(ke), skip_nan_(skipnan)  {   }
 
 private:
@@ -3896,13 +3887,13 @@ struct  MedianVisitor  {
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_ = value_type();
     }
-    inline void post ()  { OBO_PORT_POST }
-    inline result_type get_result () const  { return (result_); }
+    inline void post()  { OBO_PORT_POST }
+    inline result_type get_result() const  { return (result_); }
 
     explicit
     MedianVisitor (bool skipnan = false) : skip_nan_(skipnan)  {  }
@@ -3988,13 +3979,13 @@ struct  QuantileVisitor  {
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_ = value_type();
     }
-    inline void post ()  { OBO_PORT_POST }
-    inline result_type get_result () const  { return (result_); }
+    inline void post()  { OBO_PORT_POST }
+    inline result_type get_result() const  { return (result_); }
 
     explicit
     QuantileVisitor (double quantile = 0.5,
@@ -4152,16 +4143,15 @@ public:
 
     OBO_PORT_OPT2
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_type x;
 
         result_.swap (x);
         OBO_PORT_PRE
     }
-    inline void post ()  { OBO_PORT_POST }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline void post()  { OBO_PORT_POST }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
 
     inline void sort_by_repeat_count()  {
 
@@ -4401,13 +4391,13 @@ public:
     MADVisitor (mad_type mt, bool skip_nan = false)
         : mad_type_(mt), skip_nan_(skip_nan)  {   }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_ = value_type();
     }
-    inline void post ()  { OBO_PORT_POST }
-    inline result_type get_result () const  { return (result_); }
+    inline void post()  { OBO_PORT_POST }
+    inline result_type get_result() const  { return (result_); }
 
 private:
 
@@ -4663,9 +4653,9 @@ struct  SampleZScoreVisitor  {
                   (p_svisit.get_result() / ::sqrt(s_col_s));
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = 0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
     DECL_CTOR(SampleZScoreVisitor)
 
@@ -5865,14 +5855,12 @@ public:
         }
     }
 
-    inline void pre ()  { coeffs_.clear(); residual_ = 0; }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (coeffs_); }
-    inline result_type &get_result ()  { return (coeffs_); }
-    inline value_type get_slope () const  { return (coeffs_[0]); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline const result_type &get_y_fits () const  { return (y_fits_); }
-    inline result_type &get_y_fits ()  { return (y_fits_); }
+    inline void pre()  { coeffs_.clear(); residual_ = 0; }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.coeffs_); }
+    inline value_type get_slope() const  { return (coeffs_[0]); }
+    inline value_type get_residual() const  { return (residual_); }
+    inline auto &get_y_fits(this auto &&self)  { return (self.y_fits_); }
 
     explicit
     PolyFitVisitor(size_type d,
@@ -5980,15 +5968,13 @@ struct  LogFitVisitor  {
         }
     }
 
-    inline void pre ()  { poly_fit_.pre(); residual_ = 0; }
-    inline void post ()  { poly_fit_.post(); }
-    inline const result_type &
-    get_result () const  { return (poly_fit_.get_result()); }
-    inline result_type &get_result ()  { return (poly_fit_.get_result()); }
-    inline value_type get_slope () const  { return (poly_fit_.get_slope()); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline const result_type &get_y_fits () const  { return (y_fits_); }
-    inline result_type &get_y_fits ()  { return (y_fits_); }
+    inline void pre()  { poly_fit_.pre(); residual_ = 0; }
+    inline void post()  { poly_fit_.post(); }
+    inline auto &
+    get_result(this auto &&self)  { return (self.poly_fit_.get_result()); }
+    inline value_type get_slope() const  { return (poly_fit_.get_slope()); }
+    inline value_type get_residual() const  { return (residual_); }
+    inline auto &get_y_fits(this auto &&self)  { return (self.y_fits_); }
 
     explicit
     LogFitVisitor(weight_func w_func =
@@ -6137,19 +6123,18 @@ struct  ExponentialFitVisitor  {
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         y_fits_.clear();
         residual_ = 0;
         slope_ = 0;
         intercept_ = 0;
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (y_fits_); }
-    inline result_type &get_result ()  { return (y_fits_); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline value_type get_slope () const  { return (slope_); }
-    inline value_type get_intercept () const  { return (intercept_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.y_fits_); }
+    inline value_type get_residual() const  { return (residual_); }
+    inline value_type get_slope() const  { return (slope_); }
+    inline value_type get_intercept() const  { return (intercept_); }
 
     ExponentialFitVisitor()  {   }
 
@@ -6296,19 +6281,18 @@ struct  PowerFitVisitor  {
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         y_fits_.clear();
         residual_ = 0;
         slope_ = 0;
         intercept_ = 0;
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (y_fits_); }
-    inline result_type &get_result ()  { return (y_fits_); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline value_type get_slope () const  { return (slope_); }
-    inline value_type get_intercept () const  { return (intercept_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.y_fits_); }
+    inline value_type get_residual() const  { return (residual_); }
+    inline value_type get_slope() const  { return (slope_); }
+    inline value_type get_intercept() const  { return (intercept_); }
 
     PowerFitVisitor()  {   }
 
@@ -6496,18 +6480,17 @@ struct  QuadraticFitVisitor  {
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         y_fits_.clear();
         residual_ = slope_ = intercept_ = constant_ = 0;
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (y_fits_); }
-    inline result_type &get_result ()  { return (y_fits_); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline value_type get_slope () const  { return (slope_); }
-    inline value_type get_intercept () const  { return (intercept_); }
-    inline value_type get_constant () const  { return (constant_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.y_fits_); }
+    inline value_type get_residual() const  { return (residual_); }
+    inline value_type get_slope() const  { return (slope_); }
+    inline value_type get_intercept() const  { return (intercept_); }
+    inline value_type get_constant() const  { return (constant_); }
 
     QuadraticFitVisitor()  {   }
 
@@ -6647,19 +6630,18 @@ struct  LinearFitVisitor  {
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         y_fits_.clear();
         residual_ = 0;
         slope_ = 0;
         intercept_ = 0;
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (y_fits_); }
-    inline result_type &get_result ()  { return (y_fits_); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline value_type get_slope () const  { return (slope_); }
-    inline value_type get_intercept () const  { return (intercept_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.y_fits_); }
+    inline value_type get_residual() const  { return (residual_); }
+    inline value_type get_slope() const  { return (slope_); }
+    inline value_type get_intercept() const  { return (intercept_); }
 
     LinearFitVisitor()  {   }
 
@@ -6758,14 +6740,13 @@ struct  CubicSplineFitVisitor  {
         d_vec_.swap(d);
     }
 
-    inline void pre ()  {  }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (b_vec_); }
-    inline result_type &get_result ()  { return (b_vec_); }
-    inline const result_type &get_c_vec () const  { return (c_vec_); }
-    inline result_type &get_c_vec ()  { return (c_vec_); }
-    inline const result_type &get_d_vec () const  { return (d_vec_); }
-    inline result_type &get_d_vec ()  { return (d_vec_); }
+    inline void pre()  {  }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.b_vec_); }
+    inline const result_type &get_c_vec() const  { return (c_vec_); }
+    inline result_type &get_c_vec()  { return (c_vec_); }
+    inline const result_type &get_d_vec() const  { return (d_vec_); }
+    inline result_type &get_d_vec()  { return (d_vec_); }
 
     CubicSplineFitVisitor()  {   }
 
@@ -7375,7 +7356,7 @@ public:
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         y_fits_.clear();
         resid_weights_.clear();
@@ -7383,12 +7364,11 @@ public:
         x_j_.clear();
         dist_i_j_.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (y_fits_); }
-    inline result_type &get_result ()  { return (y_fits_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.y_fits_); }
     inline const result_type &
-    get_residual_weights () const  { return (resid_weights_); }
-    inline result_type &get_residual_weights ()  { return (resid_weights_); }
+    get_residual_weights() const  { return (resid_weights_); }
+    inline result_type &get_residual_weights()  { return (resid_weights_); }
 
     explicit
     LowessVisitor (size_type loop_n = 3,
@@ -7599,21 +7579,17 @@ public:
         do_residual_(detrended);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         trend_.clear();
         seasonal_.clear();
         residual_.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (trend_); }
-    inline result_type &get_result ()  { return (trend_); }
-    inline const result_type &get_trend () const  { return (trend_); }
-    inline result_type &get_trend ()  { return (trend_); }
-    inline const result_type &get_seasonal () const  { return (seasonal_); }
-    inline result_type &get_seasonal ()  { return (seasonal_); }
-    inline const result_type &get_residual () const  { return (residual_); }
-    inline result_type &get_residual ()  { return (residual_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.trend_); }
+    inline auto &get_trend(this auto &&self)  { return (self.trend_); }
+    inline auto &get_seasonal(this auto &&self)  { return (self.seasonal_); }
+    inline auto &get_residual(this auto &&self)  { return (self.residual_); }
 
     DecomposeVisitor (size_type s_period,
                       value_type frac,
@@ -8345,13 +8321,13 @@ struct  MannWhitneyUTestVisitor  {
 
     }
 
-    inline void pre ()  { result_ = u1_ = u2_ = zscore_ = -1; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
-    inline result_type get_u1 () const  { return (u1_); }
-    inline result_type get_u2 () const  { return (u2_); }
-    inline result_type get_zscore () const  { return (zscore_); }
-    inline result_type get_pvalue () const  { return (p_val_); }
+    inline void pre()  { result_ = u1_ = u2_ = zscore_ = -1; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
+    inline result_type get_u1() const  { return (u1_); }
+    inline result_type get_u2() const  { return (u2_); }
+    inline result_type get_zscore() const  { return (zscore_); }
+    inline result_type get_pvalue() const  { return (p_val_); }
 
     MannWhitneyUTestVisitor()  {   }
 
@@ -9180,10 +9156,8 @@ struct  DivideToBinsVisitor  {
 
     inline void pre()  { result_.clear(); labels_.clear(); }
     inline void post()  {  }
-    inline const result_type &get_result() const  { return (result_); }
-    inline result_type &get_result()  { return (result_); }
-    inline const label_vec_t &get_labels() const  { return (labels_); }
-    inline label_vec_t &get_labels()  { return (labels_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &get_labels(this auto &&self)  { return (self.labels_); }
 
     explicit
     DivideToBinsVisitor(size_type bins,
@@ -9333,10 +9307,8 @@ struct  DivideToQuantilesVisitor  {
 
     inline void pre()  { result_.clear(); labels_.clear(); }
     inline void post()  {  }
-    inline const result_type &get_result() const  { return (result_); }
-    inline result_type &get_result()  { return (result_); }
-    inline const label_vec_t &get_labels() const  { return (labels_); }
-    inline label_vec_t &get_labels()  { return (labels_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &get_labels(this auto &&self)  { return (self.labels_); }
 
     explicit
     DivideToQuantilesVisitor(size_type quantiles, label_vec_t &&labels = {  })
@@ -9422,10 +9394,10 @@ struct  ConfIntervalVisitor   {
         lower_bound_ = sv.get_mean() - error_m_;
     }
 
-    inline void pre ()  { upper_bound_ = lower_bound_ = 0; error_m_ = 0; }
-    inline void post ()  {  }
+    inline void pre()  { upper_bound_ = lower_bound_ = 0; error_m_ = 0; }
+    inline void post()  {  }
     inline value_type get_error_margin() const  { return (error_m_); }
-    inline result_type get_result () const  {
+    inline result_type get_result() const  {
 
         return (result_type { lower_bound_, upper_bound_ });
     }
@@ -9513,9 +9485,9 @@ struct  CoeffVariationVisitor   {
         result_ = sv.get_result() / sv.get_mean();
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = 0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
 private:
 
@@ -9587,8 +9559,8 @@ struct  ChiSquaredTestVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
+    inline void pre()  { result_ = 0; }
+    inline void post()  {  }
     inline result_type get_result() const  { return (result_); }
     inline result_type get_p_value(size_type deg_of_freedom) const  {
 

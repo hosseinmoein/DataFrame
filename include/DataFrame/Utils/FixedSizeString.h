@@ -75,7 +75,7 @@ public:
     // supposed to be.
     //
     [[nodiscard]] inline auto
-    end(this auto &&self) noexcept  { return (self.string_ + size()); }
+    end(this auto &&self) noexcept  { return (self.string_ + self.size()); }
 
     VirtualString() = delete;
     VirtualString(const VirtualString &) = delete;

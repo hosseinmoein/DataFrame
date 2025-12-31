@@ -42,13 +42,10 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
           -DCMAKE_CXX_STANDARD=23 \
           -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-          -DCMAKE_CXX_EXTENSIONS=OFF \
-          -DHMDF_TESTING=ON \
-          -DHMDF_EXAMPLES=ON \
-          -DHMDF_BENCHMARKS=ON
+          -DCMAKE_CXX_EXTENSIONS=OFF
     
     - name: Build
-      run: cmake -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON --build build --config ${{ matrix.build_type }} -j $(nproc)
+      run: cmake -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON --build build --config ${{ matrix.build_type }}
     
     - name: Run tests
       working-directory: build

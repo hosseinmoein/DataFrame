@@ -278,18 +278,16 @@ public:
             calc_clusters_(column_begin, col_s);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         for (auto &iter : clusters_) iter.clear();
         for (auto &iter : clusters_idxs_) iter.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
-    inline const cluster_type &get_clusters () const  { return (clusters_); }
-    inline cluster_type &get_clusters ()  { return (clusters_); }
-    inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &get_clusters(this auto &&self)  { return (self.clusters_); }
+    inline auto &
+    get_clusters_idxs(this auto &&self)  { return (self.clusters_idxs_); }
 
     explicit
     KMeansVisitor(
@@ -510,19 +508,17 @@ public:
         if (cc_)  calc_clusters_(column_begin,  col_s);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_.clear();
         clusters_.clear();
         clusters_idxs_.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
-    inline const cluster_type &get_clusters () const  { return (clusters_); }
-    inline cluster_type &get_clusters ()  { return (clusters_); }
-    inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &get_clusters(this auto &&self)  { return (self.clusters_); }
+    inline auto &
+    get_clusters_idxs(this auto &&self)  { return (self.clusters_idxs_); }
 
     explicit
     AffinityPropVisitor(
@@ -685,19 +681,18 @@ public:
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         clusters_.clear();
         clusters_idxs_.clear();
         noisey_idxs_.clear();
     }
-    inline void post ()  {  }
-
-    inline const result_type &get_result () const  { return (clusters_); }
-    inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
-    inline const vec_t<size_type> &
-    get_noisey_idxs () const  { return (noisey_idxs_); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &
+    get_clusters_idxs(this auto &&self)  { return (self.clusters_idxs_); }
+    inline auto &
+    get_noisey_idxs(this auto &&self)  { return (self.noisey_idxs_); }
 
     DBSCANVisitor(id_t min_mems,
                   double max_dist,
@@ -928,12 +923,11 @@ public:
         build_cluster_(column_begin, col_s, shifted);
     }
 
-    inline void pre ()  { clusters_.clear(); clusters_idxs_.clear(); }
-    inline void post ()  {  }
-
-    inline const result_type &get_result () const  { return (clusters_); }
-    inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    inline void pre()  { clusters_.clear(); clusters_idxs_.clear(); }
+    inline void post()  {  }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &
+    get_clusters_idxs(this auto &&self)  { return (self.clusters_idxs_); }
 
     MeanShiftVisitor(
         value_type kernel_bandwidth,
@@ -2544,9 +2538,8 @@ public:
         }
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
-
+    inline void pre()  { result_ = 0; }
+    inline void post()  {  }
     inline result_type get_result() const  { return (result_); }
 
     explicit
@@ -2643,9 +2636,9 @@ struct  VectorSimilarityVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
-    [[nodiscard]] inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = 0; }
+    inline void post()  {  }
+    [[nodiscard]] inline result_type get_result() const  { return (result_); }
 
     VectorSimilarityVisitor() = default;
 
@@ -2871,10 +2864,9 @@ public:
         for (auto &iter : clusters_idxs_) iter.clear();
     }
     inline void post()  {  }
-    inline const cluster_type &get_result() const  { return (clusters_); }
-    inline cluster_type &get_result()  { return (clusters_); }
-    inline const order_type &
-    get_clusters_idxs() const  { return (clusters_idxs_); }
+    inline auto &get_result(this auto &&self)  { return (self.clusters_); }
+    inline auto &
+    get_clusters_idxs(this auto &&self)  { return (self.clusters_idxs_); }
 
     SpectralClusteringVisitor(
         size_type num_of_iter,
@@ -2970,21 +2962,20 @@ struct  SeasonalPeriodVisitor  {
         result_ = T(1.0) / dom_freq_;
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_ = max_mag_ = dom_freq_ = 0;
         dom_idx_ = 0;
     }
-    inline void post ()  {  }
-
-    [[nodiscard]] inline result_type get_result () const  { return (result_); }
-    [[nodiscard]] inline result_type get_period () const  { return (result_); }
+    inline void post()  {  }
+    [[nodiscard]] inline result_type get_result() const  { return (result_); }
+    [[nodiscard]] inline result_type get_period() const  { return (result_); }
     [[nodiscard]] inline result_type
-    get_max_magnitude () const  { return (max_mag_); }
+    get_max_magnitude() const  { return (max_mag_); }
     [[nodiscard]] inline result_type
-    get_dominant_frequency () const  { return (dom_freq_); }
+    get_dominant_frequency() const  { return (dom_freq_); }
     [[nodiscard]] inline size_type
-    get_dominant_index () const  { return (dom_idx_); }
+    get_dominant_index() const  { return (dom_idx_); }
 
     explicit
     SeasonalPeriodVisitor(const SeasonalityParams<T> params = { })
@@ -3070,10 +3061,9 @@ public:
         else  calc_(x_begin, x_end, y_begin, y_end);
     }
 
-    inline void pre ()  { result_ = 0.0; }
-    inline void post ()  {  }
-
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = 0.0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
     explicit
     DynamicTimeWarpVisitor(
@@ -3812,13 +3802,11 @@ struct  ARIMAVisitor  {
         result_.clear();
     }
     inline void post()  {  }
-    inline const result_type &get_result() const  { return (result_); }
-    inline result_type &get_result()  { return (result_); }
-
-    inline value_type &get_sigma_sq() const  { return (sigma2_); }
-    inline const result_type &get_phi() const  { return (ar_coeffs_); }
-    inline const result_type &get_theta() const  { return (ma_coeffs_); }
-    inline const result_type &get_residuals() const  { return (residuals_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline value_type get_sigma_sq() const  { return (sigma2_); }
+    inline auto &get_phi(this auto &&self)  { return (self.ar_coeffs_); }
+    inline auto &get_theta(this auto &&self)  { return (self.ma_coeffs_); }
+    inline auto &get_residuals(this auto &&self)  { return (self.residuals_); }
 
     explicit
     ARIMAVisitor(long periods = 3,
@@ -4101,10 +4089,9 @@ struct  HWESForecastVisitor  {
         result_.clear();
     }
     inline void post()  {  }
-    inline const result_type &get_result() const  { return (result_); }
-    inline result_type &get_result()  { return (result_); }
-    inline const result_type &
-    get_seasonal_factors() const  { return (seasonal_factors_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &
+    get_seasonal_factors(this auto &&self) { return (self.seasonal_factors_); }
 
     explicit
     HWESForecastVisitor(long periods = 3,
@@ -5029,8 +5016,7 @@ public:
 
     inline void pre()  { result_.clear(); }
     inline void post()  {  }
-    inline const result_type &get_result() const  { return (result_); }
-    inline result_type &get_result()  { return (result_); }
+    inline auto &get_result(this auto &&self)  { return (self.result_); }
 
     explicit
     LSTMForecastVisitor(long input_size = 1,

@@ -48,9 +48,9 @@ namespace hmdf
     using result_type = size_type;
 
 #define DEFINE_PRE_POST_2 \
-    inline void pre ()  { count_ = 0; } \
-    inline void post ()  {  } \
-    inline result_type get_result () const  { return (count_); }
+    inline void pre()  { count_ = 0; } \
+    inline void post()  {  } \
+    inline result_type get_result() const  { return (count_); }
 
 // ----------------------------------------------------------------------------
 
@@ -90,9 +90,9 @@ struct  EhlersHighPassFilterVisitor  {
         }
     }
 
-    inline void pre ()  {  }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (0); }
+    inline void pre()  {  }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (0); }
 
     explicit
     EhlersHighPassFilterVisitor(value_type period = 20) : period_(period)  {  }
@@ -140,9 +140,9 @@ struct  EhlersBandPassFilterVisitor  {
             *(column_begin + i) -= filter[i];
     }
 
-    inline void pre ()  {  }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (0); }
+    inline void pre()  {  }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (0); }
 
     explicit
     EhlersBandPassFilterVisitor(value_type period = 20,

@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         compiler:
-          - { cc: gcc-13, cxx: g++-13 }
+          - { cc: gcc-15, cxx: g++-15 }
           - { cc: clang-17, cxx: clang++-17 }
         build_type: [Release]
     

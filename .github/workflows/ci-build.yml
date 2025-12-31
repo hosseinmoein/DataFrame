@@ -48,7 +48,7 @@ jobs:
           -DHMDF_BENCHMARKS=ON
     
     - name: Build
-      run: cmake --build build -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON --config ${{ matrix.build_type }} -j $(nproc)
+      run: cmake -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON --build build --config ${{ matrix.build_type }} -j $(nproc)
     
     - name: Run tests
       working-directory: build

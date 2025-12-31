@@ -688,7 +688,7 @@ public:
         noisey_idxs_.clear();
     }
     inline void post()  {  }
-    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &get_result(this auto &&self)  { return (self.clusters_); }
     inline auto &
     get_clusters_idxs(this auto &&self)  { return (self.clusters_idxs_); }
     inline auto &
@@ -925,7 +925,7 @@ public:
 
     inline void pre()  { clusters_.clear(); clusters_idxs_.clear(); }
     inline void post()  {  }
-    inline auto &get_result(this auto &&self)  { return (self.result_); }
+    inline auto &get_result(this auto &&self)  { return (self.clusters_); }
     inline auto &
     get_clusters_idxs(this auto &&self)  { return (self.clusters_idxs_); }
 

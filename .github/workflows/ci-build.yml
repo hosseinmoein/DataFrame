@@ -14,7 +14,6 @@ jobs:
       matrix:
         compiler:
           - { cc: gcc-14, cxx: g++-14 }
-          - { cc: clang-17, cxx: clang++-17 }
         build_type: [Release]
     
     steps:

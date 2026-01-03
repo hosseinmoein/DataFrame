@@ -64,7 +64,7 @@ public:
     using size_type = long;
     using thread_type = std::thread;
 
-    inline static constexpr size_type   MUL_THR_THHOLD = 250'000L;
+    inline static constexpr size_type   MUL_THR_THHOLD = size_type(250'000);
 #ifdef __cpp_lib_hardware_interference_size
     inline static constexpr size_type   CLINE_SIZE =
         size_type(std::hardware_destructive_interference_size);
@@ -118,7 +118,7 @@ public:
 
     // Parallel loop operating with two ranges
     //
-    template<typename F, typename I1, typename I2, typename ... As>
+    template<typename T, typename F, typename I1, typename I2, typename ... As>
     loop2_res_t<F, I1, I2, As ...>
     parallel_loop2(I1 begin1, I1 end1, I2 begin2, I2 end2,
                    F &&routine, As && ... args);

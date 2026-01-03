@@ -44,14 +44,12 @@ using namespace hmdf;
 // A DataFrame with ulong index type
 //
 using ULDataFrame = StdDataFrame<unsigned long>;
-using MyDataFrame = StdDataFrame<unsigned long>;
-using MyStdDataFrame = StdDataFrame<unsigned long>;
 using StrDataFrame = StdDataFrame<std::string>;
 using DTDataFrame = StdDataFrame256<DateTime>;
 using StrDataFrame2 = StdDataFrame256<std::string>;
 
 template<typename T>
-using StlVecType = typename MyDataFrame::template StlVecType<T>;
+using StlVecType = typename ULDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
@@ -125,7 +123,7 @@ static void test_get_data_every_n()  {
 
     std::cout << "\nTesting get_data_every_n( ) ..." << std::endl;
 
-    MyDataFrame                df;
+    ULDataFrame                df;
     StlVecType<unsigned long>  idxvec =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
           19, 20, 21 };
@@ -618,7 +616,7 @@ static void test_gen_join()  {
     std::vector<double>         d3 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
     std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
-    MyDataFrame                 df;
+    ULDataFrame                 df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -640,7 +638,7 @@ static void test_gen_join()  {
         { 115, 116, 115, 118, 119, 116, 121, 10.34, 11.56, 10.34, 12.3, 10.34,
           119.0 };
     std::vector<int>            i12 = { 122, 123, 124, 125, 199 };
-    MyDataFrame                 df2;
+    ULDataFrame                 df2;
 
     df2.load_data(std::move(idx2),
                   std::make_pair("xcol_1", d12),
@@ -731,7 +729,7 @@ static void test_gen_join()  {
         };
 
     auto    result_vw3 =
-        vw.gen_join<MyDataFrame, int, double, double, int>
+        vw.gen_join<ULDataFrame, int, double, double, int>
             (df2, "col_4", "xcol_1", predicate3);
 
     // result_vw3.write<std::ostream, double, int, unsigned long>(
@@ -782,7 +780,7 @@ static void test_ChiSquaredTestVisitor()  {
     std::vector<double>         ex2 = { 8, 20, 36, 24, 12 };
     std::vector<double>         ob3 = { 2, 5, 6, 8, 4 };
     std::vector<double>         ex3 = { 5, 5, 5, 5, 5 };
-    MyDataFrame                 df;
+    ULDataFrame                 df;
 
     df.load_data(std::move(idx),
                  std::make_pair("observation 1", ob1),
@@ -1065,7 +1063,7 @@ static void test_ARIMAVisitor()  {
         10.56, 10.30, 10.12, 10.01, 9.80, 9.74, 9.41, 9.03, 9.0, 8.20,
         8.01, 7.9, 7.55
     };
-    MyDataFrame                 df;
+    ULDataFrame                 df;
 
     df.load_data(std::move(idxvec),
                  std::make_pair("col1", col1),
@@ -1172,7 +1170,7 @@ static void test_HWESForecastVisitor()  {
         10.56, 10.30, 10.12, 10.01, 9.80, 9.74, 9.41, 9.03, 9.0, 8.20,
         8.01, 7.9, 7.55
     };
-    MyDataFrame                 df;
+    ULDataFrame                 df;
 
     df.load_data(std::move(idxvec),
                  std::make_pair("col1", col1),
@@ -1283,7 +1281,7 @@ static void test_LSTMForecastVisitor()  {
         10.56, 10.30, 10.12, 10.01, 9.80, 9.74, 9.41, 9.03, 9.0, 8.20,
         8.01, 7.9, 7.55
     };
-    MyDataFrame                 df;
+    ULDataFrame                 df;
 
     df.load_data(std::move(idxvec),
                  std::make_pair("col1", col1),
@@ -1470,9 +1468,46 @@ static void test_kshape_groups()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_count()  {
+
+    std::cout << "\nTesting count( ) ..." << std::endl;
+
+    ULDataFrame df;
+
+    try  {
+        df.read("FORD.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    const auto  count1 =
+        df.count<double>("FORD_Close",
+                         [](const unsigned long &, const double &close)  {
+                             return (close > 10.0);
+                         });
+
+    assert(count1 == 4900);
+
+    const auto  count2 =
+        df.count<double, double, double, long>(
+            "FORD_Close", "FORD_Open", "FORD_Low", "FORD_Volume",
+            [](const unsigned long &,
+               const double &close, const double &open, const double &low,
+               const long &volume)  {
+                return (close > 10.0 && open > 10.0 && low > 10.0 &&
+                        volume > 40'000'000L);
+            });
+
+    assert(count2 == 953);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
-    MyDataFrame::set_optimum_thread_level();
+    ULDataFrame::set_optimum_thread_level();
 
     test_permutation_vec();
     test_get_data_every_n();
@@ -1493,6 +1528,7 @@ int main(int, char *[])  {
     test_HWESForecastVisitor();
     test_LSTMForecastVisitor();
     test_kshape_groups();
+    test_count();
 
     return (0);
 }

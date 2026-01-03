@@ -1121,11 +1121,11 @@ public:
                 ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop2(column_begin1,
-                                                            column_end1,
-                                                            column_begin2,
-                                                            column_end2,
-                                                            std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop2<T>(column_begin1,
+                                                               column_end1,
+                                                               column_begin2,
+                                                               column_end2,
+                                                               std::move(lbd));
 
             for (auto &fut : futures)  {
                 const auto  &result = fut.get();
@@ -1796,11 +1796,11 @@ struct  DotProdVisitor  {
                                             euc_dist, man_dist));
                 };
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop2(column_begin1,
-                                                            column_end1,
-                                                            column_begin2,
-                                                            column_end2,
-                                                            std::move(lbd));
+                ThreadGranularity::thr_pool_.parallel_loop2<T>(column_begin1,
+                                                               column_end1,
+                                                               column_begin2,
+                                                               column_end2,
+                                                               std::move(lbd));
 
             for (auto &fut : futures)  {
                 const auto  ret = fut.get();
@@ -6901,7 +6901,7 @@ private:
 
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop2(
+                ThreadGranularity::thr_pool_.parallel_loop2<T>(
                     size_type(0),
                     col_s,
                     size_type(0),
@@ -7549,7 +7549,7 @@ public:
 
             if (type_ == decompose_type::additive)
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop2(
+                    ThreadGranularity::thr_pool_.parallel_loop2<T>(
                         size_type(0),
                         col_s,
                         size_type(0),
@@ -7562,7 +7562,7 @@ public:
                         });
             else
                 futures =
-                    ThreadGranularity::thr_pool_.parallel_loop2(
+                    ThreadGranularity::thr_pool_.parallel_loop2<T>(
                         size_type(0),
                         col_s,
                         size_type(0),
@@ -7804,7 +7804,7 @@ struct  BiasVisitor  {
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop2(
+                ThreadGranularity::thr_pool_.parallel_loop2<T>(
                     roll_period_ - 1,
                     col_s,
                     roll_period_ - 1,

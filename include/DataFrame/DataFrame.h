@@ -1917,7 +1917,7 @@ public:  // Data manipulation
     //   Type of the selecting functor
     // col_name:
     //   Name of the data column
-    // sel_functor:
+    // functor:
     //   A reference to the selecting functor
     //
     template<typename T, typename F>
@@ -1938,7 +1938,7 @@ public:  // Data manipulation
     //   Name of the first data column
     // col_name2:
     //   Name of the second data column
-    // sel_functor:
+    // functor:
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename F>
@@ -1965,7 +1965,7 @@ public:  // Data manipulation
     //   Name of the second data column
     // col_name3:
     //   Name of the third data column
-    // sel_functor:
+    // functor:
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename T3, typename F>
@@ -1998,7 +1998,7 @@ public:  // Data manipulation
     //   Name of the third data column
     // col_name3:
     //   Name of the fourth data column
-    // sel_functor:
+    // functor:
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename T3, typename T4, typename F>
@@ -2012,6 +2012,125 @@ public:  // Data manipulation
                                       const T1 &, const T2 &,
                                       const T3 &, const T4 &>,
                  bool>;
+
+    // For this you must define an Enum class that can classify the data in the
+    // named column with its options. This function will pass the datapoints in
+    // the named column to the functor which returns an Enum value for each
+    // datapoint. Then it will count the number of instances of each option in
+    // the Enum. The returned result is a map of Enum options to the number of
+    // instances.
+    //
+    // E:
+    //   An enum class type to classify the values in the named column
+    // T:
+    //   Type of the named column
+    // F:
+    //   Type of the classifying functor
+    // col_name:
+    //   Name of the data column
+    // functor:
+    //   A reference to the classifying functor
+    //
+    template<EnumType E, typename T, typename F>
+    [[nodiscard]] std::unordered_map<E, size_type>
+    class_count(const char *col_name, F &&functor) const requires
+    std::invocable<F, const IndexType &, const T &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, E>;
+
+    // This is the same as above class_count but operates on two data columns.
+    //
+    // E:
+    //   An enum class type to classify the values in the named columns
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // F:
+    //   Type of the classifying functor
+    // col_name1:
+    //   Name of the first data column
+    // col_name2:
+    //   Name of the second data column
+    // functor:
+    //   A reference to the classifying functor
+    //
+    template<EnumType E, typename T1, typename T2, typename F>
+    [[nodiscard]] std::unordered_map<E, size_type>
+    class_count(const char *col_name1, const char *col_name2,
+                F &&functor) const requires
+    std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                      const T1 &, const T2 &>, E>;
+
+    // This is the same as above class_count but operates on three
+    // data columns.
+    //
+    // E:
+    //   An enum class type to classify the values in the named columns
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // F:
+    //   Type of the classifying functor
+    // col_name1:
+    //   Name of the first data column
+    // col_name2:
+    //   Name of the second data column
+    // col_name3:
+    //   Name of the third data column
+    // functor:
+    //   A reference to the classifying functor
+    //
+    template<EnumType E, typename T1, typename T2, typename T3, typename F>
+    [[nodiscard]] std::unordered_map<E, size_type>
+    class_count(const char *col_name1, const char *col_name2,
+                const char *col_name3, F &&functor) const requires
+    std::invocable<F, const IndexType &,
+                   const T1 &, const T2 &, const T3 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                      const T1 &, const T2 &, const T3 &>,
+                 E>;
+
+    // This is the same as above class_count but operates on fourth
+    // data columns.
+    //
+    // E:
+    //   An enum class type to classify the values in the named columns
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // F:
+    //   Type of the classifying functor
+    // col_name1:
+    //   Name of the first data column
+    // col_name2:
+    //   Name of the second data column
+    // col_name3:
+    //   Name of the third data column
+    // col_name4:
+    //   Name of the fourth data column
+    // functor:
+    //   A reference to the classifying functor
+    //
+    template<EnumType E, typename T1, typename T2, typename T3, typename T4,
+             typename F>
+    [[nodiscard]] std::unordered_map<E, size_type>
+    class_count(const char *col_name1, const char *col_name2,
+                const char *col_name3, const char *col_name4,
+                F &&functor) const requires
+    std::invocable<F, const IndexType &,
+                   const T1 &, const T2 &, const T3 &, const T4 &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                      const T1 &, const T2 &,
+                                      const T3 &, const T4 &>, E>;
 
     template<hashable_equal T>
     [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>

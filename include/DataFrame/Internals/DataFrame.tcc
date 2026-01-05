@@ -1268,6 +1268,203 @@ std::same_as<std::invoke_result_t<F, const IndexType &,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<EnumType E,  typename T, typename F>
+std::unordered_map<E, typename DataFrame<I, H>::size_type> DataFrame<I, H>::
+class_count(const char *col_name, F &&functor) const requires
+std::invocable<F, const IndexType &, const T &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, E>  {
+
+    using result_t = std::unordered_map<E, size_type>;
+
+    const ColumnVecType<T> &vec = get_column<T>(col_name);
+    const size_type        col_s = vec.size();
+    const auto             thread_level =
+        (col_s < (ThreadPool::MUL_THR_THHOLD * 2)) ? 0L : get_thread_level();
+    auto                   lbd =
+        [this, &functor, &vec = std::as_const(vec)]
+        (auto begin, auto end) -> result_t  {
+            result_t    result;
+
+            for (size_type i { begin }; i < end; ++i)
+               result[functor(indices_[i], vec[i])] += 1;
+            return (result);
+        };
+    result_t               result;
+
+    if (thread_level > 2)  {
+        auto    futures =
+            thr_pool_.parallel_loop<T>(size_type(0), col_s, std::move(lbd));
+
+        for (auto &fut : futures)  {
+            for (const auto [key, value] : fut.get())
+                result[key] += value;
+        }
+    }
+    else  result = lbd(size_type(0), col_s);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<EnumType E, typename T1, typename T2, typename F>
+std::unordered_map<E, typename DataFrame<I, H>::size_type> DataFrame<I, H>::
+class_count(const char *col_name1, const char *col_name2,
+            F &&functor) const requires
+std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                  const T1 &, const T2 &>, E>  {
+
+    using result_t = std::unordered_map<E, size_type>;
+
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(col_name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(col_name2, false);
+
+    guard.release();
+
+    const size_type col_s = std::min(vec1.size(), vec2.size());
+    const auto      thread_level =
+        (col_s < (ThreadPool::MUL_THR_THHOLD * 2)) ? 0L : get_thread_level();
+    auto            lbd =
+        [this, &functor,
+         &vec1 = std::as_const(vec1), &vec2 = std::as_const(vec2)]
+        (auto begin, auto end) -> result_t  {
+            result_t    result;
+
+            for (size_type i { begin }; i < end; ++i)
+                result[functor(indices_[i], vec1[i], vec2[i])] += 1;
+            return (result);
+        };
+    result_t        result;
+
+    if (thread_level > 2)  {
+        auto    futures =
+            thr_pool_.parallel_loop<T1>(size_type(0), col_s, std::move(lbd));
+
+        for (auto &fut : futures)  {
+            for (const auto [key, value] : fut.get())
+                result[key] += value;
+        }
+    }
+    else  result = lbd(size_type(0), col_s);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<EnumType E, typename T1, typename T2, typename T3, typename F>
+std::unordered_map<E, typename DataFrame<I, H>::size_type> DataFrame<I, H>::
+class_count(const char *col_name1, const char *col_name2,
+            const char *col_name3, F &&functor) const requires
+std::invocable<F, const IndexType &,
+               const T1 &, const T2 &, const T3 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                  const T1 &, const T2 &, const T3 &>, E>  {
+
+    using result_t = std::unordered_map<E, size_type>;
+
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(col_name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(col_name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(col_name3, false);
+
+    guard.release();
+
+    const size_type col_s =
+        std::min({ vec1.size(), vec2.size(), vec3.size() });
+    const auto      thread_level =
+        (col_s < (ThreadPool::MUL_THR_THHOLD * 2)) ? 0L : get_thread_level();
+    auto            lbd =
+        [this, &functor,
+         &vec1 = std::as_const(vec1), &vec2 = std::as_const(vec2),
+         &vec3 = std::as_const(vec3)]
+        (auto begin, auto end) -> result_t  {
+            result_t    result;
+
+            for (size_type i { begin }; i < end; ++i)
+                result[functor(indices_[i], vec1[i], vec2[i], vec3[i])] += 1;
+            return (result);
+        };
+    result_t        result;
+
+    if (thread_level > 2)  {
+        auto    futures =
+            thr_pool_.parallel_loop<T1>(size_type(0), col_s, std::move(lbd));
+
+        for (auto &fut : futures)  {
+            for (const auto [key, value] : fut.get())
+                result[key] += value;
+        }
+    }
+    else  result = lbd(size_type(0), col_s);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<EnumType E, typename T1, typename T2, typename T3, typename T4,
+             typename F>
+std::unordered_map<E, typename DataFrame<I, H>::size_type> DataFrame<I, H>::
+class_count(const char *col_name1, const char *col_name2,
+            const char *col_name3, const char *col_name4,
+            F &&functor) const requires
+std::invocable<F, const IndexType &,
+               const T1 &, const T2 &, const T3 &, const T4 &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                  const T1 &, const T2 &,
+                                  const T3 &, const T4 &>, E>  {
+
+    using result_t = std::unordered_map<E, size_type>;
+
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(col_name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(col_name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(col_name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(col_name4, false);
+
+    guard.release();
+
+    const size_type col_s =
+        std::min({ vec1.size(), vec2.size(), vec3.size(), vec4.size() });
+    const auto      thread_level =
+        (col_s < (ThreadPool::MUL_THR_THHOLD * 2)) ? 0L : get_thread_level();
+    auto            lbd =
+        [this, &functor,
+         &vec1 = std::as_const(vec1), &vec2 = std::as_const(vec2),
+         &vec3 = std::as_const(vec3), &vec4 = std::as_const(vec4)]
+        (auto begin, auto end) -> result_t  {
+            result_t    result;
+
+            for (size_type i { begin }; i < end; ++i)
+                result[functor(indices_[i],
+                               vec1[i], vec2[i], vec3[i], vec4[i])] += 1;
+            return (result);
+        };
+    result_t        result;
+
+    if (thread_level > 2)  {
+        auto    futures =
+            thr_pool_.parallel_loop<T1>(size_type(0), col_s, std::move(lbd));
+
+        for (auto &fut : futures)  {
+            for (const auto [key, value] : fut.get())
+                result[key] += value;
+        }
+    }
+    else  result = lbd(size_type(0), col_s);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<binary_array T>
 typename
 DataFrame<T, HeteroVector<std::size_t(H::align_value)>>::template

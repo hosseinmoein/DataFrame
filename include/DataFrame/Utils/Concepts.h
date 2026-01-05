@@ -245,6 +245,11 @@ concept DT_ALLOWABLE_FORMATS = std::is_enum_v<F> && requires(F format)  {
     } -> std::same_as<bool>;
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T>
+concept EnumType = std::is_enum_v<T>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

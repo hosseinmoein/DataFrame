@@ -1505,6 +1505,55 @@ static void test_count()  {
 
 // ----------------------------------------------------------------------------
 
+enum class  FordDataTypes : int  {
+
+    invalid = 0,
+    grey = 1,
+    blue = 2,
+    red = 3,
+    white = 4,
+};
+
+static void test_class_count()  {
+
+    std::cout << "\nTesting class_count( ) ..." << std::endl;
+
+    ULDataFrame df;
+
+    try  {
+        df.read("FORD.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    auto    result =
+        df.class_count<FordDataTypes, double, double, double, long>(
+            "FORD_Close", "FORD_Open", "FORD_Low", "FORD_Volume",
+            [](const unsigned long &,
+               const double &close, const double &open, const double &low,
+               const long &volume) -> FordDataTypes  {
+ 
+                if (close > 0 && open > 0 && low > 0 && volume > 0)  {
+                    if (close < 1.5)  return (FordDataTypes::grey);
+                    else if (close < 5.5)  return (FordDataTypes::blue);
+                    else if (close < 20.5)  return (FordDataTypes::red);
+                    else  return (FordDataTypes::white);
+                }
+                return (FordDataTypes::invalid);
+            });
+
+    assert(result[FordDataTypes::invalid] == 0);
+    assert(result[FordDataTypes::grey] == 1232);
+    assert(result[FordDataTypes::blue] == 2877);
+    assert(result[FordDataTypes::red] == 7279);
+    assert(result[FordDataTypes::white] == 877);
+    assert((df.get_index().size() == (0 + 1232 + 2877 + 7279 + 877)));
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -1529,6 +1578,7 @@ int main(int, char *[])  {
     test_LSTMForecastVisitor();
     test_kshape_groups();
     test_count();
+    test_class_count();
 
     return (0);
 }

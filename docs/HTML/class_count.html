@@ -1,0 +1,227 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html style="margin:0; padding:0; height:100%;">
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif; margin:0; padding:0; height:100%;">
+  <font size="+3">&#8592;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+
+    </tr>
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><a href="https://github.com/hosseinmoein/DataFrame/blob/master/include/DataFrame/Utils/Concepts.h#L250">EnumType</a> E<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">unordered_map</span><span style="color:#800080; ">&lt;</span>E<span style="color:#808030; ">,</span> size_type<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">class_count<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name<span style="color:#808030; ">,</span> F <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">requires</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invocable<span style="color:#800080; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> IndexType <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span><span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>same_as<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invoke_result_t<span style="color:#800080; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> IndexType <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">,</span> E<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        For this you must define an Enum class that can classify the data in the named column with its options. This function will pass the datapoints in the named column to the functor which returns an Enum value for each datapoint. Then it will count the number of instances of each option in the Enum. The returned result is a map of Enum options to the number of instances.<BR>
+        The signature of fucntor:<BR>
+        <I><PRE>
+    E ()(const IndexType &, const T &)
+        </PRE></I>
+      </td>
+      <td width="30%">
+        <B>E</B>: An enum class type to classify the values in the named columns<BR>
+        <B>T</B>: Type of the named column<BR>
+        <B>F</B>: Type of the classifying functor<BR>
+        <B>col_name</B>: Name of the data column<BR>
+        <B>functor</B>: A reference to the classifying functor<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><a href="https://github.com/hosseinmoein/DataFrame/blob/master/include/DataFrame/Utils/Concepts.h#L250">EnumType</a> E<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">unordered_map</span><span style="color:#800080; ">&lt;</span>E<span style="color:#808030; ">,</span> size_type<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">class_count<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            F <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">requires</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invocable<span style="color:#800080; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> IndexType <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T1 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T2 <span style="color:#808030; ">&amp;</span><span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>same_as<span style="color:#808030; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invoke_result_t<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> IndexType <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                  <span style="color:#800000; font-weight:bold; ">const</span> T1 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T2 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&gt;</span><span style="color:#808030; ">,</span> E<span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        This is the same as above class_count but operates on two data columns.<BR>
+        The signature of sel_fucntor:<BR>
+        <I><PRE>
+    E ()(const IndexType &, const T1 &, const T2 &)
+        </PRE></I>
+      </td>
+      <td width="30%">
+        <B>E</B>: An enum class type to classify the values in the named columns<BR>
+        <B>T1</B>: Type of the first named column<BR>
+        <B>T2</B>: Type of the second named column<BR>
+        <B>F</B>: Type of the classifying functor<BR>
+        <B>name1</B>: Name of the first data column<BR>
+        <B>name2</B>: Name of the second data column<BR>
+        <B>functor</B>: A reference to the classifying functor<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><a href="https://github.com/hosseinmoein/DataFrame/blob/master/include/DataFrame/Utils/Concepts.h#L250">EnumType</a> E<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">unordered_map</span><span style="color:#800080; ">&lt;</span>E<span style="color:#808030; ">,</span> size_type<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">class_count<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name3<span style="color:#808030; ">,</span> F <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">requires</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invocable<span style="color:#800080; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> IndexType <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T1 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T2 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T3 <span style="color:#808030; ">&amp;</span><span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>same_as<span style="color:#808030; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invoke_result_t<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> IndexType <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                  <span style="color:#800000; font-weight:bold; ">const</span> T1 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T2 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T3 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&gt;</span><span style="color:#808030; ">,</span> E<span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        This is the same as above class_count but operates on three data columns.<BR>
+        The signature of sel_fucntor:<BR>
+        <I><PRE>
+    E ()(const IndexType &, const T1 &, const T2 &, const T3 &)
+        </PRE></I>
+      </td>
+      <td width="30%">
+        <B>E</B>: An enum class type to classify the values in the named columns<BR>
+        <B>T1</B>: Type of the first named column<BR>
+        <B>T2</B>: Type of the second named column<BR>
+        <B>T3</B>: Type of the third named column<BR>
+        <B>F</B>: Type of the classifying functor<BR>
+        <B>name1</B>: Name of the first data column<BR>
+        <B>name2</B>: Name of the second data column<BR>
+        <B>name3</B>: Name of the third data column<BR>
+        <B>functor</B>: A reference to the classifying functor<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><a href="https://github.com/hosseinmoein/DataFrame/blob/master/include/DataFrame/Utils/Concepts.h#L250">EnumType</a> E<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T2<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T4<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">unordered_map</span><span style="color:#800080; ">&lt;</span>E<span style="color:#808030; ">,</span> size_type<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">class_count<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name1<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name2<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name3<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">char</span> <span style="color:#808030; ">*</span>col_name4<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            F <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span>functor<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">requires</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invocable<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> IndexType <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">               <span style="color:#800000; font-weight:bold; ">const</span> T1 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T2 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T3 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T4 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&gt;</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>same_as<span style="color:#808030; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>invoke_result_t<span style="color:#808030; ">&lt;</span>F<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> IndexType <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                  <span style="color:#800000; font-weight:bold; ">const</span> T1 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T2 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T3 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T4 <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&gt;</span><span style="color:#808030; ">,</span> E<span style="color:#808030; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        This is the same as above class_count but operates on four data columns.<BR>
+        The signature of sel_fucntor:<BR>
+        <I><PRE>
+    E ()(const IndexType &,
+         const T1 &, const T2 &, const T3 &, const T4 &)
+        </PRE></I>
+      </td>
+      <td width="30%">
+        <B>E</B>: An enum class type to classify the values in the named columns<BR>
+        <B>T1</B>: Type of the first named column<BR>
+        <B>T2</B>: Type of the second named column<BR>
+        <B>T3</B>: Type of the third named column<BR>
+        <B>T4</B>: Type of the fourth named column<BR>
+        <B>F</B>: Type of the classifying functor<BR>
+        <B>name1</B>: Name of the first data column<BR>
+        <B>name2</B>: Name of the second data column<BR>
+        <B>name3</B>: Name of the third data column<BR>
+        <B>name4</B>: Name of the fourth data column<BR>
+        <B>functor</B>: A reference to the classifying functor<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  FordDataTypes <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">int</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    invalid <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    grey <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    blue <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    red <span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">    white <span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_class_count<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing class_count( ) ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ULDataFrame df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">try</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span><span style="color:#603000; ">read</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">FORD.csv</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> io_format<span style="color:#800080; ">::</span>csv2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">catch</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DataFrameError <span style="color:#808030; ">&amp;</span>ex<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> ex<span style="color:#808030; ">.</span>what<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">::</span><span style="color:#603000; ">exit</span><span style="color:#808030; ">(</span><span style="color:#808030; ">-</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>    result <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>class_count<span style="color:#800080; ">&lt;</span>FordDataTypes<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span></span>
+<span class="line_wrapper">            <span style="color:#800000; ">"</span><span style="color:#0000e6; ">FORD_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">FORD_Open</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">FORD_Low</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">FORD_Volume</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">            <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">               <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span><span style="color:#603000; ">close</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span><span style="color:#603000; ">open</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span>low<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">long</span> <span style="color:#808030; ">&amp;</span>volume<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> FordDataTypes  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"> </span>
+<span class="line_wrapper">                <span style="color:#800000; font-weight:bold; ">if</span> <span style="color:#808030; ">(</span><span style="color:#603000; ">close</span> <span style="color:#808030; ">&gt;</span> <span style="color:#008c00; ">0</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span> <span style="color:#603000; ">open</span> <span style="color:#808030; ">&gt;</span> <span style="color:#008c00; ">0</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span> low <span style="color:#808030; ">&gt;</span> <span style="color:#008c00; ">0</span> <span style="color:#808030; ">&amp;</span><span style="color:#808030; ">&amp;</span> volume <span style="color:#808030; ">&gt;</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">if</span> <span style="color:#808030; ">(</span><span style="color:#603000; ">close</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1.5</span><span style="color:#808030; ">)</span>  <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span>FordDataTypes<span style="color:#800080; ">::</span>grey<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">else</span> <span style="color:#800000; font-weight:bold; ">if</span> <span style="color:#808030; ">(</span><span style="color:#603000; ">close</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">5.5</span><span style="color:#808030; ">)</span>  <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span>FordDataTypes<span style="color:#800080; ">::</span>blue<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">else</span> <span style="color:#800000; font-weight:bold; ">if</span> <span style="color:#808030; ">(</span><span style="color:#603000; ">close</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">20.5</span><span style="color:#808030; ">)</span>  <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span>FordDataTypes<span style="color:#800080; ">::</span>red<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">else</span>  <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span>FordDataTypes<span style="color:#800080; ">::</span>white<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">                <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span>FordDataTypes<span style="color:#800080; ">::</span>invalid<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span>FordDataTypes<span style="color:#800080; ">::</span>invalid<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span>FordDataTypes<span style="color:#800080; ">::</span>grey<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">1232</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span>FordDataTypes<span style="color:#800080; ">::</span>blue<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">2877</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span>FordDataTypes<span style="color:#800080; ">::</span>red<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">7279</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span>FordDataTypes<span style="color:#800080; ">::</span>white<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">877</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#808030; ">(</span>df<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#808030; ">(</span><span style="color:#008c00; ">0</span> <span style="color:#808030; ">+</span> <span style="color:#008c00; ">1232</span> <span style="color:#808030; ">+</span> <span style="color:#008c00; ">2877</span> <span style="color:#808030; ">+</span> <span style="color:#008c00; ">7279</span> <span style="color:#808030; ">+</span> <span style="color:#008c00; ">877</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

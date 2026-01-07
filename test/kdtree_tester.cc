@@ -45,10 +45,6 @@ int main(int, char *[]) {
     tree.build(points);
     assert(tree.size() == 11);
 
-    // Size of std::vector in debug and non-debug modes
-	// 
-    assert(tree.memory_usage() == 792 || tree.memory_usage() == 440);
-
     // Find nearest neighbor
     //
     std::vector<double> query = { 9, 2 };

@@ -121,11 +121,6 @@ public:
     [[nodiscard]] size_type
     size() const;
 
-    // Get memory usage in bytes
-    //
-    [[nodiscard]] size_type
-    memory_usage() const;
-
 private:
 
     std::vector<Node>   nodes_ { };

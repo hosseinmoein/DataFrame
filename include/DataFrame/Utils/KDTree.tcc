@@ -105,15 +105,6 @@ size() const  { return (nodes_.size()); }
 // ----------------------------------------------------------------------------
 
 template<typename T>
-typename KDTree<T>::size_type KDTree<T>::
-memory_usage() const  {
-
-    return (nodes_.capacity() * sizeof(Node));
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename T>
 void KDTree<T>::build_tree_(points_vec &points)  {
 
     if (points.empty())  {

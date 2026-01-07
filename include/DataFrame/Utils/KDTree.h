@@ -65,9 +65,10 @@ public:
     KDTree(size_type k,
            dist_func_t &&dist_func =
                [](const point_t &a, const point_t &b) -> value_type {
-                   value_type  sum { 0 };
+                   value_type       sum { 0 };
+                   const size_type  sz { a.size() };
 
-                   for (size_type i { 0 }; i < a.size(); ++i)  {
+                   for (size_type i { 0 }; i < sz; ++i)  {
                        const value_type    diff { a[i] - b[i] };
 
                        sum += diff * diff;

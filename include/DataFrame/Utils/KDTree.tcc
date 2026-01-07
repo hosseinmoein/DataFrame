@@ -267,7 +267,6 @@ k_nearest_(const point_t &target, size_type k) const  {
     std::stack<SearchState>                             stack;
 
     stack.push(SearchState(root_idx_, 0));
-
     while (! stack.empty())  {
         const SearchState   state { stack.top() };
 
@@ -340,7 +339,7 @@ range_search_(const point_t &lower, const point_t &upper) const  {
 
     std::stack<RangeState>  stack;
 
-    stack.push({root_idx_, 0});
+    stack.push({ root_idx_, 0 });
     while (! stack.empty())  {
         const RangeState    state { stack.top() };
 
@@ -348,10 +347,7 @@ range_search_(const point_t &lower, const point_t &upper) const  {
         if (state.node_idx == NULL_IDX)  continue;
 
         const Node  &node { nodes_[state.node_idx] };
-
-        // Check if point is in range
-        //
-        bool    in_range { true };
+        bool        in_range { true };  // Check if point is in range
 
         for (size_type i = 0; i < k_; ++i)  {
             if (node.point[i] < lower[i] || node.point[i] > upper[i])  {
@@ -359,8 +355,7 @@ range_search_(const point_t &lower, const point_t &upper) const  {
                 break;
             }
         }
-        if (in_range)
-            result.push_back(node.point);
+        if (in_range)  result.push_back(node.point);
 
         const size_type axis { state.depth % k_ };
 

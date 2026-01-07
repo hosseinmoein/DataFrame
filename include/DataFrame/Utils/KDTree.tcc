@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/DataFrameTypes.h>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -43,23 +45,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename T, std::size_t K>
-void KDTree<T, K>::
-build(std::vector<point_t> points)  { build_tree_(points); }
+template<typename T>
+KDTree<T>::KDTree(size_type k) : k_(k)  {   }
 
 // ----------------------------------------------------------------------------
 
-template<typename T, std::size_t K>
-typename KDTree<T, K>::point_t
-KDTree<T, K>::find_nearest(const point_t &target) const {
-
-    return (nearest_(target));
-}
+template<typename T>
+void KDTree<T>::
+build(points_vec &points)  { build_tree_(points); }
 
 // ----------------------------------------------------------------------------
 
-template<typename T, std::size_t K>
-std::vector<typename KDTree<T, K>::point_t> KDTree<T, K>::
+template<typename T>
+typename KDTree<T>::point_t KDTree<T>::
+find_nearest(const point_t &target) const { return (nearest_(target)); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+typename KDTree<T>::points_vec KDTree<T>::
 find_k_nearest(const point_t &target, size_type k) const {
 
     return (k_nearest_(target, k));
@@ -67,8 +71,8 @@ find_k_nearest(const point_t &target, size_type k) const {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, std::size_t K>
-std::vector<typename KDTree<T, K>::point_t> KDTree<T, K>::
+template<typename T>
+typename KDTree<T>::points_vec KDTree<T>::
 find_in_range(const point_t &lower, const point_t &upper) const  {
 
     return (range_search_(lower, upper));
@@ -76,16 +80,20 @@ find_in_range(const point_t &lower, const point_t &upper) const  {
 
 // ----------------------------------------------------------------------------
 
-bool KDTree<T, K>::empty() const  { return (root_idx_ == NULL_IDX); }
+template<typename T>
+bool KDTree<T>::
+empty() const  { return (root_idx_ == NULL_IDX); }
 
 // ----------------------------------------------------------------------------
 
-typename KDTree<T, K>::size_type
-KDTree<T, K>::size() const  { return (nodes_.size()); }
+template<typename T>
+typename KDTree<T>::size_type KDTree<T>::
+size() const  { return (nodes_.size()); }
 
 // ----------------------------------------------------------------------------
 
-typename KDTree<T, K>::size_type KDTree<T, K>::
+template<typename T>
+typename KDTree<T>::size_type KDTree<T>::
 memory_usage() const  {
 
     return (nodes_.capacity() * sizeof(Node));
@@ -93,13 +101,13 @@ memory_usage() const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, std::size_t K>
-typename KDTree<T, K>::value_type KDTree<T, K>::
+template<typename T>
+typename KDTree<T>::value_type KDTree<T>::
 distance_sq_(const point_t &a, const point_t &b) const  {
 
     value_type  sum { 0 };
 
-    for (size_type i { 0 }; i < K; ++i)  {
+    for (size_type i { 0 }; i < k_; ++i)  {
         const value_type    diff { a[i] - b[i] };
 
         sum += diff * diff;
@@ -109,8 +117,8 @@ distance_sq_(const point_t &a, const point_t &b) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, std::size_t K>
-void KDTree<T, K>::build_tree_(std::vector<point_t> &points)  {
+template<typename T>
+void KDTree<T>::build_tree_(points_vec &points)  {
 
     if (points.empty())  {
         root_idx_ = NULL_IDX;
@@ -131,7 +139,7 @@ void KDTree<T, K>::build_tree_(std::vector<point_t> &points)  {
 
         if (task.start >= task.end)  continue;
 
-        const size_type axis { task.depth % K };
+        const size_type axis { task.depth % k_ };
         const size_type mid { task.start + (task.end - task.start) / 2 };
 
         // Partition around median
@@ -185,14 +193,14 @@ void KDTree<T, K>::build_tree_(std::vector<point_t> &points)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, std::size_t K>
-typename KDTree<T, K>::point_t KDTree<T, K>::
+template<typename T>
+typename KDTree<T>::point_t KDTree<T>::
 nearest_(const point_t &target) const  {
 
     if (root_idx_ == NULL_IDX)
-        throw DataFrameError("KDTree<T, K>::nearest_(): Tree is empty");
+        throw DataFrameError("KDTree<T>::nearest_(): Tree is empty");
 
-    point_t                 best { nodes_[root_idx_].point };
+    point_t                 best (nodes_[root_idx_].point);
     value_type              best_dist {
         distance_sq_(nodes_[root_idx_].point, target)
     };
@@ -215,7 +223,7 @@ nearest_(const point_t &target) const  {
                 best = node.point;
             }
 
-            const size_type     axis { state.depth % K };
+            const size_type     axis { state.depth % k_ };
             const value_type    diff { target[axis] - node.point[axis] };
             const size_type     near_idx {
                 (diff < 0) ? node.left : node.right
@@ -235,7 +243,7 @@ nearest_(const point_t &target) const  {
                 stack.push(SearchState { near_idx, state.depth + 1 });
         }
         else  { // Visiting far side
-            const size_type     axis { state.depth % K };
+            const size_type     axis { state.depth % k_ };
             const value_type    diff { target[axis] - node.point[axis] };
             const size_type     far_idx {
                 (diff < 0) ? node.right : node.left
@@ -251,11 +259,13 @@ nearest_(const point_t &target) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, std::size_t K>
-std::vector<typename KDTree<T, K>::point_t> KDTree<T, K>::
+template<typename T>
+typename KDTree<T>::points_vec KDTree<T>::
 k_nearest_(const point_t &target, size_type k) const  {
 
-    if (root_idx_ == NULL_IDX) return ({ });
+    points_vec    result;
+
+    if (root_idx_ == NULL_IDX)  return (result);
 
     std::priority_queue<std::pair<value_type, point_t>> pq;
     std::stack<SearchState>                             stack;
@@ -282,7 +292,7 @@ k_nearest_(const point_t &target, size_type k) const  {
                 pq.push({ dist, node.point });
             }
 
-            const size_type     axis { state.depth % K };
+            const size_type     axis { state.depth % k_ };
             const value_type    diff { target[axis] - node.point[axis] };
             const size_type     near_idx {
                 (diff < 0) ? node.left : node.right
@@ -301,7 +311,7 @@ k_nearest_(const point_t &target, size_type k) const  {
                 stack.push(SearchState { near_idx, state.depth + 1 });
         }
         else  { // Visiting far side
-            const size_type     axis { state.depth % K };
+            const size_type     axis { state.depth % k_ };
             const value_type    diff { target[axis] - node.point[axis] };
             const size_type     far_idx {
                 (diff < 0) ? node.right : node.left
@@ -312,8 +322,6 @@ k_nearest_(const point_t &target, size_type k) const  {
                 stack.push(SearchState { far_idx, state.depth + 1 });
         }
     }
-
-    std::vector<point_t>    result;
 
     while (! pq.empty())  {
         result.push_back(pq.top().second);
@@ -326,11 +334,11 @@ k_nearest_(const point_t &target, size_type k) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, std::size_t K>
-std::vector<typename KDTree<T, K>::point_t> KDTree<T, K>::
+template<typename T>
+typename KDTree<T>::points_vec KDTree<T>::
 range_search_(const point_t &lower, const point_t &upper) const  {
 
-    std::vector<point_t>    result;
+    points_vec    result;
 
     if (root_idx_ == NULL_IDX)  return (result);
 
@@ -349,7 +357,7 @@ range_search_(const point_t &lower, const point_t &upper) const  {
         //
         bool    in_range { true };
 
-        for (size_type i = 0; i < K; ++i)  {
+        for (size_type i = 0; i < k_; ++i)  {
             if (node.point[i] < lower[i] || node.point[i] > upper[i])  {
                 in_range = false;
                 break;
@@ -358,7 +366,7 @@ range_search_(const point_t &lower, const point_t &upper) const  {
         if (in_range)
             result.push_back(node.point);
 
-        const size_type axis { state.depth % K };
+        const size_type axis { state.depth % k_ };
 
         // Push children if they might contain points in range
         //
@@ -373,12 +381,6 @@ range_search_(const point_t &lower, const point_t &upper) const  {
 }
 
 } // namespace hmdf
-
-// ----------------------------------------------------------------------------
-
-#ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
-#  include <DataFrame/Utils/KDTree.tcc>
-#endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 
 // ----------------------------------------------------------------------------
 

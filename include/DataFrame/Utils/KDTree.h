@@ -43,18 +43,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename T, std::size_t K>
+// K-Dimensional (KD) Tree
+//
+template<typename T>
 class   KDTree {
 
 public:
 
     using value_type = T;
     using size_type = std::size_t;
-    using point_t = std::array<value_type, K>;
+    using point_t = std::vector<value_type>;
+    using points_vec = std::vector<point_t>;
 
     static constexpr size_type  NULL_IDX {
         std::numeric_limits<size_type>::max()
     };
+
+    explicit KDTree(size_type k);
+    KDTree() = delete;
+    KDTree(const KDTree &that) = default;
+    KDTree(KDTree &&that) = default;
+    KDTree &operator= (const KDTree &that) = delete;
+    KDTree &operator= (KDTree &&that) = default;
+    ~KDTree() = default;
 
     struct  Node {
         point_t     point { };
@@ -67,42 +78,43 @@ public:
     // Build tree from vector of points
     //
     inline void
-    build(std::vector<point_t> points);
+    build(points_vec &points);
 
     // Find nearest_ neighbor
     //
-    inline [[nodiscard]] point_t
+    [[nodiscard]] point_t
     find_nearest(const point_t &target) const;
 
     // Find k nearest neighbors
     //
-    inline [[nodiscard]] std::vector<point_t>
+    [[nodiscard]] points_vec
     find_k_nearest(const point_t &target, size_type k) const;
 
     // Range search: find all points within [lower, upper] box
     //
-    inline [[nodiscard]] std::vector<point_t>
+    [[nodiscard]] points_vec
     find_in_range(const point_t &lower, const point_t &upper) const;
 
     // Check if tree is empty
     //
-    inline [[nodiscard]] bool
+    [[nodiscard]] bool
     empty() const;
 
     // Get number of nodes_
     //
-    inline [[nodiscard]] size_type
+    [[nodiscard]] size_type
     size() const;
 
     // Get memory usage in bytes
     //
-    inline [[nodiscard]] size_type
+    [[nodiscard]] size_type
     memory_usage() const;
 
 private:
 
     std::vector<Node>   nodes_ { };
     size_type           root_idx_ { NULL_IDX };
+    const size_type     k_;
 
     // Helper to compute squared distance between two points
     //
@@ -121,17 +133,17 @@ private:
     };
 
     void
-    build_tree_(std::vector<point_t> &points);
+    build_tree_(points_vec &points);
 
     // Iterative nearest neighbor search
     //
     struct  SearchState  {
         size_type   node_idx;
         size_type   depth;
-        bool        visited_name;
+        bool        visited_near;
 
         SearchState(size_type idx, size_type d, bool v = false)
-            : node_idx(idx), depth(d), visited_name(v)  {   }
+            : node_idx(idx), depth(d), visited_near(v)  {   }
     };
 
     [[nodiscard]] point_t
@@ -139,7 +151,7 @@ private:
 
     // Iterative k-nearest neighbors search
     //
-    [[nodiscard]] std::vector<point_t>
+    [[nodiscard]] points_vec
     k_nearest_(const point_t &target, size_type k) const;
 
     // Iterative range search
@@ -149,7 +161,7 @@ private:
         size_type   depth;
     };
 
-    [[nodiscard]] std::vector<point_t>
+    [[nodiscard]] points_vec
     range_search_(const point_t &lower, const point_t &upper) const;
 };
 

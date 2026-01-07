@@ -224,3 +224,19 @@ target_compile_options(
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4996>
 )
+
+add_executable(kdtree_tester kdtree_tester.cc)
+target_link_libraries(kdtree_tester PRIVATE DataFrame)
+add_test(NAME kdtree_tester COMMAND kdtree_tester)
+target_compile_options(
+    kdtree_tester
+    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5030>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd5222>
+    # TODO: fix these warnings
+    PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
+           $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
+           $<$<CXX_COMPILER_ID:MSVC>:/wd4996>
+)
+

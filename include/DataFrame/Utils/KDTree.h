@@ -54,12 +54,27 @@ public:
     using size_type = std::size_t;
     using point_t = std::vector<value_type>;
     using points_vec = std::vector<point_t>;
+    using dist_func_t =
+        std::function<value_type(const point_t &, const point_t &)>;
 
     static constexpr size_type  NULL_IDX {
         std::numeric_limits<size_type>::max()
     };
 
-    explicit KDTree(size_type k);
+    explicit
+    KDTree(size_type k,
+           dist_func_t &&dist_func =
+               [](const point_t &a, const point_t &b) -> value_type {
+                   value_type  sum { 0 };
+
+                   for (size_type i { 0 }; i < a.size(); ++i)  {
+                       const value_type    diff { a[i] - b[i] };
+
+                       sum += diff * diff;
+                   }
+                   return (sum);
+               }
+           );
     KDTree() = delete;
     KDTree(const KDTree &that) = default;
     KDTree(KDTree &&that) = default;
@@ -115,11 +130,7 @@ private:
     std::vector<Node>   nodes_ { };
     size_type           root_idx_ { NULL_IDX };
     const size_type     k_;
-
-    // Helper to compute squared distance between two points
-    //
-    [[nodiscard]] value_type
-    distance_sq_(const point_t &a, const point_t &b) const;
+    dist_func_t         dist_func_;
 
     // Build tree iteratively using array-based storage
     //

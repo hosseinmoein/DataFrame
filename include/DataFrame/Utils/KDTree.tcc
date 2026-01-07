@@ -46,13 +46,25 @@ namespace hmdf
 {
 
 template<typename T>
-KDTree<T>::KDTree(size_type k) : k_(k)  {   }
+KDTree<T>::KDTree(size_type k, dist_func_t &&dist_func)
+    : k_(k), dist_func_(dist_func)  {   }
 
 // ----------------------------------------------------------------------------
 
 template<typename T>
 void KDTree<T>::
-build(points_vec &points)  { build_tree_(points); }
+build(points_vec &points)  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    for (const auto &vec : points)
+        if (vec.size() != k_)
+            throw DataFrameError("KDTree<T>::::build(): "
+                                 "All data vectors must have exactly "
+                                 "K datapoints");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    build_tree_(points);
+}
 
 // ----------------------------------------------------------------------------
 
@@ -97,22 +109,6 @@ typename KDTree<T>::size_type KDTree<T>::
 memory_usage() const  {
 
     return (nodes_.capacity() * sizeof(Node));
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename T>
-typename KDTree<T>::value_type KDTree<T>::
-distance_sq_(const point_t &a, const point_t &b) const  {
-
-    value_type  sum { 0 };
-
-    for (size_type i { 0 }; i < k_; ++i)  {
-        const value_type    diff { a[i] - b[i] };
-
-        sum += diff * diff;
-    }
-    return (sum);
 }
 
 // ----------------------------------------------------------------------------
@@ -202,7 +198,7 @@ nearest_(const point_t &target) const  {
 
     point_t                 best (nodes_[root_idx_].point);
     value_type              best_dist {
-        distance_sq_(nodes_[root_idx_].point, target)
+        dist_func_(nodes_[root_idx_].point, target)
     };
     std::stack<SearchState> stack;
 
@@ -216,7 +212,7 @@ nearest_(const point_t &target) const  {
         const Node  &node { nodes_[state.node_idx] };
 
         if (! state.visited_near)  {
-            const value_type    dist { distance_sq_(node.point, target) };
+            const value_type    dist { dist_func_(node.point, target) };
 
             if (dist < best_dist)  {
                 best_dist = dist;
@@ -282,7 +278,7 @@ k_nearest_(const point_t &target, size_type k) const  {
         const Node &node { nodes_[state.node_idx] };
 
         if (! state.visited_near)  {
-            const value_type    dist { distance_sq_(node.point, target) };
+            const value_type    dist { dist_func_(node.point, target) };
 
             if (pq.size() < k)  {
                 pq.push({ dist, node.point });

@@ -109,6 +109,7 @@ TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/date_time_tester \
            $(LOCAL_BIN_DIR)/gen_rand_tester \
            $(LOCAL_BIN_DIR)/matrix_tester \
+           $(LOCAL_BIN_DIR)/kdtree_tester \
            $(LOCAL_BIN_DIR)/iso_tree_tester
 
 # -----------------------------------------------------------------------------
@@ -238,6 +239,10 @@ MATRIX_TESTER_OBJ = $(LOCAL_OBJ_DIR)/matrix_tester.o
 $(LOCAL_BIN_DIR)/matrix_tester: $(TARGET_LIB) $(MATRIX_TESTER_OBJ)
 	$(CXX) -o $@ $(MATRIX_TESTER_OBJ) $(LIBS)
 
+KDTREE_TESTER_OBJ = $(LOCAL_OBJ_DIR)/kdtree_tester.o
+$(LOCAL_BIN_DIR)/kdtree_tester: $(TARGET_LIB) $(KDTREE_TESTER_OBJ)
+	$(CXX) -o $@ $(KDTREE_TESTER_OBJ) $(LIBS)
+
 ISO_TREE_TESTER_OBJ = $(LOCAL_OBJ_DIR)/iso_tree_tester.o
 $(LOCAL_BIN_DIR)/iso_tree_tester: $(TARGET_LIB) $(ISO_TREE_TESTER_OBJ)
 	$(CXX) -o $@ $(ISO_TREE_TESTER_OBJ) $(LIBS)
@@ -247,30 +252,8 @@ $(LOCAL_BIN_DIR)/iso_tree_tester: $(TARGET_LIB) $(ISO_TREE_TESTER_OBJ)
 depend:
 	makedepend $(CXXFLAGS) -Y $(SRCS)
 
-clean:
-	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
-          $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
-          $(GEN_RAND_TESTER_OBJ) $(META_PROG_OBJ) \
-          $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_TESTER_OBJ_2) \
-          $(DATAFRAME_TESTER_OBJ_3) $(DATAFRAME_TESTER_OBJ_4) \
-          $(HELLO_WORLD_OBJ) $(DATAFRAME_PERFORMANCE_2_OBJ) \
-          $(DATAFRAME_THREAD_SAFTY_OBJ) $(DATAFRAME_TESTER_SCHEMA_OBJ) \
-          $(ALLOCATOR_TESTER_OBJ) $(LINKEDIN_BENCHMARK_OBJ) \
-          $(DATAFRAME_READ_LARGE_FILE_OBJ) $(MATRIX_TESTER_OBJ) \
-          $(ISO_TREE_TESTER_OBJ) $(DATAFRAME_TESTER_OBJ_5)
-
 clobber:
-	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
-          $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
-          $(GEN_RAND_TESTER_OBJ) $(DATAFRAME_PERFORMACE_OBJ) \
-          $(DATAFRAME_TESTER_OBJ_2) $(DATAFRAME_THREAD_SAFTY_OBJ) \
-          $(DATAFRAME_TESTER_OBJ_3) $(DATAFRAME_TESTER_OBJ_4) \
-          $(HELLO_WORLD_OBJ) $(DATAFRAME_TESTER_SCHEMA_OBJ) \
-          $(ALLOCATOR_TESTER_OBJ) $(DATAFRAME_PERFORMANCE_OBJ) \
-          $(DATAFRAME_PERFORMANCE_2_OBJ) \
-          $(META_PROG_OBJ) $(LINKEDIN_BENCHMARK_OBJ) \
-          $(DATAFRAME_READ_LARGE_FILE_OBJ) $(MATRIX_TESTER_OBJ) \
-          $(ISO_TREE_TESTER_OBJ) $(DATAFRAME_TESTER_OBJ_5)
+	rm -rf $(LOCAL_OBJ_DIR) $(LOCAL_BIN_DIR) $(LOCAL_LIB_DIR)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

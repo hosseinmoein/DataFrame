@@ -73,7 +73,7 @@ public:
 
                        sum += diff * diff;
                    }
-                   return (sum);
+                   return (std::sqrt(sum));
                }
            );
     KDTree() = delete;
@@ -166,6 +166,124 @@ private:
     struct  RangeState  {
         size_type   node_idx;
         size_type   depth;
+    };
+
+    [[nodiscard]] points_vec
+    range_search_(const point_t &lower, const point_t &upper) const;
+};
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+// K-Dimensional (KD) Tree for scalar (one dimensional)
+//
+template<typename T>
+class   KDTree1D {
+
+public:
+
+    using value_type = T;
+    using size_type = std::size_t;
+    using point_t = value_type;
+    using points_vec = std::vector<point_t>;
+    using dist_func_t =
+        std::function<value_type(const point_t &, const point_t &)>;
+
+    static constexpr size_type  NULL_IDX {
+        std::numeric_limits<size_type>::max()
+    };
+
+    explicit
+    KDTree1D(dist_func_t &&dist_func =
+                 [](const point_t &a, const point_t &b) -> value_type {
+                     return (std::abs(a - b));
+                 }
+           );
+    KDTree1D(const KDTree1D &that) = default;
+    KDTree1D(KDTree1D &&that) = default;
+    KDTree1D &operator= (const KDTree1D &that) = default;
+    KDTree1D &operator= (KDTree1D &&that) = default;
+    ~KDTree1D() = default;
+
+    struct  Node {
+        point_t     point { };
+        size_type   left { NULL_IDX };
+        size_type   right { NULL_IDX };
+
+        explicit Node(const point_t &p) : point(p)  {  }
+    };
+
+    // Build tree from vector of points
+    //
+    inline void
+    build(points_vec &points);
+
+    // Find nearest_ neighbor
+    //
+    [[nodiscard]] point_t
+    find_nearest(const point_t &target) const;
+
+    // Find k nearest neighbors
+    //
+    [[nodiscard]] points_vec
+    find_k_nearest(const point_t &target, size_type k) const;
+
+    // Range search: find all points within [lower, upper] box
+    //
+    [[nodiscard]] points_vec
+    find_in_range(const point_t &lower, const point_t &upper) const;
+
+    // Check if tree is empty
+    //
+    [[nodiscard]] bool
+    empty() const;
+
+    // Get number of nodes_
+    //
+    [[nodiscard]] size_type
+    size() const;
+
+private:
+
+    std::vector<Node>   nodes_ { };
+    size_type           root_idx_ { NULL_IDX };
+    dist_func_t         dist_func_;
+
+    // Build tree iteratively using array-based storage
+    //
+    struct  BuildTask  {
+        size_type   node_idx;
+        size_type   start;
+        size_type   end;
+        bool        is_left;
+        size_type   parent_idx;
+    };
+
+    void
+    build_tree_(points_vec &points);
+
+    // Iterative nearest neighbor search
+    //
+    struct  SearchState  {
+        size_type   node_idx;
+        bool        visited_near;
+
+        SearchState(size_type idx, bool v = false)
+            : node_idx(idx), visited_near(v)  {   }
+    };
+
+    [[nodiscard]] point_t
+    nearest_(const point_t& target) const;
+
+    // Iterative k-nearest neighbors search
+    //
+    [[nodiscard]] points_vec
+    k_nearest_(const point_t &target, size_type k) const;
+
+    // Iterative range search
+    //
+    struct  RangeState  {
+        size_type   node_idx;
     };
 
     [[nodiscard]] points_vec

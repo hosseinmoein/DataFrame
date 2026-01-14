@@ -92,9 +92,10 @@ public:
     };
 
     // Build tree from vector of points
+    // NOTE: points is passed by value in purpose
     //
     inline void
-    build(points_vec &points);
+    build(points_vec points);
 
     // Find nearest_ neighbor
     //
@@ -105,6 +106,11 @@ public:
     //
     [[nodiscard]] points_vec
     find_k_nearest(const point_t &target, size_type k) const;
+
+    // Find k nearest neighbors
+    //
+    [[nodiscard]] std::vector<value_type>
+    k_nearest_dists(const point_t &target, size_type k) const;
 
     // Range search: find all points within [lower, upper] box
     //

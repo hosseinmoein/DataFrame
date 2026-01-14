@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/Utils/KDTree.h>
 #include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Vectors/VectorPtrView.h>
 
@@ -47,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 namespace hmdf
 {
@@ -123,7 +124,7 @@ private:
     const bool                              skip_nan_;
 };
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<std::size_t K,
          typename T, typename I = unsigned long, std::size_t A = 0>
@@ -306,7 +307,7 @@ public:
           dfunc_(f) {  }
 };
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 // Time complexity is O(I*n^2) where I is number of iterations
 // Space complexity is O(n^2)
@@ -538,7 +539,7 @@ public:
           dfactor_(damping_factor), dfunc_(f)  {   }
 };
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 // Density-Based Spatial Clustering of Applications with Noise
 // Average runtime complexity is O(n log n). The worst case is O(n^2).
@@ -719,7 +720,7 @@ private:
     vec_t<size_type>    noisey_idxs_ { };    // Indices of noisey elements
 };
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 // Runtime complexity is O(I * n^2) where I is number of iterations.
 //
@@ -961,7 +962,7 @@ private:
     order_type              clusters_idxs_ { };  // Clusters indices
 };
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  FastFourierTransVisitor  {
@@ -1431,7 +1432,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using fft_v = FastFourierTransVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  EntropyVisitor  {
@@ -1524,7 +1525,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using ent_v = EntropyVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ImpurityVisitor  {
@@ -1636,7 +1637,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using impu_v = ImpurityVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  SigmoidVisitor  {
@@ -1894,7 +1895,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using sigm_v = SigmoidVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  RectifyVisitor  {
@@ -2152,7 +2153,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using recf_v = RectifyVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  PolicyLearningLossVisitor  {
@@ -2219,7 +2220,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using plloss_v = PolicyLearningLossVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long>
 struct  LossFunctionVisitor  {
@@ -2561,7 +2562,7 @@ private:
 template<typename T, typename I = unsigned long>
 using loss_v = LossFunctionVisitor<T, I>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<vector_sim_type TYP, typename T, typename I = unsigned long>
 struct  VectorSimilarityVisitor  {
@@ -2657,7 +2658,7 @@ private:
 template<vector_sim_type TYP, typename T, typename I = unsigned long>
 using vs_v = VectorSimilarityVisitor<TYP, T, I>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<std::size_t K,
          typename T, typename I = unsigned long, std::size_t A = 0>
@@ -2896,7 +2897,7 @@ template<std::size_t K, typename T,
          typename I = unsigned long, std::size_t A = 0>
 using spect_v = SpectralClusteringVisitor<K, T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
 struct  SeasonalPeriodVisitor  {
@@ -3002,7 +3003,7 @@ private:
 template<typename T, typename I = unsigned long>
 using ssp_v = SeasonalPeriodVisitor<T, I>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 // Dynamic Time Warping (DTW) is an algorithm for measuring similarity between
 // two temporal sequences, which may vary in speed.
@@ -3094,7 +3095,7 @@ private:
 template<typename T, typename I = unsigned long>
 using dtw_v = DynamicTimeWarpVisitor<T, I>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AnomalyDetectByFFTVisitor  {
@@ -3173,7 +3174,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_fft_v = AnomalyDetectByFFTVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  HampelFilterVisitor {
@@ -3263,7 +3264,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using hamf_v = HampelFilterVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AnomalyDetectByIQRVisitor  {
@@ -3351,7 +3352,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_iqr_v = AnomalyDetectByIQRVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AnomalyDetectByZScoreVisitor  {
@@ -3405,7 +3406,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_zscr_v = AnomalyDetectByZScoreVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AnomalyDetectByLOFVisitor  {
@@ -3554,7 +3555,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_lof_v = AnomalyDetectByLOFVisitor<T, I, A>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 // Mutual Information
 //
@@ -3731,7 +3732,7 @@ private:
 template<typename T, typename I = unsigned long>
 using mut_i_v = MutualInfoVisitor<T, I>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 // AutoRegressive Integrated Moving Average
 //
@@ -4040,7 +4041,7 @@ private:
 template<typename T, typename I = unsigned long>
 using arima_v = ARIMAVisitor<T, I>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 // Holt–Winters Exponential Smoothing forecasting
 //
@@ -4402,7 +4403,7 @@ private:
 template<typename T, typename I = unsigned long>
 using hwes_v = HWESForecastVisitor<T, I>;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 // Long Short-Term Memory (LSTM) forecasting
 //
@@ -5093,9 +5094,184 @@ private:
 template<typename T, typename I = unsigned long>
 using lstm_v = LSTMForecastVisitor<T, I>;
 
+// ------------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  AnomalyDetectByKNNVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using win_type = std::vector<value_type>;
+    using result_type =
+        std::vector<value_type, typename allocator_declare<value_type, A>::type>;
+    using index_vec_t =
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
+    using distance_func =
+        std::function<value_type(const win_type &x, const win_type &y)>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (window_ > (col_s / 2))
+            throw DataFrameError("AnomalyDetectByKNNVisitor: "
+                                 "Time-series is too short for window");
+        if (k_ > (col_s / 2))
+            throw DataFrameError("AnomalyDetectByKNNVisitor: "
+                                 "Time-series is too short for K");
+        if (window_ <= 1)
+            throw DataFrameError("AnomalyDetectByKNNVisitor: "
+                                 "Window must be > 1");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        std::vector<std::vector<value_type>>    buckets;
+
+        if (nt_ > normalization_type::none)  {
+            NormalizeVisitor<T, I, A>   norm { nt_ };
+
+            norm.pre();
+            norm(idx_begin, idx_end, column_begin, column_end);
+            norm.post();
+            buckets = bucketize_(norm.get_result().begin(), col_s);
+        }
+        else
+            buckets = bucketize_(column_begin, col_s);
+
+        KDTree<double>  tree { window_, std::forward<distance_func>(dfunc_) };
+
+        tree.build(buckets);
+
+        // Now score
+        //
+        result_type scores;
+
+        scores.reserve(buckets.size());
+        for (const auto &vec : buckets)  {
+            // +1 because nearest neighbor is the point itself
+            //
+            const auto  dists { tree.k_nearest_dists(vec, k_ + 1) };
+            value_type  sum { 0 };
+
+            for (size_type i { 1 }; i < dists.size(); ++i)  sum += dists[i];
+            scores.push_back(sum / T(k_));
+        }
+
+        result_ = expand_scores_(scores, col_s);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    index_vec_t
+    get_anomalous_indices(value_type threshold = T(0.0000001)) const  {
+
+        const size_type col_s { result_.size() };
+        size_type       idx { 0 };
+        index_vec_t     anom_idxs;
+
+        anom_idxs.reserve(64);
+        while (idx < col_s)  {
+            value_type  val = result_[idx];
+
+            if (val > threshold) [[unlikely]]  {
+                size_type       max_idx { idx };
+                value_type      max_val { val };
+
+                while (val > threshold && idx < (col_s - 1))  {
+                    val = result_[++idx];
+                    if (val > max_val)  {
+                        max_val = val;
+                        max_idx = idx;
+                    }
+                }
+                anom_idxs.push_back(max_idx);
+            }
+            idx += 1;
+        }
+        return (anom_idxs);
+    }
+
+    AnomalyDetectByKNNVisitor(
+        size_type window,
+        size_type k,
+        normalization_type norm_type = normalization_type::none,
+        distance_func &&f =
+           [](const win_type &a, const win_type &b) -> value_type {
+               value_type       sum { 0 };
+               const size_type  sz { a.size() };
+
+               for (size_type i { 0 }; i < sz; ++i)  {
+                   const value_type    diff { a[i] - b[i] };
+
+                   sum += diff * diff;
+               }
+               return (std::sqrt(sum));
+           })
+        : window_(window),
+          k_(k),
+          nt_(norm_type),
+          dfunc_(std::forward<distance_func>(f))  {   }
+
+private:
+
+    template <typename H>
+    inline std::vector<std::vector<value_type>>
+    bucketize_(const H &column_begin, size_type col_s) const  {
+
+        std::vector<result_type>    result;
+
+        result.reserve(col_s - window_ + 1);
+        for (size_type i { 0 }; (i + window_) <= col_s; ++i)
+            result.emplace_back(column_begin + i, column_begin + (i + window_));
+        return (result);
+    }
+
+    inline result_type
+    expand_scores_(const result_type &scores, size_type col_s) const  {
+
+        result_type             expanded(col_s, 0);
+        std::vector<size_type>  counts(col_s, 0);
+
+        for (size_type i { 0 }; i < scores.size(); ++i) {
+            for (size_type j { 0 }; j < window_; ++j) {
+                expanded[i + j] += scores[i];
+                counts[i + j]++;
+            }
+        }
+
+        for (size_type i { 0 }; i < col_s; ++i)
+            if (counts[i] > 0)  expanded[i] /= T(counts[i]);
+
+        return (expanded);
+    }
+
+    // This is the KDTree dimension.
+    // Larger dimension makes KDTree less effective. Window stays small to keep
+    // KD-tree viable. Window decides what a point looks like.
+    //
+    const size_type             window_;
+
+    // This is number of neighbors used to estimate rarity.
+    // K is about local density, and Independent of time series length or window
+    // size. K grows with dataset size, not dimension. K decides how lonely that
+    // point is.
+    //
+    const size_type             k_;
+    const normalization_type    nt_;
+    distance_func               dfunc_;
+    result_type                 result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using and_knn_v = AnomalyDetectByKNNVisitor<T, I, A>;
+
 } // namespace hmdf
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 // Local Variables:
 // mode:C++

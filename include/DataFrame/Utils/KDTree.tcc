@@ -53,7 +53,7 @@ KDTree<T>::KDTree(size_type k, dist_func_t &&dist_func)
 
 template<typename T>
 void KDTree<T>::
-build(points_vec &points)  {
+build(points_vec points)  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     for (const auto &vec : points)
@@ -79,6 +79,80 @@ typename KDTree<T>::points_vec KDTree<T>::
 find_k_nearest(const point_t &target, size_type k) const {
 
     return (k_nearest_(target, k));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+std::vector<typename KDTree<T>::value_type> KDTree<T>::
+k_nearest_dists(const point_t &target, size_type k) const {
+
+	std::vector<value_type> result;
+
+    if (root_idx_ == NULL_IDX)  return (result);
+
+    std::priority_queue<std::pair<value_type, point_t>> pq;
+    std::stack<SearchState>                             stack;
+
+    stack.push(SearchState { root_idx_, 0 });
+    while (! stack.empty())  {
+        const SearchState   state { stack.top() };
+
+        stack.pop();
+
+        if (state.node_idx == NULL_IDX)  continue;
+
+        const Node &node { nodes_[state.node_idx] };
+
+        if (! state.visited_near)  {
+            const value_type    dist { dist_func_(node.point, target) };
+
+            if (pq.size() < k)  {
+                pq.push({ dist, node.point });
+            }
+            else if (dist < pq.top().first)  {
+                pq.pop();
+                pq.push({ dist, node.point });
+            }
+
+            const size_type     axis { state.depth % k_ };
+            const value_type    diff { target[axis] - node.point[axis] };
+            const size_type     near_idx {
+                (diff < 0) ? node.left : node.right
+            };
+            const size_type     far_idx {
+                (diff < 0) ? node.right : node.left
+            };
+
+            // Check if we need to explore far side
+            //
+            if (far_idx != NULL_IDX &&
+                (pq.size() < k || diff * diff < pq.top().first))
+                stack.push(SearchState { state.node_idx, state.depth, true });
+
+            if (near_idx != NULL_IDX)
+                stack.push(SearchState { near_idx, state.depth + 1 });
+        }
+        else  { // Visiting far side
+            const size_type     axis { state.depth % k_ };
+            const value_type    diff { target[axis] - node.point[axis] };
+            const size_type     far_idx {
+                (diff < 0) ? node.right : node.left
+            };
+
+            if (far_idx != NULL_IDX &&
+                (pq.size() < k || diff * diff < pq.top().first))
+                stack.push(SearchState { far_idx, state.depth + 1 });
+        }
+    }
+
+    while (! pq.empty())  {
+        result.push_back(pq.top().first);
+        pq.pop();
+    }
+
+    std::reverse(result.begin(), result.end());
+    return (result);
 }
 
 // ----------------------------------------------------------------------------

@@ -1554,6 +1554,71 @@ static void test_class_count()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_AnomalyDetectByKNNVisitor()  {
+
+    std::cout << "\nTesting AnomalyDetectByKNNVisitor{ } ..." << std::endl;
+
+    constexpr std::size_t   item_cnt = 1024;
+    ULDataFrame             df;
+
+    df.load_index(ULDataFrame::gen_sequence_index(0, item_cnt, 1));
+
+    std::vector<double>   sine_col;
+
+    sine_col.reserve(item_cnt);
+    for (std::size_t i = 0; i < item_cnt; ++i)  {
+        sine_col.push_back(std::sin(2.0 * M_PI * i / 20.0)); // Base sine wave
+        if (i % 31 == 0)  sine_col.back() += 10.0;  // Inject anomalies
+    }
+    df.load_column("sine col", std::move(sine_col));
+
+    and_knn_v<double>   anomaly1 { 3, 4 };
+
+    df.single_act_visit<double>("sine col", anomaly1);
+
+    const auto  anomalous_indices1 = anomaly1.get_anomalous_indices();
+
+    assert(anomaly1.get_result().size() == 1024);
+    assert(anomalous_indices1.size() == 34);
+    assert(anomalous_indices1[0] == 0);
+    assert(anomalous_indices1[1] == 31);
+    assert(anomalous_indices1[2] == 62);
+    assert(anomalous_indices1[17] == 527);
+    assert(anomalous_indices1[22] == 682);
+    assert(anomalous_indices1[32] == 992);
+    assert(anomalous_indices1[33] == 1023);
+
+    // Now do the same thing for IBM market data
+    //
+    StrDataFrame    ibm;
+
+    try  {
+        ibm.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+    ibm.get_column<double>("IBM_Adj_Close")[502] = 800.0;
+    ibm.get_column<double>("IBM_Adj_Close")[1001] = 900.0;
+    ibm.get_column<double>("IBM_Adj_Close")[2002] = 850.0;
+
+    and_knn_v<double, std::string>  anomaly2 {
+        3, 4, normalization_type::z_score
+    };
+
+    ibm.single_act_visit<double>("IBM_Adj_Close", anomaly2);
+
+    const auto  anomalous_indices2 = anomaly2.get_anomalous_indices(0.9);
+
+    assert(anomalous_indices2.size() == 3);
+    assert(anomalous_indices2[0] == 502);
+    assert(anomalous_indices2[1] == 1001);
+    assert(anomalous_indices2[2] == 2002);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -1579,6 +1644,7 @@ int main(int, char *[])  {
     test_kshape_groups();
     test_count();
     test_class_count();
+    test_AnomalyDetectByKNNVisitor();
 
     return (0);
 }

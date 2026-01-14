@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/KDTree.h>
 
 #include <cassert>
+#include <cmath>
 #include <iostream>
 
 using namespace hmdf;
@@ -62,6 +63,15 @@ int main(int, char *[]) {
         assert(knn[0][0] == 8.0 && knn[0][1] == 2.0);
         assert(knn[1][0] == 8.0 && knn[1][1] == 1.0);
         assert(knn[2][0] == 7.0 && knn[2][1] == 2.0);
+
+        // K nearest distances
+        //
+        const auto  k_dists { tree.k_nearest_dists(query, 3) };
+
+        assert(k_dists.size() == 3);
+        assert(k_dists[0] == 1.0);
+        assert(std::fabs(k_dists[1] - 1.41421) < 0.00001);
+        assert(k_dists[2] == 2.0);
 
         // Range search
         //

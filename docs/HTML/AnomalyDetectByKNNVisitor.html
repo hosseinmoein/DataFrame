@@ -67,12 +67,10 @@ body {
 
     <I>
     <PRE>
-using win_type = std::vector&lt;value_type&gt;;
-using result_type =
-    std::vector&lt;value_type, typename allocator_declare&lt;value_type, A&gt;::type&gt;;
-using index_vec_t =
-    std::vector&lt;size_type, typename allocator_declare&lt;size_type, A&gt;::type&gt;;
-using distance_func = std::function&lt;value_type(const win_type &x, const win_type &y)&gt;;
+using win_type = std::vector&lt;T&gt;;
+using result_type = std::vector&lt;T, typename allocator_declare&lt;T, A&gt;::type&gt;;
+using index_vec_t = std::vector&lt;size_type, typename allocator_declare&lt;size_type, A&gt;::type&gt;;
+using distance_func = std::function&lt;T(const win_type &x, const win_type &y)&gt;;
 
 AnomalyDetectByKNNVisitor(
     size_type window,

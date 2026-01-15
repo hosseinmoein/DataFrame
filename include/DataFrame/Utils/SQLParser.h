@@ -180,10 +180,10 @@ public:
         switch (current) {
             case ',': pos_++; return (SQLToken(SQLTokenType::COMMA, ","));
             case ';': pos_++; return (SQLToken(SQLTokenType::SEMICOLON, ";"));
-            case '*': pos_++; (return SQLToken(SQLTokenType::ASTERISK, "*"));
-            case '(': pos_++; (return SQLToken(SQLTokenType::LPAREN, "("));
-            case ')': pos_++; (return SQLToken(SQLTokenType::RPAREN, ")"));
-            case '=': pos_++; (return SQLToken(SQLTokenType::EQUALS, "="));
+            case '*': pos_++; return (SQLToken(SQLTokenType::ASTERISK, "*"));
+            case '(': pos_++; return (SQLToken(SQLTokenType::LPAREN, "("));
+            case ')': pos_++; return (SQLToken(SQLTokenType::RPAREN, ")"));
+            case '=': pos_++; return (SQLToken(SQLTokenType::EQUALS, "="));
             case '<':  {
                 pos_ += 1;
                 if (pos_ < input_.length())  {

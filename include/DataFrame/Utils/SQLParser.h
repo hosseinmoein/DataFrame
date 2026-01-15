@@ -179,7 +179,7 @@ public:
         // Single character tokens - use jump table concept
         switch (current) {
             case ',': pos_++; return (SQLToken(SQLTokenType::COMMA, ","));
-            case ';': pos_++; (return SQLToken(SQLTokenType::SEMICOLON, ";"));
+            case ';': pos_++; return (SQLToken(SQLTokenType::SEMICOLON, ";"));
             case '*': pos_++; (return SQLToken(SQLTokenType::ASTERISK, "*"));
             case '(': pos_++; (return SQLToken(SQLTokenType::LPAREN, "("));
             case ')': pos_++; (return SQLToken(SQLTokenType::RPAREN, ")"));

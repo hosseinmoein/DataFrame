@@ -73,13 +73,16 @@ enum class  SQLTokenType : unsigned short int  {
     END_OF_FILE = 20,
 };
 
+// -----------------------------------------------------------------------------
+
 // SQLToken structure - use string_view to avoid copies
 //
 struct  SQLToken  {
     SQLTokenType        type { SQLTokenType::UNKNOWN };
     std::string_view    value { "" };
     
-    SQLToken(SQLTokenType t, std::string_view v = "") : type(t), value(v)  {   }
+    SQLToken(SQLTokenType t, std::string_view v = "")
+        : type(t), value(v)  {   }
 };
 
 // -----------------------------------------------------------------------------
@@ -87,8 +90,6 @@ struct  SQLToken  {
 // Lexer class
 /
 class   Lexer  {
-
-private:
 
     using size_type = std::size_t;
 
@@ -154,7 +155,7 @@ private:
     }
 
     inline SQLTokenType
-    get_ketword_type_(std::string_view word)  {
+    get_keyword_type_(std::string_view word)  {
 
         const auto  it { keywords_.find(word) };
 
@@ -172,18 +173,25 @@ public:
         skip_white_space_();
 
         if (pos_ >= input_.length())
-            return SQLToken(SQLTokenType::END_OF_FILE);
+            return (SQLToken(SQLTokenType::END_OF_FILE));
 
         const char  current { input_[pos_] };
 
         // Single character tokens - use jump table concept
-        switch (current) {
-            case ',': pos_++; return (SQLToken(SQLTokenType::COMMA, ","));
-            case ';': pos_++; return (SQLToken(SQLTokenType::SEMICOLON, ";"));
-            case '*': pos_++; return (SQLToken(SQLTokenType::ASTERISK, "*"));
-            case '(': pos_++; return (SQLToken(SQLTokenType::LPAREN, "("));
-            case ')': pos_++; return (SQLToken(SQLTokenType::RPAREN, ")"));
-            case '=': pos_++; return (SQLToken(SQLTokenType::EQUALS, "="));
+        //
+        switch (current)  {
+            case ',':
+                pos_ += 1; return (SQLToken(SQLTokenType::COMMA, ","));
+            case ';':
+                pos_ += 1; return (SQLToken(SQLTokenType::SEMICOLON, ";"));
+            case '*':
+                pos_ += 1; return (SQLToken(SQLTokenType::ASTERISK, "*"));
+            case '(':
+                pos_ += 1; return (SQLToken(SQLTokenType::LPAREN, "("));
+            case ')':
+                pos_ += 1; return (SQLToken(SQLTokenType::RPAREN, ")"));
+            case '=':
+                pos_ += 1; return (SQLToken(SQLTokenType::EQUALS, "="));
             case '<':  {
                 pos_ += 1;
                 if (pos_ < input_.length())  {
@@ -217,14 +225,14 @@ public:
 
         // Identifiers and keywords
         //
-        if (std::isalpha(current) || current == '_') {
+        if (std::isalpha(current) || current == '_')  {
             const std::string_view  ident { read_identifier_() };
 
-            return (SQLToken(get_ketword_type_(ident), ident));
+            return (SQLToken(get_keyword_type_(ident), ident));
         }
 
         pos_ += 1;
-        return SQLToken(SQLTokenType::UNKNOWN, input_.substr(pos_ - 1, 1));
+        return (SQLToken(SQLTokenType::UNKNOWN, input_.substr(pos_ - 1, 1)));
     }
 };
 
@@ -233,6 +241,7 @@ public:
 // AST Node types - use virtual dispatch efficiently
 //
 struct  SQL_ASTNode {
+
     virtual ~SQL_ASTNode() = default;
     virtual void print(int indent = 0) const = 0;
 };

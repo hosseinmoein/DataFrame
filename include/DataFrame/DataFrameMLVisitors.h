@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/Utils/CFTree.h>
 #include <DataFrame/Utils/KDTree.h>
 #include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Vectors/VectorPtrView.h>
@@ -39,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <complex>
 #include <cstdlib>
-// #include <flat_map>
 #include <functional>
 #include <limits>
 #include <numeric>

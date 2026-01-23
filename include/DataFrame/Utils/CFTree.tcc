@@ -111,10 +111,10 @@ CFTree<T>::CFTree(value_type t, size_type max_e, dist_func_t &&f)
 
 template<typename T>
 bool
-CFTree<T>::insert(value_type point)  {
+CFTree<T>::insert(const value_type &point)  {
 
     if (entries_.empty())  {
-        CF<T>   new_cf;  // First point - create new entry
+        CF_t    new_cf;  // First point - create new entry
 
         new_cf.add_value(point);
         entries_.reserve(128);
@@ -126,11 +126,11 @@ CFTree<T>::insert(value_type point)  {
     //
     size_type       closest_idx { -1 };
     double          min_dist { std::numeric_limits<double>::max() };
-    const size_type sz { entries_.size() };
+    const size_type sz { size_type(entries_.size()) };
 
     for (size_type i { 0 }; i < sz; ++i)  {
         const value_type    centroid { entries_[i].centroid() };
-        const double        dist { dist_func_(point - centroid) };
+        const double        dist { dist_func_(point, centroid) };
 
         if (dist < min_dist)  {
             min_dist = dist;
@@ -140,7 +140,7 @@ CFTree<T>::insert(value_type point)  {
 
     // Try to absorb point into closest entry
     //
-    CF<T>   test_cf { entries_[closest_idx] };
+    CF_t    test_cf { entries_[closest_idx] };
 
     test_cf.add_value(point);
     if (test_cf.radius() <= threshold_)  {  // Point fits within threshold
@@ -151,8 +151,8 @@ CFTree<T>::insert(value_type point)  {
     // Create new entry if space available
     // sz is still valid, since nothing was added to entries_
     //
-    if (sz < static_cast<std::size_t>(max_entries_))  {
-        CF<T>   new_cf;
+    if (sz < max_entries_)  {
+        CF_t    new_cf;
 
         new_cf.add_value(point);
         entries_.push_back(new_cf);
@@ -165,8 +165,14 @@ CFTree<T>::insert(value_type point)  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
-const std::vector<CF<T>> &
+const std::vector<typename CFTree<T>::CF_t> &
 CFTree<T>::get_entries() const  { return (entries_); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+std::vector<typename CFTree<T>::CF_t> &
+CFTree<T>::get_entries()  { return (entries_); }
 
 // ----------------------------------------------------------------------------
 

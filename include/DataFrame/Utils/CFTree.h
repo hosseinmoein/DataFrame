@@ -55,8 +55,8 @@ struct  CF {
     value_type  ls { 0 };  // linear sum
     value_type  ss { 0 };  // sum of squares
 
-    explicit
-    CF(value_type value);
+    CF() = default;
+    explicit CF(value_type value);
 
     // Add another CF to this CF
     //
@@ -98,24 +98,27 @@ public:
 
     using size_type = long;
     using value_type = T;
-    using dist_func_t = std::function<double(const T &, const T &)>;
+    using dist_func_t =
+        std::function<double(const value_type &, const value_type &)>;
+    using CF_t = CF<value_type>;
 
     explicit
     CFTree(value_type t,
-           size_type max_e = 1000,
+           size_type max_entries = 1000,
            dist_func_t &&f =
                [](const value_type &v1, const value_type &v2) -> double  {
-                   return (double(std::abs(v1 - v2)));
+                   return (static_cast<double>(std::abs(v1 - v2)));
                });
 
     // Insert a point into the tree
     //
     bool
-    insert(value_type point);
+    insert(const value_type &point);
 
     // Get all CF entries
     //
-    const std::vector<CF<T>> &get_entries() const;
+    const std::vector<CF_t> &get_entries() const;
+    std::vector<CF_t> &get_entries();
     size_type size() const;
     void clear();
     value_type get_threshold() const;
@@ -126,7 +129,7 @@ private:
     value_type          threshold_;
     const size_type     max_entries_;
     dist_func_t         dist_func_;
-    std::vector<CF<T>>  entries_ { };
+    std::vector<CF_t>   entries_ { };
 };
 
 } // namespace hmdf

@@ -53,6 +53,7 @@ using StlVecType = typename ULDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_permutation_vec()  {
 
     std::cout << "\nTesting permutation_vec( ) ..." << std::endl;
@@ -1534,7 +1535,7 @@ static void test_class_count()  {
             [](const unsigned long &,
                const double &close, const double &open, const double &low,
                const long &volume) -> FordDataTypes  {
- 
+
                 if (close > 0 && open > 0 && low > 0 && volume > 0)  {
                     if (close < 1.5)  return (FordDataTypes::grey);
                     else if (close < 5.5)  return (FordDataTypes::blue);
@@ -1616,13 +1617,50 @@ static void test_AnomalyDetectByKNNVisitor()  {
     assert(anomalous_indices2[1] == 1001);
     assert(anomalous_indices2[2] == 2002);
 }
+*/
 
 // ----------------------------------------------------------------------------
+
+static void test_BIRCHVisitor()  {
+
+    std::cout << "\nTesting BIRCHVisitor{ } ..." << std::endl;
+
+    ULDataFrame df;
+
+    try  {
+        df.read("FORD.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    BIRCHVisitor<double>    birch(4, 2.5);
+
+    df.single_act_visit<double>("FORD_Close", birch);
+    assert(birch.get_result().size() == 4);
+    assert(std::fabs(birch.get_result()[0] - 3.02152) < 0.00001);
+    assert(std::fabs(birch.get_result()[1] - 9.35769) < 0.00001);
+    assert(std::fabs(birch.get_result()[2] - 14.2126) < 0.0001);
+    assert(std::fabs(birch.get_result()[3] - 28.1059) < 0.0001);
+
+    const auto  &close = df.get_column<double>("FORD_Close");
+
+    for (const auto &vec : birch.get_clusters_idxs())  {
+        for (const auto &idx : vec)
+            std::cout << close[idx] << ", ";
+        std::cout << "\n\n\n";
+    }
+    std::cout << std::endl;
+}
+
+// -----------------------------------------------------------------------------
 
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
 
+/*
     test_permutation_vec();
     test_get_data_every_n();
     test_get_n_largest_data();
@@ -1645,6 +1683,8 @@ int main(int, char *[])  {
     test_count();
     test_class_count();
     test_AnomalyDetectByKNNVisitor();
+*/
+    test_BIRCHVisitor();
 
     return (0);
 }

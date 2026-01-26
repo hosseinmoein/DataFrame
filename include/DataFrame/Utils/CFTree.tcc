@@ -30,6 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameTypes.h>
+#include <DataFrame/Utils/Concepts.h>
+
+#include <type_traits>
 
 // ----------------------------------------------------------------------------
 
@@ -37,7 +40,16 @@ namespace hmdf
 {
 
 template<typename T>
-CF<T>::CF(value_type value) : n(1), ls(value), ss(value * value)  {  }
+CF<T>::CF(size_type dimension) : n_(0), ss_(0)  {
+
+    if constexpr (std::is_arithmetic_v<feature_type>)  {
+        ls_ = 0;
+    }
+    else  {
+        if constexpr (Resizable<feature_type>)
+            ls_.resize(dimension, 0);
+    }
+}
 
 // ----------------------------------------------------------------------------
 
@@ -45,27 +57,57 @@ template<typename T>
 void
 CF<T>::merge(const CF &rhs)  {
 
-    n += rhs.n;
-    ls += rhs.ls;
-    ss += rhs.ss;
+    n_ += rhs.n_;
+    ss_ += rhs.ss_;
+    if constexpr (std::is_arithmetic_v<feature_type>)  {
+        ls_ += rhs.ls_;
+    }
+    else  {
+        for (size_type i { 0 }; i < size_type(ls_.size()); ++i)
+            ls_[i] += rhs.ls_[i];
+    }
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename T>
 void
-CF<T>::add_value(value_type value)  {
+CF<T>::add_value(const feature_type &value)  {
 
-    n += 1;
-    ls += value;
-    ss += value * value;
+    n_ += 1;
+    if constexpr (std::is_arithmetic_v<feature_type>)  {
+        ls_ += value;
+        ss_ += value * value;
+    }
+    else  {
+        for (size_type i { 0 }; i < size_type(value.size()); ++i)  {
+            ls_[i] += value[i];
+            ss_ += value[i] * value[i];
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename T>
-typename CF<T>::value_type
-CF<T>::centroid() const  { return (n > 0 ? ls / T(n) : T(0)); }
+typename CF<T>::feature_type
+CF<T>::centroid() const  {
+
+    if constexpr (std::is_arithmetic_v<feature_type>)  {
+        return (n_ > 0 ? ls_ / n_ : 0.0);
+    }
+    else  {
+        feature_type    ret;
+
+        if constexpr (Resizable<feature_type>)
+            ret.resize(ls_.size(), 0);
+        if (n_ > 0)  {
+            for (size_type i { 0 }; i < size_type(ls_.size()); ++i)
+                ret[i] = ls_[i] / n_;
+        }
+        return (ret);
+    }
+}
 
 // ----------------------------------------------------------------------------
 
@@ -73,11 +115,20 @@ template<typename T>
 typename CF<T>::value_type
 CF<T>::variance() const  {
 
-    if (n == 0)  return (0);
+    if (n_ == 0)  return (0);
 
-    const value_type    mean { centroid() };
+    const feature_type  mean { centroid() };
 
-    return (std::max(T(0), ss / T(n) - (mean * mean)));
+    if constexpr (std::is_arithmetic_v<feature_type>)  {
+        return (std::max(0.0, (ss_ / n_) - (mean * mean)));
+    }
+    else  {
+        value_type  sum { 0 };
+
+        for (size_type i { 0 }; i < size_type(mean.size()); ++i)
+            sum += mean[i] * mean[i];
+        return (std::max(0.0, (ss_ / n_) - sum));
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -92,29 +143,47 @@ template<typename T>
 typename CF<T>::value_type
 CF<T>::diameter() const  {
 
-    if (n <= 1)  return (0);
+    if (n_ <= 1)  return (0);
 
-    const value_type    mean { centroid() };
+    const feature_type  mean { centroid() };
 
-    return (std::sqrt(
-                std::max(T(0), T(2) * T(n) * (ss / T(n) - (mean * mean)))));
+    if constexpr (std::is_arithmetic_v<feature_type>)  {
+        return (std::sqrt(
+                    std::max(0.0, 2.0 * n_ * (ss_ / n_ - (mean * mean)))));
+    }
+    else  {
+        value_type  sum { 0 };
+
+        for (size_type i { 0 }; i < mean.size(); ++i)
+            sum += mean[i] * mean[i];
+        return (std::sqrt(std::max(0.0, 2.0 * n_ * (ss_ / n_ - sum))));
+    }
 }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+typename CF<T>::size_type
+CF<T>::size() const  { return (n_); }
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
 template<typename T>
-CFTree<T>::CFTree(value_type t, size_type max_e, dist_func_t &&f)
-    : threshold_(t), max_entries_(max_e), dist_func_(f)  {  }
+CFTree<T>::CFTree(double t, size_type dimen, dist_func_t &&f, size_type max_e)
+    : threshold_(t),
+      dimension_(dimen),
+      max_entries_(max_e),
+      dist_func_(f)  {  }
 
 // ----------------------------------------------------------------------------
 
 template<typename T>
 bool
-CFTree<T>::insert(const value_type &point)  {
+CFTree<T>::insert(const feature_type &point)  {
 
     if (entries_.empty())  {
-        CF_t    new_cf;  // First point - create new entry
+        CF_t    new_cf { dimension_ };  // First point - create new entry
 
         new_cf.add_value(point);
         entries_.reserve(128);
@@ -125,12 +194,12 @@ CFTree<T>::insert(const value_type &point)  {
     // Find closest entry
     //
     size_type       closest_idx { -1 };
-    double          min_dist { std::numeric_limits<double>::max() };
+    value_type      min_dist { std::numeric_limits<value_type>::max() };
     const size_type sz { size_type(entries_.size()) };
 
     for (size_type i { 0 }; i < sz; ++i)  {
-        const value_type    centroid { entries_[i].centroid() };
-        const double        dist { dist_func_(point, centroid) };
+        const feature_type  centroid { entries_[i].centroid() };
+        const value_type    dist { dist_func_(point, centroid) };
 
         if (dist < min_dist)  {
             min_dist = dist;
@@ -140,8 +209,9 @@ CFTree<T>::insert(const value_type &point)  {
 
     // Try to absorb point into closest entry
     //
-    CF_t    test_cf { entries_[closest_idx] };
+    CF_t    test_cf { dimension_ };
 
+    test_cf.merge(entries_[closest_idx]);
     test_cf.add_value(point);
     if (test_cf.radius() <= threshold_)  {  // Point fits within threshold
         entries_[closest_idx] = test_cf;
@@ -152,7 +222,7 @@ CFTree<T>::insert(const value_type &point)  {
     // sz is still valid, since nothing was added to entries_
     //
     if (sz < max_entries_)  {
-        CF_t    new_cf;
+        CF_t    new_cf { dimension_ };
 
         new_cf.add_value(point);
         entries_.push_back(new_cf);

@@ -5294,14 +5294,33 @@ private:
     const size_type     iter_num_;
     const bool          cc_;
     const double        threshold_;
-    distance_func       dfunc_;
-    CFTree<T>           tree_;
+    distance_func       dfunc_ { };
     result_type         result_ { };         // K Means
     order_type          clusters_idxs_ { };  // K Clusters indices
 
-    inline void calc_k_means_()  {
+    inline static distance_func
+    get_dist_func_()  {
 
-        const auto  &entries { tree_.get_entries() };
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return ([](const T &x, const T &y) -> double  {
+                        return (static_cast<double>(std::abs(x - y)));
+            });
+        else
+            return ([](const T &x, const T &y) -> double  {
+                        double  sum { 0 };
+
+                        for (size_type i { 0 }; i < size_type(x.size()); ++i)  {
+                            const double    diff { x[i] - y[i] };
+
+                            sum += diff * diff;
+                        }
+                        return (std::sqrt(sum));
+            });
+    }
+
+    inline void calc_k_means_(const CFTree<value_type> &tree)  {
+
+        const auto  &entries { tree.get_entries() };
 
         if (entries.empty())  return;
 
@@ -5322,7 +5341,7 @@ private:
 
         result_.reserve(entries.size());
         for (size_type i { 0 };
-			 (i < k_) && ((i * step) < size_type(all_centroids.size())); ++i) 
+             (i < k_) && ((i * step) < size_type(all_centroids.size())); ++i)
             result_.push_back(all_centroids[i * step]);
 
         // Ensure we have exactly numClusters centroids
@@ -5424,43 +5443,64 @@ public:
 
         GET_COL_SIZE
 
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 4)
+            throw DataFrameError("BIRCHVisitor: Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
         // Phase 1 & 2: Build CF-Tree
         //
-        double  current_threshold { threshold_ };
+        double              current_threshold { threshold_ };
+        CFTree<value_type>  tree { };
+
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            CFTree<value_type>  tmp_tree { threshold_, 1, get_dist_func_() };
+
+            tree = std::move(tmp_tree);
+        }
+        else  {
+            CFTree<value_type>  tmp_tree {
+                threshold_, size_type(column_begin->size()), get_dist_func_()
+            };
+
+            tree = std::move(tmp_tree);
+        }
 
         for (size_type i { 0 }; i < size_type(col_s); ++i)  {
             const value_type    &val { *(column_begin + i) };
 
-            while (! tree_.insert(val))  {
+            while (! tree.insert(val))  {
                 // Tree is full, rebuild with larger threshold
                 //
                 current_threshold *= 1.5;
 
-                const auto  old_entries { std::move(tree_.get_entries()) };
+                const auto  old_entries { std::move(tree.get_entries()) };
 
-                tree_.clear();
-                tree_.set_threshold(current_threshold);
+                tree.clear();
+                tree.set_threshold(current_threshold);
 
                 for (const auto &entry : old_entries)  {
                     const value_type    &c { entry.centroid() };
 
                     // Simplified: insert centroid multiple times
                     //
-                    for (size_type i { 0 }; i < entry.n; i++)
-                        tree_.insert(c);
+                    for (size_type i { 0 }; i < entry.size(); i++)
+                        tree.insert(c);
                 }
             }
         }
 
         // Phase 3 & 4: Global clustering
         //
-        calc_k_means_();
+        calc_k_means_(tree);
         if (cc_)  calc_clusters_(column_begin,  col_s);
     }
 
+    inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
+
     inline void pre ()  {
 
-        tree_.clear();
         result_.clear();
         clusters_idxs_.clear();
     }
@@ -5474,18 +5514,12 @@ public:
                  double threshold, // Maximum radius (stdev) allowed for a CF
                  size_type max_entries = 1000,
                  bool calc_clusters = true,
-                 size_type max_iter = 1000,
-                 distance_func f =
-                     [](const value_type &x, const value_type &y) -> double  {
-                         return (double(std::abs(x - y)));
-                     })
+                 size_type max_iter = 1000)
         : k_(k),
           max_entries_(max_entries),
           iter_num_(max_iter),
           cc_(calc_clusters),
-          threshold_(threshold),
-          dfunc_(f),
-          tree_(threshold, max_entries, std::forward<distance_func>(f))  {  }
+          threshold_(threshold)  { dfunc_ = get_dist_func_(); }
 };
 
 } // namespace hmdf

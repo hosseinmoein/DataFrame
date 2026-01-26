@@ -30,12 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <functional>
 #include <limits>
-#include <queue>
-#include <stack>
 #include <vector>
 
 // ----------------------------------------------------------------------------
@@ -46,17 +43,21 @@ namespace hmdf
 // Clustering Feature for scalar values
 //
 template<typename T>
-struct  CF {
+struct  CF  {
 
     using size_type = long;
-    using value_type = T;
+    using feature_type = T;
+    using value_type = double;
 
-    size_type   n { 0 };   // number of points
-    value_type  ls { 0 };  // linear sum
-    value_type  ss { 0 };  // sum of squares
+private:
 
-    CF() = default;
-    explicit CF(value_type value);
+    size_type       n_ { 0 };   // number of points
+    feature_type    ls_ { };    // linear sum
+    value_type      ss_ { 0 };  // sum of squares
+
+public:
+
+    explicit CF(size_type dimension = 1);
 
     // Add another CF to this CF
     //
@@ -66,11 +67,11 @@ struct  CF {
     // Add a single value
     //
     inline void
-    add_value(value_type value);
+    add_value(const feature_type &value);
 
     // Get centroid
     //
-    inline value_type
+    inline feature_type
     centroid() const;
 
     // Get variance
@@ -87,6 +88,9 @@ struct  CF {
     //
     inline value_type
     diameter() const;
+
+    inline size_type
+    size() const;
 };
 
 // ----------------------------------------------------------------------------
@@ -97,23 +101,28 @@ class CFTree {
 public:
 
     using size_type = long;
-    using value_type = T;
+    using feature_type = T;
+    using value_type = double;
     using dist_func_t =
-        std::function<double(const value_type &, const value_type &)>;
-    using CF_t = CF<value_type>;
+        std::function<value_type(const feature_type &, const feature_type &)>;
+    using CF_t = CF<feature_type>;
 
     explicit
-    CFTree(value_type t,
-           size_type max_entries = 1000,
-           dist_func_t &&f =
-               [](const value_type &v1, const value_type &v2) -> double  {
-                   return (static_cast<double>(std::abs(v1 - v2)));
-               });
+    CFTree(double t,
+           size_type dimen,
+           dist_func_t &&f,
+           size_type max_entries = 1000);
+    CFTree() = default;
+    CFTree(const CFTree &) = default;
+    CFTree(CFTree &&) = default;
+    CFTree &operator =(const CFTree &) = default;
+    CFTree &operator =(CFTree &&) = default;
+    ~CFTree() = default;
 
     // Insert a point into the tree
     //
     bool
-    insert(const value_type &point);
+    insert(const feature_type &point);
 
     // Get all CF entries
     //
@@ -126,9 +135,12 @@ public:
 
 private:
 
-    value_type          threshold_;
-    const size_type     max_entries_;
-    dist_func_t         dist_func_;
+    value_type          threshold_ { };
+    size_type           dimension_ { };
+    size_type           max_entries_ { };
+    dist_func_t         dist_func_ {
+        [](const T &, const T &) -> double { return (0); }
+    };
     std::vector<CF_t>   entries_ { };
 };
 

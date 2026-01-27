@@ -254,6 +254,13 @@ concept EnumType = std::is_enum_v<T>;
 
 // ----------------------------------------------------------------------------
 
+template <typename T>
+concept Resizable = requires(T container, std::size_t size) {
+    { container.resize(size) };  // Checks if the expression is valid
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

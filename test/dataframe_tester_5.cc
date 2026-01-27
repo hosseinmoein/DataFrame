@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameTransformVisitors.h>
 #include <DataFrame/RandGen.h>
 
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstdio>
@@ -1534,7 +1535,7 @@ static void test_class_count()  {
             [](const unsigned long &,
                const double &close, const double &open, const double &low,
                const long &volume) -> FordDataTypes  {
- 
+
                 if (close > 0 && open > 0 && low > 0 && volume > 0)  {
                     if (close < 1.5)  return (FordDataTypes::grey);
                     else if (close < 5.5)  return (FordDataTypes::blue);
@@ -1619,6 +1620,103 @@ static void test_AnomalyDetectByKNNVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_BIRCHVisitor()  {
+
+    std::cout << "\nTesting BIRCHVisitor{ } ..." << std::endl;
+
+    ULDataFrame df;
+
+    try  {
+        df.read("FORD.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    BIRCHVisitor<double>    birch(4, 2.5);
+
+    df.single_act_visit<double>("FORD_Close", birch);
+
+    // The centroids
+    //
+    assert(birch.get_result().size() == 4);
+    assert(std::fabs(birch.get_result()[0] - 3.02152) < 0.00001);
+    assert(std::fabs(birch.get_result()[1] - 9.35769) < 0.00001);
+    assert(std::fabs(birch.get_result()[2] - 14.2126) < 0.0001);
+    assert(std::fabs(birch.get_result()[3] - 28.1059) < 0.0001);
+
+    // const auto  &close = df.get_column<double>("FORD_Close");
+
+    // Print the clusters
+    //
+    // for (const auto &vec : birch.get_clusters_idxs())  {
+    //     for (const auto &idx : vec)
+    //         std::cout << close[idx] << ", ";
+    //     std::cout << "\n\n\n";
+    // }
+    // std::cout << std::endl;
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = -20.0;
+    p.max_value = 20.0;
+
+    using col_t = std::array<double, 3>;
+
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * 3, p);
+
+    std::vector<col_t>  multi_dimen_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        multi_dimen_col[i][0] = rand_vec[j++];
+        multi_dimen_col[i][1] = rand_vec[j++];
+        multi_dimen_col[i][2] = rand_vec[j++];
+    }
+    df.load_column<col_t>("multi_dimen_col", std::move(multi_dimen_col));
+
+    BIRCHVisitor<col_t> birch2(4, 2.5);
+
+    // This is the default distance function for multidimensional data.
+    // But I am setting it here for testing and illustration.
+    //
+    birch2.set_dist_func(
+        [](const col_t &x, const col_t &y) -> double  {
+            double  sum { 0 };
+
+            for (std::size_t i { 0 }; i < x.size(); ++i)  {
+                const double    diff { x[i] - y[i] };
+
+                sum += diff * diff;
+            }
+            return (std::sqrt(sum));
+        });
+    df.single_act_visit<col_t>("multi_dimen_col", birch2);
+
+    assert(birch2.get_result().size() == 4);
+    assert(std::fabs(birch2.get_result()[0][0] - -10.9757) < 0.0001);
+    assert(std::fabs(birch2.get_result()[0][1] - -1.08913) < 0.00001);
+    assert(std::fabs(birch2.get_result()[0][2] - 9.23815) < 0.00001);
+
+    assert(std::fabs(birch2.get_result()[1][0] - -0.544063) < 0.000001);
+    assert(std::fabs(birch2.get_result()[1][1] - 10.899) < 0.001);
+    assert(std::fabs(birch2.get_result()[1][2] - -9.79122) < 0.00001);
+
+    assert(std::fabs(birch2.get_result()[2][0] - 0.911082) < 0.000001);
+    assert(std::fabs(birch2.get_result()[2][1] - -10.8084) < 0.0001);
+    assert(std::fabs(birch2.get_result()[2][2] - -9.55188) < 0.00001);
+
+    assert(std::fabs(birch2.get_result()[3][0] - 10.4331) < 0.0001);
+    assert(std::fabs(birch2.get_result()[3][1] - 1.78207) < 0.00001);
+    assert(std::fabs(birch2.get_result()[3][2] - 9.60288) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -1645,6 +1743,7 @@ int main(int, char *[])  {
     test_count();
     test_class_count();
     test_AnomalyDetectByKNNVisitor();
+    test_BIRCHVisitor();
 
     return (0);
 }

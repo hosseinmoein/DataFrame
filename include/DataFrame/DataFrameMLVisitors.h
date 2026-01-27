@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/Utils/CFTree.h>
 #include <DataFrame/Utils/KDTree.h>
 #include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Vectors/VectorPtrView.h>
@@ -39,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <complex>
 #include <cstdlib>
-// #include <flat_map>
 #include <functional>
 #include <limits>
 #include <numeric>
@@ -5268,6 +5268,259 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using and_knn_v = AnomalyDetectByKNNVisitor<T, I, A>;
+
+// ------------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  BIRCHVisitor  {
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = long;
+    using result_type = std::vector<T, typename allocator_declare<T, A>::type>;
+    using order_type =
+        std::vector<std::vector<size_type,
+                                typename allocator_declare<size_type, A>::type>>;
+    using distance_func =
+        std::function<double(const value_type &x, const value_type &y)>;
+    using seed_t = std::random_device::result_type;
+
+private:
+
+    const size_type     k_;   // Number of KMeans clusters
+    const size_type     max_entries_;
+    const size_type     iter_num_;
+    const bool          cc_;
+    const double        threshold_;
+    distance_func       dfunc_ { };
+    result_type         result_ { };         // K Means
+    order_type          clusters_idxs_ { };  // K Clusters indices
+
+    inline static distance_func
+    get_dist_func_()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return ([](const T &x, const T &y) -> double  {
+                        return (static_cast<double>(std::abs(x - y)));
+            });
+        else
+            return ([](const T &x, const T &y) -> double  {
+                        double  sum { 0 };
+
+                        for (size_type i { 0 }; i < size_type(x.size()); ++i)  {
+                            const double    diff { x[i] - y[i] };
+
+                            sum += diff * diff;
+                        }
+                        return (std::sqrt(sum));
+            });
+    }
+
+    inline void calc_k_means_(const CFTree<value_type> &tree)  {
+
+        const auto  &entries { tree.get_entries() };
+
+        if (entries.empty())  return;
+
+        // Initialize centroids from CF entries
+        //
+        std::vector<value_type> all_centroids(entries.size());
+
+        for (size_type i { 0 }; const auto &entry : entries)
+            all_centroids[i++] = entry.centroid();
+
+        // Sort and pick evenly spaced centroids
+        //
+        std::sort(all_centroids.begin(), all_centroids.end());
+
+        const size_type step {
+            std::max(size_type(1), size_type(all_centroids.size()) / k_)
+        };
+
+        result_.reserve(entries.size());
+        for (size_type i { 0 };
+             (i < k_) && ((i * step) < size_type(all_centroids.size())); ++i)
+            result_.push_back(all_centroids[i * step]);
+
+        // Ensure we have exactly numClusters centroids
+        //
+        while (size_type(result_.size()) < k_ &&
+               result_.size() < all_centroids.size())
+            result_.push_back(all_centroids[result_.size()]);
+
+        // K-means iterations on CF entries
+        //
+        bool    changed { true };
+
+        for (size_type iter { 0 }; (iter < iter_num_) && changed; ++iter)  {
+            changed = false;
+
+            // Assign each CF to nearest cluster
+            //
+            std::vector<std::vector<size_type>> assignments(result_.size());
+
+            for (size_type i { 0 }; i < size_type(entries.size()); ++i)  {
+                const value_type    centroid { entries[i].centroid() };
+                double              min_dist { dfunc_(centroid, result_[0]) };
+                size_type           closest { 0 };
+
+                for (size_type k { 1 }; k < size_type(result_.size()); ++k)  {
+                    const double    dist { dfunc_(centroid, result_[k]) };
+
+                    if (dist < min_dist)  {
+                        min_dist = dist;
+                        closest = k;
+                    }
+                }
+                assignments[closest].push_back(i);
+            }
+
+            // Update centroids
+            //
+            for (size_type k { 0 }; k < size_type(result_.size()); ++k)  {
+                if (assignments[k].empty())  continue;
+
+                CF<T>   merged;
+
+                for (const size_type idx : assignments[k])
+                    merged.merge(entries[idx]);
+
+                const value_type    new_centroid { merged.centroid() };
+
+                if (dfunc_(new_centroid, result_[k]) > 1e-6)  {
+                    result_[k] = new_centroid;
+                    changed = true;
+                }
+            }
+        }
+
+        // Sort final centroids
+        //
+        std::sort(result_.begin(), result_.end());
+    }
+
+    // Using the calculated means, separate the given column into clusters
+    //
+    template<typename H>
+    inline void
+    calc_clusters_(const H &column_begin, size_type col_s)  {
+
+        order_type  clusters_idxs(k_);
+
+        for (size_type i = 0; i < k_; ++i) [[likely]]
+            clusters_idxs[i].reserve(col_s / k_ + 2);
+
+        for (size_type j = 0; j < col_s; ++j) [[likely]]  {
+            const value_type    &value = *(column_begin + j);
+
+            if (! is_nan__(value)) [[likely]]  {
+                double      min_dist { std::numeric_limits<double>::max() };
+                size_type   min_idx { 0 };
+
+                for (size_type i = 0; i < k_; ++i)  {
+                    const double    dist = dfunc_(value, result_[i]);
+
+                    if (dist < min_dist)  {
+                        min_dist = dist;
+                        min_idx = i;
+                    }
+                }
+                clusters_idxs[min_idx].push_back(j);
+            }
+        }
+
+        clusters_idxs_.swap(clusters_idxs);
+    }
+
+public:
+
+    template<typename IV, typename H>
+    inline void
+    operator()(const IV &idx_begin, const IV &idx_end,
+               const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 4)
+            throw DataFrameError("BIRCHVisitor: Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        // Phase 1 & 2: Build CF-Tree
+        //
+        double              current_threshold { threshold_ };
+        CFTree<value_type>  tree { };
+
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            CFTree<value_type>  tmp_tree { threshold_, 1, get_dist_func_() };
+
+            tree = std::move(tmp_tree);
+        }
+        else  {
+            CFTree<value_type>  tmp_tree {
+                threshold_, size_type(column_begin->size()), get_dist_func_()
+            };
+
+            tree = std::move(tmp_tree);
+        }
+
+        for (size_type i { 0 }; i < size_type(col_s); ++i)  {
+            const value_type    &val { *(column_begin + i) };
+
+            while (! tree.insert(val))  {
+                // Tree is full, rebuild with larger threshold
+                //
+                current_threshold *= 1.5;
+
+                const auto  old_entries { std::move(tree.get_entries()) };
+
+                tree.clear();
+                tree.set_threshold(current_threshold);
+
+                for (const auto &entry : old_entries)  {
+                    const value_type    &c { entry.centroid() };
+
+                    // Simplified: insert centroid multiple times
+                    //
+                    for (size_type i { 0 }; i < entry.size(); i++)
+                        tree.insert(c);
+                }
+            }
+        }
+
+        // Phase 3 & 4: Global clustering
+        //
+        calc_k_means_(tree);
+        if (cc_)  calc_clusters_(column_begin,  col_s);
+    }
+
+    inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
+
+    inline void pre ()  {
+
+        result_.clear();
+        clusters_idxs_.clear();
+    }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+    inline const order_type &
+    get_clusters_idxs() const  { return (clusters_idxs_); }
+
+    BIRCHVisitor(size_type k,      // Number of clusters for k-means
+                 double threshold, // Maximum radius (stdev) allowed for a CF
+                 size_type max_entries = 1000,
+                 bool calc_clusters = true,
+                 size_type max_iter = 1000)
+        : k_(k),
+          max_entries_(max_entries),
+          iter_num_(max_iter),
+          cc_(calc_clusters),
+          threshold_(threshold)  { dfunc_ = get_dist_func_(); }
+};
 
 } // namespace hmdf
 

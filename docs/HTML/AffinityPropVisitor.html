@@ -60,21 +60,19 @@ body {
         2. Boolean flag to whether populate the actual clusters values and indices<BR>
         3. A function to calculate distance between two data points of type T with a default implementation<BR>
         4. Damping factor used in the algorithm. The default is 0.9. (1 – damping factor) prevents numerical oscillations.<BR>
-        <I>
-        <PRE>
-    explicit
-    AffinityPropVisitor(std::size_t num_of_iter,
-                        bool calc_clusters = true,
-                        distance_func f =
-                            [](const T &x, const T &y) -> double {
-                                return ((x - y) * (x - y));
-                            },
-                        double damping_factor = 0.9);
-        </PRE>
-        </I><BR>
-        <I>get_result()</I> returns a VectorPtrView of type T containing the centers of clusters.<BR>
-        <I>get_clusters()</I> returns an vector of VectorPtrView's which contains the data clustered around the centers.<BR>
-        <I>get_clusters_idxs()</I> returns an vector of std::vector&lt;std::size_t&gt;'s which contains the indices of data clustered around the centers.<BR>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">explicit</span></span>
+<span class="line_wrapper">AffinityPropVisitor<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> num_of_iter<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">bool</span> calc_clusters <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    distance_func f <span style="color:#808030; ">=</span> <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                                          <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                                      <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">double</span> damping_factor <span style="color:#808030; ">=</span> <span style="color:#008000; ">0.9</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+
+        <B>get_result()</B> returns a VectorPtrView of type T containing the centers of clusters.<BR>
+        <B>get_clusters()</B> returns an vector of VectorPtrView's which contains the data clustered around the centers.<BR>
+        <B>get_clusters_idxs()</B> returns an vector of std::vector&lt;std::size_t&gt;'s which contains the indices of data clustered around the centers.<BR>
       </td>
       <td width="30%">
         <B>T</B>: Column data type<BR>

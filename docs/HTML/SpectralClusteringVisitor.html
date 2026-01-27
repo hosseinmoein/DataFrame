@@ -62,22 +62,19 @@ Spectral clustering is very interesting and different from other clustering algo
         <LI>A function to calculate <I>similarity</I> between two datapoints of type T (with default)</LI>
         <LI>Seed for random number generation. The defualt is to generate different set each time.</LI>
         </OL>
-        <I>
-        <PRE>
-SpectralClusteringVisitor(
-    size_type num_of_iter,
-    double sigma,
-    seed_t seed = seed_t(-1),
-    similarity_func sf =
-        [](const value_type &x, const value_type &y, double sigma) -> double  {
-            return (std::exp(-((x - y) * (x - y)) / (2 * sigma * sigma)));
-        });
-        </PRE>
-        </I>
-        </LI>
-        </OL>
-        <I>get_results()</I> returns an array of K <I>VectorPtrView</I>'s which contain the data clustered around the K means of the eigenvectors of the Laplacian matrix. The first element in each <I>VectorPtrView</I> is the mean and the reset are the data points belonging to that cluster.<BR>
-        <I>get_clusters_idxs()</I> returns an array of K <I>std::vector&lt;size_type&gt;</I>'s which contains indices of the data in each cluster.<BR><BR>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">SpectralClusteringVisitor<span style="color:#808030; ">(</span>size_type num_of_iter<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                          <span style="color:#800000; font-weight:bold; ">double</span> sigma<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                          seed_t seed <span style="color:#808030; ">=</span> seed_t<span style="color:#808030; ">(</span><span style="color:#808030; ">-</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                          similarity_func sf <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">                              <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span> sigma<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">double</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                                  <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#603000; ">exp</span><span style="color:#808030; ">(</span><span style="color:#808030; ">-</span><span style="color:#808030; ">(</span><span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">/</span> <span style="color:#808030; ">(</span><span style="color:#008c00; ">2</span> <span style="color:#808030; ">*</span> sigma <span style="color:#808030; ">*</span> sigma<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                              <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+
+        <B>get_results()</B> Returns a vector of vectors containing datapoint values of each cluster.<BR>
+        <B>get_clusters_idxs()</B> returns an array of K <I>std::vector&lt;size_type&gt;</I>'s which contains indices of the data in each cluster.<BR><BR>
+
         <B>NOTE</B>: There is no interface to return the K means/centroids. The means are the means of the eigenvectors of the Laplacian matrix which are not particularly useful.<BR>
        </td>
       <td width="30%">

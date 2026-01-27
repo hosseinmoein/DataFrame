@@ -60,20 +60,17 @@ body {
         <LI>The distance used to determine if a data point is in the same area as other data points</LI>
         <LI>A function to calculate distance between two data points of type T (with default)</LI>
         </OL>
-        <I>
-        <PRE>
-  DBSCANVisitor(long min_mems,
-                double max_dist,
-                distance_func f = [](const T &x, const T &y) -> double {
-                                      return ((x - y) * (x - y));
-                                  })
-        </PRE>
-        </I>
-        </LI>
-        </OL>
-        <I>get_results()</I> Returns a vector of vectors containing datapoint values of each cluster.<BR><BR>
-        <I>get_clusters_idxs()</I> Returns a vector of vectors containing indices to datapoints of each cluster.<BR><BR>
-        <I>get_noisey_idxs()</I> Returns a vector containing indices to datapoints that could not be placed in any cluster. Ideally you want this to be empty.<BR>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">DBSCANVisitor<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">long</span> min_mems<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#800000; font-weight:bold; ">double</span> max_dist<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              distance_func f <span style="color:#808030; ">=</span> <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                                <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+
+        <B>get_results()</B> Returns a vector of vectors containing datapoint values of each cluster.<BR>
+        <B>get_clusters_idxs()</B> Returns a vector of vectors containing indices to datapoints of each cluster.<BR>
+        <B>get_noisey_idxs()</B> Returns a vector containing indices to datapoints that could not be placed in any cluster. Ideally you want this to be empty.<BR>
        </td>
       <td width="30%">
         <B>T</B>: Column data type<BR>

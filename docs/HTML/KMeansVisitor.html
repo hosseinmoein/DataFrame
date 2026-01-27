@@ -59,20 +59,16 @@ body {
         <LI>If <I>calc_clusters</I> is true -- default -- the actual clusters are also calculated in addition to the means</LI>
         <LI>A function to calculate distance between two data points of type T (with default)</LI>
         </OL>
-        <I>
-        <PRE>
-KMeansVisitor(std::size_t num_of_iter,
-              bool calc_clusters = true,
-              distance_func f = [](const T &x, const T &y) -> double {
-                                    return ((x - y) * (x - y));
-                                })
-        </PRE>
-        </I>
-        </LI>
-        </OL>
-        <I>get_results()</I> returns an array of K means.<BR><BR>
-        <I>get_clusters()</I> returns an array of K <I>VectorPtrView</I>'s which contain the data clustered around the K-Means. The first element in each <I>VectorPtrView</I> is the mean and the reset are the data points belonging to that cluster.<BR><BR>
-        <I>get_clusters_idxs()</I> returns an array of K <I>std::vector&lt;size_type&gt;</I>'s which contains indices of the data in each cluster.<BR>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">KMeansVisitor<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> num_of_iter<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              <span style="color:#800000; font-weight:bold; ">bool</span> calc_clusters <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">              distance_func f <span style="color:#808030; ">=</span> <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                                    <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                                <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+
+        <B>get_results()</B> returns an array of K means.<BR>
+        <B>get_clusters()</B> returns an array of K <I>VectorPtrView</I>'s which contain the data clustered around the K-Means. The first element in each <I>VectorPtrView</I> is the mean and the reset are the data points belonging to that cluster.<BR>
+        <B>get_clusters_idxs()</B> returns an array of K <I>std::vector&lt;size_type&gt;</I>'s which contains indices of the data in each cluster.<BR>
        </td>
       <td width="30%">
         <B>K</B>: Number of means to find<BR>

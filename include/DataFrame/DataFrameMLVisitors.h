@@ -5281,8 +5281,9 @@ public:
     using size_type = long;
     using result_type = std::vector<T, typename allocator_declare<T, A>::type>;
     using order_type =
-        std::vector<std::vector<size_type,
-                                typename allocator_declare<size_type, A>::type>>;
+        std::vector<std::vector<
+                        std::size_t,
+                        typename allocator_declare<std::size_t, A>::type>>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
     using seed_t = std::random_device::result_type;
@@ -5427,7 +5428,7 @@ private:
                         min_idx = i;
                     }
                 }
-                clusters_idxs[min_idx].push_back(j);
+                clusters_idxs[min_idx].push_back(std::size_t(j));
             }
         }
 

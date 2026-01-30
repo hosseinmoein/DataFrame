@@ -1717,6 +1717,57 @@ static void test_BIRCHVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+void test_get_data_by_birch()  {
+
+    std::cout << "\nTesting get_data_by_birch( ) ..." << std::endl;
+
+    ULDataFrame df;
+
+    try  {
+        df.read("FORD.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    auto    lbd =
+        [](const unsigned long &, const double &) -> bool { return (true); };
+    auto    view =
+        df.get_view_by_sel<double, decltype(lbd), double, long>
+           ("FORD_Open", lbd);
+
+    // I am using both views and dataframes to make sure both work
+    //
+    auto    views =
+        view.get_view_by_birch<double, double, long>("FORD_Close", 4, 2.5);
+    auto    dfs =
+        df.get_data_by_birch<double, double, long>("FORD_Close", 4, 2.5);
+
+    assert(views.size() == 4);
+    assert(dfs.size() == 4);
+
+    assert(views[0].get_index().size() == 4367);
+    assert(dfs[0].get_index().size() == 4367);
+    assert(views[1].get_index().size() == 4450);
+    assert(dfs[1].get_index().size() == 4450);
+    assert(views[2].get_index().size() == 2575);
+    assert(dfs[2].get_index().size() == 2575);
+    assert(views[3].get_index().size() == 873);
+    assert(dfs[3].get_index().size() == 873);
+
+    assert(
+    (std::fabs(views[0].get_column<double>("FORD_Close")[7] - 2.08) < 0.01));
+    assert(
+    (std::fabs(dfs[1].get_column<double>("FORD_Open")[15] - 6.91) < 0.01));
+    assert(
+    (std::fabs(views[2].get_column<double>("FORD_High")[3] - 12.07) < 0.01));
+    assert(dfs[2].get_column<long>("FORD_Volume")[0] == 7512900);
+    assert(views[3].get_index()[1] == 6507);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -1744,6 +1795,7 @@ int main(int, char *[])  {
     test_class_count();
     test_AnomalyDetectByKNNVisitor();
     test_BIRCHVisitor();
+    test_get_data_by_birch();
 
     return (0);
 }

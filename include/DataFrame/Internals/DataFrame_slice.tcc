@@ -3349,6 +3349,111 @@ get_view_by_dbscan(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T, typename ... Ts>
+std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
+DataFrame<I, H>::
+get_data_by_birch(const char *col_name,
+                  long k,
+                  double threshold,
+                  long max_entries,
+                  long max_iter) const  {
+
+
+    using df_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+    using res_t = std::vector<df_t>;
+    using birch_t = BIRCHVisitor<T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    birch_t                 birch { k, threshold, max_entries, true, max_iter };
+
+    birch.pre();
+    birch(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    birch.post();
+
+    const auto      &idxs = birch.get_clusters_idxs();
+    const size_type &res_s = idxs.size();
+    res_t           result (res_s);
+
+    for (size_type i = 0; i < res_s; ++i)
+        result[i] =
+            std::move(data_by_sel_common_<Ts ...>(idxs[i], indices_.size()));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T, typename ... Ts>
+std::vector<typename DataFrame<I, H>::PtrView>
+DataFrame<I, H>::
+get_view_by_birch(const char *col_name,
+                  long k,
+                  double threshold,
+                  long max_entries,
+                  long max_iter)  {
+
+
+    using df_t = typename DataFrame<I, H>::PtrView;
+    using res_t = std::vector<df_t>;
+    using birch_t = BIRCHVisitor<T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    birch_t                 birch { k, threshold, max_entries, true, max_iter };
+
+    birch.pre();
+    birch(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    birch.post();
+
+    const auto      &idxs = birch.get_clusters_idxs();
+    const size_type &res_s = idxs.size();
+    res_t           result (res_s);
+
+    for (size_type i = 0; i < res_s; ++i)
+        result[i] =
+            std::move(view_by_sel_common_<Ts ...>(idxs[i], indices_.size()));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T, typename ... Ts>
+std::vector<typename DataFrame<I, H>::ConstPtrView>
+DataFrame<I, H>::
+get_view_by_birch(const char *col_name,
+                  long k,
+                  double threshold,
+                  long max_entries,
+                  long max_iter) const  {
+
+
+    using df_t = typename DataFrame<I, H>::ConstPtrView;
+    using res_t = std::vector<df_t>;
+    using birch_t = BIRCHVisitor<T, I, std::size_t(H::align_value)>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    birch_t                 birch { k, threshold, max_entries, true, max_iter };
+
+    birch.pre();
+    birch(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    birch.post();
+
+    const auto      &idxs = birch.get_clusters_idxs();
+    const size_type &res_s = idxs.size();
+    res_t           result (res_s);
+
+    for (size_type i = 0; i < res_s; ++i)
+        result[i] =
+            std::move(view_by_sel_common_<Ts ...>(idxs[i], indices_.size()));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<arithmetic T, typename ... Ts>
 std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
 DataFrame<I, H>::

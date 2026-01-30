@@ -4390,6 +4390,65 @@ public: // Read/access and slicing interfaces
                                return ((x - y) * (x - y));
                            }) const;
 
+    // This uses BIRCH algorithm to divide the named column into clusters.
+    // It returns an array of DataFrame's each containing one of the clusters
+    // of data based on the named column.
+    // It ultimately uses the K-Means algorithm to calculate the centroids and
+    // clusters hence you must specify K.
+    // This works for both scalar and multidimensional (i.e. vectors/arrays)
+    // data types.
+    // See BIRCHVisitor for more specs
+    //
+    //
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // k:
+    //   Number of clusters used by K-Means algorithm
+    // threshold:
+    //   It is the maximum radius (standard deviation) allowed for a CF
+    //   (Clustering Feature) entry
+    // max_entries:
+    //   It is the maximum number of CF (Clustering Feature) entries that can
+    //   be stored in the flat CF-Tree before it needs to be rebuilt
+    // max_iter:
+    //   It is the maximum number of iterations for K-Means before it converges
+    //
+    template<typename T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
+    get_data_by_birch(const char *col_name,
+                      long k,
+                      double threshold,
+                      long max_entries = 1000,
+                      long max_iter = 1000) const;
+
+    // Same as above but it returns a vector of Views.
+    //
+    template<typename T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<PtrView>
+    get_view_by_birch(const char *col_name,
+                      long k,
+                      double threshold,
+                      long max_entries = 1000,
+                      long max_iter = 1000);
+
+    // Same as above but it returns a vector of const Views.
+    //
+    template<typename T, typename ... Ts>
+    [[nodiscard]]
+    std::vector<ConstPtrView>
+    get_view_by_birch(const char *col_name,
+                      long k,
+                      double threshold,
+                      long max_entries = 1000,
+                      long max_iter = 1000) const;
+
     // This uses Mean-Shift algorithm to divide the named column into clusters.
     // It returns an array of DataFrame's each containing one of the clusters
     // of data based on the named column.  Unlike K-Means clustering, you do

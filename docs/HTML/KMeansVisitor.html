@@ -52,7 +52,7 @@ body {
       </td>
       <td>
         This is a single action visitor, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This functor class finds the K means in the data. It could also cluster the data around the means.<BR>
+        This functor class finds the K means in the data. It could also cluster the data around the means. This works with both scalar and multidimensional (i.e. vector and arrays) datasets.<BR>
         The constructor takes 3 parameters<BR>
         <OL>
         <LI>Number of iterations</LI>
@@ -111,6 +111,8 @@ body {
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#808030; ">(</span>lhs<span style="color:#808030; ">.</span>x <span style="color:#808030; ">-</span> rhs<span style="color:#808030; ">.</span>x<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#808030; ">(</span>lhs<span style="color:#808030; ">.</span>x <span style="color:#808030; ">-</span> rhs<span style="color:#808030; ">.</span>x<span style="color:#808030; ">)</span> <span style="color:#808030; ">+</span> <span style="color:#808030; ">(</span>lhs<span style="color:#808030; ">.</span>y <span style="color:#808030; ">-</span> rhs<span style="color:#808030; ">.</span>y<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#808030; ">(</span>lhs<span style="color:#808030; ">.</span>y <span style="color:#808030; ">-</span> rhs<span style="color:#808030; ">.</span>y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"><span style="color:#800080; ">}</span></span>
 <span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_k_means<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing k-means visitor ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
@@ -123,10 +125,13 @@ body {
 <span class="line_wrapper">    p<span style="color:#808030; ">.</span><span style="color:#666616; ">std</span> <span style="color:#808030; ">=</span> <span style="color:#008000; ">0.005</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    p<span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">10</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper">    df<span style="color:#808030; ">.</span>load_data<span style="color:#808030; ">(</span>MyDataFrame<span style="color:#800080; ">::</span>gen_sequence_index<span style="color:#808030; ">(</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> item_cnt<span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_lognormal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">128</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>item_cnt<span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>load_data<span style="color:#808030; ">(</span>MyDataFrame<span style="color:#800080; ">::</span>gen_sequence_index<span style="color:#808030; ">(</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> item_cnt<span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_lognormal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">128</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>item_cnt<span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper">    KMeansVisitor<span style="color:#800080; ">&lt;</span><span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">128</span><span style="color:#800080; ">&gt;</span>    km_visitor<span style="color:#808030; ">(</span><span style="color:#008c00; ">1000</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    KMeansVisitor<span style="color:#800080; ">&lt;</span><span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">128</span><span style="color:#800080; ">&gt;</span>  km_visitor<span style="color:#808030; ">(</span><span style="color:#008c00; ">1000</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                                             <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                                                                 <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                                                             <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                                                             <span style="color:#008c00; ">10</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> km_visitor<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Means of clusters are: </span><span style="color:#800000; ">"</span><span style="color:#800080; ">;</span></span>
@@ -134,56 +139,53 @@ body {
 <span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> citer <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">, </span><span style="color:#800000; ">"</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Using the calculated means, separate the given column into clusters</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// const auto  &amp;clusters = km_visitor.get_clusters();</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// bool        found = false;</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper"><span style="color:#696969; ">/*</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    // Using the calculated means, separate the given column into clusters</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    const auto  &amp;clusters = km_visitor.get_clusters();</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    bool        found = false;</span></span>
-<span class="line_wrapper"><span style="color:#696969; "></span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    for (auto iter : clusters)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        if (::fabs(iter[0] - 1.89348) &lt; 0.00001)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            if (::fabs(iter[6] - 1.44231) &lt; 0.00001)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                found = true;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                break;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    assert(found);</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    found = false;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    for (auto iter : clusters)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        if (::fabs(iter[0] - 0.593126) &lt; 0.00001)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            if (::fabs(iter[2] - 0.950026) &lt; 0.00001)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                found = true;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                break;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    assert(found);</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    found = false;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    for (auto iter : clusters)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        if (::fabs(iter[0] - 14.2245) &lt; 0.0001)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            found = true;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            break;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    assert(found);</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    found = false;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    for (auto iter : clusters)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        if (::fabs(iter[0] - 6.90427) &lt; 0.00001)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            found = true;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            break;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    assert(found);</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    found = false;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    for (auto iter : clusters)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        if (::fabs(iter[0] - 3.8146) &lt; 0.00001)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            found = true;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            break;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    assert(found);</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">*/</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// for (auto iter : clusters)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     if (::fabs(iter[0] - 1.89348) &lt; 0.00001)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         if (::fabs(iter[6] - 1.44231) &lt; 0.00001)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             found = true;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             break;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// assert(found);</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// found = false;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// for (auto iter : clusters)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     if (::fabs(iter[0] - 0.593126) &lt; 0.00001)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         if (::fabs(iter[2] - 0.950026) &lt; 0.00001)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             found = true;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             break;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// assert(found);</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// found = false;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// for (auto iter : clusters)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     if (::fabs(iter[0] - 14.2245) &lt; 0.0001)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         found = true;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         break;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// assert(found);</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// found = false;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// for (auto iter : clusters)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     if (::fabs(iter[0] - 6.90427) &lt; 0.00001)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         found = true;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         break;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// assert(found);</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// found = false;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// for (auto iter : clusters)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     if (::fabs(iter[0] - 3.8146) &lt; 0.00001)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         found = true;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         break;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// assert(found);</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Now try with Points</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
@@ -201,77 +203,114 @@ body {
 <span class="line_wrapper">        points<span style="color:#808030; ">.</span>push_back<span style="color:#808030; ">(</span>Point<span style="color:#808030; ">(</span>x_vec<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">,</span> y_vec<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span>Point<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">point_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>points<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper">    KMeansVisitor<span style="color:#800080; ">&lt;</span><span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span> Point<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">128</span><span style="color:#800080; ">&gt;</span> km_visitor2<span style="color:#808030; ">(</span><span style="color:#008c00; ">1000</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">,</span> point_distance<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    KMeansVisitor<span style="color:#800080; ">&lt;</span><span style="color:#008c00; ">5</span><span style="color:#808030; ">,</span> Point<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">128</span><span style="color:#800080; ">&gt;</span> km_visitor2<span style="color:#808030; ">(</span><span style="color:#008c00; ">1000</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">,</span> point_distance<span style="color:#808030; ">,</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span>Point<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">point_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> km_visitor2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Using the calculated means, separate the given column into clusters</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>clusters2 <span style="color:#808030; ">=</span> km_visitor2<span style="color:#808030; ">.</span>get_clusters<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">auto</span> iter <span style="color:#800080; ">:</span> clusters2<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
-<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">auto</span> iter2 <span style="color:#800080; ">:</span> iter<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">auto</span> iter2 <span style="color:#800080; ">:</span> iter<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
 <span class="line_wrapper">            <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> iter2<span style="color:#808030; ">.</span>x <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; "> | </span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> iter2<span style="color:#808030; ">.</span>y <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">, </span><span style="color:#800000; ">"</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">}</span></span>
 <span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0f69ff; ">\n</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper"><span style="color:#696969; ">/*</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    found = false;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    for (auto iter : clusters2)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        if (::fabs(iter[0].x - 18.9556) &lt; 0.1 &amp;&amp;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            ::fabs(iter[0].y - 2.17537) &lt; 0.1)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            if (::fabs(iter[6].x - 16.7309) &lt; 0.1 &amp;&amp;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                ::fabs(iter[6].y - 0.872376) &lt; 0.1)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                found = true;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                break;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    assert(found);</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">*/</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">/*</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    found = false;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    for (auto iter : clusters2)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        if (::fabs(iter[0].x - 0.943977) &lt; 0.1 &amp;&amp;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            ::fabs(iter[0].y - 0.910989) &lt; 0.1)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            if (::fabs(iter[2].x - 0.30509) &lt; 0.1 &amp;&amp;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                ::fabs(iter[2].y - 1.69017) &lt; 0.1)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                found = true;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                break;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    assert(found);</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    found = false;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    for (auto iter : clusters2)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        if (::fabs(iter[0].x - 4.31973) &lt; 0.1 &amp;&amp;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            ::fabs(iter[0].y - 1.24214) &lt; 0.1)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            if (::fabs(iter[3].x - 4.68381) &lt; 0.1 &amp;&amp;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                ::fabs(iter[3].y - 0.453632) &lt; 0.1)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                found = true;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">                break;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    assert(found);</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    found = false;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    for (auto iter : clusters2)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        if (::fabs(iter[0].x - 1.5694) &lt; 0.1 &amp;&amp;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            ::fabs(iter[0].y - 15.3338) &lt; 0.1)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            found = true;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            break;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    assert(found);</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    found = false;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    for (auto iter : clusters2)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        if (::fabs(iter[0].x - 1.29624) &lt; 0.1 &amp;&amp;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            ::fabs(iter[0].y - 4.13919) &lt; 0.1)  {</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            found = true;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">            break;</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">        }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    }</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">    assert(found);</span></span>
-<span class="line_wrapper"><span style="color:#696969; ">*/</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// found = false;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// for (auto iter : clusters2)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     if (::fabs(iter[0].x - 18.9556) &lt; 0.1 &amp;&amp;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         ::fabs(iter[0].y - 2.17537) &lt; 0.1)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         if (::fabs(iter[6].x - 16.7309) &lt; 0.1 &amp;&amp;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             ::fabs(iter[6].y - 0.872376) &lt; 0.1)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             found = true;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             break;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// assert(found);</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// found = false;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// for (auto iter : clusters2)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     if (::fabs(iter[0].x - 0.943977) &lt; 0.1 &amp;&amp;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         ::fabs(iter[0].y - 0.910989) &lt; 0.1)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         if (::fabs(iter[2].x - 0.30509) &lt; 0.1 &amp;&amp;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             ::fabs(iter[2].y - 1.69017) &lt; 0.1)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             found = true;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             break;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// assert(found);</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// found = false;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// for (auto iter : clusters2)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     if (::fabs(iter[0].x - 4.31973) &lt; 0.1 &amp;&amp;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         ::fabs(iter[0].y - 1.24214) &lt; 0.1)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         if (::fabs(iter[3].x - 4.68381) &lt; 0.1 &amp;&amp;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             ::fabs(iter[3].y - 0.453632) &lt; 0.1)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             found = true;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//             break;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// assert(found);</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// found = false;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// for (auto iter : clusters2)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     if (::fabs(iter[0].x - 1.5694) &lt; 0.1 &amp;&amp;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         ::fabs(iter[0].y - 15.3338) &lt; 0.1)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         found = true;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         break;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// assert(found);</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// found = false;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// for (auto iter : clusters2)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     if (::fabs(iter[0].x - 1.29624) &lt; 0.1 &amp;&amp;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         ::fabs(iter[0].y - 4.13919) &lt; 0.1)  {</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         found = true;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//         break;</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//     }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// }</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// assert(found);</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Now try with multidimensional dataset (vector of arrays)</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   p2<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    p2<span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    p2<span style="color:#808030; ">.</span>min_value <span style="color:#808030; ">=</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">20.0</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    p2<span style="color:#808030; ">.</span>max_value <span style="color:#808030; ">=</span> <span style="color:#008000; ">20.0</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> col_t <span style="color:#808030; ">=</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">array</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">3</span><span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>                rand_vec <span style="color:#808030; ">=</span> gen_uniform_real_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>df<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">,</span> p2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span>col_t<span style="color:#800080; ">&gt;</span>   multi_dimen_col<span style="color:#808030; ">(</span>df<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>                dist_func <span style="color:#808030; ">=</span> <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> col_t <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> col_t <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">double</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                                        <span style="color:#800000; font-weight:bold; ">double</span>  sum <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">                                        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> x<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                                            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span>    diff <span style="color:#800080; ">{</span> x<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> y<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">                                            sum <span style="color:#808030; ">+</span><span style="color:#808030; ">=</span> diff <span style="color:#808030; ">*</span> diff<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                                        <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">                                        <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">sqrt</span><span style="color:#808030; ">(</span>sum<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                                    <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">,</span> j <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> j <span style="color:#808030; ">&lt;</span> rand_vec<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        multi_dimen_col<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span> rand_vec<span style="color:#808030; ">[</span>j<span style="color:#808030; ">+</span><span style="color:#808030; ">+</span><span style="color:#808030; ">]</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        multi_dimen_col<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span> rand_vec<span style="color:#808030; ">[</span>j<span style="color:#808030; ">+</span><span style="color:#808030; ">+</span><span style="color:#808030; ">]</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        multi_dimen_col<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">2</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span> rand_vec<span style="color:#808030; ">[</span>j<span style="color:#808030; ">+</span><span style="color:#808030; ">+</span><span style="color:#808030; ">]</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span>col_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">multi_dimen_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>multi_dimen_col<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    KMeansVisitor<span style="color:#800080; ">&lt;</span><span style="color:#008c00; ">4</span><span style="color:#808030; ">,</span> col_t<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">128</span><span style="color:#800080; ">&gt;</span> kmean<span style="color:#808030; ">(</span><span style="color:#008c00; ">1000</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">,</span> dist_func<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span>col_t<span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">multi_dimen_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> kmean<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>kmean<span style="color:#808030; ">.</span>get_clusters_idxs<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span> <span style="color:#808030; ">&amp;</span>mean <span style="color:#800080; ">:</span> kmean<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> mean <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0f69ff; ">\n</span><span style="color:#800000; ">"</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"><span style="color:#800080; ">}</span></span>
 <span class="line_wrapper"></span></pre>
 

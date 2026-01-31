@@ -4896,6 +4896,539 @@ operator /= (std::vector<T, A> &lhs, T rhs)  {
     return (lhs);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator + (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
+
+    using result_t = std::array<T, N>;
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] += rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] += rhs[i];
+        };
+
+    lbd(0L, lhs_size);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator - (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
+
+    using result_t = std::array<T, N>;
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] -= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] -= rhs[i];
+        };
+
+    lbd(0L, lhs_size);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator * (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
+
+    using result_t = std::array<T, N>;
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] *= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] *= rhs[i];
+        };
+
+    lbd(0L, lhs_size);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator / (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
+
+    using result_t = std::array<T, N>;
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] /= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] /= rhs[i];
+        };
+
+    lbd(0L, lhs_size);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N> &
+operator += (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    auto            lbd =
+        [&lhs = lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    lhs[i + j] += rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                lhs[i] += rhs[i];
+        };
+
+    lbd(0L, lhs_size);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N> &
+operator -= (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    auto            lbd =
+        [&lhs = lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    lhs[i + j] -= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                lhs[i] -= rhs[i];
+        };
+
+    lbd(0L, lhs_size);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N> &
+operator *= (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    auto            lbd =
+        [&lhs = lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    lhs[i + j] *= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                lhs[i] *= rhs[i];
+        };
+
+    lbd(0L, lhs_size);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N> &
+operator /= (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    auto            lbd =
+        [&lhs = lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    lhs[i + j] /= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                lhs[i] /= rhs[i];
+        };
+
+    lbd(0L, lhs_size);
+    return (lhs);
+}
+
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator + (const std::array<T, N> &lhs, T rhs)  {
+
+
+    using result_t = std::array<T, N>;
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] += rhs;
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] += rhs;
+        };
+
+    lbd(0L, lhs_size);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator - (const std::array<T, N> &lhs, T rhs)  {
+
+
+    using result_t = std::array<T, N>;
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] -= rhs;
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] -= rhs;
+        };
+
+    lbd(0L, lhs_size);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator * (const std::array<T, N> &lhs, T rhs)  {
+
+
+    using result_t = std::array<T, N>;
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] *= rhs;
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] *= rhs;
+        };
+
+    lbd(0L, lhs_size);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator / (const std::array<T, N> &lhs, T rhs)  {
+
+
+    using result_t = std::array<T, N>;
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] /= rhs;
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] /= rhs;
+        };
+
+    lbd(0L, lhs_size);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N> &
+operator += (std::array<T, N> &lhs, T rhs)  {
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    auto            lbd =
+        [&lhs = lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    lhs[i + j] += rhs;
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                lhs[i] += rhs;
+        };
+
+    lbd(0L, lhs_size);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N> &
+operator -= (std::array<T, N> &lhs, T rhs)  {
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    auto            lbd =
+        [&lhs = lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    lhs[i + j] -= rhs;
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                lhs[i] -= rhs;
+        };
+
+    lbd(0L, lhs_size);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N> &
+operator *= (std::array<T, N> &lhs, T rhs)  {
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    auto            lbd =
+        [&lhs = lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    lhs[i + j] *= rhs;
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                lhs[i] *= rhs;
+        };
+
+    lbd(0L, lhs_size);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N> &
+operator /= (std::array<T, N> &lhs, T rhs)  {
+
+    const long      lhs_size = lhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    auto            lbd =
+        [&lhs = lhs, &rhs = std::as_const(rhs)]
+        (auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    lhs[i + j] /= rhs;
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                lhs[i] /= rhs;
+        };
+
+    lbd(0L, lhs_size);
+    return (lhs);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

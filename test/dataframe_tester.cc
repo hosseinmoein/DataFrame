@@ -4083,6 +4083,8 @@ static double point_distance(const Point &lhs, const Point &rhs)  {
             (lhs.y - rhs.y) * (lhs.y - rhs.y));
 }
 
+// -------------------------------------
+
 static void test_k_means()  {
 
     std::cout << "\nTesting k-means visitor ..." << std::endl;
@@ -4186,6 +4188,7 @@ static void test_k_means()  {
     df.single_act_visit<Point>("point_col", km_visitor2);
 
     // Using the calculated means, separate the given column into clusters
+    //
     const auto  &clusters2 = km_visitor2.get_clusters();
 
     for (auto iter : clusters2)  {
@@ -4250,6 +4253,46 @@ static void test_k_means()  {
     //     }
     // }
     // assert(found);
+
+    // Now try with multidimensional dataset (vector of arrays)
+    //
+    RandGenParams<double>   p2;
+
+    p2.seed = 123;
+    p2.min_value = -20.0;
+    p2.max_value = 20.0;
+
+    using col_t = std::array<double, 3>;
+
+    auto                rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * 3, p2);
+    StlVecType<col_t>   multi_dimen_col(df.get_index().size());
+    auto                dist_func =
+        [](const col_t &x, const col_t &y) -> double  {
+            double  sum { 0 };
+
+            for (std::size_t i { 0 }; i < x.size(); ++i)  {
+                const double    diff { x[i] - y[i] };
+
+                sum += diff * diff;
+            }
+            return (std::sqrt(sum));
+        };
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        multi_dimen_col[i][0] = rand_vec[j++];
+        multi_dimen_col[i][1] = rand_vec[j++];
+        multi_dimen_col[i][2] = rand_vec[j++];
+    }
+    df.load_column<col_t>("multi_dimen_col", std::move(multi_dimen_col));
+
+    KMeansVisitor<4, col_t, unsigned long, 128> kmean(1000, true, dist_func);
+
+    df.single_act_visit<col_t>("multi_dimen_col", kmean);
+
+    assert(kmean.get_clusters_idxs().size() == 4);
+    for (const auto &mean : kmean.get_result())
+        std::cout << mean << "\n\n";
 }
 
 // -----------------------------------------------------------------------------

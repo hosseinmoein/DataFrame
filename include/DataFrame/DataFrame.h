@@ -4212,13 +4212,6 @@ public: // Read/access and slicing interfaces
     get_data_by_spectral(const char *col_name,
                          double sigma,
                          seed_t seed = seed_t(-1),
-                         std::function<double(const T &x, const T &y,
-                                              double sigma)>  &&sfunc =
-                             [](const T &x, const T &y,
-                                double sigma) -> double  {
-                                 return (std::exp(-((x - y) * (x - y)) /
-                                                  (2 * sigma * sigma)));
-                             },
                          size_type num_of_iter = 1000) const;
 
     // Same as above but it returns an array of Views.
@@ -4229,13 +4222,6 @@ public: // Read/access and slicing interfaces
     get_view_by_spectral(const char *col_name,
                          double sigma,
                          seed_t seed = seed_t(-1),
-                         std::function<double(const T &x, const T &y,
-                                              double sigma)>  &&sfunc =
-                             [](const T &x, const T &y,
-                                double sigma) -> double  {
-                                 return (std::exp(-((x - y) * (x - y)) /
-                                                  (2 * sigma * sigma)));
-                             },
                          size_type num_of_iter = 1000);
 
     // Same as above but it returns an array of const Views.
@@ -4246,13 +4232,6 @@ public: // Read/access and slicing interfaces
     get_view_by_spectral(const char *col_name,
                          double sigma,
                          seed_t seed = seed_t(-1),
-                         std::function<double(const T &x, const T &y,
-                                              double sigma)>  &&sfunc =
-                             [](const T &x, const T &y,
-                                double sigma) -> double  {
-                                 return (std::exp(-((x - y) * (x - y)) /
-                                                  (2 * sigma * sigma)));
-                             },
                          size_type num_of_iter = 1000) const;
 
     // This uses Affinity Propagation algorithm to divide the named column

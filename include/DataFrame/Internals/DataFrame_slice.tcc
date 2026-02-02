@@ -3040,8 +3040,6 @@ DataFrame<I, H>::
 get_data_by_spectral(const char *col_name,
                      double sigma,
                      seed_t seed,
-                     std::function<double(const T &x, const T &y,
-                                          double sigma)>  &&sfunc,
                      size_type num_of_iter) const  {
 
     using df_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
@@ -3049,7 +3047,7 @@ get_data_by_spectral(const char *col_name,
     using scv_t = spect_v<K, T, I, std::size_t(H::align_value)>;
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
-    scv_t                   spectral { num_of_iter, sigma, seed, sfunc };
+    scv_t                   spectral { num_of_iter, sigma, seed };
 
     spectral.pre();
     spectral(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -3073,8 +3071,6 @@ DataFrame<I, H>::
 get_view_by_spectral(const char *col_name,
                      double sigma,
                      seed_t seed,
-                     std::function<double(const T &x, const T &y,
-                                          double sigma)>  &&sfunc,
                      size_type num_of_iter)  {
 
     using df_t = typename DataFrame<I, H>::PtrView;
@@ -3082,7 +3078,7 @@ get_view_by_spectral(const char *col_name,
     using scv_t = spect_v<K, T, I, std::size_t(H::align_value)>;
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
-    scv_t                   spectral { num_of_iter, sigma, seed, sfunc };
+    scv_t                   spectral { num_of_iter, sigma, seed };
 
     spectral.pre();
     spectral(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -3106,8 +3102,6 @@ DataFrame<I, H>::
 get_view_by_spectral(const char *col_name,
                      double sigma,
                      seed_t seed,
-                     std::function<double(const T &x, const T &y,
-                                          double sigma)>  &&sfunc,
                      size_type num_of_iter) const  {
 
     using df_t = typename DataFrame<I, H>::ConstPtrView;
@@ -3115,7 +3109,7 @@ get_view_by_spectral(const char *col_name,
     using scv_t = spect_v<K, T, I, std::size_t(H::align_value)>;
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
-    scv_t                   spectral { num_of_iter, sigma, seed, sfunc };
+    scv_t                   spectral { num_of_iter, sigma, seed };
 
     spectral.pre();
     spectral(indices_.begin(), indices_.end(), vec.begin(), vec.end());

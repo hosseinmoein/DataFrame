@@ -2668,10 +2668,9 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES
 
-    using similarity_func =
-        std::function<double(const value_type &x,
-                             const value_type &y,
-                             double sigma)>;
+    using similarity_func = std::function<double(const value_type &x,
+                                                 const value_type &y,
+                                                 double sigma)>;
     using seed_t = std::random_device::result_type;
     using cluster_type = std::array<VectorConstPtrView<value_type, A>, K>;
     using order_type =
@@ -2681,8 +2680,9 @@ public:
 
 private:
 
-    using sym_mat_t = Matrix<T, matrix_orient::row_major, true>;
+    using sym_mat_t = Matrix<double, matrix_orient::row_major, true>;
     using mat_t = Matrix<T, matrix_orient::row_major, false>;
+    using lap_mat_t = Matrix<double, matrix_orient::row_major, false>;
     template<typename U>
     using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
 
@@ -2692,6 +2692,28 @@ private:
     similarity_func sfunc_;
     cluster_type    clusters_ { };       // K Clusters
     order_type      clusters_idxs_ { };  // K Clusters indices
+
+    inline static similarity_func
+    get_sim_func_()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return ([](const T &x, const T &y, double sigma) -> double  {
+                        const double    diff { x - y };
+
+                        return (std::exp(-(diff * diff) / (2 * sigma * sigma)));
+            });
+        else
+            return ([](const T &x, const T &y, double sigma) -> double  {
+                        double sum { 0 };
+
+                        for (size_type i { 0 }; i < x.size(); ++i)  {
+                            const double    diff { x[i] - y[i] };
+
+                            sum += diff * diff;
+                        }
+                        return (std::exp(-sum / (2 * sigma * sigma)));
+            });
+    }
 
     template<typename H>
     inline sym_mat_t
@@ -2707,13 +2729,13 @@ private:
         return (sim_mat);
     }
 
-    inline vec_t<T>
+    inline vec_t<double>
     calc_degree_(const sym_mat_t &sim_mat)  {
 
-        vec_t<T>    deg_mat(sim_mat.rows());
+        vec_t<double>   deg_mat(sim_mat.rows());
 
         for (long r = 0; r < sim_mat.rows(); ++r)  {
-            value_type  sum { 0 };
+            double  sum { 0 };
 
             for (long c = 0; c < sim_mat.cols(); ++c)
                 sum += sim_mat(r, c);
@@ -2724,10 +2746,10 @@ private:
         return (deg_mat);
     }
 
-    inline mat_t
-    calc_laplacian_(const vec_t<T> &deg_mat, const sym_mat_t &sim_mat)  {
+    inline lap_mat_t
+    calc_laplacian_(const vec_t<double> &deg_mat, const sym_mat_t &sim_mat)  {
 
-        mat_t   lap_mat(sim_mat.rows(), sim_mat.cols());
+        lap_mat_t   lap_mat(sim_mat.rows(), sim_mat.cols());
 
         for (long r = 0; r < sim_mat.rows(); ++r)
             for (long c = 0; c < sim_mat.cols(); ++c)
@@ -2740,13 +2762,13 @@ private:
     }
 
     inline double
-    distance_func_(const mat_t &x, const mat_t &y,
+    distance_func_(const lap_mat_t &x, const lap_mat_t &y,
                    long xr, long yr, long cols)  {
 
-        value_type  val { 0 };
+        double  val { 0 };
 
         for (long c = 0; c < cols; ++c) {
-            const value_type    diff = x(xr, c) - y(yr, c);
+            const double    diff = x(xr, c) - y(yr, c);
 
             val += diff * diff;
         }
@@ -2754,7 +2776,7 @@ private:
     }
 
     inline vec_t<long>
-    do_kmeans_(const mat_t &eigenvecs)  {
+    do_kmeans_(const lap_mat_t &eigenvecs)  {
 
         const long      rows = eigenvecs.rows();  // Samples
         vec_t<long>     cluster_idxs (rows, -1L);
@@ -2767,7 +2789,7 @@ private:
 
         // Copy the top k rows of eigen vector.
         //
-        mat_t   means { k, k };
+        lap_mat_t   means { k, k };
 
         for (long r = 0; r < k; ++r)  {
             const auto rr = rd_gen(gen);
@@ -2780,7 +2802,7 @@ private:
              // Assign cluster_idxs based on closest means
              //
              for (long r = 0; r < rows; ++r) {
-                 double best_distance = std::numeric_limits<double>::max();
+                 double best_distance { std::numeric_limits<double>::max() };
 
                  for (long rr = 0; rr < k; ++rr) {
                      const double   distance =
@@ -2795,7 +2817,7 @@ private:
 
              // Update means
              //
-             mat_t          new_means { k, k };
+             lap_mat_t      new_means { k, k };
              vec_t<long>    counts (k, 0L);
 
              for (long r = 0; r < rows; ++r) {
@@ -2807,7 +2829,7 @@ private:
              for (int r = 0; r < k; ++r) {
                  if (counts[r] > 0)  {
                      for (long c = 0; c < k; ++c)
-                         new_means(r, c) /= T(counts[r]);
+                         new_means(r, c) /= double(counts[r]);
                  }
                  else  { // Reinitialize centroid if no points assigned
                      const auto rr = rd_gen(gen);
@@ -2839,13 +2861,13 @@ public:
                                 "Data size must be bigger than K");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        mat_t   eigenvecs;
+        lap_mat_t   eigenvecs;
 
         {
             const auto  sim_mat = calc_similarity_(column_begin, col_s);
             const auto  deg_mat = calc_degree_(sim_mat);
             const auto  lap_mat = calc_laplacian_(deg_mat, sim_mat);
-            mat_t       eigenvals;
+            lap_mat_t   eigenvals;
 
             lap_mat.eigen_space(eigenvals, eigenvecs, true);
         }  // Getting rid of the big things we don't need anymore
@@ -2866,6 +2888,8 @@ public:
         }
     }
 
+    inline void set_sim_func(similarity_func &&f)  { sfunc_ = f; }
+	
     inline void pre()  {
 
         for (auto &iter : clusters_) iter.clear();
@@ -2877,20 +2901,12 @@ public:
     inline const order_type &
     get_clusters_idxs() const  { return (clusters_idxs_); }
 
-    SpectralClusteringVisitor(
-        size_type num_of_iter,
-        double sigma,
-        seed_t seed = seed_t(-1),
-        similarity_func sf =
-            [](const value_type &x,
-               const value_type &y,
-               double sigma) -> double  {
-                return (std::exp(-((x - y) * (x - y)) / (2 * sigma * sigma)));
-            })
+    SpectralClusteringVisitor(size_type num_of_iter,
+                              double sigma,
+                              seed_t seed = seed_t(-1))
         : iter_num_(num_of_iter),
           seed_(seed),
-          sigma_(sigma),
-          sfunc_(sf)  {  }
+          sigma_(sigma)  { sfunc_ = get_sim_func_(); }
 };
 
 template<std::size_t K, typename T,

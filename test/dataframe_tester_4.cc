@@ -2503,8 +2503,6 @@ static void test_SpectralClusteringVisitor()  {
 
     std::cout << "\nTesting SpectralClusteringVisitor{ } ..." << std::endl;
 
-    typedef StdDataFrame64<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
@@ -2516,7 +2514,7 @@ static void test_SpectralClusteringVisitor()  {
         ::exit(-1);
     }
 
-    spect_v<4, double, std::string, 64> spc(1000, 7, 123);
+    spect_v<4, double, std::string> spc(1000, 7, 123);
 
     df.single_act_visit<double>("IBM_Close", spc);
 
@@ -2548,6 +2546,68 @@ static void test_SpectralClusteringVisitor()  {
     assert(std::fabs(clusters[3][8] - 124.83) < 0.001);
     assert(std::fabs(clusters[3][12] - 120.19) < 0.001);
     assert(std::fabs(clusters[3][14] - 122.74) < 0.001);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = -20.0;
+    p.max_value = 20.0;
+
+    using col_t = std::array<double, 3>;
+
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * 3, p);
+
+    std::vector<col_t>  multi_dimen_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        multi_dimen_col[i][0] = rand_vec[j++];
+        multi_dimen_col[i][1] = rand_vec[j++];
+        multi_dimen_col[i][2] = rand_vec[j++];
+    }
+    df.load_column<col_t>("multi_dimen_col", std::move(multi_dimen_col));
+
+    spect_v<4, col_t, std::string>  ml_spc(1000, 7, 123);
+
+    // This is the default similarity function for multidimensional data.
+    // But I am setting it here for testing and illustration.
+    //
+    ml_spc.set_sim_func(
+        [](const col_t &x, const col_t &y, double sigma) -> double  {
+            double sum { 0 };
+
+            for (std::size_t i { 0 }; i < x.size(); ++i)  {
+                const double    diff { x[i] - y[i] };
+
+                sum += diff * diff;
+            }
+            return (std::exp(-sum / (2 * sigma * sigma)));
+        });
+    df.single_act_visit<col_t>("multi_dimen_col", ml_spc);
+
+    const auto  &ml_clusters = ml_spc.get_result();
+
+    assert(ml_clusters.size() == 4);
+    assert(ml_spc.get_clusters_idxs()[0].size() == 327);
+    assert(ml_spc.get_clusters_idxs()[1].size() == 206);
+    assert(ml_spc.get_clusters_idxs()[2].size() == 253);
+    assert(ml_spc.get_clusters_idxs()[3].size() == 214);
+    assert((ml_spc.get_clusters_idxs()[0].size() +
+            ml_spc.get_clusters_idxs()[1].size() +
+            ml_spc.get_clusters_idxs()[2].size() +
+            ml_spc.get_clusters_idxs()[3].size() == df.get_index().size()));
+
+    assert(std::fabs(ml_spc.get_result()[0][5][0] - 16.4466) < 0.0001);
+    assert(std::fabs(ml_spc.get_result()[0][5][1] - -2.12685) < 0.00001);
+    assert(std::fabs(ml_spc.get_result()[0][5][2] - 8.58622) < 0.00001);
+    assert(std::fabs(ml_spc.get_result()[2][5][0] - 5.05986) < 0.00001);
+    assert(std::fabs(ml_spc.get_result()[2][5][1] - -1.57193) < 0.00001);
+    assert(std::fabs(ml_spc.get_result()[2][5][2] - -7.64881) < 0.00001);
+    assert(std::fabs(ml_spc.get_result()[3][7][0] - -19.7594) < 0.0001);
+    assert(std::fabs(ml_spc.get_result()[3][7][1] - 8.27358) < 0.00001);
+    assert(std::fabs(ml_spc.get_result()[3][7][2] - -6.11494) < 0.00001);
 }
 
 // ----------------------------------------------------------------------------

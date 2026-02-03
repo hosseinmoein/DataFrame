@@ -1768,8 +1768,6 @@ static void test_DBSCANVisitor()  {
 
     std::cout << "\nTesting DBSCANVisitor{ } ..." << std::endl;
 
-    typedef StdDataFrame64<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
@@ -1786,10 +1784,13 @@ static void test_DBSCANVisitor()  {
         df.get_view_by_sel<double, decltype(lbd), double, long>
             ("IBM_Open", lbd);
 
-    DBSCANVisitor<double, std::string, 64>  dbscan(
-        10,
-        4,
-        [](const double &x, const double &y)  { return (std::fabs(x - y)); });
+    DBSCANVisitor<double, std::string>  dbscan(10, 4);
+
+    // Set a different distance function than default
+    //
+    dbscan.set_dist_func([](const double &x, const double &y)  {
+                             return (std::fabs(x - y));
+                         });
 
     view.single_act_visit<double>("IBM_Close", dbscan);
 
@@ -1807,6 +1808,45 @@ static void test_DBSCANVisitor()  {
     assert(dbscan.get_result()[4][18] == 167.330002);
     assert(dbscan.get_result()[10][135] == 145.160004);
     assert(dbscan.get_result()[18][3] == 103.550003);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = -20.0;
+    p.max_value = 20.0;
+
+    using col_t = std::array<double, 3>;
+
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * 3, p);
+
+    std::vector<col_t>  multi_dimen_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        multi_dimen_col[i][0] = rand_vec[j++];
+        multi_dimen_col[i][1] = rand_vec[j++];
+        multi_dimen_col[i][2] = rand_vec[j++];
+    }
+    df.load_column<col_t>("multi_dimen_col", std::move(multi_dimen_col));
+
+    DBSCANVisitor<col_t, std::string>   md_dbscan(10, 4);
+
+    df.single_act_visit<col_t>("multi_dimen_col", md_dbscan);
+
+    const auto  &md_clusters = md_dbscan.get_result();
+
+    assert(md_clusters.size() == 102); // Number of clusters
+
+    assert(md_clusters[0].size() == 14);
+    assert(std::fabs(md_clusters[0][6][1] - -19.9438) < 0.0001);
+
+    assert(md_clusters[58].size() == 12);
+    assert(std::fabs(md_clusters[58][3][0] - -6.41034) < 0.00001);
+
+    assert(md_clusters[101].size() == 10);
+    assert(std::fabs(md_clusters[101][9][2] - -5.92195) < 0.00001);
 }
 
 // ----------------------------------------------------------------------------
@@ -1879,35 +1919,31 @@ void test_get_data_by_dbscan()  {
     // I am using both views and dataframes to make sure both work
     //
     auto    views =
-        view.get_view_by_dbscan<double, double, long>
-            ("IBM_Close", 10, 4,
-             [](const double &x, const double &y) -> double  {
-                 return (std::fabs(x - y));
-             });
+        view.get_view_by_dbscan<double, double, long>("IBM_Close", 10, 4);
     auto    dfs =
-        df.get_data_by_dbscan<double, double, long>
-            ("IBM_Close", 10, 4,
-             [](const double &x, const double &y) -> double  {
-                 return (std::fabs(x - y));
-             });
+        df.get_data_by_dbscan<double, double, long>("IBM_Close", 10, 4);
 
-    assert(views.size() == 20);
+    assert(views.size() == 36);
+    assert(dfs.size() == 36);
 
-    assert(views[0].get_index().size() == 11);
-    assert(views[0].get_column<double>("IBM_Close")[7] == 184.779999);
+    assert(views[0].get_index().size() == 5);
+    assert(
+    std::fabs(views[0].get_column<double>("IBM_Close")[4] - 185.69) < 0.001);
 
-    assert(dfs[5].get_index().size() == 127);
-    assert(dfs[5].get_column<double>("IBM_Open")[15] == 162.0);
+    assert(dfs[5].get_index().size() == 30);
+    assert(
+    std::fabs(dfs[5].get_column<double>("IBM_Open")[15] - 180.87) < 0.001);
 
-    assert(views[16].get_index().size() == 29);
-    assert(views[16].get_column<double>("IBM_High")[3] == 117.75);
+    assert(views[16].get_index().size() == 39);
+    assert(
+    std::fabs(views[16].get_column<double>("IBM_High")[3] - 170.85) < 0.001);
 
     // This is the last DataFrame which contains the data corresponding to
     // noisy close prices
     //
-    assert(views[19].get_index().size() == 2);
-    assert(views[19].get_column<long>("IBM_Volume")[0] == 10546500);
-    assert(views[19].get_index()[1] == "2020-03-23");
+    assert(views[35].get_index().size() == 16);
+    assert(views[35].get_column<long>("IBM_Volume")[0] == 3821400);
+    assert(views[35].get_index()[1] == "2020-03-12");
 }
 
 // ----------------------------------------------------------------------------
@@ -2569,12 +2605,12 @@ static void test_SpectralClusteringVisitor()  {
     }
     df.load_column<col_t>("multi_dimen_col", std::move(multi_dimen_col));
 
-    spect_v<4, col_t, std::string>  ml_spc(1000, 7, 123);
+    spect_v<4, col_t, std::string>  md_spc(1000, 7, 123);
 
     // This is the default similarity function for multidimensional data.
     // But I am setting it here for testing and illustration.
     //
-    ml_spc.set_sim_func(
+    md_spc.set_sim_func(
         [](const col_t &x, const col_t &y, double sigma) -> double  {
             double sum { 0 };
 
@@ -2585,29 +2621,29 @@ static void test_SpectralClusteringVisitor()  {
             }
             return (std::exp(-sum / (2 * sigma * sigma)));
         });
-    df.single_act_visit<col_t>("multi_dimen_col", ml_spc);
+    df.single_act_visit<col_t>("multi_dimen_col", md_spc);
 
-    const auto  &ml_clusters = ml_spc.get_result();
+    const auto  &md_clusters = md_spc.get_result();
 
-    assert(ml_clusters.size() == 4);
-    assert(ml_spc.get_clusters_idxs()[0].size() == 327);
-    assert(ml_spc.get_clusters_idxs()[1].size() == 206);
-    assert(ml_spc.get_clusters_idxs()[2].size() == 253);
-    assert(ml_spc.get_clusters_idxs()[3].size() == 214);
-    assert((ml_spc.get_clusters_idxs()[0].size() +
-            ml_spc.get_clusters_idxs()[1].size() +
-            ml_spc.get_clusters_idxs()[2].size() +
-            ml_spc.get_clusters_idxs()[3].size() == df.get_index().size()));
+    assert(md_clusters.size() == 4);
+    assert(md_spc.get_clusters_idxs()[0].size() == 327);
+    assert(md_spc.get_clusters_idxs()[1].size() == 206);
+    assert(md_spc.get_clusters_idxs()[2].size() == 253);
+    assert(md_spc.get_clusters_idxs()[3].size() == 214);
+    assert((md_spc.get_clusters_idxs()[0].size() +
+            md_spc.get_clusters_idxs()[1].size() +
+            md_spc.get_clusters_idxs()[2].size() +
+            md_spc.get_clusters_idxs()[3].size() == df.get_index().size()));
 
-    assert(std::fabs(ml_spc.get_result()[0][5][0] - 16.4466) < 0.0001);
-    assert(std::fabs(ml_spc.get_result()[0][5][1] - -2.12685) < 0.00001);
-    assert(std::fabs(ml_spc.get_result()[0][5][2] - 8.58622) < 0.00001);
-    assert(std::fabs(ml_spc.get_result()[2][5][0] - 5.05986) < 0.00001);
-    assert(std::fabs(ml_spc.get_result()[2][5][1] - -1.57193) < 0.00001);
-    assert(std::fabs(ml_spc.get_result()[2][5][2] - -7.64881) < 0.00001);
-    assert(std::fabs(ml_spc.get_result()[3][7][0] - -19.7594) < 0.0001);
-    assert(std::fabs(ml_spc.get_result()[3][7][1] - 8.27358) < 0.00001);
-    assert(std::fabs(ml_spc.get_result()[3][7][2] - -6.11494) < 0.00001);
+    assert(std::fabs(md_spc.get_result()[0][5][0] - 16.4466) < 0.0001);
+    assert(std::fabs(md_spc.get_result()[0][5][1] - -2.12685) < 0.00001);
+    assert(std::fabs(md_spc.get_result()[0][5][2] - 8.58622) < 0.00001);
+    assert(std::fabs(md_spc.get_result()[2][5][0] - 5.05986) < 0.00001);
+    assert(std::fabs(md_spc.get_result()[2][5][1] - -1.57193) < 0.00001);
+    assert(std::fabs(md_spc.get_result()[2][5][2] - -7.64881) < 0.00001);
+    assert(std::fabs(md_spc.get_result()[3][7][0] - -19.7594) < 0.0001);
+    assert(std::fabs(md_spc.get_result()[3][7][1] - 8.27358) < 0.00001);
+    assert(std::fabs(md_spc.get_result()[3][7][2] - -6.11494) < 0.00001);
 }
 
 // ----------------------------------------------------------------------------

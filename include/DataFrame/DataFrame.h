@@ -4206,7 +4206,7 @@ public: // Read/access and slicing interfaces
     //   Seed for random number generator to initialize k-means clustering
     //   algorithm. Default is a random numbers for each call.
     //
-    template<std::size_t K, arithmetic T, typename ... Ts>
+    template<std::size_t K, typename T, typename ... Ts>
     [[nodiscard]]
     std::array<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>, K>
     get_data_by_spectral(const char *col_name,
@@ -4216,7 +4216,7 @@ public: // Read/access and slicing interfaces
 
     // Same as above but it returns an array of Views.
     //
-    template<std::size_t K, arithmetic T, typename ... Ts>
+    template<std::size_t K, typename T, typename ... Ts>
     [[nodiscard]]
     std::array<PtrView, K>
     get_view_by_spectral(const char *col_name,
@@ -4226,7 +4226,7 @@ public: // Read/access and slicing interfaces
 
     // Same as above but it returns an array of const Views.
     //
-    template<std::size_t K, arithmetic T, typename ... Ts>
+    template<std::size_t K, typename T, typename ... Ts>
     [[nodiscard]]
     std::array<ConstPtrView, K>
     get_view_by_spectral(const char *col_name,
@@ -4332,42 +4332,30 @@ public: // Read/access and slicing interfaces
     //   A function to calculate the distance between two data points in the
     //   named column
     //
-    template<arithmetic T, typename ... Ts>
+    template<typename T, typename ... Ts>
     [[nodiscard]]
     std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
     get_data_by_dbscan(const char *col_name,
                        long min_members,
-                       double max_distance,
-                       std::function<double(const T &x, const T &y)> &&dfunc =
-                           [](const T &x, const T &y) -> double  {
-                               return ((x - y) * (x - y));
-                           }) const;
+                       double max_distance) const;
 
     // Same as above but it returns a vector of Views.
     //
-    template<arithmetic T, typename ... Ts>
+    template<typename T, typename ... Ts>
     [[nodiscard]]
     std::vector<PtrView>
     get_view_by_dbscan(const char *col_name,
                        long min_members,
-                       double max_distance,
-                       std::function<double(const T &x, const T &y)> &&dfunc =
-                           [](const T &x, const T &y) -> double  {
-                               return ((x - y) * (x - y));
-                           });
+                       double max_distance);
 
     // Same as above but it returns a vector of const Views.
     //
-    template<arithmetic T, typename ... Ts>
+    template<typename T, typename ... Ts>
     [[nodiscard]]
     std::vector<ConstPtrView>
     get_view_by_dbscan(const char *col_name,
                        long min_members,
-                       double max_distance,
-                       std::function<double(const T &x, const T &y)> &&dfunc =
-                           [](const T &x, const T &y) -> double  {
-                               return ((x - y) * (x - y));
-                           }) const;
+                       double max_distance) const;
 
     // This uses BIRCH algorithm to divide the named column into clusters.
     // It returns an array of DataFrame's each containing one of the clusters

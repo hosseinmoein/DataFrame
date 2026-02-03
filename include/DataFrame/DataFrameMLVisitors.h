@@ -569,6 +569,26 @@ private:
     static constexpr id_t   UNCLASSIFIED { -1 };
     static constexpr id_t   NOISE { -2 };
 
+    inline static distance_func
+    get_dist_func_()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return ([](const T &x, const T &y) -> double  {
+                        return (static_cast<double>((x - y) * (x - y)));
+                    });
+        else
+            return ([](const T &x, const T &y) -> double  {
+                        double  sum { 0 };
+
+                        for (size_type i { 0 }; i < size_type(x.size()); ++i)  {
+                            const double    diff { x[i] - y[i] };
+
+                            sum += diff * diff;
+                        }
+                        return (std::sqrt(sum));
+                    });
+    }
+
     template<typename H>
     inline void
     calculate_cluster_(const H &column_begin,
@@ -686,6 +706,8 @@ public:
         }
     }
 
+    inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
+	
     inline void pre ()  {
 
         clusters_.clear();
@@ -700,21 +722,15 @@ public:
     inline const vec_t<size_type> &
     get_noisey_idxs () const  { return (noisey_idxs_); }
 
-    DBSCANVisitor(id_t min_mems,
-                  double max_dist,
-                  distance_func &&f =
-                      [](const value_type &x, const value_type &y) -> double  {
-                          return ((x - y) * (x - y));
-                      })
+    DBSCANVisitor(id_t min_mems, double max_dist)
         : min_mems_(min_mems),
-          max_dist_(max_dist),
-          dfunc_(std::forward<distance_func>(f))  {   }
+          max_dist_(max_dist)  { dfunc_ = get_dist_func_(); }
 
 private:
 
     const id_t          min_mems_;
     const double        max_dist_;
-    distance_func       dfunc_;
+    distance_func       dfunc_ { };
     result_type         clusters_ { };       // Clusters
     order_type          clusters_idxs_ { };  // Clusters indices
     vec_t<size_type>    noisey_idxs_ { };    // Indices of noisey elements
@@ -5321,7 +5337,7 @@ private:
         if constexpr (std::is_arithmetic_v<value_type>)
             return ([](const T &x, const T &y) -> double  {
                         return (static_cast<double>(std::abs(x - y)));
-            });
+                    });
         else
             return ([](const T &x, const T &y) -> double  {
                         double  sum { 0 };
@@ -5332,7 +5348,7 @@ private:
                             sum += diff * diff;
                         }
                         return (std::sqrt(sum));
-            });
+                    });
     }
 
     inline void calc_k_means_(const CFTree<value_type> &tree)  {

@@ -3034,7 +3034,7 @@ get_view_by_kmeans(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<std::size_t K, arithmetic T, typename ... Ts>
+template<std::size_t K, typename T, typename ... Ts>
 std::array<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>, K>
 DataFrame<I, H>::
 get_data_by_spectral(const char *col_name,
@@ -3065,7 +3065,7 @@ get_data_by_spectral(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<std::size_t K, arithmetic T, typename ... Ts>
+template<std::size_t K, typename T, typename ... Ts>
 std::array<typename DataFrame<I, H>::PtrView, K>
 DataFrame<I, H>::
 get_view_by_spectral(const char *col_name,
@@ -3096,7 +3096,7 @@ get_view_by_spectral(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<std::size_t K, arithmetic T, typename ... Ts>
+template<std::size_t K, typename T, typename ... Ts>
 std::array<typename DataFrame<I, H>::ConstPtrView, K>
 DataFrame<I, H>::
 get_view_by_spectral(const char *col_name,
@@ -3226,22 +3226,19 @@ get_view_by_affin(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<arithmetic T, typename ... Ts>
+template<typename T, typename ... Ts>
 std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
 DataFrame<I, H>::
-get_data_by_dbscan(
-    const char *col_name,
-    long min_members,
-    double max_distance,
-    std::function<double(const T &x, const T &y)> &&dfunc) const  {
+get_data_by_dbscan(const char *col_name,
+                   long min_members,
+                   double max_distance) const  {
 
     using df_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
     using res_t = std::vector<df_t>;
     using dbs_t = DBSCANVisitor<T, I, std::size_t(H::align_value)>;
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
-    dbs_t                   dbscan { min_members, max_distance,
-                                     std::forward<decltype(dfunc)>(dfunc) };
+    dbs_t                   dbscan { min_members, max_distance };
 
     dbscan.pre();
     dbscan(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -3265,22 +3262,19 @@ get_data_by_dbscan(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<arithmetic T, typename ... Ts>
+template<typename T, typename ... Ts>
 std::vector<typename DataFrame<I, H>::PtrView>
 DataFrame<I, H>::
-get_view_by_dbscan(
-    const char *col_name,
-    long min_members,
-    double max_distance,
-    std::function<double(const T &x, const T &y)> &&dfunc)  {
+get_view_by_dbscan(const char *col_name,
+                   long min_members,
+                   double max_distance)  {
 
     using df_t = typename DataFrame<I, H>::PtrView;
     using res_t = std::vector<df_t>;
     using dbs_t = DBSCANVisitor<T, I, std::size_t(H::align_value)>;
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
-    dbs_t                   dbscan { min_members, max_distance,
-                                     std::forward<decltype(dfunc)>(dfunc) };
+    dbs_t                   dbscan { min_members, max_distance };
 
     dbscan.pre();
     dbscan(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -3304,22 +3298,19 @@ get_view_by_dbscan(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<arithmetic T, typename ... Ts>
+template<typename T, typename ... Ts>
 std::vector<typename DataFrame<I, H>::ConstPtrView>
 DataFrame<I, H>::
-get_view_by_dbscan(
-    const char *col_name,
-    long min_members,
-    double max_distance,
-    std::function<double(const T &x, const T &y)> &&dfunc) const  {
+get_view_by_dbscan(const char *col_name,
+                   long min_members,
+                   double max_distance) const  {
 
     using df_t = typename DataFrame<I, H>::ConstPtrView;
     using res_t = std::vector<df_t>;
     using dbs_t = DBSCANVisitor<T, I, std::size_t(H::align_value)>;
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
-    dbs_t                   dbscan { min_members, max_distance,
-                                     std::forward<decltype(dfunc)>(dfunc) };
+    dbs_t                   dbscan { min_members, max_distance };
 
     dbscan.pre();
     dbscan(indices_.begin(), indices_.end(), vec.begin(), vec.end());

@@ -1855,8 +1855,6 @@ static void test_MeanShiftVisitor()  {
 
     std::cout << "\nTesting MeanShiftVisitor{ } ..." << std::endl;
 
-    typedef StdDataFrame64<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
@@ -1867,13 +1865,14 @@ static void test_MeanShiftVisitor()  {
         ::exit(-1);
     }
 
-    MeanShiftVisitor<double, std::string, 64>   mshift(
+    MeanShiftVisitor<double, std::string>   mshift(
         1.0,
         4,
-        mean_shift_kernel::gaussian,
-        // mean_shift_kernel::triweight,
-        [](const double &x, const double &y)  { return (std::fabs(x - y)); });
+        mean_shift_kernel::gaussian);
 
+    mshift.set_dist_func([](const double &x, const double &y) -> double  {
+                             return (std::fabs(x - y));
+                         });
     df.single_act_visit<double>("IBM_Close", mshift);
 
     assert(mshift.get_result().size() == 19);
@@ -1888,6 +1887,48 @@ static void test_MeanShiftVisitor()  {
     assert(std::fabs(mshift.get_result()[6][273] - 154.31) < 0.001);
     assert(std::fabs(mshift.get_result()[10][135] - 137.61) < 0.001);
     assert(std::fabs(mshift.get_result()[18][1] - 94.77) < 0.001);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = -20.0;
+    p.max_value = 20.0;
+
+    using col_t = std::array<double, 3>;
+
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * 3, p);
+
+    std::vector<col_t>  multi_dimen_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        multi_dimen_col[i][0] = rand_vec[j++];
+        multi_dimen_col[i][1] = rand_vec[j++];
+        multi_dimen_col[i][2] = rand_vec[j++];
+    }
+    df.load_column<col_t>("multi_dimen_col", std::move(multi_dimen_col));
+
+    MeanShiftVisitor<col_t, std::string>    md_mshift(
+        1.0,
+        10,
+        mean_shift_kernel::sigmoid);
+
+    df.single_act_visit<col_t>("multi_dimen_col", md_mshift);
+
+    const auto  &md_clusters = md_mshift.get_result();
+
+    assert(md_clusters.size() == 53); // Number of clusters
+
+    assert(md_clusters[0].size() == 74);
+    assert(std::fabs(md_clusters[0][6][1] - -1.8807) < 0.0001);
+
+    assert(md_clusters[28].size() == 36);
+    assert(std::fabs(md_clusters[28][3][0] - 12.6347) < 0.0001);
+
+    assert(md_clusters[52].size() == 1);
+    assert(std::fabs(md_clusters[52][0][2] - 19.2094) < 0.0001);
 }
 
 // ----------------------------------------------------------------------------
@@ -1976,36 +2017,30 @@ void test_get_data_by_mshift()  {
     //
     auto    views =
         view.get_view_by_mshift<double, double, long>
-            ("IBM_Close", 1, 4, mean_shift_kernel::gaussian,
-             [](const double &x, const double &y) -> double  {
-                 return (std::fabs(x - y));
-             });
+            ("IBM_Close", 1, 4, mean_shift_kernel::gaussian);
     auto    dfs =
         df.get_data_by_mshift<double, double, long>
-            ("IBM_Close", 1, 4, mean_shift_kernel::gaussian,
-             [](const double &x, const double &y) -> double  {
-                 return (std::fabs(x - y));
-             });
-
-    assert(views.size() == 19);
-    assert(dfs.size() == 19);
-    assert(views[0].get_index().size() == 106);
-    assert(dfs[0].get_index().size() == 106);
-    assert(views[4].get_index().size() == 19);
-    assert(views[6].get_index().size() == 274);
-    assert(views[10].get_index().size() == 180);
-    assert(views[14].get_index().size() == 29);
-    assert(views[18].get_index().size() == 2);
-    assert(dfs[18].get_index().size() == 2);
+            ("IBM_Close", 1, 4, mean_shift_kernel::gaussian);
+   
+    assert(views.size() == 38);
+    assert(dfs.size() == 38);
+    assert(views[0].get_index().size() == 56);
+    assert(dfs[0].get_index().size() == 56);
+    assert(views[4].get_index().size() == 20);
+    assert(views[6].get_index().size() == 3);
+    assert(views[10].get_index().size() == 45);
+    assert(views[14].get_index().size() == 101);
+    assert(views[18].get_index().size() == 164);
+    assert(dfs[18].get_index().size() == 164);
 
     assert(
-    (std::fabs(views[0].get_column<double>("IBM_Close")[7] - 185.92) < 0.001));
+    (std::fabs(views[0].get_column<double>("IBM_Close")[7] - 183.69) < 0.001));
     assert(
-    (std::fabs(dfs[5].get_column<double>("IBM_Open")[15] - 163.7) < 0.001));
+    (std::fabs(dfs[5].get_column<double>("IBM_Open")[15] - 173.91) < 0.001));
     assert(
-    (std::fabs(views[16].get_column<double>("IBM_High")[3] - 106.04) < 0.001));
-    assert(dfs[18].get_column<long>("IBM_Volume")[0] == 10546500);
-    assert(views[18].get_index()[1] == "2020-03-23");
+    (std::fabs(views[16].get_column<double>("IBM_High")[3] - 166.02) < 0.001));
+    assert(dfs[18].get_column<long>("IBM_Volume")[0] == 10189700);
+    assert(views[18].get_index()[1] == "2015-09-01");
 }
 
 // ----------------------------------------------------------------------------

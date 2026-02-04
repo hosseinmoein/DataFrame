@@ -4444,47 +4444,35 @@ public: // Read/access and slicing interfaces
     // num_of_iter:
     //   Maximum number of iterations for AP clustering algorithm to converge
     //
-    template<arithmetic T, typename ... Ts>
+    template<typename T, typename ... Ts>
     [[nodiscard]]
     std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
     get_data_by_mshift(const char *col_name,
                        double kernel_bandwidth,
                        double max_distance,
                        mean_shift_kernel kernel = mean_shift_kernel::gaussian,
-                       std::function<double(const T &x, const T &y)> &&dfunc =
-                           [](const T &x, const T &y) -> double  {
-                               return ((x - y) * (x - y));
-                           },
                        size_type num_of_iter = 50) const;
 
     // Same as above but it returns a vector of Views.
     //
-    template<arithmetic T, typename ... Ts>
+    template<typename T, typename ... Ts>
     [[nodiscard]]
     std::vector<PtrView>
     get_view_by_mshift(const char *col_name,
                        double kernel_bandwidth,
                        double max_distance,
                        mean_shift_kernel kernel = mean_shift_kernel::gaussian,
-                       std::function<double(const T &x, const T &y)> &&dfunc =
-                           [](const T &x, const T &y) -> double  {
-                               return ((x - y) * (x - y));
-                           },
                        size_type num_of_iter = 50);
 
     // Same as above but it returns a vector of const Views.
     //
-    template<arithmetic T, typename ... Ts>
+    template<typename T, typename ... Ts>
     [[nodiscard]]
     std::vector<ConstPtrView>
     get_view_by_mshift(const char *col_name,
                        double kernel_bandwidth,
                        double max_distance,
                        mean_shift_kernel kernel = mean_shift_kernel::gaussian,
-                       std::function<double(const T &x, const T &y)> &&dfunc =
-                           [](const T &x, const T &y) -> double  {
-                               return ((x - y) * (x - y));
-                           },
                        size_type num_of_iter = 50) const;
 
     // This returns a new DataFrame with the same index column as self and an

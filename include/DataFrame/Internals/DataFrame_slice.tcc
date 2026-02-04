@@ -3439,14 +3439,13 @@ get_view_by_birch(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<arithmetic T, typename ... Ts>
+template<typename T, typename ... Ts>
 std::vector<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
 DataFrame<I, H>::
 get_data_by_mshift(const char *col_name,
                    double kernel_bandwidth,
                    double max_distance,
                    mean_shift_kernel kernel,
-                   std::function<double(const T &x, const T &y)> &&dfunc,
                    size_type num_of_iter) const  {
 
     using df_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
@@ -3455,7 +3454,6 @@ get_data_by_mshift(const char *col_name,
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
     msh_t                   mshift { kernel_bandwidth, max_distance, kernel,
-                                     std::forward<decltype(dfunc)>(dfunc),
                                      num_of_iter };
 
     mshift.pre();
@@ -3476,14 +3474,13 @@ get_data_by_mshift(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<arithmetic T, typename ... Ts>
+template<typename T, typename ... Ts>
 std::vector<typename DataFrame<I, H>::PtrView>
 DataFrame<I, H>::
 get_view_by_mshift(const char *col_name,
                    double kernel_bandwidth,
                    double max_distance,
                    mean_shift_kernel kernel,
-                   std::function<double(const T &x, const T &y)> &&dfunc,
                    size_type num_of_iter)  {
 
     using df_t = typename DataFrame<I, H>::PtrView;
@@ -3492,7 +3489,6 @@ get_view_by_mshift(const char *col_name,
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
     msh_t                   mshift { kernel_bandwidth, max_distance, kernel,
-                                     std::forward<decltype(dfunc)>(dfunc),
                                      num_of_iter };
 
     mshift.pre();
@@ -3513,14 +3509,13 @@ get_view_by_mshift(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<arithmetic T, typename ... Ts>
+template<typename T, typename ... Ts>
 std::vector<typename DataFrame<I, H>::ConstPtrView>
 DataFrame<I, H>::
 get_view_by_mshift(const char *col_name,
                    double kernel_bandwidth,
                    double max_distance,
                    mean_shift_kernel kernel,
-                   std::function<double(const T &x, const T &y)> &&dfunc,
                    size_type num_of_iter) const  {
 
     using df_t = typename DataFrame<I, H>::ConstPtrView;
@@ -3529,7 +3524,6 @@ get_view_by_mshift(const char *col_name,
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
     msh_t                   mshift { kernel_bandwidth, max_distance, kernel,
-                                     std::forward<decltype(dfunc)>(dfunc),
                                      num_of_iter };
 
     mshift.pre();

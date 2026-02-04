@@ -758,67 +758,87 @@ public:
         std::vector<size_type, typename allocator_declare<size_type, A>::type>;
     using order_type = std::vector<inner_order_t>;
     using distance_func =
-        std::function<value_type(const value_type &x, const value_type &y)>;
+        std::function<double(const value_type &x, const value_type &y)>;
 
 private:
 
-    inline static value_type uniform_kernel_(value_type d)  {
+    inline static distance_func
+    get_dist_func_()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return ([](const T &x, const T &y) -> double  {
+                        return (static_cast<double>((x - y) * (x - y)));
+                    });
+        else
+            return ([](const T &x, const T &y) -> double  {
+                        double  sum { 0 };
+
+                        for (size_type i { 0 }; i < size_type(x.size()); ++i)  {
+                            const double    diff { x[i] - y[i] };
+
+                            sum += diff * diff;
+                        }
+                        return (std::sqrt(sum));
+                    });
+    }
+	
+    inline static double uniform_kernel_(double d)  {
 
         return (d <= 1.0 ? 1.0 : 0.0);
     }
 
-    inline static value_type triangular_kernel_(value_type d)  {
+    inline static double triangular_kernel_(double d)  {
 
         return (d <= 1.0 ? 1.0 - std::fabs(d) : 0.0);
     }
 
-    inline static value_type parabolic_kernel_(value_type d)  {
+    inline static double parabolic_kernel_(double d)  {
 
         return (d <= 1.0 ? 1.0 - d * d : 0.0);
     }
 
-    inline static value_type biweight_kernel_(value_type d)  {
+    inline static double biweight_kernel_(double d)  {
 
         const auto  x = 1.0 - d * d;
 
         return (d <= 1.0 ? x * x : 0.0);
     }
 
-    inline static value_type triweight_kernel_(value_type d)  {
+    inline static double triweight_kernel_(double d)  {
 
         const auto  x = 1.0 - d * d;
 
         return (d <= 1.0 ? x * x * x : 0.0);
     }
 
-    inline static value_type tricube_kernel_(value_type d)  {
+    inline static double tricube_kernel_(double d)  {
 
         const auto  x = 1.0 - d * d * d;
 
         return (d <= 1.0 ? x * x * x : 0.0);
     }
 
-    inline static value_type gaussian_kernel_(value_type d)  {
+    inline static double gaussian_kernel_(double d)  {
 
         return (std::exp(-0.5 * d * d));
     }
 
-    inline static value_type cosin_kernel_(value_type d)  {
+    inline static double cosin_kernel_(double d)  {
 
         return (d <= 1.0 ? std::cos(M_PI_2 * d) : 0.0);
     }
 
-    inline static value_type logistic_kernel_(value_type d)  {
+    inline static double logistic_kernel_(double d)  {
 
         return (1.0 / (2.0 + std::exp(d) + std::exp(-d)));
     }
 
-    inline static value_type sigmoid_kernel_(value_type d)  {
+    inline static double sigmoid_kernel_(double d)  {
 
         return (1.0 / (std::exp(d) + std::exp(-d)));
     }
 
-    inline static value_type silverman_kernel_(value_type d)  {
+    inline static double silverman_kernel_(double d)  {
 
         const auto  x = M_SQRT1_2 * std::abs(d);
 
@@ -832,7 +852,7 @@ private:
                        vec_t<value_type> &shifted,
                        vec_t<bool> &shifting)  {
 
-        if (d_func_(val, *(column_begin + index)) <= max_dist_)
+        if (dfunc_(val, *(column_begin + index)) <= max_dist_)
             shifting[index] = false;
         else
             shifted[index] = val;
@@ -851,7 +871,7 @@ private:
         centriods.reserve(32);
         clusters_.reserve(32);
         clusters_idxs_.reserve(32);
-        for (size_type i = 0; i < shifted.size(); ++i)  {
+        for (size_type i { 0 }; i < shifted.size(); ++i)  {
             const auto  &shifted_val = shifted[i];
             auto        cbegin = clusters_.begin();
             auto        cend = clusters_.end();
@@ -859,7 +879,7 @@ private:
             size_type   cnt_idx { 0 };
 
             while (cbegin != cend)  {
-                if (d_func_(centriods[cnt_idx], shifted_val) <= max_dist_)  {
+                if (dfunc_(centriods[cnt_idx], shifted_val) <= max_dist_)  {
                     // The point belongs to a cluster already created
                     //
                     cbegin->push_back(&(*(column_begin + i)));
@@ -909,27 +929,27 @@ public:
         vec_t<value_type>   shifted (column_begin, column_end);
         vec_t<bool>         shifting (col_s, true);
         size_type           iterations { 0 };
-        const value_type    radius { kband_ * 3.0 };
-        const value_type    dbl_sq_bw { 2.0 * kband_ * kband_ };
+        const double        radius { kband_ * 3.0 };
+        const double        dbl_sq_bw { 2.0 * kband_ * kband_ };
 
         while (iterations++ < max_iter_ &&
                std::any_of(shifting.begin(), shifting.end(),
                            [](bool v) -> bool { return (v); }))  {
-            for (size_type i = 0; i < col_s; ++i)  {
+            for (size_type i { 0 }; i < col_s; ++i)  {
                 if (! shifting[i])  continue;
 
                 value_type          new_val { };
                 const value_type    &val_to_shift { shifted[i] };
-                value_type          total_w { 0 };
+                double              total_w { 0 };
 
                 for (size_type j = 0; j < col_s; ++j)  {
                     const value_type    &this_val = *(column_begin + j);
-                    const value_type    dist = d_func_(val_to_shift, this_val);
+                    const double        dist = dfunc_(val_to_shift, this_val);
 
                     if (dist <= radius)  {
-                        const value_type    weight = k_func(dist) / dbl_sq_bw;
+                        const double    weight = k_func(dist) / dbl_sq_bw;
 
-                        new_val = new_val + this_val * weight;
+                        new_val = new_val + (this_val * weight);
                         total_w += weight;
                     }
                 }
@@ -945,6 +965,8 @@ public:
         build_cluster_(column_begin, col_s, shifted);
     }
 
+    inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
+	
     inline void pre ()  { clusters_.clear(); clusters_idxs_.clear(); }
     inline void post ()  {  }
 
@@ -952,28 +974,22 @@ public:
     inline const order_type &
     get_clusters_idxs () const  { return (clusters_idxs_); }
 
-    MeanShiftVisitor(
-        value_type kernel_bandwidth,
-        value_type max_dist,
-        mean_shift_kernel kernel = mean_shift_kernel::gaussian,
-        distance_func &&f =
-            [](const value_type &x, const value_type &y) -> value_type  {
-                return ((x - y) * (x - y));
-            },
-        size_type max_iteration = 50)
+    MeanShiftVisitor(double kernel_bandwidth,
+                     double max_dist,
+                     mean_shift_kernel kernel = mean_shift_kernel::gaussian,
+                     size_type max_iteration = 50)
         : kband_(kernel_bandwidth),
           kernel_(kernel),
           max_iter_(max_iteration),
-          max_dist_(max_dist),
-          d_func_(std::forward<distance_func>(f))  {  }
+          max_dist_(max_dist)  { dfunc_ = get_dist_func_();  }
 
 private:
 
-    const value_type        kband_; // Kernel is fancy name for distance weight
+    const double            kband_; // Kernel is fancy name for distance weight
     const mean_shift_kernel kernel_;
     const size_type         max_iter_;
-    const value_type        max_dist_;
-    distance_func           d_func_;
+    const double            max_dist_;
+    distance_func           dfunc_ { };
     result_type             clusters_ { };       // Clusters
     order_type              clusters_idxs_ { };  // Clusters indices
 };

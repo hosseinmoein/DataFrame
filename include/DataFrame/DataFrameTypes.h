@@ -555,14 +555,25 @@ enum class  prob_dist_type : unsigned char  {
 enum class  normalization_type : unsigned char  {
 
     none = 0,
-    simple = 1,           // V / sum(xi)
-    euclidean = 2,        // V / sqrt(sum(xi^2))
-    maxi = 3,             // V / max(xi)
-    z_score = 4,          // (V - μ(V)) / σ(V)
-    min_max = 5,          // (V - min(V)) / (max(V) - min(V))
-    decimal_scaling = 6,  // V / 10^max(xi) order
-    log_transform = 7,    // ln(xi)
-    root_transform = 8,   // sqrt(xi)
+
+    // These only apply to scalar data
+    //
+    simple = 1,          // V / sum(xi)
+    euclidean = 2,       // V / sqrt(sum(xi^2))
+    maxi = 3,            // V / max(xi)
+    decimal_scaling = 4, // V / 10^max(xi) order
+    log_transform = 5,   // ln(xi)
+    root_transform = 6,  // sqrt(xi)
+
+    // These apply to both scalar and multidimensional data
+    //
+    z_score = 7,         // (V - μ(V)) / σ(V)
+    min_max = 8,         // (V - min(V)) / (max(V) - min(V))
+
+    // These only apply to multidimensional data
+    //
+    unit_length = 9,     // Divide the points by their norms
+    flat_vector = 10,    // Normalize entire collection as one flattened vector
 };
 
 // ----------------------------------------------------------------------------

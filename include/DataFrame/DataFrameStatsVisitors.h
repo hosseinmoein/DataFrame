@@ -5257,35 +5257,53 @@ using pd_v = ProbabilityDistVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  NormalizeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
-        if (type_ == normalization_type::min_max)
-            min_max_(idx_begin, idx_end, column_begin, column_end);
-        else if (type_ == normalization_type::simple)
-            simple_(idx_begin, idx_end, column_begin, column_end);
-        else if (type_ == normalization_type::euclidean)
-            euclidean_(idx_begin, idx_end, column_begin, column_end);
-        else if (type_ == normalization_type::maxi)
-            maxi_(idx_begin, idx_end, column_begin, column_end);
-        else if (type_ == normalization_type::z_score)
-            z_score_(idx_begin, idx_end, column_begin, column_end);
-        else if (type_ == normalization_type::decimal_scaling)
-            decimal_scaling_(idx_begin, idx_end, column_begin, column_end);
-        else if (type_ == normalization_type::log_transform)
-            log_transform_(column_begin, column_end);
-        else if (type_ == normalization_type::root_transform)
-            root_transform_(column_begin, column_end);
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            if (type_ == normalization_type::min_max)
+                min_max_(idx_begin, idx_end, column_begin, column_end);
+            else if (type_ == normalization_type::simple)
+                simple_(idx_begin, idx_end, column_begin, column_end);
+            else if (type_ == normalization_type::euclidean)
+                euclidean_(idx_begin, idx_end, column_begin, column_end);
+            else if (type_ == normalization_type::maxi)
+                maxi_(idx_begin, idx_end, column_begin, column_end);
+            else if (type_ == normalization_type::z_score)
+                z_score_(idx_begin, idx_end, column_begin, column_end);
+            else if (type_ == normalization_type::decimal_scaling)
+                decimal_scaling_(idx_begin, idx_end, column_begin, column_end);
+            else if (type_ == normalization_type::log_transform)
+                log_transform_(column_begin, column_end);
+            else if (type_ == normalization_type::root_transform)
+                root_transform_(column_begin, column_end);
+        }
+        else if constexpr (container<T>)  {
+            if (type_ == normalization_type::min_max)
+                min_max_(idx_begin, idx_end, column_begin, column_end);
+            else if (type_ == normalization_type::z_score)
+                z_score_(idx_begin, idx_end, column_begin, column_end);
+            else if (type_ == normalization_type::unit_length)
+                unit_length_(column_begin, column_end);
+            else if (type_ == normalization_type::flat_vector)
+                flat_vector_(column_begin, column_end);
+        }
+
+        if (! done_)
+            throw DataFrameError("NormalizeVisitor: Cannot do normalization; "
+                                 "unknown norm type or mismatched data type");
     }
 
-    DEFINE_PRE_POST
+    inline void pre ()  { result_.clear(); done_ = false; }
+    inline void post ()  {  }
+
     DEFINE_RESULT
 
     explicit
@@ -5294,47 +5312,163 @@ struct  NormalizeVisitor  {
 
 private:
 
+    template<typename H>
+    inline void
+    unit_length_(const H &column_begin, const H &column_end)  {
+
+        if constexpr (container<T>)  {
+            using data_t = typename T::value_type;
+
+            const size_type col_s = std::distance(column_begin, column_end);
+            const size_type num_dim { column_begin->size() };
+            auto            calc_norm =
+                [](const value_type &point) -> data_t  {
+                    data_t  sum { 0 };
+
+                    for (const data_t val : point)
+                        sum += val * val;
+                    return (std::sqrt(sum));
+                };
+
+            result_.resize(col_s);
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &point { *(column_begin + i) };
+                const auto  norm { calc_norm(point) };
+                value_type  norm_point;
+
+                if constexpr (Resizable<value_type>)
+                    norm_point.resize(num_dim, 0);
+                if (norm != 0)  {
+                    for (size_type j { 0 }; j < num_dim; ++j)
+                        norm_point[j] = point[j] / norm;
+                }
+                result_[i] = std::move(norm_point);
+            }
+            done_ = true;
+        }
+    }
+    template<typename H>
+    inline void
+    flat_vector_(const H &column_begin, const H &column_end)  {
+
+        if constexpr (container<T>)  {
+            using data_t = typename T::value_type;
+
+            const size_type col_s = std::distance(column_begin, column_end);
+            const size_type num_dim { column_begin->size() };
+
+            // Compute norm of all values combined
+            //
+            data_t total_norm { 0 };
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &point { *(column_begin + i) };
+
+                for (const data_t val : point)
+                    total_norm += val * val;
+            }
+            total_norm = std::sqrt(total_norm);
+
+            // Normalize all values
+            //
+            result_.resize(col_s);
+            if (total_norm != 0)  {
+                for (size_type i { 0 }; i < col_s; ++i)  {
+                    const auto  &point { *(column_begin + i) };
+                    value_type  norm_point;
+
+                    if constexpr (Resizable<value_type>)
+                        norm_point.resize(num_dim, 0);
+                    for (size_type j { 0 }; j < num_dim; ++j)
+                        norm_point[j] = point[j] / total_norm;
+                    result_[i] = std::move(norm_point);
+                }
+            }
+            done_ = true;
+        }
+    }
     template<typename K, typename H>
     inline void
     min_max_(const K &idx_begin, const K &idx_end,
              const H &column_begin, const H &column_end)  {
 
-        MinVisitor<T, I>    minv;
-        MaxVisitor<T, I>    maxv;
+        const size_type col_s = std::distance(column_begin, column_end);
 
-        minv.pre();
-        maxv.pre();
-        minv(idx_begin, idx_end, column_begin, column_end);
-        maxv(idx_begin, idx_end, column_begin, column_end);
-        minv.post();
-        maxv.post();
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            MinVisitor<T, I>    minv;
+            MaxVisitor<T, I>    maxv;
 
-        const value_type    diff = maxv.get_result() - minv.get_result();
-        const size_type     col_s = std::distance(column_begin, column_end);
+            minv.pre();
+            maxv.pre();
+            minv(idx_begin, idx_end, column_begin, column_end);
+            maxv(idx_begin, idx_end, column_begin, column_end);
+            minv.post();
+            maxv.post();
 
-        result_.resize(col_s);
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [minv = minv.get_result(), &column_begin, diff, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                            this->result_[i] =
-                                (*(column_begin + i) - minv) / diff;
-                    });
+            const value_type    diff = maxv.get_result() - minv.get_result();
 
-            for (auto &fut : futures)  fut.get();
+            result_.resize(col_s);
+            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        size_type(0),
+                        col_s,
+                        [minv = minv.get_result(), &column_begin, diff, this]
+                        (auto begin, auto end) -> void  {
+                            for (size_type i = begin; i < end; ++i)
+                                this->result_[i] =
+                                    (*(column_begin + i) - minv) / diff;
+                        });
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                std::transform(column_begin, column_end,
+                               result_.begin(),
+                               [minv = minv.get_result(), diff]
+                               (const auto &val) -> value_type  {
+                                   return ((val - minv) / diff);
+                               });
+            }
+            done_ = true;
         }
-        else  {
-            std::transform(column_begin, column_end,
-                           result_.begin(),
-                           [minv = minv.get_result(), diff]
-                           (const auto &val) -> value_type  {
-                               return ((val - minv) / diff);
-                           });
+        else if constexpr (container<T>)  {
+            using data_t = typename T::value_type;
+
+            const size_type     num_dim { column_begin->size() };
+            std::vector<data_t> min_vals(
+                num_dim, std::numeric_limits<data_t>::max());
+            std::vector<data_t> max_vals(
+                num_dim, std::numeric_limits<data_t>::lowest());
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &point { *(column_begin + i) };
+
+                for (size_type j { 0 }; j < num_dim; ++j)  {
+                    min_vals[j] = std::min(min_vals[j], point[j]);
+                    max_vals[j] = std::max(max_vals[j], point[j]);
+                }
+            }
+
+            // Normalize
+            //
+            result_.resize(col_s);
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &point { *(column_begin + i) };
+                value_type  norm_point;
+
+                if constexpr (Resizable<value_type>)
+                    norm_point.resize(num_dim, 0);
+                for (size_type j { 0 }; j < num_dim; ++j)  {
+                    const data_t    range { max_vals[j] - min_vals[j] };
+
+                    if (range != 0) [[likely]]
+                        norm_point[j] = (point[j] - min_vals[j]) / range;
+                }
+                result_[i] = std::move(norm_point);
+            }
+            done_ = true;
         }
     }
     template<typename K, typename H>
@@ -5373,6 +5507,7 @@ private:
                                return (val / sumv);
                            });
         }
+        done_ = true;
     }
     template<typename K, typename H>
     inline void
@@ -5410,6 +5545,7 @@ private:
                                return (val / eucli);
                            });
         }
+        done_ = true;
     }
     template<typename K, typename H>
     inline void
@@ -5447,45 +5583,100 @@ private:
                                return (val / maxv);
                            });
         }
+        done_ = true;
     }
     template<typename K, typename H>
     inline void
     z_score_(const K &idx_begin, const K &idx_end,
              const H &column_begin, const H &column_end)  {
 
-        StdVisitor<T, I>    stdv;
-
-        stdv.pre();
-        stdv(idx_begin, idx_end, column_begin, column_end);
-        stdv.post();
-
         const size_type col_s = std::distance(column_begin, column_end);
 
-        result_.resize(col_s);
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [meanv = stdv.get_mean(), stdv = stdv.get_result(),
-                     &column_begin, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                            this->result_[i] =
-                                (*(column_begin + i) - meanv) / stdv;
-                    });
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            StdVisitor<T, I>    stdv;
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            std::transform(column_begin, column_end,
+            stdv.pre();
+            stdv(idx_begin, idx_end, column_begin, column_end);
+            stdv.post();
+
+            result_.resize(col_s);
+            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        size_type(0),
+                        col_s,
+                        [meanv = stdv.get_mean(), stdv = stdv.get_result(),
+                         &column_begin, this]
+                        (auto begin, auto end) -> void  {
+                            for (size_type i = begin; i < end; ++i)
+                                this->result_[i] =
+                                    (*(column_begin + i) - meanv) / stdv;
+                        });
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                std::transform(column_begin, column_end,
                            result_.begin(),
-                           [meanv = stdv.get_mean(),
-                            stdv = stdv.get_result()]
-                           (const auto &val) -> value_type  {
-                               return ((val - meanv) / stdv);
-                           });
+                               [meanv = stdv.get_mean(),
+                                stdv = stdv.get_result()]
+                               (const auto &val) -> value_type  {
+                                   return ((val - meanv) / stdv);
+                               });
+            }
+            done_ = true;
+        }
+        else if constexpr (container<T>)  {
+            using data_t = typename T::value_type;
+
+            const size_type num_dim { column_begin->size() };
+
+            // Compute mean for each dimension
+            //
+            std::vector<data_t> means(num_dim, 0);
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &point { *(column_begin + i) };
+
+                for (size_type j { 0 }; j < num_dim; ++j)
+                    means[j] += point[j];
+            }
+            for (data_t &mean : means)
+                mean /= data_t(col_s);
+
+            // Compute standard deviation for each dimension
+            //
+            std::vector<data_t> std_devs(num_dim, 0);
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &point { *(column_begin + i) };
+
+                for (size_type j { 0 }; j < num_dim; ++j)  {
+                    const data_t    diff { point[j] - means[j] };
+
+                    std_devs[j] += diff * diff;
+                }
+            }
+            for (data_t &std_dev : std_devs)
+                std_dev = std::sqrt(std_dev / data_t(col_s));
+
+            // Normalize
+            //
+            result_.resize(col_s);
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &point { *(column_begin + i) };
+                value_type  norm_point;
+
+                if constexpr (Resizable<value_type>)
+                    norm_point.resize(num_dim, 0);
+                for (size_type j { 0 }; j < num_dim; ++j)  {
+                    if (std_devs[j] != 0)
+                        norm_point[j] = (point[j] - means[j]) / std_devs[j];
+                }
+                result_[i] = std::move(norm_point);
+            }
+            done_ = true;
         }
     }
     template<typename K, typename H>
@@ -5527,6 +5718,7 @@ private:
                                return (val / scale);
                            });
         }
+        done_ = true;
     }
     template<typename H>
     inline void
@@ -5555,6 +5747,7 @@ private:
                                return (std::log(val));
                            });
         }
+        done_ = true;
     }
     template<typename H>
     inline void
@@ -5583,10 +5776,12 @@ private:
                                return (std::sqrt(val));
                            });
         }
+        done_ = true;
     }
 
     result_type                 result_ {  };  // Normalized
     const normalization_type    type_;
+    bool                        done_ { false };
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

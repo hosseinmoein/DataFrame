@@ -1753,6 +1753,75 @@ static void test_NormalizeVisitor()  {
     result = df.single_act_visit<double>("dbl_col", stand_v).get_result();
     for (size_t i = 0; i < result.size(); ++i)
        assert(fabs(result[i] - stand_result[i]) < 0.00001);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = -20.0;
+    p.max_value = 20.0;
+
+    using col_t = std::array<double, 3>;
+
+    const auto          rand_vec =
+        gen_uniform_real_dist<double, 64>(df.get_index().size() * 3, p);
+    StlVecType<col_t>   multi_dimen_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        multi_dimen_col[i][0] = rand_vec[j++];
+        multi_dimen_col[i][1] = rand_vec[j++];
+        multi_dimen_col[i][2] = rand_vec[j++];
+    }
+    df.load_column<col_t>("multi_dimen_col", std::move(multi_dimen_col));
+
+    NormalizeVisitor<col_t, unsigned long, 64> md_norm1 {
+        normalization_type::min_max
+    };
+
+    df.single_act_visit<col_t>("multi_dimen_col", md_norm1);
+    assert(md_norm1.get_result().size() == 28);
+    assert(std::fabs(md_norm1.get_result()[0][1] - 0.582342) < 0.000001);
+    assert(std::fabs(md_norm1.get_result()[9][2] - 1.0) < 0.00001);
+    assert(std::fabs(md_norm1.get_result()[9][1] - 0.0) < 0.00001);
+    assert(std::fabs(md_norm1.get_result()[22][2] - 0.363817) < 0.00001);
+    assert(std::fabs(md_norm1.get_result()[27][2] - 0.650224) < 0.000001);
+
+    NormalizeVisitor<col_t, unsigned long, 64> md_norm2 {
+        normalization_type::z_score
+    };
+
+    df.single_act_visit<col_t>("multi_dimen_col", md_norm2);
+    assert(md_norm2.get_result().size() == 28);
+    assert(std::fabs(md_norm2.get_result()[0][1] - 0.15879) < 0.00001);
+    assert(std::fabs(md_norm2.get_result()[9][2] - 1.53805) < 0.00001);
+    assert(std::fabs(md_norm2.get_result()[9][1] - -1.74383) < 0.00001);
+    assert(std::fabs(md_norm2.get_result()[22][2] - -0.440033) < 0.000001);
+    assert(std::fabs(md_norm2.get_result()[27][2] - 0.450492) < 0.000001);
+
+    NormalizeVisitor<col_t, unsigned long, 64> md_norm3 {
+        normalization_type::unit_length
+    };
+
+    df.single_act_visit<col_t>("multi_dimen_col", md_norm3);
+    assert(md_norm3.get_result().size() == 28);
+    assert(std::fabs(md_norm3.get_result()[0][1] - 0.116694) < 0.000001);
+    assert(std::fabs(md_norm3.get_result()[9][2] - 0.630255) < 0.000001);
+    assert(std::fabs(md_norm3.get_result()[9][1] - -0.713796) < 0.000001);
+    assert(std::fabs(md_norm3.get_result()[22][2] - -0.253627) < 0.000001);
+    assert(std::fabs(md_norm3.get_result()[27][2] - 0.374604) < 0.000001);
+
+    NormalizeVisitor<col_t, unsigned long, 64> md_norm4 {
+        normalization_type::flat_vector
+    };
+
+    df.single_act_visit<col_t>("multi_dimen_col", md_norm4);
+    assert(md_norm4.get_result().size() == 28);
+    assert(std::fabs(md_norm4.get_result()[0][1] - 0.021617) < 0.000001);
+    assert(std::fabs(md_norm4.get_result()[9][2] - 0.170005) < 0.000001);
+    assert(std::fabs(md_norm4.get_result()[9][1] - -0.19254) < 0.00001);
+    assert(std::fabs(md_norm4.get_result()[22][2] - -0.059508) < 0.000001);
+    assert(std::fabs(md_norm4.get_result()[27][2] - 0.043818) < 0.000001);
 }
 
 // -----------------------------------------------------------------------------

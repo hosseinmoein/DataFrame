@@ -1,169 +1,881 @@
-Introduction
-============
+================================================================================
+C++ DATAFRAME DOCUMENTATION
+================================================================================
+Title: C++ DataFrame Library - Comprehensive Documentation
+Description: Complete documentation for C++ DataFrame library for statistical analysis, machine learning, financial data processing, and data science applications
+Keywords: C++ DataFrame, data analysis, statistical computing, machine learning, financial analysis, heterogeneous container, templated library, data science, quantitative analysis, time series
+Version: Latest
+Repository: https://github.com/hosseinmoein/DataFrame
+Website: https://hosseinmoein.github.io/DataFrame/
+License: BSD-3-Clause
+Language: C++23
+Platform: Cross-platform (Linux, Windows, macOS)
 
-DataFrame is a templatized and heterogeneous C++ container designed for data analysis for statistical, machine-learning, or financial applications. You can think of data-frame as a two-dimensional data structure of columns and rows just like an Excel spreadsheet, or a SQL table. But in case of C++ DataFrame, your data needn't be two-dimensional necessarily. Columns in the C++ DataFrame could be vectors of any type, including DataFrames or other containers. So, a C++ DataFrame can be of any dimension. Columns are the first-class citizens of DataFrame, meaning operations and access to columns is far more efficient and easier than dealing with data row by row. That's the logical layout of the data. C++ DataFrame also includes an intuitive API for data analysis and analytics. The API is designed to be open-ended meaning you can easily include your own custom algorithms.
-Any data-frame inherently includes a schema. C++ DataFrame schema is either built dynamically at run-time or it comes from a file. Currently C++ DataFrame could be shared between different nodes (e.g. computers) in a couple of ways. It can be written into a file, or it can be serialized into a buffer and sent across and reconstituted on the other side.
+================================================================================
+TABLE OF CONTENTS
+================================================================================
 
-.  A DataFrame can have one index column and many data columns of any built-in or user-defined types
-.  Each column in DataFrame could be at most as long as the index column
-.  Columns in the DataFrame are in order of creation and they could be accessed by name or index. If you rotate the columns, their order changes
-.  To access a column for any operation, you must know its name (or index) and its type at compile time
-.  To start off on basic operations, see Hello World and/or Cheat Sheet
-.  Also, see DataFrame Library Types
-.  DataFrame has both sync and async interfaces, latter returning C++ std::future
-.  Read multithreading, views, visitors, and memory alignment sections below, before getting serious about this library
+1. INTRODUCTION AND OVERVIEW
+   1.1 What is C++ DataFrame
+   1.2 Core Features and Capabilities
+   1.3 Data Structure and Schema
+   1.4 Key Characteristics
 
-DataFrame class is defined as:
+2. LIBRARY ARCHITECTURE
+   2.1 Template Parameters
+   2.2 Index Column Concept
+   2.3 Heterogeneous Vector Types
+   2.4 Memory Alignment Options
+   2.5 DataFrame Views
+
+3. DATETIME SUPPORT
+   3.1 DateTime Class Overview
+   3.2 Features and Capabilities
+
+4. API REFERENCE
+   4.1 API Categories
+   4.2 Data Access and Manipulation
+   4.3 Analytical Algorithms and Visitors
+
+5. MULTITHREADING AND PERFORMANCE
+   5.1 Overview
+   5.2 User Multithreading
+   5.3 DataFrame Internal Multithreading
+   5.4 Thread Pool Configuration
+   5.5 Asynchronous Interfaces
+
+6. VISITORS PATTERN
+   6.1 Concept and Purpose
+   6.2 Implementation Details
+
+7. MEMORY ALIGNMENT AND SIMD OPTIMIZATION
+   7.1 Custom Memory Alignment
+   7.2 SIMD Instructions Support
+   7.3 Performance Optimization
+   7.4 Cache Line Optimization
+
+8. NUMERIC GENERATORS
+   8.1 Random Number Generation
+   8.2 Distribution Support
+   8.3 Usage Examples
+
+9. BUILD INSTRUCTIONS
+   9.1 Build Types
+   9.2 CMake Build System
+   9.3 Package Manager Installation
+   9.4 Alternative Build Methods
+   9.5 Testing and Validation
+
+================================================================================
+1. INTRODUCTION AND OVERVIEW
+================================================================================
+
+1.1 WHAT IS C++ DATAFRAME
+-------------------------
+
+DataFrame is a high-performance, templatized, and heterogeneous C++ container 
+specifically designed for data analysis in statistical, machine-learning, and 
+financial applications.
+
+Primary Use Cases:
+• Statistical data analysis and processing
+• Machine learning data preparation and feature engineering
+• Financial time series analysis and algorithmic trading
+• Quantitative research and analytics
+• Scientific computing and data science workflows
+• Big data processing in C++ applications
+
+Data Structure Paradigm:
+Think of DataFrame as a two-dimensional data structure of columns and rows, 
+similar to:
+• Excel spreadsheet
+• SQL database table
+• Python Pandas DataFrame
+• R data.frame
+
+However, C++ DataFrame extends beyond two dimensions. Columns can contain 
+vectors of any type, including other DataFrames or custom containers, enabling 
+multi-dimensional data structures.
+
+
+1.2 CORE FEATURES AND CAPABILITIES
+-----------------------------------
+
+Column-First Design:
+Columns are first-class citizens in DataFrame. Operations and access to columns 
+are significantly more efficient and easier than row-by-row data manipulation. 
+This design choice optimizes for:
+• Vectorized operations
+• Cache-efficient processing
+• SIMD instruction utilization
+• Parallel computation
+
+Intuitive Analytics API:
+The API is designed to be:
+• Open-ended and extensible
+• Easy to integrate custom algorithms
+• Consistent across different operations
+• Type-safe at compile time
+
+
+1.3 DATA STRUCTURE AND SCHEMA
+------------------------------
+
+Schema Management:
+Every DataFrame inherently includes a schema that can be:
+• Built dynamically at runtime
+• Loaded from external files
+• Serialized and transmitted across network nodes
+• Reconstructed on remote systems
+
+Distribution and Serialization:
+DataFrame supports sharing between different nodes (computers) through:
+• File-based persistence
+• In-memory serialization to buffers
+• Network transmission and reconstruction
+
+
+1.4 KEY CHARACTERISTICS
+-----------------------
+
+Structural Properties:
+• Single index column with multiple data columns
+• Supports any built-in or user-defined types
+• Each data column can be at most as long as the index column
+• Columns maintain creation order (modifiable through rotation)
+• Column access requires compile-time type knowledge
+
+Type Safety:
+To access a column for any operation, you must know:
+• Column name (or index position)
+• Column data type at compile time
+
+Getting Started Resources:
+• Hello World examples
+• Cheat Sheet for common operations
+• DataFrame Library Types reference
+
+Interfaces:
+• Synchronous methods for immediate execution
+• Asynchronous methods returning std::future
+• Thread-safe operations (with proper configuration)
+
+IMPORTANT: Before production use, thoroughly review these sections:
+• Multithreading configuration and best practices
+• Views and memory management
+• Visitors pattern for analytical operations
+• Memory alignment for performance optimization
+
+
+================================================================================
+2. LIBRARY ARCHITECTURE
+================================================================================
+
+2.1 TEMPLATE PARAMETERS
+-----------------------
+
+DataFrame Class Definition:
     template<typename I, typename H>
     class DataFrame;
 
-I specifies the index column type. Index column in a DataFrame is unlike an index in a SQL database. SQL database index makes access efficient. It doesn't give you any more information. The index column in a DataFrame is metadata about the data in the DataFrame. Each entry in the index describes the given row. It could be time, frequency, …, or a set of descriptors in a struct (like temperature, altitude, …).
-H specifies a heterogenous vector type to contain DataFrame columns — don't get hang up on this too much, instead use the convenient typedef's in DataFrame Library Types. H is a relatively complex construct. You do not need to fully understand H to use the DataFrame library.
-H can only be:
-.  HeteroVector<std::size_t A = 0>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame
-.  HeteroPtrView<std::size_t A = 0>: This is a heterogenous vector view. It will result in a data frame view into a disjoined slice of another data frame.
-.  HeteroConstPtrView<std::size_t A = 0>: The const version of HeteroPtrView.
-.  HeteroView<std::size_t A = 0>: This is a heterogenous vector view. It will result in a data frame view into a contiguous slice of another data frame. This view is slightly more efficient than HeteroPtrView
-.  HeteroConstView<std::size_t A = 0>: The const version of HeteroView.
-Template parameter A referrers to byte boundary alignment to be used in memory allocations. The default is system default boundaries for each type. See DataFrame Library Types for convenient typedef's, especially under Library-wide Types section. Also, see Memory Alignment section below
-Some of the methods in DataFrame return another DataFrame or one of the above views depending on what you asked for. DataFrame and view instances should be indistinguishable from the user's point of view.
-See Views section below. Also, see DataFrame Library Types for convenient typedef's
+Template Parameter I (Index Type):
+Specifies the index column type. The index in DataFrame differs from SQL 
+database indices:
 
-class DateTime; included in this library is a cool and handy object to manipulate date/time with nanosecond precision and multi timezone capability. It has a very simple and intuitive interface that allows you to break date/time to their components, reassemble date/time from their components, advance or pullback date/time with different granularities, and more. Please see DateTime documentation.
+SQL Database Index:
+• Makes data access efficient
+• Doesn't provide additional information
+• Used primarily for lookup optimization
 
-----------------------------------------------------------------------------------
-----------------------------------------------------------------------------------
+DataFrame Index Column:
+• Metadata describing each row
+• Provides contextual information about data points
+• Examples: timestamps, frequencies, measurement conditions
+• Can be composite structures (e.g., struct with temperature, altitude, etc.)
 
-API Reference with code samples
-===============================
+Template Parameter H (Heterogeneous Vector):
+Specifies the heterogeneous vector type for containing DataFrame columns.
 
-DataFrame library interface is separated into two main categories:
-1.  Accessing, adding, slicing & dicing, joining & groupby'ing ...
-2.  Analytical algorithms being statistical, machine-learning, financial analysis ...
+Note: Don't get overwhelmed by H's complexity. Use the convenient typedef's 
+provided in DataFrame Library Types documentation.
 
-I employ regular parameterized methods (i.e. member functions) to implement item (1). For item (2), I chose the visitor pattern.
-Please see the table below for a comprehensive list of methods, visitors, and types along with documentation and sample code for each feature
 
-----------------------------------------------------------------------------------
-----------------------------------------------------------------------------------
+2.2 INDEX COLUMN CONCEPT
+-------------------------
 
-Multithreading
-==============
+The index column serves as metadata providing context for each row:
+• Time series: timestamps or date-time values
+• Frequency domain: frequency bins or wavelengths
+• Experimental data: measurement conditions (temperature, pressure, etc.)
+• Multi-dimensional: composite descriptors in custom structs
 
-In general, multithreading could be very unintuitive. Often you think by using multithreading you enhance the performance of your program. But in fact, you are hindering it. To do effective multithreading, you must do two things repeatedly; measure and adjust. In general (rule of thumb), you should use multithreading in two contradictory situations. First, when you have intensive CPU-bound operations like mathematical equations that can independently utilize different cores. Second, when you have multiple I/O-bound operations that can go on independently while they wait for each other. The key word here is independently. You must also realize that multithreading has an inherent overhead that not only affects your process but also other processes running on the same node. It is recommended to start with a single-threaded version and when that is working correctly, establish a baseline, take measurements, and implement a multithreaded solution.
-DataFrame uses multithreading extensively and provides granular tools to adjust your environment. Let's divide the multithreading subject in DataFrame into two categories:
 
-1.  User Multithreading
-----------------------
-If you use multithreading, you are responsible for synchronization of shared resources. Generally speaking, DataFrame is not multithreaded-safe. DataFrame has static data and per-instance data, both of which need protection in threads:
-.  DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So, by default there is no locking overhead. If you use DataFrame in a multithreaded program, you must provide a SpinLock defined in ThreadGranularity.h file. DataFrame will use your SpinLock to protect the containers. Please see above, set_lock(), remove_lock(), and dataframe_tester.cc#3767 for code example. In this case you must go through the above DataFrame API and use the Spinlock. Again, this protects the DataFrame static structures.
-.  In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only. In this case you must use your own lock and logic. In other words, DataFrame doesn't have an API for this category.
+2.3 HETEROGENEOUS VECTOR TYPES
+-------------------------------
 
-2. DataFrame Internal Multithreading
-------------------------------------
-Whether or not you, as the user, use multithreading, DataFrame utilizes a versatile thread-pool to employ parallel computing extensively in almost all its API's. By default, there is no multithreading. All algorithms execute their single-threaded version. To enable multithreading, call either ThreadGranularity::set_optimum_thread_level() (recommended) or ThreadGranularity::set_thread_level(n).
-When Multithreading is enabled, most parallel algorithms trigger when number of data points exceeds 250k and number of threads exceeds 2. Therefore, if your process deals with datasets smaller than this, it doesn't make sense to populate the thread-pool with threads as they will be waste of resources.
-You do not need to worry about synchronization for DataFrame internal multithreading. It is done behind the scenes and unbeknown to you.
-.  There are asynchronous versions of some methods. For example, you have sort()/sort_async(), visit()/visit_async(), ... The latter versions return a std::future and would execute in parallel.  If you chose to use DataFrame async interfaces, it is highly recommended to call ThreadGranularity::set_optimum_thread_level(), So your thread-pool is populated with optimal number of threads. Otherwise, if thread-pool is empty, async interfaces will add one thread to it. Having only one thread in thread-pool could be suboptimal and hinder performance.
-.  As mentioned above, DataFrame uses parallel computing extensively. But by default, DataFrame is single threaded, because by default its thread-pool is empty. If you want to fully take advantage of DataFrame parallel computing, it is recommended to call ThreadGranularity::set_optimum_thread_level() at the beginning of your program. Alternatively you could call ThreadGranularity:: set_thread_level(n) to add a custom number of threads to the thread-pool. But you better have a good reason for that.  Thread-pool and thread level are static properties of DataFrame. Once the thread level is set, it applies to all DataFrame instances.
+H Template Parameter Options:
 
-----------------------------------------------------------------------------------
-----------------------------------------------------------------------------------
+1. HeteroVector<std::size_t A = 0>
+   • Actual heterogeneous vector containing data
+   • Results in a "standard" DataFrame
+   • Owns the data
+   • Full modification capabilities
 
-Visitors
-========
+2. HeteroPtrView<std::size_t A = 0>
+   • Heterogeneous vector view
+   • Non-contiguous view into another DataFrame slice
+   • Disjointed data access
+   • Lightweight reference
 
-Visitors are the main mechanism to implement analytical (i.e. statistical, financial, machine-learning) algorithms. You can easily follow the visitor's interface to add your custom algorithm by which you will extend the DataFrame package. Visitors also play several roles that in other packages maybe handled by separate interfaces. Visitors play the role of apply, transformer, and algorithms. For example, a visitor can transform column(s) or it may take the column(s) as read-only and implement an algorithm.
-There are two visitor interfaces:
+3. HeteroConstPtrView<std::size_t A = 0>
+   • Const version of HeteroPtrView
+   • Read-only access
+   • Prevents data modification
 
-1.  Regular visit. This visitor is called by calling the visit() method on a DataFrame instance. In this case DataFrame passes the given index and column(s) data points one-by-one to the visitor functor. This is convenient for algorithms that can operate on one data point at a time. Examples are correlation or variance visitors.
-2.  Single-action visit. This visitor is called by calling the single_act_visit() method on a DataFrame instance . In this case begin and end iterators for the given index and column(s) are passed to the visitor functor. So the fuctor has access to all index and column(s) data at once. This is necessary for algorithms that need the whole data together. Examples are return or median visitors.
+4. HeteroView<std::size_t A = 0>
+   • Heterogeneous vector view
+   • Contiguous slice of another DataFrame
+   • More efficient than HeteroPtrView
+   • Sequential data access
 
-There are some common interfaces in most of the visitors. For example the following interfaces are common between almost all visitors:
-get_result(): It returns the result of the visitor/algorithm.
-pre(): It is called by DataFrame each time before starting to pass the data to the visitor. pre() is the place to initialize the process
-post(): It is called by DataFrame each time it is done with passing data to the visitor.
+5. HeteroConstView<std::size_t A = 0>
+   • Const version of HeteroView
+   • Read-only contiguous access
 
-See this document, DataFrameStatsVisitors.h, DataFrameMLVisitors.h, DataFrameFinancialVisitors.h, DataFrameTransformVisitors.h, and test/dataframe_tester[_2].cc for more examples and documentation.
 
-I have been asked many times, why I chose the visitor pattern for algorithms as opposed to having member functions. Because I wanted algorithms to be independent objects. To be more precise as to why:
-.  I wanted users to be able to incorporate their custom algorithms without touching or understanding the DataFrame codebase. If you follow a simple interface, you can write your custom visitor and use it in DataFrame
-.  I wanted the algorithms to be self-contained like an object. That means a single object should contain the algorithm, input(s), parameter(s), and result(s). Because algorithms are self-contained objects, they can be passed to other algorithms
-.  Life cycle of an algorithm and its result(s) should be independent of the life cycle of a DataFrame instance
-.  Algorithms sometime have complex results. Sometimes the result is a single number. But sometimes the result of an algorithms could be a single or multiple vectors. That's not efficient to implement as a member function
-.  If I had implemented them as member functions, I would have had 100's of member functions in DataFrame
+2.4 MEMORY ALIGNMENT OPTIONS
+-----------------------------
 
-----------------------------------------------------------------------------------
-----------------------------------------------------------------------------------
+Template Parameter A:
+Specifies byte boundary alignment for memory allocations.
 
-Memory Alignment
-================
+Default Behavior:
+• A = 0: Uses system default alignment boundaries for each type
 
-DataFrame gives you the ability to allocate memory on custom alignment boundaries.
-You can use this feature to take advantage of SIMD instructions in modern CPU's. Since DataFrame algorithms are all done on vectors of data — columns, this can come handy in conjunction with compiler optimizations. Also, you can use alignment to prevent false cache-line sharing between multiple columns.
-There are convenient typedef's that define DataFrames that allocate memory, for example, on 64, 128, 256, ... bytes boundaries. Best alignment depends on cash line width of your system. See DataFrame Library Types.
-When you get access to columns in a DataFrame, you will get a reference to a StlVecType. StlVecType is just a std::vector with custom allocator for the requested alignment.
+Custom Alignment:
+• Enables SIMD instruction optimization
+• Prevents false cache-line sharing
+• Improves performance for vectorized operations
 
-SIMD stands for Single Instruction, Multiple Data. This powerful approach allows a single CPU instruction to process multiple data points simultaneously. Imagine you're working with an image or two vectors. Normally, operations on these data points would be performed one at a time - a method known as scalar operation. However, with SIMD optimization, these operations can be vectorized, meaning multiple data points are processed in one go. SIMD architectures typically organize data into vectors or arrays, enabling synchronized execution and faster computational throughput.
-SIMD techniques have evolved alongside advancements in computer architecture and instruction set extensions. Initial SIMD implementations emerged in the 1990s, and subsequent developments, such as Intel's Streaming SIMD Extensions (SSE) and Advanced Vector Extensions (AVX), expanded SIMD capabilities. These extensions introduced specialized SIMD instructions that significantly improved computational performance by enabling efficient execution of parallel operations.
+See sections:
+• DataFrame Library Types for convenient typedef's
+• Memory Alignment section for detailed information
 
-----------------------------------------------------------------------------------
-----------------------------------------------------------------------------------
 
-Numeric Generators
-==================
+2.5 DATAFRAME VIEWS
+-------------------
 
-Random generators, and a few other numeric generators, were added as a series of convenient stand-alone functions to generate random numbers with various distributions. You can seamlessly use these routines to generate random DataFrame columns. The result vectors are space-optimized and you can choose different memory alignments.
-See this document and file RandGen.h and dataframe_tester.cc. For the definition and defaults of RandGenParams, see this document and file DataFrameTypes.h
+DataFrame methods may return:
+• New DataFrame instances
+• View instances (HeteroPtrView, HeteroView, etc.)
 
-----------------------------------------------------------------------------------
-----------------------------------------------------------------------------------
+User Perspective:
+DataFrame and view instances are designed to be indistinguishable from the 
+user's perspective. Views provide:
+• Efficient data slicing without copying
+• Memory-efficient data access
+• Consistent API across DataFrame and views
 
-Build Instructions
-==================
+Resources:
+• Views section (detailed documentation)
+• DataFrame Library Types (convenient typedef's)
+• Library-wide Types section
 
-When building your application with DataFrame, if you define HMDF_SANITY_EXCEPTIONS=1 on the compile line, DataFrame algorithms do runtime checks to make sure the dimensionality of your data is correct and other sanity checks (throw exceptions otherwise). If this is not defined there are no checks. For example, supposed you call to calculate KNN and supposed K is greater than observed datapoints passed in. if HMDF_SANITY_EXCEPTIONS is defined, you get an exception with explanation. If it is not defined, you get garbage or a crash. If you do not define HMDF_SANITY_EXCEPTIONS, it means you are sure you have no bugs in your system. That is a tall order! If you are getting mysterious crashes or results, chances are defining HMDF_SANITY_EXCEPTIONS will help you a lot.
 
-In general, there are three ways you can build C++ applications and libraries.
-1.  Building with debug information and no optimizations: This build allows you to debug your application and walk through the source code as it executes inside a debugger. This build results in bigger executable files and significantly slower execution.
-2.  Building with full optimizations and no debug information: You cannot debug these applications and if they crash, they don't leave any meaningful trace. This build results in smaller executable files, and they are significantly faster at runtime.
-3.  Something in between: Experiment with that in your own time.
+================================================================================
+3. DATETIME SUPPORT
+================================================================================
 
-Cloning Repo:
--------------
-     git clone https://github.com/hosseinmoein/DataFrame.git
+3.1 DATETIME CLASS OVERVIEW
+----------------------------
 
-Using CMake:
+The included DateTime class provides powerful date and time manipulation 
+capabilities:
+
+Precision: Nanosecond-level accuracy
+Timezone Support: Multi-timezone handling
+Interface: Simple and intuitive
+
+
+3.2 FEATURES AND CAPABILITIES
+------------------------------
+
+Component Manipulation:
+• Break date/time into individual components (year, month, day, hour, etc.)
+• Reassemble date/time from components
+• Convert between different representations
+
+Time Operations:
+• Advance or pull back with different granularities
+• Calculate time differences
+• Timezone conversions
+• Daylight saving time handling
+
+For comprehensive DateTime documentation, see dedicated DateTime reference.
+
+
+================================================================================
+4. API REFERENCE
+================================================================================
+
+4.1 API CATEGORIES
+------------------
+
+The DataFrame library interface is organized into two main categories:
+
+Category 1: Data Manipulation and Access
+• Accessing columns and rows
+• Adding and removing data
+• Slicing and dicing operations
+• Joining DataFrames
+• Group-by operations
+• Sorting and filtering
+• Data transformation
+
+Category 2: Analytical Algorithms
+• Statistical analysis methods
+• Machine learning algorithms
+• Financial analysis tools
+• Custom algorithm integration
+
+
+4.2 DATA ACCESS AND MANIPULATION
+---------------------------------
+
+Implementation Approach:
+Regular parameterized methods (member functions) implement data manipulation 
+operations.
+
+Common Operations:
+• Column selection and filtering
+• Row-based operations
+• Multi-column transformations
+• Data aggregation
+• Reshaping and pivoting
+
+
+4.3 ANALYTICAL ALGORITHMS AND VISITORS
+---------------------------------------
+
+Implementation Approach:
+The Visitor Pattern is employed for analytical algorithms.
+
+Advantages:
+• Type-safe algorithm execution
+• Extensible design for custom algorithms
+• Efficient parallel processing
+• Separation of concerns
+
+For comprehensive documentation:
+See the complete reference table listing all methods, visitors, and types 
+with code samples.
+
+
+================================================================================
+5. MULTITHREADING AND PERFORMANCE
+================================================================================
+
+5.1 OVERVIEW
 ------------
+
+Multithreading Best Practices:
+Multithreading can be counterintuitive. Adding threads doesn't automatically 
+improve performance and can sometimes hinder it.
+
+Effective Multithreading Requirements:
+1. Measure performance metrics
+2. Adjust based on measurements
+3. Iterate and optimize
+
+When to Use Multithreading:
+
+Scenario 1 - CPU-Bound Operations:
+• Intensive mathematical computations
+• Independent calculations utilizing different cores
+• Parallelizable algorithms
+
+Scenario 2 - I/O-Bound Operations:
+• Multiple independent I/O operations
+• Operations that can proceed while waiting
+• Network or disk-intensive tasks
+
+Critical Success Factor: Independence
+Operations must be independent to benefit from parallelization.
+
+Multithreading Overhead:
+• Inherent performance cost
+• Affects current process and system-wide resources
+• Thread creation and synchronization costs
+
+Recommended Development Approach:
+1. Start with single-threaded implementation
+2. Verify correctness
+3. Establish performance baseline
+4. Take detailed measurements
+5. Implement multithreaded solution
+6. Compare and validate improvements
+
+
+5.2 USER MULTITHREADING
+-----------------------
+
+Responsibility:
+Users are responsible for synchronizing shared DataFrame resources.
+
+Thread Safety:
+DataFrame is NOT thread-safe by default. This applies to:
+• Static data structures
+• Per-instance data
+
+Static Container Protection:
+
+Default Behavior:
+• Static containers are unprotected (by design)
+• No locking overhead by default
+• Maximum performance for single-threaded use
+
+Multithreaded Applications:
+Must provide SpinLock (defined in ThreadGranularity.h)
+
+Protection Steps:
+1. Implement custom SpinLock
+2. Register with DataFrame using set_lock()
+3. Remove with remove_lock() when done
+4. See dataframe_tester.cc#3767 for code example
+
+This protects DataFrame static structures only.
+
+Instance-Level Protection:
+
+Requirements:
+• Individual DataFrame instances need separate protection
+• Not safe for concurrent access by multiple threads
+• Exception: Read-only access is safe
+
+User Responsibility:
+• Implement your own locking mechanism
+• Design synchronization logic
+• DataFrame doesn't provide instance-level locking API
+
+
+5.3 DATAFRAME INTERNAL MULTITHREADING
+--------------------------------------
+
+Thread Pool Architecture:
+DataFrame uses a versatile thread pool for parallel computing across almost 
+all APIs.
+
+Default Behavior:
+• No multithreading enabled by default
+• All algorithms execute single-threaded versions
+• Thread pool is initially empty
+
+Enabling Multithreading:
+
+Option 1 - Automatic Optimization (Recommended):
+    ThreadGranularity::set_optimum_thread_level()
+
+Option 2 - Manual Configuration:
+    ThreadGranularity::set_thread_level(n)
+
+
+5.4 THREAD POOL CONFIGURATION
+------------------------------
+
+Activation Thresholds:
+When multithreading is enabled, parallel algorithms trigger when:
+• Data points exceed 250,000
+• Thread count exceeds 2
+
+Small Dataset Optimization:
+For datasets smaller than 250k rows:
+• Single-threaded execution is more efficient
+• Thread pool overhead outweighs benefits
+• No need to populate thread pool
+
+Automatic Synchronization:
+• Internal synchronization handled automatically
+• No user intervention required
+• Thread-safe internal operations
+
+Static Properties:
+• Thread pool is static across all DataFrame instances
+• Thread level applies globally
+• Set once, applies everywhere
+
+
+5.5 ASYNCHRONOUS INTERFACES
+----------------------------
+
+Available Async Methods:
+• sort() → sort_async()
+• visit() → visit_async()
+• Many other operations have async variants
+
+Return Type:
+Async methods return std::future for parallel execution
+
+Recommended Configuration:
+    ThreadGranularity::set_optimum_thread_level()
+
+Important: If thread pool is empty when async methods are called:
+• Single thread will be added automatically
+• Suboptimal performance with only one thread
+• May actually hinder performance
+
+Best Practice:
+Always configure thread pool optimally before using async interfaces.
+
+
+================================================================================
+6. VISITORS PATTERN
+================================================================================
+
+6.1 CONCEPT AND PURPOSE
+-----------------------
+
+Design Pattern:
+The Visitor Pattern separates algorithms from the data structures they 
+operate on.
+
+Benefits in DataFrame:
+• Type-safe algorithm execution
+• Easy addition of new algorithms
+• Consistent interface across operations
+• Efficient parallel processing
+• Clean separation of concerns
+
+Use Cases:
+• Statistical calculations
+• Machine learning algorithms
+• Financial indicators
+• Custom analytical functions
+
+
+6.2 IMPLEMENTATION DETAILS
+---------------------------
+
+For detailed visitor implementation and usage, see dedicated Visitors 
+documentation section.
+
+
+================================================================================
+7. MEMORY ALIGNMENT AND SIMD OPTIMIZATION
+================================================================================
+
+7.1 CUSTOM MEMORY ALIGNMENT
+----------------------------
+
+Capability:
+DataFrame provides custom memory alignment allocation on specified byte 
+boundaries.
+
+Primary Benefits:
+• SIMD instruction optimization
+• Vectorized operations support
+• Cache-line optimization
+
+
+7.2 SIMD INSTRUCTIONS SUPPORT
+------------------------------
+
+SIMD Definition:
+Single Instruction, Multiple Data - A parallel processing technique where one 
+CPU instruction processes multiple data points simultaneously.
+
+Traditional Scalar Operations:
+• Process one data point at a time
+• Sequential execution
+• Lower throughput
+
+SIMD Vectorized Operations:
+• Process multiple data points simultaneously
+• Parallel execution within single instruction
+• Higher computational throughput
+
+DataFrame Advantage:
+All DataFrame algorithms operate on vectors (columns), making SIMD optimization 
+highly effective when combined with compiler optimizations.
+
+
+7.3 PERFORMANCE OPTIMIZATION
+-----------------------------
+
+Historical Context:
+• Initial SIMD implementations: 1990s
+• Intel SSE (Streaming SIMD Extensions): Enhanced SIMD capabilities
+• Intel AVX (Advanced Vector Extensions): Further expanded SIMD support
+• Modern CPUs: Extensive SIMD instruction sets
+
+Alignment Options:
+Convenient typedef's define DataFrames with different alignment boundaries:
+• 64-byte alignment
+• 128-byte alignment
+• 256-byte alignment
+• Custom alignments
+
+Optimal Alignment:
+Depends on your system's cache line width. Experiment for best results.
+
+
+7.4 CACHE LINE OPTIMIZATION
+----------------------------
+
+False Sharing Prevention:
+Custom alignment can prevent false cache-line sharing between multiple columns.
+
+Performance Impact:
+• Reduced cache invalidation
+• Better memory access patterns
+• Improved multi-core performance
+
+Access Pattern:
+When accessing columns, you receive a reference to StlVecType (std::vector with 
+custom allocator for requested alignment).
+
+Resources:
+See DataFrame Library Types documentation for alignment typedef's.
+
+
+================================================================================
+8. NUMERIC GENERATORS
+================================================================================
+
+8.1 RANDOM NUMBER GENERATION
+-----------------------------
+
+Purpose:
+Convenient standalone functions for generating random numbers with various 
+statistical distributions.
+
+Integration:
+Seamlessly generate random DataFrame columns with these utilities.
+
+
+8.2 DISTRIBUTION SUPPORT
+-------------------------
+
+Features:
+• Multiple probability distributions
+• Space-optimized result vectors
+• Configurable memory alignment
+• High-performance generation
+
+
+8.3 USAGE EXAMPLES
+------------------
+
+Documentation Resources:
+• Dedicated generator documentation
+• RandGen.h header file
+• dataframe_tester.cc examples
+• RandGenParams definition in DataFrameTypes.h
+
+Configuration:
+See DataFrameTypes.h for RandGenParams definition and default values.
+
+
+================================================================================
+9. BUILD INSTRUCTIONS
+================================================================================
+
+9.1 BUILD TYPES
+---------------
+
+Sanity Checks Configuration:
+
+Compile-time Flag: HMDF_SANITY_EXCEPTIONS=1
+
+With HMDF_SANITY_EXCEPTIONS Defined:
+• Runtime dimensionality checks
+• Data validation
+• Explanatory exceptions on errors
+• Debugging assistance
+
+Example Error Scenario:
+Calling KNN with K greater than available data points:
+• With flag: Descriptive exception thrown
+• Without flag: Garbage results or crash
+
+Without HMDF_SANITY_EXCEPTIONS:
+• No runtime checks
+• Assumes bug-free code
+• Maximum performance
+• Risk of mysterious crashes
+
+Recommendation:
+Always use HMDF_SANITY_EXCEPTIONS during development and testing. Only disable 
+in thoroughly tested production code.
+
+Build Configuration Types:
+
+1. Debug Build:
+   • Debug information included
+   • No optimizations
+   • Larger executable files
+   • Significantly slower execution
+   • Full debugging capabilities
+
+2. Release Build:
+   • Full compiler optimizations
+   • No debug information
+   • Smaller executable files
+   • Significantly faster execution
+   • Limited crash diagnostics
+
+3. Custom Build:
+   • User-defined optimization levels
+   • Custom debug information
+   • Experimental configurations
+
+
+9.2 CMAKE BUILD SYSTEM
+----------------------
+
+Repository Setup:
+
+Clone Repository:
+    git clone https://github.com/hosseinmoein/DataFrame.git
+
+CMake Build Process:
+
+Create Build Directory:
     mkdir [Debug|Release]
     cd [Debug|Release]
 
-    # Making the optimized release version.
-    # First example is without sanity checks exceptions. Second example includes sanity checks.
-    #
-    cmake -DCMAKE_BUILD_TYPE=Release -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
-    cmake -DCMAKE_BUILD_TYPE=Release -DHMDF_SANITY_EXCEPTIONS=1 -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
+Release Build (Optimized):
 
-    # Making the debug version with debug info
-    #
-    cmake -DCMAKE_BUILD_TYPE=Debug -DHMDF_SANITY_EXCEPTIONS=1 -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
+Without Sanity Checks:
+    cmake -DCMAKE_BUILD_TYPE=Release \
+          -DHMDF_BENCHMARKS=1 \
+          -DHMDF_EXAMPLES=1 \
+          -DHMDF_TESTING=1 ..
 
+With Sanity Checks:
+    cmake -DCMAKE_BUILD_TYPE=Release \
+          -DHMDF_SANITY_EXCEPTIONS=1 \
+          -DHMDF_BENCHMARKS=1 \
+          -DHMDF_EXAMPLES=1 \
+          -DHMDF_TESTING=1 ..
+
+Debug Build:
+    cmake -DCMAKE_BUILD_TYPE=Debug \
+          -DHMDF_SANITY_EXCEPTIONS=1 \
+          -DHMDF_BENCHMARKS=1 \
+          -DHMDF_EXAMPLES=1 \
+          -DHMDF_TESTING=1 ..
+
+Compile and Install:
     make
     make install
-    
+
+Uninstall:
     cd [Debug|Release]
     make uninstall
 
-Using Package Managers:
------------------------
-         DataFrame is available on Conan platform. See Conan docs for more information.
-         DataFrame is available on VCPKG platform. See VCPKG docs for more information
 
-Using plain make and make-files (Not Recommended):
---------------------------------------------------
-         Go to the src subdirectory, and execute build_all.sh. This will build the library and test executables for Linux/Unix flavors only
+9.3 PACKAGE MANAGER INSTALLATION
+---------------------------------
 
-Running the test executables:
------------------------------
-         Almost all test programs in test/, example/, and benchmarks/ directories need to open mocked datafiles that exist in data/ directory. They also assume the datafiles are in the current directory. If you use CMake to build the project, it copies the datafiles into the execution directory. If you are running the tests by yourself, data/ directory must be your current directory.
+Conan Platform:
+DataFrame is available on Conan package manager.
+See Conan documentation for installation and usage instructions.
 
+VCPKG Platform:
+DataFrame is available on VCPKG package manager.
+See VCPKG documentation for installation and usage instructions.
+
+
+9.4 ALTERNATIVE BUILD METHODS
+------------------------------
+
+Plain Make (Not Recommended):
+
+Process:
+1. Navigate to src subdirectory
+2. Execute build_all.sh script
+3. Builds library and test executables
+
+Limitations:
+• Linux/Unix flavors only
+• Less flexible than CMake
+• Manual dependency management
+
+
+9.5 TESTING AND VALIDATION
+---------------------------
+
+Test Data Requirements:
+
+Location:
+Test programs in test/, examples/, and benchmarks/ directories require mock 
+data files from the data/ directory.
+
+Important:
+• Data files must be in current directory when running tests
+• CMake automatically copies data files to execution directory
+• Manual execution requires data/ as current directory
+
+Test Execution:
+If running tests manually, ensure data/ directory is your current working 
+directory.
+
+
+================================================================================
+ADDITIONAL RESOURCES
+================================================================================
+
+Documentation:
+• Complete API Reference: https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html
+• GitHub Repository: https://github.com/hosseinmoein/DataFrame
+• Issue Tracker: https://github.com/hosseinmoein/DataFrame/issues
+• Discussions: https://github.com/hosseinmoein/DataFrame/discussions
+
+Quick Start:
+• Hello World Examples
+• Cheat Sheet PDF
+• Sample Code in examples/ directory
+• Test Suite in test/ directory
+
+Support:
+• GitHub Issues for bug reports
+• GitHub Discussions for questions
+• Documentation for comprehensive guides
+
+Contributing:
+• Pull requests welcome
+• See contribution guidelines
+• Test coverage required
+• Documentation updates appreciated
+
+
+================================================================================
+KEYWORDS FOR SEARCH OPTIMIZATION
+================================================================================
+
+Primary Keywords:
+C++ DataFrame, data analysis C++, statistical computing C++, machine learning C++,
+financial data analysis, time series analysis C++, quantitative analysis,
+heterogeneous container C++, templated DataFrame, data science C++
+
+Secondary Keywords:
+pandas alternative C++, R dataframe C++, columnar data structure, vectorized operations,
+SIMD optimization, parallel computing C++, thread-safe DataFrame, high-performance analytics,
+big data C++, numerical computing, statistical library C++, trading algorithms
+
+Technical Keywords:
+template metaprogramming, visitor pattern, memory alignment, cache optimization,
+multithreading C++, async operations, compile-time type safety, heterogeneous storage,
+STL containers, modern C++, C++20, C++23
+
+Application Domains:
+quantitative finance, algorithmic trading, data science, machine learning pipeline,
+statistical analysis, time series forecasting, financial engineering, risk analysis,
+backtesting, market data analysis
+
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
+Last Updated: 2024
+For latest version, visit: https://github.com/hosseinmoein/DataFrame

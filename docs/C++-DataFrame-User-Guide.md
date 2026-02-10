@@ -472,6 +472,10 @@ Configure the internal thread pool:
 // Set number of threads
 ThreadGranularity::set_thread_level(8);
 
+// OR
+ThreadGranularity::set_optimum_thread_level();
+
+
 // Get current thread count
 auto count = ThreadGranularity::get_thread_level();
 ```
@@ -490,11 +494,11 @@ Many DataFrame methods have asynchronous variants:
 
 ```cpp
 // Synchronous
-auto result = df.mean<double>("column");
+auto result = df.sort<double, double, string, int>("column_name");
 
 // Asynchronous
-auto future = df.mean_async<double>("column");
-auto result = future.get();
+auto future = df.sort_async<double, double, string, int>("column_name");
+future.get();
 ```
 
 #### Benefits
@@ -532,12 +536,21 @@ Visitors implement a standard interface for processing DataFrame columns:
 
 ```cpp
 template<typename T>
+template<typename DataType, typename IndexType = unsigned long>
 struct MyVisitor {
-    using value_type = T;
-    using result_type = /* return type */;
+    using value_type = DataType;
+    using size_type = std::size_t
+    using result_type = /* return type, typically a vector of some kind */;
     
-    void operator()(const T& value);
-    result_type get_result() const;
+    template<typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end);
+
+    inline void pre();
+    inline void post();
+    const result_type &get_result() const;
+    result_type &get_result();
 };
 ```
 
@@ -548,7 +561,7 @@ struct MyVisitor {
 MeanVisitor<double> mean_calc;
 
 // Apply to DataFrame column
-df.visit<double>("column_name", mean_calc);
+df.single_act_visit<double>("column_name", mean_calc);
 
 // Get result
 auto mean = mean_calc.get_result();
@@ -581,10 +594,10 @@ Custom memory alignment enables:
 #### Configuration
 
 ```cpp
-// 64-byte aligned DataFrame
+// 64-byte aligned DataFrame with index type of unsigned long
 using DF64 = DataFrame<unsigned long, HeteroVector<64>>;
 
-// 128-byte aligned DataFrame
+// 128-byte aligned DataFrame with index type of unsigned long
 using DF128 = DataFrame<unsigned long, HeteroVector<128>>;
 ```
 

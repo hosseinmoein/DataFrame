@@ -1,13 +1,13 @@
-# C++ DataFrame Library - Comprehensive Documentation
+# C++ DataFrame Library - User Guide
 
-**Title:** C++ DataFrame Library - Comprehensive Documentation  
-**Description:** Complete documentation for C++ DataFrame library for statistical analysis, machine learning, financial data processing, and data science applications  
-**Keywords:** C++ DataFrame, data analysis, statistical computing, machine learning, financial analysis, heterogeneous container, templated library, data science, quantitative analysis, time series  
-**Version:** Latest  
-**Repository:** [https://github.com/hosseinmoein/DataFrame](https://github.com/hosseinmoein/DataFrame)  
-**Website:** [https://hosseinmoein.github.io/DataFrame/](https://hosseinmoein.github.io/DataFrame/)  
-**License:** BSD-3-Clause  
-**Language:** C++23  
+**Title:** C++ DataFrame Library - User Guide
+**Description:** Documentation for C++ DataFrame library for statistical analysis, machine learning, financial data processing, and data science applications
+**Keywords:** C++ DataFrame, data analysis, statistical computing, machine learning, financial analysis, heterogeneous container, templated library, data science, quantitative analysis, time series
+**Version:** Latest
+**Repository:** [https://github.com/hosseinmoein/DataFrame](https://github.com/hosseinmoein/DataFrame)
+**Website:** [https://hosseinmoein.github.io/DataFrame/](https://hosseinmoein.github.io/DataFrame/)
+**License:** BSD-3-Clause
+**Language:** C++23
 **Platform:** Cross-platform (Linux, Windows, macOS)
 
 ---
@@ -91,7 +91,7 @@ Think of DataFrame as a two-dimensional data structure of columns and rows, simi
 - Python Pandas DataFrame
 - R data.frame
 
-However, C++ DataFrame extends beyond two dimensions. Columns can contain vectors of any type, including other DataFrames or custom containers, enabling multi-dimensional data structures.
+However, C++ DataFrame extends beyond two dimensions. Columns can contain vectors of any type, including other DataFrames or vector containers, enabling multi-dimensional data structures.
 
 ### 1.2 Core Features and Capabilities
 
@@ -109,7 +109,7 @@ Columns are first-class citizens in DataFrame. Operations and access to columns 
 The API is designed to be:
 
 - Open-ended and extensible
-- Easy to integrate custom algorithms
+- Easy to integrate custom and/or proprietary algorithms
 - Consistent across different operations
 - Type-safe at compile time
 
@@ -472,7 +472,7 @@ Configure the internal thread pool:
 // Set number of threads
 ThreadGranularity::set_thread_level(8);
 
-// OR
+// Or even better
 ThreadGranularity::set_optimum_thread_level();
 
 
@@ -498,6 +498,7 @@ auto result = df.sort<double, double, string, int>("column_name");
 
 // Asynchronous
 auto future = df.sort_async<double, double, string, int>("column_name");
+/* Do other things ... */
 future.get();
 ```
 
@@ -519,7 +520,7 @@ The visitor pattern in DataFrame enables:
 - Extensible analytical operations
 - Type-safe algorithm application
 - Reusable statistical computations
-- Custom algorithm integration
+- Custom/proprietary algorithm integration
 
 #### Design Benefits
 
@@ -541,7 +542,7 @@ struct MyVisitor {
     using value_type = DataType;
     using size_type = std::size_t
     using result_type = /* return type, typically a vector of some kind */;
-    
+
     template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
@@ -574,7 +575,7 @@ Create custom analytical operations by implementing the visitor interface:
 1. Define value_type and result_type
 2. Implement operator() for data processing
 3. Implement get_result() for returning results
-4. Optionally implement pre() and post() hooks
+4. Implement pre() and post() hooks
 
 ---
 
@@ -595,10 +596,10 @@ Custom memory alignment enables:
 
 ```cpp
 // 64-byte aligned DataFrame with index type of unsigned long
-using DF64 = DataFrame<unsigned long, HeteroVector<64>>;
+using ULDataFrame64 = DataFrame<unsigned long, HeteroVector<64>>;
 
 // 128-byte aligned DataFrame with index type of unsigned long
-using DF128 = DataFrame<unsigned long, HeteroVector<128>>;
+using ULDataFrame128 = DataFrame<unsigned long, HeteroVector<128>>;
 ```
 
 ### 7.2 SIMD Instructions Support
@@ -828,12 +829,12 @@ make uninstall
 
 #### Conan Platform
 
-DataFrame is available on Conan package manager.  
+DataFrame is available on Conan package manager.
 See [Conan documentation](https://conan.io/) for installation and usage instructions.
 
 #### VCPKG Platform
 
-DataFrame is available on VCPKG package manager.  
+DataFrame is available on VCPKG package manager.
 See [VCPKG documentation](https://vcpkg.io/) for installation and usage instructions.
 
 ### 9.4 Alternative Build Methods
@@ -920,5 +921,5 @@ quantitative finance, algorithmic trading, data science, machine learning pipeli
 
 ---
 
-**Last Updated:** 2024  
+**Last Updated:** 2026-02
 **For latest version, visit:** [https://github.com/hosseinmoein/DataFrame](https://github.com/hosseinmoein/DataFrame)

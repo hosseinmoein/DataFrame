@@ -1780,8 +1780,8 @@ void test_md_stats()  {
     RandGenParams<double>   p;
 
     p.seed = 123;
-    p.min_value = 0;
-    p.max_value = 50.0;
+    p.min_value = 0.5;
+    p.max_value = 2.0;
 
     constexpr std::size_t   dim { 3 };
 
@@ -1808,13 +1808,23 @@ void test_md_stats()  {
     MeanVisitor<vec_col_t>  vec_mean;
 
     df.single_act_visit<ary_col_t>("array_col", ary_mean);
-    df.single_act_visit<vec_col_t>("vector_col", vec_mean);
-    assert(std::fabs(ary_mean.get_result()[0] - 25.0207) < 0.0001);
-    assert(std::fabs(ary_mean.get_result()[1] - 25.4868) < 0.0001);
-    assert(std::fabs(ary_mean.get_result()[2] - 24.9429) < 0.0001);
-    assert(std::fabs(vec_mean.get_result()[0] - 25.0207) < 0.0001);
-    assert(std::fabs(vec_mean.get_result()[1] - 25.4868) < 0.0001);
-    assert(std::fabs(vec_mean.get_result()[2] - 24.9429) < 0.0001);
+    df.visit<vec_col_t>("vector_col", vec_mean);
+    assert(std::fabs(ary_mean.get_result()[0] - 1.25062) < 0.00001);
+    assert(std::fabs(ary_mean.get_result()[1] - 1.2646) < 0.0001);
+    assert(std::fabs(ary_mean.get_result()[2] - 1.24829) < 0.00001);
+    assert(std::fabs(vec_mean.get_result()[0] - 1.25062) < 0.00001);
+    assert(std::fabs(vec_mean.get_result()[1] - 1.2646) < 0.0001);
+    assert(std::fabs(vec_mean.get_result()[2] - 1.24829) < 0.00001);
+
+    // Prod
+    //
+    ProdVisitor<ary_col_t>  ary_prod;
+    ProdVisitor<vec_col_t>  vec_prod;
+
+    df.single_act_visit<ary_col_t>("array_col", ary_prod);
+    df.visit<vec_col_t>("vector_col", vec_prod);
+    //
+    // Numbers will be very large
 }
 
 // ----------------------------------------------------------------------------

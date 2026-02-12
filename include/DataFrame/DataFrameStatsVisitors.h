@@ -614,7 +614,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  ProdVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -623,12 +623,24 @@ struct  ProdVisitor  {
 
         SKIP_NAN
 
+        if constexpr (! std::is_arithmetic_v<value_type> &&
+                      ! Fillable<value_type>)  {
+            if (! started_)  {
+                result_.resize(val.size(), 1);
+                started_ = true;
+            }
+        }
+
         result_ *= val;
     }
     template <typename K, typename H>
     inline void
     operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
                 const H &column_begin, const H &column_end) {
+
+        if constexpr (! std::is_arithmetic_v<value_type> &&
+                      ! Fillable<value_type>)
+            result_.resize(column_begin->size(), 1);
 
         if (std::distance(column_begin, column_end) >=
                 ThreadPool::MUL_THR_THHOLD &&
@@ -668,7 +680,17 @@ struct  ProdVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = 1; }
+    inline void pre ()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            result_ = 1;
+        }
+        else  {
+            if constexpr (Fillable<value_type>)  // For a std::array
+                result_.fill(1);
+            else  started_ = false;  // For a std::vector
+        }
+	}
     inline void post ()  {  }
     inline result_type get_result () const  { return (result_); }
 
@@ -676,6 +698,7 @@ struct  ProdVisitor  {
 
 private:
 
+    bool        started_ { false };
     value_type  result_ { 1 };
     const bool  skip_nan_;
 };

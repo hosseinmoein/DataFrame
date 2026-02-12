@@ -1768,6 +1768,58 @@ void test_get_data_by_birch()  {
 
 // ----------------------------------------------------------------------------
 
+void test_md_stats()  {
+
+    std::cout << "\nTesting get_md_stats( ) ..." << std::endl;
+
+    constexpr std::size_t   item_cnt = 1024;
+    ULDataFrame             df;
+
+    df.load_index(ULDataFrame::gen_sequence_index(0, item_cnt, 1));
+
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = 0;
+    p.max_value = 50.0;
+
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
+
+    std::vector<ary_col_t>  array_col(df.get_index().size());
+    std::vector<vec_col_t>  vector_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        vector_col[i].resize(dim);
+        for (std::size_t d { 0 }; d < dim; ++d)
+            array_col[i][d] = vector_col[i][d] = rand_vec[j++];
+    }
+    df.load_column<ary_col_t>("array_col", std::move(array_col));
+    df.load_column<vec_col_t>("vector_col", std::move(vector_col));
+
+    // Mean and Sum
+    //
+    MeanVisitor<ary_col_t>  ary_mean;
+    MeanVisitor<vec_col_t>  vec_mean;
+
+    df.single_act_visit<ary_col_t>("array_col", ary_mean);
+    df.single_act_visit<vec_col_t>("vector_col", vec_mean);
+    assert(std::fabs(ary_mean.get_result()[0] - 25.0207) < 0.0001);
+    assert(std::fabs(ary_mean.get_result()[1] - 25.4868) < 0.0001);
+    assert(std::fabs(ary_mean.get_result()[2] - 24.9429) < 0.0001);
+    assert(std::fabs(vec_mean.get_result()[0] - 25.0207) < 0.0001);
+    assert(std::fabs(vec_mean.get_result()[1] - 25.4868) < 0.0001);
+    assert(std::fabs(vec_mean.get_result()[2] - 24.9429) < 0.0001);
+}
+
+// ----------------------------------------------------------------------------
+
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -1796,6 +1848,7 @@ int main(int, char *[])  {
     test_AnomalyDetectByKNNVisitor();
     test_BIRCHVisitor();
     test_get_data_by_birch();
+    test_md_stats();
 
     return (0);
 }

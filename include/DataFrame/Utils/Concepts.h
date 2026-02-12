@@ -261,6 +261,13 @@ concept Resizable = requires(T container, std::size_t size) {
 
 // ----------------------------------------------------------------------------
 
+template <typename T>
+concept Fillable = requires(T container, const typename T::value_type &val) {
+    { container.fill(val) };  // Checks if the expression is valid
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

@@ -151,7 +151,7 @@ namespace hmdf
     name(bool skipnan = false) : skip_nan_(skipnan)  {   }
 
 #define SKIP_NAN if (skip_nan_ && is_nan__(val))  { return; }
-#define SKIP_NAN_BASE if (BaseClass::skip_nan_ && is_nan__(val))  { return; }
+#define SKIP_NAN_BASE if (BaseClass::_skip_nan && is_nan__(val))  { return; }
 
 #define GET_COL_SIZE \
     const std::size_t   col_s = \
@@ -314,12 +314,24 @@ struct  SumVisitor  {
 
         SKIP_NAN
 
+        if constexpr (! std::is_arithmetic_v<value_type> &&
+                      ! Fillable<value_type>)  {
+            if (! started_)  {
+                result_.resize(val.size(), 0);
+                started_ = true;
+            }
+        }
+
         result_ += val;
     }
     template <typename K, typename H>
     inline void
     operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
                 const H &column_begin, const H &column_end) {
+
+        if constexpr (! std::is_arithmetic_v<value_type> &&
+                      ! Fillable<value_type>)
+            result_.resize(column_begin->size(), 0);
 
         if (std::distance(column_begin, column_end) >=
                 ThreadPool::MUL_THR_THHOLD &&
@@ -357,38 +369,56 @@ struct  SumVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = value_type { }; }
+    inline void pre ()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            result_ = 0;
+        }
+        else  {
+            if constexpr (Fillable<value_type>)  // For a std::array
+                result_.fill(0);
+            else  started_ = false;  // For a std::vector
+        }
+    }
     inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
     DECL_CTOR(SumVisitor)
 
 private:
 
+    bool        started_ { false };
     value_type  result_ { 0 };
     const bool  skip_nan_;
 };
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  MeanBase  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    inline void pre ()  { sum_.pre(); mean_ = 0; cnt_ = 0; }
-    inline size_type get_count () const  { return (cnt_); }
-    inline value_type get_sum () const  { return (sum_.get_result()); }
-    inline result_type get_result () const  { return (mean_); }
+    inline void pre ()  {
 
-    DECL_CTOR(MeanBase)
+        _sum.pre();
+        // _mean = 0;
+        _cnt = 0;
+    }
+    inline size_type get_count () const  { return (_cnt); }
+    inline value_type get_sum () const  { return (_sum.get_result()); }
+    inline const result_type &get_result () const  { return (_mean); }
+    inline result_type &get_result ()  { return (_mean); }
+
+    MeanBase(bool skipnan = false) : _skip_nan(skipnan)  {   }
 
 protected:
 
-    const bool          skip_nan_;
-    value_type          mean_ { 0 };
-    size_type           cnt_ { 0 };
-    SumVisitor<T, I>    sum_ { skip_nan_ };
+    const bool          _skip_nan;
+    value_type          _mean { 0 };
+    size_type           _cnt { 0 };
+    SumVisitor<T, I>    _sum { _skip_nan };
 };
 
 // ----------------------------------------------------------------------------
@@ -402,29 +432,37 @@ struct  MeanVisitor : public MeanBase<T, I>  {
 
         SKIP_NAN_BASE
 
-        BaseClass::cnt_ += 1;
-        BaseClass::sum_(idx, val);
+        BaseClass::_cnt += 1;
+        BaseClass::_sum(idx, val);
     }
     template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end) {
 
-        BaseClass::sum_(idx_begin, idx_end, column_begin, column_end);
-        if (! BaseClass::skip_nan_)  {
-            BaseClass::cnt_ = std::distance(column_begin, column_end);
+        BaseClass::_sum(idx_begin, idx_end, column_begin, column_end);
+        if (! BaseClass::_skip_nan)  {
+            BaseClass::_cnt = std::distance(column_begin, column_end);
         }
         else  {
             for (auto citer = column_begin; citer < column_end; ++citer)
                 if (! is_nan__(*citer))
-                    BaseClass::cnt_ += 1;
+                    BaseClass::_cnt += 1;
         }
     }
 
     inline void post ()  {
 
-        BaseClass::sum_.post();
-        BaseClass::mean_ = BaseClass::sum_.get_result() / T(BaseClass::cnt_);
+        BaseClass::_sum.post();
+        if constexpr (std::is_arithmetic_v<T>)
+            BaseClass::_mean =
+                BaseClass::_sum.get_result() / T(BaseClass::_cnt);
+        else  {
+            using data_t = typename T::value_type;
+
+            BaseClass::_mean =
+                BaseClass::_sum.get_result() / data_t(BaseClass::_cnt);
+        }
     }
 
     MeanVisitor(bool skipnan = false) : BaseClass(skipnan)  {   }
@@ -464,7 +502,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<arithmetic T, typename I = unsigned long>
 struct  WeightedMeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
@@ -473,18 +511,18 @@ struct  WeightedMeanVisitor : public MeanBase<T, I>  {
 
         SKIP_NAN_BASE
 
-        BaseClass::cnt_ += 1;
-        BaseClass::sum_(idx, val * T(BaseClass::cnt_));
+        BaseClass::_cnt += 1;
+        BaseClass::_sum(idx, val * T(BaseClass::_cnt));
     }
     PASS_DATA_ONE_BY_ONE
 
     inline void
     post()  {
 
-        BaseClass::sum_.post();
-        BaseClass::mean_ =
-            BaseClass::sum_.get_result() /
-            (T((BaseClass::cnt_ * (BaseClass::cnt_ + 1))) / T(2));
+        BaseClass::_sum.post();
+        BaseClass::_mean =
+            BaseClass::_sum.get_result() /
+            (T((BaseClass::_cnt * (BaseClass::_cnt + 1))) / T(2));
     }
 
     WeightedMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
@@ -492,7 +530,7 @@ struct  WeightedMeanVisitor : public MeanBase<T, I>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<arithmetic T, typename I = unsigned long>
 struct GeometricMeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
@@ -501,16 +539,16 @@ struct GeometricMeanVisitor : public MeanBase<T, I>  {
 
         SKIP_NAN_BASE
 
-        BaseClass::cnt_ += 1;
-        BaseClass::sum_(idx, std::log(val));
+        BaseClass::_cnt += 1;
+        BaseClass::_sum(idx, std::log(val));
     }
     PASS_DATA_ONE_BY_ONE
 
     inline void post ()  {
 
-        BaseClass::sum_.post();
-        BaseClass::mean_ =
-            std::exp(BaseClass::sum_.get_result() / T(BaseClass::cnt_));
+        BaseClass::_sum.post();
+        BaseClass::_mean =
+            std::exp(BaseClass::_sum.get_result() / T(BaseClass::_cnt));
     }
 
     GeometricMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
@@ -518,7 +556,7 @@ struct GeometricMeanVisitor : public MeanBase<T, I>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<arithmetic T, typename I = unsigned long>
 struct  HarmonicMeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
@@ -527,15 +565,15 @@ struct  HarmonicMeanVisitor : public MeanBase<T, I>  {
 
         SKIP_NAN_BASE
 
-        BaseClass::cnt_ += 1;
-        BaseClass::sum_(idx, T(1) / val);
+        BaseClass::_cnt += 1;
+        BaseClass::_sum(idx, T(1) / val);
     }
     PASS_DATA_ONE_BY_ONE
 
     inline void post ()  {
 
-        BaseClass::sum_.post();
-        BaseClass::mean_ = T(BaseClass::cnt_) / BaseClass::sum_.get_result();
+        BaseClass::_sum.post();
+        BaseClass::_mean = T(BaseClass::_cnt) / BaseClass::_sum.get_result();
     }
 
     HarmonicMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
@@ -543,7 +581,7 @@ struct  HarmonicMeanVisitor : public MeanBase<T, I>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<arithmetic T, typename I = unsigned long>
 struct  QuadraticMeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
@@ -552,16 +590,16 @@ struct  QuadraticMeanVisitor : public MeanBase<T, I>  {
 
         SKIP_NAN_BASE
 
-        BaseClass::cnt_ += 1;
-        BaseClass::sum_(idx, val * val);
+        BaseClass::_cnt += 1;
+        BaseClass::_sum(idx, val * val);
     }
     PASS_DATA_ONE_BY_ONE
 
     inline void post()  {
 
-        BaseClass::sum_.post();
-        euclidean_norm_ = std::sqrt(BaseClass::sum_.get_result());
-        BaseClass::mean_ = euclidean_norm_ / std::sqrt(T(BaseClass::cnt_));
+        BaseClass::_sum.post();
+        euclidean_norm_ = std::sqrt(BaseClass::_sum.get_result());
+        BaseClass::_mean = euclidean_norm_ / std::sqrt(T(BaseClass::_cnt));
     }
 
     BaseClass::value_type

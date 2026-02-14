@@ -1788,10 +1788,13 @@ void test_md_stats()  {
     using ary_col_t = std::array<double, dim>;
     using vec_col_t = std::vector<double>;
 
+    // Generate and load 3 random columns
+    //
     auto    rand_vec =
         gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
 
     std::vector<ary_col_t>  array_col(df.get_index().size());
+    std::vector<ary_col_t>  array_col2(df.get_index().size());
     std::vector<vec_col_t>  vector_col(df.get_index().size());
 
     for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
@@ -1801,6 +1804,14 @@ void test_md_stats()  {
     }
     df.load_column<ary_col_t>("array_col", std::move(array_col));
     df.load_column<vec_col_t>("vector_col", std::move(vector_col));
+
+    p.seed = 1024;
+    rand_vec = gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        for (std::size_t d { 0 }; d < dim; ++d)
+            array_col2[i][d] = rand_vec[j++];
+    }
+    df.load_column<ary_col_t>("array_col2", std::move(array_col2));
 
     // Mean and Sum
     //
@@ -1825,6 +1836,40 @@ void test_md_stats()  {
     df.visit<vec_col_t>("vector_col", vec_prod);
     //
     // Numbers will be very large
+
+    // Covariance
+    //
+    CovVisitor<ary_col_t>   cov;
+
+    df.single_act_visit<ary_col_t, ary_col_t>("array_col", "array_col2", cov);
+
+    const auto  &cov_result { cov.get_result() };
+    const auto  &mean1_result { cov.get_mean1() };
+    const auto  &mean2_result { cov.get_mean2() };
+
+    assert(cov_result.rows() == dim);
+    assert(cov_result.cols() == dim);
+    assert(std::fabs(cov_result(0, 0) - 0.00187) < 0.00001);
+    assert(std::fabs(cov_result(1, 2) - 0.00420) < 0.00001);
+    assert(std::fabs(cov_result(2, 1) - -0.000457) < 0.000001);
+    assert(mean1_result.size() == dim);
+    assert(std::fabs(mean1_result[1] - 1.2646) < 0.0001);
+    assert(std::fabs(mean1_result[2] - 1.24829) < 0.00001);
+    assert(mean2_result.size() == dim);
+    assert(std::fabs(mean2_result[1] - 1.25428) < 0.00001);
+    assert(std::fabs(mean2_result[2] - 1.25122) < 0.00001);
+
+    CovVisitor<vec_col_t>   cov2;
+
+    df.single_act_visit<vec_col_t, vec_col_t>("vector_col", "vector_col", cov2);
+
+    const auto  &cov_result2 { cov2.get_result() };
+
+    assert(cov_result2.rows() == dim);
+    assert(cov_result2.cols() == dim);
+    assert(std::fabs(cov_result2(0, 0) - 0.188617) < 0.000001);
+    assert(std::fabs(cov_result2(1, 2) - 0.004326) < 0.000001);
+    assert(std::fabs(cov_result2(2, 1) - 0.004326) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

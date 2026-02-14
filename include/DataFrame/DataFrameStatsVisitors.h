@@ -315,7 +315,8 @@ struct  SumVisitor  {
         SKIP_NAN
 
         if constexpr (! std::is_arithmetic_v<value_type> &&
-                      ! Fillable<value_type>)  {
+                      ! Fillable<value_type> &&
+                      ! StringOnly<value_type>)  {
             if (! started_)  {
                 result_.resize(val.size(), 0);
                 started_ = true;
@@ -330,7 +331,8 @@ struct  SumVisitor  {
                 const H &column_begin, const H &column_end) {
 
         if constexpr (! std::is_arithmetic_v<value_type> &&
-                      ! Fillable<value_type>)
+                      ! Fillable<value_type> &&
+                      ! StringOnly<value_type>)
             result_.resize(column_begin->size(), 0);
 
         if (std::distance(column_begin, column_end) >=
@@ -374,6 +376,9 @@ struct  SumVisitor  {
         if constexpr (std::is_arithmetic_v<value_type>)  {
             result_ = 0;
         }
+        else if constexpr (StringOnly<value_type>)  {
+            result_.clear();
+        }
         else  {
             if constexpr (Fillable<value_type>)  // For a std::array
                 result_.fill(0);
@@ -389,7 +394,7 @@ struct  SumVisitor  {
 private:
 
     bool        started_ { false };
-    value_type  result_ { 0 };
+    value_type  result_ { };
     const bool  skip_nan_;
 };
 
@@ -690,7 +695,7 @@ struct  ProdVisitor  {
                 result_.fill(1);
             else  started_ = false;  // For a std::vector
         }
-	}
+    }
     inline void post ()  {  }
     inline result_type get_result () const  { return (result_); }
 
@@ -980,19 +985,41 @@ using NSmallestVisitor = NExtremumVisitor<T, I, std::less>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  CovVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    Matrix<data_t, matrix_orient::row_major>>;
+    using var_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
+    using mean_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
 
 private:
 
     struct  InterResults  {
-        value_type  total1 { 0 };
-        value_type  total2 { 0 };
-        value_type  dot_prod { 0 };
-        value_type  dot_prod1 { 0 };
-        value_type  dot_prod2 { 0 };
+        data_t      total1 { 0 };
+        data_t      total2 { 0 };
+        data_t      dot_prod { 0 };
+        data_t      dot_prod1 { 0 };
+        data_t      dot_prod2 { 0 };
         size_type   cnt { 0 };
 
         inline void clear()  {
@@ -1150,8 +1177,8 @@ private:
 
 public:
 
-    inline void operator() (const index_type &,
-                            const value_type &val1, const value_type &val2)  {
+    inline void operator()(const index_type &,
+                           const value_type &val1, const value_type &val2)  {
 
         if (skip_nan_ && (is_nan__(val1) || is_nan__(val2))) [[unlikely]]
             return;
@@ -1165,103 +1192,211 @@ public:
     }
     template <typename K, typename H>
     inline void
-    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
-                const H &column_begin1, const H &column_end1,
-                const H &column_begin2, const H &column_end2)  {
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const H &column_begin1, const H &column_end1,
+               const H &column_begin2, const H &column_end2)  {
 
-        auto    lbd =
-            [this]
-            (const auto &begin1, const auto &end1,
-             const auto &begin2) -> InterResults  {
-                if (stable_algo_)
-                    return (get_kahan_sum_(begin1, end1, begin2, skip_nan_));
-                return (get_regular_sum_(begin1, end1, begin2, skip_nan_));
-            };
+        const size_type col_s {
+            size_type(std::distance(column_begin1, column_end1))
+        };
 
-        if (std::distance(column_begin1, column_end1) >=
-                ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop2<T>(column_begin1,
-                                                               column_end1,
-                                                               column_begin2,
-                                                               column_end2,
-                                                               std::move(lbd));
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type col_s2 {
+            size_type(std::distance(column_begin2, column_end2))
+        };
 
-            for (auto &fut : futures)  {
-                const auto  &result = fut.get();
+        if (col_s != col_s2)
+            throw DataFrameError("CovVisitor: The two columns must have the "
+                                 "same length");
+#endif // HMDF_SANITY_EXCEPTIONS
 
-                inter_result_.total1 += result.total1;
-                inter_result_.total2 += result.total2;
-                inter_result_.dot_prod += result.dot_prod;
-                inter_result_.dot_prod1 += result.dot_prod1;
-                inter_result_.dot_prod2 += result.dot_prod2;
-                inter_result_.cnt += result.cnt;
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            auto    lbd =
+                [this]
+                (const auto &begin1, const auto &end1,
+                 const auto &begin2) -> InterResults  {
+                    if (stable_algo_)
+                        return(get_kahan_sum_(begin1, end1, begin2, skip_nan_));
+                    return(get_regular_sum_(begin1, end1, begin2, skip_nan_));
+                };
+
+            if (std::distance(column_begin1, column_end1) >=
+                    ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop2<T>(
+                        column_begin1,
+                        column_end1,
+                        column_begin2,
+                        column_end2,
+                        std::move(lbd));
+
+                for (auto &fut : futures)  {
+                    const auto  &result = fut.get();
+
+                    inter_result_.total1 += result.total1;
+                    inter_result_.total2 += result.total2;
+                    inter_result_.dot_prod += result.dot_prod;
+                    inter_result_.dot_prod1 += result.dot_prod1;
+                    inter_result_.dot_prod2 += result.dot_prod2;
+                    inter_result_.cnt += result.cnt;
+                }
+            }
+            else  {
+                inter_result_ = lbd(column_begin1, column_end1, column_begin2);
             }
         }
         else  {
-            inter_result_ = lbd(column_begin1, column_end1, column_begin2);
+            const long  dim1 { long(column_begin1->size()) };
+            const long  dim2 { long(column_begin2->size()) };
+
+            // Compute means
+            //
+            mean1_.resize(dim1, 0);
+            mean2_.resize(dim2, 0);
+            for (long k { 0 }; k < long(col_s); ++k) {
+                const auto  &val1 { *(column_begin1 + k) };
+                const auto  &val2 { *(column_begin2 + k) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+                if (long(val1.size()) != dim1 || long(val2.size()) != dim2)
+                    throw DataFrameError("CovVisitor: Inconsistent dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+                for (long i { 0 }; i < dim1; ++i)
+                    mean1_[i] += val1[i];
+                for (long i { 0 }; i < dim2; ++i)
+                    mean2_[i] += val2[i];
+            }
+
+            mean1_ /= static_cast<data_t>(col_s);
+            mean2_ /= static_cast<data_t>(col_s);
+
+            // Allocate result and accumulate cross outer products
+            //
+            result_.resize(dim1, dim2, 0);
+            for (long k { 0 }; k < long(col_s); ++k) {
+                for (long i { 0 }; i < dim1; ++i) {
+                    const data_t    dx {
+                        (*(column_begin1 + k))[i] - mean1_[i]
+                    };
+
+                    for (long j { 0 }; j < dim2; ++j) {
+                        const data_t    dy {
+                            (*(column_begin2 + k))[j] - mean2_[j]
+                        };
+
+                        result_(i, j) += dx * dy;
+                    }
+                }
+            }
+
+            const data_t    norm {
+                data_t(1) / static_cast<data_t>(col_s - b_)
+            };
+
+            for (long i { 0 }; i < dim1; ++i)
+                for (long j { 0 }; j < dim2; ++j)
+                    result_(i, j) *= norm;
         }
     }
 
     inline void pre ()  {
 
-        inter_result_.clear();
-        result_ = 0;
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            inter_result_.clear();
+            result_ = 0;
+        }
+        else  {
+            result_.clear();
+            mean1_.clear();
+            mean2_.clear();
+        }
     }
     inline void post ()  {
 
-        const value_type    d = value_type(inter_result_.cnt) - b_;
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            const data_t    d = data_t(inter_result_.cnt) - b_;
 
-        if (d != 0) [[likely]]  {
-            result_ = (inter_result_.dot_prod -
-                       (inter_result_.total1 * inter_result_.total2) /
-                       value_type(inter_result_.cnt)) /
-                      d;
+            if (d != 0) [[likely]]  {
+                result_ = (inter_result_.dot_prod -
+                           (inter_result_.total1 * inter_result_.total2) /
+                           data_t(inter_result_.cnt)) /
+                          d;
+            }
+            else  { result_ = std::numeric_limits<data_t>::quiet_NaN(); }
         }
-        else  { result_ = std::numeric_limits<value_type>::quiet_NaN(); }
     }
 
-    inline result_type get_result () const  { return (result_); }
-    inline value_type get_var1 () const  {
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+    inline var_t get_var1 () const  {
 
-        const value_type    d = value_type(inter_result_.cnt) - b_;
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            const data_t    d = data_t(inter_result_.cnt) - b_;
 
-        if (d != 0) [[likely]]  {
-            return ((inter_result_.dot_prod1 -
-                     (inter_result_.total1 * inter_result_.total1) /
-                     value_type(inter_result_.cnt)) /
-                    d);
+            if (d != 0) [[likely]]  {
+                return ((inter_result_.dot_prod1 -
+                         (inter_result_.total1 * inter_result_.total1) /
+                         data_t(inter_result_.cnt)) /
+                        d);
+            }
+            else { return (std::numeric_limits<data_t>::quiet_NaN()); }
         }
-        else { return (std::numeric_limits<value_type>::quiet_NaN()); }
-    }
-    inline value_type get_var2 () const  {
+        else  {
+            var_t   var (result_.rows(),
+                         std::numeric_limits<data_t>::quiet_NaN());
 
-        const value_type    d = value_type(inter_result_.cnt) - b_;
-
-        if (d != 0) [[likely]]  {
-            return ((inter_result_.dot_prod2 -
-                     (inter_result_.total2 * inter_result_.total2) /
-                     value_type(inter_result_.cnt)) /
-                    d);
+            return (var);
         }
-        else { return (std::numeric_limits<value_type>::quiet_NaN()); }
     }
-    inline size_type get_count() const  { return (inter_result_.cnt); }
+    inline var_t get_var2 () const  {
 
-    inline result_type get_mean1() const  {
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            const data_t    d = data_t(inter_result_.cnt) - b_;
 
-        if (inter_result_.cnt | 0x0) [[likely]]
-            return (inter_result_.total1 / value_type(inter_result_.cnt));
+            if (d != 0) [[likely]]  {
+                return ((inter_result_.dot_prod2 -
+                         (inter_result_.total2 * inter_result_.total2) /
+                         data_t(inter_result_.cnt)) /
+                        d);
+            }
+            else { return (std::numeric_limits<data_t>::quiet_NaN()); }
+        }
+        else  {
+            var_t   var (result_.cols(),
+                         std::numeric_limits<data_t>::quiet_NaN());
+
+            return (var);
+        }
+    }
+    inline size_type get_count() const  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (inter_result_.cnt);
         else
-            return (std::numeric_limits<value_type>::quiet_NaN());
+            return (0);
     }
-    inline result_type get_mean2() const  {
 
-        if (inter_result_.cnt | 0x0) [[likely]]
-            return (inter_result_.total2 / value_type(inter_result_.cnt));
-        else
-            return (std::numeric_limits<value_type>::quiet_NaN());
+    inline mean_t get_mean1() const  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            if (inter_result_.cnt | 0x0) [[likely]]
+                return (inter_result_.total1 / data_t(inter_result_.cnt));
+            else
+                return (std::numeric_limits<data_t>::quiet_NaN());
+        }
+        else  return (mean1_);
+    }
+    inline mean_t get_mean2() const  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            if (inter_result_.cnt | 0x0) [[likely]]
+                return (inter_result_.total2 / data_t(inter_result_.cnt));
+            else
+                return (std::numeric_limits<data_t>::quiet_NaN());
+        }
+        else  return (mean2_);
     }
 
     explicit CovVisitor (bool biased = false,
@@ -1273,11 +1408,13 @@ public:
 
 private:
 
-    InterResults        inter_result_ { };
-    result_type         result_ { 0 };
-    const value_type    b_;
-    const bool          skip_nan_;
-    const bool          stable_algo_;
+    InterResults    inter_result_ { };
+    result_type     result_ { };
+    const data_t    b_;
+    const bool      skip_nan_;
+    const bool      stable_algo_;
+    mean_t          mean1_ { };
+    mean_t          mean2_ { };
 };
 
 // ----------------------------------------------------------------------------

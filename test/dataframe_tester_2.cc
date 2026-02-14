@@ -1244,8 +1244,7 @@ static void test_groupby_2()  {
           0.1, -1.545, std::sqrt(-1), -0.9999, 1.545, 0.1002, -0.8888,
           0.14, 0.0456, -1.545, -0.8999, std::sqrt(-1), 0.8002, -1.545,
           0.2, 0.1056, 0.87865, -0.6999, std::sqrt(-1), 0.1902, -1.545 };
-
-    MyDataFrame df;
+    MyDataFrame                df;
 
     df.load_data(std::move(ulgvec2),
                  std::make_pair("xint_col", intvec2),

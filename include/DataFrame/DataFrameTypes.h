@@ -1210,6 +1210,18 @@ struct  is_complex<std::complex<T>>  {
 
 // ----------------------------------------------------------------------------
 
+// A wrapper that computes type only when asked
+//
+template <typename T>
+struct  lazy_type { using type = T; };
+
+// Solves the double::value_type error
+//
+template <typename T>
+struct  value_type_of { using type = typename T::value_type; };
+
+// ----------------------------------------------------------------------------
+
 // Since std::is_arithmetic cannot be overloaded, we need a way to determine
 // if a user-defined type supports arithmetic
 //

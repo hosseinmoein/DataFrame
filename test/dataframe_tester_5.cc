@@ -1870,6 +1870,40 @@ void test_md_stats()  {
     assert(std::fabs(cov_result2(0, 0) - 0.188617) < 0.000001);
     assert(std::fabs(cov_result2(1, 2) - 0.004326) < 0.000001);
     assert(std::fabs(cov_result2(2, 1) - 0.004326) < 0.000001);
+
+    // Standard Deviation / Variance
+    //
+    VarVisitor<vec_col_t>   var;
+    StdVisitor<ary_col_t>   stdev;
+
+    df.single_act_visit<vec_col_t>("vector_col", var);
+    df.single_act_visit<ary_col_t>("array_col", stdev);
+
+    const auto  &var_result = var.get_result();
+
+    assert(var_result.rows() == dim);
+    assert(var_result.cols() == dim);
+    assert(std::fabs(var_result(0, 0) - 0.188617) < 0.000001);
+    assert(std::fabs(var_result(1, 2) - 0.004326) < 0.000001);
+    assert(std::fabs(var_result(2, 1) - 0.004326) < 0.000001);
+
+    const auto  &var_mean = var.get_mean();
+
+    assert(var_mean.size() == dim);
+    assert(std::fabs(var_mean[1] - 1.2646) < 0.0001);
+    assert(std::fabs(var_mean[2] - 1.24829) < 0.00001);
+
+    const auto  &std_result = stdev.get_result();
+
+    assert(std_result.size() == dim);
+    assert(std::fabs(std_result[1] - 0.428274) < 0.000001);
+    assert(std::fabs(std_result[2] - 0.431151) < 0.000001);
+
+    const auto  &std_mean = stdev.get_mean();
+
+    assert(std_mean.size() == dim);
+    assert(std::fabs(std_mean[1] - 1.2646) < 0.0001);
+    assert(std::fabs(std_mean[2] - 1.24829) < 0.00001);
 }
 
 // ----------------------------------------------------------------------------

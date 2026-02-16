@@ -1399,6 +1399,8 @@ public:
         else  return (mean2_);
     }
 
+    data_t get_b() const  { return (b_); }
+
     explicit CovVisitor (bool biased = false,
                          bool skipnan = false,
                          bool stable_algo = false)
@@ -1419,37 +1421,166 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  VarVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    Matrix<data_t, matrix_orient::row_major>>;
+    using mean_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
+
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
-        cov_ (idx, val, val);
+        cov_(idx, val, val);
     }
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end) {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end) {
 
-        cov_ (idx_begin, idx_end,
-              column_begin, column_end, column_begin, column_end);
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            cov_(idx_begin, idx_end,
+                 column_begin, column_end, column_begin, column_end);
+        }
+        else  {
+            const long  col_s { long(std::distance(column_begin, column_end)) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+            if (col_s < 3)
+                throw DataFrameError("VarVisitor: Need at least 3 "
+                                     "observations");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+            // Accumulated centered outer products
+            //
+            const long  dim { long(column_begin->size()) };
+            result_type m2 { dim, dim, 0 };
+
+            // Running mean
+            //
+            mean_.resize(dim, 0);
+            count_ = 0;
+            for (long k { 0 }; k < col_s; ++k)  {
+                const auto  &point = *(column_begin + k);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+                if (long(point.size()) != dim)
+                    throw DataFrameError("VarVisitor: Inconsistent dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+                count_ += 1;;
+
+                // delta = x - mean
+                //
+                std::vector<data_t> delta(dim);
+
+                for (long i { 0 }; i < dim; ++i)
+                    delta[i] = point[i] - mean_[i];
+
+                // Update mean
+                //
+                for (long i { 0 }; i < dim; ++i)
+                    mean_[i] += delta[i] / data_t(count_);
+
+                // delta2 = x - new_mean
+                //
+                std::vector<data_t> delta2(dim);
+
+                for (long i { 0 }; i < dim; ++i)
+                    delta2[i] = point[i] - mean_[i];
+
+                // Accumulate only lower triangle
+                //
+                for (long i { 0 }; i < dim; ++i)
+                    for (long j { 0 }; j <= i; ++j)
+                        m2(i, j) += delta[i] * delta2[j];
+            }
+
+            // Normalize and symmetrize
+            //
+            const data_t    inv { data_t(1) / (data_t(col_s) - cov_.get_b()) };
+
+            result_.resize(dim, dim, 0);
+            for (long i { 0 }; i < dim; ++i)  {
+                for (long j { 0 }; j <= i; ++j) {
+                    result_(i, j) = m2(i, j) * inv;
+                    if (i != j)  result_(j, i) = result_(i, j);
+                }
+            }
+        }
     }
 
-    inline void pre ()  { cov_.pre(); }
-    inline void post ()  { cov_.post(); }
-    inline result_type get_result () const  { return (cov_.get_result()); }
-    inline size_type get_count() const  { return (cov_.get_count()); }
-    inline result_type get_mean() const  { return (cov_.get_mean1()); }
+    inline void pre ()  {
 
-    explicit VarVisitor (bool biased = false, bool skip_nan = false,
-                         bool stable_algo = false)
-        : cov_ (biased, skip_nan, stable_algo)  {   }
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            cov_.pre();
+        }
+        else  {
+            result_.clear();
+            mean_.clear();
+            count_ = 0;
+        }
+    }
+    inline void post ()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            cov_.post();
+    }
+    inline const result_type &get_result() const  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (cov_.get_result());
+        else
+            return (result_);
+    }
+    inline result_type &get_result()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (cov_.get_result());
+        else
+            return (result_);
+    }
+    inline size_type get_count() const  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (cov_.get_count());
+        else
+            return (count_);
+    }
+    inline mean_t get_mean() const  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (cov_.get_mean1());
+        else
+            return (mean_);
+    }
+
+    explicit VarVisitor(bool biased = false, bool skip_nan = false,
+                        bool stable_algo = false)
+        : cov_(biased, skip_nan, stable_algo)  {   }
 
 private:
 
     CovVisitor<value_type, index_type>  cov_;
+    mean_t                              mean_ { };
+    result_type                         result_ { };
+    size_type                           count_ { 0 };
 };
 
 // ----------------------------------------------------------------------------
@@ -1504,28 +1635,68 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  StdVisitor   {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
 
-    inline void operator() (const index_type &idx, const value_type &val)  {
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
+    using mean_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
+
+
+    inline void operator()(const index_type &idx, const value_type &val)  {
 
         var_ (idx, val);
     }
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end) {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end) {
 
         var_ (idx_begin, idx_end, column_begin, column_end);
     }
 
-    inline void pre ()  { var_.pre(); result_ = 0; }
-    inline void post ()  { var_.post(); result_ = ::sqrt(var_.get_result()); }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre ()  {
+
+        var_.pre();
+        if constexpr (std::is_arithmetic_v<value_type>)
+            result_ = 0;
+        else
+            result_.clear();
+    }
+    inline void post ()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            var_.post();
+            result_ = ::sqrt(var_.get_result());
+        }
+        else  {
+            const auto  &var { var_.get_result() };
+
+            result_.resize(var.rows());
+            for (long i { 0 }; i < var.rows(); ++i)
+                result_[i] = std::sqrt(var(i, i));
+        }
+    }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
     inline size_type get_count() const  { return (var_.get_count()); }
-    inline result_type get_mean() const  { return (var_.get_mean()); }
+    inline mean_t get_mean() const  { return (var_.get_mean()); }
 
     explicit StdVisitor (bool biased = false, bool skip_nan = false,
                          bool stable_algo = false)
@@ -1534,7 +1705,7 @@ struct  StdVisitor   {
 private:
 
     VarVisitor<value_type, index_type>  var_;
-    result_type                         result_ { 0 };
+    result_type                         result_ { };
 };
 
 // ----------------------------------------------------------------------------

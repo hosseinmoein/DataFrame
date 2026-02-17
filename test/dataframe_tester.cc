@@ -2543,27 +2543,29 @@ static void test_tracking_error()  {
 
 static void test_beta()  {
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     std::cout << "\nTesting Beta ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    StlVecType<double>         d1 =
+    std::vector<double>         d1 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    StlVecType<double>         d2 =
+    std::vector<double>         d2 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    StlVecType<double>         d3 =
+    std::vector<double>         d3 =
         { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
           17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
           9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-    StlVecType<double>         d4 =
+    std::vector<double>         d4 =
         { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
           16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
           8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-    StlVecType<double>         d5 =
+    std::vector<double>         d5 =
         { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
           -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
           19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
@@ -2576,7 +2578,7 @@ static void test_beta()  {
                  std::make_pair("dblcol_4", d4),
                  std::make_pair("dblcol_5", d5));
 
-    ReturnVisitor<double, unsigned long, 128>  return_visit(return_policy::log);
+    ReturnVisitor<double, unsigned long>    return_visit(return_policy::log);
 
     df.load_column<double>(
         "dblcol_1_return",
@@ -2621,6 +2623,36 @@ static void test_beta()  {
                                       "dblcol_5_return",
                                       beta_visit).get_result();
     assert(fabs(result - -0.128854) < 0.00001);
+
+    // Now multidimensional data
+    //
+    using col_t = std::array<double, 2>;
+
+    std::vector<col_t>  md_data = { {1, 0}, {0, 1}, {1, 1}, {2, 1} };
+    std::vector<col_t>  md_bench = { {2, -1}, {1, 3}, {3, 2}, {5, 1} };
+
+    df.load_column<col_t>("md_data", md_data, nan_policy::dont_pad_with_nans);
+    df.load_column<col_t>("md_benchmark", md_bench,
+                          nan_policy::dont_pad_with_nans);
+
+    BetaVisitor<col_t>  md_beta;
+
+    df.single_act_visit<col_t, col_t>("md_data", "md_benchmark", md_beta);
+
+    const auto  &md_result { md_beta.get_result() };
+
+    assert(md_result.rows() == 2);
+    assert(md_result.cols() == 2);
+    assert(fabs(md_result(0, 0) - 0.428571) < 0.000001);
+    assert(fabs(md_result(0, 1) - -0.142857) < 0.000001);
+    assert(fabs(md_result(1, 0) - 0.142857) < 0.000001);
+    assert(fabs(md_result(1, 1) - 0.285714) < 0.000001);
+
+    const auto  data_mean { md_beta.get_data_mean() };
+    const auto  benchmark_mean { md_beta.get_benchmark_mean() };
+
+    assert((data_mean == std::vector<double>{ 1.0, 0.75 }));
+    assert((benchmark_mean == std::vector<double>{ 2.75, 1.25 }));
 }
 
 // -----------------------------------------------------------------------------

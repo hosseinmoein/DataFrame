@@ -1585,52 +1585,128 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  BetaVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
 
-    inline void operator() (const index_type &idx,
-                            const value_type &val, const value_type &bmark)  {
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
 
-        cov_ (idx, val, bmark);
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    Matrix<data_t, matrix_orient::row_major>>;
+    using mean_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
+
+
+    inline void operator()(const index_type &idx,
+                           const value_type &val, const value_type &bmark)  {
+
+        cov_(idx, val, bmark);
     }
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &data_begin, const H &data_end,
-                const H &benchmark_begin, const H &benchmark_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &data_begin, const H &data_end,
+               const H &benchmark_begin, const H &benchmark_end)  {
 
-        cov_ (idx_begin, idx_end,
-              data_begin, data_end, benchmark_begin, benchmark_end);
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            cov_(idx_begin, idx_end,
+                 data_begin, data_end, benchmark_begin, benchmark_end);
+        }
+        else  {
+#ifdef HMDF_SANITY_EXCEPTIONS
+            const long  data_s { long(std::distance(data_begin, data_end)) };
+            const long  bench_s {
+                long(std::distance(benchmark_begin, benchmark_end))
+            };
+
+            if (data_s != bench_s)
+                throw DataFrameError(
+                    "BetaVisitor: Data and benchmark size " "mismatch");
+            if (data_s < 3)
+                throw DataFrameError(
+                    "BetaVisitor: Need at least 3 " "observations");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+            // Σ_XY  (d1 × d2)
+            //
+            cov_.pre();
+            cov_(idx_begin, idx_end,
+                 data_begin, data_end, benchmark_begin, benchmark_end);
+            cov_.post();
+
+            const auto  sigma_xy = std::move(cov_.get_result());
+
+            // Σ_Y  (d2 × d2)
+            //
+            VarVisitor<value_type, index_type>  var_;
+
+            var_.pre();
+            var_ (idx_begin, idx_end, benchmark_begin, benchmark_end);
+            var_.post();
+
+            const auto  sigma_y = std::move(var_.get_result());
+
+            // Solve Σ_Y * B^T = Σ_XY^T
+            //
+            const auto  rhs { sigma_xy.transpose2() };
+
+            // B^T = Σ_Y^{-1} * Σ_XY^T
+            //
+            const auto  bt { sigma_y.solve(rhs) };
+
+            // B
+            //
+            result_ = bt.transpose2();
+        }
     }
 
-    inline void pre ()  { cov_.pre(); result_ = 0; }
-    inline void post ()  {
+    inline void pre()  {
 
-        cov_.post();
-
-        const value_type    v = cov_.get_var2();
-
-        result_ = v != 0.0
-                      ? cov_.get_result() / v
-                      : std::numeric_limits<value_type>::quiet_NaN();
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            cov_.pre();
+            result_ = 0;
+        }
+        else  result_.clear();
     }
-    inline result_type get_result () const  { return (result_); }
+    inline void post()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            cov_.post();
+
+            const value_type    v = cov_.get_var2();
+
+            result_ = v != 0.0
+                          ? cov_.get_result() / v
+                          : std::numeric_limits<value_type>::quiet_NaN();
+        }
+    }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
     inline size_type get_count() const  { return (cov_.get_count()); }
-    inline result_type get_data_mean() const  { return (cov_.get_mean1()); }
-    inline result_type
-    get_benchmark_mean() const  { return (cov_.get_mean2()); }
+    inline mean_t get_data_mean() const  { return (cov_.get_mean1()); }
+    inline mean_t get_benchmark_mean() const  { return (cov_.get_mean2()); }
 
     explicit
-    BetaVisitor (bool biased = false, bool skip_nan = false,
-                 bool stable_algo = false)
-        : cov_ (biased, skip_nan, stable_algo)  {   }
+    BetaVisitor(bool biased = false, bool skip_nan = false,
+                bool stable_algo = false)
+        : cov_(biased, skip_nan, stable_algo)  {   }
 
 private:
 
     CovVisitor<value_type, index_type>  cov_;
-    result_type                         result_ { 0 };
+    result_type                         result_ { };
 };
 
 // ----------------------------------------------------------------------------

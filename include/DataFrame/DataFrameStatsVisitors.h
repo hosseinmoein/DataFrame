@@ -1570,6 +1570,7 @@ public:
         else
             return (mean_);
     }
+    data_t get_b() const  { return (cov_.get_b()); }
 
     explicit VarVisitor(bool biased = false, bool skip_nan = false,
                         bool stable_algo = false)
@@ -1773,6 +1774,7 @@ public:
     inline result_type &get_result ()  { return (result_); }
     inline size_type get_count() const  { return (var_.get_count()); }
     inline mean_t get_mean() const  { return (var_.get_mean()); }
+    data_t get_b() const  { return (var_.get_b()); }
 
     explicit StdVisitor (bool biased = false, bool skip_nan = false,
                          bool stable_algo = false)
@@ -1788,38 +1790,130 @@ private:
 
 // Standard Error of the Mean
 //
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  SEMVisitor   {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
 
-    inline void operator() (const index_type &idx, const value_type &val)  {
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    Matrix<data_t, matrix_orient::row_major>>;
+    using mean_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
+
+
+    inline void operator()(const index_type &idx, const value_type &val)  {
 
         std_ (idx, val);
     }
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end) {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end) {
 
-        std_ (idx_begin, idx_end, column_begin, column_end);
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            std_(idx_begin, idx_end, column_begin, column_end);
+        }
+        else  {
+            const long                          col_s {
+                long(std::distance(column_begin, column_end))
+            };
+            const long                          dim = column_begin->size();
+            CovVisitor<value_type, index_type>  cov;
+
+            // Calculate covariance of dimensions
+            //
+            mean_t      means (dim, 0);
+            mean_t      delta (dim, 0);
+
+            result_.resize(dim, dim, 0);
+            for (long j { 0 }; j < col_s; ++j)  {
+                const auto  &point = *(column_begin + j);
+
+                for (long i { 0 }; i < dim; ++i)
+                    delta[i] = point[i] - means[i];
+
+                const data_t    inv_n { data_t(1) / data_t(j + 1) };
+
+                // Update mean
+                //
+                for (long i { 0 }; i < dim; ++i)
+                    means[i] += delta[i] * inv_n;
+
+                mean_t  delta2(dim, 0);
+
+                for (long i { 0 }; i < dim; ++i)
+                    delta2[i] = point[i] - means[i];
+
+                // Update result (outer product)
+                //
+                for (long i { 0 }; i < dim; ++i)
+                    for (long k { 0 }; k < dim; ++k)
+                        result_(i, k) += delta[i] * delta2[k];
+            }
+
+            const data_t    denom {
+                data_t(1) / (data_t(col_s) - std_.get_b())
+            };
+            const data_t    inv_n { data_t(1) / data_t(col_s) };
+
+            // Per-dimension standard error (diagonal only)
+            //
+            per_dim_SEM_.resize(dim, 0);
+            for (long i { 0 }; i < dim; ++i)
+                per_dim_SEM_[i] = std::sqrt(result_(i, i) * inv_n);
+
+            // Full covariance of the SEM (dim x dim)
+            //
+            for (long i { 0 }; i < dim; ++i)
+                for (long k { 0 }; k < dim; ++k)
+                    result_(i, k) *= denom * inv_n;
+        }
     }
 
-    inline void pre ()  { std_.pre(); result_ = 0; }
-    inline void post ()  {
+    inline void pre()  {
 
-        std_.post();
-        result_ = std_.get_result() / ::sqrt(get_count());
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            std_.pre();
+            result_ = 0;
+        }
+        else  {
+            result_.clear();
+            per_dim_SEM_.clear();
+        }
     }
-    inline result_type get_result () const  { return (result_); }
+    inline void post()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            std_.post();
+            result_ = std_.get_result() / ::sqrt(get_count());
+        }
+    }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
     inline size_type get_count() const  { return (std_.get_count()); }
+    inline const mean_t &get_per_dim_SEM() const  { return (per_dim_SEM_); }
+    inline mean_t &get_per_dim_SEM()  { return (per_dim_SEM_); }
 
-    explicit SEMVisitor (bool biased = false) : std_ (biased)  {   }
+    explicit SEMVisitor(bool biased = false) : std_ (biased)  {   }
 
 private:
 
     StdVisitor<value_type, index_type>  std_;
-    result_type                         result_ { 0 };
+    result_type                         result_ { };
+    mean_t                              per_dim_SEM_ { };
 };
 
 template<typename T, typename I = unsigned long>

@@ -4840,15 +4840,17 @@ static void test_SEMVisitor()  {
 
     std::cout << "\nTesting SEMVisitor{ } ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    std::vector<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
-    StlVecType<double> d1 =
+    std::vector<double>         d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
-    MyDataFrame         df;
+    MyDataFrame                 df;
 
     df.load_data(std::move(idx), std::make_pair("col_1", d1));
 
@@ -4857,6 +4859,65 @@ static void test_SEMVisitor()  {
         df.visit<double>("col_1", sem_visitor).get_result();
 
     assert(fabs(result - 1.84842) < 0.00001);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = 0;
+    p.max_value = 10.0;
+
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    // Generate and load 3 random columns
+    //
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
+
+    std::vector<ary_col_t>  array_col(df.get_index().size());
+    std::vector<vec_col_t>  vector_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        vector_col[i].resize(dim);
+        for (std::size_t d { 0 }; d < dim; ++d)
+            array_col[i][d] = vector_col[i][d] = rand_vec[j++];
+    }
+    df.load_column<ary_col_t>("array_col", std::move(array_col));
+    df.load_column<vec_col_t>("vector_col", std::move(vector_col));
+
+    SEMVisitor<ary_col_t>   ary_sem;
+    SEMVisitor<vec_col_t>   vec_sem;
+
+    df.single_act_visit<ary_col_t>("array_col", ary_sem);
+    df.single_act_visit<vec_col_t>("vector_col", vec_sem);
+
+    const auto  &ary_dm_result = ary_sem.get_result();
+    const auto  &vec_dm_result = vec_sem.get_result();
+
+    assert(ary_dm_result.rows() == 3);
+    assert(ary_dm_result.cols() == 3);
+    assert(vec_dm_result.rows() == 3);
+    assert(vec_dm_result.cols() == 3);
+    assert(fabs(ary_dm_result(0, 0) - 0.202278) < 0.000001);
+    assert(fabs(ary_dm_result(1, 2) - 0.012392) < 0.000001);
+    assert(fabs(ary_dm_result(2, 1) - 0.012392) < 0.000001);
+    assert(fabs(vec_dm_result(0, 0) - 0.202278) < 0.000001);
+    assert(fabs(vec_dm_result(1, 2) - 0.012392) < 0.000001);
+    assert(fabs(vec_dm_result(2, 1) - 0.012392) < 0.000001);
+
+    const auto  &ary_per_dim = ary_sem.get_per_dim_SEM();
+    const auto  &vec_per_dim = vec_sem.get_per_dim_SEM();
+
+    assert(ary_per_dim.size() == 3);
+    assert(vec_per_dim.size() == 3);
+    assert(fabs(ary_per_dim[0] - 2.80871) < 0.00001);
+    assert(fabs(ary_per_dim[2] - 2.77477) < 0.00001);
+    assert(fabs(vec_per_dim[0] - 2.80871) < 0.00001);
+    assert(fabs(vec_per_dim[2] - 2.77477) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

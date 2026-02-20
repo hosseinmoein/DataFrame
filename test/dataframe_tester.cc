@@ -2496,7 +2496,7 @@ static void test_tracking_error()  {
         { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
           -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
           19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
-    MyDataFrame                 df;
+    MyDataFrame                df;
 
     df.load_data(std::move(idx),
                  std::make_pair("dblcol_1", d1),
@@ -2537,6 +2537,46 @@ static void test_tracking_error()  {
                                       "dblcol_5",
                                       tracking_visit).get_result();
     assert(fabs(result - 17.0566) < 0.0001);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = -20.0;
+    p.max_value = 20.0;
+
+    using col_t = std::array<double, 3>;
+
+    const auto          rand_vec =
+        gen_uniform_real_dist<double, 64>(df.get_index().size() * 3 * 2, p);
+    StlVecType<col_t>   multi_dimen_col1(df.get_index().size());
+    StlVecType<col_t>   multi_dimen_col2(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        multi_dimen_col1[i][0] = rand_vec[j++];
+        multi_dimen_col1[i][1] = rand_vec[j++];
+        multi_dimen_col1[i][2] = rand_vec[j++];
+
+        multi_dimen_col2[i][0] = rand_vec[j++];
+        multi_dimen_col2[i][1] = rand_vec[j++];
+        multi_dimen_col2[i][2] = rand_vec[j++];
+    }
+    df.load_column<col_t>("multi_dimen_col1", std::move(multi_dimen_col1));
+    df.load_column<col_t>("multi_dimen_col2", std::move(multi_dimen_col2));
+
+    TrackingErrorVisitor<col_t> md_te;
+
+    df.single_act_visit<col_t, col_t>("multi_dimen_col1",
+                                      "multi_dimen_col2",
+                                      md_te);
+
+    const auto  &md_result { md_te.get_result() };
+
+    assert(md_result.size() == 3);
+    assert(fabs(md_result[0] - 15.0167) < 0.0001);
+    assert(fabs(md_result[1] - 15.7958) < 0.0001);
+    assert(fabs(md_result[2] - 17.6217) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------

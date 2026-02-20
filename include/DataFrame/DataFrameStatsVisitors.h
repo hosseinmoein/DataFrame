@@ -1913,7 +1913,7 @@ private:
 
     StdVisitor<value_type, index_type>  std_;
     result_type                         result_ { };
-    mean_t                              per_dim_SEM_ { };
+    COND_DECL(! std::is_arithmetic_v<T>, mean_t, per_dim_SEM_);
 };
 
 template<typename T, typename I = unsigned long>
@@ -1921,27 +1921,154 @@ using sem_v = SEMVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  TrackingErrorVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
 
-    inline void operator() (const index_type &idx,
-                            const value_type &val1, const value_type &val2)  {
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+    using mean_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
+    using matrix_t = Matrix<data_t, matrix_orient::row_major>;
 
-        std_ (idx, val1 - val2);
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
+
+    inline void operator()(const index_type &idx,
+                           const value_type &val1, const value_type &val2)  {
+
+        std_(idx, val1 - val2);
     }
-    PASS_DATA_ONE_BY_ONE_2
+    template <typename K, typename H>
+    inline void
+    operator()(K idx_begin, K /*idx_end*/,
+               H column_begin1, H column_end1,
+               H column_begin2, H column_end2)  {
 
-    inline void pre ()  { std_.pre(); }
-    inline void post ()  { std_.post();  }
-    inline result_type get_result () const  { return (std_.get_result()); }
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const long  col_s1 { long(std::distance(column_begin1, column_end1)) };
+        const long  col_s2 { long(std::distance(column_begin2, column_end2)) };
+
+        if (col_s1 != col_s2)
+            throw DataFrameError(
+                "TrackingErrorVisitor: Both columns must have same size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            while (column_begin1 < column_end1 && column_begin2 < column_end2)
+                (*this)(*idx_begin++, *column_begin1++, *column_begin2++);
+        }
+        else  {
+            const long  col_s {
+                long(std::distance(column_begin1, column_end1))
+            };
+            const long  dim = long(column_begin1->size());
+            mean_t      mean_x(dim, 0);
+            mean_t      mean_y(dim, 0);
+            matrix_t    m2_x { dim, dim, 0 };
+            matrix_t    m2_y { dim, dim, 0 };
+            matrix_t    m2_xy { dim, dim, 0 };
+
+            for (long j { 0 }; j < col_s; ++j)  {
+                const auto  &val_x { *(column_begin1 + j) };
+                const auto  &val_y { *(column_begin2 + j) };
+
+                mean_t  dx(dim, 0);
+                mean_t  dy(dim, 0);
+
+                for (long i { 0 }; i < dim; ++i)  {
+                    dx[i] = val_x[i] - mean_x[i];
+                    dy[i] = val_y[i] - mean_y[i];
+                }
+
+                const data_t    inv_n { data_t(1) / data_t(j + 1) };
+
+                mean_x += dx * inv_n;
+                mean_y += dy * inv_n;
+
+                mean_t  dx2(dim, 0);
+                mean_t  dy2(dim, 0);
+
+                for (long i { 0 }; i < dim; ++i)  {
+                    dx2[i] = val_x[i] - mean_x[i];
+                    dy2[i] = val_y[i] - mean_y[i];
+                }
+
+                for (long i { 0 }; i < dim; ++i)  {
+                    for (long k { 0 }; k < dim; ++k)  {
+                        m2_x(i, k) += dx[i] * dx2[k];
+                        m2_y(i, k) += dy[i] * dy2[k];
+                        m2_x(i, k) += dx[i] * dy2[k];
+                    }
+                }
+            }
+
+            // Calculate covariance
+            //
+            matrix_t        cov { dim, dim, 0 };
+            const data_t    denom {
+                data_t(1) / (data_t(col_s) - std_.get_b())
+            };
+
+            for (long i { 0 }; i < dim; ++i)
+                for (long j { 0 }; j < dim; ++j)
+                    cov(i, j) = m2_x(i, j) * denom +
+                                m2_y(i, j) * denom -
+                                m2_xy(i, j) * denom -
+                                m2_xy(j, i) * denom;
+
+            // Tracking error vector
+            //
+            result_.resize(dim, 0);
+            for (long i { 0 }; i < dim; ++i)
+                result_[i] = std::sqrt(cov(i, i));
+        }
+    }
+
+
+    inline void pre()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            std_.pre();
+        else  result_.clear();
+    }
+    inline void post()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            std_.post();
+    }
+    inline const result_type &get_result() const  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (std_.get_result());
+        else  return (result_);
+    }
+    inline result_type &get_result()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (std_.get_result());
+        else  return (result_);
+    }
 
     explicit TrackingErrorVisitor (bool biased = false) : std_ (biased)  {  }
 
 private:
 
-    StdVisitor<value_type, index_type>  std_;
+    using stdev_type = StdVisitor<value_type, index_type>;
+
+    stdev_type  std_;
+    COND_DECL(! std::is_arithmetic_v<T>, result_type, result_);
 };
 
 template<typename T, typename I = unsigned long>

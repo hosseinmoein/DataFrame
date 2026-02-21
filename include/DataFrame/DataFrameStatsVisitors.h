@@ -1407,14 +1407,19 @@ public:
         : b_ (biased ? 0 : 1),
           skip_nan_(skipnan),
           stable_algo_(stable_algo)  {  }
+    CovVisitor(const CovVisitor &) = default;
+    CovVisitor(CovVisitor &&) = default;
+    CovVisitor &operator =(const CovVisitor &) = default;
+    CovVisitor &operator =(CovVisitor &&) = default;
+    ~CovVisitor() = default;
 
 private:
 
     InterResults    inter_result_ { };
     result_type     result_ { };
-    const data_t    b_;
-    const bool      skip_nan_;
-    const bool      stable_algo_;
+    data_t          b_;
+    bool            skip_nan_;
+    bool            stable_algo_;
     mean_t          mean1_ { };
     mean_t          mean2_ { };
 };
@@ -1575,6 +1580,11 @@ public:
     explicit VarVisitor(bool biased = false, bool skip_nan = false,
                         bool stable_algo = false)
         : cov_(biased, skip_nan, stable_algo)  {   }
+    VarVisitor(const VarVisitor &) = default;
+    VarVisitor(VarVisitor &&) = default;
+    VarVisitor &operator =(const VarVisitor &) = default;
+    VarVisitor &operator =(VarVisitor &&) = default;
+    ~VarVisitor() = default;
 
 private:
 
@@ -2175,30 +2185,78 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  CorrVisitor  {
+
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
 
 public:
 
-    DEFINE_VISIT_BASIC_TYPES_2
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
+    using mean_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
 
-    inline void operator() (const index_type &idx,
-                            const value_type &val1, const value_type &val2)  {
 
-        cov_ (idx, val1, val2);
+    inline void operator()(const index_type &idx,
+                           const value_type &val1, const value_type &val2)  {
+
+        cov_(idx, val1, val2);
     }
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin1, const H &column_end1,
-                const H &column_begin2, const H &column_end2)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin1, const H &column_end1,
+               const H &column_begin2, const H &column_end2)  {
 
         if (type_ == correlation_type::pearson)  {
-            cov_ (idx_begin, idx_end,
-                  column_begin1, column_end1, column_begin2, column_end2);
+            if constexpr (std::is_arithmetic_v<value_type>)  {
+                cov_ (idx_begin, idx_end,
+                      column_begin1, column_end1, column_begin2, column_end2);
+            }
+            else  {
+                cov_.pre();
+                cov_(idx_begin, idx_end,
+                     column_begin1, column_end1,
+                     column_begin2, column_end2);
+                cov_.post();
+
+                var1_.pre();
+                var1_(idx_begin, idx_end, column_begin1, column_end1);
+                var1_.post();
+
+                var2_.pre();
+                var2_(idx_begin, idx_end, column_begin2, column_end2);
+                var2_.post();
+
+                const long  dim = long(column_begin1->size());
+
+                result_.resize(dim, std::numeric_limits<data_t>::quiet_NaN());
+                for (long i { 0 }; i < dim; ++i)  {
+                    const auto  var_x = var1_.get_result()(i, i);
+                    const auto  var_y = var2_.get_result()(i, i);
+
+                    if (var_x > 0 && var_y > 0) [[likely]]
+                        result_[i] =
+                            cov_.get_result()(i, i) / std::sqrt(var_x * var_y);
+                }
+                mean1_ = std::move(var1_.get_mean());
+                mean2_ = std::move(var2_.get_mean());
+            }
         }
-        else  {
+        else if constexpr (std::is_arithmetic_v<value_type>)  {
             const size_type col_s =
                 std::min ({ std::distance(idx_begin, idx_end),
                             std::distance(column_begin1, column_end1),
@@ -2313,30 +2371,75 @@ public:
         }
     }
 
-    inline void pre ()  { cov_.pre(); result_ = 0; }
-    inline void post ()  {
+    inline void pre()  {
 
-        if (type_ == correlation_type::pearson)  {
-            cov_.post();
-            result_ = cov_.get_result() /
-                      (::sqrt(cov_.get_var1()) * ::sqrt(cov_.get_var2()));
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            cov_.pre();
+            result_ = 0;
+        }
+        else  result_.clear();
+    }
+    inline void post()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            if (type_ == correlation_type::pearson)  {
+                cov_.post();
+                result_ = cov_.get_result() /
+                          (::sqrt(cov_.get_var1()) * ::sqrt(cov_.get_var2()));
+            }
         }
     }
-    inline result_type get_result () const  { return (result_); }
-    inline result_type get_data_mean1() const  { return (cov_.get_mean1()); }
-    inline result_type get_data_mean2() const  { return (cov_.get_mean2()); }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+    inline const mean_t &get_data_mean1() const {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (cov_.get_mean1());
+        else  return (mean1_);
+    }
+    inline mean_t &get_data_mean1()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (cov_.get_mean1());
+        else  return (mean1_);
+    }
+    inline const mean_t &get_data_mean2() const {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (cov_.get_mean2());
+        else  return (mean2_);
+    }
+    inline mean_t &get_data_mean2()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            return (cov_.get_mean2());
+        else  return (mean2_);
+    }
 
     explicit
-    CorrVisitor (correlation_type t = correlation_type::pearson,
-                 bool biased = false, bool skip_nan = false,
-                 bool stable_algo = false)
-        : cov_(biased, skip_nan, stable_algo), type_(t)  {  }
+    CorrVisitor(correlation_type t = correlation_type::pearson,
+                bool biased = false,
+                bool skip_nan = false,
+                bool stable_algo = false)
+        : cov_(biased, skip_nan, stable_algo), type_(t)  {
+
+        if constexpr (! std::is_arithmetic_v<value_type>)  {
+            var1_ = var_t{ biased, skip_nan, stable_algo };
+            var2_ = var_t{ biased, skip_nan, stable_algo };
+        }
+    }
 
 private:
 
+    using var_t = VarVisitor<T, I>;
+
     CovVisitor<value_type, index_type>  cov_;
-    result_type                         result_ { 0 };
+    result_type                         result_ { };
     const correlation_type              type_;
+    COND_DECL(! std::is_arithmetic_v<T>, var_t, var1_);
+    COND_DECL(! std::is_arithmetic_v<T>, var_t, var2_);
+    COND_DECL(! std::is_arithmetic_v<T>, mean_t, mean1_);
+    COND_DECL(! std::is_arithmetic_v<T>, mean_t, mean2_);
 };
 
 // ----------------------------------------------------------------------------

@@ -1904,6 +1904,39 @@ void test_md_stats()  {
     assert(std_mean.size() == dim);
     assert(std::fabs(std_mean[1] - 1.2646) < 0.0001);
     assert(std::fabs(std_mean[2] - 1.24829) < 0.00001);
+
+    // Pearson Correlation
+    //
+    CorrVisitor<ary_col_t>  md_corr;
+
+    df.single_act_visit<ary_col_t, ary_col_t>
+        ("array_col", "array_col2", md_corr);
+    assert(md_corr.get_result().size() == dim);
+    assert(md_corr.get_data_mean1().size() == dim);
+    assert(md_corr.get_data_mean2().size() == dim);
+
+    assert(std::fabs(md_corr.get_result()[0] - 0.00982) < 0.00001);
+    assert(std::fabs(md_corr.get_result()[2] - 0.03198) < 0.00001);
+
+    assert(std::fabs(md_corr.get_data_mean1()[0] - 1.25062) < 0.00001);
+    assert(std::fabs(md_corr.get_data_mean1()[2] - 1.24829) < 0.00001);
+
+    assert(std::fabs(md_corr.get_data_mean2()[0] - 1.24407) < 0.00001);
+    assert(std::fabs(md_corr.get_data_mean2()[2] - 1.25122) < 0.00001);
+
+    df.single_act_visit<ary_col_t, ary_col_t>
+        ("array_col", "array_col", md_corr);
+    assert(std::fabs(md_corr.get_result()[0] - 1.0) < 0.00001);
+    assert(std::fabs(md_corr.get_result()[2] - 1.0) < 0.00001);
+
+    assert(std::fabs(md_corr.get_data_mean1()[0] - 1.25062) < 0.00001);
+    assert(std::fabs(md_corr.get_data_mean1()[2] - 1.24829) < 0.00001);
+
+    assert(std::fabs(md_corr.get_data_mean2()[0] - 1.25062) < 0.00001);
+    assert(std::fabs(md_corr.get_data_mean2()[2] - 1.24829) < 0.00001);
+
+    // Cross Correlation
+    //
 }
 
 // ----------------------------------------------------------------------------

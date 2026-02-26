@@ -2507,10 +2507,26 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  DotProdVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = data_t;
+    using comp_result_t = std::vector<data_t>;
+    using mag_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
 
     inline void operator() (const index_type &,
                             const value_type &val1, const value_type &val2)  {
@@ -2530,98 +2546,197 @@ struct  DotProdVisitor  {
                 const H &column_begin1, const H &column_end1,
                 const H &column_begin2, const H &column_end2)  {
 
-        if (std::distance(column_begin1, column_end1) >=
-                ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    lbd =
-                []
-                (const auto &begin1, const auto &end1,
-                 const auto &begin2) -> std::tuple<result_type,
-                                                   result_type,
-                                                   result_type,
-                                                   result_type,
-                                                   result_type>  {
-                    value_type  result { 0 };
-                    value_type  mag1 { 0 };
-                    value_type  mag2 { 0 };
-                    value_type  euc_dist { 0 };
-                    value_type  man_dist { 0 };
-                    auto        iter2 = begin2;
+        const size_type  col_s {
+            size_type(std::distance(column_begin1, column_end1))
+        };
 
-                    for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2) {
-                        const auto  val1 = *iter1;
-                        const auto  val2 = *iter2;
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type  col_s2 {
+            size_type(std::distance(column_begin2, column_end2))
+        };
 
-                        result += val1 * val2;
-                        mag1 += val1 * val1;
-                        mag2 += val2 * val2;
+        if (col_s != col_s2)
+            throw DataFrameError(
+                "DotProdVisitor: Two columns must have the same length");
+#endif // HMDF_SANITY_EXCEPTIONS
 
-                        const value_type    diff = val1 - val2;
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    lbd =
+                    []
+                    (const auto &begin1, const auto &end1,
+                     const auto &begin2) -> std::tuple<result_type,
+                                                       result_type,
+                                                       result_type,
+                                                       result_type,
+                                                       result_type>  {
+                        value_type  result { 0 };
+                        value_type  mag1 { 0 };
+                        value_type  mag2 { 0 };
+                        value_type  euc_dist { 0 };
+                        value_type  man_dist { 0 };
+                        auto        iter2 = begin2;
 
-                        euc_dist += diff * diff;
-                        man_dist += std::fabs(diff);
-                    }
-                    return (std::make_tuple(result, mag1, mag2,
-                                            euc_dist, man_dist));
-                };
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop2<T>(column_begin1,
-                                                               column_end1,
-                                                               column_begin2,
-                                                               column_end2,
-                                                               std::move(lbd));
+                        for (auto iter1 = begin1; iter1 < end1;
+                             ++iter1, ++iter2) {
+                            const auto  val1 = *iter1;
+                            const auto  val2 = *iter2;
 
-            for (auto &fut : futures)  {
-                const auto  ret = fut.get();
+                            result += val1 * val2;
+                            mag1 += val1 * val1;
+                            mag2 += val2 * val2;
 
-                result_ += std::get<0>(ret);
-                mag1_ += std::get<1>(ret);
-                mag2_ += std::get<2>(ret);
-                euc_dist_ += std::get<3>(ret);
-                man_dist_ += std::get<4>(ret);
+                            const value_type    diff = val1 - val2;
+
+                            euc_dist += diff * diff;
+                            man_dist += std::fabs(diff);
+                        }
+                        return (std::make_tuple(result, mag1, mag2,
+                                                euc_dist, man_dist));
+                    };
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop2<T>(
+                        column_begin1,
+                        column_end1,
+                        column_begin2,
+                        column_end2,
+                        std::move(lbd));
+
+                for (auto &fut : futures)  {
+                    const auto  ret = fut.get();
+
+                    result_ += std::get<0>(ret);
+                    mag1_ += std::get<1>(ret);
+                    mag2_ += std::get<2>(ret);
+                    euc_dist_ += std::get<3>(ret);
+                    man_dist_ += std::get<4>(ret);
+                }
+            }
+            else  {
+                for (size_type i = 0; i < col_s; ++i)  {
+                    const auto  val1 = *(column_begin1 + i);
+                    const auto  val2 = *(column_begin2 + i);
+
+                    result_ += val1 * val2;
+                    mag1_ += val1 * val1;
+                    mag2_ += val2 * val2;
+
+                    const value_type    diff = val1 - val2;
+
+                    euc_dist_ += diff * diff;
+                    man_dist_ += std::fabs(diff);
+                }
             }
         }
         else  {
-            const size_type col_s =
-                std::min(std::distance(column_begin1, column_end1),
-                         std::distance(column_begin2, column_end2));
+            const size_type dim { column_begin1->size() };
 
-            for (size_type i = 0; i < col_s; ++i)  {
-                const auto  val1 = *(column_begin1 + i);
-                const auto  val2 = *(column_begin2 + i);
+#ifdef HMDF_SANITY_EXCEPTIONS
+            for (size_type i { 0 }; i < col_s; ++i)
+                if ((column_begin1 + i)->size() != dim ||
+                    (column_begin2 + i)->size() != dim)
+                    throw DataFrameError(
+                        "DotProdVisitor: Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
 
-                result_ += val1 * val2;
-                mag1_ += val1 * val1;
-                mag2_ += val2 * val2;
+            // Flattened dot product
+            //
+            auto    lbd =
+                []
+                (const auto &begin1, const auto &end1,
+                 const auto &begin2) -> data_t  {
+                    data_t  result { 0 };
+                    auto    iter2 { begin2 };
 
-                const value_type    diff = val1 - val2;
+                    for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2)
+                        for (size_type i { 0 }; i < iter1->size(); ++i)
+                            result += (*iter1)[i] * (*iter2)[i];
+                    return (result);
+                };
 
-                euc_dist_ += diff * diff;
-                man_dist_ += std::fabs(diff);
+            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop2<T>(
+                        column_begin1,
+                        column_end1,
+                        column_begin2,
+                        column_end2,
+                        std::move(lbd));
+
+                for (auto &fut : futures)
+                    result_ += fut.get();
+            }
+            else  {
+                result_ = lbd(column_begin1, column_end1, column_begin2);
+            }
+
+            // Component-wise dot product and Magnitudes
+            //
+            comp_result_.resize(dim, 0);
+            mag1_.resize(col_s);
+            mag2_.resize(col_s);
+            for (size_type n { 0 }; n < col_s; ++n)  {
+                data_t      mag1 { 0 };
+                data_t      mag2 { 0 };
+                const auto  &ary1 = *(column_begin1 + n);
+                const auto  &ary2 = *(column_begin2 + n);
+
+                for (size_type d { 0 }; d < dim; ++d)  {
+                    const auto  val1 = ary1[d];
+                    const auto  val2 = ary2[d];
+
+                    comp_result_[d] += val1 * val2;
+                    mag1 += val1 * val1;
+                    mag2 += val2 * val2;
+                }
+                mag1_[n] = std::sqrt(mag1);
+                mag2_[n] = std::sqrt(mag2);
             }
         }
     }
 
-    inline void pre ()  { result_ = mag1_ = mag2_ = euc_dist_ = man_dist_ = 0; }
-    inline void post ()  {
+    inline void pre()  {
 
-        mag1_ = std::sqrt(mag1_);
-        mag2_ = std::sqrt(mag2_);
-        euc_dist_ = std::sqrt(euc_dist_);
+        result_ = euc_dist_ = man_dist_ = 0;
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            mag1_ = mag2_ = 0;
+        }
+        else  {
+            comp_result_.clear();
+            mag1_.clear();
+            mag2_.clear();
+        }
     }
-    inline result_type get_result () const  { return (result_); }
-    inline result_type get_magnitude1 () const  { return (mag1_); }
-    inline result_type get_magnitude2 () const  { return (mag2_); }
-    inline result_type get_euclidean_dist () const  { return (euc_dist_); }
-    inline result_type get_manhattan_dist () const  { return (man_dist_); }
+    inline void post()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            mag1_ = std::sqrt(mag1_);
+            mag2_ = std::sqrt(mag2_);
+            euc_dist_ = std::sqrt(euc_dist_);
+        }
+    }
+    inline result_type get_result() const  { return (result_); }
+    inline const mag_t &get_magnitude1() const  { return (mag1_); }
+    inline mag_t &get_magnitude1()  { return (mag1_); }
+    inline const mag_t &get_magnitude2() const  { return (mag2_); }
+    inline mag_t &get_magnitude2() { return (mag2_); }
+
+    inline const comp_result_t &get_comp_dp() const  { return (comp_result_); }
+    inline comp_result_t &get_comp_dp() { return (comp_result_); }
+
+    inline result_type get_euclidean_dist() const  { return (euc_dist_); }
+    inline result_type get_manhattan_dist() const  { return (man_dist_); }
 
 private:
 
-    result_type result_ { 0 };   // Dot product of two vectors
-    result_type mag1_ { 0 };     // Magnitude of first vector
-    result_type mag2_ { 0 };     // Magnitude of second vector
-    result_type euc_dist_ { 0 }; // Euclidean distance of two vectors
-    result_type man_dist_ { 0 }; // Manhattan distance of two vectors
+    result_type     result_ { 0 };    // Dot product of two vectors
+    mag_t           mag1_ { };        // Magnitude of first vector
+    mag_t           mag2_ { };        // Magnitude of second vector
+    result_type     euc_dist_ { 0 };  // Euclidean distance of two vectors
+    result_type     man_dist_ { 0 };  // Manhattan distance of two vectors
+    comp_result_t   comp_result_ { }; // Component-wise dot product
 };
 
 // ----------------------------------------------------------------------------

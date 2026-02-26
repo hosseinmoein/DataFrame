@@ -4025,6 +4025,38 @@ static void test_view_visitors()  {
     assert(fabs(dp_visitor.get_euclidean_dist() - 1.90526) < 0.00001);
     assert(fabs(dp_visitor.get_manhattan_dist() - 3.3) < 0.00001);
 
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+
+    StlVecType<ary_col_t>   md_ary_col1 =
+        { {1, 2, 3}, {1, 1, 1}, {2, 1, 1}, {-1, 0, -2}, {2, 1, 1},
+          {3, 1, 0}, {-2, -1, -2}, {1, -1, 2}, {2, 0, 2}, {1, 3, 2} };
+    StlVecType<ary_col_t>   md_ary_col2 =
+        { {-1, -2, -3}, {-1, -1, -1}, {-2, -1, -1}, {1, 0, 2}, {-2, -1, -1},
+          {-3, -1, 0}, {2, 1, 2}, {-1, 1, -2}, {-2, 0, -2}, {-1, -3, -2} };
+
+    df.load_column<ary_col_t>("MD_col 1", std::move(md_ary_col1));
+    df.load_column<ary_col_t>("MD_col 2", std::move(md_ary_col2));
+
+    DotProdVisitor<ary_col_t>   md_dp;
+
+    df.single_act_visit<ary_col_t, ary_col_t>("MD_col 1", "MD_col 2", md_dp);
+    assert(md_dp.get_result() == -81.0);
+    assert(md_dp.get_comp_dp().size() == dim);
+    assert(md_dp.get_comp_dp()[0] == -30.0);
+    assert(md_dp.get_comp_dp()[2] == -32.0);
+    assert(md_dp.get_magnitude1().size() == df.get_index().size());
+    assert(md_dp.get_magnitude2().size() == df.get_index().size());
+    assert(std::fabs(md_dp.get_magnitude1()[0] - 3.74166) < 0.00001);
+    assert(std::fabs(md_dp.get_magnitude2()[0] - 3.74166) < 0.00001);
+    assert(std::fabs(md_dp.get_magnitude1()[5] - 3.16228) < 0.00001);
+    assert(std::fabs(md_dp.get_magnitude2()[5] - 3.16228) < 0.00001);
+    assert(std::fabs(md_dp.get_magnitude1()[9] - 3.74166) < 0.00001);
+    assert(std::fabs(md_dp.get_magnitude2()[9] - 3.74166) < 0.00001);
+
     SimpleRollAdopter<MeanVisitor<double>, double, unsigned long, 128>
         mean_roller1(MeanVisitor<double>(), 3);
     const auto  &res_sra =

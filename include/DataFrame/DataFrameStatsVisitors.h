@@ -3591,8 +3591,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -3625,8 +3625,8 @@ public:
         result_.swap(result);
     }
 
-    inline void pre ()  { result_.clear(); cat_map_.clear(); }
-    inline void post ()  {  }
+    inline void pre()  { result_.clear(); cat_map_.clear(); }
+    inline void post()  {  }
     DEFINE_RESULT
 
     explicit
@@ -3660,8 +3660,8 @@ struct  FactorizeVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &, const K &,
+               const H &column_begin, const H &column_end)  {
 
         const size_type col_s = std::distance(column_begin, column_end);
         result_type     result;
@@ -3705,15 +3705,27 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AutoCorrVisitor  {
 
     template<typename U>
     using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
 
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
 public:
 
-    DEFINE_VISIT_BASIC_TYPES_3
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    vec_type<data_t>,
+                                    vec_type<std::vector<data_t>>>;
 
     template <typename K, typename H>
     inline void
@@ -3727,13 +3739,28 @@ public:
             throw DataFrameError("AutoCorrVisitor: Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        vec_type<value_type>    tmp_result(max_lag_);
-        size_type               lag = 1;
+        if constexpr (! std::is_arithmetic_v<value_type>)  {
+#ifdef HMDF_SANITY_EXCEPTIONS
+            const size_type dim { column_begin->size() };
 
-        tmp_result[0] = 1.0;
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "AutoCorrVisitor: Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+        }
+
+        result_type tmp_result(max_lag_);
+        size_type   lag { 1 };
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            tmp_result[0] = 1.0;
+        else
+            lag = 0;
+
         if ((col_s >= (ThreadPool::MUL_THR_THHOLD / 3)) &&
             (ThreadGranularity::get_thread_level() > 2))  {
-            vec_type<std::future<CorrResult>>   futures;
+            vec_type<std::future<corr_res_t>>   futures;
 
             futures.reserve((max_lag_) - lag);
             while (lag < max_lag_)  {
@@ -3760,11 +3787,10 @@ public:
                     get_auto_corr_(idx_begin, idx_end,
                                    col_s, lag, column_begin);
 
-                tmp_result[result.first] = result.second;
+                tmp_result[result.first] = std::move(result.second);
                 lag += 1;
             }
         }
-
         result_.swap(tmp_result);
     }
 
@@ -3779,10 +3805,13 @@ private:
     result_type     result_ {  };
     const size_type max_lag_;
 
-    using CorrResult = std::pair<size_type, value_type>;
+    using corr_res_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    std::pair<size_type, data_t>,
+                                    std::pair<size_type, std::vector<data_t>>>;
 
     template<typename K, typename H>
-    inline static CorrResult
+    inline static corr_res_t
     get_auto_corr_(const K &idx_begin, const K &idx_end,
                    size_type col_s, size_type lag, const H &column_begin)  {
 
@@ -3794,7 +3823,7 @@ private:
               column_begin + lag, column_begin + col_s);
         corr.post();
 
-        return (CorrResult(lag, corr.get_result()));
+        return (corr_res_t(lag, std::move(corr.get_result())));
     }
 };
 

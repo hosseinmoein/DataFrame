@@ -2305,6 +2305,48 @@ static void test_auto_correlation()  {
     assert(fabs(result3[1] - 0.903754) < 0.00001);
     assert(fabs(result3[6] - -0.263385) < 0.00001);
     assert(fabs(result3[10] - -0.712274) < 0.00001);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = -5.0;
+    p.max_value = 5.0;
+
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+
+    // Generate and load 3 random columns
+    //
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
+
+    StlVecType<ary_col_t>   array_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        for (std::size_t d { 0 }; d < dim; ++d)
+            array_col[i][d] = rand_vec[j++];
+    }
+    df.load_column<ary_col_t>("md_array_col", std::move(array_col));
+
+    AutoCorrVisitor<ary_col_t>  md_auto_corr { 15 };
+
+    df.single_act_visit<ary_col_t>("md_array_col", md_auto_corr);
+
+    const auto  &md_result = md_auto_corr.get_result();
+
+    assert(md_result.size() == 15);
+    for (const auto &vec : md_result)
+        assert(vec.size() == dim);
+    assert(std::fabs(md_result[0][0] - 1.0) < 0.000001);
+    assert(std::fabs(md_result[0][1] - 1.0) < 0.000001);
+    assert(std::fabs(md_result[0][2] - 1.0) < 0.000001);
+    assert(std::fabs(md_result[7][0] - -0.256401) < 0.000001);
+    assert(std::fabs(md_result[7][2] - -0.071576) < 0.000001);
+    assert(std::fabs(md_result[14][1] - -0.348612) < 0.000001);
+    assert(std::fabs(md_result[14][2] - 0.050936) < 0.000001);
 }
 
 // -----------------------------------------------------------------------------

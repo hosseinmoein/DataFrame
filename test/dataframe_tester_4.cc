@@ -2159,6 +2159,59 @@ static void test_PartialAutoCorrVisitor()  {
     assert(std::fabs(pacf.get_result()[30] - 0.983226) < 0.000001);
     assert(std::fabs(pacf.get_result()[48] - 0.98751) < 0.000001);
     assert(std::fabs(pacf.get_result()[49] - 0.987886) < 0.000001);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = -3.0;
+    p.max_value = 3.0;
+
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+
+    // Generate and load 3 random columns
+    //
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
+
+    std::vector<ary_col_t>   array_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        for (std::size_t d { 0 }; d < dim; ++d)
+            array_col[i][d] = rand_vec[j++];
+    }
+    df.load_column<ary_col_t>("md_array_col", std::move(array_col));
+
+    PartialAutoCorrVisitor<ary_col_t, std::string>  md_pacf { 50 };
+
+    df.single_act_visit<ary_col_t>("md_array_col", md_pacf);
+
+    const auto  &md_result = md_pacf.get_result();
+
+    assert(md_result.size() == 50);
+    for (const auto &mtx : md_result)  {
+        assert(mtx.rows() == dim);
+        assert(mtx.rows() == dim);
+    }
+    // First one must be the identity matrix
+    //
+    for (long r = 0; r < md_result[0].rows(); ++r)  {
+        for (long c = 0; c < md_result[0].cols(); ++c)  {
+            if (r == c)
+                assert(md_result[0](r, c) == 1.0);
+            else
+                assert(md_result[0](r, c) == 0.0);
+        }
+    }
+    assert(std::fabs(md_result[1](0, 0) - 0.0121899) < 0.000001);
+    assert(std::fabs(md_result[1](1, 2) - 0.0032037) < 0.000001);
+    assert(std::fabs(md_result[31](1, 1) - -0.0123611) < 0.000001);
+    assert(std::fabs(md_result[31](2, 0) - -0.0122399) < 0.000001);
+    assert(std::fabs(md_result[49](1, 0) - 0.00041) < 0.00001);
+    assert(std::fabs(md_result[49](2, 2) - -0.00258) < 0.00001);
 }
 
 // ----------------------------------------------------------------------------

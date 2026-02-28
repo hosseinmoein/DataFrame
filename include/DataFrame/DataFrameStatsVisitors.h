@@ -3832,17 +3832,33 @@ using acf_v = AutoCorrVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  PartialAutoCorrVisitor  {
+
+    template<typename U>
+    using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
+
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+    using matrix_t = Matrix<data_t, matrix_orient::row_major>;
 
 public:
 
-    DEFINE_VISIT_BASIC_TYPES_3
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    vec_type<data_t>,
+                                    vec_type<matrix_t>>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -3854,37 +3870,104 @@ public:
             throw DataFrameError("PartialAutoCorrVisitor: Maximum lag is 375");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        using matrix_t = Matrix<T, matrix_orient::row_major>;
+        if constexpr (! std::is_arithmetic_v<value_type>)  {
+            const size_type dim { column_begin->size() };
 
-        result_type result (max_lag_, 0);
+#ifdef HMDF_SANITY_EXCEPTIONS
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError("PartialAutoCorrVisitor: "
+                                         "Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+        }
+
+        result_type result (max_lag_);
         matrix_t    x;
         matrix_t    y;
 
-        result[0] = 1;
-        for (size_type k = 1; k < max_lag_; ++k)  {
-            x.clear();
-            x.resize(col_s - k, k);
-            y.clear();
-            y.resize(col_s - k, 1);
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            result[0] = 1;
+        }
+        else  {
+            const size_type dim { column_begin->size() };
 
-            for (size_type i = 0; i < col_s - k; ++i)  {
-                y(i, 0) = *(column_begin + (i + k));
-                for (size_type j = 0; j < k; ++j)  {
-                    x(i, j) = *(column_begin + (i + j));
+            matrix_t    identity { long(dim), long(dim), 0 };
+
+            for (long i { 0 }; i < identity.rows(); ++i)
+                identity(i, i) = 1;
+            result[0] = std::move(identity);
+        }
+        for (size_type k { 1 }; k < max_lag_; ++k)  {
+            x.clear();
+            y.clear();
+
+            const size_type rows { col_s - k };
+
+            if constexpr (std::is_arithmetic_v<value_type>)  {
+                x.resize(rows, k);
+                y.resize(rows, 1);
+                for (size_type i { 0 }; i < rows; ++i)  {
+                    y(i, 0) = *(column_begin + (i + k));
+                    for (size_type j = 0; j < k; ++j)  {
+                        x(i, j) = *(column_begin + (i + j));
+                    }
+                }
+            }
+            else  {
+                const size_type dim { column_begin->size() };
+
+                x.resize(col_s - k, k * dim, 0);
+                y.resize(col_s - k, dim, 0);
+
+                // y row i  : the dim components of observation (i + k)
+                //
+                for (size_type i { 0 }; i < rows; ++i)  {
+                    const auto  &obs_y { *(column_begin + (i + k)) };
+
+                    for (size_type d { 0 }; d < dim; ++d)
+                        y(i, d) = obs_y[d];
+
+                    // x row i  : lagged observations
+                    // block j  : columns [j * dim ... j * dim + dim - 1]
+                    //
+                    for (size_type j { 0 }; j < k; ++j)  {
+                        const auto  &obs_x { *(column_begin + (i + j)) };
+
+                        for (size_type d { 0 }; d < dim; ++d)
+                            x(i, j * dim + d) = obs_x[d];
+                    }
                 }
             }
 
             const auto  x_trans = x.transpose();
             const auto  phi = (x_trans * x).inverse() * x_trans * y;
 
-            result[k] = phi(k - 1, 0);
+            if constexpr (std::is_arithmetic_v<value_type>)  {
+                result[k] = phi(k - 1, 0);
+            }
+            else  {
+                const size_type dim { column_begin->size() };
+
+                // The partial autocorrelation matrix at lag k is the last
+                // dimXdim block of phi: rows [(k - 1) * dim ... k * dim - 1],
+                // all dim columns
+                //
+                matrix_t    res { long(dim), long(dim), 0 };
+
+                for (size_type r { 0 }; r < dim; ++r)
+                    for (size_type c { 0 }; c < dim; ++c)
+                        res(r, c) = phi((k - 1) * dim + r, c);
+                result[k] = std::move(res);
+            }
         }
 
         result_.swap(result);
     }
 
     DEFINE_PRE_POST
-    DEFINE_RESULT
+
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
 
     explicit
     PartialAutoCorrVisitor(size_type max_lag) : max_lag_(max_lag)  {   }

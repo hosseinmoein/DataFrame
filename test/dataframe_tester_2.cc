@@ -47,7 +47,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // -----------------------------------------------------------------------------
 
-/*
 static void test_get_reindexed()  {
 
     std::cout << "\nTesting get_reindexed( ) ..." << std::endl;
@@ -4184,7 +4183,6 @@ static void test_HeikinAshiCndlVisitor()  {
         ::exit(-1);
     }
 }
-*/
 
 // -----------------------------------------------------------------------------
 
@@ -4339,7 +4337,6 @@ static void test_FastFourierTransVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-/*
 static void test_CenterOfGravityVisitor()  {
 
     std::cout << "\nTesting CenterOfGravityVisitor{  } ..." << std::endl;
@@ -5502,7 +5499,6 @@ static void test_get_view_by_idx_values()  {
     assert(dfv2.get_column<double>("col_1")[0] == 101.0);
     assert(df.get_column<double>("col_1")[0] == 101.0);
 }
-*/
 
 // -----------------------------------------------------------------------------
 
@@ -5510,7 +5506,6 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_get_reindexed();
     test_get_reindexed_view();
     test_retype_column();
@@ -5582,9 +5577,7 @@ int main(int, char *[]) {
     test_AvgDirMovIdxVisitor();
     test_HoltWinterChannelVisitor();
     test_HeikinAshiCndlVisitor();
-*/
     test_FastFourierTransVisitor();
-/*
     test_CenterOfGravityVisitor();
     test_ArnaudLegouxMAVisitor();
     test_RateOfChangeVisitor();
@@ -5605,7 +5598,6 @@ int main(int, char *[]) {
     test_get_view_by_rand();
     test_get_view_by_loc_location();
     test_get_view_by_idx_values();
-*/
 
     return (0);
 }

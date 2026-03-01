@@ -1464,7 +1464,7 @@ public:
                  column_begin, column_end, column_begin, column_end);
         }
         else  {
-            const long  col_s { long(std::distance(column_begin, column_end)) };
+            const long col_s { long(std::distance(column_begin, column_end)) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
             if (col_s < 3)
@@ -1486,7 +1486,8 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
                 if (long(point.size()) != dim)
-                    throw DataFrameError("VarVisitor: Inconsistent dimensions");
+                    throw DataFrameError("VarVisitor: "
+                                         "Inconsistent dimensions");
 #endif // HMDF_SANITY_EXCEPTIONS
 
                 count_ += 1;;
@@ -3983,10 +3984,27 @@ using pacf_v = PartialAutoCorrVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  FixedAutoCorrVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+    template<typename U>
+    using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
+
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    vec_type<data_t>,
+                                    vec_type<std::vector<data_t>>>;
 
     template <typename K, typename H>
     inline void
@@ -4001,13 +4019,24 @@ struct  FixedAutoCorrVisitor  {
                 "FixedAutoCorrVisitor: column size must be > lag");
 #endif // HMDF_SANITY_EXCEPTIONS
 
+        if constexpr (! std::is_arithmetic_v<value_type>)  {
+#ifdef HMDF_SANITY_EXCEPTIONS
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "AutoCorrVisitor: Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+        }
+
         CorrVisitor<value_type, index_type> corr {  };
         result_type                         result;
 
         if (policy_ == roll_policy::blocks)  {
             const size_type calc_size { col_s / lag_ };
 
-            result.resize(calc_size);
+            result.reserve(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
                 auto    far_end = i * lag_ + 2 * lag_;
                 auto    near_end = i * lag_ + lag_;
@@ -4020,21 +4049,25 @@ struct  FixedAutoCorrVisitor  {
                 if ((near_end - begin) > (far_end - near_end))
                     begin += ((near_end - begin) - (far_end - near_end));
 
-                corr.pre();
-                corr (idx_begin, idx_end,  // This doesn't matter
-                      column_begin + begin,
-                      column_begin + near_end,
-                      column_begin + near_end,
-                      column_begin + far_end);
-                corr.post();
+                try  {  // The last block might be too small to calculate var
+                    corr.pre();
+                    corr (idx_begin, idx_end,  // This doesn't matter
+                          column_begin + begin,
+                          column_begin + near_end,
+                          column_begin + near_end,
+                          column_begin + far_end);
+                    corr.post();
+                }
+                catch (const DataFrameError &)  { break; }
 
-                result[i] = corr.get_result();
+
+                result.push_back(std::move(corr.get_result()));
             }
         }
         else  {  // roll_policy::continuous
             const size_type calc_size { col_s - lag_ };
 
-            result.resize(calc_size);
+            result.reserve(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
                 auto    far_end = i + 2 * lag_;
                 auto    near_end = i + lag_;
@@ -4046,15 +4079,18 @@ struct  FixedAutoCorrVisitor  {
                     near_end -= near_end % col_s;
                 if ((near_end - begin) > (far_end - near_end))
                     begin += ((near_end - begin) - (far_end - near_end));
-                corr.pre();
-                corr (idx_begin, idx_end,  // This doesn't matter
-                      column_begin + begin,
-                      column_begin + near_end,
-                      column_begin + near_end,
-                      column_begin + far_end);
-                corr.post();
+                try  {  // The last block might be too small to calculate var
+                    corr.pre();
+                    corr (idx_begin, idx_end,  // This doesn't matter
+                          column_begin + begin,
+                          column_begin + near_end,
+                          column_begin + near_end,
+                          column_begin + far_end);
+                    corr.post();
+                }
+                catch (const DataFrameError &)  { break; }
 
-                result[i] = corr.get_result();
+                result.push_back(std::move(corr.get_result()));
             }
 
         }

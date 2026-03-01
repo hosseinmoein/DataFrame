@@ -707,7 +707,7 @@ public:
     }
 
     inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
-	
+
     inline void pre ()  {
 
         clusters_.clear();
@@ -781,7 +781,7 @@ private:
                         return (std::sqrt(sum));
                     });
     }
-	
+
     inline static double uniform_kernel_(double d)  {
 
         return (d <= 1.0 ? 1.0 : 0.0);
@@ -966,7 +966,7 @@ public:
     }
 
     inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
-	
+
     inline void pre ()  { clusters_.clear(); clusters_idxs_.clear(); }
     inline void post ()  {  }
 
@@ -996,36 +996,57 @@ private:
 
 // ------------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  FastFourierTransVisitor  {
-
-public:
-
-    DEFINE_VISIT_BASIC_TYPES
-
-    template<typename U>
-    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
-    using result_type =
-        typename std::conditional<is_complex<T>::value,
-                                  vec_t<T>,
-                                  vec_t<std::complex<T>>>::type;
-    using real_t = typename result_type::value_type::value_type;
 
 private:
 
-    using cplx_t = typename result_type::value_type;
+    static constexpr bool   IS_SCALAR {
+        std::is_arithmetic_v<T> || is_complex<T>::value
+    };
 
-    static inline result_type
-    convolve_(result_type xvec, result_type yvec, long thread_level)  {
+    using data_t = typename std::conditional_t<IS_SCALAR,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+    template<typename U>
+    using matrix_t = Matrix<U, matrix_orient::row_major>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using channel_result_t =
+        typename std::conditional_t<is_complex<data_t>::value,
+                                    vec_t<data_t>,
+                                    vec_t<std::complex<data_t>>>;
+
+    using cplx_t = typename channel_result_t::value_type;
+    using real_t = typename cplx_t::value_type;
+
+    using result_type = typename std::conditional_t<IS_SCALAR,
+                                                    channel_result_t,
+                                                    matrix_t<cplx_t>>;
+    using magnitude_type = typename std::conditional_t<IS_SCALAR,
+                                                       vec_t<real_t>,
+                                                       matrix_t<real_t>>;
+    using angle_type = magnitude_type;
+
+private:
+
+    static inline channel_result_t
+    convolve_(channel_result_t xvec, channel_result_t yvec, long thread_level) {
 
         transform_(xvec, false, thread_level);
         transform_(yvec, false, thread_level);
         xvec *= yvec;
         transform_(xvec, true, thread_level);
 
-        using data_t = typename result_type::value_type;
-
-        xvec /= data_t(value_type(xvec.size()));
+        xvec /= cplx_t(data_t(xvec.size()));
         return (xvec);
     }
 
@@ -1034,28 +1055,28 @@ private:
 
         size_type   result { 0 };
 
-        for (size_type i = 0; i < width; i++, val >>= 1) [[likely]]
+        for (size_type i { 0 }; i < width; i++, val >>= 1) [[likely]]
             result = (result << 1) | (val & 1U);
         return (result);
     }
 
     static inline void
-    fft_radix2_(result_type &column, bool reverse, long thread_level)  {
+    fft_radix2_(channel_result_t &column, bool reverse, long thread_level)  {
 
         const size_type col_s { column.size() };
         size_type       levels { 0 };
 
         // Compute levels = floor(log2(col_s))
         //
-        for (size_type i = col_s; i > 1; i >>= 1) [[likely]]
+        for (size_type i { col_s }; i > 1; i >>= 1) [[likely]]
             levels += 1;
 
         // Trigonometric table
         //
-        const size_type half_col_s { col_s / 2 };
-        const real_t    two_pi
+        const size_type     half_col_s { col_s / 2 };
+        const real_t        two_pi
             { (reverse ? real_t(2) : -real_t(2)) * real_t(M_PI) };
-        result_type     exp_table (half_col_s);
+        channel_result_t    exp_table (half_col_s);
 
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
@@ -1064,7 +1085,7 @@ private:
                     half_col_s,
                     [&exp_table, two_pi, col_s]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]
+                        for (size_type i { begin }; i < end; ++i) [[likely]]
                             exp_table[i] =
                                 std::polar(real_t(1),
                                            two_pi * real_t(i) / real_t(col_s));
@@ -1073,14 +1094,14 @@ private:
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            for (size_type i = 0; i < half_col_s; i++) [[likely]]
+            for (size_type i { 0 }; i < half_col_s; i++) [[likely]]
                 exp_table[i] =
                     std::polar(real_t(1), two_pi * real_t(i) / real_t(col_s));
         }
 
         // Bit-reversed addressing permutation
         //
-        for (size_type i = 0; i < col_s; i++) [[likely]]  {
+        for (size_type i { 0 }; i < col_s; i++) [[likely]]  {
             const size_type rb { reverse_bits_(i, levels) };
 
             if (rb > i)  std::swap(column[i], column[rb]);
@@ -1092,8 +1113,8 @@ private:
             const size_type half_size { s / 2 };
             const size_type table_step { col_s / s };
 
-            for (size_type i = 0; i < col_s; i += s) [[likely]]  {
-                for (size_type j = i, k = 0; j < i + half_size;
+            for (size_type i { 0 }; i < col_s; i += s) [[likely]]  {
+                for (size_type j { i }, k = 0; j < i + half_size;
                      j++, k += table_step) [[likely]]  {
                     const cplx_t    temp
                         { column[j + half_size] * exp_table[k] };
@@ -1106,15 +1127,15 @@ private:
     }
 
     static inline void
-    fft_bluestein_(result_type &column, bool reverse, long thread_level)  {
+    fft_bluestein_(channel_result_t &column, bool reverse, long thread_level)  {
 
         const size_type col_s { column.size() };
 
         // Trigonometric table
         //
-        result_type     exp_table (col_s);
-        const size_type col_s_2 { col_s * 2 };
-        const real_t    pi { reverse ? real_t(M_PI) : -real_t(M_PI) };
+        channel_result_t    exp_table (col_s);
+        const size_type     col_s_2 { col_s * 2 };
+        const real_t        pi { reverse ? real_t(M_PI) : -real_t(M_PI) };
 
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
@@ -1123,7 +1144,7 @@ private:
                     col_s,
                     [&exp_table, pi, col_s, col_s_2]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                        for (size_type i { begin }; i < end; ++i) [[likely]]  {
                             const real_t    sq = real_t((i * i) % col_s_2);
 
                             exp_table[i] =
@@ -1134,7 +1155,7 @@ private:
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            for (size_type i = 0; i < col_s; i++) [[likely]]  {
+            for (size_type i { 0 }; i < col_s; i++) [[likely]]  {
                 const real_t    sq = real_t((i * i) % col_s_2);
 
                 exp_table[i] = std::polar(real_t(1), pi * sq / real_t(col_s));
@@ -1149,7 +1170,7 @@ private:
 
         // Temporary vectors and preprocessing
         //
-        result_type xvec (m, cplx_t(0, 0));
+        channel_result_t    xvec (m, cplx_t(0, 0));
 
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
@@ -1158,7 +1179,7 @@ private:
                     col_s,
                     [&exp_table, &xvec, &column]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]
+                        for (size_type i { begin }; i < end; ++i) [[likely]]
                             xvec[i] = column[i] * exp_table[i];
                     });
 
@@ -1169,7 +1190,7 @@ private:
                 xvec[i] = column[i] * exp_table[i];
         }
 
-        result_type yvec(m, cplx_t(0, 0));
+        channel_result_t    yvec(m, cplx_t(0, 0));
 
         yvec[0] = exp_table[0];
         if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
@@ -1179,22 +1200,22 @@ private:
                     col_s,
                     [&exp_table, &yvec, m]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]
+                        for (size_type i { begin }; i < end; ++i) [[likely]]
                             yvec[i] = yvec[m - i] = std::conj(exp_table[i]);
                     });
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            for (size_type i = 1; i < col_s; i++) [[likely]]
+            for (size_type i { 1 }; i < col_s; i++) [[likely]]
                 yvec[i] = yvec[m - i] = std::conj(exp_table[i]);
         }
 
         // Convolution
         //
-        const result_type   conv (convolve_(std::move(xvec),
-                                            std::move(yvec),
-                                            thread_level));
+        const channel_result_t  conv (convolve_(std::move(xvec),
+                                      std::move(yvec),
+                                      thread_level));
 
         // Postprocessing
         //
@@ -1205,7 +1226,7 @@ private:
                     exp_table.size(),
                     [&exp_table, &conv, &column]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]
+                        for (size_type i { begin }; i < end; ++i) [[likely]]
                             column[i] = exp_table[i] * conv[i];
                     });
 
@@ -1219,7 +1240,7 @@ private:
     }
 
     static inline void
-    transform_(result_type &column, bool reverse, long thread_level)  {
+    transform_(channel_result_t &column, bool reverse, long thread_level)  {
 
         const size_type col_s { column.size() };
 
@@ -1232,7 +1253,7 @@ private:
     }
 
     static inline void
-    itransform_(result_type &column, long thread_level)  {
+    itransform_(channel_result_t &column, long thread_level)  {
 
         const size_type col_s { column.size() };
 
@@ -1245,7 +1266,7 @@ private:
                     col_s,
                     [&column]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                        for (size_type i { begin }; i < end; ++i) [[likely]]  {
                             auto    &val = column[i];
 
                             val = std::conj(val);
@@ -1279,7 +1300,7 @@ private:
                     col_s,
                     [&column]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                        for (size_type i { begin }; i < end; ++i) [[likely]]  {
                             auto    &val = column[i];
 
                             val = std::conj(val);
@@ -1291,79 +1312,149 @@ private:
         else  {
             std::transform(column.begin(), column.end(),
                            column.begin(),
-                           [] (const cplx_t &v) -> cplx_t  {
+                           [](const cplx_t &v) -> cplx_t  {
                                return (std::conj(v));
                            });
         }
 
-        using data_t = typename result_type::value_type;
+        column /= cplx_t(data_t(col_s));
+    }
 
-        column /= data_t(value_type(col_s));
+    template<typename SCALAR, typename H>
+    inline void
+    fill_channel_(channel_result_t &channel,
+                  const H &col_begin,
+                  size_type col_s) const  {
+
+        if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    size_type(0),
+                    col_s,
+                    [&col_begin, &channel]
+                    (auto begin, auto end) -> void  {
+                        for (size_type i { begin }; i < end; ++i) [[likely]]  {
+                            const SCALAR    val =
+                                static_cast<SCALAR>(*(col_begin + i));
+
+                            if constexpr (is_complex<SCALAR>::value)
+                                channel[i] = val;
+                            else
+                                channel[i] = cplx_t(val, real_t(0));
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            if constexpr (is_complex<SCALAR>::value)  {
+                std::transform(col_begin, col_begin + col_s,
+                               channel.begin(),
+                               [](SCALAR v) -> cplx_t  { return (v); });
+            }
+            else  {
+                std::transform(col_begin, col_begin + col_s,
+                               channel.begin(),
+                               [](SCALAR v) -> cplx_t  {
+                                   return (cplx_t(v, real_t(0)));
+                               });
+            }
+        }
     }
 
 public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
-        result_type result (col_s);
+        if constexpr (IS_SCALAR)  {
+            result_type result (col_s);
 
-        if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            std::vector<std::future<void>>  futures;
-
-            if constexpr (is_complex<T>::value)  {
-                futures =
-                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0),
-                        col_s,
-                        [&column_begin, &result]
-                        (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i) [[likely]]
-                                result[i]= *(column_begin + i);
-                        });
-            }
-            else  {
-                futures =
-                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0),
-                        col_s,
-                        [&column_begin, &result]
-                        (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
-                                if constexpr (is_complex<T>::value)
-                                    result[i] = *(column_begin + i);
-                                else
-                                    result[i] =
-                                        std::complex<T>(*(column_begin + i), 0);
-                            }
-                        });
-            }
-            for (auto &fut : futures)  fut.get();
+            fill_channel_<T>(result, column_begin, col_s);
+            if (inverse_)
+                itransform_(result, thread_level_);
+            else
+                transform_(result, false, thread_level_);
+            result_.swap(result);
         }
         else  {
-            if constexpr (is_complex<T>::value)  {
-                std::transform(column_begin, column_end,
-                               result.begin(),
-                               [] (T v) -> cplx_t  { return (v); });
-            }
-            else  {
-                std::transform(column_begin, column_end,
-                               result.begin(),
-                               [] (T v) -> cplx_t  {
-                                   return (std::complex<T>(v, 0));
-                               });
+            const size_type dim { column_begin->size() };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+            for (size_type i { 0 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "FastFourierTransVisitor: Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+            result_.resize(col_s, dim);
+            for (size_type d { 0 }; d < dim; ++d)  {
+                channel_result_t    channel (col_s);
+
+                // Populate channel from the d-th component.
+                //
+                if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+                    auto    futures =
+                        ThreadGranularity::thr_pool_.parallel_loop<T>(
+                            size_type(0),
+                            col_s,
+                            [&column_begin, &channel, d]
+                            (auto begin, auto end) -> void  {
+                                for (size_type i { begin }; i < end; ++i)  {
+                                    const auto  &elem = *(column_begin + i);
+
+                                    if constexpr (is_complex<T>::value)
+                                        channel[i] = elem[d];
+                                    else
+                                        channel[i] = cplx_t(elem[d], real_t(0));
+                                }
+                            });
+
+                    for (auto &fut : futures)  fut.get();
+                }
+                else  {
+                    for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                        const auto  &elem = *(column_begin + i);
+
+                        if constexpr (is_complex<T>::value)
+                            channel[i] = elem[d];
+                        else
+                            channel[i] = cplx_t(elem[d], real_t(0));
+                    }
+                }
+
+                // Transform the channel.
+                //
+                if (inverse_)
+                    itransform_(channel, thread_level_);
+                else
+                    transform_(channel, false, thread_level_);
+
+                // Scatter back into result_.
+                //
+                if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+                    auto    futures =
+                        ThreadGranularity::thr_pool_.parallel_loop<T>(
+                            size_type(0),
+                            col_s,
+                            [&channel, this, d]
+                            (auto begin, auto end) -> void  {
+                                for (size_type i { begin }; i < end; ++i)
+                                    this->result_(i, d) = channel[i];
+                            });
+
+                    for (auto &fut : futures)  fut.get();
+                }
+                else  {
+                    for (size_type i { 0 }; i < col_s; ++i) [[likely]]
+                        result_(i, d) = channel[i];
+                }
             }
         }
-
-        if (inverse_)
-            itransform_(result, thread_level_);
-        else
-            transform_(result, false, thread_level_);
-        result_.swap(result);
     }
 
     inline void pre ()  {
@@ -1374,76 +1465,133 @@ public:
     }
     inline void post ()  {  }
 
-    DEFINE_RESULT
-    inline const vec_t<real_t> &
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    inline const magnitude_type &
     get_magnitude() const  {
 
         return (const_cast<FastFourierTransVisitor<T, I> *>
                     (this)->get_magnitude());
     }
-    inline vec_t<real_t> &
+    inline magnitude_type &
     get_magnitude()  {
 
         if (magnitude_.empty())  {
-            const size_type col_s = result_.size();
+            if constexpr (IS_SCALAR)  {
+                const size_type col_s { result_.size() };
 
-            if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
                 magnitude_.resize(col_s);
+                if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+                    auto    futures =
+                        ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                            size_type(0),
+                            col_s,
+                            [this]
+                            (auto begin, auto end) -> void  {
+                                for (size_type i { begin }; i < end; ++i)
+                                    this->magnitude_[i] =
+                                        std::sqrt(std::norm(this->result_[i]));
+                            });
 
-                auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0),
-                        col_s,
-                        [this]
-                        (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)
-                                this->magnitude_[i] =
-                                    std::sqrt(std::norm(this->result_[i]));
-                        });
-
-                for (auto &fut : futures)  fut.get();
+                    for (auto &fut : futures)  fut.get();
+                }
+                else  {
+                    for (size_type i { 0 }; const auto &citer : result_)
+                        magnitude_[i++] = std::sqrt(std::norm(citer));
+                }
             }
             else  {
-                magnitude_.reserve(col_s);
-                for (const auto &citer : result_) [[likely]]
-                    magnitude_.push_back(std::sqrt(std::norm(citer)));
+                const size_type col_s { result_.rows() };
+                const size_type dim { result_.cols() };
+
+                magnitude_.resize(col_s, dim);
+                if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+                    auto    futures =
+                        ThreadGranularity::thr_pool_.parallel_loop<T>(
+                            size_type(0),
+                            col_s,
+                            [this, dim]
+                            (auto begin, auto end) -> void  {
+                                for (size_type i { begin }; i < end; ++i)
+                                    for (size_type d { 0 }; d < dim; ++d)
+                                        this->magnitude_(i, d) =
+                                            std::sqrt(
+                                                std::norm(this->result_(i, d)));
+                            });
+
+                    for (auto &fut : futures)  fut.get();
+                }
+                else  {
+                    for (size_type i { 0 }; i < col_s; ++i) [[likely]]
+                        for (size_type d { 0 }; d < dim; ++d)
+                            magnitude_(i, d) =
+                                std::sqrt(std::norm(result_(i, d)));
+                }
             }
         }
+
         return (magnitude_);
     }
-    inline const vec_t<real_t> &
+    inline const angle_type &
     get_angle() const  {
 
-        return (const_cast<FastFourierTransVisitor<T, I> *>
-                    (this)->get_angle());
+        return (const_cast<FastFourierTransVisitor<T, I> *>(this)->get_angle());
     }
-    inline vec_t<real_t> &
+    inline angle_type &
     get_angle()  {
 
         if (angle_.empty())  {
-            const size_type col_s = result_.size();
+            if constexpr (IS_SCALAR)  {
+                const size_type col_s { result_.size() };
 
-            if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
                 angle_.resize(col_s);
+                if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+                    auto    futures =
+                        ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                            size_type(0),
+                            col_s,
+                            [this]
+                            (auto begin, auto end) -> void  {
+                                for (size_type i { begin }; i < end; ++i)
+                                    this->angle_[i] = std::arg(this->result_[i]);
+                            });
 
-                auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0),
-                        col_s,
-                        [this]
-                        (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)
-                                this->angle_[i] = std::arg(this->result_[i]);
-                        });
-
-                for (auto &fut : futures)  fut.get();
+                    for (auto &fut : futures)  fut.get();
+                }
+                else  {
+                    for (size_type i { 0 }; const auto &citer : result_)
+                        angle_[i++] = std::arg(citer);
+                }
             }
             else  {
-                angle_.reserve(col_s);
-                for (const auto &citer : result_) [[likely]]
-                    angle_.push_back(std::arg(citer));
+                const size_type col_s { result_.rows() };
+                const size_type dim { result_.cols() };
+
+                angle_.resize(col_s, dim);
+                if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+                    auto    futures =
+                        ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                            size_type(0),
+                            col_s,
+                            [this, dim]
+                            (auto begin, auto end) -> void  {
+                                for (size_type i { begin }; i < end; ++i)
+                                    for (size_type d { 0 }; d < dim; ++d)
+                                        this->angle_(i, d) =
+                                            std::arg(this->result_(i, d));
+                            });
+
+                    for (auto &fut : futures)  fut.get();
+                }
+                else  {
+                    for (size_type i { 0 }; i < col_s; ++i) [[likely]]
+                        for (size_type d { 0 }; d < dim; ++d)
+                            angle_(i, d) = std::arg(result_(i, d));
+                }
             }
         }
+
         return (angle_);
     }
 
@@ -1457,8 +1605,8 @@ private:
     const bool      inverse_;
     const long      thread_level_;
     result_type     result_ {  };
-    vec_t<real_t>   magnitude_ {  };
-    vec_t<real_t>   angle_ {  };
+    magnitude_type  magnitude_ {  };
+    angle_type      angle_ {  };
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
@@ -2921,7 +3069,7 @@ public:
     }
 
     inline void set_sim_func(similarity_func &&f)  { sfunc_ = f; }
-	
+
     inline void pre()  {
 
         for (auto &iter : clusters_) iter.clear();

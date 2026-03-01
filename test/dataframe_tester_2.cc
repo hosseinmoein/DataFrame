@@ -4270,6 +4270,69 @@ static void test_FastFourierTransVisitor()  {
         std::cout << ex.what() << std::endl;
         ::exit(-1);
     }
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3};
+
+    using col_t = std::array<double, dim>;
+
+    auto    naive_dft =
+        [](const std::vector<double> &input)
+            -> std::vector<std::complex<double>>  {
+            const std::size_t                   col_s { input.size() };
+            std::vector<std::complex<double>>   result (col_s);
+
+            for (std::size_t k = 0; k < col_s; ++k)  {
+                result[k] = { 0.0, 0.0 };
+                for (std::size_t n = 0; n < col_s; ++n)  {
+                    const double    angle =
+                        -2.0 * M_PI * double(k) * double(n) / double(col_s);
+
+                    result[k] +=
+                        input[n] *
+                        std::complex<double>(std::cos(angle), std::sin(angle));
+                }
+            }
+
+            return (result);
+        };
+
+    const std::size_t               col_s = df.get_index().size();
+    StlVecType<col_t>               multi_dimen_col(col_s);
+    StlVecType<std::vector<double>> scalar_channels(dim);
+
+    for (std::size_t d { 0 }; d < dim; ++d)
+        scalar_channels[d].resize(col_s);
+    for (std::size_t n { 0 }; n < col_s; ++n)  {
+        for (std::size_t d { 0 }; d < dim; ++d)  {
+            const double    val =
+                std::sin(2.0 * M_PI * double(d + 1) * double(n) / double(dim));
+
+            multi_dimen_col[n][d] = val;
+            scalar_channels[d][n] = val;
+        }
+    }
+    df.load_column<col_t>("multi_dimen_col", std::move(multi_dimen_col));
+
+    fft_v<col_t, unsigned long, 64> md_fft;
+
+    df.single_act_visit<col_t>("multi_dimen_col", md_fft);
+
+    const auto  &md_result { md_fft.get_result() };
+
+    assert(md_result.rows() == 8);
+    assert(md_result.cols() == 3);
+    for (long c { 0 }; c < md_result.cols(); ++c)  {
+        const auto  expected = naive_dft(scalar_channels[c]);
+
+        for (long r { 0 }; r < md_result.rows(); ++r)  {
+            assert(std::fabs(md_result(r, c).real() -
+                             expected[r].real()) < 0.00001);
+            assert(std::fabs(md_result(r, c).imag() -
+                             expected[r].imag()) < 0.00001);
+        }
+    }
 }
 
 // -----------------------------------------------------------------------------

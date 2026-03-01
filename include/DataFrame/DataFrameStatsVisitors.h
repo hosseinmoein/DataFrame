@@ -1464,7 +1464,7 @@ public:
                  column_begin, column_end, column_begin, column_end);
         }
         else  {
-            const long  col_s { long(std::distance(column_begin, column_end)) };
+            const long col_s { long(std::distance(column_begin, column_end)) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
             if (col_s < 3)
@@ -1486,7 +1486,8 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
                 if (long(point.size()) != dim)
-                    throw DataFrameError("VarVisitor: Inconsistent dimensions");
+                    throw DataFrameError("VarVisitor: "
+                                         "Inconsistent dimensions");
 #endif // HMDF_SANITY_EXCEPTIONS
 
                 count_ += 1;;
@@ -2507,10 +2508,26 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  DotProdVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = data_t;
+    using comp_result_t = std::vector<data_t>;
+    using mag_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
 
     inline void operator() (const index_type &,
                             const value_type &val1, const value_type &val2)  {
@@ -2530,98 +2547,197 @@ struct  DotProdVisitor  {
                 const H &column_begin1, const H &column_end1,
                 const H &column_begin2, const H &column_end2)  {
 
-        if (std::distance(column_begin1, column_end1) >=
-                ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    lbd =
-                []
-                (const auto &begin1, const auto &end1,
-                 const auto &begin2) -> std::tuple<result_type,
-                                                   result_type,
-                                                   result_type,
-                                                   result_type,
-                                                   result_type>  {
-                    value_type  result { 0 };
-                    value_type  mag1 { 0 };
-                    value_type  mag2 { 0 };
-                    value_type  euc_dist { 0 };
-                    value_type  man_dist { 0 };
-                    auto        iter2 = begin2;
+        const size_type  col_s {
+            size_type(std::distance(column_begin1, column_end1))
+        };
 
-                    for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2) {
-                        const auto  val1 = *iter1;
-                        const auto  val2 = *iter2;
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type  col_s2 {
+            size_type(std::distance(column_begin2, column_end2))
+        };
 
-                        result += val1 * val2;
-                        mag1 += val1 * val1;
-                        mag2 += val2 * val2;
+        if (col_s != col_s2)
+            throw DataFrameError(
+                "DotProdVisitor: Two columns must have the same length");
+#endif // HMDF_SANITY_EXCEPTIONS
 
-                        const value_type    diff = val1 - val2;
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    lbd =
+                    []
+                    (const auto &begin1, const auto &end1,
+                     const auto &begin2) -> std::tuple<result_type,
+                                                       result_type,
+                                                       result_type,
+                                                       result_type,
+                                                       result_type>  {
+                        value_type  result { 0 };
+                        value_type  mag1 { 0 };
+                        value_type  mag2 { 0 };
+                        value_type  euc_dist { 0 };
+                        value_type  man_dist { 0 };
+                        auto        iter2 = begin2;
 
-                        euc_dist += diff * diff;
-                        man_dist += std::fabs(diff);
-                    }
-                    return (std::make_tuple(result, mag1, mag2,
-                                            euc_dist, man_dist));
-                };
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop2<T>(column_begin1,
-                                                               column_end1,
-                                                               column_begin2,
-                                                               column_end2,
-                                                               std::move(lbd));
+                        for (auto iter1 = begin1; iter1 < end1;
+                             ++iter1, ++iter2) {
+                            const auto  val1 = *iter1;
+                            const auto  val2 = *iter2;
 
-            for (auto &fut : futures)  {
-                const auto  ret = fut.get();
+                            result += val1 * val2;
+                            mag1 += val1 * val1;
+                            mag2 += val2 * val2;
 
-                result_ += std::get<0>(ret);
-                mag1_ += std::get<1>(ret);
-                mag2_ += std::get<2>(ret);
-                euc_dist_ += std::get<3>(ret);
-                man_dist_ += std::get<4>(ret);
+                            const value_type    diff = val1 - val2;
+
+                            euc_dist += diff * diff;
+                            man_dist += std::fabs(diff);
+                        }
+                        return (std::make_tuple(result, mag1, mag2,
+                                                euc_dist, man_dist));
+                    };
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop2<T>(
+                        column_begin1,
+                        column_end1,
+                        column_begin2,
+                        column_end2,
+                        std::move(lbd));
+
+                for (auto &fut : futures)  {
+                    const auto  ret = fut.get();
+
+                    result_ += std::get<0>(ret);
+                    mag1_ += std::get<1>(ret);
+                    mag2_ += std::get<2>(ret);
+                    euc_dist_ += std::get<3>(ret);
+                    man_dist_ += std::get<4>(ret);
+                }
+            }
+            else  {
+                for (size_type i = 0; i < col_s; ++i)  {
+                    const auto  val1 = *(column_begin1 + i);
+                    const auto  val2 = *(column_begin2 + i);
+
+                    result_ += val1 * val2;
+                    mag1_ += val1 * val1;
+                    mag2_ += val2 * val2;
+
+                    const value_type    diff = val1 - val2;
+
+                    euc_dist_ += diff * diff;
+                    man_dist_ += std::fabs(diff);
+                }
             }
         }
         else  {
-            const size_type col_s =
-                std::min(std::distance(column_begin1, column_end1),
-                         std::distance(column_begin2, column_end2));
+            const size_type dim { column_begin1->size() };
 
-            for (size_type i = 0; i < col_s; ++i)  {
-                const auto  val1 = *(column_begin1 + i);
-                const auto  val2 = *(column_begin2 + i);
+#ifdef HMDF_SANITY_EXCEPTIONS
+            for (size_type i { 0 }; i < col_s; ++i)
+                if ((column_begin1 + i)->size() != dim ||
+                    (column_begin2 + i)->size() != dim)
+                    throw DataFrameError(
+                        "DotProdVisitor: Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
 
-                result_ += val1 * val2;
-                mag1_ += val1 * val1;
-                mag2_ += val2 * val2;
+            // Flattened dot product
+            //
+            auto    lbd =
+                []
+                (const auto &begin1, const auto &end1,
+                 const auto &begin2) -> data_t  {
+                    data_t  result { 0 };
+                    auto    iter2 { begin2 };
 
-                const value_type    diff = val1 - val2;
+                    for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2)
+                        for (size_type i { 0 }; i < iter1->size(); ++i)
+                            result += (*iter1)[i] * (*iter2)[i];
+                    return (result);
+                };
 
-                euc_dist_ += diff * diff;
-                man_dist_ += std::fabs(diff);
+            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop2<T>(
+                        column_begin1,
+                        column_end1,
+                        column_begin2,
+                        column_end2,
+                        std::move(lbd));
+
+                for (auto &fut : futures)
+                    result_ += fut.get();
+            }
+            else  {
+                result_ = lbd(column_begin1, column_end1, column_begin2);
+            }
+
+            // Component-wise dot product and Magnitudes
+            //
+            comp_result_.resize(dim, 0);
+            mag1_.resize(col_s);
+            mag2_.resize(col_s);
+            for (size_type n { 0 }; n < col_s; ++n)  {
+                data_t      mag1 { 0 };
+                data_t      mag2 { 0 };
+                const auto  &ary1 = *(column_begin1 + n);
+                const auto  &ary2 = *(column_begin2 + n);
+
+                for (size_type d { 0 }; d < dim; ++d)  {
+                    const auto  val1 = ary1[d];
+                    const auto  val2 = ary2[d];
+
+                    comp_result_[d] += val1 * val2;
+                    mag1 += val1 * val1;
+                    mag2 += val2 * val2;
+                }
+                mag1_[n] = std::sqrt(mag1);
+                mag2_[n] = std::sqrt(mag2);
             }
         }
     }
 
-    inline void pre ()  { result_ = mag1_ = mag2_ = euc_dist_ = man_dist_ = 0; }
-    inline void post ()  {
+    inline void pre()  {
 
-        mag1_ = std::sqrt(mag1_);
-        mag2_ = std::sqrt(mag2_);
-        euc_dist_ = std::sqrt(euc_dist_);
+        result_ = euc_dist_ = man_dist_ = 0;
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            mag1_ = mag2_ = 0;
+        }
+        else  {
+            comp_result_.clear();
+            mag1_.clear();
+            mag2_.clear();
+        }
     }
-    inline result_type get_result () const  { return (result_); }
-    inline result_type get_magnitude1 () const  { return (mag1_); }
-    inline result_type get_magnitude2 () const  { return (mag2_); }
-    inline result_type get_euclidean_dist () const  { return (euc_dist_); }
-    inline result_type get_manhattan_dist () const  { return (man_dist_); }
+    inline void post()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            mag1_ = std::sqrt(mag1_);
+            mag2_ = std::sqrt(mag2_);
+            euc_dist_ = std::sqrt(euc_dist_);
+        }
+    }
+    inline result_type get_result() const  { return (result_); }
+    inline const mag_t &get_magnitude1() const  { return (mag1_); }
+    inline mag_t &get_magnitude1()  { return (mag1_); }
+    inline const mag_t &get_magnitude2() const  { return (mag2_); }
+    inline mag_t &get_magnitude2() { return (mag2_); }
+
+    inline const comp_result_t &get_comp_dp() const  { return (comp_result_); }
+    inline comp_result_t &get_comp_dp() { return (comp_result_); }
+
+    inline result_type get_euclidean_dist() const  { return (euc_dist_); }
+    inline result_type get_manhattan_dist() const  { return (man_dist_); }
 
 private:
 
-    result_type result_ { 0 };   // Dot product of two vectors
-    result_type mag1_ { 0 };     // Magnitude of first vector
-    result_type mag2_ { 0 };     // Magnitude of second vector
-    result_type euc_dist_ { 0 }; // Euclidean distance of two vectors
-    result_type man_dist_ { 0 }; // Manhattan distance of two vectors
+    result_type     result_ { 0 };    // Dot product of two vectors
+    mag_t           mag1_ { };        // Magnitude of first vector
+    mag_t           mag2_ { };        // Magnitude of second vector
+    result_type     euc_dist_ { 0 };  // Euclidean distance of two vectors
+    result_type     man_dist_ { 0 };  // Manhattan distance of two vectors
+    comp_result_t   comp_result_ { }; // Component-wise dot product
 };
 
 // ----------------------------------------------------------------------------
@@ -3476,8 +3592,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -3510,8 +3626,8 @@ public:
         result_.swap(result);
     }
 
-    inline void pre ()  { result_.clear(); cat_map_.clear(); }
-    inline void post ()  {  }
+    inline void pre()  { result_.clear(); cat_map_.clear(); }
+    inline void post()  {  }
     DEFINE_RESULT
 
     explicit
@@ -3545,8 +3661,8 @@ struct  FactorizeVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &, const K &,
+               const H &column_begin, const H &column_end)  {
 
         const size_type col_s = std::distance(column_begin, column_end);
         result_type     result;
@@ -3590,15 +3706,27 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AutoCorrVisitor  {
 
     template<typename U>
     using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
 
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
 public:
 
-    DEFINE_VISIT_BASIC_TYPES_3
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    vec_type<data_t>,
+                                    vec_type<std::vector<data_t>>>;
 
     template <typename K, typename H>
     inline void
@@ -3612,13 +3740,28 @@ public:
             throw DataFrameError("AutoCorrVisitor: Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        vec_type<value_type>    tmp_result(max_lag_);
-        size_type               lag = 1;
+        if constexpr (! std::is_arithmetic_v<value_type>)  {
+#ifdef HMDF_SANITY_EXCEPTIONS
+            const size_type dim { column_begin->size() };
 
-        tmp_result[0] = 1.0;
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "AutoCorrVisitor: Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+        }
+
+        result_type tmp_result(max_lag_);
+        size_type   lag { 1 };
+
+        if constexpr (std::is_arithmetic_v<value_type>)
+            tmp_result[0] = 1.0;
+        else
+            lag = 0;
+
         if ((col_s >= (ThreadPool::MUL_THR_THHOLD / 3)) &&
             (ThreadGranularity::get_thread_level() > 2))  {
-            vec_type<std::future<CorrResult>>   futures;
+            vec_type<std::future<corr_res_t>>   futures;
 
             futures.reserve((max_lag_) - lag);
             while (lag < max_lag_)  {
@@ -3645,11 +3788,10 @@ public:
                     get_auto_corr_(idx_begin, idx_end,
                                    col_s, lag, column_begin);
 
-                tmp_result[result.first] = result.second;
+                tmp_result[result.first] = std::move(result.second);
                 lag += 1;
             }
         }
-
         result_.swap(tmp_result);
     }
 
@@ -3664,10 +3806,13 @@ private:
     result_type     result_ {  };
     const size_type max_lag_;
 
-    using CorrResult = std::pair<size_type, value_type>;
+    using corr_res_t =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    std::pair<size_type, data_t>,
+                                    std::pair<size_type, std::vector<data_t>>>;
 
     template<typename K, typename H>
-    inline static CorrResult
+    inline static corr_res_t
     get_auto_corr_(const K &idx_begin, const K &idx_end,
                    size_type col_s, size_type lag, const H &column_begin)  {
 
@@ -3679,7 +3824,7 @@ private:
               column_begin + lag, column_begin + col_s);
         corr.post();
 
-        return (CorrResult(lag, corr.get_result()));
+        return (corr_res_t(lag, std::move(corr.get_result())));
     }
 };
 
@@ -3688,17 +3833,33 @@ using acf_v = AutoCorrVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  PartialAutoCorrVisitor  {
+
+    template<typename U>
+    using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
+
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+    using matrix_t = Matrix<data_t, matrix_orient::row_major>;
 
 public:
 
-    DEFINE_VISIT_BASIC_TYPES_3
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    vec_type<data_t>,
+                                    vec_type<matrix_t>>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -3710,37 +3871,104 @@ public:
             throw DataFrameError("PartialAutoCorrVisitor: Maximum lag is 375");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        using matrix_t = Matrix<T, matrix_orient::row_major>;
+        if constexpr (! std::is_arithmetic_v<value_type>)  {
+            const size_type dim { column_begin->size() };
 
-        result_type result (max_lag_, 0);
+#ifdef HMDF_SANITY_EXCEPTIONS
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError("PartialAutoCorrVisitor: "
+                                         "Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+        }
+
+        result_type result (max_lag_);
         matrix_t    x;
         matrix_t    y;
 
-        result[0] = 1;
-        for (size_type k = 1; k < max_lag_; ++k)  {
-            x.clear();
-            x.resize(col_s - k, k);
-            y.clear();
-            y.resize(col_s - k, 1);
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            result[0] = 1;
+        }
+        else  {
+            const size_type dim { column_begin->size() };
 
-            for (size_type i = 0; i < col_s - k; ++i)  {
-                y(i, 0) = *(column_begin + (i + k));
-                for (size_type j = 0; j < k; ++j)  {
-                    x(i, j) = *(column_begin + (i + j));
+            matrix_t    identity { long(dim), long(dim), 0 };
+
+            for (long i { 0 }; i < identity.rows(); ++i)
+                identity(i, i) = 1;
+            result[0] = std::move(identity);
+        }
+        for (size_type k { 1 }; k < max_lag_; ++k)  {
+            x.clear();
+            y.clear();
+
+            const size_type rows { col_s - k };
+
+            if constexpr (std::is_arithmetic_v<value_type>)  {
+                x.resize(rows, k);
+                y.resize(rows, 1);
+                for (size_type i { 0 }; i < rows; ++i)  {
+                    y(i, 0) = *(column_begin + (i + k));
+                    for (size_type j = 0; j < k; ++j)  {
+                        x(i, j) = *(column_begin + (i + j));
+                    }
+                }
+            }
+            else  {
+                const size_type dim { column_begin->size() };
+
+                x.resize(col_s - k, k * dim, 0);
+                y.resize(col_s - k, dim, 0);
+
+                // y row i  : the dim components of observation (i + k)
+                //
+                for (size_type i { 0 }; i < rows; ++i)  {
+                    const auto  &obs_y { *(column_begin + (i + k)) };
+
+                    for (size_type d { 0 }; d < dim; ++d)
+                        y(i, d) = obs_y[d];
+
+                    // x row i  : lagged observations
+                    // block j  : columns [j * dim ... j * dim + dim - 1]
+                    //
+                    for (size_type j { 0 }; j < k; ++j)  {
+                        const auto  &obs_x { *(column_begin + (i + j)) };
+
+                        for (size_type d { 0 }; d < dim; ++d)
+                            x(i, j * dim + d) = obs_x[d];
+                    }
                 }
             }
 
             const auto  x_trans = x.transpose();
             const auto  phi = (x_trans * x).inverse() * x_trans * y;
 
-            result[k] = phi(k - 1, 0);
+            if constexpr (std::is_arithmetic_v<value_type>)  {
+                result[k] = phi(k - 1, 0);
+            }
+            else  {
+                const size_type dim { column_begin->size() };
+
+                // The partial autocorrelation matrix at lag k is the last
+                // dimXdim block of phi: rows [(k - 1) * dim ... k * dim - 1],
+                // all dim columns
+                //
+                matrix_t    res { long(dim), long(dim), 0 };
+
+                for (size_type r { 0 }; r < dim; ++r)
+                    for (size_type c { 0 }; c < dim; ++c)
+                        res(r, c) = phi((k - 1) * dim + r, c);
+                result[k] = std::move(res);
+            }
         }
 
         result_.swap(result);
     }
 
     DEFINE_PRE_POST
-    DEFINE_RESULT
+
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
 
     explicit
     PartialAutoCorrVisitor(size_type max_lag) : max_lag_(max_lag)  {   }
@@ -3756,10 +3984,27 @@ using pacf_v = PartialAutoCorrVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  FixedAutoCorrVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+    template<typename U>
+    using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
+
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    vec_type<data_t>,
+                                    vec_type<std::vector<data_t>>>;
 
     template <typename K, typename H>
     inline void
@@ -3774,13 +4019,24 @@ struct  FixedAutoCorrVisitor  {
                 "FixedAutoCorrVisitor: column size must be > lag");
 #endif // HMDF_SANITY_EXCEPTIONS
 
+        if constexpr (! std::is_arithmetic_v<value_type>)  {
+#ifdef HMDF_SANITY_EXCEPTIONS
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "AutoCorrVisitor: Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+        }
+
         CorrVisitor<value_type, index_type> corr {  };
         result_type                         result;
 
         if (policy_ == roll_policy::blocks)  {
             const size_type calc_size { col_s / lag_ };
 
-            result.resize(calc_size);
+            result.reserve(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
                 auto    far_end = i * lag_ + 2 * lag_;
                 auto    near_end = i * lag_ + lag_;
@@ -3793,21 +4049,25 @@ struct  FixedAutoCorrVisitor  {
                 if ((near_end - begin) > (far_end - near_end))
                     begin += ((near_end - begin) - (far_end - near_end));
 
-                corr.pre();
-                corr (idx_begin, idx_end,  // This doesn't matter
-                      column_begin + begin,
-                      column_begin + near_end,
-                      column_begin + near_end,
-                      column_begin + far_end);
-                corr.post();
+                try  {  // The last block might be too small to calculate var
+                    corr.pre();
+                    corr (idx_begin, idx_end,  // This doesn't matter
+                          column_begin + begin,
+                          column_begin + near_end,
+                          column_begin + near_end,
+                          column_begin + far_end);
+                    corr.post();
+                }
+                catch (const DataFrameError &)  { break; }
 
-                result[i] = corr.get_result();
+
+                result.push_back(std::move(corr.get_result()));
             }
         }
         else  {  // roll_policy::continuous
             const size_type calc_size { col_s - lag_ };
 
-            result.resize(calc_size);
+            result.reserve(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
                 auto    far_end = i + 2 * lag_;
                 auto    near_end = i + lag_;
@@ -3819,15 +4079,18 @@ struct  FixedAutoCorrVisitor  {
                     near_end -= near_end % col_s;
                 if ((near_end - begin) > (far_end - near_end))
                     begin += ((near_end - begin) - (far_end - near_end));
-                corr.pre();
-                corr (idx_begin, idx_end,  // This doesn't matter
-                      column_begin + begin,
-                      column_begin + near_end,
-                      column_begin + near_end,
-                      column_begin + far_end);
-                corr.post();
+                try  {  // The last block might be too small to calculate var
+                    corr.pre();
+                    corr (idx_begin, idx_end,  // This doesn't matter
+                          column_begin + begin,
+                          column_begin + near_end,
+                          column_begin + near_end,
+                          column_begin + far_end);
+                    corr.post();
+                }
+                catch (const DataFrameError &)  { break; }
 
-                result[i] = corr.get_result();
+                result.push_back(std::move(corr.get_result()));
             }
 
         }

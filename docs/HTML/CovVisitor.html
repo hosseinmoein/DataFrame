@@ -51,7 +51,7 @@ body {
       </td>
       <td>
         This functor class calculates the covariance of two given columns. In addition, it provides the variances of both columns.<BR>
-        This works with both scalar and multidimensional (i.e. vector and arrays) datasets. For multidimensiional datasetes, you must use the <I>single_act_visit()</I> interface.<BR>
+        This works with both scalar and multidimensional (i.e. vectors or arrays) datasets. For multidimensiional datasetes, you must use the <I>single_act_visit()</I> interface.<BR>
         <I>
         <PRE>
           explicit
@@ -68,7 +68,7 @@ body {
         <PRE>
 <I>get_result()</I>: Returns the covariance.
               In case of scalar dataset, the covariance is a single number. In case of multidimensional dataset,
-              the covariance is a matrix of first column dimension rows and second column dimension columns.
+              the covariance is a <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/Matrix.html">matrix</a> of first column dimension rows and second column dimension columns.
 <I>get_count()</I>: Returns the number of valid datapoints (none NaN), only when dealing with scalar datasets.
 <I>get_mean1()</I>: Returns the mean of the first time-series. In case of scalar dataset,
              the mean is a single number. In case of multidimensional dataset, the mean is

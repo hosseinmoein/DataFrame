@@ -1405,6 +1405,62 @@ static void test_FixedAutoCorrVisitor()  {
         std::cout << ex.what() << std::endl;
         ::exit(-1);
     }
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = -5.0;
+    p.max_value = 5.0;
+
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+
+    // Generate and load 3 random columns
+    //
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
+
+    StlVecType<ary_col_t>   array_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        for (std::size_t d { 0 }; d < dim; ++d)
+            array_col[i][d] = rand_vec[j++];
+    }
+    df.load_column<ary_col_t>("md_array_col", std::move(array_col));
+
+    FixedAutoCorrVisitor<ary_col_t,
+                         std::string>   md_b_fac { 31, roll_policy::blocks };
+
+    df.single_act_visit<ary_col_t>("md_array_col", md_b_fac);
+
+    const auto  &md_result1 = md_b_fac.get_result();
+
+    assert(md_result1.size() == 162);
+    for (const auto &vec : md_result1)
+        assert(vec.size() == dim);
+    assert(std::abs(md_result1[0][0] - -0.093056) < 0.000001);
+    assert(std::abs(md_result1[10][0] - 0.00392099) < 0.00000001);
+    assert(std::abs(md_result1[134][1] - -0.0776815) < 0.0000001);
+    assert(std::abs(md_result1[161][2] - -0.608483) < 0.000001);
+
+    FixedAutoCorrVisitor<ary_col_t,
+                         std::string> md_c_fac { 31, roll_policy::continuous };
+
+    df.single_act_visit<ary_col_t>("md_array_col", md_c_fac);
+
+    const auto  &md_result2 = md_c_fac.get_result();
+
+    assert(md_result2.size() == 4998);
+    for (const auto &vec : md_result2)
+        assert(vec.size() == dim);
+    assert(std::abs(md_result2[0][0] - -0.093056) < 0.000001);
+    assert(std::abs(md_result2[1000][0] - -0.080953) < 0.000001);
+    assert(std::abs(md_result2[1000][2] - 0.160131) < 0.000001);
+    assert(std::abs(md_result2[4997][0] - -0.930264) < 0.000001);
+    assert(std::abs(md_result2[4997][2] - 0.175084) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

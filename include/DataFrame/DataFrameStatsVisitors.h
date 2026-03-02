@@ -5569,10 +5569,25 @@ using diff_v = DiffVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ZScoreVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    template<typename U>
+    using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    vec_type<T>,
+                                    vec_type<std::vector<data_t>>>;
 
     template <typename K, typename H>
     inline void
@@ -5587,10 +5602,10 @@ struct  ZScoreVisitor  {
         svisit(idx_begin, idx_end, column_begin, column_end);
         svisit.post();
 
-        const value_type    m = svisit.get_mean();
-        const value_type    s = svisit.get_result();
-        result_type         result(col_s);
-        const auto          thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+        const auto  m = svisit.get_mean();
+        const auto  s = svisit.get_result();
+        result_type result(col_s);
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
         if (thread_level > 2)  {
@@ -5600,18 +5615,34 @@ struct  ZScoreVisitor  {
                     col_s,
                     [m, s, &result, &column_begin]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                            result[i] = (*(column_begin + i) - m) / s;
+                        for (size_type i = begin; i < end; ++i)  {
+                            const auto  &val { *(column_begin + i) };
+
+                            if constexpr (! std::is_arithmetic_v<value_type> &&
+                                          ! is_std_vector_v<value_type>)  {
+                                const std::vector<data_t>   vec(
+                                    val.begin(), val.end());
+
+                                result[i] = (vec - m) / s;
+                            }
+                            else  result[i] = (val - m) / s;
+                        }
                     });
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            std::transform(column_begin, column_end,
-                           result.begin(),
-                           [m, s](const auto &val) -> value_type  {
-                               return ((val - m) / s);
-                           });
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &val { *(column_begin + i) };
+
+                if constexpr (! std::is_arithmetic_v<value_type> &&
+                              ! is_std_vector_v<value_type>)  {
+                    const std::vector<data_t>   vec(val.begin(), val.end());
+
+                    result[i] = (vec - m) / s;
+                }
+                else  result[i] = (val - m) / s;
+            }
         }
 
         result_.swap(result);
@@ -5621,10 +5652,17 @@ struct  ZScoreVisitor  {
 
     inline void pre ()  {
 
-        OBO_PORT_PRE
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            OBO_PORT_PRE
+        }
         result_.clear();
     }
-    inline void post ()  { OBO_PORT_POST }
+    inline void post ()  {
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            OBO_PORT_POST
+        }
+    }
     DEFINE_RESULT
 
     DECL_CTOR(ZScoreVisitor)

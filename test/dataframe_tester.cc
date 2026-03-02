@@ -3947,6 +3947,58 @@ static void test_z_score_visitor()  {
                                             "col_2",
                                             z_score3).get_result();
     assert(result3 == 0.0);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = 0;
+    p.max_value = 10.0;
+
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    // Generate and load 3 random columns
+    //
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
+
+    StlVecType<ary_col_t>   array_col(df.get_index().size());
+    StlVecType<vec_col_t>   vector_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        vector_col[i].resize(dim);
+        for (std::size_t d { 0 }; d < dim; ++d)
+            array_col[i][d] = vector_col[i][d] = rand_vec[j++];
+    }
+    df.load_column<ary_col_t>("array_col", std::move(array_col));
+    df.load_column<vec_col_t>("vector_col", std::move(vector_col));
+
+    ZScoreVisitor<ary_col_t>    ary_md_zs;
+    ZScoreVisitor<vec_col_t>    vec_md_zs;
+
+    const auto  &ary_res =
+        df.single_act_visit<ary_col_t>("array_col", ary_md_zs).get_result();
+    const auto  &vec_res =
+        df.single_act_visit<vec_col_t>("vector_col", vec_md_zs).get_result();
+
+    assert(ary_res.size() == 21);
+    assert(vec_res.size() == 21);
+    for (const auto &vec : ary_res)
+        assert(vec.size() == dim);
+    for (const auto &vec : vec_res)
+        assert(vec.size() == dim);
+    assert(std::fabs(ary_res[0][0] - -0.956961) < 0.000001);
+    assert(std::fabs(ary_res[0][2] - 1.342) < 0.001);
+    assert(std::fabs(vec_res[0][0] - -0.956961) < 0.000001);
+    assert(std::fabs(vec_res[0][2] - 1.342) < 0.001);
+    assert(std::fabs(ary_res[20][1] - 1.06051) < 0.00001);
+    assert(std::fabs(ary_res[20][2] - 0.219589) < 0.000001);
+    assert(std::fabs(vec_res[20][1] - 1.06051) < 0.00001);
+    assert(std::fabs(vec_res[20][2] - 0.219589) < 0.000001);
 }
 
 // -----------------------------------------------------------------------------

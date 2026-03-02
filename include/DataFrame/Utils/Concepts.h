@@ -254,17 +254,42 @@ concept EnumType = std::is_enum_v<T>;
 
 // ----------------------------------------------------------------------------
 
-template <typename T>
+template<typename T>
 concept Resizable = requires(T container, std::size_t size) {
     { container.resize(size) };  // Checks if the expression is valid
 };
 
 // ----------------------------------------------------------------------------
 
-template <typename T>
+template<typename T>
 concept Fillable = requires(T container, const typename T::value_type &val) {
     { container.fill(val) };  // Checks if the expression is valid
 };
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+struct  is_std_array : std::false_type {  };
+
+template<typename T, std::size_t N>
+struct  is_std_array<std::array<T, N>> : std::true_type {  };
+
+// Helper variable template for convenience (C++17+)
+//
+template<typename T>
+constexpr bool  is_std_array_v = is_std_array<T>::value;
+
+// ----------------------------------------------------------------------------
+
+template <typename T>
+struct  is_std_vector : std::false_type {  };
+
+template <typename T, typename Alloc>
+struct  is_std_vector<std::vector<T, Alloc>> : std::true_type {  };
+
+// Helper variable template for convenience (C++17+)
+template <typename T>
+constexpr bool  is_std_vector_v = is_std_vector<T>::value;
 
 // ----------------------------------------------------------------------------
 

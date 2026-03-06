@@ -445,6 +445,63 @@ static void test_BiasVisitor()  {
         std::cout << ex.what() << std::endl;
         ::exit(-1);
     }
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = 1;
+    p.max_value = 10.0;
+
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    // Generate and load 3 random columns
+    //
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
+
+    StlVecType<ary_col_t>   array_col(df.get_index().size());
+    StlVecType<vec_col_t>   vector_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        vector_col[i].resize(dim);
+        for (std::size_t d { 0 }; d < dim; ++d)
+            array_col[i][d] = vector_col[i][d] = rand_vec[j++];
+    }
+    df.load_column<ary_col_t>("array_col", std::move(array_col));
+    df.load_column<vec_col_t>("vector_col", std::move(vector_col));
+
+    MeanVisitor<ary_col_t, std::string>             ary_mean_v;
+    MeanVisitor<vec_col_t, std::string>             vec_mean_v;
+    GeometricMeanVisitor<ary_col_t, std::string>    ary_geom_v;
+    GeometricMeanVisitor<vec_col_t, std::string>    vec_geom_v;
+
+    const auto  &ary_mean_res =
+        df.single_act_visit<ary_col_t>("array_col", ary_mean_v).get_result();
+    const auto  &vec_mean_res =
+        df.single_act_visit<vec_col_t>("vector_col", vec_mean_v).get_result();
+    const auto  &ary_geom_res =
+        df.single_act_visit<ary_col_t>("array_col", ary_geom_v).get_result();
+    const auto  &vec_geom_res =
+        df.single_act_visit<vec_col_t>("vector_col", vec_geom_v).get_result();
+
+    assert(ary_mean_res.size() == 3);
+    assert(vec_mean_res.size() == 3);
+    assert(std::abs(ary_mean_res[0] - 5.47712) < 0.00001);
+    assert(std::abs(ary_mean_res[2] - 5.67667) < 0.00001);
+    assert(std::abs(vec_mean_res[0] - 5.47712) < 0.00001);
+    assert(std::abs(vec_mean_res[2] - 5.67667) < 0.00001);
+
+    assert(ary_geom_res.size() == 3);
+    assert(vec_geom_res.size() == 3);
+    assert(std::abs(ary_geom_res[0] - 4.80128) < 0.00001);
+    assert(std::abs(ary_geom_res[2] - 4.97216) < 0.00001);
+    assert(std::abs(vec_geom_res[0] - 4.80128) < 0.00001);
+    assert(std::abs(vec_geom_res[2] - 4.97216) < 0.00001);
 }
 
 // ----------------------------------------------------------------------------

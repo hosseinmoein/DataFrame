@@ -308,9 +308,22 @@ private:
 template<typename T, typename I = unsigned long>
 struct  SumVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
 
-    inline void operator() (const index_type &, const value_type &val)  {
+    using data_t =
+        typename std::conditional_t<std::is_arithmetic_v<T> || StringOnly<T>,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T> || StringOnly<T>,
+                                    T,
+                                    std::vector<data_t>>;
+
+    inline void operator()(const index_type &, const value_type &val)  {
 
         SKIP_NAN
 
@@ -327,21 +340,42 @@ struct  SumVisitor  {
     }
     template <typename K, typename H>
     inline void
-    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
-                const H &column_begin, const H &column_end) {
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const H &column_begin, const H &column_end) {
 
         if constexpr (! std::is_arithmetic_v<value_type> &&
-                      ! Fillable<value_type> &&
                       ! StringOnly<value_type>)
             result_.resize(column_begin->size(), 0);
 
-        if (std::distance(column_begin, column_end) >=
-                ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    lbd =
-                [this] (const auto &begin, const auto &end) -> value_type  {
-                    value_type  sum { };
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
+        if constexpr (! std::is_arithmetic_v<value_type>)  {
+#ifdef HMDF_SANITY_EXCEPTIONS
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 0 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "SumVisitor: Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+        }
+
+        auto    lbd =
+            [this] (const auto &begin, const auto &end) -> result_type  {
+                result_type sum { };
+
+                if constexpr (! std::is_arithmetic_v<value_type>)
+                    sum.resize(begin->size(), 0);
+                if constexpr (is_std_array_v<value_type>)  {
+                    const size_type dim { begin->size() };
+
+                    for (auto citer = begin; citer < end; ++citer)
+                        for (size_type d { 0 }; d < dim; ++d)
+                            sum[d] += (*citer)[d];
+                }
+                else  {
                     if (! this->skip_nan_)  {
                         for (auto citer = begin; citer < end; ++citer)
                             sum += *citer;
@@ -350,9 +384,13 @@ struct  SumVisitor  {
                         for (auto citer = begin; citer < end; ++citer)
                             if (! is_nan__(*citer))  sum += *citer;
                     }
+                }
 
-                    return (sum);
-                };
+                return (sum);
+            };
+
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     column_begin, column_end, std::move(lbd));
@@ -360,18 +398,11 @@ struct  SumVisitor  {
             for (auto &fut : futures)  result_ += fut.get();
         }
         else  {
-            if (! skip_nan_)  {
-                for (auto citer = column_begin; citer < column_end; ++citer)
-                    result_ += *citer;
-            }
-            else  {
-                for (auto citer = column_begin; citer < column_end; ++citer)
-                    if (! is_nan__(*citer))  result_ += *citer;
-            }
+            result_ = lbd(column_begin, column_end);
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
             result_ = 0;
@@ -380,21 +411,19 @@ struct  SumVisitor  {
             result_.clear();
         }
         else  {
-            if constexpr (Fillable<value_type>)  // For a std::array
-                result_.fill(0);
-            else  started_ = false;  // For a std::vector
+            started_ = false;  // For a std::vector
         }
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
 
     DECL_CTOR(SumVisitor)
 
 private:
 
     bool        started_ { false };
-    value_type  result_ { };
+    result_type result_ { };
     const bool  skip_nan_;
 };
 
@@ -403,16 +432,32 @@ private:
 template<typename T, typename I = unsigned long>
 struct  MeanBase  {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    T,
+                                    std::vector<data_t>>;
 
     inline void pre ()  {
 
         _sum.pre();
-        // _mean = 0;
         _cnt = 0;
+        if constexpr (std::is_arithmetic_v<value_type>)
+            _mean = 0;
+        else
+            _mean.clear();
     }
     inline size_type get_count () const  { return (_cnt); }
-    inline value_type get_sum () const  { return (_sum.get_result()); }
+    inline const result_type &get_sum () const  { return (_sum.get_result()); }
+    inline result_type &get_sum ()  { return (_sum.get_result()); }
     inline const result_type &get_result () const  { return (_mean); }
     inline result_type &get_result ()  { return (_mean); }
 
@@ -421,7 +466,7 @@ struct  MeanBase  {
 protected:
 
     const bool          _skip_nan;
-    value_type          _mean { 0 };
+    result_type         _mean { };
     size_type           _cnt { 0 };
     SumVisitor<T, I>    _sum { _skip_nan };
 };
@@ -430,6 +475,14 @@ protected:
 
 template<typename T, typename I = unsigned long>
 struct  MeanVisitor : public MeanBase<T, I>  {
+
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+public:
 
     using BaseClass = MeanBase<T, I>;
 
@@ -459,15 +512,8 @@ struct  MeanVisitor : public MeanBase<T, I>  {
     inline void post ()  {
 
         BaseClass::_sum.post();
-        if constexpr (std::is_arithmetic_v<T>)
-            BaseClass::_mean =
-                BaseClass::_sum.get_result() / T(BaseClass::_cnt);
-        else  {
-            using data_t = typename T::value_type;
-
-            BaseClass::_mean =
-                BaseClass::_sum.get_result() / data_t(BaseClass::_cnt);
-        }
+        BaseClass::_mean =
+            BaseClass::_sum.get_result() / data_t(BaseClass::_cnt);
     }
 
     MeanVisitor(bool skipnan = false) : BaseClass(skipnan)  {   }
@@ -535,10 +581,11 @@ struct  WeightedMeanVisitor : public MeanBase<T, I>  {
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct GeometricMeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
+    using size_type = std::size_t;
 
     inline void operator() (const I &idx, const T &val)  {
 
@@ -547,13 +594,65 @@ struct GeometricMeanVisitor : public MeanBase<T, I>  {
         BaseClass::_cnt += 1;
         BaseClass::_sum(idx, std::log(val));
     }
-    PASS_DATA_ONE_BY_ONE
+
+    template <typename K, typename H>
+    inline void
+    operator() (K idx_begin, K /*idx_end*/, H column_begin, H column_end)  {
+
+        if constexpr (std::is_arithmetic_v<T>)  {
+            if (! BaseClass::_skip_nan)  {
+                BaseClass::_cnt = std::distance(column_begin, column_end);
+                for (auto citer = column_begin; citer < column_end; ++citer)
+                    BaseClass::_sum(*idx_begin, std::log(*citer));
+            }
+            else  {
+                for (auto citer = column_begin; citer < column_end; ++citer)  {
+                    if (! is_nan__(*citer)) [[likely]]  {
+                        BaseClass::_cnt += 1;
+                        BaseClass::_sum(*idx_begin, std::log(*citer));
+                    }
+                }
+            }
+        }
+        else  {
+            using data_t = typename T::value_type;
+
+            const size_type col_s {
+                size_type(std::distance(column_begin, column_end))
+            };
+            const size_type dim { column_begin->size() };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+            for (size_type i { 0 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "GeometricMeanVisitor: Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+            std::vector<data_t> sum (dim, 0);
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &val { *(column_begin + i) };
+
+                for (size_type d { 0 }; d < dim; ++d)
+                    sum[d] += std::log(val[d]);
+            }
+
+            BaseClass::_mean = std::move(sum);
+            for (size_type d { 0 }; d < dim; ++d)
+                BaseClass::_mean[d] =
+                    std::exp(BaseClass::_mean[d] / data_t(col_s));
+        }
+    }
+
 
     inline void post ()  {
 
-        BaseClass::_sum.post();
-        BaseClass::_mean =
-            std::exp(BaseClass::_sum.get_result() / T(BaseClass::_cnt));
+        if constexpr (std::is_arithmetic_v<T>)  {
+            BaseClass::_sum.post();
+            BaseClass::_mean =
+                std::exp(BaseClass::_sum.get_result() / T(BaseClass::_cnt));
+        }
     }
 
     GeometricMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
@@ -3872,9 +3971,9 @@ public:
 #endif // HMDF_SANITY_EXCEPTIONS
 
         if constexpr (! std::is_arithmetic_v<value_type>)  {
+#ifdef HMDF_SANITY_EXCEPTIONS
             const size_type dim { column_begin->size() };
 
-#ifdef HMDF_SANITY_EXCEPTIONS
             for (size_type i { 1 }; i < col_s; ++i)
                 if ((column_begin + i)->size() != dim)
                     throw DataFrameError("PartialAutoCorrVisitor: "
@@ -5750,10 +5849,13 @@ using szs_v = SampleZScoreVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  BoxCoxVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = std::vector<T, typename allocator_declare<T, A>::type>;
 
 private:
 
@@ -6075,8 +6177,10 @@ public:
             exponential_(column_begin, column_end, col_s, thread_level);
     }
 
-    DEFINE_PRE_POST
-    DEFINE_RESULT
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
     BoxCoxVisitor(box_cox_type bct, value_type l, bool is_all_pos)
         : box_cox_type_(bct),

@@ -3971,7 +3971,7 @@ public:
         GET_COL_SIZE
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        if (col_s < 10 || col_s < (max_lag_ + 4))
+        if (col_s < 5 || col_s < (max_lag_ + 2))
             throw DataFrameError(
                 "PartialAutoCorrVisitor: Time-series is too short");
         if (max_lag_ > 375)

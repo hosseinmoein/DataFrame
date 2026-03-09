@@ -4146,7 +4146,7 @@ operator - (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     const long  rhs_size = rhs.size();
 
     if (lhs_size != rhs_size)
-        throw NotFeasible("Incompatible vector + vector operation");
+        throw NotFeasible("Incompatible vector - vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
@@ -4202,7 +4202,7 @@ operator * (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     const long  rhs_size = rhs.size();
 
     if (lhs_size != rhs_size)
-        throw NotFeasible("Incompatible vector + vector operation");
+        throw NotFeasible("Incompatible vector * vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
@@ -4258,7 +4258,7 @@ operator / (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     const long  rhs_size = rhs.size();
 
     if (lhs_size != rhs_size)
-        throw NotFeasible("Incompatible vector + vector operation");
+        throw NotFeasible("Incompatible vector / vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
@@ -4301,6 +4301,438 @@ operator / (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename A, std::size_t N>
+static inline
+std::vector<T, A>
+operator + (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
+
+    using result_t = std::vector<T, A>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    const long  lhs_size = lhs.size();
+
+    if (N != lhs_size)
+        throw NotFeasible("Incompatible vector + array operation");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] += rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] += rhs[i];
+        };
+    const long      thread_level =
+        N >= ThreadPool::MUL_THR_THHOLD
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
+                      0L, long(N), std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, long(N));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A, std::size_t N>
+static inline
+std::vector<T, A>
+operator - (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
+
+    using result_t = std::vector<T, A>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    const long  lhs_size = lhs.size();
+
+    if (N != lhs_size)
+        throw NotFeasible("Incompatible vector - array operation");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] -= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] -= rhs[i];
+        };
+    const long      thread_level =
+        N >= ThreadPool::MUL_THR_THHOLD
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
+                      0L, long(N), std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, long(N));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A, std::size_t N>
+static inline
+std::vector<T, A>
+operator * (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
+
+    using result_t = std::vector<T, A>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    const long  lhs_size = lhs.size();
+
+    if (N != lhs_size)
+        throw NotFeasible("Incompatible vector * array operation");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] *= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] *= rhs[i];
+        };
+    const long      thread_level =
+        N >= ThreadPool::MUL_THR_THHOLD
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
+                      0L, long(N), std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, long(N));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A, std::size_t N>
+static inline
+std::vector<T, A>
+operator / (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
+
+    using result_t = std::vector<T, A>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    const long  lhs_size = lhs.size();
+
+    if (N != lhs_size)
+        throw NotFeasible("Incompatible vector / array operation");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] /= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] /= rhs[i];
+        };
+    const long      thread_level =
+        N >= ThreadPool::MUL_THR_THHOLD
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
+                      0L, long(N), std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, long(N));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A, std::size_t N>
+static inline
+std::array<T, N>
+operator + (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
+
+    using result_t = std::array<T, N>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    const long  rhs_size = rhs.size();
+
+    if (N != rhs_size)
+        throw NotFeasible("Incompatible array + vector operation");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] += rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] += rhs[i];
+        };
+    const long      thread_level =
+        N >= ThreadPool::MUL_THR_THHOLD
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
+                      0L, long(N), std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, long(N));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A, std::size_t N>
+static inline
+std::array<T, N>
+operator - (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
+
+    using result_t = std::array<T, N>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    const long  rhs_size = rhs.size();
+
+    if (N != rhs_size)
+        throw NotFeasible("Incompatible array - vector operation");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] -= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] -= rhs[i];
+        };
+    const long      thread_level =
+        N >= ThreadPool::MUL_THR_THHOLD
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
+                      0L, long(N), std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, long(N));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A, std::size_t N>
+static inline
+std::array<T, N>
+operator * (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
+
+    using result_t = std::array<T, N>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    const long  rhs_size = rhs.size();
+
+    if (N != rhs_size)
+        throw NotFeasible("Incompatible array * vector operation");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] *= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] *= rhs[i];
+        };
+    const long      thread_level =
+        N >= ThreadPool::MUL_THR_THHOLD
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
+                      0L, long(N), std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, long(N));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A, std::size_t N>
+static inline
+std::array<T, N>
+operator / (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
+
+    using result_t = std::array<T, N>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    const long  rhs_size = rhs.size();
+
+    if (N != rhs_size)
+        throw NotFeasible("Incompatible array / vector operation");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = lhs;
+    auto            lbd =
+        [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)
+                    result[i + j] /= rhs[i + j];
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)
+                result[i] /= rhs[i];
+        };
+    const long      thread_level =
+        N >= ThreadPool::MUL_THR_THHOLD
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        std::vector<std::future<void>>  futures;
+
+        futures = ThreadGranularity::thr_pool_.parallel_loop<T>(
+                      0L, long(N), std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, long(N));
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename A1, typename A2>
 static inline
 std::vector<T, A1> &
@@ -4312,7 +4744,7 @@ operator += (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     const long  rhs_size = rhs.size();
 
     if (lhs_size != rhs_size)
-        throw NotFeasible("Incompatible vector + vector operation");
+        throw NotFeasible("Incompatible vector += vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
@@ -4366,7 +4798,7 @@ operator -= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     const long  rhs_size = rhs.size();
 
     if (lhs_size != rhs_size)
-        throw NotFeasible("Incompatible vector + vector operation");
+        throw NotFeasible("Incompatible vector -= vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
@@ -4420,7 +4852,7 @@ operator *= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     const long  rhs_size = rhs.size();
 
     if (lhs_size != rhs_size)
-        throw NotFeasible("Incompatible vector + vector operation");
+        throw NotFeasible("Incompatible vector *= vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
@@ -4474,7 +4906,7 @@ operator /= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
     const long  rhs_size = rhs.size();
 
     if (lhs_size != rhs_size)
-        throw NotFeasible("Incompatible vector + vector operation");
+        throw NotFeasible("Incompatible vector /= vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
@@ -4522,7 +4954,6 @@ template<typename T, typename A>
 static inline
 std::vector<T, A>
 operator + (const std::vector<T, A> &lhs, T rhs)  {
-
 
     using result_t = std::vector<T, A>;
 
@@ -4572,7 +5003,6 @@ static inline
 std::vector<T, A>
 operator - (const std::vector<T, A> &lhs, T rhs)  {
 
-
     using result_t = std::vector<T, A>;
 
     const long      lhs_size = lhs.size();
@@ -4620,7 +5050,6 @@ template<typename T, typename A>
 static inline
 std::vector<T, A>
 operator * (const std::vector<T, A> &lhs, T rhs)  {
-
 
     using result_t = std::vector<T, A>;
 
@@ -4670,7 +5099,6 @@ static inline
 std::vector<T, A>
 operator / (const std::vector<T, A> &lhs, T rhs)  {
 
-
     using result_t = std::vector<T, A>;
 
     const long      lhs_size = lhs.size();
@@ -4707,6 +5135,126 @@ operator / (const std::vector<T, A> &lhs, T rhs)  {
     }
     else  {
         lbd(0L, lhs_size);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator + (T lhs, const std::vector<T, A> &rhs)  { return (rhs + lhs); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator - (T lhs, const std::vector<T, A> &rhs)  {
+
+    using result_t = std::vector<T, A>;
+
+    const long      rhs_size = rhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = rhs;
+    auto            lbd =
+        [&result, lhs](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)  {
+                    auto    &val { result[i + j] };
+
+                    val = lhs - val;
+                }
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)  {
+                auto    &val { result[i] };
+
+                val = lhs - val;
+            }
+        };
+    const long      thread_level =
+        rhs_size >= ThreadPool::MUL_THR_THHOLD
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        auto    futures =
+            ThreadGranularity::thr_pool_.parallel_loop<T>(
+                  0L, rhs_size, std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, rhs_size);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator * (T lhs, const std::vector<T, A> &rhs)  { return (rhs * lhs); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator / (T lhs, const std::vector<T, A> &rhs)  {
+
+    using result_t = std::vector<T, A>;
+
+    const long      rhs_size = rhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = rhs;
+    auto            lbd =
+        [&result, lhs](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)  {
+                    auto    &val { result[i + j] };
+
+                    val = lhs / val;
+                }
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)  {
+                auto    &val { result[i] };
+
+                val = lhs / val;
+            }
+        };
+    const long      thread_level =
+        rhs_size >= ThreadPool::MUL_THR_THHOLD
+            ? ThreadGranularity::get_thread_level() : 0;
+
+    if (thread_level > 2)  {
+        auto    futures =
+            ThreadGranularity::thr_pool_.parallel_loop<T>(
+                  0L, rhs_size, std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        lbd(0L, rhs_size);
     }
 
     return (result);
@@ -5160,7 +5708,6 @@ operator /= (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
     return (lhs);
 }
 
-
 // ----------------------------------------------------------------------------
 
 template<typename T, std::size_t N>
@@ -5298,6 +5845,100 @@ operator / (const std::array<T, N> &lhs, T rhs)  {
         };
 
     lbd(0L, lhs_size);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator + (T lhs, const std::array<T, N> &rhs)  { return (rhs + lhs); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator - (T lhs, const std::array<T, N> &rhs)  {
+
+    using result_t = std::array<T, N>;
+
+    const long      rhs_size = rhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = rhs;
+    auto            lbd =
+        [&result, lhs](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)  {
+                    auto    &val { result[i + j] };
+
+                    val = lhs - val;
+                }
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)  {
+                auto    &val { result[i] };
+
+                val = lhs - val;
+            }
+        };
+
+    lbd(0L, rhs_size);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator * (T lhs, const std::array<T, N> &rhs)  { return (rhs * lhs); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator / (T lhs, const std::array<T, N> &rhs)  {
+
+    using result_t = std::array<T, N>;
+
+    const long      rhs_size = rhs.size();
+    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    result_t        result = rhs;
+    auto            lbd =
+        [&result, lhs](auto begin, auto end) -> void  {
+            long    i { begin };
+
+            for (; (i + block_s) < end; i += block_s)  {
+#pragma GCC ivdep
+#pragma clang loop vectorize(enable)
+#pragma omp simd
+                for (long j = 0; j < block_s; ++j)  {
+                    auto    &val { result[i + j] };
+
+                    val = lhs / val;
+                }
+            }
+
+            // Handle remaining elements
+            //
+            for (; i < end; ++i)  {
+                auto    &val { result[i] };
+
+                val = lhs / val;
+            }
+        };
+
+    lbd(0L, rhs_size);
     return (result);
 }
 

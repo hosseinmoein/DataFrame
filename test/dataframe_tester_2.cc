@@ -1503,6 +1503,8 @@ static void test_BoxCoxVisitor()  {
 
     std::cout << "\nTesting BoxCoxVisitor{ } ..." << std::endl;
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     const size_t            item_cnt = 16;
     MyDataFrame             df;
     RandGenParams<double>   p;
@@ -1515,46 +1517,127 @@ static void test_BoxCoxVisitor()  {
 
     df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt, 1),
                  std::make_pair("lognormal",
-                                gen_lognormal_dist<double, 64>(item_cnt, p)),
+                                gen_lognormal_dist<double>(item_cnt, p)),
                  std::make_pair("normal",
-                                gen_normal_dist<double, 64>(item_cnt, p)),
-                 std::make_pair(
-                     "uniform_real",
-                     gen_uniform_real_dist<double, 64>(item_cnt, p)));
+                                gen_normal_dist<double>(item_cnt, p)),
+                 std::make_pair("uniform_real",
+                                gen_uniform_real_dist<double>(item_cnt, p)));
 
-    BoxCoxVisitor<double, unsigned long, 64>   bc_v1(box_cox_type::original,
-                                                     1.5,
-                                                     true);
+    BoxCoxVisitor<double>   bc_v1(box_cox_type::original, 1.5, true);
     const auto              &result1 =
         df.single_act_visit<double>("lognormal", bc_v1).get_result();
-    BoxCoxVisitor<double, unsigned long, 64>   bc_v2(box_cox_type::original,
-                                                     1.5,
-                                                     false);
+    BoxCoxVisitor<double>   bc_v2(box_cox_type::original, 1.5, false);
     const auto              &result2 =
         df.single_act_visit<double>("uniform_real", bc_v2).get_result();
-    BoxCoxVisitor<double, unsigned long, 64>   bc_v3(box_cox_type::modulus,
-                                                     -0.5,
-                                                     false);
+    BoxCoxVisitor<double>   bc_v3(box_cox_type::modulus, -0.5, false);
     const auto              &result3 =
         df.single_act_visit<double>("uniform_real", bc_v3).get_result();
-    BoxCoxVisitor<double, unsigned long, 64>   bc_v4(box_cox_type::exponential,
-                                                     -0.5,
-                                                     false);
+    BoxCoxVisitor<double>   bc_v4(box_cox_type::exponential, -0.5, false);
     const auto              &result4 =
         df.single_act_visit<double>("uniform_real", bc_v4).get_result();
 
-    for(auto citer : result1)
-        std::cout << citer << ", ";
-    std::cout << std::endl;
-    for(auto citer : result2)
-        std::cout << citer << ", ";
-    std::cout << std::endl;
-    for(auto citer : result3)
-        std::cout << citer << ", ";
-    std::cout << std::endl;
-    for(auto citer : result4)
-        std::cout << citer << ", ";
-    std::cout << std::endl;
+    assert(result1.size() == item_cnt);
+    assert(result2.size() == item_cnt);
+    assert(result3.size() == item_cnt);
+    assert(result4.size() == item_cnt);
+
+    assert(std::fabs(result1[0] - 0.870871) < 0.000001);
+    assert(std::fabs(result1[8] - -0.047667) < 0.000001);
+    assert(std::fabs(result1[15] - 0.059915) < 0.000001);
+
+    assert(std::fabs(result2[0] - 25.9053) < 0.0001);
+    assert(std::fabs(result2[8] - 134.035) < 0.001);
+    assert(std::fabs(result2[15] - 177.17) < 0.01);
+
+    assert(std::fabs(result3[0] - -0.55133) < 0.00001);
+    assert(std::fabs(result3[8] - 1.58168) < 0.00001);
+    assert(std::fabs(result3[15] - 1.63402) < 0.00001);
+
+    assert(std::fabs(result4[0] - -1.14604) < 0.00001);
+    assert(std::fabs(result4[8] - 1.99996) < 0.00001);
+    assert(std::fabs(result4[15] - 2.0) < 0.01);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p2;
+
+    p2.seed = 123;
+    p2.min_value = -1.0;
+    p2.max_value = 5.0;
+
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    // Generate and load 3 random columns
+    //
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * dim, p2);
+
+    std::vector<ary_col_t>  array_col(df.get_index().size());
+    std::vector<vec_col_t>  vector_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        vector_col[i].resize(dim);
+        for (std::size_t d { 0 }; d < dim; ++d)
+            array_col[i][d] = vector_col[i][d] = rand_vec[j++];
+    }
+    df.load_column<ary_col_t>("array_col", std::move(array_col));
+    df.load_column<vec_col_t>("vector_col", std::move(vector_col));
+
+    BoxCoxVisitor<ary_col_t>    ary_bc_m(box_cox_type::modulus, -0.5, false);
+    const auto                  &ary_res_m =
+        df.single_act_visit<ary_col_t>("array_col", ary_bc_m).get_result();
+    BoxCoxVisitor<vec_col_t>    vec_bc_m(box_cox_type::modulus, -0.5, false);
+    const auto                  &vec_res_m =
+        df.single_act_visit<vec_col_t>("vector_col", vec_bc_m).get_result();
+
+    assert(ary_res_m.size() == item_cnt);
+    assert(vec_res_m.size() == item_cnt);
+
+    assert(std::fabs(ary_res_m[0][1] - 0.904972) < 0.000001);
+    assert(std::fabs(ary_res_m[8][0] - 0.921917) < 0.000001);
+    assert(std::fabs(ary_res_m[15][2] - -0.248427) < 0.000001);
+    assert(std::fabs(vec_res_m[0][1] - 0.904972) < 0.000001);
+    assert(std::fabs(vec_res_m[8][0] - 0.921917) < 0.000001);
+    assert(std::fabs(vec_res_m[15][2] - -0.248427) < 0.000001);
+
+    BoxCoxVisitor<ary_col_t>    ary_bc_o(box_cox_type::original, -0.5, false);
+    const auto                  &ary_res_o =
+        df.single_act_visit<ary_col_t>("array_col", ary_bc_o).get_result();
+    BoxCoxVisitor<vec_col_t>    vec_bc_o(box_cox_type::original, -0.5, false);
+    const auto                  &vec_res_o =
+        df.single_act_visit<vec_col_t>("vector_col", vec_bc_o).get_result();
+
+    assert(ary_res_o.size() == item_cnt);
+    assert(vec_res_o.size() == item_cnt);
+
+    assert(std::fabs(ary_res_o[0][1] - 0.903587) < 0.000001);
+    assert(std::fabs(ary_res_o[8][0] - 0.920595) < 0.000001);
+    assert(std::fabs(ary_res_o[15][2] - -0.411572) < 0.000001);
+    assert(std::fabs(vec_res_o[0][1] - 0.903587) < 0.000001);
+    assert(std::fabs(vec_res_o[8][0] - 0.920595) < 0.000001);
+    assert(std::fabs(vec_res_o[15][2] - -0.411572) < 0.000001);
+
+    BoxCoxVisitor<ary_col_t>    ary_bc_gm(
+        box_cox_type::geometric_mean, -0.5, false);
+    const auto                  &ary_res_gm =
+        df.single_act_visit<ary_col_t>("array_col", ary_bc_gm).get_result();
+    BoxCoxVisitor<vec_col_t>    vec_bc_gm(
+        box_cox_type::geometric_mean, -0.5, false);
+    const auto                  &vec_res_gm =
+        df.single_act_visit<vec_col_t>("vector_col", vec_bc_gm).get_result();
+
+    assert(ary_res_gm.size() == item_cnt);
+    assert(vec_res_gm.size() == item_cnt);
+
+    assert(std::fabs(ary_res_gm[0][1] - 0.56114) < 0.00001);
+    assert(std::fabs(ary_res_gm[8][0] - 4.00197) < 0.00001);
+    assert(std::fabs(ary_res_gm[15][2] - -0.844804) < 0.000001);
+    assert(std::fabs(vec_res_gm[0][1] - 0.56114) < 0.00001);
+    assert(std::fabs(vec_res_gm[8][0] - 4.00197) < 0.00001);
+    assert(std::fabs(vec_res_gm[15][2] - -0.844804) < 0.000001);
 }
 
 // -----------------------------------------------------------------------------

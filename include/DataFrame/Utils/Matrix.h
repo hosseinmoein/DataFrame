@@ -1633,6 +1633,78 @@ operator /= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs);
 
 // ----------------------------------------------------------------------------
 
+// Vector + Array
+//
+template<typename T, typename A, std::size_t N>
+static inline
+std::vector<T, A>
+operator + (const std::vector<T, A> &lhs, const std::array<T, N> &rhs);
+
+// -------------------------------------
+
+// Vector - Array
+//
+template<typename T, typename A, std::size_t N>
+static inline
+std::vector<T, A>
+operator - (const std::vector<T, A> &lhs, const std::array<T, N> &rhs);
+
+// -------------------------------------
+
+// Vector * Array
+//
+template<typename T, typename A, std::size_t N>
+static inline
+std::vector<T, A>
+operator * (const std::vector<T, A> &lhs, const std::array<T, N> &rhs);
+
+// -------------------------------------
+
+// Vector / Array
+//
+template<typename T, typename A, std::size_t N>
+static inline
+std::vector<T, A>
+operator / (const std::vector<T, A> &lhs, const std::array<T, N> &rhs);
+
+// ----------------------------------------------------------------------------
+
+// Array + Vector
+//
+template<typename T, typename A, std::size_t N>
+static inline
+std::array<T, N>
+operator + (const std::array<T, N> &lhs, const std::vector<T, A> &rhs);
+
+// -------------------------------------
+
+// Array - Vector
+//
+template<typename T, typename A, std::size_t N>
+static inline
+std::array<T, N>
+operator - (const std::array<T, N> &lhs, const std::vector<T, A> &rhs);
+
+// -------------------------------------
+
+// Array * Vector
+//
+template<typename T, typename A, std::size_t N>
+static inline
+std::array<T, N>
+operator * (const std::array<T, N> &lhs, const std::vector<T, A> &rhs);
+
+// -------------------------------------
+
+// Array / Vector
+//
+template<typename T, typename A, std::size_t N>
+static inline
+std::array<T, N>
+operator / (const std::array<T, N> &lhs, const std::vector<T, A> &rhs);
+
+// ----------------------------------------------------------------------------
+
 // Vector + Value
 //
 template<typename T, typename A>
@@ -1667,7 +1739,43 @@ static inline
 std::vector<T, A>
 operator / (const std::vector<T, A> &lhs, T rhs);
 
+// ----------------------------------------------------------------------------
+
+// Value + Vector
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator + (T lhs, const std::vector<T, A> &rhs);
+
 // -------------------------------------
+
+// Value - Vector
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator - (T lhs, const std::vector<T, A> &rhs);
+
+// -------------------------------------
+
+// Value * Vector
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator * (T lhs, const std::vector<T, A> &rhs);
+
+// -------------------------------------
+
+// Value / Vector
+//
+template<typename T, typename A>
+static inline
+std::vector<T, A>
+operator / (T lhs, const std::vector<T, A> &rhs);
+
+// ----------------------------------------------------------------------------
 
 // Vector += Value
 //
@@ -1846,6 +1954,42 @@ template<typename T, std::size_t N>
 static inline
 std::array<T, N> &
 operator /= (std::array<T, N> &lhs, T rhs);
+
+// ----------------------------------------------------------------------------
+
+// Value + Array
+//
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator + (T lhs, const std::array<T, N> &rhs);
+
+// -------------------------------------
+
+// Value - Array
+//
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator - (T lhs, const std::array<T, N> &rhs);
+
+// -------------------------------------
+
+// Value * Array
+//
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator * (T lhs, const std::array<T, N> &rhs);
+
+// -------------------------------------
+
+// Value / Array
+//
+template<typename T, std::size_t N>
+static inline
+std::array<T, N>
+operator / (T lhs, const std::array<T, N> &rhs);
 
 } // namespace hmdf
 

@@ -327,23 +327,21 @@ public:
 
         SKIP_NAN
 
-        if constexpr (! std::is_arithmetic_v<value_type> &&
-                      ! Fillable<value_type> &&
-                      ! StringOnly<value_type>)  {
+        if constexpr (! std::is_arithmetic_v<T>  && ! StringOnly<T>)  {
             if (! started_)  {
                 result_.resize(val.size(), 0);
                 started_ = true;
             }
         }
 
-        result_ += val;
+        result_ = result_ + val;
     }
     template <typename K, typename H>
     inline void
     operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
                const H &column_begin, const H &column_end) {
 
-        if constexpr (! std::is_arithmetic_v<value_type> &&
+        if constexpr (is_std_vector_v<value_type> &&
                       ! StringOnly<value_type>)
             result_.resize(column_begin->size(), 0);
 
@@ -404,15 +402,11 @@ public:
 
     inline void pre()  {
 
-        if constexpr (std::is_arithmetic_v<value_type>)  {
+        started_ = false;
+        if constexpr (std::is_arithmetic_v<value_type>)
             result_ = 0;
-        }
-        else if constexpr (StringOnly<value_type>)  {
+        else if constexpr (StringOnly<value_type>)
             result_.clear();
-        }
-        else  {
-            started_ = false;  // For a std::vector
-        }
     }
     inline void post()  {  }
     inline const result_type &get_result() const  { return (result_); }
@@ -591,8 +585,16 @@ struct GeometricMeanVisitor : public MeanBase<T, I>  {
 
         SKIP_NAN_BASE
 
+        if constexpr (std::is_arithmetic_v<T>)  {
+            BaseClass::_sum(idx, std::log(val));
+        }
+        else  {
+            if (BaseClass::_mean.empty()) [[unlikely]]
+                BaseClass::_mean.resize(val.size(), 0 );
+            for (size_type d { 0 }; const auto v : val)
+                BaseClass::_mean[d++] += std::log(v);
+        }
         BaseClass::_cnt += 1;
-        BaseClass::_sum(idx, std::log(val));
     }
 
     template <typename K, typename H>
@@ -634,17 +636,14 @@ struct GeometricMeanVisitor : public MeanBase<T, I>  {
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const auto  &val { *(column_begin + i) };
 
-                for (size_type d { 0 }; d < dim; ++d)
+                for (size_type d { 0 }; d < dim; ++d)  {
                     sum[d] += std::log(val[d]);
+                }
             }
-
             BaseClass::_mean = std::move(sum);
-            for (size_type d { 0 }; d < dim; ++d)
-                BaseClass::_mean[d] =
-                    std::exp(BaseClass::_mean[d] / data_t(col_s));
+            BaseClass::_cnt = col_s;
         }
     }
-
 
     inline void post ()  {
 
@@ -652,6 +651,15 @@ struct GeometricMeanVisitor : public MeanBase<T, I>  {
             BaseClass::_sum.post();
             BaseClass::_mean =
                 std::exp(BaseClass::_sum.get_result() / T(BaseClass::_cnt));
+        }
+        else  {
+            using data_t = typename T::value_type;
+
+            const size_type dim { BaseClass::_mean.size() };
+
+            for (size_type d { 0 }; d < dim; ++d)
+                BaseClass::_mean[d] =
+                    std::exp(BaseClass::_mean[d] / data_t(BaseClass::_cnt));
         }
     }
 
@@ -5852,207 +5860,282 @@ using szs_v = SampleZScoreVisitor<T, I>;
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  BoxCoxVisitor  {
 
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+    using anal_res_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                                   data_t,
+                                                   std::vector<data_t>>;
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
     using value_type = T;
     using index_type = I;
     using size_type = std::size_t;
-    using result_type = std::vector<T, typename allocator_declare<T, A>::type>;
+    using result_type =
+        typename std::conditional_t<std::is_arithmetic_v<T>,
+                                    vec_t<data_t>,
+                                    vec_t<std::vector<data_t>>>;
 
 private:
 
+    template<typename V, typename S>
+    static inline auto bc_pow_(const V &v, S exp) noexcept  {
+
+        if constexpr (std::is_arithmetic_v<V>)  {
+            return (std::pow(v, exp));
+        }
+        else  {
+            anal_res_t  res(v.size());
+
+            for (size_type i { 0 }; i < v.size(); ++i)
+                res[i] = std::pow(v[i], exp);
+            return (res);
+        }
+    }
+
+    template<typename V>
+    static inline auto bc_log_(const V &v) noexcept  {
+
+        if constexpr (std::is_arithmetic_v<V>)  {
+            return (std::log(v));
+        }
+        else  {
+            anal_res_t  res(v.size());
+
+            for (size_type i { 0 }; i < v.size(); ++i)
+                res[i] = std::log(v[i]);
+            return (res);
+        }
+    }
+
+    template<typename V>
+    static inline auto bc_exp_(const V &v) noexcept  {
+
+        if constexpr (std::is_arithmetic_v<V>)  {
+            return (std::exp(v));
+        }
+        else  {
+            anal_res_t  res(v.size());
+
+            for (size_type i { 0 }; i < v.size(); ++i)
+                res[i] = std::exp(v[i]);
+            return (res);
+        }
+    }
+
+    template<typename V>
+    static inline auto bc_fabs_(const V &v) noexcept  {
+
+        if constexpr (std::is_arithmetic_v<V>)  {
+            return (std::fabs(v));
+        }
+        else  {
+            anal_res_t  res(v.size());
+
+            for (size_type i { 0 }; i < v.size(); ++i)
+                res[i] = std::fabs(v[i]);
+            return (res);
+        }
+    }
+
+    template<typename V>
+    static inline auto bc_signbit_(const V &v) noexcept  {
+
+        if constexpr (std::is_arithmetic_v<V>)  {
+            return (std::signbit(v) ? V(-1) : V(1));
+        }
+        else  {
+            anal_res_t  res(v.size());
+
+            for (size_type i { 0 }; i < v.size(); ++i)
+                res[i] = std::signbit(v[i]) ? data_t(-1) : one_;
+            return (res);
+        }
+    }
+
+    template<typename V, typename S>
+    static inline auto bc_shift_add_(const V &v, S shift) noexcept  {
+
+        if constexpr (std::is_arithmetic_v<V>)  {
+            return (v + shift);
+        }
+        else {
+            anal_res_t  res(v.size());
+
+            for (size_type i { 0 }; i < v.size(); ++i)
+                res[i] = v[i] + shift;
+            return (res);
+        }
+    }
+
     template<typename H>
-    inline void modulus_(const H &column_begin, const H &column_end,
-                         size_type col_s, size_type thread_level)  {
+    inline void modulus_(const H &column_begin, size_type col_s,
+                         size_type thread_level)  {
 
         result_.resize(col_s);
         if (lambda_ != 0)  {
+            auto   lbd =
+                [this, &column_begin] (auto begin, auto end) -> void  {
+                    for (auto i = begin; i < end; ++i)  {
+                        const auto          &val = *(column_begin + i);
+                        const anal_res_t    sign = bc_signbit_(val);
+                        const anal_res_t    &v =
+                            (bc_pow_(bc_fabs_(val) + one_, lambda_) -
+                             one_) / lambda_;
+
+                        result_[i] = sign * v;
+                    }
+                };
+
             if (thread_level > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0),
-                        col_s,
-                        [this, &column_begin]
-                        (auto begin, auto end) -> void  {
-                            for (auto i = begin; i < end; ++i)  {
-                                const auto          val = *(column_begin + i);
-                                const value_type    sign =
-                                    std::signbit(val) ? -1 : 1;
-                                const value_type    v =
-                                    (std::pow(std::fabs(val) + T(1),
-                                              this->lambda_) -
-                                     T(1)) / this->lambda_;
-
-                                this->result_[i] = sign * v;
-                            }
-                       });
+                        size_type(0), col_s, std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }
             else  {
-                std::transform(
-                    column_begin, column_end,
-                    result_.begin(),
-                    [this](const auto &val) -> value_type  {
-                        const value_type    sign = std::signbit(val) ? -1 : 1;
-                        const value_type    v =
-                            (std::pow(std::fabs(val) + (1), this->lambda_) -
-                             T(1)) / this->lambda_;
-
-                        return (sign * v);
-                    });
+                lbd(size_type(0), col_s);
             }
         }
         else  {
+            auto    lbd =
+                [this, &column_begin] (auto begin, auto end) -> void  {
+                    for (auto i = begin; i < end; ++i)  {
+                        const auto          &val = *(column_begin + i);
+                        const anal_res_t    sign = bc_signbit_(val);
+
+                        result_[i] = sign * bc_log_(bc_fabs_(val) + one_);
+                    }
+                };
+
             if (thread_level > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0),
-                        col_s,
-                        [this, &column_begin]
-                        (auto begin, auto end) -> void  {
-                            for (auto i = begin; i < end; ++i)  {
-                                const auto          val = *(column_begin + i);
-                                const value_type    sign =
-                                    std::signbit(val) ? -1 : 1;
-
-                                result_[i] =
-                                    sign * std::log(std::fabs(val) + T(1));
-                            }
-                       });
+                        size_type(0), col_s, std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }
             else  {
-                std::transform(
-                    column_begin, column_end,
-                    result_.begin(),
-                    [](const auto &val) -> value_type  {
-                        const value_type    sign = std::signbit(val) ? -1 : 1;
-
-                        return (sign * std::log(std::fabs(val) + T(1)));
-                    });
+                lbd(size_type(0), col_s);
             }
         }
     }
 
     template<typename H>
-    inline void exponential_(const H &column_begin, const H &column_end,
+    inline void exponential_(const H &column_begin,
                              size_type col_s, size_type thread_level)  {
 
         result_.resize(col_s);
         if (lambda_ != 0)  {
+            auto    lbd =
+                [this, &column_begin] (auto begin, auto end) -> void  {
+                    for (auto i = begin; i < end; ++i)  {
+                        const auto  &val = *(column_begin + i);
+
+                        result_[i] = (bc_exp_(lambda_ * val) - one_) / lambda_;
+                    }
+               };
+
             if (thread_level > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [this, &column_begin]
-                        (auto begin, auto end) -> void  {
-                            for (auto i = begin; i < end; ++i)  {
-                                const auto  val = *(column_begin + i);
-
-                                this->result_[i] =
-                                    (std::exp(this->lambda_ * val) - T(1)) /
-                                    this->lambda_;
-                            }
-                       });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }
             else  {
-                std::transform(
-                    column_begin, column_end,
-                    result_.begin(),
-                    [this](const auto &val) -> value_type  {
-                        return ((std::exp(this->lambda_ * val) - T(1)) /
-                                this->lambda_);
-                    });
+                lbd(size_type(0), col_s);
             }
         }
         else  {
+            auto    lbd =
+                [this, &column_begin] (auto begin, auto end) -> void  {
+                    for (auto i = begin; i < end; ++i)  {
+                        if constexpr (! std::is_arithmetic_v<T>)  {
+                            const auto  &val { *(column_begin + i) };
+
+                            result_[i].assign(std::begin(val), std::end(val));
+                        }
+                        else
+                            result_[i] = *(column_begin + i);
+                    }
+               };
+
             if (thread_level > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [this, &column_begin]
-                        (auto begin, auto end) -> void  {
-                            for (auto i = begin; i < end; ++i)  {
-                                this->result_[i] = *(column_begin + i);
-                            }
-                       });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }
             else  {
-                std::transform(column_begin, column_end,
-                               result_.begin(),
-                               [](const auto &val) -> value_type  {
-                                   return (val);
-                               });
+                lbd(size_type(0), col_s);
             }
         }
     }
 
     template<typename H>
     inline void original_(const H &column_begin,
-                          const H &column_end,
-                          value_type shift,
+                          data_t shift,
                           size_type col_s,
                           size_type thread_level)  {
 
         result_.resize(col_s);
         if (lambda_ != 0)  {
+            auto    lbd =
+                [this, shift, &column_begin] (auto begin, auto end) -> void  {
+                    for (auto i = begin; i < end; ++i)  {
+                        const auto  &val = *(column_begin + i);
+
+                        result_[i] =
+                            (bc_pow_(val + shift, lambda_) - one_) / lambda_;
+                    }
+               };
+
             if (thread_level > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [this, shift, &column_begin]
-                        (auto begin, auto end) -> void  {
-                            for (auto i = begin; i < end; ++i)  {
-                                const auto  val = *(column_begin + i);
-
-                                this->result_[i] =
-                                    (std::pow(val + shift, this->lambda_) -
-                                    T(1)) / this->lambda_;
-                            }
-                       });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }
             else  {
-                std::transform(
-                    column_begin, column_end,
-                    result_.begin(),
-                    [this, shift](const auto &val) -> value_type  {
-                        return ((std::pow(val + shift, this->lambda_) -
-                                 T(1)) / this->lambda_);
-                    });
+                lbd(size_type(0), col_s);
             }
         }
         else  {
+            auto    lbd =
+                [this, shift, &column_begin] (auto begin, auto end) -> void  {
+                    for (auto i = begin; i < end; ++i)  {
+                        const auto  &val = *(column_begin + i);
+
+                        result_[i] = bc_log_(val + shift);
+                    }
+               };
+
             if (thread_level > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [this, shift, &column_begin]
-                        (auto begin, auto end) -> void  {
-                            for (auto i = begin; i < end; ++i)  {
-                                const auto  val = *(column_begin + i);
-
-                                this->result_[i] = std::log(val + shift);
-                            }
-                       });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }
             else  {
-                std::transform(column_begin, column_end,
-                               result_.begin(),
-                               [shift](const auto &val) -> value_type  {
-                                   return (std::log(val + shift));
-                               });
+                lbd(size_type(0), col_s);
             }
         }
     }
@@ -6061,7 +6144,7 @@ private:
     inline void geometric_mean_(const K &dummy,
                                 const H &column_begin,
                                 const H &column_end,
-                                value_type shift,
+                                data_t shift,
                                 size_type col_s, size_type thread_level)  {
 
         H                           citer = column_begin;
@@ -6069,74 +6152,67 @@ private:
 
         result_.resize(col_s);
         gm.pre();
+        while (citer < column_end) [[likely]]
+            gm(dummy, *citer++ + shift);
+        gm.post();
+
         if (lambda_ != 0)  {
-            while (citer < column_end) [[likely]]
-                gm(dummy, *citer++ + shift);
-            gm.post();
+            auto    lbd =
+                [this, shift,
+                 &gm = std::as_const(gm.get_result()), &column_begin]
+                (auto begin, auto end) -> void  {
+                    for (auto i = begin; i < end; ++i)  {
+                        const auto  &val = *(column_begin + i);
+                        const auto  &raw_v = val + shift;
+
+                        result_[i] =
+                            (bc_pow_(raw_v, lambda_) - one_) /
+                            (lambda_ * bc_pow_(gm, lambda_ - one_));
+
+                    }
+               };
 
             if (thread_level > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [this, shift, gm = gm.get_result(), &column_begin]
-                        (auto begin, auto end) -> void  {
-                            for (auto i = begin; i < end; ++i)  {
-                                const auto          val = *(column_begin + i);
-                                const value_type    raw_v = val + shift;
-
-                                this->result_[i] =
-                                    (std::pow(raw_v, this->lambda_) -  T(1)) /
-                                    (this->lambda_ *
-                                     std::pow(gm, this->lambda_ - T(1)));
-
-                            }
-                       });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }
             else  {
-                std::transform(
-                    column_begin, column_end,
-                    result_.begin(),
-                    [this, shift, gm = gm.get_result()]
-                    (const auto &val) -> value_type  {
-                        const value_type    raw_v = val + shift;
-
-                        return ((std::pow(raw_v, this->lambda_) -  T(1)) /
-                                (this->lambda_ *
-                                 std::pow(gm, this->lambda_ - T(1))));
-                    });
+                lbd(size_type(0), col_s);
             }
         }
         else  {
-            while (citer < column_end) [[likely]]
-                gm(dummy, std::log(*citer++ + shift));
-            gm.post();
+            auto    lbd =
+                [this, shift, gm = gm.get_result(), &column_begin]
+                (auto begin, auto end) -> void  {
+                    for (auto i = begin; i < end; ++i)  {
+                        const auto  &val = *(column_begin + i);
+
+                        if constexpr (is_std_array_v<T>)  {
+                            const auto  &res { (val + shift) * gm };
+
+                            result_[i].assign(std::begin(res), std::end(res));
+                        }
+                        else
+                            result_[i] = (val + shift) * gm;
+                    }
+               };
 
             if (thread_level > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [this, shift, gm = gm.get_result(), &column_begin]
-                        (auto begin, auto end) -> void  {
-                            for (auto i = begin; i < end; ++i)  {
-                                const auto  val = *(column_begin + i);
-
-                                this->result_[i] = (val + shift) * gm;
-                            }
-                       });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }
             else  {
-                std::transform(column_begin, column_end,
-                               result_.begin(),
-                               [shift, gm = gm.get_result()]
-                               (const auto &val) -> value_type  {
-                                   return ((val + shift) * gm);
-                               });
+                lbd(size_type(0), col_s);
             }
         }
     }
@@ -6148,33 +6224,45 @@ public:
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        value_type  shift = 0;
+        const size_type col_s = std::distance(column_begin, column_end);
+        data_t          shift = 0;
 
         if (! is_all_positive_ &&
             (box_cox_type_ == box_cox_type::original ||
              box_cox_type_ == box_cox_type::geometric_mean))  {
-            MinVisitor<T, I>    mv;
+            if constexpr (std::is_arithmetic_v<value_type>)  {
+                MinVisitor<T, I>    mv;
 
-            mv.pre();
-            mv(idx_begin, idx_end, column_begin, column_end);
-            mv.post();
+                mv.pre();
+                mv(idx_begin, idx_end, column_begin, column_end);
+                mv.post();
+                shift = bc_fabs_(mv.get_result()) + data_t(0.0000001);
+            }
+            else  {
+                auto    min_val { (*column_begin)[0] };
 
-            shift = std::fabs(mv.get_result()) + value_type(0.0000001);
+                for (size_type i { 0 }; i < col_s; ++i)  {
+                    const auto  &md_val { *(column_begin + i) };
+
+                    for (const auto val : md_val)
+                        min_val = std::min(min_val, val);
+                }
+                shift = bc_fabs_(min_val) + data_t(0.0000001);
+            }
         }
 
-        const size_type col_s = std::distance(column_begin, column_end);
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
         if (box_cox_type_ == box_cox_type::original)
-            original_(column_begin, column_end, shift, col_s, thread_level);
+            original_(column_begin, shift, col_s, thread_level);
         else if (box_cox_type_ == box_cox_type::geometric_mean)
             geometric_mean_(*idx_begin, column_begin, column_end,
                             shift, col_s, thread_level);
         else if (box_cox_type_ == box_cox_type::modulus)
-            modulus_(column_begin, column_end, col_s, thread_level);
+            modulus_(column_begin, col_s, thread_level);
         else if (box_cox_type_ == box_cox_type::exponential)
-            exponential_(column_begin, column_end, col_s, thread_level);
+            exponential_(column_begin, col_s, thread_level);
     }
 
     inline void pre ()  { result_.clear(); }
@@ -6182,17 +6270,18 @@ public:
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
 
-    BoxCoxVisitor(box_cox_type bct, value_type l, bool is_all_pos)
+    BoxCoxVisitor(box_cox_type bct, data_t l, bool is_all_pos)
         : box_cox_type_(bct),
           lambda_(l),
           is_all_positive_(is_all_pos)  {   }
 
 private:
 
-    result_type         result_ {  }; // Transformed
-    const box_cox_type  box_cox_type_;
-    const value_type    lambda_;
-    const bool          is_all_positive_;
+    result_type             result_ {  }; // Transformed
+    const box_cox_type      box_cox_type_;
+    const data_t            lambda_;
+    const bool              is_all_positive_;
+    static constexpr data_t one_ { 1 };
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

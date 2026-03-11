@@ -167,7 +167,11 @@ body {
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This class converts the given column of values into a probability distribution based on one of the above methods. Values in a probability distribution are between 0 and 1 and they all add up to 1.<BR>
-        Please note that some of that methods require that values be only positive or above 1. If you don't adhere to the requirement, you will get garbage <BR>
+        Please note that some of that methods require that values be only positive or above 1. If you don't adhere to the requirement, you will get garbage <BR><BR>
+
+        This works with both scalar and multidimensional (i.e. vectors or arrays) datasets.<BR><BR>
+
+        <B>get_result()</B> returns the vector of normalized data in case of a scalar column. In case of a multidimensional column, it returns a <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/Matrix.html">matrix</a>. Number of rows in the matrix is the number of data items in the input column. Number of columns in the matrix is the number of dimensions.<BR>
 
         <I>
         <PRE>

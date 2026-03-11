@@ -296,6 +296,25 @@ static S &operator << (S &stream, const std::pair<F, L> &data)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename S, typename T, matrix_orient MO>
+static S &operator << (S &stream, const Matrix<T, MO> &data)  {
+
+    if (! data.empty())  {
+        stream << data.rows() << 'X' << data.cols() << '[';
+        for (long r = 0; r < data.rows(); ++r)  {
+            for (long c = 0; c < data.cols(); ++c)
+                stream << data(r, c) << '|';
+            if (r < (data.rows() - 1))
+                stream << '\n';
+            else
+                stream << ']';
+        }
+    }
+    return (stream);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename DF, typename T>
 static inline auto &
 _create_column_from_triple_(DF &df, T &triple) {

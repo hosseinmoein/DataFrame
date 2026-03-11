@@ -2055,16 +2055,18 @@ static void test_EldersThermometerVisitor()  {
 
 static void test_ProbabilityDistVisitor()  {
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     std::cout << "\nTesting ProbabilityDistVisitor{  } ..." << std::endl;
 
-    MyDataFrame                df;
-    StlVecType<unsigned long>  idxvec =
+    MyDataFrame                 df;
+    std::vector<unsigned long>  idxvec =
         { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
-    StlVecType<double>         dblvec =
+    std::vector<double>         dblvec =
         { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-    StlVecType<double>         dblvec2 =
+    std::vector<double>         dblvec2 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    StlVecType<double>         dblvec3 =
+    std::vector<double>         dblvec3 =
         { 0, 1, -2, 3, 4, 5, 6, 7, -8, 9, 10, -11, 12, -13, 14};
 
     df.load_data(std::move(idxvec),
@@ -2072,8 +2074,8 @@ static void test_ProbabilityDistVisitor()  {
                  std::make_pair("dbl_col_2", dblvec2),
                  std::make_pair("dbl_col_3", dblvec3));
 
-    pd_v<double, unsigned long, 256>    pd { prob_dist_type::arithmetic };
-    double                              sum { 0 };
+    pd_v<double>    pd { prob_dist_type::arithmetic };
+    double          sum { 0 };
 
     df.single_act_visit<double>("dbl_col", pd);
     assert(pd.get_result().size() == 15);
@@ -2083,7 +2085,7 @@ static void test_ProbabilityDistVisitor()  {
     }
     assert(std::abs(sum - 1.0) < 0.0001);
 
-    pd_v<double, unsigned long, 256>    pd2 { prob_dist_type::log };
+    pd_v<double>    pd2 { prob_dist_type::log };
 
     df.single_act_visit<double>("dbl_col_2", pd2);
     assert(pd2.get_result().size() == 15);
@@ -2094,7 +2096,7 @@ static void test_ProbabilityDistVisitor()  {
     }
     assert(std::abs(sum - 1.0) < 0.0001);
 
-    pd_v<double, unsigned long, 256>    pd3 { prob_dist_type::softmax };
+    pd_v<double>    pd3 { prob_dist_type::softmax };
 
     df.single_act_visit<double>("dbl_col_3", pd3);
     assert(pd3.get_result().size() == 15);
@@ -2105,7 +2107,7 @@ static void test_ProbabilityDistVisitor()  {
     }
     assert(std::abs(sum - 1.0) < 0.0001);
 
-    pd_v<double, unsigned long, 256>    pd4 { prob_dist_type::pow2 };
+    pd_v<double>    pd4 { prob_dist_type::pow2 };
 
     df.single_act_visit<double>("dbl_col_3", pd4);
     assert(pd4.get_result().size() == 15);
@@ -2116,7 +2118,7 @@ static void test_ProbabilityDistVisitor()  {
     }
     assert(std::abs(sum - 1.0) < 0.0001);
 
-    pd_v<double, unsigned long, 256>    pd5 { prob_dist_type::pow10 };
+    pd_v<double>    pd5 { prob_dist_type::pow10 };
 
     df.single_act_visit<double>("dbl_col_3", pd5);
     assert(pd5.get_result().size() == 15);
@@ -2126,6 +2128,175 @@ static void test_ProbabilityDistVisitor()  {
         sum += val;
     }
     assert(std::abs(sum - 1.0) < 0.0001);
+
+    // Now multidimensional data
+    //
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = 1;
+    p.max_value = 10.0;
+
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    // Generate and load 3 random columns
+    //
+    auto    rand_vec =
+        gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
+
+    std::vector<ary_col_t>  array_col(df.get_index().size());
+    std::vector<vec_col_t>  vector_col(df.get_index().size());
+
+    for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
+        vector_col[i].resize(dim);
+        for (std::size_t d { 0 }; d < dim; ++d)
+            array_col[i][d] = vector_col[i][d] = rand_vec[j++];
+    }
+    df.load_column<ary_col_t>("array_col", std::move(array_col));
+    df.load_column<vec_col_t>("vector_col", std::move(vector_col));
+
+    pd_v<ary_col_t> ary_ar_pd { prob_dist_type::arithmetic };
+    pd_v<vec_col_t> vec_ar_pd { prob_dist_type::arithmetic };
+
+    df.single_act_visit<ary_col_t>("array_col", ary_ar_pd);
+    df.single_act_visit<vec_col_t>("vector_col", vec_ar_pd);
+
+    const auto  &ary_ar_res { ary_ar_pd.get_result() };
+    const auto  &vec_ar_res { vec_ar_pd.get_result() };
+
+    assert(ary_ar_res.rows() == long(df.get_index().size()));
+    assert(ary_ar_res.cols() == dim);
+    for (long c = 0; c < ary_ar_res.cols(); ++c)  {
+        double  sum { 0 };
+
+        for (long r = 0; r < ary_ar_res.rows(); ++r)
+            sum += ary_ar_res(r, c);
+        assert(std::abs(sum - 1.0) < 0.0001);
+    }
+    assert(vec_ar_res.rows() == long(df.get_index().size()));
+    assert(vec_ar_res.cols() == dim);
+    for (long c = 0; c < vec_ar_res.cols(); ++c)  {
+        double  sum { 0 };
+
+        for (long r = 0; r < vec_ar_res.rows(); ++r)
+            sum += vec_ar_res(r, c);
+        assert(std::abs(sum - 1.0) < 0.0001);
+    }
+
+    pd_v<ary_col_t> ary_log_pd { prob_dist_type::log };
+    pd_v<vec_col_t> vec_log_pd { prob_dist_type::log };
+
+    df.single_act_visit<ary_col_t>("array_col", ary_log_pd);
+    df.single_act_visit<vec_col_t>("vector_col", vec_log_pd);
+
+    const auto  &ary_log_res { ary_log_pd.get_result() };
+    const auto  &vec_log_res { vec_log_pd.get_result() };
+
+    assert(ary_log_res.rows() == long(df.get_index().size()));
+    assert(ary_log_res.cols() == dim);
+    for (long c = 0; c < ary_log_res.cols(); ++c)  {
+        double  sum { 0 };
+
+        for (long r = 0; r < ary_log_res.rows(); ++r)
+            sum += ary_log_res(r, c);
+        assert(std::abs(sum - 1.0) < 0.0001);
+    }
+    assert(vec_log_res.rows() == long(df.get_index().size()));
+    assert(vec_log_res.cols() == dim);
+    for (long c = 0; c < vec_log_res.cols(); ++c)  {
+        double  sum { 0 };
+
+        for (long r = 0; r < vec_log_res.rows(); ++r)
+            sum += vec_log_res(r, c);
+        assert(std::abs(sum - 1.0) < 0.0001);
+    }
+
+    pd_v<ary_col_t> ary_sm_pd { prob_dist_type::softmax };
+    pd_v<vec_col_t> vec_sm_pd { prob_dist_type::softmax };
+
+    df.single_act_visit<ary_col_t>("array_col", ary_sm_pd);
+    df.single_act_visit<vec_col_t>("vector_col", vec_sm_pd);
+
+    const auto  &ary_sm_res { ary_sm_pd.get_result() };
+    const auto  &vec_sm_res { vec_sm_pd.get_result() };
+
+    assert(ary_sm_res.rows() == long(df.get_index().size()));
+    assert(ary_sm_res.cols() == dim);
+    for (long c = 0; c < ary_sm_res.cols(); ++c)  {
+        double  sum { 0 };
+
+        for (long r = 0; r < ary_sm_res.rows(); ++r)
+            sum += ary_sm_res(r, c);
+        assert(std::abs(sum - 1.0) < 0.0001);
+    }
+    assert(vec_sm_res.rows() == long(df.get_index().size()));
+    assert(vec_sm_res.cols() == dim);
+    for (long c = 0; c < vec_sm_res.cols(); ++c)  {
+        double  sum { 0 };
+
+        for (long r = 0; r < vec_sm_res.rows(); ++r)
+            sum += vec_sm_res(r, c);
+        assert(std::abs(sum - 1.0) < 0.0001);
+    }
+
+    pd_v<ary_col_t> ary_p2_pd { prob_dist_type::pow2 };
+    pd_v<vec_col_t> vec_p2_pd { prob_dist_type::pow2 };
+
+    df.single_act_visit<ary_col_t>("array_col", ary_p2_pd);
+    df.single_act_visit<vec_col_t>("vector_col", vec_p2_pd);
+
+    const auto  &ary_p2_res { ary_p2_pd.get_result() };
+    const auto  &vec_p2_res { vec_p2_pd.get_result() };
+
+    assert(ary_p2_res.rows() == long(df.get_index().size()));
+    assert(ary_p2_res.cols() == dim);
+    for (long c = 0; c < ary_p2_res.cols(); ++c)  {
+        double  sum { 0 };
+
+        for (long r = 0; r < ary_p2_res.rows(); ++r)
+            sum += ary_p2_res(r, c);
+        assert(std::abs(sum - 1.0) < 0.0001);
+    }
+    assert(vec_p2_res.rows() == long(df.get_index().size()));
+    assert(vec_p2_res.cols() == dim);
+    for (long c = 0; c < vec_p2_res.cols(); ++c)  {
+        double  sum { 0 };
+
+        for (long r = 0; r < vec_p2_res.rows(); ++r)
+            sum += vec_p2_res(r, c);
+        assert(std::abs(sum - 1.0) < 0.0001);
+    }
+
+    pd_v<ary_col_t> ary_p10_pd { prob_dist_type::pow10 };
+    pd_v<vec_col_t> vec_p10_pd { prob_dist_type::pow10 };
+
+    df.single_act_visit<ary_col_t>("array_col", ary_p10_pd);
+    df.single_act_visit<vec_col_t>("vector_col", vec_p10_pd);
+
+    const auto  &ary_p10_res { ary_p10_pd.get_result() };
+    const auto  &vec_p10_res { vec_p10_pd.get_result() };
+
+    assert(ary_p10_res.rows() == long(df.get_index().size()));
+    assert(ary_p10_res.cols() == dim);
+    for (long c = 0; c < ary_p10_res.cols(); ++c)  {
+        double  sum { 0 };
+
+        for (long r = 0; r < ary_p10_res.rows(); ++r)
+            sum += ary_p10_res(r, c);
+        assert(std::abs(sum - 1.0) < 0.0001);
+    }
+    assert(vec_p10_res.rows() == long(df.get_index().size()));
+    assert(vec_p10_res.cols() == dim);
+    for (long c = 0; c < vec_p10_res.cols(); ++c)  {
+        double  sum { 0 };
+
+        for (long r = 0; r < vec_p10_res.rows(); ++r)
+            sum += vec_p10_res(r, c);
+        assert(std::abs(sum - 1.0) < 0.0001);
+    }
 }
 
 // ----------------------------------------------------------------------------

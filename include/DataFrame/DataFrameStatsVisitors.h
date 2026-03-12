@@ -1581,25 +1581,29 @@ public:
             return (0);
     }
 
-    inline mean_t get_mean1() const  {
+    inline const mean_t &get_mean1() const  {
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
             if (inter_result_.cnt | 0x0) [[likely]]
-                return (inter_result_.total1 / data_t(inter_result_.cnt));
+                const_cast<CovVisitor *>(this)->mean1_ =
+                    inter_result_.total1 / data_t(inter_result_.cnt);
             else
-                return (std::numeric_limits<data_t>::quiet_NaN());
+                const_cast<CovVisitor *>(this)->mean1_ =
+                    std::numeric_limits<data_t>::quiet_NaN();
         }
-        else  return (mean1_);
+        return (mean1_);
     }
-    inline mean_t get_mean2() const  {
+    inline const mean_t &get_mean2() const  {
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
             if (inter_result_.cnt | 0x0) [[likely]]
-                return (inter_result_.total2 / data_t(inter_result_.cnt));
+                const_cast<CovVisitor *>(this)->mean2_ =
+                    inter_result_.total2 / data_t(inter_result_.cnt);
             else
-                return (std::numeric_limits<data_t>::quiet_NaN());
+                const_cast<CovVisitor *>(this)->mean2_ = 
+                    std::numeric_limits<data_t>::quiet_NaN();
         }
-        else  return (mean2_);
+        return (mean2_);
     }
 
     data_t get_b() const  { return (b_); }
@@ -1772,7 +1776,7 @@ public:
         else
             return (count_);
     }
-    inline mean_t get_mean() const  {
+    inline const mean_t &get_mean() const  {
 
         if constexpr (std::is_arithmetic_v<value_type>)
             return (cov_.get_mean1());
@@ -1910,8 +1914,9 @@ public:
     inline const result_type &get_result() const  { return (result_); }
     inline result_type &get_result()  { return (result_); }
     inline size_type get_count() const  { return (cov_.get_count()); }
-    inline mean_t get_data_mean() const  { return (cov_.get_mean1()); }
-    inline mean_t get_benchmark_mean() const  { return (cov_.get_mean2()); }
+    inline const mean_t &get_data_mean() const  { return (cov_.get_mean1()); }
+    inline const mean_t &
+    get_benchmark_mean() const  { return (cov_.get_mean2()); }
 
     explicit
     BetaVisitor(bool biased = false, bool skip_nan = false,
@@ -1987,7 +1992,7 @@ public:
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
     inline size_type get_count() const  { return (var_.get_count()); }
-    inline mean_t get_mean() const  { return (var_.get_mean()); }
+    inline const mean_t &get_mean() const  { return (var_.get_mean()); }
     data_t get_b() const  { return (var_.get_b()); }
 
     explicit StdVisitor (bool biased = false, bool skip_nan = false,
@@ -7175,10 +7180,28 @@ using norm_v = NormalizeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  StandardizeVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
+
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+                                               lazy_type<T>,
+                                               value_type_of<T>>::type;
+
+    template<typename U>
+    using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        typename std::conditional_t<
+            std::is_arithmetic_v<T>,
+            vec_type<data_t>,
+            Matrix<data_t, matrix_orient::column_major>>;
 
     template<typename K, typename H>
     inline void
@@ -7192,30 +7215,50 @@ struct  StandardizeVisitor  {
         sv.post();
 
         const size_type col_s = std::distance(column_begin, column_end);
+        auto            lbd =
+            [&mv = std::as_const(sv.get_mean()),
+             &sv = std::as_const(sv.get_result()),
+             &column_begin = std::as_const(column_begin), this]
+            (auto begin, auto end) -> void  {
+                for (size_type i = begin; i < end; ++i)
+                    if constexpr (std::is_arithmetic_v<T>)  {
+                        result_[i] = (*(column_begin + i) - mv) / sv;
+                    }
+                    else  {
+                        const auto  &val { (*(column_begin + i) - mv) / sv };
 
-        result_.resize(col_s);
+                        result_.set_row(val.begin(), long(i));
+                    }
+            };
+
+        if constexpr (std::is_arithmetic_v<value_type>)  {
+            result_.resize(col_s);
+        }
+        else  {
+            const size_type dim = column_begin->size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+            for (size_type i { 0 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "StandardizeVisitor: Inconsistent data dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+            result_.resize(long(col_s), long(dim));
+        }
+
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    [mv = sv.get_mean(), sv = sv.get_result(),
-                     &column_begin, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                            this->result_[i] = (*(column_begin + i) - mv) / sv;
-                    });
+                    lbd);
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            std::transform(column_begin, column_end,
-                           result_.begin(),
-                           [mv = sv.get_mean(), sv = sv.get_result()]
-                           (const auto &val) -> value_type  {
-                               return ((val - mv) / sv);
-                           });
+            lbd(size_type(0), col_s);
         }
     }
 

@@ -1904,6 +1904,18 @@ static void test_NormalizeVisitor()  {
     assert(std::fabs(md_norm4.get_result()[9][1] - -0.19254) < 0.00001);
     assert(std::fabs(md_norm4.get_result()[22][2] - -0.059508) < 0.000001);
     assert(std::fabs(md_norm4.get_result()[27][2] - 0.043818) < 0.000001);
+
+    StandardizeVisitor<col_t, unsigned long, 64>   md_stand;
+
+    df.single_act_visit<col_t>("multi_dimen_col", md_stand);
+
+    const auto  &md_stand_res { md_stand.get_result() };
+
+    assert(md_stand_res.rows() == 28);
+    assert(md_stand_res.cols() == 3);
+    assert(std::fabs(md_stand_res(0, 0) - -0.72837) < 0.00001);
+    assert(std::fabs(md_stand_res(10, 1) - 1.15779) < 0.00001);
+    assert(std::fabs(md_stand_res(27, 2) - 0.44237) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

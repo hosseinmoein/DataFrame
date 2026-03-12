@@ -208,7 +208,10 @@ body {
 
         This works with both scalar and multidimensional (i.e. vectors or arrays) datasets.<BR><BR>
 
-        <B>NOTE</B>: If your normalization type does not match with your dataset type, you get an exception. See normalization types above.<BR>
+        <B>NOTE</B>: If your normalization type does not match with your dataset type, you get an exception. See normalization types above.<BR><BR>
+
+        <B>get_result()</B> returns the vector of nornalized data in case of a scalar column. In case of a multidimensional column, it returns a vector of T (i.e. a vector of vectors or arrays). Each inner vector/array is the length of data dimension. In case of a multidimensional column, the normalization is done per dimension<BR>
+
         <I>
         <PRE>
     explicit

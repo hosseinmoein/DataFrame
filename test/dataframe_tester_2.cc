@@ -47,7 +47,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // -----------------------------------------------------------------------------
 
-/*
 static void test_get_reindexed()  {
 
     std::cout << "\nTesting get_reindexed( ) ..." << std::endl;
@@ -1952,7 +1951,6 @@ static void test_HampelFilterVisitor()  {
 
     assert(result2 == compare2);
 }
-*/
 
 // -----------------------------------------------------------------------------
 
@@ -2085,7 +2083,6 @@ static void test_PolyFitVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-/*
 static void test_HurstExponentVisitor()  {
 
     std::cout << "\nTesting HurstExponentVisitor{ } ..." << std::endl;
@@ -5659,7 +5656,6 @@ static void test_get_view_by_idx_values()  {
     assert(dfv2.get_column<double>("col_1")[0] == 101.0);
     assert(df.get_column<double>("col_1")[0] == 101.0);
 }
-*/
 
 // -----------------------------------------------------------------------------
 
@@ -5667,7 +5663,6 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_get_reindexed();
     test_get_reindexed_view();
     test_retype_column();
@@ -5690,9 +5685,7 @@ int main(int, char *[]) {
     test_BoxCoxVisitor();
     test_NormalizeVisitor();
     test_HampelFilterVisitor();
-*/
     test_PolyFitVisitor();
-/*
     test_HurstExponentVisitor();
     test_LogFitVisitor();
     test_ExponentialFitVisitor();
@@ -5762,7 +5755,6 @@ int main(int, char *[]) {
     test_get_view_by_rand();
     test_get_view_by_loc_location();
     test_get_view_by_idx_values();
-*/
 
     return (0);
 }

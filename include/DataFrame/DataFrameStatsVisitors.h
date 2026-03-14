@@ -7275,33 +7275,48 @@ using stand_v = StandardizeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  PolyFitVisitor  {
-
-    DEFINE_VISIT_BASIC_TYPES_3
 
 private:
 
-    static inline size_type
-    index_(size_type row, size_type col, size_type num_rows)  {
+    // True when T is a container (multidimensional x input)
+    //
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
-        return (col * num_rows + row);
-    }
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using anal_res_t =
+        typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
+
+    using matrix_t = Matrix<data_t, matrix_orient::row_major>;
 
 public:
 
+    using value_type = T;
+    using index_type = I;
+    using size_type = long;
+    using result_type = vec_t<data_t>;
     using weight_func =
-        std::function<value_type(const index_type &idx, size_type val_index)>;
+        std::function<data_t(const index_type &idx, size_type val_index)>;
 
     template<typename K, typename Hx, typename Hy>
     inline void
-    operator() (const K &idx_begin, const K &,
-                const Hx &x_begin, const Hx &x_end,
-                const Hy &y_begin, const Hy &y_end)  {
+    operator()(const K &idx_begin, const K &,
+               const Hx &x_begin, const Hx &x_end,
+               const Hy &y_begin, const Hy &y_end)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
-        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const size_type col_s { std::distance(x_begin, x_end) };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(y_begin, y_end)))
@@ -7309,108 +7324,126 @@ public:
                                  "equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        // degree needs to change to contain the slope (0-degree)
+        // Degree needs to change to contain the slope (0-degree)
         //
-        size_type       deg = degree_;
-        const size_type nrows = deg + 1;
+        size_type       deg { degree_ };
+        const size_type nrows { deg + 1 };  // number of coefficients
 
         // Array that will store the values of
         // sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
         //
-        result_type sigma_x (2 * nrows, 0);
+        vec_t<anal_res_t>   sigma_x(2 * nrows);
 
-        for (size_type i = 0; i < sigma_x.size(); ++i) [[likely]]  {
-            // consecutive positions of the array will store
-            // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
-            //
+        // Consecutive positions of the array will store
+        // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
+        //
+        if constexpr (is_md_)  {
+            const auto  dim { x_begin->size() };
+
+            for (auto &vec : sigma_x)
+                vec.resize(dim, 0);
+        }
+        auto    x_lbd =
+            [&x_begin, &idx_begin, this]
+            (auto begin, auto end, auto i) -> anal_res_t  {
+                anal_res_t  sum;
+
+                if constexpr (is_md_)
+                    sum.resize((x_begin + begin)->size(), 0);
+                else
+                    sum = 0;
+                for (auto j { begin }; j < end; ++j)  {
+                    const data_t    w { weights_(*(idx_begin + j), j) };
+
+                    sum += _bc_pow_(*(x_begin + j), data_t(i)) * w;
+                }
+                return (sum);
+           };
+
+        for (size_type i { 0 }; i < size_type(sigma_x.size()); ++i)  {
             if (thread_level > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&x_begin, &idx_begin, i, this]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (auto j = begin; j < end; ++j)  {
-                                const value_type    w =
-                                    this->weights_(*(idx_begin + j), j);
-
-                                sum += std::pow(*(x_begin + j), i) * w;
-                            }
-                            return (sum);
-                       });
+                        std::move(x_lbd),
+                        i);
 
                 for (auto &fut : futures)  sigma_x[i] += fut.get();
             }
             else  {
-                for (size_type j = 0; j < col_s; ++j) [[likely]]  {
-                    const value_type    w = weights_(*(idx_begin + j), j);
-
-                    sigma_x[i] += std::pow(*(x_begin + j), i) * w;
-                }
+                sigma_x[i] += x_lbd(size_type(0), col_s, i);
             }
         }
 
         // eq_mat is the Normal matrix (augmented) that will store the
         // equations. The extra column is the y column.
         //
-        result_type eq_mat (nrows * (deg + 2), 0);
+        matrix_t    eq_mat { nrows, deg + 2, 0 };
 
-        for (size_type i = 0; i <= deg; ++i) [[likely]]  {
+        for (size_type i { 0 }; i <= deg; ++i)  {
             // Build the Normal matrix by storing the corresponding
             // coefficients at the right positions except the last column
             // of the matrix
             //
-            for (size_type j = 0; j <= deg; ++j)
-                eq_mat[index_(i, j, nrows)] = sigma_x[i + j];
+            for (size_type j { 0 }; j <= deg; ++j)
+                eq_mat(i, j) = reduce_to_scalar_(sigma_x[i + j]);
         }
 
         // Array to store the values of
         // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
         //
-        result_type sigma_y (nrows, 0);
+        vec_t<anal_res_t>   sigma_y(nrows);
 
-        for (size_type i = 0; i < sigma_y.size(); ++i) [[likely]]  {
-            // consecutive positions will store
-            // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
-            //
+        // Consecutive positions will store
+        // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
+        //
+        if constexpr (is_md_)  {
+            const auto  dim { x_begin->size() };
+
+            for (auto &vec : sigma_y)
+                vec.resize(dim, 0);
+        }
+        auto    y_lbd =
+            [&x_begin, &y_begin, &idx_begin, this]
+            (auto begin, auto end, auto i) -> anal_res_t  {
+                anal_res_t  sum;
+
+                if constexpr (is_md_)
+                    sum.resize((x_begin + begin)->size(), 0);
+                else
+                    sum = 0;
+                for (auto j { begin }; j < end; ++j)  {
+                    const data_t    w { weights_(*(idx_begin + j), j) };
+
+                    sum += _bc_pow_(*(x_begin + j), data_t(i)) *
+                           data_t(*(y_begin + j)) * w;
+                }
+                return (sum);
+           };
+
+
+        for (size_type i { 0 }; i < size_type(sigma_y.size()); ++i)  {
             if (thread_level > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&x_begin, &y_begin, &idx_begin, i, this]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (auto j = begin; j < end; ++j)  {
-                                const value_type    w =
-                                    this->weights_(*(idx_begin + j), j);
-
-                                sum += std::pow(*(x_begin + j), i) *
-                                       *(y_begin + j) * w;
-                            }
-                            return (sum);
-                       });
+                        std::move(y_lbd),
+                        i);
 
                 for (auto &fut : futures)  sigma_y[i] += fut.get();
             }
             else  {
-                for (size_type j = 0; j < col_s; ++j)  {
-                    const value_type    w = weights_(*(idx_begin + j), j);
-
-                    sigma_y[i] +=
-                        std::pow(*(x_begin + j), i) * *(y_begin + j) * w;
-                }
+                sigma_y[i] += y_lbd(size_type(0), col_s, i);
             }
         }
 
-        // load the values of sigma_y as the last column of eq_mat
+        // Load the values of sigma_y as the last column of eq_mat
         // (Normal Matrix but augmented)
         //
-        for (size_type i = 0; i <= deg; ++i) [[likely]]
-            eq_mat[index_(i, nrows, nrows)] = sigma_y[i];
+        for (size_type i { 0 }; i <= deg; ++i)
+            eq_mat(i, nrows) = reduce_to_scalar_(sigma_y[i]);
 
         // deg is made deg + 1 because the Gaussian elimination part
         // below was for deg equations, but here deg is the deg of
@@ -7421,94 +7454,104 @@ public:
         // From now Gaussian elimination starts (can be ignored) to solve the
         // set of linear equations (Pivotisation)
         //
-        for (size_type i = 0; i < deg; ++i) [[likely]]  {
-            for (size_type k = i + 1; k < deg; ++k) [[likely]]
-                if (eq_mat[index_(i, i, nrows)] < eq_mat[index_(k, i, nrows)])
-                    for (size_type j = 0; j <= deg; ++j) [[likely]]
-                        std::swap(eq_mat[index_(i, j, nrows)],
-                                  eq_mat[index_(k, j, nrows)]);
+        for (size_type i { 0 }; i < deg; ++i)  {
+            for (size_type k { i + 1 }; k < deg; ++k)
+                if (eq_mat(i, i) < eq_mat(k, i))
+                    for (size_type j { 0 }; j <= deg; ++j)
+                        std::swap(eq_mat(i, j), eq_mat(k, j));
         }
 
-        // loop to perform the Gauss elimination
+        // Loop to perform the Gauss elimination
         //
-        for (size_type i = 0; i < deg - 1; ++i) [[likely]]  {
-            for (size_type k = i + 1; k < deg; ++k) [[likely]]  {
-                const value_type    t =
-                    eq_mat[index_(k, i, nrows)] / eq_mat[index_(i, i, nrows)];
+        for (size_type i { 0 }; i < deg - 1; ++i)  {
+            for (size_type k { i + 1 }; k < deg; ++k)  {
+                const data_t    t { eq_mat(k, i) / eq_mat(i, i) };
 
-                // make the elements below the pivot elements equal to zero
+                // Make the elements below the pivot elements equal to zero
                 // or elimnate the variables
                 //
-                for (size_type j = 0; j <= deg; ++j) [[likely]]
-                    eq_mat[index_(k, j, nrows)] =
-                        eq_mat[index_(k, j, nrows)] -
-                        eq_mat[index_(i, j, nrows)] * t;
+                for (size_type j { 0 }; j <= deg; ++j)
+                    eq_mat(k, j) = eq_mat(k, j) - eq_mat(i, j) * t;
             }
         }
 
-        coeffs_.resize(deg, 0);
-
-        // back-substitution
+        // Back-substitution
         // coeffs_ is a vector whose values correspond to the values
         // of x, y, z ...
         //
-        for (int i = int(deg) - 1; i >= 0; --i) [[likely]]  {
-            // make the variable to be calculated equal to the rhs of the last
+        coeffs_.resize(deg, 0);
+        for (size_type i { deg - 1 }; i >= 0; --i)  {
+            // Make the variable to be calculated equal to the rhs of the last
             // equation
             //
-            coeffs_[i] = eq_mat[index_(i, deg, nrows)];
-            for (int j = 0; j < int(deg); ++j) [[likely]]  {
-                // then subtract all the lhs values except the coefficient of
+            coeffs_[i] = eq_mat(i, deg);
+            for (size_type j { 0 }; j < deg; ++j)  {
+                // Then subtract all the lhs values except the coefficient of
                 // the variable whose value is being calculated
                 //
                 if (j != i)
-                    coeffs_[i] =
-                        coeffs_[i] - eq_mat[index_(i, j, nrows)] * coeffs_[j];
+                    coeffs_[i] = coeffs_[i] - eq_mat(i, j) * coeffs_[j];
             }
 
-            // now finally divide the rhs by the coefficient of the
+            // Now finally divide the rhs by the coefficient of the
             // variable to be calculated
             //
-            coeffs_[i] = coeffs_[i] / eq_mat[index_(i, i, nrows)];
+            coeffs_[i] = coeffs_[i] / eq_mat(i, i);
         }
 
-        y_fits_.resize(col_s);
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            value_type  pred = 0;
+        y_fits_.resize(col_s, 0);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            data_t  pred { 0 };
 
-            for (size_type j = 0; j < deg; ++j)
-                pred += coeffs_[j] * std::pow(*(x_begin + i), j);
+            for (size_type j { 0 }; j < deg; ++j)
+                pred += coeffs_[j] *
+                        reduce_to_scalar_(_bc_pow_(*(x_begin + i), j));
             y_fits_[i] = pred;
 
-            const value_type    w = weights_(*(idx_begin + i), i);
+            const auto  w { weights_(*(idx_begin + i), i) };
 
             // y fits at given x points
             //
-            residual_ += ((*(y_begin + i) - pred) * w) *
-                         ((*(y_begin + i) - pred) * w);
+            const auto  val { (*(y_begin + i) - pred) * w };
+
+            residual_ += val * val;
         }
     }
 
-    inline void pre ()  { coeffs_.clear(); residual_ = 0; }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (coeffs_); }
-    inline result_type &get_result ()  { return (coeffs_); }
-    inline value_type get_slope () const  { return (coeffs_[0]); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline const result_type &get_y_fits () const  { return (y_fits_); }
-    inline result_type &get_y_fits ()  { return (y_fits_); }
+    inline void pre()  { coeffs_.clear(); y_fits_.clear(); residual_ = 0; }
+    inline void post()  {  }
+
+    inline const result_type &get_result() const  { return (coeffs_); }
+    inline result_type &get_result()  { return (coeffs_); }
+    inline data_t get_slope() const  { return (coeffs_[0]); }
+    inline data_t get_residual() const  { return (residual_); }
+    inline const result_type &get_y_fits() const  { return (y_fits_); }
+    inline result_type &get_y_fits()  { return (y_fits_); }
 
     explicit
     PolyFitVisitor(size_type d,
                    weight_func w_func =
-                       [](const I &, std::size_t) -> T  { return (1); })
+                       [](const I &, std::size_t) -> data_t  { return (1); })
         : degree_(d), weights_(w_func)  {   }
 
 private:
 
+    static inline data_t reduce_to_scalar_(const anal_res_t &val)  {
+
+        if constexpr (! is_md_)
+            return (val);
+        else  {
+            data_t  sum { 0 };
+
+            for (const auto &elem : val)
+                sum += elem;
+            return (sum);
+        }
+    }
+
     result_type     y_fits_ {  };
     result_type     coeffs_ {  };
-    value_type      residual_ { 0 };
+    data_t          residual_ { 0 };
     const size_type degree_;
     weight_func     weights_;
 };

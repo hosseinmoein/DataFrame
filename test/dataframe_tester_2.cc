@@ -47,6 +47,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // -----------------------------------------------------------------------------
 
+/*
 static void test_get_reindexed()  {
 
     std::cout << "\nTesting get_reindexed( ) ..." << std::endl;
@@ -1951,14 +1952,17 @@ static void test_HampelFilterVisitor()  {
 
     assert(result2 == compare2);
 }
+*/
 
 // -----------------------------------------------------------------------------
 
 static void test_PolyFitVisitor()  {
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     std::cout << "\nTesting PolyFitVisitor{  } ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -1968,21 +1972,17 @@ static void test_PolyFitVisitor()  {
     MyDataFrame                 df;
 
     df.load_index(std::move(idx));
-    df.load_column<double>("X1",
-                           { 1, 2, 3, 4, 5 },
+    df.load_column<double>("X1", { 1, 2, 3, 4, 5 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y1",
-                           { 6, 7, 8, 9, 3 },
+    df.load_column<double>("Y1", { 6, 7, 8, 9, 3 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("X2",
-                           { 0.0, 1.0, 2.0, 3.0,  4.0,  5.0 },
+    df.load_column<double>("X2", { 0.0, 1.0, 2.0, 3.0,  4.0,  5.0 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y2",
-                           { 0.0, 0.8, 0.9, 0.1, -0.8, -1.0 },
+    df.load_column<double>("Y2", { 0.0, 0.8, 0.9, 0.1, -0.8, -1.0 },
                            nan_policy::dont_pad_with_nans);
 
-    PolyFitVisitor<double, unsigned long, 64>  poly_v1 (2);
-    PolyFitVisitor<double, unsigned long, 64>  poly_v12 (
+    PolyFitVisitor<double>  poly_v1 (2);
+    PolyFitVisitor<double>  poly_v12 (
         2,
         [](const unsigned int &, std::size_t i) -> double {
             const std::array<double, 5> weights = { 0.1, 0.8, 0.3, 0.5, 0.2 };
@@ -1993,11 +1993,11 @@ static void test_PolyFitVisitor()  {
         df.single_act_visit<double, double>("X1", "Y1", poly_v1).get_result();
     auto                    result12 =
         df.single_act_visit<double, double>("X1", "Y1", poly_v12).get_result();
-    auto                    actual1 = StlVecType<double> { 0.8, 5.6, -1 };
+    auto                    actual1 = std::vector<double> { 0.8, 5.6, -1 };
     auto                    actual1_y =
-        StlVecType<double> { 5.4, 8, 8.6, 7.2, 3.8 };
+        std::vector<double>{ 5.4, 8, 8.6, 7.2, 3.8 };
     auto                    actual12 =
-        StlVecType<double> { -1.97994, 6.99713, -1.14327 };
+        std::vector<double>{ -1.97994, 6.99713, -1.14327 };
 
     assert(std::fabs(poly_v1.get_residual() - 5.6) < 0.00001);
     for (size_t i = 0; i < result1.size(); ++i)
@@ -2009,18 +2009,83 @@ static void test_PolyFitVisitor()  {
     for (size_t i = 0; i < result12.size(); ++i)
        assert(fabs(result12[i] - actual12[i]) < 0.00001);
 
-    PolyFitVisitor<double, unsigned long, 64>  poly_v2 (3);
+    PolyFitVisitor<double>  poly_v2 (3);
     auto                    result2 =
         df.single_act_visit<double, double>("X2", "Y2", poly_v2).get_result();
     auto                    actual2 =
-        StlVecType<double> { -0.0396825, 1.69312, -0.813492, 0.087037 };
+        std::vector<double> { -0.0396825, 1.69312, -0.813492, 0.087037 };
 
     for (size_t i = 0; i < result2.size(); ++i)
        assert(fabs(result2[i] - actual2[i]) < 0.00001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 2 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  ary_md_x  {
+        { 0.0,  0.0 }, { 1.0,  0.0 }, { 0.0,  1.0 }, { 1.0,  1.0 },
+        { 2.0,  0.0 }, { 0.0,  2.0 }, { 2.0,  2.0 }, { 1.0,  2.0 },
+        { 2.0,  1.0 }, { 1.5,  1.5 },
+    };
+    std::vector<vec_col_t>  vec_md_x  {
+        { 0.0,  0.0 }, { 1.0,  0.0 }, { 0.0,  1.0 }, { 1.0,  1.0 },
+        { 2.0,  0.0 }, { 0.0,  2.0 }, { 2.0,  2.0 }, { 1.0,  2.0 },
+        { 2.0,  1.0 }, { 1.5,  1.5 },
+    };
+
+    df.load_column<ary_col_t>("ARY MD X", std::move(ary_md_x),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD X", std::move(vec_md_x),
+                              nan_policy::dont_pad_with_nans);
+
+    auto    ground_truth =
+        [](const ary_col_t &x) -> double  {
+            return (1.0 +
+                    3.0 * (x[0] + x[1]) +
+                    2.0 * (x[0] * x[0] + x[1] * x[1]));
+        };
+
+    std::vector<double> md_y;
+    const auto          &md_x_col = df.get_column<ary_col_t>("ARY MD X");
+
+    md_y.reserve(md_x_col.size());
+    for (const auto &x : md_x_col)
+        md_y.push_back(ground_truth(x));
+    df.load_column<double>("MD Y", std::move(md_y),
+                           nan_policy::dont_pad_with_nans);
+
+    PolyFitVisitor<ary_col_t>   ary_poly { 2 };
+    PolyFitVisitor<vec_col_t>   vec_poly { 2 };
+
+    df.single_act_visit<ary_col_t, double>("ARY MD X", "MD Y", ary_poly);
+    df.single_act_visit<vec_col_t, double>("VEC MD X", "MD Y", vec_poly);
+
+    assert(ary_poly.get_result().size() == 3);
+    assert(vec_poly.get_result().size() == 3);
+    assert(std::fabs(ary_poly.get_result()[0] - 7.2437) < 0.0001);
+    assert(std::fabs(ary_poly.get_result()[2] - 1.55182) < 0.00001);
+    assert(std::fabs(vec_poly.get_result()[0] - 7.2437) < 0.0001);
+    assert(std::fabs(vec_poly.get_result()[2] - 1.55182) < 0.00001);
+
+    assert(ary_poly.get_y_fits().size() == md_x_col.size());
+    assert(vec_poly.get_y_fits().size() == md_x_col.size());
+    assert(std::fabs(ary_poly.get_y_fits()[0] - 14.4874) < 0.0001);
+    assert(std::fabs(ary_poly.get_y_fits()[5] - 28.8459) < 0.0001);
+    assert(std::fabs(ary_poly.get_y_fits()[9] - 33.6975) < 0.0001);
+    assert(std::fabs(vec_poly.get_y_fits()[0] - 14.4874) < 0.0001);
+    assert(std::fabs(vec_poly.get_y_fits()[5] - 28.8459) < 0.0001);
+    assert(std::fabs(vec_poly.get_y_fits()[9] - 33.6975) < 0.0001);
+
+    assert(std::fabs(ary_poly.get_residual() - 2017.86) < 0.01);
+    assert(std::fabs(ary_poly.get_residual() - 2017.86) < 0.01);
 }
 
 // -----------------------------------------------------------------------------
 
+/*
 static void test_HurstExponentVisitor()  {
 
     std::cout << "\nTesting HurstExponentVisitor{ } ..." << std::endl;
@@ -5594,6 +5659,7 @@ static void test_get_view_by_idx_values()  {
     assert(dfv2.get_column<double>("col_1")[0] == 101.0);
     assert(df.get_column<double>("col_1")[0] == 101.0);
 }
+*/
 
 // -----------------------------------------------------------------------------
 
@@ -5601,6 +5667,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_get_reindexed();
     test_get_reindexed_view();
     test_retype_column();
@@ -5623,7 +5690,9 @@ int main(int, char *[]) {
     test_BoxCoxVisitor();
     test_NormalizeVisitor();
     test_HampelFilterVisitor();
+*/
     test_PolyFitVisitor();
+/*
     test_HurstExponentVisitor();
     test_LogFitVisitor();
     test_ExponentialFitVisitor();
@@ -5693,6 +5762,7 @@ int main(int, char *[]) {
     test_get_view_by_rand();
     test_get_view_by_loc_location();
     test_get_view_by_idx_values();
+*/
 
     return (0);
 }

@@ -7329,7 +7329,7 @@ public:
                const Hx &x_begin, const Hx &x_end,
                const Hy &y_begin, const Hy &y_end)  {
 
-        const size_type col_s { std::distance(x_begin, x_end) };
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
         const auto      thread_level {
             (col_s < ThreadPool::MUL_THR_THHOLD)
                 ? 0L : ThreadGranularity::get_thread_level()
@@ -7600,7 +7600,7 @@ public:
                const Hx &x_begin, const Hx &x_end,
                const Hy &y_begin, const Hy &y_end)  {
 
-        const size_type col_s { std::distance(x_begin, x_end) };
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
         const auto      thread_level {
             (col_s < ThreadPool::MUL_THR_THHOLD)
                 ? 0L : ThreadGranularity::get_thread_level()

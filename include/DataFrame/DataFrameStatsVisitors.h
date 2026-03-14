@@ -289,6 +289,23 @@ static inline auto _bc_signbit_(const V &v) noexcept  {
     }
 }
 
+template<typename V>
+static inline auto _reduce_to_scalar_(const V &val)  {
+
+    if constexpr (std::is_arithmetic_v<V>)  {
+        return (val);
+    }
+    else  {
+        using data_t = typename V::value_type;
+
+        data_t  sum { 0 };
+
+        for (const auto &elem : val)
+            sum += elem;
+        return (sum);
+    }
+}
+
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
@@ -7387,7 +7404,7 @@ public:
             // of the matrix
             //
             for (size_type j { 0 }; j <= deg; ++j)
-                eq_mat(i, j) = reduce_to_scalar_(sigma_x[i + j]);
+                eq_mat(i, j) = _reduce_to_scalar_(sigma_x[i + j]);
         }
 
         // Array to store the values of
@@ -7443,7 +7460,7 @@ public:
         // (Normal Matrix but augmented)
         //
         for (size_type i { 0 }; i <= deg; ++i)
-            eq_mat(i, nrows) = reduce_to_scalar_(sigma_y[i]);
+            eq_mat(i, nrows) = _reduce_to_scalar_(sigma_y[i]);
 
         // deg is made deg + 1 because the Gaussian elimination part
         // below was for deg equations, but here deg is the deg of
@@ -7505,7 +7522,7 @@ public:
 
             for (size_type j { 0 }; j < deg; ++j)
                 pred += coeffs_[j] *
-                        reduce_to_scalar_(_bc_pow_(*(x_begin + i), j));
+                        _reduce_to_scalar_(_bc_pow_(*(x_begin + i), j));
             y_fits_[i] = pred;
 
             const auto  w { weights_(*(idx_begin + i), i) };
@@ -7536,19 +7553,6 @@ public:
 
 private:
 
-    static inline data_t reduce_to_scalar_(const anal_res_t &val)  {
-
-        if constexpr (! is_md_)
-            return (val);
-        else  {
-            data_t  sum { 0 };
-
-            for (const auto &elem : val)
-                sum += elem;
-            return (sum);
-        }
-    }
-
     result_type     y_fits_ {  };
     result_type     coeffs_ {  };
     data_t          residual_ { 0 };
@@ -7561,46 +7565,91 @@ using pfit_v = PolyFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  LogFitVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
 
+    // True when T is a container (multidimensional x input)
+    //
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using anal_res_t =
+        typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = long;
+    using result_type = vec_t<data_t>;
     using weight_func =
         std::function<value_type(const index_type &idx, size_type val_index)>;
 
-    template<typename K, typename H>
+    template<typename K, typename Hx, typename Hy>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const Hx &x_begin, const Hx &x_end,
+               const Hy &y_begin, const Hy &y_end)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
-        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const size_type col_s { std::distance(x_begin, x_end) };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
 
-        result_type logx (x_begin, x_end);
+        vec_t<anal_res_t>   logx (x_begin, x_end);
+        auto                log_lbd =
+            [&logx](auto begin, auto end) -> void  {
+                for (auto i = begin; i < end; ++i)
+                    logx[i] = _bc_log_(logx[i]);
+            };
 
         if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    [&logx](auto begin, auto end) -> void  {
-                        for (auto i = begin; i < end; ++i)
-                            logx[i] = std::log(logx[i]);
-                    });
+                    std::move(log_lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            std::transform(logx.begin(), logx.end(), logx.begin(),
-                           (value_type(*)(value_type)) std::log);
+            log_lbd(size_type(0), col_s);
         }
 
-        poly_fit_(idx_begin, idx_end,
-                  logx.begin(), logx.end(),
-                  y_begin, y_end);
+        poly_fit_(idx_begin, idx_end, logx.begin(), logx.end(), y_begin, y_end);
+
+        auto    res_lbd =
+            [&x_begin, &y_begin, &idx_begin, this]
+            (auto begin, auto end) -> data_t  {
+                data_t  residual { 0 };
+
+                for (auto i = begin; i < end; ++i)  {
+                    const auto  p_res { poly_fit_.get_result() };
+                    const auto  pred =
+                        _reduce_to_scalar_(
+                            _bc_log_(*(x_begin + i)) * p_res[1] + p_res[0]);
+                    const auto  w = weights_(*(idx_begin + i), i);
+
+                    // y fits at given x points
+                    //
+                    y_fits_[i] = pred;
+
+                    const auto  val = ((*(y_begin + i) - pred) * w);
+
+                    residual += val * val;
+                }
+                return (residual);
+           };
 
         y_fits_.resize(col_s);
         if (thread_level > 2)  {
@@ -7608,58 +7657,28 @@ struct  LogFitVisitor  {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    [&x_begin, &y_begin, &idx_begin, this]
-                    (auto begin, auto end) -> value_type  {
-                        value_type  residual { 0 };
-
-                        for (auto i = begin; i < end; ++i)  {
-                            const value_type    pred =
-                                this->poly_fit_.get_result()[0] +
-                                this->poly_fit_.get_result()[1] *
-                                std::log(*(x_begin + i));
-                            const value_type    w =
-                                this->weights_(*(idx_begin + i), i);
-
-                            // y fits at given x points
-                            //
-                            this->y_fits_[i] = pred;
-                            residual += ((*(y_begin + i) - pred) * w) *
-                                        ((*(y_begin + i) - pred) * w);
-                        }
-                        return (residual);
-                   });
+                    std::move(res_lbd));
 
              for (auto &fut : futures)  residual_ += fut.get();
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    pred =
-                    poly_fit_.get_result()[0] +
-                    poly_fit_.get_result()[1] * std::log(*(x_begin + i));
-                const value_type    w = weights_(*(idx_begin + i), i);
-
-                // y fits at given x points
-                //
-                y_fits_[i] = pred;
-                residual_ += ((*(y_begin + i) - pred) * w) *
-                             ((*(y_begin + i) - pred) * w);
-            }
+            residual_ = res_lbd(size_type(0), col_s);
         }
     }
 
-    inline void pre ()  { poly_fit_.pre(); residual_ = 0; }
-    inline void post ()  { poly_fit_.post(); }
+    inline void pre()  { poly_fit_.pre(); y_fits_.clear(); residual_ = 0; }
+    inline void post()  { poly_fit_.post(); }
     inline const result_type &
-    get_result () const  { return (poly_fit_.get_result()); }
-    inline result_type &get_result ()  { return (poly_fit_.get_result()); }
-    inline value_type get_slope () const  { return (poly_fit_.get_slope()); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline const result_type &get_y_fits () const  { return (y_fits_); }
-    inline result_type &get_y_fits ()  { return (y_fits_); }
+    get_result() const  { return (poly_fit_.get_result()); }
+    inline result_type &get_result()  { return (poly_fit_.get_result()); }
+    inline data_t get_slope() const  { return (poly_fit_.get_slope()); }
+    inline data_t get_residual() const  { return (residual_); }
+    inline const result_type &get_y_fits() const  { return (y_fits_); }
+    inline result_type &get_y_fits()  { return (y_fits_); }
 
     explicit
     LogFitVisitor(weight_func w_func =
-                      [](const I &, std::size_t) -> T  { return (1); })
+                      [](const I &, std::size_t) -> data_t  { return (1); })
         : poly_fit_(1, w_func), weights_(w_func)  {   }
 
 private:
@@ -7667,7 +7686,7 @@ private:
     result_type             y_fits_ {  };
     PolyFitVisitor<T, I, A> poly_fit_ {  };
     weight_func             weights_;
-    value_type              residual_ { 0 };
+    data_t                  residual_ { 0 };
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

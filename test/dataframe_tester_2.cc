@@ -2024,14 +2024,12 @@ static void test_PolyFitVisitor()  {
     using vec_col_t = std::vector<double>;
 
     std::vector<ary_col_t>  ary_md_x  {
-        { 0.0,  0.0 }, { 1.0,  0.0 }, { 0.0,  1.0 }, { 1.0,  1.0 },
-        { 2.0,  0.0 }, { 0.0,  2.0 }, { 2.0,  2.0 }, { 1.0,  2.0 },
-        { 2.0,  1.0 }, { 1.5,  1.5 },
+        { 0.0, 0.0 }, { 1.0, 0.0 }, { 0.0, 1.0 }, { 1.0, 1.0 }, { 2.0, 0.0 },
+        { 0.0, 2.0 }, { 2.0, 2.0 }, { 1.0, 2.0 }, { 2.0, 1.0 }, { 1.5, 1.5 },
     };
     std::vector<vec_col_t>  vec_md_x  {
-        { 0.0,  0.0 }, { 1.0,  0.0 }, { 0.0,  1.0 }, { 1.0,  1.0 },
-        { 2.0,  0.0 }, { 0.0,  2.0 }, { 2.0,  2.0 }, { 1.0,  2.0 },
-        { 2.0,  1.0 }, { 1.5,  1.5 },
+        { 0.0, 0.0 }, { 1.0, 0.0 }, { 0.0, 1.0 }, { 1.0, 1.0 }, { 2.0, 0.0 },
+        { 0.0, 2.0 }, { 2.0, 2.0 }, { 1.0, 2.0 }, { 2.0, 1.0 }, { 1.5, 1.5 },
     };
 
     df.load_column<ary_col_t>("ARY MD X", std::move(ary_md_x),
@@ -2130,9 +2128,11 @@ static void test_HurstExponentVisitor()  {
 
 static void test_LogFitVisitor()  {
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     std::cout << "\nTesting LogFitVisitor{  } ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -2142,26 +2142,22 @@ static void test_LogFitVisitor()  {
     MyDataFrame                 df;
 
     df.load_index(std::move(idx));
-    df.load_column<double>("X1",
-                           { 1, 2, 3, 4, 5 },
+    df.load_column<double>("X1", { 1, 2, 3, 4, 5 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y1",
-                           { 6, 7, 8, 9, 3 },
+    df.load_column<double>("Y1", { 6, 7, 8, 9, 3 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("X2",
-                           { 1, 2, 4, 6, 8 },
+    df.load_column<double>("X2", { 1, 2, 4, 6, 8 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y2",
-                           { 1, 3, 4, 5, 6 },
+    df.load_column<double>("Y2", { 1, 3, 4, 5, 6 },
                            nan_policy::dont_pad_with_nans);
 
-    LogFitVisitor<double, unsigned long, 64>   log_v1;
+    LogFitVisitor<double>   log_v1;
     auto                    result1 =
         df.single_act_visit<double, double>("X1", "Y1", log_v1).get_result();
     auto                    actual1 =
-        StlVecType<double> { 6.98618, -0.403317 };
+        std::vector<double> { 6.98618, -0.403317 };
     auto                    actual1_y =
-        StlVecType<double> { 6.98618, 6.70662, 6.54309, 6.42706, 6.33706 };
+        std::vector<double> { 6.98618, 6.70662, 6.54309, 6.42706, 6.33706 };
 
     assert(std::fabs(log_v1.get_residual() - 20.9372) < 0.0001);
     for (size_t i = 0; i < result1.size(); ++i)
@@ -2169,14 +2165,77 @@ static void test_LogFitVisitor()  {
     for (size_t i = 0; i < log_v1.get_y_fits().size(); ++i)
        assert(fabs(log_v1.get_y_fits()[i] - actual1_y[i]) < 0.01);
 
-    LogFitVisitor<double, unsigned long, 64>   log_v2;
+    LogFitVisitor<double>   log_v2;
     auto                    result2 =
         df.single_act_visit<double, double>("X2", "Y2", log_v2).get_result();
-    auto                    actual2 = StlVecType<double> { 1.11199, 2.25859 };
+    auto                    actual2 = std::vector<double> { 1.11199, 2.25859 };
 
     assert(std::fabs(log_v2.get_residual() - 0.237476) < 0.00001);
     for (size_t i = 0; i < result2.size(); ++i)
        assert(fabs(result2[i] - actual2[i]) < 0.00001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 2 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  ary_md_x  {
+        { 1.0, 2.0 }, { 2.0, 3.0 }, { 3.0, 5.0 }, { 4.0, 1.5 }, { 5.0, 4.0 },
+        { 6.0, 2.5 }, { 7.0, 6.0 }, { 8.0, 3.5 }, { 9.0, 7.0 }, { 10.0, 8.0 }
+    };
+    std::vector<vec_col_t>  vec_md_x  {
+        { 1.0, 2.0 }, { 2.0, 3.0 }, { 3.0, 5.0 }, { 4.0, 1.5 }, { 5.0, 4.0 },
+        { 6.0, 2.5 }, { 7.0, 6.0 }, { 8.0, 3.5 }, { 9.0, 7.0 }, { 10.0, 8.0 }
+    };
+
+    df.load_column<ary_col_t>("ARY MD X", std::move(ary_md_x),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD X", std::move(vec_md_x),
+                              nan_policy::dont_pad_with_nans);
+
+    auto    ground_truth =
+        [](const ary_col_t &x) -> double  {
+            return (3.0 * std::log(x[0]) + 1.5 * std::log(x[1]) + 2.0);
+        };
+
+    std::vector<double> md_y;
+    const auto          &md_x_col = df.get_column<ary_col_t>("ARY MD X");
+
+    md_y.reserve(md_x_col.size());
+    for (const auto &x : md_x_col)
+        md_y.push_back(ground_truth(x));
+    df.load_column<double>("MD Y", std::move(md_y),
+                           nan_policy::dont_pad_with_nans);
+
+    auto                        w_func {
+        [](const unsigned long &, std::size_t) -> double  { return (1); },
+    };
+    LogFitVisitor<ary_col_t>    ary_log { w_func, 2 };
+    LogFitVisitor<vec_col_t>    vec_log { w_func, 2 };
+
+    df.single_act_visit<ary_col_t, double>("ARY MD X", "MD Y", ary_log);
+    df.single_act_visit<vec_col_t, double>("VEC MD X", "MD Y", vec_log);
+
+    assert(ary_log.get_result().size() == 3);
+    assert(vec_log.get_result().size() == 3);
+    assert(std::fabs(ary_log.get_result()[0] - 3.61525) < 0.00001);
+    assert(std::fabs(ary_log.get_result()[2] - 0.281702) < 0.000001);
+    assert(std::fabs(vec_log.get_result()[0] - 3.61525) < 0.00001);
+    assert(std::fabs(vec_log.get_result()[2] - 0.281702) < 0.000001);
+
+    assert(ary_log.get_y_fits().size() == md_x_col.size());
+    assert(vec_log.get_y_fits().size() == md_x_col.size());
+    assert(std::fabs(ary_log.get_y_fits()[0] - 9.29912) < 0.00001);
+    assert(std::fabs(ary_log.get_y_fits()[5] - 15.3124) < 0.0001);
+    assert(std::fabs(ary_log.get_y_fits()[9] - 20.3082) < 0.0001);
+    assert(std::fabs(vec_log.get_y_fits()[0] - 9.29912) < 0.00001);
+    assert(std::fabs(vec_log.get_y_fits()[5] - 15.3124) < 0.0001);
+    assert(std::fabs(vec_log.get_y_fits()[9] - 20.3082) < 0.0001);
+
+    assert(std::fabs(ary_log.get_residual() - 519.021) < 0.001);
+    assert(std::fabs(ary_log.get_residual() - 519.021) < 0.001);
 }
 
 // -----------------------------------------------------------------------------

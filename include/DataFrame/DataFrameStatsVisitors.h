@@ -290,17 +290,17 @@ static inline auto _bc_signbit_(const V &v) noexcept  {
 }
 
 template<typename V>
-static inline auto _reduce_to_scalar_(const V &val)  {
+static inline auto _reduce_to_scalar_(const V &v) noexcept  {
 
     if constexpr (std::is_arithmetic_v<V>)  {
-        return (val);
+        return (v);
     }
     else  {
         using data_t = typename V::value_type;
 
         data_t  sum { 0 };
 
-        for (const auto &elem : val)
+        for (const auto &elem : v)
             sum += elem;
         return (sum);
     }
@@ -7592,7 +7592,7 @@ public:
     using size_type = long;
     using result_type = vec_t<data_t>;
     using weight_func =
-        std::function<value_type(const index_type &idx, size_type val_index)>;
+        std::function<data_t(const index_type &idx, size_type val_index)>;
 
     template<typename K, typename Hx, typename Hy>
     inline void
@@ -7606,11 +7606,11 @@ public:
                 ? 0L : ThreadGranularity::get_thread_level()
         };
 
-        vec_t<anal_res_t>   logx (x_begin, x_end);
+        vec_t<anal_res_t>   logx (col_s);
         auto                log_lbd =
-            [&logx](auto begin, auto end) -> void  {
-                for (auto i = begin; i < end; ++i)
-                    logx[i] = _bc_log_(logx[i]);
+            [&logx, &x_begin](auto begin, auto end) -> void  {
+                for (auto i { begin }; i < end; ++i)
+                    logx[i] = _bc_log_(*(x_begin + i));
             };
 
         if (thread_level > 2)  {
@@ -7633,18 +7633,19 @@ public:
             (auto begin, auto end) -> data_t  {
                 data_t  residual { 0 };
 
-                for (auto i = begin; i < end; ++i)  {
+                for (auto i { begin }; i < end; ++i)  {
                     const auto  p_res { poly_fit_.get_result() };
-                    const auto  pred =
+                    const auto  pred {
                         _reduce_to_scalar_(
-                            _bc_log_(*(x_begin + i)) * p_res[1] + p_res[0]);
-                    const auto  w = weights_(*(idx_begin + i), i);
+                            _bc_log_(*(x_begin + i)) * p_res[1] + p_res[0])
+                    };
+                    const auto  w { weights_(*(idx_begin + i), i) };
 
                     // y fits at given x points
                     //
                     y_fits_[i] = pred;
 
-                    const auto  val = ((*(y_begin + i) - pred) * w);
+                    const auto  val { ((*(y_begin + i) - pred) * w) };
 
                     residual += val * val;
                 }
@@ -7678,8 +7679,9 @@ public:
 
     explicit
     LogFitVisitor(weight_func w_func =
-                      [](const I &, std::size_t) -> data_t  { return (1); })
-        : poly_fit_(1, w_func), weights_(w_func)  {   }
+                      [](const I &, std::size_t) -> data_t  { return (1); },
+                  size_type deg = 1)
+        : poly_fit_(deg, w_func), weights_(w_func)  {   }
 
 private:
 

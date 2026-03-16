@@ -2418,7 +2418,8 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 
   <H2 ID="4"><font color="blue">Views <font size="+4">&#128269;</font></font></H2>
   <P>
-    Views have useful and practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified and vice versa. There are certain things you cannot do in views. For example, you cannot add or delete columns, extend the index column, ...<BR><BR>
+    Views have useful and practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified and vice versa. Conceptually, views are very similar to <I>std::span</I> or <I>std::mdspan</I> in C++. If the original DataFrame goes out of scope, access to all its views will be UB.<BR>
+	There are certain things you cannot do in views. For example, you cannot add or delete columns, extend the index column, ...<BR><BR>
 
     In general there are two kinds of views
     <OL>

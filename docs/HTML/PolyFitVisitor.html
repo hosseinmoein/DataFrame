@@ -104,6 +104,7 @@ PolyFitVisitor(std::size_t degree,
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+
         This functor fits a <I>y = b<sub>0</sub> + b<sub>1</sub> * log(x)</I> through the given x-y coordinates by the way of calling PolyFit above on log(x).<BR><BR>
 
         This works with both scalar and multidimensional (i.e. vectors or arrays) datasets.<BR><BR>
@@ -121,6 +122,7 @@ LogFitVisitor(std::size_t degree = 1,
               weight_func w_func = [](const I &, size_t) -> data_t { return (1); });
         </PRE>
         </I>
+        <B>degree</B>: The polynomial degree<BR>
         <B>w_func</B>: A functor that provides weights to be applied to sigma values. w_func is passed two parameters: (1) The value of the index column corresponding to the given y value, (2) The corresponding index into the y vector. The default is no weights.
       </td>
       <td width="30%">

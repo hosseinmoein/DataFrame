@@ -2391,12 +2391,10 @@ solve(const MA &rhs) const  {
 
     Matrix<T, MO>   sol { rhs_size, 1L };
 
-    for (size_type rhsc = 0; rhsc < 1L; ++rhsc)  {
-        for (size_type r = rows() - 1; r >= 0; --r)  {
-            sol(r, rhsc) = tmp(r, cols() + rhsc);
-            for (size_type c = r + 1; c < cols(); ++c)
-                sol(r, rhsc) -= tmp(r, c) * sol(c, rhsc);
-        }
+    for (size_type r = rows() - 1; r >= 0; --r)  {
+        sol(r, 0) = tmp(r, cols());
+        for (size_type c = r + 1; c < cols(); ++c)
+            sol(r, 0) -= tmp(r, c) * sol(c, 0);
     }
 
     return (sol);

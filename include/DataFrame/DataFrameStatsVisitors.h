@@ -328,7 +328,7 @@ static inline auto _reduce_to_product_(const V &v) noexcept  {
         return (prod);
     }
 }
-	
+
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
@@ -7364,197 +7364,283 @@ public:
                                  "equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        // Degree needs to change to contain the slope (0-degree)
-        //
-        size_type       deg { degree_ };
-        const size_type nrows { deg + 1 };  // number of coefficients
-
-        // Array that will store the values of
-        // sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
-        //
-        vec_t<anal_res_t>   sigma_x(2 * nrows);
-
-        // Consecutive positions of the array will store
-        // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
-        //
         if constexpr (is_md_)  {
-            const auto  dim { x_begin->size() };
-
-            for (auto &vec : sigma_x)
-                vec.resize(dim, 0);
-        }
-        auto    x_lbd =
-            [&x_begin, &idx_begin, this]
-            (auto begin, auto end, auto i) -> anal_res_t  {
-                anal_res_t  sum;
-
-                if constexpr (is_md_)
-                    sum.resize((x_begin + begin)->size(), 0);
-                else
-                    sum = 0;
-                for (auto j { begin }; j < end; ++j)  {
-                    const data_t    w { weights_(*(idx_begin + j), j) };
-
-                    sum += _bc_pow_(*(x_begin + j), data_t(i)) * w;
-                }
-                return (sum);
-           };
-
-        for (size_type i { 0 }; i < size_type(sigma_x.size()); ++i)  {
-            if (thread_level > 2)  {
-                auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0),
-                        col_s,
-                        std::move(x_lbd),
-                        i);
-
-                for (auto &fut : futures)  sigma_x[i] += fut.get();
-            }
-            else  {
-                sigma_x[i] += x_lbd(size_type(0), col_s, i);
-            }
-        }
-
-        // eq_mat is the Normal matrix (augmented) that will store the
-        // equations. The extra column is the y column.
-        //
-        matrix_t    eq_mat { nrows, deg + 2, 0 };
-
-        for (size_type i { 0 }; i <= deg; ++i)  {
-            // Build the Normal matrix by storing the corresponding
-            // coefficients at the right positions except the last column
-            // of the matrix
+            // -----------------------------------------------------------------
+            // Multivariate polynomial least-squares fit.
             //
-            for (size_type j { 0 }; j <= deg; ++j)
-                eq_mat(i, j) = _reduce_to_scalar_(sigma_x[i + j]);
-        }
+            // For dim dimensions and polynomial degree d, the basis consists
+            // of all monomials of total degree <= d:
+            //   { x[0]^e0 * x[1]^e1 * ... : e0 + e1 + ... <= d }
+            //
+            // The number of basis terms is C(dim+d, d).
+            //
+            // We form the normal equations directly:
+            //   (Phi^T * W^2 * Phi) * c = Phi^T * W^2 * y
+            //
+            // where Phi[i][k] is the k-th monomial evaluated at x[i], and W
+            // is the diagonal weight matrix.  The system is then handed off to
+            // matrix_t::solve() which avoids duplicating elimination logic.
+            // -----------------------------------------------------------------
 
-        // Array to store the values of
-        // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
-        //
-        vec_t<anal_res_t>   sigma_y(nrows);
+            const size_type                     dim      {
+                size_type(x_begin->size())
+            };
+            const std::vector<std::vector<size_type>>   monomials {
+                md_monomials_(size_type(dim), size_type(degree_))
+            };
+            const size_type                     n_terms  {
+                size_type(monomials.size())
+            };
 
-        // Consecutive positions will store
-        // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
-        //
-        if constexpr (is_md_)  {
-            const auto  dim { x_begin->size() };
+            // Normal matrix (Phi^T * W^2 * Phi) and RHS (Phi^T * W^2 * y),
+            // kept separate to match matrix_t::solve(rhs) signature.
+            //
+            matrix_t            normal { n_terms, n_terms, data_t(0) };
+            std::vector<data_t> rhs    (n_terms, data_t(0));
 
-            for (auto &vec : sigma_y)
-                vec.resize(dim, 0);
-        }
-        auto    y_lbd =
-            [&x_begin, &y_begin, &idx_begin, this]
-            (auto begin, auto end, auto i) -> anal_res_t  {
-                anal_res_t  sum;
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto      &xi  { *(x_begin + i) };
+                const data_t    yi   { data_t(*(y_begin + i)) };
+                const data_t    wi   { weights_(*(idx_begin + i), i) };
+                const data_t    wi2  { wi * wi };
 
-                if constexpr (is_md_)
-                    sum.resize((x_begin + begin)->size(), 0);
-                else
-                    sum = 0;
-                for (auto j { begin }; j < end; ++j)  {
-                    const data_t    w { weights_(*(idx_begin + j), j) };
-
-                    sum += _bc_pow_(*(x_begin + j), data_t(i)) *
-                           data_t(*(y_begin + j)) * w;
-                }
-                return (sum);
-           };
-
-
-        for (size_type i { 0 }; i < size_type(sigma_y.size()); ++i)  {
-            if (thread_level > 2)  {
-                auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0),
-                        col_s,
-                        std::move(y_lbd),
-                        i);
-
-                for (auto &fut : futures)  sigma_y[i] += fut.get();
-            }
-            else  {
-                sigma_y[i] += y_lbd(size_type(0), col_s, i);
-            }
-        }
-
-        // Load the values of sigma_y as the last column of eq_mat
-        // (Normal Matrix but augmented)
-        //
-        for (size_type i { 0 }; i <= deg; ++i)
-            eq_mat(i, nrows) = _reduce_to_scalar_(sigma_y[i]);
-
-        // deg is made deg + 1 because the Gaussian elimination part
-        // below was for deg equations, but here deg is the deg of
-        // polynomial and for deg we get deg + 1 equations
-        //
-        deg += 1;
-
-        // From now Gaussian elimination starts (can be ignored) to solve the
-        // set of linear equations (Pivotisation)
-        //
-        for (size_type i { 0 }; i < deg; ++i)  {
-            for (size_type k { i + 1 }; k < deg; ++k)
-                if (eq_mat(i, i) < eq_mat(k, i))
-                    for (size_type j { 0 }; j <= deg; ++j)
-                        std::swap(eq_mat(i, j), eq_mat(k, j));
-        }
-
-        // Loop to perform the Gauss elimination
-        //
-        for (size_type i { 0 }; i < deg - 1; ++i)  {
-            for (size_type k { i + 1 }; k < deg; ++k)  {
-                const data_t    t { eq_mat(k, i) / eq_mat(i, i) };
-
-                // Make the elements below the pivot elements equal to zero
-                // or elimnate the variables
+                // Evaluate all basis monomials at xi once and cache them
                 //
+                std::vector<data_t> phi(n_terms);
+
+                for (size_type k { 0 }; k < n_terms; ++k)
+                    phi[k] = eval_monomial_(xi, monomials[k]);
+
+                // Accumulate outer product into normal matrix and dot into RHS
+                //
+                for (size_type r { 0 }; r < n_terms; ++r)  {
+                    for (size_type c { 0 }; c < n_terms; ++c)
+                        normal(r, c) += phi[r] * phi[c] * wi2;
+                    rhs[r] += phi[r] * yi * wi2;
+                }
+            }
+
+            /* solve() throws matrix is singular" for our example
+            // Solve the normal equations: normal * coeffs = rhs
+            //
+            const auto  sol { normal.solve(rhs) };
+
+            // sol is a single-column matrix; unpack into coeffs_
+            //
+            coeffs_.resize(n_terms);
+            for (size_type k { 0 }; k < n_terms; ++k)
+                coeffs_[k] = sol(k, 0);
+            */
+
+            matrix_t U, S, V;
+
+            normal.svd(U, S, V);
+
+            // Compute pseudoinverse: for each singular value, use 1/s if above
+            // threshold, 0 otherwise (handles rank-deficiency gracefully)
+            //
+            const data_t threshold { S(0, 0) * n_terms *
+                                     std::numeric_limits<data_t>::epsilon() };
+
+            matrix_t S_pinv { n_terms, n_terms, data_t(0) };
+
+            for (size_type k { 0 }; k < n_terms; ++k)
+                if (std::fabs(S(k, k)) > threshold)
+                    S_pinv(k, k) = data_t(1) / S(k, k);
+
+            matrix_t rhs_mat { n_terms, 1, 0 };
+
+            rhs_mat.set_column(rhs.begin(), 0);
+
+            // c = V * S⁺ * Uᵀ * rhs
+            //
+            const auto  sol { V * S_pinv * U.transpose() * rhs_mat };
+
+            coeffs_.resize(n_terms);
+            for (size_type k { 0 }; k < n_terms; ++k)
+                coeffs_[k] = sol(k, 0);
+
+            // Evaluate fitted values and accumulate residual
+            //
+            y_fits_.resize(col_s, data_t(0));
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &xi  { *(x_begin + i) };
+                data_t      pred { 0 };
+
+                for (size_type k { 0 }; k < n_terms; ++k)
+                    pred += coeffs_[k] * eval_monomial_(xi, monomials[k]);
+                y_fits_[i] = pred;
+
+                const data_t    w   { weights_(*(idx_begin + i), i) };
+                const data_t    val { (data_t(*(y_begin + i)) - pred) * w };
+
+                residual_ += val * val;
+            }
+        }
+        else  {
+            // -----------------------------------------------------------------
+            // Scalar (1-D) path — unchanged from the original implementation.
+            // -----------------------------------------------------------------
+
+            // Degree needs to change to contain the slope (0-degree)
+            //
+            size_type       deg { degree_ };
+            const size_type nrows { deg + 1 };  // number of coefficients
+
+            // Array that will store the values of
+            // sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
+            //
+            vec_t<data_t>   sigma_x(2 * nrows, data_t(0));
+            auto            x_lbd =
+                [&x_begin, &idx_begin, this]
+                (auto begin, auto end, auto i) -> data_t  {
+                    data_t  sum { 0 };
+
+                    for (auto j { begin }; j < end; ++j)  {
+                        const data_t    w { weights_(*(idx_begin + j), j) };
+
+                        sum += _bc_pow_(*(x_begin + j), data_t(i)) * w;
+                    }
+                    return (sum);
+               };
+
+            for (size_type i { 0 }; i < size_type(sigma_x.size()); ++i)  {
+                if (thread_level > 2)  {
+                    auto    futures =
+                        ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                            size_type(0),
+                            col_s,
+                            std::move(x_lbd),
+                            i);
+
+                    for (auto &fut : futures)  sigma_x[i] += fut.get();
+                }
+                else  {
+                    sigma_x[i] += x_lbd(size_type(0), col_s, i);
+                }
+            }
+
+            // eq_mat is the Normal matrix (augmented) that will store the
+            // equations. The extra column is the y column.
+            //
+            matrix_t    eq_mat { nrows, deg + 2, data_t(0) };
+
+            for (size_type i { 0 }; i <= deg; ++i)
                 for (size_type j { 0 }; j <= deg; ++j)
-                    eq_mat(k, j) = eq_mat(k, j) - eq_mat(i, j) * t;
-            }
-        }
+                    eq_mat(i, j) = sigma_x[i + j];
 
-        // Back-substitution
-        // coeffs_ is a vector whose values correspond to the values
-        // of x, y, z ...
-        //
-        coeffs_.resize(deg, 0);
-        for (size_type i { deg - 1 }; i >= 0; --i)  {
-            // Make the variable to be calculated equal to the rhs of the last
-            // equation
+            // Array to store the values of
+            // sigma(yi), sigma(xi*yi), sigma(xi^2*yi) ... sigma(xi^n*yi)
             //
-            coeffs_[i] = eq_mat(i, deg);
-            for (size_type j { 0 }; j < deg; ++j)  {
-                // Then subtract all the lhs values except the coefficient of
-                // the variable whose value is being calculated
+            vec_t<data_t>   sigma_y(nrows, data_t(0));
+            auto            y_lbd =
+                [&x_begin, &y_begin, &idx_begin, this]
+                (auto begin, auto end, auto i) -> data_t  {
+                    data_t  sum { 0 };
+
+                    for (auto j { begin }; j < end; ++j)  {
+                        const data_t    w { weights_(*(idx_begin + j), j) };
+
+                        sum += _bc_pow_(*(x_begin + j), data_t(i)) *
+                               data_t(*(y_begin + j)) * w;
+                    }
+                    return (sum);
+               };
+
+            for (size_type i { 0 }; i < size_type(sigma_y.size()); ++i)  {
+                if (thread_level > 2)  {
+                    auto    futures =
+                        ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                            size_type(0),
+                            col_s,
+                            std::move(y_lbd),
+                            i);
+
+                    for (auto &fut : futures)  sigma_y[i] += fut.get();
+                }
+                else  {
+                    sigma_y[i] += y_lbd(size_type(0), col_s, i);
+                }
+            }
+
+            // Load the values of sigma_y as the last column of eq_mat
+            // (Normal Matrix but augmented)
+            //
+            for (size_type i { 0 }; i <= deg; ++i)
+                eq_mat(i, nrows) = sigma_y[i];
+
+            // deg is made deg + 1 because the Gaussian elimination part
+            // below was for deg equations, but here deg is the deg of
+            // polynomial and for deg we get deg + 1 equations
+            //
+            deg += 1;
+
+            // From now Gaussian elimination starts (can be ignored) to solve
+            // the set of linear equations (Pivotisation)
+            //
+            for (size_type i { 0 }; i < deg; ++i)  {
+                for (size_type k { i + 1 }; k < deg; ++k)
+                    if (eq_mat(i, i) < eq_mat(k, i))
+                        for (size_type j { 0 }; j <= deg; ++j)
+                            std::swap(eq_mat(i, j), eq_mat(k, j));
+            }
+
+            // Loop to perform the Gauss elimination
+            //
+            for (size_type i { 0 }; i < deg - 1; ++i)  {
+                for (size_type k { i + 1 }; k < deg; ++k)  {
+                    const data_t    t { eq_mat(k, i) / eq_mat(i, i) };
+
+                    // Make the elements below the pivot elements equal to zero
+                    // or elimnate the variables
+                    //
+                    for (size_type j { 0 }; j <= deg; ++j)
+                        eq_mat(k, j) = eq_mat(k, j) - eq_mat(i, j) * t;
+                }
+            }
+
+            // Back-substitution
+            // coeffs_ is a vector whose values correspond to the values
+            // of x, y, z ...
+            //
+            coeffs_.resize(deg, data_t(0));
+            for (size_type i { deg - 1 }; i >= 0; --i)  {
+                // Make the variable to be calculated equal to the rhs of the
+                // last equation
                 //
-                if (j != i)
-                    coeffs_[i] = coeffs_[i] - eq_mat(i, j) * coeffs_[j];
+                coeffs_[i] = eq_mat(i, deg);
+                for (size_type j { 0 }; j < deg; ++j)  {
+                    // Then subtract all the lhs values except the coefficient
+                    // of the variable whose value is being calculated
+                    //
+                    if (j != i)
+                        coeffs_[i] =
+                            coeffs_[i] - eq_mat(i, j) * coeffs_[j];
+                }
+
+                // Now finally divide the rhs by the coefficient of the
+                // variable to be calculated
+                //
+                coeffs_[i] = coeffs_[i] / eq_mat(i, i);
             }
 
-            // Now finally divide the rhs by the coefficient of the
-            // variable to be calculated
-            //
-            coeffs_[i] = coeffs_[i] / eq_mat(i, i);
-        }
+            y_fits_.resize(col_s, data_t(0));
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                data_t  pred { 0 };
 
-        y_fits_.resize(col_s, 0);
-        for (size_type i { 0 }; i < col_s; ++i)  {
-            data_t  pred { 0 };
+                for (size_type j { 0 }; j < deg; ++j)
+                    pred += coeffs_[j] *
+                            _bc_pow_(*(x_begin + i), data_t(j));
+                y_fits_[i] = pred;
 
-            for (size_type j { 0 }; j < deg; ++j)
-                pred += coeffs_[j] *
-                        _reduce_to_scalar_(_bc_pow_(*(x_begin + i), j));
-            y_fits_[i] = pred;
+                const auto  w { weights_(*(idx_begin + i), i) };
 
-            const auto  w { weights_(*(idx_begin + i), i) };
+                // y fits at given x points
+                //
+                const auto  val { (*(y_begin + i) - pred) * w };
 
-            // y fits at given x points
-            //
-            const auto  val { (*(y_begin + i) - pred) * w };
-
-            residual_ += val * val;
+                residual_ += val * val;
+            }
         }
     }
 
@@ -7575,6 +7661,69 @@ public:
         : degree_(d), weights_(w_func)  {   }
 
 private:
+
+    // Generate all monomials of total degree <= max_degree over 'dim
+    // variables. Each monomial is a vector of per-dimension exponents.
+    //
+    // For dim=2, max_degree=2 the result is (in total-degree order):
+    //   {0,0}, {1,0}, {0,1}, {2,0}, {1,1}, {0,2}
+    // giving 6 basis terms = C(dim+degree, degree) = C(4,2) = 6.
+    //
+    static inline std::vector<std::vector<size_type>>
+    md_monomials_(size_type dim, size_type max_degree) noexcept  {
+
+        std::vector<std::vector<size_type>>  result;
+        std::vector<size_type>               current;
+
+        std::function<void(size_type, size_type, std::vector<size_type> &)>
+            gen =
+            [&]
+            (size_type d, size_type rem,
+             std::vector<size_type> &current) -> void  {
+                if (d == dim)  {
+                    result.push_back(current);
+                    return;
+                }
+                for (size_type e { rem }; e >= 0; --e)  {
+                    current.push_back(e);
+                    gen(d + 1, rem - e, current);
+                    current.pop_back();
+                }
+            };
+
+        gen(0, max_degree, current);
+        std::sort(result.begin(), result.end(),
+            [](const std::vector<size_type> &a,
+               const std::vector<size_type> &b)  {
+                const size_type sum_a {
+                    std::accumulate(a.begin(), a.end(), 0)
+                };
+                const size_type sum_b {
+                    std::accumulate(b.begin(), b.end(), 0)
+                };
+
+                if (sum_a != sum_b)  return (sum_a < sum_b);
+                return (a < b);  // lexicographic within same total degree
+            });
+        return (result);
+    }
+
+    // Evaluate a single monomial (product of x[d]^exp[d] for all d) at
+    // point x.
+    //
+    template<typename Vec>
+    static inline typename Vec::value_type
+    eval_monomial_(const Vec &x,
+                   const std::vector<size_type> &exponents) noexcept  {
+
+        using data_t = typename Vec::value_type;
+
+        data_t  val { 1 };
+
+        for (std::size_t d { 0 }; d < exponents.size(); ++d)
+            val *= std::pow(x[d], data_t(exponents[d]));
+        return (val);
+    }
 
     result_type     y_fits_ {  };
     result_type     coeffs_ {  };
@@ -7651,42 +7800,52 @@ public:
 
         poly_fit_(idx_begin, idx_end, logx.begin(), logx.end(), y_begin, y_end);
 
-        auto    res_lbd =
-            [&x_begin, &y_begin, &idx_begin, this]
-            (auto begin, auto end) -> data_t  {
-                data_t  residual { 0 };
-
-                for (auto i { begin }; i < end; ++i)  {
-                    const auto  p_res { poly_fit_.get_result() };
-                    const auto  pred {
-                        _reduce_to_scalar_(
-                            _bc_log_(*(x_begin + i)) * p_res[1] + p_res[0])
-                    };
-                    const auto  w { weights_(*(idx_begin + i), i) };
-
-                    // y fits at given x points
-                    //
-                    y_fits_[i] = pred;
-
-                    const auto  val { ((*(y_begin + i) - pred) * w) };
-
-                    residual += val * val;
-                }
-                return (residual);
-           };
-
         y_fits_.resize(col_s);
-        if (thread_level > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    std::move(res_lbd));
+        if constexpr (is_md_)  {
+            // PolyFitVisitor already computed the correct residual and y_fits
+            // in log-x space for the multidimensional case. Just copy them.
+            //
+            residual_ = poly_fit_.get_residual();
 
-             for (auto &fut : futures)  residual_ += fut.get();
+            const auto &pf_fits = poly_fit_.get_y_fits();
+
+            for (size_type i { 0 }; i < col_s; ++i)
+                y_fits_[i] = pf_fits[i];
         }
         else  {
-            residual_ = res_lbd(size_type(0), col_s);
+            // Scalar path: reconstruct prediction from slope/intercept
+            // as before
+            //
+            const auto  &poly_res =  poly_fit_.get_result();
+            auto        res_lbd =
+                [&x_begin, &y_begin, &idx_begin,
+                 &poly_res = std::as_const(poly_res), this]
+                (auto begin, auto end) -> data_t  {
+                    data_t residual { 0 };
+
+                    for (auto i { begin }; i < end; ++i)  {
+                        const auto  pred  {
+                            _bc_log_(*(x_begin + i)) * poly_res[1] + poly_res[0]
+                        };
+                        const auto  w   { weights_(*(idx_begin + i), i) };
+
+                        y_fits_[i] = pred;
+
+                        const auto val { (*(y_begin + i) - pred) * w };
+                        residual += val * val;
+                    }
+                    return (residual);
+                };
+
+            if (thread_level > 2)  {
+                auto futures =
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        size_type(0), col_s, std::move(res_lbd));
+                for (auto &fut : futures)  residual_ += fut.get();
+            }
+            else  {
+                residual_ = res_lbd(size_type(0), col_s);
+            }
         }
     }
 
@@ -8110,7 +8269,7 @@ public:
         residual_ = 0;
         if constexpr (is_md_)
             slope_.clear();
-        else 
+        else
             slope_ = 0;
         intercept_ = 0;
     }

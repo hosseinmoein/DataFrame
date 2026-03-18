@@ -2059,24 +2059,32 @@ static void test_PolyFitVisitor()  {
     df.single_act_visit<ary_col_t, double>("ARY MD X", "MD Y", ary_poly);
     df.single_act_visit<vec_col_t, double>("VEC MD X", "MD Y", vec_poly);
 
-    assert(ary_poly.get_result().size() == 3);
-    assert(vec_poly.get_result().size() == 3);
-    assert(std::fabs(ary_poly.get_result()[0] - 7.2437) < 0.0001);
-    assert(std::fabs(ary_poly.get_result()[2] - 1.55182) < 0.00001);
-    assert(std::fabs(vec_poly.get_result()[0] - 7.2437) < 0.0001);
-    assert(std::fabs(vec_poly.get_result()[2] - 1.55182) < 0.00001);
+    assert(ary_poly.get_result().size() == 6);
+    assert(vec_poly.get_result().size() == 6);
+    assert(std::fabs(ary_poly.get_result()[0] - 1.0) < 0.0001);
+    assert(std::fabs(ary_poly.get_result()[1] - 3.0) < 0.0001);
+    assert(std::fabs(ary_poly.get_result()[2] - 3.0) < 0.0001);
+    assert(std::fabs(ary_poly.get_result()[3] - 2.0) < 0.0001);
+    assert(std::fabs(ary_poly.get_result()[4] - 0.0) < 0.0001);
+    assert(std::fabs(ary_poly.get_result()[5] - 2.0) < 0.0001);
+    assert(std::fabs(vec_poly.get_result()[0] - 1.0) < 0.0001);
+    assert(std::fabs(vec_poly.get_result()[1] - 3.0) < 0.0001);
+    assert(std::fabs(vec_poly.get_result()[2] - 3.0) < 0.0001);
+    assert(std::fabs(vec_poly.get_result()[3] - 2.0) < 0.0001);
+    assert(std::fabs(vec_poly.get_result()[4] - 0.0) < 0.0001);
+    assert(std::fabs(vec_poly.get_result()[5] - 2.0) < 0.0001);
 
     assert(ary_poly.get_y_fits().size() == md_x_col.size());
     assert(vec_poly.get_y_fits().size() == md_x_col.size());
-    assert(std::fabs(ary_poly.get_y_fits()[0] - 14.4874) < 0.0001);
-    assert(std::fabs(ary_poly.get_y_fits()[5] - 28.8459) < 0.0001);
-    assert(std::fabs(ary_poly.get_y_fits()[9] - 33.6975) < 0.0001);
-    assert(std::fabs(vec_poly.get_y_fits()[0] - 14.4874) < 0.0001);
-    assert(std::fabs(vec_poly.get_y_fits()[5] - 28.8459) < 0.0001);
-    assert(std::fabs(vec_poly.get_y_fits()[9] - 33.6975) < 0.0001);
+    assert(std::fabs(ary_poly.get_y_fits()[0] - 1.0)  < 0.0001);
+    assert(std::fabs(ary_poly.get_y_fits()[5] - 15.0) < 0.0001);
+    assert(std::fabs(ary_poly.get_y_fits()[9] - 19.0) < 0.0001);
+    assert(std::fabs(vec_poly.get_y_fits()[0] - 1.0)  < 0.0001);
+    assert(std::fabs(vec_poly.get_y_fits()[5] - 15.0) < 0.0001);
+    assert(std::fabs(vec_poly.get_y_fits()[9] - 19.0) < 0.0001);
 
-    assert(std::fabs(ary_poly.get_residual() - 2017.86) < 0.01);
-    assert(std::fabs(ary_poly.get_residual() - 2017.86) < 0.01);
+    assert(ary_poly.get_residual() < 1.0e-20);
+    assert(vec_poly.get_residual() < 1.0e-20);
 }
 
 // -----------------------------------------------------------------------------
@@ -2210,7 +2218,7 @@ static void test_LogFitVisitor()  {
                            nan_policy::dont_pad_with_nans);
 
     auto                        w_func {
-        [](const unsigned long &, std::size_t) -> double  { return (1); },
+        [](const unsigned long &, std::size_t) -> double  { return (1); }
     };
     LogFitVisitor<ary_col_t>    ary_log { w_func, 2 };
     LogFitVisitor<vec_col_t>    vec_log { w_func, 2 };
@@ -2218,24 +2226,28 @@ static void test_LogFitVisitor()  {
     df.single_act_visit<ary_col_t, double>("ARY MD X", "MD Y", ary_log);
     df.single_act_visit<vec_col_t, double>("VEC MD X", "MD Y", vec_log);
 
-    assert(ary_log.get_result().size() == 3);
-    assert(vec_log.get_result().size() == 3);
-    assert(std::fabs(ary_log.get_result()[0] - 3.61525) < 0.00001);
-    assert(std::fabs(ary_log.get_result()[2] - 0.281702) < 0.000001);
-    assert(std::fabs(vec_log.get_result()[0] - 3.61525) < 0.00001);
-    assert(std::fabs(vec_log.get_result()[2] - 0.281702) < 0.000001);
+    assert(ary_log.get_result().size() == 6);
+    assert(vec_log.get_result().size() == 6);
+    assert(std::fabs(ary_log.get_result()[0] - 2.0) < 0.01);
+    assert(std::fabs(ary_log.get_result()[2] - 3.0) < 0.01);
+    assert(ary_log.get_result()[5] < 1.0e-12);
+    assert(std::fabs(vec_log.get_result()[0] - 2.0) < 0.00001);
+    assert(std::fabs(vec_log.get_result()[2] - 3.0) < 0.000001);
+    assert(vec_log.get_result()[5] < 1.0e-12);
 
     assert(ary_log.get_y_fits().size() == md_x_col.size());
     assert(vec_log.get_y_fits().size() == md_x_col.size());
-    assert(std::fabs(ary_log.get_y_fits()[0] - 9.29912) < 0.00001);
-    assert(std::fabs(ary_log.get_y_fits()[5] - 15.3124) < 0.0001);
-    assert(std::fabs(ary_log.get_y_fits()[9] - 20.3082) < 0.0001);
-    assert(std::fabs(vec_log.get_y_fits()[0] - 9.29912) < 0.00001);
-    assert(std::fabs(vec_log.get_y_fits()[5] - 15.3124) < 0.0001);
-    assert(std::fabs(vec_log.get_y_fits()[9] - 20.3082) < 0.0001);
+    assert(std::fabs(ary_log.get_y_fits()[0] - 3.03972) < 0.00001);
+    assert(std::fabs(ary_log.get_y_fits()[5] - 8.74971) < 0.00001);
+    assert(std::fabs(ary_log.get_y_fits()[9] - 12.0269) < 0.0001);
+    assert(std::fabs(vec_log.get_y_fits()[0] - 3.03972) < 0.00001);
+    assert(std::fabs(vec_log.get_y_fits()[5] - 8.74971) < 0.00001);
+    assert(std::fabs(vec_log.get_y_fits()[9] - 12.0269) < 0.0001);
 
-    assert(std::fabs(ary_log.get_residual() - 519.021) < 0.001);
-    assert(std::fabs(ary_log.get_residual() - 519.021) < 0.001);
+    assert(ary_log.get_residual() < 1.0e-22);
+    assert(ary_log.get_residual() < 1.0e-22);
+    assert(std::fabs(ary_log.get_slope() - 2.0) < 0.01);
+    assert(std::fabs(ary_log.get_slope() - 2.0) < 0.01);
 }
 
 // -----------------------------------------------------------------------------

@@ -150,10 +150,10 @@ LogFitVisitor(std::size_t degree = 1,
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
-        The result gives you the vector of y fits for each given x.<BR>
-        There is also a method <I>get_slope()</I> which returns the slope -- coefficient of the exponential function.<BR>
-        There is also a method <I>get_residual()</I> which returns the sum of squared residuals.<BR>
-        There is also a method <I>get_intercept()</I> which returns the intercept.<BR>
+        <B>get_result()</B> gives you the vector of y fits for each given x.<BR>
+        <B>get_slope()</B> returns the slope -- coefficient of the exponential function.<BR>
+        <B>get_residual()</B> returns the sum of squared residuals.<BR>
+        <B>get_intercept()</B> returns the intercept.<BR>
         <I>
         <PRE>
     ExponentialFitVisitor();
@@ -186,10 +186,13 @@ LogFitVisitor(std::size_t degree = 1,
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
         The PowerFit method fits a function of the form y = ax<sup>b</sup> to data by performing a least-squares fit using the transformed model function ln(y) = a<sub>0</sub> + b*ln(x) where a<sub>0</sub> is ln(a). The new function is linear in the model parameters, a<sub>0</sub> and b. <BR><BR>
-        The result gives you the vector of y fits for each given x.<BR>
-        There is also a method <I>get_slope()</I> which returns the slope -- logarithmic constant.<BR>
-        There is also a method <I>get_residual()</I> which returns the sum of squared residuals.<BR>
-        There is also a method <I>get_intercept()</I> which returns the intercept -- coefficient of logarithmic term.<BR>
+
+        This works with both scalar and multidimensional (i.e. vectors or arrays) datasets.<BR><BR>
+
+        <B>get_result()</B> gives you the vector of y fits for each given x.<BR>
+        <B>get_slope()</B> returns the slope -- logarithmic constant. In case of multidimensional input data, this is a vector of size dimensions.<BR>
+        <B>get_residual()</B> returns the sum of squared residuals.<BR>
+        <B>get_intercept()</B> returns the intercept -- coefficient of logarithmic term.<BR>
         <I>
         <PRE>
     PowerFitVisitor();

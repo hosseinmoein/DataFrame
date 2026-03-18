@@ -386,7 +386,7 @@ public:
     // It returns the x vector.
     //
     template<typename MA>
-    [[nodiscard]] inline MA solve(const MA &rhs) const;
+    [[nodiscard]] inline Matrix<T, MO> solve(const MA &rhs) const;
     [[nodiscard]] inline Matrix solve() const;  // rhs is the last column
 
     // In 2-D, when you talk about the point (2, 4), you can think of the

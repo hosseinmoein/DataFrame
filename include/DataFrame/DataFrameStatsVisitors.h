@@ -203,8 +203,14 @@ static inline auto _bc_pow_(const V &v, S exp) noexcept  {
 
         std::vector<data_t> res(exp.size());
 
-        for (std::size_t i { 0 }; i < exp.size(); ++i)
-            res[i] = std::pow(v, exp[i]);
+        if constexpr (std::is_arithmetic_v<V>)  {
+            for (std::size_t i { 0 }; i < exp.size(); ++i)
+                res[i] = std::pow(v, exp[i]);
+        }
+        else  {
+            for (std::size_t i { 0 }; i < exp.size(); ++i)
+                res[i] = std::pow(v[i], exp[i]);
+        }
         return (res);
     }
     else if constexpr (std::is_arithmetic_v<V>)  {
@@ -306,6 +312,23 @@ static inline auto _reduce_to_scalar_(const V &v) noexcept  {
     }
 }
 
+template<typename V>
+static inline auto _reduce_to_product_(const V &v) noexcept  {
+
+    if constexpr (std::is_arithmetic_v<V>)  {
+        return (v);
+    }
+    else  {
+        using data_t = typename V::value_type;
+
+        data_t  prod { 1 };
+
+        for (const auto &elem : v)
+            prod *= elem;
+        return (prod);
+    }
+}
+	
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
@@ -1617,7 +1640,7 @@ public:
                 const_cast<CovVisitor *>(this)->mean2_ =
                     inter_result_.total2 / data_t(inter_result_.cnt);
             else
-                const_cast<CovVisitor *>(this)->mean2_ = 
+                const_cast<CovVisitor *>(this)->mean2_ =
                     std::numeric_limits<data_t>::quiet_NaN();
         }
         return (mean2_);
@@ -7854,91 +7877,217 @@ using efit_v = ExponentialFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  PowerFitVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
 
-    template<typename K, typename H>
+    // True when T is a container (multidimensional x input)
+    //
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using anal_res_t =
+        typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
+
+    using matrix_t = Matrix<data_t, matrix_orient::row_major>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = vec_t<data_t>;
+
+    template<typename K, typename H1, typename H2>
     inline void
-    operator() (const K &, const K &,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &, const K &,
+               const H1 &x_begin, const H1 &x_end,
+               const H2 &y_begin, const H2 &y_end)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
-        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(y_begin, y_end)))
-            throw DataFrameError("PowerFitVisitor: two columns must be "
+            throw DataFrameError("PowerFitVisitor: X and Y columns must be "
                                  "of equal sizes");
+        if constexpr (is_md_)  {
+            const size_type dim { x_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((x_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "PowerFitVisitor: Inconsistent data dimensions");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        value_type  sum_x { 0 };   // Sum of all observed x
-        value_type  sum_y { 0 };   // Sum of all observed y
-        value_type  sum_x2 { 0 };  // Sum of all observed x squared
-        value_type  sum_xy { 0 };  // Sum of all x times sum of all observed y
+        if constexpr (! is_md_)  {
+            using sum_t = std::tuple<data_t, data_t, data_t, data_t>;
 
-        if (thread_level > 2)  {
-            using sum_t =
-                std::tuple<value_type, value_type, value_type, value_type>;
+            data_t  sum_x { };   // Sum of all observed x
+            data_t  sum_y { 0 }; // Sum of all observed y
+            data_t  sum_x2 { };  // Sum of all observed x squared
+            data_t  sum_xy { };  // Sum of all x times sum of all observed y
 
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&x_begin, &y_begin](auto begin, auto end) -> sum_t  {
-                        value_type  sum_x { 0 };
-                        value_type  sum_y { 0 };
-                        value_type  sum_x2 { 0 };
-                        value_type  sum_xy { 0 };
+            if constexpr (is_md_)  {
+                const auto  dim { x_begin->size() };
 
-                        for (auto i = begin; i < end; ++i)  {
-                            const value_type    log_x =
-                                std::log(*(x_begin + i));
-                            const value_type    log_y =
-                                std::log(*(y_begin + i));
+                sum_x.resize(dim, 0);
+                sum_x2.resize(dim, 0);
+                sum_xy.resize(dim, 0);
+            }
+            else  {
+                sum_x = 0;
+                sum_x2 = 0;
+                sum_xy = 0;
+            }
+            auto    lbd_1 =
+                [&x_begin, &y_begin](auto begin, auto end) -> sum_t  {
+                    data_t  sum_x { };
+                    data_t  sum_y { 0 };
+                    data_t  sum_x2 { };
+                    data_t  sum_xy { };
 
-                            sum_x += log_x;
-                            sum_y += log_y;
-                            sum_xy += log_x * log_y;
-                            sum_x2 += log_x * log_x;
-                        }
-                        return (std::make_tuple(sum_x, sum_y, sum_xy, sum_x2));
-                    });
+                    if constexpr (is_md_)  {
+                        const auto  dim { x_begin->size() };
 
-            for (auto &fut : futures)  {
-                const auto  &sums = fut.get();
+                        sum_x.resize(dim, 0);
+                        sum_x2.resize(dim, 0);
+                        sum_xy.resize(dim, 0);
+                    }
+                    else  {
+                        sum_x = 0;
+                        sum_x2 = 0;
+                        sum_xy = 0;
+                    }
+                    for (auto i = begin; i < end; ++i)  {
+                        const data_t    log_x { _bc_log_(*(x_begin + i)) };
+                        const data_t    log_y {_bc_log_(*(y_begin + i)) };
+
+                        sum_x += log_x;
+                        sum_y += log_y;
+                        sum_xy += log_x * log_y;
+                        sum_x2 += log_x * log_x;
+                    }
+                    return (std::make_tuple(sum_x, sum_y, sum_xy, sum_x2));
+                };
+
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        size_type(0),
+                        col_s,
+                        std::move(lbd_1));
+
+                for (auto &fut : futures)  {
+                    const auto  &sums { fut.get() };
+
+                    sum_x += std::get<0>(sums);
+                    sum_y += std::get<1>(sums);
+                    sum_xy += std::get<2>(sums);
+                    sum_x2 += std::get<3>(sums);
+                }
+            }
+            else  {
+                const auto  &sums { lbd_1(size_type(0), col_s) };
 
                 sum_x += std::get<0>(sums);
                 sum_y += std::get<1>(sums);
                 sum_xy += std::get<2>(sums);
                 sum_x2 += std::get<3>(sums);
             }
-        }
-        else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    log_y = std::log(*(y_begin + i));
-                const value_type    log_x = std::log(*(x_begin + i));
 
-                sum_x += log_x;
-                sum_y += log_y;
-                sum_xy += log_x * log_y;
-                sum_x2 += log_x * log_x;
+            // The slope (the the power of exp) of best fit line
+            //
+            slope_ = (data_t(col_s) * sum_xy - sum_x * sum_y) /
+                     (data_t(col_s) * sum_x2 - sum_x * sum_x);
+
+            // The intercept of best fit line
+            //
+            intercept_ = (sum_y - slope_ * sum_x) / data_t(col_s);
+        }
+        else  {  // Multidimensional path
+            const size_type dim { static_cast<size_type>(x_begin->size()) };
+            const size_type mat_s { dim + 1 };
+
+            // XtX is (dim+1 x dim+1), Xty is (dim+1)
+            // Row/col 0 is the intercept (constant 1) term
+            //
+            matrix_t        XtX(mat_s, mat_s, 0);
+            vec_t<data_t>   Xty(mat_s, 0);
+
+            // Accumulate XtX and Xty in log-space
+            // X row = [1, ln(x_0), ln(x_1), ..., ln(x_{dim-1})]
+            //
+            for (auto i = size_type(0); i < col_s; ++i)  {
+                const auto  &xi { *(x_begin + i) };
+                const auto  log_y { _bc_log_(*(y_begin + i)) };
+
+                // Build log_row = [1, ln(x_0), ..., ln(x_{dim-1})]
+                //
+                vec_t<data_t>       log_row(mat_s);
+
+                log_row[0] = 1;
+                for (size_type j { 0 }; j < dim; ++j)
+                    log_row[j + 1] = std::log(xi[j]);
+
+                // XtX += log_row * log_rowᵀ
+                //
+                for (long r { 0 }; r < long(mat_s); ++r)
+                    for (long c { 0 }; c < long(mat_s); ++c)
+                        XtX(r, c) += log_row[r] * log_row[c];
+
+                // Xty += log_row * log_y
+                //
+                for (size_type r { 0 }; r < mat_s; ++r)
+                    Xty[r] += log_row[r] * log_y;
             }
+
+            // Solve (XtX) * beta = Xty
+            // beta = [ln(a), b_0, b_1, ..., b_{dim-1}]
+            //
+            const matrix_t  beta { XtX.solve(Xty) };
+
+            intercept_ = beta(0, 0);   // ln(a)
+            slope_.resize(dim);
+            for (size_type j { 0 }; j < dim; ++j)
+                slope_[j] = beta(j + 1, 0);
         }
 
-        // The slope (the the power of exp) of best fit line
-        //
-        slope_ = (col_s * sum_xy - sum_x * sum_y) /
-                 (col_s * sum_x2 - sum_x * sum_x);
+        const data_t    prefactor { _bc_exp_(intercept_) };
+        auto            lbd_2 =
+            [&x_begin, &y_begin, prefactor, this]
+            (auto begin, auto end) -> data_t  {
+                data_t  residual { 0 };
 
-        // The intercept of best fit line
-        //
-        intercept_ = (sum_y - slope_ * sum_x) / col_s;
+                for (auto i = begin; i < end; ++i)  {
+                    const auto    pred {
+                        prefactor *
+                        _reduce_to_product_(_bc_pow_(*(x_begin + i), slope_))
+                    };
 
-        const value_type    prefactor = std::exp(intercept_);
+                    // y fits at given x points
+                    //
+                    y_fits_[i] = pred;
+
+                    const auto  r { *(y_begin + i) - pred };
+
+                    residual += r * r;
+                }
+                return (residual);
+           };
+
 
         y_fits_.resize(col_s);
         if (thread_level > 2)  {
@@ -7946,66 +8095,40 @@ struct  PowerFitVisitor  {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    [&x_begin, &y_begin, prefactor, this]
-                    (auto begin, auto end) -> value_type  {
-                        value_type  residual { 0 };
-
-                        for (auto i = begin; i < end; ++i)  {
-                            const value_type    pred =
-                                prefactor *
-                                std::pow(*(x_begin + i), this->slope_);
-
-                            // y fits at given x points
-                            //
-                            this->y_fits_[i] = pred;
-
-                            const value_type    r = *(y_begin + i) - pred;
-
-                            residual += r * r;
-                        }
-                        return (residual);
-                   });
+                    std::move(lbd_2));
 
              for (auto &fut : futures)  residual_ += fut.get();
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    pred =
-                    prefactor * std::pow(*(x_begin + i), this->slope_);
-
-                // y fits at given x points
-                //
-                y_fits_[i] = pred;
-
-                const value_type    r = *(y_begin + i) - pred;
-
-                residual_ += r * r;
-            }
+            residual_ = lbd_2(size_type(0), col_s);
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         y_fits_.clear();
         residual_ = 0;
-        slope_ = 0;
+        if constexpr (is_md_)
+            slope_.clear();
+        else 
+            slope_ = 0;
         intercept_ = 0;
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (y_fits_); }
-    inline result_type &get_result ()  { return (y_fits_); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline value_type get_slope () const  { return (slope_); }
-    inline value_type get_intercept () const  { return (intercept_); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (y_fits_); }
+    inline result_type &get_result()  { return (y_fits_); }
+    inline data_t get_residual() const  { return (residual_); }
+    inline const anal_res_t &get_slope() const  { return (slope_); }
+    inline data_t get_intercept() const  { return (intercept_); }
 
     PowerFitVisitor()  {   }
 
 private:
 
-    result_type y_fits_ {  };
-    value_type  residual_ { 0 };
-    value_type  slope_ { 0 };
-    value_type  intercept_ { 0 };
+    result_type y_fits_ { };
+    data_t      residual_ { 0 };
+    anal_res_t  slope_ { };
+    data_t      intercept_ { 0 };
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

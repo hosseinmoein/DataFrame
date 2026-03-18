@@ -2355,22 +2355,31 @@ ldlt(std::vector<T> &D, MA &L) const  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA>
-MA Matrix<T, MO, IS_SYM>::
+Matrix<T, MO> Matrix<T, MO, IS_SYM>::
 solve(const MA &rhs) const  {
 
+    constexpr bool  is_vec = is_std_vector_v<MA>;
+
+    size_type   rhs_size;
+
+    if constexpr (is_vec)  rhs_size = rhs.size();
+    else  rhs_size = rhs.rows();
+
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (! is_square() || cols() != rhs.rows())
+    if (! is_square() || cols() != rhs_size)
         throw NotFeasible("Matrix::solve(): Matrix must be squared and "
                           "compatible with rhs");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    MA  tmp { rows(), cols() + rhs.cols() };
+    Matrix<T, MO>   tmp { rows(), cols() + 1L };
 
     for (size_type r = 0; r < rows(); ++r)  {
         for (size_type c = 0; c < cols(); ++c)
             tmp(r, c) = at(r, c);
-        for (size_type c = 0; c < rhs.cols(); ++c)
-            tmp(r, cols() + c) = rhs(r, c);
+        if constexpr (is_vec)
+            tmp(r, cols()) = rhs[r];
+        else
+            tmp(r, cols()) = rhs(r, 0);
     }
 
     size_type   rank { 0 };
@@ -2380,9 +2389,9 @@ solve(const MA &rhs) const  {
     if (rank != rows())
         throw NotFeasible("Matrix::solve(): Matrix is singular");
 
-    MA  sol { rhs.rows(), rhs.cols() };
+    Matrix<T, MO>   sol { rhs_size, 1L };
 
-    for (size_type rhsc = 0; rhsc < rhs.cols(); ++rhsc)  {
+    for (size_type rhsc = 0; rhsc < 1L; ++rhsc)  {
         for (size_type r = rows() - 1; r >= 0; --r)  {
             sol(r, rhsc) = tmp(r, cols() + rhsc);
             for (size_type c = r + 1; c < cols(); ++c)

@@ -2292,9 +2292,11 @@ static void test_ExponentialFitVisitor()  {
 
 static void test_PowerFitVisitor()  {
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     std::cout << "\nTesting PowerFitVisitor{  } ..." << std::endl;
 
-    StlVecType<unsigned long>   idx =
+    std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -2304,26 +2306,92 @@ static void test_PowerFitVisitor()  {
     MyDataFrame                 df;
 
     df.load_index(std::move(idx));
-    df.load_column<double>("X1",
-                           { 1, 2, 3, 4, 5, 6 },
+    df.load_column<double>("X1", { 1, 2, 3, 4, 5, 6 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y1",
-                           { 2.98, 7.26, 11.75, 22.72, 27.20, 38.57 },
+    df.load_column<double>("Y1", { 2.98, 7.26, 11.75, 22.72, 27.20, 38.57 },
                            nan_policy::dont_pad_with_nans);
 
-    PowerFitVisitor<double, unsigned long, 64>  pow_v;
+    PowerFitVisitor<double> pow_v;
 
     df.single_act_visit<double, double>("X1", "Y1", pow_v);
     assert(std::fabs(pow_v.get_residual() - 13.4058) < 0.0001);
     assert(std::fabs(pow_v.get_slope() - 1.4332) < 0.0001);
     assert(std::fabs(pow_v.get_intercept() - 1.0313) < 0.0001);
 
-    const auto  actual = StlVecType<double> {
+    const auto  actual = std::vector<double> {
         2.8047, 7.5739, 13.5423, 20.4527, 28.1605, 36.5697
     };
 
     for (size_t i = 0; i < pow_v.get_result().size(); ++i)
         assert(fabs(pow_v.get_result()[i] - actual[i]) < 0.0001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  ary_md_x  {
+        { 1.0, 2.0, 3.0 }, { 2.0, 3.0, 1.5 }, { 3.0, 1.0, 4.0 },
+        { 4.0, 2.5, 2.0 }, { 1.5, 4.0, 1.0 }, { 5.0, 1.5, 3.5 },
+        { 2.5, 3.5, 2.5 }, { 3.5, 2.0, 1.0 }, { 1.0, 5.0, 4.5 },
+        { 4.5, 3.0, 2.0 },
+    };
+    std::vector<vec_col_t>  vec_md_x  {
+        { 1.0, 2.0, 3.0 }, { 2.0, 3.0, 1.5 }, { 3.0, 1.0, 4.0 },
+        { 4.0, 2.5, 2.0 }, { 1.5, 4.0, 1.0 }, { 5.0, 1.5, 3.5 },
+        { 2.5, 3.5, 2.5 }, { 3.5, 2.0, 1.0 }, { 1.0, 5.0, 4.5 },
+        { 4.5, 3.0, 2.0 },
+    };
+
+    df.load_column<ary_col_t>("ARY MD X", std::move(ary_md_x),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD X", std::move(vec_md_x),
+                              nan_policy::dont_pad_with_nans);
+
+    std::vector<double> ground_truth {
+        2.0 * std::pow(1.0,1.5) * std::pow(2.0,0.8) * std::pow(3.0,0.5) + 0.05,
+        2.0 * std::pow(2.0,1.5) * std::pow(3.0,0.8) * std::pow(1.5,0.5) - 0.08,
+        2.0 * std::pow(3.0,1.5) * std::pow(1.0,0.8) * std::pow(4.0,0.5) + 0.03,
+        2.0 * std::pow(4.0,1.5) * std::pow(2.5,0.8) * std::pow(2.0,0.5) - 0.06,
+        2.0 * std::pow(1.5,1.5) * std::pow(4.0,0.8) * std::pow(1.0,0.5) + 0.02,
+        2.0 * std::pow(5.0,1.5) * std::pow(1.5,0.8) * std::pow(3.5,0.5) - 0.10,
+        2.0 * std::pow(2.5,1.5) * std::pow(3.5,0.8) * std::pow(2.5,0.5) + 0.07,
+        2.0 * std::pow(3.5,1.5) * std::pow(2.0,0.8) * std::pow(1.0,0.5) - 0.04,
+        2.0 * std::pow(1.0,1.5) * std::pow(5.0,0.8) * std::pow(4.5,0.5) + 0.01,
+        2.0 * std::pow(4.5,1.5) * std::pow(3.0,0.8) * std::pow(2.0,0.5) - 0.09,
+    };
+
+    df.load_column<double>("MD Y", std::move(ground_truth),
+                           nan_policy::dont_pad_with_nans);
+
+    PowerFitVisitor<ary_col_t>  ary_pow;
+    PowerFitVisitor<vec_col_t>  vec_pow;
+
+    df.single_act_visit<ary_col_t, double>("ARY MD X", "MD Y", ary_pow);
+    df.single_act_visit<vec_col_t, double>("VEC MD X", "MD Y", vec_pow);
+
+    // Y-Fits
+    //
+    assert(ary_pow.get_result().size() == 10);
+    assert(vec_pow.get_result().size() == 10);
+    assert(std::fabs(ary_pow.get_result()[0] - 6.062) < 0.001);
+    assert(std::fabs(ary_pow.get_result()[5] - 57.8006) < 0.0001);
+    assert(std::fabs(ary_pow.get_result()[9] - 64.829) < 0.001);
+    assert(std::fabs(vec_pow.get_result()[0] - 6.062) < 0.001);
+    assert(std::fabs(vec_pow.get_result()[5] - 57.8006) < 0.0001);
+    assert(std::fabs(vec_pow.get_result()[9] - 64.829) < 0.001);
+
+    assert(ary_pow.get_slope().size() == 3);
+    assert(vec_pow.get_slope().size() == 3);
+    assert(std::fabs(ary_pow.get_slope()[0] - 1.49562) < 0.00001);
+    assert(std::fabs(ary_pow.get_slope()[2] - 0.50078) < 0.00001);
+    assert(std::fabs(vec_pow.get_slope()[0] - 1.49562) < 0.00001);
+    assert(std::fabs(vec_pow.get_slope()[2] - 0.50078) < 0.00001);
+
+    assert(std::fabs(ary_pow.get_residual() - 0.0312596) < 0.0000001);
+    assert(std::fabs(ary_pow.get_intercept() - 0.699298) < 0.000001);
 }
 
 // -----------------------------------------------------------------------------

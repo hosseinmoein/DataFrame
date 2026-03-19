@@ -2410,9 +2410,11 @@ static void test_PowerFitVisitor()  {
 
 static void test_QuadraticFitVisitor()  {
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     std::cout << "\nTesting QuadraticFitVisitor{  } ..." << std::endl;
 
-    StlVecType<unsigned long>   idx =
+    std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -2422,12 +2424,10 @@ static void test_QuadraticFitVisitor()  {
     MyDataFrame                 df;
 
     df.load_index(std::move(idx));
-    df.load_column<double>("X1",
-                           { 10, 15, 20, 24, 30, 34, 40, 45, 48, 50, 58 },
+    df.load_column<double>("X1", { 10, 15, 20, 24, 30, 34, 40, 45, 48, 50, 58 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y1",
-                           { 115.6, 157.2, 189.2, 220.8, 253.8, 269.2, 284.8,
-                             285, 277.4, 269.2, 244.2 },
+    df.load_column<double>("Y1", { 115.6, 157.2, 189.2, 220.8, 253.8, 269.2,
+                                   284.8, 285, 277.4, 269.2, 244.2 },
                            nan_policy::dont_pad_with_nans);
 
     QuadraticFitVisitor<double, unsigned long, 64>  qud_v;
@@ -2438,13 +2438,88 @@ static void test_QuadraticFitVisitor()  {
     assert(std::fabs(qud_v.get_intercept() - 13.4522) < 0.0001);
     assert(std::fabs(qud_v.get_constant() - -9.0735) < 0.0001);
 
-    const auto  actual = StlVecType<double> {
+    const auto  actual = std::vector<double> {
         109.8382, 157.5867, 197.5302, 223.8654, 254.0023, 267.8496, 279.2546,
         280.1733, 276.9781, 273.287, 246.0347
     };
 
     for (size_t i = 0; i < qud_v.get_result().size(); ++i)
         assert(fabs(qud_v.get_result()[i] - actual[i]) < 0.0001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  ary_md_x  {
+        { 0.0,  0.0,  0.0 }, { 1.0,  0.0,  0.0 }, { 0.0,  1.0,  0.0 },
+        { 0.0,  0.0,  1.0 }, {-1.0,  1.0,  0.0 }, { 1.0, -1.0,  1.0 },
+        { 2.0,  1.0, -1.0 }, {-1.0, -1.0,  2.0 }, { 1.0,  2.0,  1.0 },
+        { 2.0, -1.0,  2.0 }
+    };
+    std::vector<vec_col_t>  vec_md_x  {
+        { 0.0,  0.0,  0.0 }, { 1.0,  0.0,  0.0 }, { 0.0,  1.0,  0.0 },
+        { 0.0,  0.0,  1.0 }, {-1.0,  1.0,  0.0 }, { 1.0, -1.0,  1.0 },
+        { 2.0,  1.0, -1.0 }, {-1.0, -1.0,  2.0 }, { 1.0,  2.0,  1.0 },
+        { 2.0, -1.0,  2.0 }
+    };
+
+    df.load_column<ary_col_t>("ARY MD X", std::move(ary_md_x),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD X", std::move(vec_md_x),
+                              nan_policy::dont_pad_with_nans);
+
+    // True model: y = 2 + x0 - x1 + 2*x2 + x0^2 + 2*x0*x1 + 3*x1^2 - x2^2
+    // (x0*x2 and x1*x2 terms are intentionally absent → coeffs should be ~0)
+    //
+    auto                ground_truth =
+        [](double x0, double x1, double x2) {
+            return (2.0 + x0 - x1 +
+                    2.0 * x2 +
+                    x0 * x0 +
+                    2.0 * x0 * x1 +
+                    3.0 * x1 * x1 -
+                    x2 * x2);
+        };
+    std::vector<double> md_y;
+    const auto          &md_x_col = df.get_column<ary_col_t>("ARY MD X");
+
+    md_y.reserve(md_x_col.size());
+    for (const auto &p : md_x_col)
+        md_y.push_back(ground_truth(p[0], p[1], p[2]));
+    df.load_column<double>("MD Y", std::move(md_y),
+                           nan_policy::dont_pad_with_nans);
+
+    QuadraticFitVisitor<ary_col_t>  ary_qud;
+    QuadraticFitVisitor<vec_col_t>  vec_qud;
+
+    df.single_act_visit<ary_col_t, double>("ARY MD X", "MD Y", ary_qud);
+    df.single_act_visit<vec_col_t, double>("VEC MD X", "MD Y", vec_qud);
+
+    // Y-Fits
+    //
+    assert(ary_qud.get_result().size() == 10);
+    assert(vec_qud.get_result().size() == 10);
+    assert(std::fabs(ary_qud.get_result()[0] - 2.0) < 0.01);
+    assert(std::fabs(ary_qud.get_result()[5] - 7.0) < 0.01);
+    assert(std::fabs(ary_qud.get_result()[9] - 8.0) < 0.01);
+    assert(std::fabs(vec_qud.get_result()[0] - 2.0) < 0.01);
+    assert(std::fabs(vec_qud.get_result()[5] - 7.0) < 0.01);
+    assert(std::fabs(vec_qud.get_result()[9] - 8.0) < 0.01);
+
+    assert(ary_qud.get_coeffs().size() == 10);
+    assert(vec_qud.get_coeffs().size() == 10);
+    assert(std::fabs(ary_qud.get_coeffs()[0] - 2.0) < 0.01);
+    assert(std::fabs(ary_qud.get_coeffs()[5] - -9.09495e-13) < 0.0000000001);
+    assert(std::fabs(ary_qud.get_coeffs()[9] - 1.0) < 0.01);
+    assert(std::fabs(vec_qud.get_coeffs()[0] - 2.0) < 0.01);
+    assert(std::fabs(vec_qud.get_coeffs()[5] - -9.09495e-13) < 0.0000000001);
+    assert(std::fabs(vec_qud.get_coeffs()[9] - 1.0) < 0.01);
+
+    assert(ary_qud.get_residual() < 1.0e-21);
+    assert(vec_qud.get_residual() < 1.0e-21);
 }
 
 // -----------------------------------------------------------------------------

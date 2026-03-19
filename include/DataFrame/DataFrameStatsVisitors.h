@@ -7364,7 +7364,7 @@ public:
                                  "equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        if constexpr (is_md_)  {
+        if constexpr (is_md_)  {  // Multidimensional input
             // -----------------------------------------------------------------
             // Multivariate polynomial least-squares fit.
             //
@@ -7382,27 +7382,23 @@ public:
             // matrix_t::solve() which avoids duplicating elimination logic.
             // -----------------------------------------------------------------
 
-            const size_type                     dim      {
-                size_type(x_begin->size())
-            };
+            const size_type dim { size_type(x_begin->size()) };
             const std::vector<std::vector<size_type>>   monomials {
-                md_monomials_(size_type(dim), size_type(degree_))
+                md_monomials_(dim, degree_)
             };
-            const size_type                     n_terms  {
-                size_type(monomials.size())
-            };
+            const size_type n_terms { size_type(monomials.size()) };
 
             // Normal matrix (Phi^T * W^2 * Phi) and RHS (Phi^T * W^2 * y),
             // kept separate to match matrix_t::solve(rhs) signature.
             //
             matrix_t            normal { n_terms, n_terms, data_t(0) };
-            std::vector<data_t> rhs    (n_terms, data_t(0));
+            std::vector<data_t> rhs (n_terms, data_t(0));
 
             for (size_type i { 0 }; i < col_s; ++i)  {
-                const auto      &xi  { *(x_begin + i) };
-                const data_t    yi   { data_t(*(y_begin + i)) };
-                const data_t    wi   { weights_(*(idx_begin + i), i) };
-                const data_t    wi2  { wi * wi };
+                const auto      &xi { *(x_begin + i) };
+                const data_t    yi { data_t(*(y_begin + i)) };
+                const data_t    wi { weights_(*(idx_begin + i), i) };
+                const data_t    wi2 { wi * wi };
 
                 // Evaluate all basis monomials at xi once and cache them
                 //
@@ -7420,7 +7416,7 @@ public:
                 }
             }
 
-            /* solve() throws matrix is singular" for our example
+            /* solve() throws "matrix is singular" for our test example
             // Solve the normal equations: normal * coeffs = rhs
             //
             const auto  sol { normal.solve(rhs) };
@@ -7432,23 +7428,26 @@ public:
                 coeffs_[k] = sol(k, 0);
             */
 
-            matrix_t U, S, V;
+            matrix_t    U, S, V;
 
             normal.svd(U, S, V);
 
             // Compute pseudoinverse: for each singular value, use 1/s if above
             // threshold, 0 otherwise (handles rank-deficiency gracefully)
             //
-            const data_t threshold { S(0, 0) * n_terms *
-                                     std::numeric_limits<data_t>::epsilon() };
+            const data_t    threshold {
+                S(0, 0) * n_terms * std::numeric_limits<data_t>::epsilon()
+            };
+            matrix_t        S_pinv { n_terms, n_terms, 0 };
 
-            matrix_t S_pinv { n_terms, n_terms, data_t(0) };
+            for (size_type k { 0 }; k < n_terms; ++k)  {
+                const auto  s_val { S(k, k) };
 
-            for (size_type k { 0 }; k < n_terms; ++k)
-                if (std::fabs(S(k, k)) > threshold)
-                    S_pinv(k, k) = data_t(1) / S(k, k);
+                if (std::fabs(s_val) > threshold)
+                    S_pinv(k, k) = data_t(1) / s_val;
+            }
 
-            matrix_t rhs_mat { n_terms, 1, 0 };
+            matrix_t    rhs_mat { n_terms, 1, 0 };
 
             rhs_mat.set_column(rhs.begin(), 0);
 
@@ -7462,7 +7461,7 @@ public:
 
             // Evaluate fitted values and accumulate residual
             //
-            y_fits_.resize(col_s, data_t(0));
+            y_fits_.resize(col_s, 0);
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const auto  &xi  { *(x_begin + i) };
                 data_t      pred { 0 };
@@ -7477,11 +7476,7 @@ public:
                 residual_ += val * val;
             }
         }
-        else  {
-            // -----------------------------------------------------------------
-            // Scalar (1-D) path — unchanged from the original implementation.
-            // -----------------------------------------------------------------
-
+        else  {  // Scalar input
             // Degree needs to change to contain the slope (0-degree)
             //
             size_type       deg { degree_ };
@@ -8295,20 +8290,41 @@ using powfit_v = PowerFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  QuadraticFitVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
 
-    template<typename K, typename H>
+    // True when T is a container (multidimensional x input)
+    //
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    // Delegate for the MD path — degree fixed at 2, no weights
+    //
+    using poly_visitor_t = PolyFitVisitor<T, I, A>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = vec_t<data_t>;
+
+    template<typename K, typename Hx, typename Hy>
     inline void
-    operator() (const K &, const K &,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const Hx &x_begin, const Hx &x_end,
+               const Hy &y_begin, const Hy &y_end)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
-        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(y_begin, y_end)))
@@ -8316,15 +8332,12 @@ struct  QuadraticFitVisitor  {
                                  "of equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        value_type  sum_x { 0 };   // Sum of all observed x
-        value_type  sum_y { 0 };   // Sum of all observed y
-        value_type  sum_x2 { 0 };  // Sum of all observed x squared
-        value_type  sum_x3 { 0 };  // Sum of all observed x cubed
-        value_type  sum_x4 { 0 };  // Sum of all observed x quadrupled
-        value_type  sum_xy { 0 };  // Sum of all y times sum of all x squared
-        value_type  sum_yx2 { 0 }; // Sum of all x times sum of all observed y
+        if constexpr (! is_md_)  {  // Scalar input
+            const auto      thread_level {
+                (col_s < ThreadPool::MUL_THR_THHOLD)
+                    ? 0L : ThreadGranularity::get_thread_level()
+            };
 
-        if (thread_level > 2)  {
             using sum_t =
                 std::tuple<value_type,  // sum_x
                            value_type,  // sum_y
@@ -8334,42 +8347,65 @@ struct  QuadraticFitVisitor  {
                            value_type,  // sum_xy
                            value_type>; // sum_yx2
 
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&x_begin, &y_begin](auto begin, auto end) -> sum_t  {
-                        value_type  sum_x { 0 };
-                        value_type  sum_y { 0 };
-                        value_type  sum_x2 { 0 };
-                        value_type  sum_x3 { 0 };
-                        value_type  sum_x4 { 0 };
-                        value_type  sum_xy { 0 };
-                        value_type  sum_yx2 { 0 };
+            value_type  sum_x { 0 };   // Sum of observed x
+            value_type  sum_y { 0 };   // Sum of observed y
+            value_type  sum_x2 { 0 };  // Sum of observed x squared
+            value_type  sum_x3 { 0 };  // Sum of observed x cubed
+            value_type  sum_x4 { 0 };  // Sum of bserved x quadrupled
+            value_type  sum_xy { 0 };  // Sum of y times sum of x squared
+            value_type  sum_yx2 { 0 }; // Sum of x times sum of observed y
+            auto        lbd_1 =
+                [&x_begin, &y_begin](auto begin, auto end) -> sum_t  {
+                    value_type  sum_x { 0 };
+                    value_type  sum_y { 0 };
+                    value_type  sum_x2 { 0 };
+                    value_type  sum_x3 { 0 };
+                    value_type  sum_x4 { 0 };
+                    value_type  sum_xy { 0 };
+                    value_type  sum_yx2 { 0 };
 
-                        for (auto i = begin; i < end; ++i)  {
-                            const value_type    x = *(x_begin + i);
-                            const value_type    y = *(y_begin + i);
+                    for (auto i { begin }; i < end; ++i)  {
+                        const value_type    x { *(x_begin + i) };
+                        const value_type    y { *(y_begin + i) };
 
-                            sum_x += x;
-                            sum_y += y;
-                            sum_x2 += x * x;
-                            sum_x3 += x * x * x;
-                            sum_x4 += x * x * x * x;
-                            sum_xy += x * y;
-                            sum_yx2 += y * x * x;
-                        }
-                        return (std::make_tuple(sum_x,
-                                                sum_y,
-                                                sum_x2,
-                                                sum_x3,
-                                                sum_x4,
-                                                sum_xy,
-                                                sum_yx2));
-                    });
+                        sum_x += x;
+                        sum_y += y;
+                        sum_x2 += x * x;
+                        sum_x3 += x * x * x;
+                        sum_x4 += x * x * x * x;
+                        sum_xy += x * y;
+                        sum_yx2 += y * x * x;
+                    }
+                    return (std::make_tuple(sum_x,
+                                            sum_y,
+                                            sum_x2,
+                                            sum_x3,
+                                            sum_x4,
+                                            sum_xy,
+                                            sum_yx2));
+                };
 
-            for (auto &fut : futures)  {
-                const auto  &sums = fut.get();
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        size_type(0),
+                        col_s,
+                        std::move(lbd_1));
+
+                for (auto &fut : futures)  {
+                    const auto  &sums { fut.get() };
+
+                    sum_x += std::get<0>(sums);
+                    sum_y += std::get<1>(sums);
+                    sum_x2 += std::get<2>(sums);
+                    sum_x3 += std::get<3>(sums);
+                    sum_x4 += std::get<4>(sums);
+                    sum_xy += std::get<5>(sums);
+                    sum_yx2 += std::get<6>(sums);
+                }
+            }
+            else  {
+                const auto  &sums { lbd_1(size_type(0), col_s) };
 
                 sum_x += std::get<0>(sums);
                 sum_y += std::get<1>(sums);
@@ -8379,115 +8415,153 @@ struct  QuadraticFitVisitor  {
                 sum_xy += std::get<5>(sums);
                 sum_yx2 += std::get<6>(sums);
             }
-        }
-        else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    x = *(x_begin + i);
-                const value_type    y = *(y_begin + i);
 
-                sum_x += x;
-                sum_y += y;
-                sum_x2 += x * x;
-                sum_x3 += x * x * x;
-                sum_x4 += x * x * x * x;
-                sum_xy += x * y;
-                sum_yx2 += y * x * x;
+            // Variables needed for calculation of coefficients
+            //
+            const value_type    c_xx { sum_x2 - sum_x * sum_x / col_s };
+            const value_type    c_xy { sum_xy - sum_x * sum_y / col_s };
+            const value_type    c_xx2 { sum_x3 - sum_x * sum_x2 / col_s };
+            const value_type    c_x2y { sum_yx2 - sum_x2 * sum_y / col_s };
+            const value_type    c_x2x2 { sum_x4 - sum_x2 * sum_x2 / col_s };
+
+            // Best fit curve is given by yc = c + bx + ax²
+
+            // The quadratic coefficient
+            //
+            slope_ = (c_x2y * c_xx - c_xy * c_xx2) /
+                     (c_xx * c_x2x2 - c_xx2 * c_xx2);
+
+            // The linear coefficient
+            //
+            intercept_ = (c_xy * c_x2x2 - c_x2y * c_xx2) /
+                         (c_xx * c_x2x2 - c_xx2 * c_xx2);
+
+            // Constant term
+            //
+            constant_ = (sum_y / data_t(col_s)) -
+                        (intercept_ * sum_x / data_t(col_s)) -
+                        (slope_ * sum_x2 / data_t(col_s));
+
+            auto    lbd_2 = [&x_begin, &y_begin, this]
+                (auto begin, auto end) -> value_type  {
+                    value_type  residual { 0 };
+
+                    for (auto i { begin }; i < end; ++i)  {
+                        const value_type    x { *(x_begin + i) };
+                        const value_type    pred {
+                            constant_ + intercept_ * x + slope_ * x * x
+                        };
+
+                        // y fits at given x points
+                        //
+                        y_fits_[i] = pred;
+
+                        const value_type    r { *(y_begin + i) - pred };
+
+                        residual += r * r;
+                    }
+                    return (residual);
+               };
+
+            y_fits_.resize(col_s);
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        size_type(0),
+                        col_s,
+                        std::move(lbd_2));
+
+                 for (auto &fut : futures)  residual_ += fut.get();
+            }
+            else  {
+                residual_ = lbd_2(size_type(0), col_s);
             }
         }
+        else  {  // Multidimensional input
+            // ----------------------------------------------------------------
+            // Multivariate path: delegate entirely to PolyFitVisitor(degree=2).
+            //
+            // PolyFitVisitor already handles:
+            //   - monomial basis generation  C(dim+2, 2) terms
+            //   - normal-equation assembly   (Phi^T * W^2 * Phi)
+            //   - SVD-based solve            (rank-deficiency safe)
+            //   - y_fits_ and residual_ accumulation
+            //
+            // We just forward all iterators unchanged and harvest its results.
+            // ----------------------------------------------------------------
 
-        // Variables needed for calculation of coefficients
-        //
-        const value_type    c_xx = sum_x2 - sum_x * sum_x / col_s;
-        const value_type    c_xy = sum_xy - sum_x * sum_y / col_s;
-        const value_type    c_xx2 = sum_x3 - sum_x * sum_x2 / col_s;
-        const value_type    c_x2y = sum_yx2 - sum_x2 * sum_y / col_s;
-        const value_type    c_x2x2 = sum_x4 - sum_x2 * sum_x2 / col_s;
+            poly_visitor_.pre();
+            poly_visitor_(idx_begin, idx_end, x_begin, x_end, y_begin, y_end);
+            poly_visitor_.post();
 
-        // Best fit curve is given by yc = c + bx + ax²
+            y_fits_ = std::move(poly_visitor_.get_y_fits());
+            residual_ = poly_visitor_.get_residual();
 
-        // The quadratic coefficient
-        //
-        slope_ =
-            (c_x2y * c_xx - c_xy * c_xx2) / (c_xx * c_x2x2 - c_xx2 * c_xx2);
-
-        // The linear coefficient
-        //
-        intercept_ =
-            (c_xy * c_x2x2 - c_x2y * c_xx2) / (c_xx * c_x2x2 - c_xx2 * c_xx2);
-
-        // Constant term
-        //
-        constant_ = (sum_y / col_s) -
-                    (intercept_ * sum_x / col_s) -
-                    (slope_ * sum_x2 / col_s);
-
-        y_fits_.resize(col_s);
-        if (thread_level > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&x_begin, &y_begin, this]
-                    (auto begin, auto end) -> value_type  {
-                        value_type  residual { 0 };
-
-                        for (auto i = begin; i < end; ++i)  {
-                            const value_type    x = *(x_begin + i);
-                            const value_type    pred =
-                                constant_ + intercept_ * x + slope_ * x * x;
-
-                            // y fits at given x points
-                            //
-                            this->y_fits_[i] = pred;
-
-                            const value_type    r = *(y_begin + i) - pred;
-
-                            residual += r * r;
-                        }
-                        return (residual);
-                   });
-
-             for (auto &fut : futures)  residual_ += fut.get();
-        }
-        else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    x = *(x_begin + i);
-                const value_type    pred =
-                    constant_ + intercept_ * x + slope_ * x * x;
-
-                // y fits at given x points
-                //
-                y_fits_[i] = pred;
-
-                const value_type    r = *(y_begin + i) - pred;
-
-                residual_ += r * r;
-            }
+            // coeffs_ mirrors PolyFitVisitor layout:
+            //   [1, x0, x1, ..., x0^2, x0*x1, ..., x_{d-1}^2]
+            //
+            coeffs_ = std::move(poly_visitor_.get_result());
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         y_fits_.clear();
+        coeffs_.clear();
         residual_ = slope_ = intercept_ = constant_ = 0;
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (y_fits_); }
-    inline result_type &get_result ()  { return (y_fits_); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline value_type get_slope () const  { return (slope_); }
-    inline value_type get_intercept () const  { return (intercept_); }
-    inline value_type get_constant () const  { return (constant_); }
+    inline void post()  {  }
 
-    QuadraticFitVisitor()  {   }
+    inline const result_type &get_result() const { return (y_fits_); }
+    inline result_type &get_result()  { return (y_fits_); }
+    inline data_t get_residual() const { return (residual_); }
+
+    // Scalar-path accessors — meaningful only when T is arithmetic.
+    // MD callers should use get_coeffs() instead.
+    //
+    inline data_t get_slope() const  {
+        static_assert(! is_md_,
+            "get_slope() is not available for multidimensional input; "
+            "use get_coeffs() to inspect the full quadratic coefficient "
+            "vector");
+        return (slope_);
+    }
+    inline data_t get_intercept() const  {
+        static_assert(! is_md_,
+            "get_intercept() is not available for multidimensional input; "
+            "use get_coeffs() to inspect the full quadratic coefficient "
+            "vector");
+        return (intercept_);
+    }
+    inline data_t get_constant() const  {
+        static_assert(! is_md_,
+            "get_constant() is not available for multidimensional input; "
+            "use get_coeffs() to inspect the full quadratic coefficient "
+            "vector");
+        return (constant_);
+    }
+
+    // MD-path accessor — coefficients in PolyFitVisitor monomial order:
+    //   [1,  x0, x1, …,  x0², x0·x1, …,  x_{d-1}²]
+    // Returns an empty vector for the scalar path (use get_slope etc.).
+    //
+    inline const result_type &get_coeffs() const  { return (coeffs_); }
+    inline result_type  &get_coeffs()  { return (coeffs_); }
+
+    QuadraticFitVisitor() = default;
 
 private:
 
-    result_type y_fits_ {  };
-    value_type  residual_ { 0 };
-    value_type  slope_ { 0 };
-    value_type  intercept_ { 0 };
-    value_type  constant_ { 0 };
+    result_type y_fits_ { };
+    result_type coeffs_ { };       // populated on MD path only
+    data_t      residual_ { 0 };
+    data_t      slope_ { 0 };      // populated on scalar path only
+    data_t      intercept_ { 0 };  // populated on scalar path only
+    data_t      constant_ { 0 };   // populated on scalar path only
+
+    // Reusable delegate for the MD path (degree fixed at 2)
+    //
+    poly_visitor_t  poly_visitor_ { 2 };
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

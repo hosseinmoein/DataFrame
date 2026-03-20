@@ -384,6 +384,7 @@ public:
 
     // Solve the simultaneous equation Ax = rhs by Gaussian elimination.
     // It returns the x vector.
+    // MA can be either a matrix of one column or a std::vector.
     //
     template<typename MA>
     [[nodiscard]] inline Matrix<T, MO> solve(const MA &rhs) const;

@@ -2526,9 +2526,11 @@ static void test_QuadraticFitVisitor()  {
 
 static void test_LinearFitVisitor()  {
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     std::cout << "\nTesting LinearFitVisitor{  } ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -2538,38 +2540,101 @@ static void test_LinearFitVisitor()  {
     MyDataFrame                 df;
 
     df.load_index(std::move(idx));
-    df.load_column<double>("X1",
-                           { 1, 2, 3, 4, 5 },
+    df.load_column<double>("X1", { 1, 2, 3, 4, 5 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y1",
-                           { 6, 7, 8, 9, 3 },
+    df.load_column<double>("Y1", { 6, 7, 8, 9, 3 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("X2",
-                           { 1, 2, 4, 6, 8 },
+    df.load_column<double>("X2", { 1, 2, 4, 6, 8 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y2",
-                           { 1, 3, 4, 5, 6 },
+    df.load_column<double>("Y2", { 1, 3, 4, 5, 6 },
                            nan_policy::dont_pad_with_nans);
 
-    LinearFitVisitor<double, unsigned long, 64> lin_v1;
-    auto                                        &result1 =
+    LinearFitVisitor<double>    lin_v1;
+    auto                        &result1 =
         df.single_act_visit<double, double>("X1", "Y1", lin_v1).get_result();
-    const auto                                  actual1 =
-        StlVecType<double> { 7.4, 7, 6.6, 6.2, 5.8 };
+    const auto                  actual1 =
+        std::vector<double> { 7.4, 7, 6.6, 6.2, 5.8 };
 
     assert(std::fabs(lin_v1.get_residual() - 19.6) < 0.01);
     for (size_t i = 0; i < result1.size(); ++i)
         assert(fabs(result1[i] - actual1[i]) < 0.0001);
 
-    linfit_v<double, unsigned long, 64>    lin_v2;
+    linfit_v<double>    lin_v2;
     auto                result2 =
         df.single_act_visit<double, double>("X2", "Y2", lin_v2).get_result();
     auto                actual2 =
-        StlVecType<double> { 1.73171, 2.37805, 3.67073, 4.96341, 6.2561 };
+        std::vector<double> { 1.73171, 2.37805, 3.67073, 4.96341, 6.2561 };
 
     assert(std::fabs(lin_v2.get_residual() - 1.097561) < 0.00001);
     for (size_t i = 0; i < result2.size(); ++i)
         assert(fabs(result2[i] - actual2[i]) < 0.0001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 2 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  ary_md_x  {
+        { 1.0, 2.0 }, { 2.0, 1.0 }, { 3.0, 3.0 }, { 4.0, 0.5 }, { 1.5, 2.5 },
+        { 5.0, 1.5 }, { 2.5, 4.0 }, { 3.5, 0.0 }, { 0.5, 3.5 }, { 4.5, 2.0 }
+    };
+    std::vector<vec_col_t>  vec_md_x  {
+        { 1.0, 2.0 }, { 2.0, 1.0 }, { 3.0, 3.0 }, { 4.0, 0.5 }, { 1.5, 2.5 },
+        { 5.0, 1.5 }, { 2.5, 4.0 }, { 3.5, 0.0 }, { 0.5, 3.5 }, { 4.5, 2.0 }
+    };
+
+    df.load_column<ary_col_t>("ARY MD X", std::move(ary_md_x),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD X", std::move(vec_md_x),
+                              nan_policy::dont_pad_with_nans);
+
+    std::vector<double> ground_truth {
+        0.5,   // 3 + 1.5(1.0) - 2.0(2.0)
+        4.0,   // 3 + 1.5(2.0) - 2.0(1.0)
+        1.5,   // 3 + 1.5(3.0) - 2.0(3.0)
+        8.0,   // 3 + 1.5(4.0) - 2.0(0.5)
+        0.25,  // 3 + 1.5(1.5) - 2.0(2.5)
+        7.5,   // 3 + 1.5(5.0) - 2.0(1.5)
+       -1.25,  // 3 + 1.5(2.5) - 2.0(4.0)
+        8.25,  // 3 + 1.5(3.5) - 2.0(0.0)
+       -3.25,  // 3 + 1.5(0.5) - 2.0(3.5)
+        5.75,  // 3 + 1.5(4.5) - 2.0(2.0)
+    };
+
+    df.load_column<double>("MD Y", std::move(ground_truth),
+                           nan_policy::dont_pad_with_nans);
+
+    LinearFitVisitor<ary_col_t> ary_lin { false };
+    LinearFitVisitor<vec_col_t> vec_lin;
+
+    df.single_act_visit<ary_col_t, double>("ARY MD X", "MD Y", ary_lin);
+    df.single_act_visit<vec_col_t, double>("VEC MD X", "MD Y", vec_lin);
+
+    // Y-Fits
+    //
+    assert(ary_lin.get_result().size() == 10);
+    assert(vec_lin.get_result().size() == 10);
+    assert(std::fabs(ary_lin.get_result()[0] - 0.5) < 0.01);
+    assert(std::fabs(ary_lin.get_result()[5] - 7.5) < 0.01);
+    assert(std::fabs(ary_lin.get_result()[9] - 5.75) < 0.01);
+    assert(std::fabs(vec_lin.get_result()[0] - 0.5) < 0.01);
+    assert(std::fabs(vec_lin.get_result()[5] - 7.5) < 0.01);
+    assert(std::fabs(vec_lin.get_result()[9] - 5.75) < 0.01);
+
+    assert(ary_lin.get_slope().size() == dim);
+    assert(vec_lin.get_slope().size() == dim);
+    assert(std::fabs(ary_lin.get_slope()[0] - 1.5) < 0.01);
+    assert(std::fabs(ary_lin.get_slope()[1] - -2.0) < 0.01);
+    assert(std::fabs(vec_lin.get_slope()[0] - 1.5) < 0.01);
+    assert(std::fabs(vec_lin.get_slope()[1] - -2.0) < 0.01);
+
+    assert(ary_lin.get_residual() < 1.0e-29);
+    assert(vec_lin.get_residual() < 1.0e-29);
+
+    assert(std::fabs(ary_lin.get_intercept() - 3.0) < 0.01);
+    assert(std::fabs(vec_lin.get_intercept() - 3.0) < 0.01);
 }
 
 // -----------------------------------------------------------------------------

@@ -7365,7 +7365,7 @@ public:
 #endif // HMDF_SANITY_EXCEPTIONS
 
         if constexpr (is_md_)  {  // Multidimensional input
-            // -----------------------------------------------------------------
+            // ----------------------------------------------------------------
             // Multivariate polynomial least-squares fit.
             //
             // For dim dimensions and polynomial degree d, the basis consists
@@ -7380,7 +7380,7 @@ public:
             // where Phi[i][k] is the k-th monomial evaluated at x[i], and W
             // is the diagonal weight matrix.  The system is then handed off to
             // matrix_t::solve() which avoids duplicating elimination logic.
-            // -----------------------------------------------------------------
+            // ----------------------------------------------------------------
 
             const size_type dim { size_type(x_begin->size()) };
             const std::vector<std::vector<size_type>>   monomials {
@@ -7430,7 +7430,7 @@ public:
 
             matrix_t    U, S, V;
 
-            normal.svd(U, S, V);
+            normal.svd(U, S, V, false);
 
             // Compute pseudoinverse: for each singular value, use 1/s if above
             // threshold, 0 otherwise (handles rank-deficiency gracefully)
@@ -7438,22 +7438,22 @@ public:
             const data_t    threshold {
                 S(0, 0) * n_terms * std::numeric_limits<data_t>::epsilon()
             };
-            matrix_t        S_pinv { n_terms, n_terms, 0 };
+            matrix_t        s_pinv { n_terms, n_terms, 0 };
 
             for (size_type k { 0 }; k < n_terms; ++k)  {
-                const auto  s_val { S(k, k) };
+                const auto  s_val { S(k, 0) };
 
                 if (std::fabs(s_val) > threshold)
-                    S_pinv(k, k) = data_t(1) / s_val;
+                    s_pinv(k, k) = data_t(1) / s_val;
             }
 
             matrix_t    rhs_mat { n_terms, 1, 0 };
 
             rhs_mat.set_column(rhs.begin(), 0);
 
-            // c = V * S⁺ * Uᵀ * rhs
+            // c = V * S⁺ * Ut * rhs
             //
-            const auto  sol { V * S_pinv * U.transpose() * rhs_mat };
+            const auto  sol { V * s_pinv * U.transpose() * rhs_mat };
 
             coeffs_.resize(n_terms);
             for (size_type k { 0 }; k < n_terms; ++k)
@@ -8569,150 +8569,334 @@ using qfit_v = QuadraticFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  LinearFitVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
+
+    // True when T is a container (multidimensional x input)
+    //
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using anal_res_t =
+        typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
+
+    using matrix_t = Matrix<data_t, matrix_orient::row_major>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+
+    // Slope_ is a vector of coefficients in the MD case,
+    // a single-element pseudo-container in the scalar case
+    //
+    using slope_type  =
+        typename std::conditional_t<! is_md_, data_t, vec_t<data_t>>;
+    using result_type = vec_t<data_t>;
 
     template<typename K, typename H1, typename H2>
     inline void
-    operator() (const K &, const K &,
-                const H1 &x_begin, const H1 &x_end,
-                const H2 &y_begin, const H2 &y_end)  {
+    operator()(const K &, const K &,
+               const H1 &x_begin, const H1 &x_end,
+               const H2 &y_begin, const H2 &y_end)  {
 
-        const size_type col_s =
-            std::min(std::distance(x_begin, x_end),
-                     std::distance(y_begin, y_end));
-        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
 
-        value_type  sum_x { 0 };   // Sum of all observed x
-        value_type  sum_y { 0 };   // Sum of all observed y
-        value_type  sum_x2 { 0 };  // Sum of all observed x squared
-        value_type  sum_xy { 0 };  // Sum of all x times sum of all observed y
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(y_begin, y_end)))
+            throw DataFrameError("LinearFitVisitor: two columns must be "
+                                 "of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
-        if (thread_level > 2)  {
-            using sum_t =
-                std::tuple<value_type, value_type, value_type, value_type>;
+        if constexpr (! is_md_)  {  // Scalar input
+            const auto  thread_level {
+                (col_s < ThreadPool::MUL_THR_THHOLD)
+                    ? 0L : ThreadGranularity::get_thread_level()
+            };
 
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&x_begin, &y_begin](auto begin, auto end) -> sum_t  {
-                        value_type  sum_x { 0 };
-                        value_type  sum_y { 0 };
-                        value_type  sum_x2 { 0 };
-                        value_type  sum_xy { 0 };
+            using sum_t = std::tuple<data_t, data_t, data_t, data_t>;
 
-                        for (auto i = begin; i < end; ++i)  {
-                            const value_type    x = *(x_begin + i);
-                            const value_type    y = *(y_begin + i);
+            data_t  sum_x { 0 };   // Sum of observed x
+            data_t  sum_y { 0 };   // Sum of observed y
+            data_t  sum_x2 { 0 };  // Sum of observed x squared
+            data_t  sum_xy { 0 };  // Sum of x times sum of observed y
+            auto        lbd_1 =
+                [&x_begin, &y_begin](auto begin, auto end) -> sum_t  {
+                    data_t  sum_x { 0 };
+                    data_t  sum_y { 0 };
+                    data_t  sum_x2 { 0 };
+                    data_t  sum_xy { 0 };
 
-                            sum_x += x;
-                            sum_y += y;
-                            sum_xy += x * y;
-                            sum_x2 += x * x;
-                        }
-                        return (std::make_tuple(sum_x, sum_y, sum_xy, sum_x2));
-                    });
+                    for (auto i { begin }; i < end; ++i)  {
+                        const data_t    x { *(x_begin + i) };
+                        const data_t    y { *(y_begin + i) };
 
-            for (auto &fut : futures)  {
-                const auto  &sums = fut.get();
+                        sum_x += x;
+                        sum_y += y;
+                        sum_xy += x * y;
+                        sum_x2 += x * x;
+                    }
+                    return (std::make_tuple(sum_x, sum_y, sum_xy, sum_x2));
+                };
+
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        size_type(0),
+                        col_s,
+                        std::move(lbd_1));
+
+                for (auto &fut : futures)  {
+                    const auto  &sums { fut.get() };
+
+                    sum_x += std::get<0>(sums);
+                    sum_y += std::get<1>(sums);
+                    sum_xy += std::get<2>(sums);
+                    sum_x2 += std::get<3>(sums);
+                }
+            }
+            else  {
+                const auto  &sums { lbd_1(size_type(0), col_s) };
 
                 sum_x += std::get<0>(sums);
                 sum_y += std::get<1>(sums);
                 sum_xy += std::get<2>(sums);
                 sum_x2 += std::get<3>(sums);
             }
-        }
-        else  {
-            for (size_type i = 0; i < col_s; ++i)  {
-                const value_type    x = *(x_begin + i);
-                const value_type    y = *(y_begin + i);
 
-                sum_x += x;
-                sum_y += y;
-                sum_xy += x * y;
-                sum_x2 += x * x;
+            const data_t    divisor { sum_x2 * col_s - sum_x * sum_x };
+
+            // The slope (the the power of exp) of best fit line
+            //
+            slope_ = (col_s * sum_xy - sum_x * sum_y) / divisor;
+
+            // The intercept of best fit line
+            //
+            intercept_ = (sum_x2 * sum_y - sum_x * sum_xy) / divisor;
+
+            auto    lbd_2 =
+                [&x_begin, &y_begin, this]
+                (auto begin, auto end) -> data_t  {
+                    data_t  residual { 0 };
+
+                    for (auto i { begin }; i < end; ++i)  {
+                        const data_t    x { *(x_begin + i) };
+                        const data_t    y { *(y_begin + i) };
+                        const data_t    pred { slope_ * x + intercept_ };
+                        const data_t    r { y - pred };
+
+                        // y fits at given x points
+                        //
+                        y_fits_[i] = pred;
+                        residual += r * r;
+                    }
+                    return (residual);
+               };
+
+            y_fits_.resize(col_s);
+            if (thread_level > 2)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        size_type(0),
+                        col_s,
+                        std::move(lbd_2));
+
+                 for (auto &fut : futures)  residual_ += fut.get();
+            }
+            else  {
+                residual_ = lbd_2(size_type(0), col_s);
             }
         }
-
-        const value_type    divisor = sum_x2 * col_s - sum_x * sum_x;
-
-        // The slope (the the power of exp) of best fit line
-        //
-        slope_ = (col_s * sum_xy - sum_x * sum_y) / divisor;
-
-        // The intercept of best fit line
-        //
-        intercept_ = (sum_x2 * sum_y - sum_x * sum_xy) / divisor;
-
-        y_fits_.resize(col_s);
-        if (thread_level > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&x_begin, &y_begin, this]
-                    (auto begin, auto end) -> value_type  {
-                        value_type  residual { 0 };
-
-                        for (auto i = begin; i < end; ++i)  {
-                            const value_type    x = *(x_begin + i);
-                            const value_type    y = *(y_begin + i);
-                            const value_type    pred =
-                                this->slope_ * x + this->intercept_;
-                            const value_type    r = y - pred;
-
-                            // y fits at given x points
-                            //
-                            this->y_fits_[i] = pred;
-                            residual += r * r;
-                        }
-                        return (residual);
-                   });
-
-             for (auto &fut : futures)  residual_ += fut.get();
-        }
-        else  {
-            std::transform(x_begin, x_end,
-                           y_begin,
-                           y_fits_.begin(),
-                           [this]
-                           (const auto &x, const auto &y) -> value_type  {
-                               const value_type    pred =
-                                   this->slope_ * x + this->intercept_;
-                               const value_type    r = y - pred;
-
-                               this->residual_ += r * r;
-                               return (pred);  // y fits at given x points
-                           });
+        else  {  // Multidimensional input
+            if (do_solve_)
+                do_md_by_solve_(x_begin, y_begin, col_s);
+            else
+                do_md_by_svd_(x_begin, y_begin, col_s);
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         y_fits_.clear();
         residual_ = 0;
-        slope_ = 0;
         intercept_ = 0;
+        if constexpr (! is_md_)
+            slope_ = data_t(0);
+        else
+            slope_.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (y_fits_); }
-    inline result_type &get_result ()  { return (y_fits_); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline value_type get_slope () const  { return (slope_); }
-    inline value_type get_intercept () const  { return (intercept_); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (y_fits_); }
+    inline result_type &get_result()  { return (y_fits_); }
+    inline data_t get_residual() const  { return (residual_); }
+    inline const slope_type &get_slope() const  { return (slope_); }
+    inline slope_type &get_slope()  { return (slope_); }
+    inline data_t get_intercept() const  { return (intercept_); }
 
-    LinearFitVisitor()  {   }
+    explicit
+    LinearFitVisitor(bool do_solve = true) : do_solve_(do_solve)  {   }
 
 private:
 
+    template<typename H1, typename H2>
+    inline void
+    do_md_by_svd_(const H1 &x_begin, const H2 &y_begin, size_type col_s)  {
+
+        const size_type dim { x_begin->size() }; // # of features
+        const size_type dim_p_one { dim + 1 };   // # coeff incl. intercept
+
+        // Build design matrix X (col_s × dim_p_one) and response
+        // y_mat (col_s × 1)
+        //
+        matrix_t    X { long(col_s), long(dim_p_one), 0 };
+        matrix_t    y_mat { long(col_s), 1L, 0 };
+
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            X(i, 0) = data_t(1);
+
+            const auto  &xi { *(x_begin + i) };
+
+            for (size_type j { 0 }; j < xi.size(); ++j)
+                X(i, j + 1) = data_t(xi[j]);
+            y_mat(i, 0) = data_t(*(y_begin + i));
+        }
+
+        // SVD decomposition: X = U * S * Vt
+        // U is (col_s × col_s) or (col_s × dim_p_one) with full_size=false
+        // S is (col_s × dim_p_one) diagonal
+        // V is (dim_p_one × dim_p_one)
+        //
+        matrix_t    U, S, V;
+
+        X.svd(U, S, V, false);
+
+        // S is returned as a column vector (sv_count × 1), not a diagonal
+        // matrix. U is (col_s × sv_count), V is (sv_count × sv_count)
+        //
+        const size_type sv_count { size_type(S.rows()) };
+        data_t          max_sv { 0 };
+
+        for (size_type i { 0 }; i < sv_count; ++i)
+            if (S(i, 0) > max_sv)   max_sv = S(i, 0);
+
+        const data_t    threshold {
+            max_sv * data_t(std::max(col_s, dim_p_one)) *
+            std::numeric_limits<data_t>::epsilon()
+        };
+
+        // Compute Σ + Ut y  (sv_count × 1)
+        //
+        matrix_t    splus_uty { long(sv_count), 1L, data_t(0) };
+
+        for (size_type i { 0 }; i < sv_count; ++i)  {
+            const data_t    sv { S(i, 0) };
+
+            if (sv <= threshold)  continue;
+
+            data_t  dot { 0 };
+
+            for (size_type k { 0 }; k < col_s; ++k)
+                dot += U(k, i) * y_mat(k, 0);
+
+            splus_uty(i, 0) = dot / sv;
+        }
+
+        // β = V * (Σ + Ut y)
+        //
+        const matrix_t  beta { V * splus_uty };  // (dim_p_one × 1)
+
+        // Extract intercept and slope vector
+        //
+        intercept_ = beta(0, 0);
+        slope_.resize(dim);
+        for (size_type j { 0 }; j < dim; ++j)
+            slope_[j] = beta(j + 1, 0);
+
+        // Compute fitted values and residual sum of squares
+        //
+        y_fits_.resize(col_s);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            data_t      pred { intercept_ };
+            const auto  &xi { *(x_begin + i) };
+
+            for (size_type j { 0 }; j < dim; ++j)
+                pred += slope_[j] * xi[j];
+            y_fits_[i]  = pred;
+
+            const data_t    r { *(y_begin + i) - pred };
+
+            residual_  += r * r;
+        }
+    }
+
+    template<typename H1, typename H2>
+    inline void
+    do_md_by_solve_(const H1 &x_begin, const H2 &y_begin, size_type col_s)  {
+
+        const size_type dim { x_begin->size() };  // # of features
+
+        // Build design matrix X  (n × dim+1)  and response vector y_mat
+        //
+        matrix_t    X { long(col_s), long(dim + 1), 0 };
+        matrix_t    y_mat { long(col_s), 1L, 0 };
+
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            X(i, 0) = data_t(1);  // intercept column
+
+            const auto  &xi { *(x_begin + i) };
+
+            for (size_type j { 0 }; j < xi.size(); ++j)
+                X(i, j + 1) = data_t(xi[j]);
+            y_mat(i, 0) = data_t(*(y_begin + i));
+        }
+
+        // Normal equations:  β = (XᵀX)⁻¹ Xᵀy
+        // Use Matrix::solve() which does Gaussian elimination on [A|b]
+        //
+        const matrix_t  Xt { X.transpose2() };
+        const matrix_t  XtX { Xt * X };          // (dim+1 × dim+1)
+        const matrix_t  Xty { Xt * y_mat };      // (dim+1 × 1)
+        const matrix_t  beta { XtX.solve(Xty) }; // (dim+1 × 1)
+
+        // Extract intercept and slope vector
+        //
+        intercept_ = beta(0, 0);
+        slope_.resize(dim);
+        for (size_type j { 0 }; j < dim; ++j)
+            slope_[j] = beta(j + 1, 0);
+
+        // Compute fitted values and residual sum of squares
+        //
+        y_fits_.resize(col_s);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            data_t       pred { intercept_ };
+            const auto  &xi { *(x_begin + i) };
+
+            for (size_type j { 0 }; j < dim; ++j)
+                pred += slope_[j] * data_t(xi[j]);
+            y_fits_[i] = pred;
+
+            const data_t    r { data_t(*(y_begin + i)) - pred };
+
+            residual_ += r * r;
+        }
+    }
+
     result_type y_fits_ {  };
-    value_type  residual_ { 0 };
-    value_type  slope_ { 0 };
-    value_type  intercept_ { 0 };
+    data_t      residual_{ 0 };
+    data_t      intercept_ { 0 };
+    slope_type  slope_ {  };   // data_t (scalar) or vector<data_t> (MD)
+    const bool  do_solve_;
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

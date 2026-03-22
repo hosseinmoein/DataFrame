@@ -2641,9 +2641,11 @@ static void test_LinearFitVisitor()  {
 
 static void test_CubicSplineFitVisitor()  {
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     std::cout << "\nTesting CubicSplineFitVisitor{  } ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -2653,20 +2655,16 @@ static void test_CubicSplineFitVisitor()  {
     MyDataFrame                 df;
 
     df.load_index(std::move(idx));
-    df.load_column<double>("X1",
-                           { 1, 2, 3, 4, 5 },
+    df.load_column<double>("X1", { 1, 2, 3, 4, 5 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y1",
-                           { 6, 7, 8, 9, 3 },
+    df.load_column<double>("Y1", { 6, 7, 8, 9, 3 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("X2",
-                           { 1, 2, 4, 6, 8 },
+    df.load_column<double>("X2", { 1, 2, 4, 6, 8 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y2",
-                           { 1, 3, 4, 5, 6 },
+    df.load_column<double>("Y2", { 1, 3, 4, 5, 6 },
                            nan_policy::dont_pad_with_nans);
 
-    CubicSplineFitVisitor<double, unsigned long, 64>    csp_v1;
+    CubicSplineFitVisitor<double>   csp_v1;
 
     df.single_act_visit<double, double>("X1", "Y1", csp_v1);
 
@@ -2674,15 +2672,91 @@ static void test_CubicSplineFitVisitor()  {
     const auto  &c_vec = csp_v1.get_c_vec();
     const auto  &d_vec = csp_v1.get_d_vec();
 
-    for (size_t i = 0; i < result1.size(); ++i)
-        std::cout << result1[i] << ", ";
-    std::cout << std::endl;
-    for (size_t i = 0; i < c_vec.size(); ++i)
-        std::cout << c_vec[i] << ", ";
-    std::cout << std::endl;
-    for (size_t i = 0; i < d_vec.size(); ++i)
-        std::cout << d_vec[i] << ", ";
-    std::cout << std::endl;
+    assert(result1.size() == 4);
+    assert(std::fabs(result1[0] - 1.125) < 0.001);
+    assert(std::fabs(result1[3] - -2.25) < 0.001);
+
+    assert(c_vec.size() == 5);
+    assert(std::fabs(c_vec[0] - 0) < 0.001);
+    assert(std::fabs(c_vec[2] - 1.5) < 0.001);
+    assert(std::fabs(c_vec[4] - 0) < 0.001);
+
+    assert(d_vec.size() == 4);
+    assert(std::fabs(d_vec[0] - -0.125) < 0.001);
+    assert(std::fabs(d_vec[3] - 1.875) < 0.001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+    constexpr std::size_t   n { 10 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<double>     x_col(n);
+    std::vector<ary_col_t>  ary_y_col(n);
+    std::vector<vec_col_t>  vec_y_col(n);
+
+    for (std::size_t i { 0 }; i < n; ++i)  {
+        x_col[i] = double(i) * (2.0 * M_PI / double(n - 1));
+        ary_y_col[i] =
+            { std::cos(x_col[i]), std::sin(x_col[i]), x_col[i] / 5.0 };
+        vec_y_col[i] =
+            { std::cos(x_col[i]), std::sin(x_col[i]), x_col[i] / 5.0 };
+    }
+    df.load_column<double>("MD X", std::move(x_col),
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY MD Y", std::move(ary_y_col),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD Y", std::move(vec_y_col),
+                              nan_policy::dont_pad_with_nans);
+
+    CubicSplineFitVisitor<ary_col_t>    ary_cpv;
+    CubicSplineFitVisitor<vec_col_t>    vec_cpv;
+
+    df.single_act_visit<double, ary_col_t>("MD X", "ARY MD Y", ary_cpv);
+    df.single_act_visit<double, vec_col_t>("MD X", "VEC MD Y", vec_cpv);
+
+    // B vector
+    //
+    assert(vec_cpv.get_result().size() == dim);
+    for (const auto &vec : vec_cpv.get_result())
+        assert(vec.size() == 9);
+    assert(std::fabs(vec_cpv.get_result()[0][0] - -0.209847) < 0.000001);
+    assert(std::fabs(vec_cpv.get_result()[1][7] - 0.173405) < 0.000001);
+    assert(std::fabs(vec_cpv.get_result()[2][4] - 0.2) < 0.01);
+    assert(ary_cpv.get_result().size() == dim);
+    for (const auto &ary : ary_cpv.get_result())
+        assert(ary.size() == 9);
+    assert(std::fabs(ary_cpv.get_result()[0][0] - -0.209847) < 0.000001);
+    assert(std::fabs(ary_cpv.get_result()[1][7] - 0.173405) < 0.000001);
+    assert(std::fabs(ary_cpv.get_result()[2][4] - 0.2) < 0.01);
+
+    assert(vec_cpv.get_c_vec().size() == dim);
+    for (const auto &vec : vec_cpv.get_c_vec())
+        assert(vec.size() == 10);
+    assert(std::fabs(vec_cpv.get_c_vec()[0][1] - -0.538305) < 0.000001);
+    assert(std::fabs(vec_cpv.get_c_vec()[1][7] - 0.51271) < 0.00001);
+    assert(std::fabs(vec_cpv.get_c_vec()[2][4] - -1.58565e-16) < 0.00000001);
+    assert(ary_cpv.get_c_vec().size() == dim);
+    for (const auto &ary : ary_cpv.get_c_vec())
+        assert(ary.size() == 10);
+    assert(std::fabs(ary_cpv.get_c_vec()[0][1] - -0.538305) < 0.000001);
+    assert(std::fabs(ary_cpv.get_c_vec()[1][7] - 0.51271) < 0.00001);
+    assert(std::fabs(ary_cpv.get_c_vec()[2][4] - -1.58565e-16) < 0.00000001);
+
+    assert(vec_cpv.get_d_vec().size() == dim);
+    for (const auto &vec : vec_cpv.get_d_vec())
+        assert(vec.size() == 9);
+    assert(std::fabs(vec_cpv.get_d_vec()[0][0] - -0.257022) < 0.000001);
+    assert(std::fabs(vec_cpv.get_d_vec()[1][7] - -0.085019) < 0.000001);
+    assert(std::fabs(vec_cpv.get_c_vec()[2][4] - 1.80644e-16) < 0.00000001);
+    assert(ary_cpv.get_d_vec().size() == dim);
+    for (const auto &ary : ary_cpv.get_d_vec())
+        assert(ary.size() == 9);
+    assert(std::fabs(ary_cpv.get_d_vec()[0][0] - -0.257022) < 0.000001);
+    assert(std::fabs(ary_cpv.get_d_vec()[1][7] - -0.085019) < 0.000001);
+    assert(std::fabs(ary_cpv.get_c_vec()[2][4] - 1.80644e-16) < 0.00000001);
 }
 
 // -----------------------------------------------------------------------------

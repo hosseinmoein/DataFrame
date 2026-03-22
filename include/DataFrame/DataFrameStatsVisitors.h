@@ -8906,23 +8906,51 @@ using linfit_v = LinearFitVisitor<T, I, A>;
 
 // https://en.wikipedia.org/w/index.php?title=Spline_%28mathematics%29&oldid=288288033#Algorithm_for_computing_natural_cubic_splines
 //
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  CubicSplineFitVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
+
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_ary_ = is_std_array_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using inner_data_t =
+        typename std::conditional_t<! is_md_, T, vec_t<data_t>>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_,
+                                    vec_t<data_t>,
+                                    vec_t<vec_t<data_t>>>;
 
     // Yi(X) = Ai + Bi(X - Xi) + Ci(X - Xi)^2 + Di(X - Xi)^3
     // A is just Y input
     //
-    template<typename K, typename H>
+    template<typename K, typename Hx, typename Hy>
     inline void
-    operator() (const K &, const K &,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &, const K &,
+               const Hx &x_begin, const Hx &x_end,
+               const Hy &y_begin, const Hy &y_end)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
-        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
+        size_type       dims  { 1 };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+
+        if constexpr (is_md_)  dims = y_begin->size();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(y_begin, y_end)) || col_s <= 3)
@@ -8930,74 +8958,129 @@ struct  CubicSplineFitVisitor  {
                                  "of equal sizes and > 3");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        result_type h;
+        vec_t<data_t>   h(col_s, 0);
+        auto            lbd =
+            [&x_begin, &h](auto begin, auto end) -> void  {
+                for (auto i { begin }; i < end; ++i)
+                     h[i] = *(x_begin + (i + 1)) - *(x_begin + i);
+            };
 
         if (thread_level > 2)  {
-            h.resize(col_s - 1);
-
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s - 1,
-                    [&x_begin, &h](auto begin, auto end) -> void  {
-                        for (auto i = begin; i < end; ++i)
-                             h[i] = *(x_begin + (i + 1)) - *(x_begin + i);
-                    });
+                    std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            h.resize(col_s - 1);
-            for(size_type i = 0; i < col_s - 1; ++i) [[likely]]
-                h[i] = *(x_begin + (i + 1)) - *(x_begin + i);
+            lbd(size_type(0), col_s - 1);
         }
 
-        result_type             mu (col_s, 0);
-        result_type             z (col_s, 0);
-        constexpr value_type    two = 2;
-        constexpr value_type    three = 3;
+        vec_t<data_t>       mu (col_s, 0);
+        result_type         z (col_s);
+        constexpr data_t    two { 2 };
+        constexpr data_t    three { 3 };
 
-        for(size_type i = 1; i < col_s - 1; ++i) [[likely]]  {
-            const value_type    yi = *(y_begin + i);
-            const value_type    alpha =
-                three * (*(y_begin + (i + 1)) - yi) / h[i] -
-                three * (yi - *(y_begin + (i - 1))) / h[i - 1];
-            const value_type    l =
+        if constexpr (is_md_)
+            z[0] = vec_t<data_t>(dims, 0);
+        else
+            z[0] = 0;
+        for(size_type i { 1 }; i < (col_s - 1); ++i) [[likely]]  {
+            const auto  &yi { *(y_begin + i) };
+            const auto  &yip1 { *(y_begin + (i + 1)) };
+            const auto  &yim1 { *(y_begin + (i - 1)) };
+            const auto  alpha {
+                (yip1 - yi) * (three / h[i]) -
+                (yi - yim1) * (three / h[i - 1])
+            };
+            const auto  l {
                 two * (*(x_begin + (i + 1)) - *(x_begin + (i - 1))) -
-                h[i - 1] * mu[i - 1];
+                h[i - 1] * mu[i - 1]
+            };
 
             mu[i] = h[i] / l;
-            z[i] = (alpha - h[i - 1] * z[i - 1]) / l;
+            if constexpr (is_ary_)  {
+                const auto  &val { (alpha - h[i - 1] * z[i - 1]) / l };
+
+                z[i].assign(val.begin(), val.end());
+            }
+            else
+                z[i] = (alpha - h[i - 1] * z[i - 1]) / l;
         }
 
-        result_type b (col_s - 1, 0);
-        result_type c (col_s, 0);
-        result_type d (col_s - 1, 0);
+        vec_t<inner_data_t> b (col_s - 1);
+        vec_t<inner_data_t> c (col_s);
+        vec_t<inner_data_t> d (col_s - 1);
 
-        for(long i = col_s - 2; i >= 0; --i) [[likely]]  {
-            c[i] = z[i] - mu[i] * c[i + 1];
-            b[i] = (*(y_begin + (i + 1)) - *(y_begin + i)) / h[i] -
-                   h[i] * (c[i + 1] + two * c[i]) / three;
-            d[i] = (c[i + 1] - c[i]) / (three * h[i]);
+        if constexpr (is_md_)  {
+            c[col_s - 1] = vec_t<data_t>(dims, 0);
+            c[col_s - 2] = vec_t<data_t>(dims, 0);
+        }
+        else  {
+            c[col_s - 1] = 0;
+            c[col_s - 2] = 0;
+        }
+        for(long i { long(col_s - 2) }; i >= 0; --i) [[likely]]  {
+            const auto  &yi { *(y_begin + i) };
+            const auto  &yip1 { *(y_begin + (i + 1)) };
+
+            c[i] = z[i] - c[i + 1] * mu[i];
+            if constexpr (is_ary_)  {
+                const auto  &val {
+                    (yip1 - yi) / h[i] -
+                    (c[i + 1] + c[i] * two) * (h[i] / three)
+                };
+
+                b[i].assign(val.begin(), val.end());
+            }
+            else
+                b[i] = (yip1 - yi) / h[i] -
+                       (c[i + 1] + c[i] * two) * (h[i] / three);
+            d[i] = (c[i + 1] - c[i]) / (h[i] * three);
         }
 
-        b_vec_.swap(b);
-        c_vec_.swap(c);
-        d_vec_.swap(d);
+        if constexpr (! is_md_)  {
+            b_vec_.swap(b);
+            c_vec_.swap(c);
+            d_vec_.swap(d);
+        }
+        else  {
+            b_vec_ = to_md_result_(b, dims);
+            c_vec_ = to_md_result_(c, dims);
+            d_vec_ = to_md_result_(d, dims);
+        }
     }
 
-    inline void pre ()  {  }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (b_vec_); }
-    inline result_type &get_result ()  { return (b_vec_); }
-    inline const result_type &get_c_vec () const  { return (c_vec_); }
-    inline result_type &get_c_vec ()  { return (c_vec_); }
-    inline const result_type &get_d_vec () const  { return (d_vec_); }
-    inline result_type &get_d_vec ()  { return (d_vec_); }
+    inline void pre()  {  }
+    inline void post()  {  }
 
-    CubicSplineFitVisitor()  {   }
+    inline const result_type &get_result() const  { return (b_vec_); }
+    inline result_type &get_result()  { return (b_vec_); }
+    inline const result_type &get_c_vec() const  { return (c_vec_); }
+    inline result_type &get_c_vec()  { return (c_vec_); }
+    inline const result_type &get_d_vec() const  { return (d_vec_); }
+    inline result_type &get_d_vec()  { return (d_vec_); }
+
+    CubicSplineFitVisitor() = default;
 
 private:
+
+    // MD only: transpose the result_type vector
+    // outer = dimension, inner = segment
+    //
+    static inline result_type
+    to_md_result_(result_type &src, size_type dims)  {
+
+        const size_type n { src.size() };
+        result_type     result(dims, vec_t<data_t>(n));
+
+        for (size_type i { 0 }; i < n; ++i)
+            for (size_type d { 0 }; d < dims; ++d)
+                result[d][i] = src[i][d];
+        return (result);
+    }
 
     result_type b_vec_ {  };
     result_type c_vec_ {  };

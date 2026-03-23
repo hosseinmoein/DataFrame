@@ -3103,20 +3103,22 @@ static void test_NExtremumSubArrayVisitor()  {
 
 static void test_LowessVisitor()  {
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     std::cout << "\nTesting LowessVisitor{  } ..." << std::endl;
 
-    StlVecType<unsigned long>  indx =
+    std::vector<unsigned long>  indx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
         };
-    StlVecType<double>         x_vec = {
+    std::vector<double>         x_vec = {
         0.5578196, 2.0217271, 2.5773252, 3.4140288, 4.3014084, 4.7448394,
         5.1073781, 6.5411662, 6.7216176, 7.2600583, 8.1335874, 9.1224379,
         1.9296663, 2.3797674, 3.2728619, 4.2767453, 5.3731026, 5.6476637,
         8.5605355, 8.5866354, 8.7572812,
     };
-    StlVecType<double>         y_vec = {
+    std::vector<double>         y_vec = {
         18.63654, 103.49646, 150.35391, 190.51031, 208.70115, 213.71135,
         228.49353, 233.55387, 234.55054, 223.89225, 227.68339, 223.91982,
         168.01999, 164.95750, 152.61107, 160.78742, 168.55567, 152.42658,
@@ -3128,11 +3130,11 @@ static void test_LowessVisitor()  {
                  std::make_pair("indep_var", x_vec),
                  std::make_pair("dep_var", y_vec));
 
-    LowessVisitor<double, unsigned long, 64>   l_v;
+    LowessVisitor<double>   l_v;
 
     df.single_act_visit<double, double>("dep_var", "indep_var", l_v);
 
-    auto    actual_yfit = StlVecType<double> {
+    auto    actual_yfit = std::vector<double> {
        67.988, 119.351, 122.673, 135.574, 142.677, 165.901, 169.442, 185.5469,
        185.946, 191.751, 197.912, 202.10997, 206.052, 214.933, 216.473,
        220.319, 226.653, 229.068, 229.203, 230.054, 231.714,
@@ -3141,7 +3143,7 @@ static void test_LowessVisitor()  {
     for (size_t idx = 0; idx < actual_yfit.size(); ++idx)
         assert(fabs(l_v.get_result()[idx] - actual_yfit[idx]) < 0.001);
 
-    auto    actual_weights = StlVecType<double> {
+    auto    actual_weights = std::vector<double> {
         0.665908, 0.674181, 0.945216, 0.873828, 0.991117, 0.973495, 0.934069,
         0.909536, 0.923308, 0.928475, 0.863709, 0.837148, 0.612762, 0.948307,
         0.951239, 0.998073, 0.99984, 0.991830, 0.993602, 0.974109, 0.990844,
@@ -3150,6 +3152,84 @@ static void test_LowessVisitor()  {
     for (size_t idx = 0; idx < actual_weights.size(); ++idx)
         assert(fabs(l_v.get_residual_weights()[idx] -
                     actual_weights[idx]) < 0.00001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    std::vector<double> vec_md_x {
+        0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0
+    };
+
+    df.load_column<double>("MD X", std::move(vec_md_x),
+                           nan_policy::dont_pad_with_nans);
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  ary_md_y  {
+        { 0.00, -0.52, -1.02 }, { 0.68, -0.27, -0.49 }, { 0.95, 0.01, 0.18 },
+        { 0.73, 0.08, 0.82 }, { 0.17, 0.33, 1.18 }, { -0.33, 0.52, 1.23 },
+        { -0.65, 0.70, 1.04 }, { -0.60, 0.89, 0.74 }, { -0.11, 1.12, 0.58 },
+        { 0.45, 1.33, 0.74 }
+    };
+    std::vector<vec_col_t>  vec_md_y  {
+        { 0.00, -0.52, -1.02 }, { 0.68, -0.27, -0.49 }, { 0.95, 0.01, 0.18 },
+        { 0.73, 0.08, 0.82 }, { 0.17, 0.33, 1.18 }, { -0.33, 0.52, 1.23 },
+        { -0.65, 0.70, 1.04 }, { -0.60, 0.89, 0.74 }, { -0.11, 1.12, 0.58 },
+        { 0.45, 1.33, 0.74 }
+    };
+
+    df.load_column<ary_col_t>("ARY MD Y", std::move(ary_md_y),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD Y", std::move(vec_md_y),
+                              nan_policy::dont_pad_with_nans);
+
+    LowessVisitor<ary_col_t>    ary_low { 3, 0.6, 0, true };
+    LowessVisitor<vec_col_t>    vec_low { 3, 0.6, 0, true };
+
+    df.single_act_visit<ary_col_t, double>("ARY MD Y", "MD X", ary_low);
+    df.single_act_visit<vec_col_t, double>("VEC MD Y", "MD X", vec_low);
+
+    assert(ary_low.get_result().size() == dim);
+    for (const auto &vec : ary_low.get_result())
+        assert(vec.size() == 10);
+    assert(std::fabs(ary_low.get_result()[0][0] - 0.254468) < 0.000001);
+    assert(std::fabs(ary_low.get_result()[0][5] - -0.2062) < 0.0001);
+    assert(std::fabs(ary_low.get_result()[0][9] - 0.311072) < 0.000001);
+    assert(std::fabs(ary_low.get_result()[1][0] - -0.493809) < 0.000001);
+    assert(std::fabs(ary_low.get_result()[1][5] - 0.510652) < 0.000001);
+    assert(std::fabs(ary_low.get_result()[1][9] - 1.32677) < 0.00001);
+    assert(std::fabs(ary_low.get_result()[2][0] - -1.03928) < 0.00001);
+    assert(std::fabs(ary_low.get_result()[2][5] - 1.08052) < 0.00001);
+    assert(std::fabs(ary_low.get_result()[2][9] - 0.619019) < 0.000001);
+
+    const auto  &ary_resi { ary_low.get_residual_weights() };
+
+    assert(ary_resi.size() == 10);
+    assert(std::fabs(ary_resi[0] - 0.930982) < 0.000001);
+    assert(std::fabs(ary_resi[5] - 0.9601) < 0.0001);
+    assert(std::fabs(ary_resi[9] - 0.96409) < 0.00001);
+
+    assert(vec_low.get_result().size() == dim);
+    for (const auto &vec : vec_low.get_result())
+        assert(vec.size() == 10);
+    assert(std::fabs(vec_low.get_result()[0][0] - 0.254468) < 0.000001);
+    assert(std::fabs(vec_low.get_result()[0][5] - -0.2062) < 0.0001);
+    assert(std::fabs(vec_low.get_result()[0][9] - 0.311072) < 0.000001);
+    assert(std::fabs(vec_low.get_result()[1][0] - -0.493809) < 0.000001);
+    assert(std::fabs(vec_low.get_result()[1][5] - 0.510652) < 0.000001);
+    assert(std::fabs(vec_low.get_result()[1][9] - 1.32677) < 0.00001);
+    assert(std::fabs(vec_low.get_result()[2][0] - -1.03928) < 0.00001);
+    assert(std::fabs(vec_low.get_result()[2][5] - 1.08052) < 0.00001);
+    assert(std::fabs(vec_low.get_result()[2][9] - 0.619019) < 0.000001);
+
+    const auto  &vec_resi { vec_low.get_residual_weights() };
+
+    assert(vec_resi.size() == 10);
+    assert(std::fabs(vec_resi[0] - 0.930982) < 0.000001);
+    assert(std::fabs(vec_resi[5] - 0.9601) < 0.0001);
+    assert(std::fabs(vec_resi[9] - 0.96409) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

@@ -9099,9 +9099,9 @@ using csfit_v = CubicSplineFitVisitor<T, I, A>;
 // This lowess function implements the algorithm given in the reference below
 // using local linear estimates.
 // Suppose the input data has N points. The algorithm works by estimating the
-// `smooth` y_i by taking the frac * N the closest points to (x_i, y_i) based on
-// their x values and estimating y_i using a weighted linear regression. The
-// weight for (x_j, y_j) is tricube function applied to |x_i - x_j|.
+// `smooth` y_i by taking the frac * N the closest points to (x_i, y_i) based
+// on their x values and estimating y_i using a weighted linear regression.
+// The weight for (x_j, y_j) is tricube function applied to |x_i - x_j|.
 // If n_loop > 1, then further weighted local linear regressions are performed,
 // where the weights are the same as above times the _lowess_bisquare function
 // of the residuals. Each iteration takes approximately the same amount of time
@@ -9124,10 +9124,36 @@ using csfit_v = CubicSplineFitVisitor<T, I, A>;
 // and Smoothing Scatterplots". Journal of the American Statistical
 // Association 74 (368): 829-836.
 //
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  LowessVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+
+private:
+
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_ary_ = is_std_array_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    // Always-scalar vector type — used for scratch buffers and resid_weights_
+    // regardless of whether T is scalar or multidimensional.
+    //
+    using scalar_vec_t = vec_t<data_t>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_,
+                                    vec_t<data_t>,
+                                    vec_t<vec_t<data_t>>>;
 
 private:
 
@@ -9139,30 +9165,28 @@ private:
     inline static
     void bi_square_(X x_begin, X x_end, long thread_level)  {
 
+        auto    lbd =
+            [](const auto &begin, const auto &end) -> void  {
+                for (auto citer { begin }; citer < end; ++citer)  {
+                    data_t        &x = *citer;
+                    const data_t  val = data_t(1) - x * x;
+
+                    x = val * val;
+                }
+            };
+
         if (thread_level > 2 &&
             std::distance(x_begin, x_end) >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     x_begin,
                     x_end,
-                    [](const auto &begin, const auto &end) -> void  {
-                        for (auto citer = begin; citer < end; ++citer)  {
-                            value_type          &x = *citer;
-                            const value_type    val = T(1) - x * x;
-
-                            x = val * val;
-                        }
-                    });
+                    std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            std::for_each(x_begin, x_end,
-                          [](auto &x) -> void  {
-                              const value_type    val = T(1) - x * x;
-
-                              x = val * val;
-                          });
+            lbd(x_begin, x_end);
         }
     }
 
@@ -9173,30 +9197,28 @@ private:
     inline static
     void tri_cube_(X x_begin, X x_end, long thread_level)  {
 
+        auto    lbd =
+            [](const auto &begin, const auto &end) -> void  {
+                for (auto citer { begin }; citer < end; ++citer)  {
+                    data_t        &x = *citer;
+                    const data_t  val = data_t(1) - x * x * x;
+
+                    x = val * val * val;
+                }
+            };
+
         if (thread_level > 2 &&
             std::distance(x_begin, x_end) >= ThreadPool::MUL_THR_THHOLD)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     x_begin,
                     x_end,
-                    [](const auto &begin, const auto &end) -> void  {
-                        for (auto citer = begin; citer < end; ++citer)  {
-                            value_type          &x = *citer;
-                            const value_type    val = T(1) - x * x * x;
-
-                            x = val * val * val;
-                        }
-                    });
+                    std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            std::for_each(x_begin, x_end,
-                          [](auto &x) -> void  {
-                              const value_type    val = T(1) - x * x * x;
-
-                              x = val * val * val;
-                          });
+            lbd(x_begin, x_end);
         }
     }
 
@@ -9208,35 +9230,59 @@ private:
                            const Y &y_begin, const Y &y_end,
                            const K &y_fits_begin, const K &y_fits_end)  {
 
-        const size_type col_s = std::distance(y_begin, y_end);
+        // Even in the MD case, this is also called from the scalar path
+        //
+        using y_type = std::remove_cvref_t<decltype(*y_begin)>;
 
-        if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop2<T>(
-                    size_type(0),
-                    col_s,
-                    size_type(0),
-                    size_type(std::distance(y_fits_begin, y_fits_end)),
-                    [&y_begin, &y_fits_begin, this]
-                    (auto begin, auto end, auto) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]
-                            this->resid_weights_[i] =
-                                std::fabs(*(y_begin + i) -
-                                          *(y_fits_begin + i));
-                    });
+        const size_type col_s { size_type(std::distance(y_begin, y_end)) };
 
-            for (auto &fut : futures)  fut.get();
+        if constexpr (container<y_type>)  {
+            // Y is const vec_t<scalar_vec_t> &
+            // Y_FITS is const vec_t<scalar_vec_t> &
+
+            const size_type n_rows = resid_weights_.size();
+
+            // Per-row Euclidean norm of column-wise absolute residuals
+            //
+            std::fill(resid_weights_.begin(), resid_weights_.end(), 0);
+            for (size_type c { 0 }; c < col_s; ++c)  {
+                for (size_type i { 0 }; i < n_rows; ++i) [[likely]]  {
+                    const auto      &y_fits { *(y_fits_begin + c) };
+                    const auto      &ys { *(y_begin + c) };
+                    const data_t    r { std::fabs(ys[i] - y_fits[i]) };
+
+                    resid_weights_[i] += r * r;
+                }
+            }
+            for (size_type i { 0 }; i < n_rows; ++i) [[likely]]
+                resid_weights_[i] = std::sqrt(resid_weights_[i]);
         }
-        else  {
-            std::transform(y_begin, y_end,
-                           y_fits_begin,
-                           resid_weights_.begin(),
-                           [](auto y, auto y_fit) -> value_type  {
-                               return (std::fabs(y - y_fit));
-                           });
+        else  {  // Scalar path
+            auto    lbd =
+                [&y_begin, &y_fits_begin, this]
+                (auto begin, auto end, auto) -> void  {
+                    for (size_type i { begin }; i < end; ++i) [[likely]]
+                        resid_weights_[i] =
+                            std::fabs(*(y_begin + i) - *(y_fits_begin + i));
+                };
+
+            if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop2<T>(
+                        size_type(0),
+                        col_s,
+                        size_type(0),
+                        size_type(std::distance(y_fits_begin, y_fits_end)),
+                        std::move(lbd));
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                lbd(size_type(0), col_s, size_type(0));
+            }
         }
 
-        MedianVisitor<T, I, A> median_v;
+        MedianVisitor<data_t, I, A> median_v;
 
         median_v.pre();
         median_v(idx_begin, idx_end,
@@ -9245,49 +9291,38 @@ private:
 
         if (median_v.get_result() == 0)  {
             std::replace_if(resid_weights_.begin(), resid_weights_.end(),
-                            std::bind(std::greater<value_type>(),
+                            std::bind(std::greater<data_t>(),
                                       std::placeholders::_1, 0),
-                            T(1));
+                            data_t(1));
         }
         else  {
-            const value_type    val = T(6) * median_v.get_result();
+            const data_t    val { data_t(6) * median_v.get_result() };
+            auto            lbd =
+                [val](const auto &begin, const auto &end) -> void  {
+                    for (auto citer { begin }; citer < end; ++citer)
+                        *citer /= val;
+                };
 
             if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         resid_weights_.begin(),
                         resid_weights_.end(),
-                        [val](const auto &begin, const auto &end) -> void  {
-                            for (auto citer = begin; citer < end; ++citer)
-                                *citer /= val;
-                        });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
             }
             else  {
-                std::transform(resid_weights_.begin(), resid_weights_.end(),
-                               resid_weights_.begin(),
-                               [val](auto c) -> value_type  {
-                                   return (c / val);
-                               });
+                lbd(resid_weights_.begin(), resid_weights_.end());
             }
         }
 
         // Some trimming of outlier residuals.
         //
         std::replace_if(resid_weights_.begin(), resid_weights_.end(),
-                        std::bind(std::greater<value_type>(),
-                                  std::placeholders::_1, T(1)),
-                        T(1));
-
-        // std::replace_if(resid_weights_.begin(), resid_weights_.end(),
-        //                 std::bind(std::greater_equal<value_type>(),
-        //                           std::placeholders::_1, value_type(0.999)),
-        //                 T(1));
-        // std::replace_if(resid_weights_.begin(), resid_weights_.end(),
-        //                 std::bind(std::less_equal<value_type>(),
-        //                           std::placeholders::_1, value_type(0.001)),
-        //                 0);
+                        std::bind(std::greater<data_t>(),
+                                  std::placeholders::_1, data_t(1)),
+                        data_t(1));
 
         bi_square_(resid_weights_.begin(), resid_weights_.end(),
                    thread_level_);
@@ -9303,7 +9338,7 @@ private:
     inline static void
     update_indices_(const X &x_begin, const X & /*x_end*/,
                     const K &y_fits_begin, const K & /*y_fits_end*/,
-                    value_type delta,
+                    data_t delta,
                     long &curr_idx, long &last_fit_idx,
                     size_type col_s)  {
 
@@ -9312,14 +9347,14 @@ private:
         // This loop increments until we fall just outside of delta distance,
         // copying the results for any repeated x's along the way.
         //
-        const value_type    cutoff = *(x_begin + last_fit_idx) + delta;
-        long                k = last_fit_idx + 1;
-        bool                looped = false;
+        const data_t    cutoff = *(x_begin + last_fit_idx) + delta;
+        long            k = last_fit_idx + 1;
+        bool            looped = false;
 
         for ( ; size_type(k) < col_s; ++k) [[likely]]  {
             looped = true;
 
-            const value_type    xvalue = *(x_begin + k);
+            const data_t    xvalue = *(x_begin + k);
 
             if (xvalue > cutoff)  break;
             if (xvalue == *(x_begin + last_fit_idx))  {
@@ -9352,27 +9387,27 @@ private:
         auxiliary_vec_.clear();
         auxiliary_vec_.reserve(curr_idx - last_fit_idx);
 
-        const value_type    last_fit_xval = *(x_begin + last_fit_idx);
+        const data_t    last_fit_xval = *(x_begin + last_fit_idx);
 
         std::transform(x_begin + (last_fit_idx + 1), x_begin + curr_idx,
                        std::back_inserter(auxiliary_vec_),
-                       [last_fit_xval](const auto &x) -> value_type  {
+                       [last_fit_xval](const auto &x) -> data_t  {
                            return (x - last_fit_xval);
                        });
 
-        const value_type    x_diff = *(x_begin + curr_idx) - last_fit_xval;
+        const data_t    x_diff { *(x_begin + curr_idx) - last_fit_xval };
 
         for (auto val : auxiliary_vec_) [[likely]]  val /= x_diff;
 
-        const value_type    last_fit_yval = *(y_fits_begin + last_fit_idx);
-        const value_type    curr_idx_yval = *(y_fits_begin + curr_idx);
+        const data_t    last_fit_yval = *(y_fits_begin + last_fit_idx);
+        const data_t    curr_idx_yval = *(y_fits_begin + curr_idx);
 
         for (long i = last_fit_idx + 1; i < long(auxiliary_vec_.size());
              ++i) [[likely]]  {
-            const value_type    avalue = auxiliary_vec_[i];
+            const data_t    avalue = auxiliary_vec_[i];
 
             *(y_fits_begin + i) =
-                avalue * curr_idx_yval + (T(1) - avalue) * last_fit_yval;
+                avalue * curr_idx_yval + (data_t(1) - avalue) * last_fit_yval;
         }
     }
 
@@ -9390,8 +9425,7 @@ private:
                       const K y_begin, const K /*y_end*/,
                       const W w_begin, const W /*w_end*/,
                       Y y_fits_begin, Y /*y_fits_end*/,
-                      long curr_idx,
-                      value_type xval,
+                      long curr_idx, data_t xval,
                       size_type left_end, size_type right_end,
                       bool reg_ok, bool fill_with_nans)  {
 
@@ -9403,28 +9437,29 @@ private:
             //
             *(y_fits_begin + curr_idx) =
                 fill_with_nans
-                    ? std::numeric_limits<value_type>::quiet_NaN()
+                    ? std::numeric_limits<data_t>::quiet_NaN()
                     : *(y_begin + curr_idx);
         }
         else  {
-            value_type  sum_weighted_x = 0;
+            data_t  sum_weighted_x { 0 };
 
             for (size_type j = left_end; j < right_end; ++j) [[likely]]
                 sum_weighted_x += *(w_begin + j) * *(x_begin + j);
 
-            value_type  weighted_sqdev_x = 0;
+            data_t  weighted_sqdev_x { 0 };
 
             for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
-                const value_type    val = *(x_begin + j) - sum_weighted_x;
+                const data_t    val { *(x_begin + j) - sum_weighted_x };
 
                 weighted_sqdev_x += *(w_begin + j) * val * val;
             }
 
             for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
-                const value_type    p_idx_j =
+                const data_t    p_idx_j {
                     *(w_begin + j) *
-                    (T(1) + (xval - sum_weighted_x) *
-                     (*(x_begin + j) - sum_weighted_x) / weighted_sqdev_x);
+                    (data_t(1) + (xval - sum_weighted_x) *
+                     (*(x_begin + j) - sum_weighted_x) / weighted_sqdev_x)
+                };
 
                 *(y_fits_begin + curr_idx) += p_idx_j * *(y_begin + j);
             }
@@ -9442,13 +9477,13 @@ private:
                        const K &w_begin, const K &/*w_end*/,
                        // The x-value of the point currently being fit
                        //
-                       value_type xval,
+                       data_t xval,
                        size_type left_end, size_type right_end,
                        // The radius of the current neighborhood. The larger
                        // of distances between x[i] and its left-most or
                        // right-most neighbor.
                        //
-                       value_type radius)  {
+                       data_t radius)  {
 
         x_j_.clear();
         dist_i_j_.clear();
@@ -9468,8 +9503,8 @@ private:
         for (size_type j = left_end; j < right_end; ++j) [[likely]]
             *(w_begin + j) *= resid_weights_[j];
 
-        value_type    sum_weights = 0;
-        size_type     non_zero_cnt = 0;
+        data_t      sum_weights { 0 };
+        size_type   non_zero_cnt { 0 };
 
         std::for_each(w_begin + left_end, w_begin + right_end,
                       [&sum_weights, &non_zero_cnt](auto w) -> void  {
@@ -9498,9 +9533,9 @@ private:
     // distances between xval and its left-most or right-most neighbor.
     //
     template<typename X>
-    inline static value_type
+    inline static data_t
     update_neighborhood_(const X &x_begin, const X &/*x_end*/,
-                         value_type xval,
+                         data_t xval,
                          size_type curr_idx,
                          size_type &left_end, size_type &right_end)  {
 
@@ -9517,7 +9552,7 @@ private:
         while (true)  {
             if (right_end < curr_idx)  {
                 if (xval > ((*(x_begin + left_end) +
-                             *(x_begin + right_end)) / T(2)))  {
+                             *(x_begin + right_end)) / data_t(2)))  {
                     left_end += 1;
                     right_end += 1;
                 }
@@ -9532,17 +9567,20 @@ private:
 
     template<typename K, typename Y, typename X>
     inline void
-    lowess_(const K &idx_begin, const K &idx_end,
-            const Y &y_begin, const Y &y_end,  // dependent variable
-            const X &x_begin, const X &x_end)  {  // independent variable
+    lowess_scalar_(const K &idx_begin, const K &idx_end,
+                   const Y &y_begin, const Y &y_end,  // dependent variable
+                   const X &x_begin, const X &x_end,  // independent variable
+                   scalar_vec_t &y_fits_col,          // output per-column fits
+                   bool update_resid = true)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
 
         // The number of neighbors in each regression. round up if close
         // to integer
         //
-        size_type   k =
-            size_type (frac_ * value_type(col_s) + value_type(1e-10));
+        size_type   k {
+            size_type (frac_ * data_t(col_s) + data_t(1e-10))
+        };
 
         // frac_ should be set, so that 2 <= k <= n. Conform them instead of
         // throwing error.
@@ -9550,30 +9588,29 @@ private:
         if (k < 2)  k = 2;
         if (k > col_s)  k = col_s;
 
-        result_type weights (col_s, 0);
+        scalar_vec_t    weights (col_s, 0);
 
-        y_fits_.resize(col_s, 0);
-        resid_weights_.resize(col_s, T(1));
+        y_fits_col.resize(col_s, 0);
         for (size_type l = 0; l < loop_n_; ++l) [[likely]]  {
-            long        curr_idx = 0;
-            long        last_fit_idx = -1;
-            size_type   left_end = 0;
-            size_type   right_end = k;
+            long        curr_idx { 0 };
+            long        last_fit_idx { -1 };
+            size_type   left_end { 0 };
+            size_type   right_end { k };
 
             // Fit y[i]'s until the end of the regression
             //
-            std::fill(y_fits_.begin(), y_fits_.end(), 0);
+            std::fill(y_fits_col.begin(), y_fits_col.end(), 0);
             while (true)  {
                 // The x value at which we will fit this time
                 //
-                const value_type    xval = *(x_begin + curr_idx);
+                const data_t    xval { *(x_begin + curr_idx) };
                 // Describe the neighborhood around the current xval.
                 //
-                const value_type    radius =
+                const data_t    radius {
                     update_neighborhood_(x_begin, x_end,
-                                         xval,
-                                         col_s,
-                                         left_end, right_end);
+                                         xval, col_s,
+                                         left_end, right_end)
+                };
 
                 // Re-initialize the weights for each point xval.
                 //
@@ -9583,21 +9620,21 @@ private:
                 // neighborhood. Determine if at least some weights are
                 // positive, so a regression is ok.
                 //
-                const bool  reg_ok =
+                const bool  reg_ok {
                     calculate_weights_(x_begin, x_end,
                                        weights.begin(), weights.end(),
                                        xval,
                                        left_end, right_end,
-                                       radius);
+                                       radius)
+                };
 
                 // If ok, run the regression
                 //
                 calculate_y_fits_(x_begin, x_end,
                                   y_begin, y_end,
                                   weights.begin(), weights.end(),
-                                  y_fits_.begin(), y_fits_.end(),
-                                  curr_idx,
-                                  xval,
+                                  y_fits_col.begin(), y_fits_col.end(),
+                                  curr_idx, xval,
                                   left_end, right_end,
                                   reg_ok, false);
 
@@ -9605,15 +9642,16 @@ private:
                 // go back and fit them by linear interpolation.
                 //
                 if (last_fit_idx < (curr_idx - 1))
-                    interpolate_skipped_fits_(x_begin, x_end,
-                                              y_fits_.begin(), y_fits_.end(),
-                                              curr_idx, last_fit_idx);
+                    interpolate_skipped_fits_(
+                        x_begin, x_end,
+                        y_fits_col.begin(), y_fits_col.end(),
+                        curr_idx, last_fit_idx);
 
                 // Update the last fit counter to indicate we've now fit this
                 // point. Find the next i for which we'll run a regression.
                 //
                 update_indices_(x_begin, x_end,
-                                y_fits_.begin(), y_fits_.end(),
+                                y_fits_col.begin(), y_fits_col.end(),
                                 delta_,
                                 curr_idx, last_fit_idx,
                                 col_s);
@@ -9621,8 +9659,102 @@ private:
                 if (last_fit_idx >= (long(col_s) - 1L))  break;
             }
 
+            // In the MD path resid_weights_ is updated by the caller
+            // (lowess_md_) after all columns are done.
+            //
+            if (update_resid)
+                calc_residual_weights_(idx_begin, idx_end,
+                                       y_begin, y_end,
+                                       y_fits_col.begin(), y_fits_col.end());
+        }
+    }
+
+    template<typename IDX, typename YS, typename XS>
+    inline void
+    lowess_(const IDX &idx_begin, const IDX &idx_end,
+            const YS  &y_begin, const YS  &y_end,
+            const XS  &x_begin, const XS  &x_end)  {
+
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
+
+
+        // y_fits_ IS the scalar_vec_t in the scalar case
+        //
+        resid_weights_.resize(col_s, 1);
+        lowess_scalar_(idx_begin, idx_end,
+                       y_begin, y_end,
+                       x_begin, x_end,
+                       y_fits_,
+                       true);   // update_resid = true
+    }
+
+    // MD entry point.
+    // Y iterators dereference to T (e.g. std::vector<double> or
+    // std::array<double,N>).  X iterators dereference to data_t (scalar).
+    //
+    // Layout of y_fits_ in MD mode: y_fits_[col][row]
+    //
+    // For each robustifying iteration:
+    //   1. Run lowess_scalar_ on each column (update_resid=false).
+    //   2. After all columns: update resid_weights_ via the MD norm method.
+    //
+    template<typename IDX, typename YMD, typename XS>
+    inline void
+    lowess_md_(const IDX &idx_begin, const IDX &idx_end,
+               const YMD &y_begin, const YMD &y_end,
+               const XS &x_begin, const XS &x_end)  {
+
+        const size_type n_rows { size_type(std::distance(y_begin, y_end)) };
+
+        if (n_rows == 0)  return;
+
+        const size_type col_s = [n_rows, &y_begin]() -> size_type  {
+            if constexpr (is_ary_)
+                return (std::tuple_size<T>::value);
+            else
+                return ((n_rows > 0) ? y_begin->size() : size_type(0));
+        }();
+
+        if (col_s == 0)  return;
+
+        resid_weights_.resize(n_rows, 1);
+
+        // Allocate result storage: y_fits_[col][row]
+        //
+        y_fits_.resize(col_s, scalar_vec_t(n_rows, 0));
+
+        // Build column-major views of y so we can pass flat iterators
+        // to lowess_scalar_.  We rebuild these each outer iteration
+        // since resid_weights_ changes.
+        //
+        // y_cols[c][r] = y_begin[r][c]
+        //
+        vec_t<scalar_vec_t> y_cols(col_s, scalar_vec_t(n_rows));
+
+        for (size_type r = 0; r < n_rows; ++r)  {
+            const auto  &row { *(y_begin + r) };
+
+            for (size_type c = 0; c < col_s; ++c)
+                y_cols[c][r] = row[c];
+        }
+
+        // Outer robustifying loop
+        //
+        for (size_type l = 0; l < loop_n_; ++l) [[likely]]  {
+            // Fit each column independently using the shared resid_weights_
+            //
+            for (size_type c = 0; c < col_s; ++c)  {
+                lowess_scalar_(idx_begin, idx_end,
+                               y_cols[c].begin(), y_cols[c].end(),
+                               x_begin, x_end,
+                               y_fits_[c],
+                               false); // update_resid = false; we do it below
+            }
+
+            // Update resid_weights_ using the Euclidean norm across columns
+            //
             calc_residual_weights_(idx_begin, idx_end,
-                                   y_begin, y_end,
+                                   y_cols.begin(), y_cols.end(),
                                    y_fits_.begin(), y_fits_.end());
         }
     }
@@ -9631,9 +9763,9 @@ public:
 
     template<typename K, typename Y, typename X>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const Y &y_begin, const Y &y_end,  // dependent variable
-                const X &x_begin, const X &x_end)  {  // independent variable
+    operator()(const K &idx_begin, const K &idx_end,
+               const Y &y_begin, const Y &y_end,     // dependent variable
+               const X &x_begin, const X &x_end)  {  // independent variable
 
         using bool_vec_t =
             std::vector<bool, typename allocator_declare<bool, A>::type>;
@@ -9644,49 +9776,96 @@ public:
                                  "loop num must be > 2");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        if (sorted_)
-            lowess_(idx_begin, idx_end, y_begin, y_end, x_begin, x_end);
-        else  {  // Sort x and y in ascending order of x
-            const size_type col_s = std::distance(x_begin, x_end);
-            result_type     xvals (x_begin, x_end);
-            result_type     yvals (y_begin, y_end);
-            result_type     sorting_idxs (col_s);
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
 
-            std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
-            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-                ThreadGranularity::get_thread_level() > 2)  {
-                ThreadGranularity::thr_pool_.parallel_sort(
-                    sorting_idxs.begin(), sorting_idxs.end(),
-                    [&xvals] (auto lhs, auto rhs) -> bool  {
-                        return (xvals[lhs] < xvals[rhs]);
-                    });
-                ThreadGranularity::thr_pool_.parallel_sort(
-                    xvals.begin(), xvals.end(),
-                    [] (auto lhs, auto rhs) -> bool  {
-                        return (lhs < rhs);
-                    });
+        if constexpr (is_md_)  {
+            if (sorted_)  {
+                lowess_md_(idx_begin, idx_end, y_begin, y_end, x_begin, x_end);
             }
             else  {
-                std::sort(sorting_idxs.begin(), sorting_idxs.end(),
-                          [&xvals] (auto lhs, auto rhs) -> bool  {
-                              return (xvals[lhs] < xvals[rhs]);
-                          });
-                std::sort(xvals.begin(), xvals.end(),
-                          [] (auto lhs, auto rhs) -> bool  {
-                              return (lhs < rhs);
-                          });
+                scalar_vec_t            xvals(x_begin, x_end);
+                std::vector<size_type>  sorting_idxs(col_s);
+
+                std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+                if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                    ThreadGranularity::get_thread_level() > 2)  {
+                    ThreadGranularity::thr_pool_.parallel_sort(
+                        sorting_idxs.begin(), sorting_idxs.end(),
+                        [&xvals](auto lhs, auto rhs) -> bool  {
+                            return (xvals[lhs] < xvals[rhs]);
+                        });
+                    ThreadGranularity::thr_pool_.parallel_sort(
+                        xvals.begin(), xvals.end(),
+                        [](auto lhs, auto rhs) -> bool {
+                            return (lhs < rhs);
+                        });
+                }
+                else  {
+                    std::sort(sorting_idxs.begin(), sorting_idxs.end(),
+                              [&xvals](auto lhs, auto rhs) -> bool  {
+                                  return (xvals[lhs] < xvals[rhs]);
+                              });
+                    std::sort(xvals.begin(), xvals.end(),
+                              [](auto lhs, auto rhs) -> bool {
+                                  return (lhs < rhs);
+                              });
+                }
+
+                // Reorder rows of y according to sorted x order
+                //
+                vec_t<T>    yvals(y_begin, y_end);
+                bool_vec_t  done_vec(col_s, false);
+
+                _sort_by_sorted_index_(yvals, sorting_idxs, done_vec, col_s);
+                lowess_md_(idx_begin, idx_end,
+                           yvals.begin(), yvals.end(),
+                           xvals.begin(), xvals.end());
             }
+        }
+        else  {  // Scalar path
+            if (sorted_)
+                lowess_(idx_begin, idx_end, y_begin, y_end, x_begin, x_end);
+            else  {  // Sort x and y in ascending order of x
+                scalar_vec_t            xvals (x_begin, x_end);
+                scalar_vec_t            yvals (y_begin, y_end);
+                std::vector<size_type>  sorting_idxs(col_s);
 
-            bool_vec_t  done_vec (col_s);
+                std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+                if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                    ThreadGranularity::get_thread_level() > 2)  {
+                    ThreadGranularity::thr_pool_.parallel_sort(
+                        sorting_idxs.begin(), sorting_idxs.end(),
+                        [&xvals] (auto lhs, auto rhs) -> bool  {
+                            return (xvals[lhs] < xvals[rhs]);
+                        });
+                    ThreadGranularity::thr_pool_.parallel_sort(
+                        xvals.begin(), xvals.end(),
+                        [] (auto lhs, auto rhs) -> bool  {
+                            return (lhs < rhs);
+                        });
+                }
+                else  {
+                    std::sort(sorting_idxs.begin(), sorting_idxs.end(),
+                              [&xvals] (auto lhs, auto rhs) -> bool  {
+                                  return (xvals[lhs] < xvals[rhs]);
+                              });
+                    std::sort(xvals.begin(), xvals.end(),
+                              [] (auto lhs, auto rhs) -> bool  {
+                                  return (lhs < rhs);
+                              });
+                }
 
-            _sort_by_sorted_index_(yvals, sorting_idxs, done_vec, col_s);
-            lowess_(idx_begin, idx_end,
-                    yvals.begin(), yvals.end(),
-                    xvals.begin(), xvals.end());
+                bool_vec_t  done_vec (col_s, false);
+
+                _sort_by_sorted_index_(yvals, sorting_idxs, done_vec, col_s);
+                lowess_(idx_begin, idx_end,
+                        yvals.begin(), yvals.end(),
+                        xvals.begin(), xvals.end());
+            }
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         y_fits_.clear();
         resid_weights_.clear();
@@ -9694,18 +9873,18 @@ public:
         x_j_.clear();
         dist_i_j_.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (y_fits_); }
-    inline result_type &get_result ()  { return (y_fits_); }
-    inline const result_type &
-    get_residual_weights () const  { return (resid_weights_); }
-    inline result_type &get_residual_weights ()  { return (resid_weights_); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (y_fits_); }
+    inline result_type &get_result()  { return (y_fits_); }
+    inline const scalar_vec_t &
+    get_residual_weights() const  { return (resid_weights_); }
+    inline scalar_vec_t &get_residual_weights()  { return (resid_weights_); }
 
     explicit
-    LowessVisitor (size_type loop_n = 3,
-                   value_type frac = T(2) / T(3),
-                   value_type delta = 0,
-                   bool sorted = false)
+    LowessVisitor(size_type loop_n = 3,
+                  data_t frac = data_t(2) / data_t(3),
+                  data_t delta = 0,
+                  bool sorted = false)
         : frac_(frac),
           loop_n_(loop_n + 1),
           delta_(delta),
@@ -9717,26 +9896,30 @@ private:
     // Between 0 and 1. The fraction of the data used when estimating
     // each y-value.
     //
-    const value_type    frac_;
+    const data_t    frac_;
     // The number of residual-based reweightings to perform.
     //
-    const size_type     loop_n_;
+    const size_type loop_n_;
     // Distance within which to use linear-interpolation instead of weighted
     // regression.
     //
-    const value_type    delta_;
+    const data_t    delta_;
     // Are x and y vectors sorted in the ascending order of values in x vector
     //
-    const bool          sorted_;
+    const bool      sorted_;
 
-    const long          thread_level_;
+    const long      thread_level_;
 
-    result_type         y_fits_ {  };
-    result_type         resid_weights_ {  };
+    result_type     y_fits_ {  };
+    // Always scalar — one weight per row regardless of T
+    //
+    scalar_vec_t    resid_weights_ {  };
 
-    result_type         auxiliary_vec_ {  };
-    result_type         x_j_ {  };
-    result_type         dist_i_j_ {  };
+    // Always scalar scratch buffers — never vector-of-vectors
+    //
+    scalar_vec_t    auxiliary_vec_ {  };
+    scalar_vec_t    x_j_ {  };
+    scalar_vec_t    dist_i_j_ {  };
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

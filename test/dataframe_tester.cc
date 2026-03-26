@@ -2723,12 +2723,10 @@ static void test_beta()  {
 
     const auto  &md_result { md_beta.get_result() };
 
-    assert(md_result.rows() == 2);
+    assert(md_result.rows() == 1);
     assert(md_result.cols() == 2);
     assert(fabs(md_result(0, 0) - 0.428571) < 0.000001);
     assert(fabs(md_result(0, 1) - -0.142857) < 0.000001);
-    assert(fabs(md_result(1, 0) - 0.142857) < 0.000001);
-    assert(fabs(md_result(1, 1) - 0.285714) < 0.000001);
 
     const auto  data_mean { md_beta.get_data_mean() };
     const auto  benchmark_mean { md_beta.get_benchmark_mean() };

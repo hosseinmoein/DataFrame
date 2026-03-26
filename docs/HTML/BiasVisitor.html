@@ -45,7 +45,7 @@ body {
       <td>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
 <span class="line_wrapper"></span>
-<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> A<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> AV<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span> BiasVisitor<span style="color:#800080; ">;</span></span>
@@ -60,11 +60,11 @@ body {
       </td>
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This visitor calculates rate of change between the source and a moving average. A is the type of mean/average visitor<BR>
+        This visitor calculates rate of change between the source and a moving average. AV is the type of mean/average visitor<BR>
         <I>
         <PRE>
     explicit
-    BiasVisitor(A avg, size_t roll_period = 26)
+    BiasVisitor(AV avg, size_t roll_period = 26)
         </PRE>
         </I>
       </td>

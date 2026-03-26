@@ -3239,8 +3239,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -3254,11 +3254,11 @@ public:
             visitor_(idx_begin[i], column_begin[i]);
     }
 
-    inline void pre ()  { visitor_.pre(); }
-    inline void post ()  { visitor_.post(); }
+    inline void pre()  { visitor_.pre(); }
+    inline void post()  { visitor_.post(); }
     inline const result_type &
-    get_result () const  { return (visitor_.get_result()); }
-    inline result_type get_result ()  { return (visitor_.get_result()); }
+    get_result() const  { return (visitor_.get_result()); }
+    inline result_type get_result()  { return (visitor_.get_result()); }
 
     StepRollAdopter(F &&functor, size_type period)
         : visitor_(std::move(functor)), period_(period)  {   }
@@ -9127,7 +9127,6 @@ using csfit_v = CubicSplineFitVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  LowessVisitor  {
 
-
 private:
 
     static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
@@ -9927,10 +9926,30 @@ using lowess_v = LowessVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  DecomposeVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
+
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_ary_ = is_std_array_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type = typename std::conditional_t<
+        ! is_md_,
+        vec_t<data_t>,          // indexed [time]
+        vec_t<vec_t<data_t>>>;  // indexed [time][dim]
 
 private:
 
@@ -9939,21 +9958,41 @@ private:
     do_trend_(const K &idx_begin, const K &idx_end,
               const H &y_begin, const H &y_end,
               size_type col_s,
-              result_type &xvals)  {
+              vec_t<data_t> &xvals)  {
 
-        std::iota(xvals.begin(), xvals.end(), 0);
+        std::iota(xvals.begin(), xvals.end(), data_t(0));
 
-        LowessVisitor<T, I, A> l_v (3,
-                                    frac_,
-                                    delta_ * value_type(col_s),
-                                    true);
+        LowessVisitor<T, I, A> l_v {
+            3, frac_, delta_ * data_t(col_s), true
+        };
 
         // Calculate trend
         //
         l_v.pre();
         l_v (idx_begin, idx_end, y_begin, y_end, xvals.begin(), xvals.end());
         l_v.post();
-        trend_ = std::move(l_v.get_result());
+        if constexpr (! is_md_)  {
+            // Scalar: get_result() is vec_t<double> indexed [time].
+            // Direct move.
+            //
+            trend_ = std::move(l_v.get_result());
+        }
+        else  {
+            // MD: LOWESS get_result() is vec_t<vec_t<data_t>>
+            // indexed [dim][time].
+            // Transpose to [time][dim] so it matches the input layout and all
+            // downstream ops (detrending, seasonal, residual) index uniformly.
+            //
+            const auto      &lowess_res { l_v.get_result() }; // [dim][time]
+            const size_type dim { lowess_res.size() };
+
+            trend_.resize(col_s);
+            for (size_type t { 0 }; t < col_s; ++t)  {
+                trend_[t].resize(dim);
+                for (size_type d { 0 }; d < dim; ++d)
+                    trend_[t][d] = lowess_res[d][t];
+            }
+        }
     }
 
     template<typename MEAN, typename K>
@@ -9961,17 +10000,19 @@ private:
     do_seasonal_(size_type col_s, const K &idx_begin, const K &idx_end,
                  const result_type &detrended)  {
 
-        StepRollAdopter<MEAN, value_type, I>    sr_mean (MEAN(), s_period_);
+        using dtrend_t = typename result_type::value_type;
+
+        StepRollAdopter<MEAN, dtrend_t, I>  sr_mean { MEAN(), s_period_ };
 
         // Calculate one-period seasonality
         //
-        seasonal_.resize(col_s, 0);
-        for (size_type i = 0; i < s_period_; ++i) [[likely]]  {
+        seasonal_.resize(col_s);
+        for (size_type i { 0 }; i < s_period_; ++i) [[likely]]  {
             sr_mean.pre();
             sr_mean (idx_begin + i, idx_end,
                      detrended.begin() + i, detrended.end());
             sr_mean.post();
-            seasonal_[i] = sr_mean.get_result();
+            seasonal_[i] = std::move(sr_mean.get_result());
         }
 
         // [01]-center the period means depending on the type
@@ -9983,20 +10024,20 @@ private:
              seasonal_.begin(), seasonal_.begin() + s_period_);
         m_v.post();
 
-        const value_type    result = m_v.get_result();
+        const auto  &result { m_v.get_result() };
 
         if (type_ == decompose_type::additive)  {
-            for (size_type i = 0; i < s_period_; ++i)
+            for (size_type i { 0 }; i < s_period_; ++i)
                 seasonal_[i] -= result;
         }
         else  {
-            for (size_type i = 0; i < s_period_; ++i)
+            for (size_type i { 0 }; i < s_period_; ++i)
                 seasonal_[i] /= result;
         }
 
         // Tile the one-time seasone over the seasonal_ vector
         //
-        for (size_type i = s_period_; i < col_s; ++i)
+        for (size_type i { s_period_ }; i < col_s; ++i)
             seasonal_[i] = seasonal_[i % s_period_];
     }
 
@@ -10015,10 +10056,10 @@ public:
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &y_begin, const H &y_end)  {
 
-        const size_type col_s = std::distance(y_begin, y_end);
+        const size_type col_s { size_type(std::distance(y_begin, y_end)) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (s_period_ > col_s / 2)
@@ -10026,17 +10067,55 @@ public:
                                  "half of column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        result_type xvals (col_s);
+        vec_t<data_t>   xvals (col_s);
 
         do_trend_(idx_begin, idx_end, y_begin, y_end, col_s, xvals);
 
         // We want to reuse the vector, so just rename it.
         // This way nobody gets confused
         //
-        result_type &detrended = xvals;
+        result_type detrended(col_s);
+        size_type   dim { 0 };
+
+        if constexpr (is_ary_)  dim = y_begin->size();
 
         // Remove trend from observations in y
         //
+        auto    add_lbd =
+            [dim, this, &detrended, &y_begin]
+            (auto begin, auto end, auto) -> void {
+                for (size_type i = begin; i < end; ++i) [[likely]]  {
+                    if constexpr (is_ary_)  {
+                        const auto  &val { *(y_begin + i) - trend_[i] };
+                        size_type   j { 0 };
+
+                        detrended[i].resize(dim);
+                        for (auto b { val.begin() }; b < val.end(); ++b)
+                            detrended[i][j++] = *b;
+                    }
+                    else  {
+                        detrended[i] = *(y_begin + i) - trend_[i];
+                    }
+                }
+            };
+        auto    mul_lbd =
+            [dim, this, &detrended, &y_begin]
+            (auto begin, auto end, auto) -> void {
+                for (size_type i = begin; i < end; ++i) [[likely]]  {
+                    if constexpr (is_ary_)  {
+                        const auto  &val { *(y_begin + i) / trend_[i] };
+                        size_type   j { 0 };
+
+                        detrended[i].resize(dim);
+                        for (auto b { val.begin() }; b < val.end(); ++b)
+                            detrended[i][j++] = *b;
+                    }
+                    else  {
+                        detrended[i] = *(y_begin + i) / trend_[i];
+                    }
+                }
+            };
+
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             std::vector<std::future<void>>  futures;
@@ -10048,12 +10127,7 @@ public:
                         col_s,
                         size_type(0),
                         trend_.size(),
-                        [this, &detrended, &y_begin]
-                        (auto begin, auto end, auto) -> void  {
-                            for (size_type i = begin; i < end; ++i) [[likely]]
-                                detrended[i] =
-                                    *(y_begin + i) - this->trend_[i];
-                        });
+                        std::move(add_lbd));
             else
                 futures =
                     ThreadGranularity::thr_pool_.parallel_loop2<T>(
@@ -10061,58 +10135,49 @@ public:
                         col_s,
                         size_type(0),
                         trend_.size(),
-                        [this, &detrended, &y_begin]
-                        (auto begin, auto end, auto) -> void  {
-                            for (size_type i = begin; i < end; ++i) [[likely]]
-                                detrended[i] =
-                                    *(y_begin + i) / this->trend_[i];
-                        });
+                        std::move(mul_lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             if (type_ == decompose_type::additive)
-                std::transform(y_begin, y_end,
-                               trend_.begin(),
-                               detrended.begin(),
-                               std::minus<value_type>());
+                add_lbd(size_type(0), col_s, size_type(0));
             else
-                std::transform(y_begin, y_end,
-                               trend_.begin(),
-                               detrended.begin(),
-                               std::divides<value_type>());
+                mul_lbd(size_type(0), col_s, size_type(0));
         }
 
+        using dtrend_t = typename result_type::value_type;
+
         if (type_ == decompose_type::additive)
-            do_seasonal_<MeanVisitor<T, I>>
+            do_seasonal_<MeanVisitor<dtrend_t, I>>
                 (col_s, idx_begin, idx_end, detrended);
         else
-            do_seasonal_<GeometricMeanVisitor<T, I>>
+            do_seasonal_<GeometricMeanVisitor<dtrend_t, I>>
                 (col_s, idx_begin, idx_end, detrended);
 
         do_residual_(detrended);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         trend_.clear();
         seasonal_.clear();
         residual_.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (trend_); }
-    inline result_type &get_result ()  { return (trend_); }
-    inline const result_type &get_trend () const  { return (trend_); }
-    inline result_type &get_trend ()  { return (trend_); }
-    inline const result_type &get_seasonal () const  { return (seasonal_); }
-    inline result_type &get_seasonal ()  { return (seasonal_); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (trend_); }
+    inline result_type &get_result()  { return (trend_); }
+    inline const result_type &get_trend() const  { return (trend_); }
+    inline result_type &get_trend()  { return (trend_); }
+    inline const result_type &get_seasonal() const  { return (seasonal_); }
+    inline result_type &get_seasonal()  { return (seasonal_); }
     inline const result_type &get_residual () const  { return (residual_); }
-    inline result_type &get_residual ()  { return (residual_); }
+    inline result_type &get_residual()  { return (residual_); }
 
-    DecomposeVisitor (size_type s_period,
-                      value_type frac,
-                      value_type delta,
-                      decompose_type t = decompose_type::additive)
+    DecomposeVisitor(size_type s_period,
+                     data_t frac,
+                     data_t delta,
+                     decompose_type t = decompose_type::additive)
         : frac_(frac),
           s_period_(s_period),
           delta_(delta),
@@ -10123,7 +10188,7 @@ private:
     // Between 0 and 1. The fraction of the data used when estimating
     // each y-value.
     //
-    const value_type        frac_;
+    const data_t            frac_;
     // Seasonal period in unit of one observation. There must be at least
     // two seasons in the data
     //
@@ -10131,7 +10196,7 @@ private:
     // Distance within which to use linear-interpolation instead of weighted
     // regression. 0 or small values cause longer/more accurate processing
     //
-    const value_type        delta_;
+    const data_t            delta_;
     const decompose_type    type_;
 
     result_type             trend_ {  };

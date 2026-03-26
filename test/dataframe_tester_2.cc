@@ -3267,9 +3267,11 @@ static void test_StepRollAdopter()  {
 
 static void test_DecomposeVisitor()  {
 
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
     std::cout << "\nTesting DecomposeVisitor{  } ..." << std::endl;
 
-    StlVecType<double>         y_vec =
+    std::vector<double>         y_vec =
         { 131.157, 131.367, 132.215, 132.725, 132.648, 130.585, 130.701,
           129.631, 129.168, 129.554, 129.467, 129.670, 128.397, 129.014,
           129.496, 131.067, 130.219, 128.947, 129.602, 128.118, 127.356,
@@ -3289,11 +3291,11 @@ static void test_DecomposeVisitor()  {
     df.load_data(MyDataFrame::gen_sequence_index(0, y_vec.size(), 1),
                  std::make_pair("IBM_closes", y_vec));
 
-    DecomposeVisitor<double, unsigned long, 64>    d_v (7, 0.6, 0.01);
+    DecomposeVisitor<double>    d_v (7, 0.6, 0.01);
 
     df.single_act_visit<double>("IBM_closes", d_v);
 
-    auto    actual_trends = StlVecType<double>
+    auto    actual_trends = std::vector<double>
         { 130.613, 130.55, 130.489, 130.43, 130.372, 130.317, 130.263, 130.211,
           130.161, 130.111, 130.064, 130.017, 129.972, 129.928, 129.885,
           129.842, 129.801, 129.76, 129.72, 129.681, 129.642, 129.603, 129.564,
@@ -3312,7 +3314,7 @@ static void test_DecomposeVisitor()  {
     for (size_t idx = 0; idx < actual_trends.size(); ++idx)
         assert(fabs(d_v.get_trend()[idx] - actual_trends[idx]) < 0.001);
 
-    auto    actual_seasonals = StlVecType<double>
+    auto    actual_seasonals = std::vector<double>
         { 0.499135, -0.362488, -0.0226401, -0.138991, -0.774313, -0.152695,
           0.951993, 0.499135, -0.362488, -0.0226401, -0.138991, -0.774313,
           -0.152695, 0.951993, 0.499135, -0.362488, -0.0226401, -0.138991,
@@ -3333,7 +3335,7 @@ static void test_DecomposeVisitor()  {
     for (size_t idx = 0; idx < actual_seasonals.size(); ++idx)
         assert(fabs(d_v.get_seasonal()[idx] - actual_seasonals[idx]) < 0.00001);
 
-    auto    actual_residuals = StlVecType<double>
+    auto    actual_residuals = std::vector<double>
         { 0.0450645, 1.17948, 1.74866, 2.43421, 3.04989, 0.420796, -0.514129,
           -1.07918, -0.630027, -0.534809, -0.457752, 0.427013, -1.42233,
           -1.86582, -0.887751, 1.58716, 0.440736, -0.674248, 0.656095,
@@ -3352,6 +3354,131 @@ static void test_DecomposeVisitor()  {
 
     for (size_t idx = 0; idx < actual_residuals.size(); ++idx)
         assert(fabs(d_v.get_residual()[idx] - actual_residuals[idx]) < 0.0001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+    constexpr std::size_t   n { 24 };   // 6 full periods
+    constexpr std::size_t   period { 4 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    const std::array<double, period>    seasonal_pattern_0 {
+        1.0, -1.0,  0.5, -0.5
+    };
+    const std::array<double, period>    seasonal_pattern_1 {
+        2.0, -2.0,  1.0, -1.0
+    };
+    const std::array<double, period>    seasonal_pattern_2 {
+        0.5, -0.5,  0.3, -0.3
+    };
+    const std::array<double, n>         noise_0 {
+         0.10, -0.05,  0.08, -0.03,  0.06, -0.09,
+         0.04,  0.07, -0.06,  0.02, -0.04,  0.05,
+        -0.07,  0.03,  0.09, -0.02,  0.05, -0.08,
+         0.01,  0.06, -0.03,  0.04, -0.01,  0.07
+    };
+    const std::array<double, n>         noise_1 {
+        -0.05,  0.08, -0.03,  0.06, -0.09,  0.04,
+         0.07, -0.06,  0.02, -0.04,  0.05, -0.07,
+         0.03,  0.09, -0.02,  0.05, -0.08,  0.01,
+         0.06, -0.03,  0.04, -0.01,  0.07, -0.02
+    };
+    const std::array<double, n>         noise_2 {
+         0.03, -0.02,  0.05, -0.01,  0.04, -0.03,
+        -0.01,  0.02, -0.04,  0.06, -0.02,  0.03,
+         0.01, -0.05,  0.02,  0.04, -0.01,  0.03,
+        -0.02,  0.01,  0.05, -0.03,  0.02, -0.04
+    };
+
+    std::vector<vec_col_t>  vec_y(n, vec_col_t(dim));
+    std::vector<ary_col_t>  ary_y(n);
+
+    for (std::size_t t { 0 }; t < n; ++t)  {
+        vec_y[t][0] = 1.0 * t + seasonal_pattern_0[t % period] + noise_0[t];
+        vec_y[t][1] = 0.5 * t + seasonal_pattern_1[t % period] + noise_1[t];
+        vec_y[t][2] = 2.0 * t + seasonal_pattern_2[t % period] + noise_2[t];
+        ary_y[t][0] = vec_y[t][0];
+        ary_y[t][1] = vec_y[t][1];
+        ary_y[t][2] = vec_y[t][2];
+    }
+    df.load_column<ary_col_t>("ARY MD Y", std::move(ary_y),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD Y", std::move(vec_y),
+                              nan_policy::dont_pad_with_nans);
+
+    DecomposeVisitor<vec_col_t> vec_md_dcom {
+        period,
+        0.75,   // frac
+        0.01,   // delta
+        decompose_type::additive
+    };
+    DecomposeVisitor<ary_col_t> ary_md_dcom {
+        period,
+        0.75,   // frac
+        0.01,   // delta
+        decompose_type::additive
+    };
+
+    df.single_act_visit<ary_col_t>("ARY MD Y", ary_md_dcom);
+    df.single_act_visit<vec_col_t>("VEC MD Y", vec_md_dcom);
+
+    const auto  &trend { ary_md_dcom.get_trend() };
+    const auto  &seasonal { ary_md_dcom.get_seasonal() };
+    const auto  &residual { ary_md_dcom.get_residual() };
+
+    assert(trend.size() == n);
+    assert(seasonal.size() == n);
+    assert(residual.size() == n);
+
+    for (std::size_t i { 0 }; i < n; ++i)  {
+        assert(trend[i].size() == dim);
+        assert(seasonal[i].size() == dim);
+        assert(residual[i].size() == dim);
+    }
+
+    // Trend checks
+    // LOWESS with frac=0.75 on a clean linear signal should track it closely
+    // in the middle of the series (endpoints have more bias). Tolerance ~1.0.
+    //
+    for (std::size_t i { 4 }; i < n - 4; ++i)  {
+        assert(std::fabs(trend[i][0] - 1.0 * i) < 1.0);
+        assert(std::fabs(trend[i][1] - 0.5 * i) < 1.0);
+        assert(std::fabs(trend[i][2] - 2.0 * i) < 1.0);
+    }
+
+    // Seasonal periodicity checks
+    // After tiling, seasonal[i] == seasonal[i % period] for i >= period
+    //
+    for (std::size_t i { period }; i < n; ++i)  {
+        assert(std::fabs(seasonal[i][0] - seasonal[i % period][0]) < 1e-10);
+        assert(std::fabs(seasonal[i][1] - seasonal[i % period][1]) < 1e-10);
+        assert(std::fabs(seasonal[i][2] - seasonal[i % period][2]) < 1e-10);
+    }
+
+    // Seasonal centering check
+    // Additive: sum of one period's seasonal values should be ~0 per channel
+    //
+    double  sum_0 { 0 }, sum_1 { 0 }, sum_2 { 0 };
+
+    for (std::size_t t { 0 }; t < period; ++t)  {
+        sum_0 += seasonal[t][0];
+        sum_1 += seasonal[t][1];
+        sum_2 += seasonal[t][2];
+    }
+    assert(std::fabs(sum_0) < 0.5);
+    assert(std::fabs(sum_1) < 0.5);
+    assert(std::fabs(sum_2) < 0.5);
+
+    // Residual magnitude check
+    // With clean synthetic data residuals should be small
+    //
+    for (std::size_t t { 2 }; t < n - 2; ++t)  {
+        assert(std::fabs(residual[t][0]) < 1.5);
+        assert(std::fabs(residual[t][1]) < 1.5);
+        assert(std::fabs(residual[t][2]) < 1.5);
+    }
 }
 
 // -----------------------------------------------------------------------------

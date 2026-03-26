@@ -336,7 +336,7 @@ int main(int, char *[])  {
     // 3. Optionally take serial correlation out by differencing. Again, you must know this about your data. Analyzing
     //    seasonality with serial correlation will show up in frequency domain as leakage and spreads the dominant frequencies.
     // 4. Now you have prepared your data for final analysis. Now you need to convert your time-series to frequency-series.
-    //    In other words, you need to convert your data from time domain to frequency domain. Mr. Joseph Fourier has a solution
+    //    In other words, you need to convert your data from time domain to frequency domain. Mr. Joe Fourier has a solution
     //    for that. You can run Fast Fourier Transform (FFT) which is an implementation of Discrete Fourier Transform (DFT).
     //    FFT gives you a vector of complex values that represent the frequency spectrum. In other words, they are amplitude
     //    and phase of different frequency components.

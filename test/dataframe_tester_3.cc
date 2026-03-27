@@ -348,6 +348,8 @@ static void test_CoppockCurveVisitor()  {
 
 static void test_BiasVisitor()  {
 
+    using StrDataFrame = StdDataFrame<std::string>;
+
     std::cout << "\nTesting BiasVisitor{  } ..." << std::endl;
 
     StrDataFrame    df;
@@ -358,8 +360,8 @@ static void test_BiasVisitor()  {
 
         using avg1 = MeanVisitor<double, std::string>;
 
-        avg1                                     avg1_v;
-        bias_v<avg1, double, std::string, 256>   bias1 (avg1_v);
+        avg1                                avg1_v;
+        bias_v<avg1, double, std::string>   bias1 (avg1_v);
 
         df.single_act_visit<double>("IBM_Close", bias1);
 
@@ -375,8 +377,8 @@ static void test_BiasVisitor()  {
 
         using s_avg1 = StableMeanVisitor<double, std::string>;
 
-        s_avg1                                   s_avg1_v;
-        bias_v<s_avg1, double, std::string, 256> s_bias1 (s_avg1_v);
+        s_avg1                              s_avg1_v;
+        bias_v<s_avg1, double, std::string> s_bias1 (s_avg1_v);
 
         df.single_act_visit<double>("IBM_Close", s_bias1);
 
@@ -392,8 +394,8 @@ static void test_BiasVisitor()  {
 
         using avg2 = WeightedMeanVisitor<double, std::string>;
 
-        avg2                                     avg2_v;
-        bias_v<avg2, double, std::string, 256>   bias2 (avg2_v);
+        avg2                                avg2_v;
+        bias_v<avg2, double, std::string>   bias2 (avg2_v);
 
         df.single_act_visit<double>("IBM_Close", bias2);
 
@@ -409,8 +411,8 @@ static void test_BiasVisitor()  {
 
         using avg3 = GeometricMeanVisitor<double, std::string>;
 
-        avg3                                     avg3_v;
-        bias_v<avg3, double, std::string, 256>   bias3 (avg3_v);
+        avg3                                avg3_v;
+        bias_v<avg3, double, std::string>   bias3 (avg3_v);
 
         df.single_act_visit<double>("IBM_Close", bias3);
 
@@ -426,8 +428,8 @@ static void test_BiasVisitor()  {
 
         using avg4 = HarmonicMeanVisitor<double, std::string>;
 
-        avg4                                     avg4_v;
-        bias_v<avg4, double, std::string, 256>   bias4 (avg4_v);
+        avg4                                avg4_v;
+        bias_v<avg4, double, std::string>   bias4 (avg4_v);
 
         df.single_act_visit<double>("IBM_Close", bias4);
 
@@ -464,8 +466,8 @@ static void test_BiasVisitor()  {
     auto    rand_vec =
         gen_uniform_real_dist<double>(df.get_index().size() * dim, p);
 
-    StlVecType<ary_col_t>   array_col(df.get_index().size());
-    StlVecType<vec_col_t>   vector_col(df.get_index().size());
+    std::vector<ary_col_t>   array_col(df.get_index().size());
+    std::vector<vec_col_t>   vector_col(df.get_index().size());
 
     for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
         vector_col[i].resize(dim);
@@ -502,6 +504,35 @@ static void test_BiasVisitor()  {
     assert(std::abs(ary_geom_res[2] - 4.97216) < 0.00001);
     assert(std::abs(vec_geom_res[0] - 4.80128) < 0.00001);
     assert(std::abs(vec_geom_res[2] - 4.97216) < 0.00001);
+
+    using ary_mean_t = MeanVisitor<ary_col_t, std::string>;
+    using vec_mean_t = MeanVisitor<vec_col_t, std::string>;
+
+    bias_v<ary_mean_t, ary_col_t, std::string>   ary_bias_v { ary_mean_v, 26 };
+    bias_v<vec_mean_t, vec_col_t, std::string>   vec_bias_v { vec_mean_v, 26 };
+
+    df.single_act_visit<ary_col_t>("array_col", ary_bias_v);
+    df.single_act_visit<vec_col_t>("vector_col", vec_bias_v);
+
+    assert(ary_bias_v.get_result().size() == 221);
+    for (std::size_t i { 0 }; const auto &vec : ary_bias_v.get_result())  {
+        if (i++ < 25)  assert(vec.empty());
+        else  assert(vec.size() == dim);
+    }
+    assert(std::fabs(ary_bias_v.get_result()[25][0] - 0.182259) < 0.000001);
+    assert(std::fabs(ary_bias_v.get_result()[35][1] - -0.461714) < 0.000001);
+    assert(std::fabs(ary_bias_v.get_result()[36][2] - -0.184178) < 0.000001);
+    assert(std::fabs(ary_bias_v.get_result()[220][1] - -0.845398) < 0.000001);
+
+    assert(vec_bias_v.get_result().size() == 221);
+    for (std::size_t i { 0 }; const auto &vec : vec_bias_v.get_result())  {
+        if (i++ < 25)  assert(vec.empty());
+        else  assert(vec.size() == dim);
+    }
+    assert(std::fabs(vec_bias_v.get_result()[25][0] - 0.182259) < 0.000001);
+    assert(std::fabs(vec_bias_v.get_result()[35][1] - -0.461714) < 0.000001);
+    assert(std::fabs(vec_bias_v.get_result()[36][2] - -0.184178) < 0.000001);
+    assert(std::fabs(vec_bias_v.get_result()[220][1] - -0.845398) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

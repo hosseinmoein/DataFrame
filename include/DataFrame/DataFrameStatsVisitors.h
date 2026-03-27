@@ -10332,17 +10332,37 @@ is_lognormal(const V &column, double epsl)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename AV, arithmetic T,
+template<typename AV, typename T,
          typename I = unsigned long, std::size_t A = 0>
 struct  BiasVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
+
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_ary_ = is_std_array_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
     using avg_type = AV;
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_,
+                                    vec_t<data_t>,
+                                    vec_t<vec_t<data_t>>>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -10352,12 +10372,33 @@ struct  BiasVisitor  {
                                  "< column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        SimpleRollAdopter<avg_type, T, I, A>   avger(std::move(avg_v_),
-                                                     roll_period_);
+        SimpleRollAdopter<avg_type, T, I, A>   avger {
+            std::move(avg_v_), roll_period_
+        };
 
         avger.pre();
         avger (idx_begin, idx_end, column_begin, column_end);
         avger.post();
+
+        auto    lbd =
+            [this, &column_begin] (auto begin, auto end, auto) -> void  {
+                for (size_type i { begin }; i < end; ++i) [[likely]]  {
+                    auto    &re { result_[i] };
+
+                    if constexpr (is_ary_)  {
+                        const auto  &val { *(column_begin + i) };
+
+                        re.resize(val.size());
+                        for (size_type j { 0 }; const auto v : val)  {
+                            re[j] = v / re[j] - data_t(1);;
+                            j += 1;
+                        }
+                    }
+                    else  {
+                        re = *(column_begin + i) / re - data_t(1);
+                    }
+                }
+            };
 
         result_ = std::move(avger.get_result());
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
@@ -10368,24 +10409,12 @@ struct  BiasVisitor  {
                     col_s,
                     roll_period_ - 1,
                     col_s,
-                    [this, &column_begin]
-                    (auto begin, auto end, auto) -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]  {
-                            value_type  &re = this->result_[i];
-
-                            re = *(column_begin + i) / re - T(1);
-                        }
-                    });
+                    std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            std::transform(column_begin + (roll_period_ - 1), column_end,
-                           result_.begin() + (roll_period_ - 1),
-                           result_.begin() + (roll_period_ - 1),
-                           [](auto val, auto result) -> value_type  {
-                               return (val / result - T(1));
-                           });
+            lbd(roll_period_ - 1, col_s, roll_period_ - 1);
         }
     }
 

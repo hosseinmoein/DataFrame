@@ -270,10 +270,10 @@ static inline auto _bc_fabs_(const V &v) noexcept  {
     else  {
         using data_t = typename V::value_type;
 
-        std::vector<data_t> res(v.size());
+        std::vector<data_t> res(v.begin(), v.end());
 
         for (std::size_t i { 0 }; i < v.size(); ++i)
-            res[i] = std::fabs(v[i]);
+            res[i] = std::fabs(res[i]);
         return (res);
     }
 }
@@ -6288,8 +6288,8 @@ public:
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         const size_type col_s = std::distance(column_begin, column_end);
         data_t          shift = 0;
@@ -10530,15 +10530,31 @@ using nzr_v = NonZeroRangeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  StationaryCheckVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
+
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_ary_ = is_std_array_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -10554,7 +10570,18 @@ struct  StationaryCheckVisitor  {
             do_adf_(idx_begin, idx_end, column_begin, column_end, col_s);
     }
 
-    inline void pre()  { kpss_val_ = 0; kpss_stat_ = -1; adf_stat_ = 0; }
+    inline void pre()  {
+        if constexpr (is_md_)  {
+            kpss_val_.clear();
+            kpss_stat_.clear();
+            adf_stat_.clear();
+        }
+        else  {
+            kpss_val_ = 0;
+            kpss_stat_ = -1;
+            adf_stat_ = 0;
+        }
+    }
     inline void post()  {  }
     inline result_type get_kpss_value() const  { return (kpss_val_); }
     inline result_type get_kpss_statistic() const  { return (kpss_stat_); }
@@ -10567,6 +10594,17 @@ struct  StationaryCheckVisitor  {
 
 private:
 
+    // Helper: map a scalar KPSS value to its significance level
+    //
+    inline data_t
+    classify_kpss_(data_t val) const  {
+        if (val < params_.critical_values[0]) return (data_t(0.1));
+        if (val < params_.critical_values[1]) return (data_t(0.05));
+        if (val < params_.critical_values[2]) return (data_t(0.025));
+        if (val < params_.critical_values[3]) return (data_t(0.01));
+        return (data_t(0));
+    }
+
     template<typename K, typename H>
     inline void
     do_kpss_(const K &idx_begin, const K &idx_end,
@@ -10575,20 +10613,24 @@ private:
 
         // Fit a linear trend line
         //
-        linfit_v<T, I>          linfit;
-        std::vector<value_type> times(col_s);
+        linfit_v<T, I>      linfit;
+        std::vector<data_t> times(col_s);
 
-        std::iota (times.begin(), times.end(), T(1));
+        std::iota(times.begin(), times.end(), data_t(1));
         linfit.pre();
-        linfit(idx_begin, idx_end,
-               times.begin(), times.end(), column_begin, column_end);
+        if constexpr (is_md_)
+            linfit(idx_begin, idx_end,
+                   column_begin, column_end, times.begin(), times.end());
+        else
+            linfit(idx_begin, idx_end,
+                   times.begin(), times.end(), column_begin, column_end);
         linfit.post();
 
         // Calculate residuals
         //
         std::vector<value_type> residuals(col_s);
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             residuals[i] = *(column_begin + i) - linfit.get_result()[i];
 
         // Calculate cumulative sum of residuals
@@ -10596,17 +10638,10 @@ private:
         std::vector<value_type> cum_sum(col_s);
 
         cum_sum[0] = residuals[0];
-        for (size_type i = 1; i < col_s; ++i)
+        for (size_type i { 1 }; i < col_s; ++i)
             cum_sum[i] = cum_sum[i - 1] + residuals[i];
 
-        // Calculate to squared norm
-        //
-        value_type  norm_sq { 0 };
-
-        for (size_type i = 0; i < col_s; ++i)
-            norm_sq += cum_sum[i] * cum_sum[i];
-
-        // Calculate variance
+        // Calculate variance of residuals
         //
         VarVisitor<T, I>    var { true };
 
@@ -10614,19 +10649,46 @@ private:
         var(idx_begin, idx_end, residuals.begin(), residuals.end());
         var.post();
 
-        // Calculate KPSS value and statistic
-        //
-        kpss_val_ = norm_sq / (T(col_s) * T(col_s) * var.get_result());
-        if (kpss_val_ < params_.critical_values[0])
-            kpss_stat_ = 0.1;
-        else if (kpss_val_ < params_.critical_values[1])
-            kpss_stat_ = 0.05;
-        else if (kpss_val_ < params_.critical_values[2])
-            kpss_stat_ = 0.025;
-        else if (kpss_val_ < params_.critical_values[3])
-            kpss_stat_ = 0.01;
-        else
-            kpss_stat_ = 0;
+        const auto  &var_res { var.get_result() };
+
+        if constexpr (! is_md_)  {
+            // Scalar path — identical to original
+            //
+            data_t  norm_sq { 0 };
+
+            for (size_type i = 0; i < col_s; ++i)
+                norm_sq += cum_sum[i] * cum_sum[i];
+
+            kpss_val_ = norm_sq / (data_t(col_s) * data_t(col_s) * var_res);
+            kpss_stat_ = classify_kpss_(kpss_val_);
+        }
+        else  {
+            // MD path — norm_sq and kpss_val_ are per-dimension
+            //
+            const size_type ndim { column_begin->size() };
+
+            // var.get_result() is result_type = std::vector<data_t>
+            // with one variance entry per dimension
+            //
+            std::vector<data_t> norm_sq(ndim, 0);
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                // cum_sum[i] is value_type (vector or array).
+                // Elementwise square and accumulate per dimension.
+                //
+                for (size_type d { 0 }; d < ndim; ++d)
+                    norm_sq[d] += cum_sum[i][d] * cum_sum[i][d];
+            }
+
+            const data_t    denom_scale { data_t(col_s * col_s) };
+
+            kpss_val_.resize(ndim);
+            kpss_stat_.resize(ndim);
+            for (size_type d { 0 }; d < ndim; ++d)  {
+                kpss_val_[d]  = norm_sq[d] / (denom_scale * var_res(d, d));
+                kpss_stat_[d] = classify_kpss_(kpss_val_[d]);
+            }
+        }
     }
 
     template<typename K, typename H>
@@ -10644,63 +10706,85 @@ private:
         std::vector<value_type> detrended_data;
 
         if (params_.adf_with_trend)  {
-            std::vector<value_type> times(col_s);
+            std::vector<data_t> times(col_s);
 
-            for (size_type i = 0; i < col_s; ++i)
-                times[i] = value_type(i + 1);
+            for (size_type i { 0 }; i < col_s; ++i)
+                times[i] = data_t(i + 1);
 
-            const value_type    sum_t =
-                std::accumulate(times.begin(), times.end(), T(0));
-            const value_type    sum_y =
-                std::accumulate(column_begin, column_end, T(0));
-            value_type          sum_t2 { 0 };
-            value_type          sum_ty { 0 };
+            const data_t        sum_t {
+                std::accumulate(times.begin(), times.end(), data_t(0))
+            };
+            value_type          sum_y { *column_begin };
 
-            for (size_type i = 0; i < col_s; i++) {
+            for (size_type i { 1 }; i < col_s; ++i)
+                sum_y += *(column_begin + i);
+
+            data_t              sum_t2 { 0 };
+            value_type          sum_ty;
+
+            if constexpr (is_md_ && ! is_ary_)
+                sum_ty.resize(column_begin->size(), 0);
+            else if constexpr (! is_md_)  sum_ty = 0;
+            for (size_type i { 0 }; i < col_s; i++) {
                 sum_ty += times[i] * *(column_begin + i);
                 sum_t2 += times[i] * times[i];
             }
 
-            const value_type    slope = (T(col_s) * sum_ty - sum_t * sum_y) /
-                                        (T(col_s) * sum_t2 - sum_t * sum_t);
-            const value_type    intercept = (sum_y - slope * sum_t) / T(col_s);
+            const value_type    slope {
+                (data_t(col_s) * sum_ty - sum_t * sum_y) /
+                (data_t(col_s) * sum_t2 - sum_t * sum_t)
+            };
+            const value_type    intercept {
+                (sum_y - slope * sum_t) / data_t(col_s)
+            };
 
             // Detrend the data
             //
-            detrended_data.resize(col_s, 0);
-            for (size_type i = 0; i < col_s; i++)
+            detrended_data.resize(col_s);
+            for (size_type i { 0 }; i < col_s; i++)
                 detrended_data[i] =
                     *(column_begin + i) - (intercept + slope * times[i]);
         }
 
-        VarVisitor<T, I>    variance { true };
+        VarVisitor<T, I>    var { true };
 
-        variance.pre();
+        var.pre();
         if (params_.adf_with_trend)
-            variance(idx_begin, idx_end,
-                     detrended_data.begin(), detrended_data.end());
+            var(idx_begin, idx_end,
+                detrended_data.begin(), detrended_data.end());
         else
-            variance(idx_begin, idx_end, column_begin, column_end);
-        variance.post();
+            var(idx_begin, idx_end, column_begin, column_end);
+        var.post();
 
         // Calculate Auto Covariance of lag
         //
-        value_type  autocovar { 0 };
+        value_type  autocovar;
+        const auto  &mean { var.get_mean() };
+        const auto  &var_res { var.get_result() };
 
+        if constexpr (is_md_ && ! is_ary_)
+            autocovar.resize(column_begin->size(), 0);
+        else if constexpr (! is_md_)  autocovar = 0;
         if (params_.adf_with_trend)
-            for (size_type i = params_.adf_lag; i < col_s; ++i)
-                autocovar +=
-                    (detrended_data[i] - variance.get_mean()) *
-                    (detrended_data[i - params_.adf_lag] - variance.get_mean());
+            for (size_type i { params_.adf_lag }; i < col_s; ++i)
+                autocovar += (detrended_data[i] - mean) *
+                             (detrended_data[i - params_.adf_lag] - mean);
         else
-            for (size_type i = params_.adf_lag; i < col_s; ++i)
-                autocovar +=
-                    (*(column_begin + i) - variance.get_mean()) *
-                    (*(column_begin + (i - params_.adf_lag)) -
-                     variance.get_mean());
-        autocovar /= T(col_s - params_.adf_lag - 1);
+            for (size_type i { params_.adf_lag }; i < col_s; ++i)
+                autocovar += (*(column_begin + i) - mean) *
+                             (*(column_begin + (i - params_.adf_lag)) - mean);
+        autocovar /= data_t(col_s - params_.adf_lag - 1);
 
-        adf_stat_ = autocovar / variance.get_result();
+        if constexpr (! is_md_)  {
+            adf_stat_ = autocovar / var_res;
+        }
+        else  {
+            const size_type ndim { column_begin->size() };
+
+            adf_stat_.resize(ndim);
+            for (size_type d { 0 }; d < ndim; ++d)
+                adf_stat_[d] = autocovar[d] / var_res(d, d);
+        }
     }
 
     const stationary_test       method_;
@@ -10712,8 +10796,8 @@ private:
     // value suggests stationarity; essentially, you want a low KPSS test value
     // to conclude stationarity.
     //
-    value_type                  kpss_val_ { 0 };
-    value_type                  kpss_stat_ { -1 };
+    result_type                 kpss_val_ { };
+    result_type                 kpss_stat_ { };
 
     // To interpret an ADF test statistic, compare its value to the critical
     // value at a chosen significance level (usually 0.05): if the test
@@ -10724,7 +10808,7 @@ private:
     // stronger evidence against the null hypothesis (i.e., more likely
     // stationary).
     //
-    value_type                  adf_stat_ { 0 };
+    result_type                 adf_stat_ { };
 };
 
 template<typename T, typename I = unsigned long>

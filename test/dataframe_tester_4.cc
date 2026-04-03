@@ -2456,6 +2456,86 @@ static void test_StationaryCheckVisitor()  {
 
     df.single_act_visit<double>("residual close", sc11);
     assert(std::fabs(sc11.get_adf_statistic() - 0.679027) < 0.000001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  stationary_ary  {
+        { 10.1,  5.0, -2.0 }, { 9.9,  5.2, -2.1 }, { 10.2,  4.9, -1.9 },
+        { 10.0,  5.1, -2.0 }, { 9.8,  5.0, -2.2 }, { 10.1,  5.3, -1.8 },
+        { 10.0,  4.8, -2.1 }, { 10.2,  5.1, -2.0 }, { 9.9,  5.0, -2.0 },
+        { 10.1,  5.2, -1.9 }, { 10.0,  4.9, -2.1 }, { 9.8,  5.1, -2.0 },
+        { 10.2,  5.0, -2.1 }
+    };
+    std::vector<vec_col_t>  stationary_vec  {
+        { 10.1,  5.0, -2.0 }, { 9.9,  5.2, -2.1 }, { 10.2,  4.9, -1.9 },
+        { 10.0,  5.1, -2.0 }, { 9.8,  5.0, -2.2 }, { 10.1,  5.3, -1.8 },
+        { 10.0,  4.8, -2.1 }, { 10.2,  5.1, -2.0 }, { 9.9,  5.0, -2.0 },
+        { 10.1,  5.2, -1.9 }, { 10.0,  4.9, -2.1 }, { 9.8,  5.1, -2.0 },
+        { 10.2,  5.0, -2.1 }
+    };
+    std::vector<vec_col_t>  non_stationary_vec  {
+        { 1.0,  10.0, -5.0 }, { 1.5,  10.5, -4.8 }, { 2.1,  11.0, -4.5 },
+        { 2.8,  11.8, -4.0 }, { 3.6,  12.5, -3.5 }, { 4.5,  13.3, -3.0 },
+        { 5.5,  14.2, -2.4 }, { 6.6,  15.0, -1.8 }, { 7.8,  16.1, -1.0 },
+        { 9.1,  17.3, -0.2 }, { 10.5,  18.6,  0.8 }, { 12.0,  20.0,  1.9 },
+        { 13.6,  21.5,  3.0 }
+    };
+    std::vector<ary_col_t>  non_stationary_ary  {
+        { 1.0,  10.0, -5.0 }, { 1.5,  10.5, -4.8 }, { 2.1,  11.0, -4.5 },
+        { 2.8,  11.8, -4.0 }, { 3.6,  12.5, -3.5 }, { 4.5,  13.3, -3.0 },
+        { 5.5,  14.2, -2.4 }, { 6.6,  15.0, -1.8 }, { 7.8,  16.1, -1.0 },
+        { 9.1,  17.3, -0.2 }, { 10.5,  18.6,  0.8 }, { 12.0,  20.0,  1.9 },
+        { 13.6,  21.5,  3.0 }
+    };
+
+    df.load_column<vec_col_t>("STATION VEC", std::move(stationary_vec),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("STATION ARY", std::move(stationary_ary),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("NON STATION VEC", std::move(non_stationary_vec),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("NON STATION ARY", std::move(non_stationary_ary),
+                              nan_policy::dont_pad_with_nans);
+
+    stac_v<vec_col_t, std::string>  adf_vec_v { stationary_test::adf };
+    stac_v<ary_col_t, std::string>  adf_ary_v { stationary_test::adf };
+    stac_v<vec_col_t, std::string>  kpss_vec_v { stationary_test::kpss };
+    stac_v<ary_col_t, std::string>  kpss_ary_v { stationary_test::kpss };
+
+    df.single_act_visit<vec_col_t>("STATION VEC", adf_vec_v);
+    df.single_act_visit<ary_col_t>("STATION ARY", adf_ary_v);
+    df.single_act_visit<vec_col_t>("STATION VEC", kpss_vec_v);
+    df.single_act_visit<ary_col_t>("STATION ARY", kpss_ary_v);
+
+    assert(adf_vec_v.get_adf_statistic().size() == dim);
+    assert(std::abs(adf_vec_v.get_adf_statistic()[0] - -0.586018) < 0.000001);
+    assert(std::abs(adf_vec_v.get_adf_statistic()[2] - -0.705822) < 0.000001);
+    assert(kpss_vec_v.get_kpss_statistic().size() == dim);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[0] - 0.0) < 0.00000001);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[2] - 0.0) < 0.00000001);
+    assert(kpss_vec_v.get_kpss_value().size() == dim);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 326.728) < 0.001);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 2239.29) < 0.01);
+
+    df.single_act_visit<vec_col_t>("NON STATION VEC", adf_vec_v);
+    df.single_act_visit<ary_col_t>("NON STATION ARY", adf_ary_v);
+    df.single_act_visit<vec_col_t>("NON STATION VEC", kpss_vec_v);
+    df.single_act_visit<ary_col_t>("NON STATION ARY", kpss_ary_v);
+
+    assert(adf_vec_v.get_adf_statistic().size() == dim);
+    assert(std::abs(adf_vec_v.get_adf_statistic()[0] - 0.904666) < 0.000001);
+    assert(std::abs(adf_vec_v.get_adf_statistic()[2] - 0.896825) < 0.000001);
+    assert(kpss_vec_v.get_kpss_statistic().size() == dim);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[0] - 0.0) < 0.00000001);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[2] - 0.0) < 0.00000001);
+    assert(kpss_vec_v.get_kpss_value().size() == dim);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 10.76) < 0.01);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 189.563) < 0.001);
 }
 
 // ----------------------------------------------------------------------------

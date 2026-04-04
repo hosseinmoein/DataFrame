@@ -10826,9 +10826,9 @@ struct  KolmoSmirnovTestVisitor  {
 
     template<typename K, typename H>
     inline void
-    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
-                const H &column1_begin, const H &column1_end,
-                const H &column2_begin, const H &column2_end)  {
+    operator()(const K & /*idx_begin*/, const K & /*idx_end*/,
+               const H &column1_begin, const H &column1_end,
+               const H &column2_begin, const H &column2_end)  {
 
         const size_type col1_s = std::distance(column1_begin, column1_end);
         const size_type col2_s = std::distance(column2_begin, column2_end);
@@ -10924,9 +10924,9 @@ struct  MannWhitneyUTestVisitor  {
 
     template<typename K, typename H>
     inline void
-    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
-                const H &column1_begin, const H &column1_end,
-                const H &column2_begin, const H &column2_end)  {
+    operator()(const K & /*idx_begin*/, const K & /*idx_end*/,
+               const H &column1_begin, const H &column1_end,
+               const H &column2_begin, const H &column2_end)  {
 
         const size_type col1_s = std::distance(column1_begin, column1_end);
         const size_type col2_s = std::distance(column2_begin, column2_end);
@@ -11017,13 +11017,13 @@ struct  MannWhitneyUTestVisitor  {
 
     }
 
-    inline void pre ()  { result_ = u1_ = u2_ = zscore_ = -1; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
-    inline result_type get_u1 () const  { return (u1_); }
-    inline result_type get_u2 () const  { return (u2_); }
-    inline result_type get_zscore () const  { return (zscore_); }
-    inline result_type get_pvalue () const  { return (p_val_); }
+    inline void pre()  { result_ = u1_ = u2_ = zscore_ = -1; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
+    inline result_type get_u1() const  { return (u1_); }
+    inline result_type get_u2() const  { return (u2_); }
+    inline result_type get_zscore() const  { return (zscore_); }
+    inline result_type get_pvalue() const  { return (p_val_); }
 
     MannWhitneyUTestVisitor()  {   }
 
@@ -11051,8 +11051,8 @@ struct  AndersonDarlingTestVisitor  {
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         const size_type col_s = std::distance(column_begin, column_end);
 
@@ -11186,8 +11186,8 @@ struct  ShapiroWilkTestVisitor  {
 
     template<typename K, typename H>
     inline void
-    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const H &column_begin, const H &column_end)  {
 
         const long  col_s = long(std::distance(column_begin, column_end));
 
@@ -11631,8 +11631,8 @@ struct  CramerVonMisesTestVisitor  {
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         const size_type col_s = std::distance(column_begin, column_end);
 
@@ -12062,20 +12062,39 @@ using qcut_v = DivideToQuantilesVisitor<T, I, L, A>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  ConfIntervalVisitor   {
+
+private:
+
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
 
     using value_type = T;
     using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::pair<value_type, value_type>;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_,
+                                    std::pair<data_t, data_t>,
+                                    std::pair<std::vector<data_t>,
+                                              std::vector<data_t>>>;
+    using stats_t =
+        typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end) {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end) {
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 4)
@@ -12089,21 +12108,33 @@ struct  ConfIntervalVisitor   {
         sv(idx_begin, idx_end, column_begin, column_end);
         sv.post();
 
-        error_m_ = (z_score_(clvl_) * sv.get_result()) / std::sqrt(T(col_s));
+        error_m_ = (sv.get_result() * data_t(z_score_(clvl_))) /
+                   data_t(std::sqrt(double(col_s)));
         upper_bound_ = sv.get_mean() + error_m_;
         lower_bound_ = sv.get_mean() - error_m_;
     }
 
-    inline void pre ()  { upper_bound_ = lower_bound_ = 0; error_m_ = 0; }
-    inline void post ()  {  }
-    inline value_type get_error_margin() const  { return (error_m_); }
-    inline result_type get_result () const  {
+    inline void pre()  {
+
+        if constexpr (! is_md_)  {
+            upper_bound_ = lower_bound_ = error_m_ = 0;
+        }
+        else  {
+            upper_bound_.clear();
+            lower_bound_.clear();
+            error_m_.clear();
+        }
+    }
+    inline void post()  {  }
+    inline const stats_t &get_error_margin() const  { return (error_m_); }
+    inline stats_t &get_error_margin()  { return (error_m_); }
+    inline result_type get_result() const  {
 
         return (result_type { lower_bound_, upper_bound_ });
     }
 
     explicit
-    ConfIntervalVisitor (value_type conf_level = 0.95) // 95% confidence level
+    ConfIntervalVisitor (double conf_level = 0.95) // 95% confidence level
         : clvl_ (conf_level)  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
@@ -12115,17 +12146,17 @@ struct  ConfIntervalVisitor   {
 
 private:
 
-    static inline value_type
-    z_score_(value_type confidence_level)  {
+    static inline double
+    z_score_(double confidence_level)  {
 
-        const static std::map<value_type, value_type>    z_table {
-            { T(0.80), T(1.2816) },
-            { T(0.85), T(1.4395) },
-            { T(0.90), T(1.6449) },
-            { T(0.95), T(1.96) },
-            { T(0.98), T(2.3263) },
-            { T(0.99), T(2.5758) },
-            { T(0.999), T(3.2905) }
+        const static std::map<double, double>    z_table {
+            { 0.80, 1.2816 },
+            { 0.85, 1.4395 },
+            { 0.90, 1.6449 },
+            { 0.95, 1.96 },
+            { 0.98, 2.3263 },
+            { 0.99, 2.5758 },
+            { 0.999, 3.2905 }
         };
 
         const auto  it = z_table.find(confidence_level);
@@ -12144,16 +12175,16 @@ private:
                                       (high_it->first - low_it->first)) *
                     (high_it->second - low_it->second));
         }
-        return (std::numeric_limits<T>::quiet_NaN());
+        return (std::numeric_limits<double>::quiet_NaN());
     }
 
-    value_type          upper_bound_ { 0 };
-    value_type          lower_bound_ { 0 };
-    value_type          error_m_ { 0 };
-    const value_type    clvl_;
+    stats_t         upper_bound_ { };
+    stats_t         lower_bound_ { };
+    stats_t         error_m_ { };
+    const double    clvl_;
 };
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 using coni_v = ConfIntervalVisitor<T, I>;
 
 // ----------------------------------------------------------------------------

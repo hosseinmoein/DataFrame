@@ -12189,18 +12189,33 @@ using coni_v = ConfIntervalVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  CoeffVariationVisitor   {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end) {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end) {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
         if (col_s < 4)
             throw DataFrameError("CoeffVariationVisitor: "
@@ -12216,13 +12231,18 @@ struct  CoeffVariationVisitor   {
         result_ = sv.get_result() / sv.get_mean();
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  {
+
+        if constexpr (is_md_)  result_.clear();
+        else  result_ = 0;
+    }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
 
 private:
 
-    result_type result_ { 0 };
+    result_type result_ { };
 };
 
 template<arithmetic T, typename I = unsigned long>

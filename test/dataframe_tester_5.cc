@@ -650,6 +650,47 @@ static void test_CoeffVariationVisitor()  {
 
     df.single_act_visit<double>("IBM_Close", cv_v2);
     assert(std::fabs(cv_v2.get_result() - 0.294703) < 0.000001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  ary_md_x  {
+        { 22.1, 1013.2, 55.4 }, { 21.8, 1012.8, 57.1 }, { 23.4, 1014.5, 53.2 },
+        { 22.7, 1013.9, 56.8 }, { 21.5, 1012.1, 58.3 }, { 23.1, 1014.1, 54.6 },
+        { 22.9, 1013.7, 55.9 }, { 21.2, 1011.8, 59.1 }, { 23.8, 1015.0, 52.7 },
+        { 22.5, 1013.4, 56.2 },
+    };
+    std::vector<vec_col_t>  vec_md_x  {
+        { 22.1, 1013.2, 55.4 }, { 21.8, 1012.8, 57.1 }, { 23.4, 1014.5, 53.2 },
+        { 22.7, 1013.9, 56.8 }, { 21.5, 1012.1, 58.3 }, { 23.1, 1014.1, 54.6 },
+        { 22.9, 1013.7, 55.9 }, { 21.2, 1011.8, 59.1 }, { 23.8, 1015.0, 52.7 },
+        { 22.5, 1013.4, 56.2 },
+    };
+
+    df.load_column<ary_col_t>("ARY MD COL", std::move(ary_md_x),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD COL", std::move(vec_md_x),
+                              nan_policy::dont_pad_with_nans);
+
+    CoeffVariationVisitor<ary_col_t, std::string>   ary_cv_v;
+    CoeffVariationVisitor<vec_col_t, std::string>   vec_cv_v;
+
+    df.single_act_visit<ary_col_t>("ARY MD COL", ary_cv_v);
+    df.single_act_visit<vec_col_t>("VEC MD COL", vec_cv_v);
+
+    assert(ary_cv_v.get_result().size() == dim);
+    assert(std::fabs(ary_cv_v.get_result()[0] - 0.037479) < 0.000001);
+    assert(std::fabs(ary_cv_v.get_result()[1] - 0.00099899) < 0.00000001);
+    assert(std::fabs(ary_cv_v.get_result()[2] - 0.036643) < 0.000001);
+
+    assert(vec_cv_v.get_result().size() == dim);
+    assert(std::fabs(vec_cv_v.get_result()[0] - 0.037479) < 0.000001);
+    assert(std::fabs(vec_cv_v.get_result()[1] - 0.00099899) < 0.00000001);
+    assert(std::fabs(vec_cv_v.get_result()[2] - 0.036643) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

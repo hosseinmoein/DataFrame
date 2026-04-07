@@ -896,6 +896,73 @@ static void test_ChiSquaredTestVisitor()  {
     df.single_act_visit<double, double>("observation 3", "expected 3", chi);
     assert(std::fabs(chi.get_result() - 4.0) < 0.0001);
     assert(std::fabs(chi.get_p_value(4) - 0.5) < 0.0001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  ary_observed  {
+        { 18.0, 10.0, 30.0 }, { 22.0, 20.0, 20.0 }, { 19.0, 15.0, 33.0 },
+        { 21.0, 18.0, 16.0 }, { 20.0, 20.0, 41.0 },
+    };
+    std::vector<vec_col_t>  vec_observed  {
+        { 18.0, 10.0, 30.0 }, { 22.0, 20.0, 20.0 }, { 19.0, 15.0, 33.0 },
+        { 21.0, 18.0, 16.0 }, { 20.0, 20.0, 41.0 },
+    };
+    std::vector<ary_col_t>  ary_expected  {
+        { 20.0, 16.6667, 28.0 }, { 20.0, 16.6667, 21.0 },
+        { 20.0, 16.6667, 35.0 }, { 20.0, 16.6667, 14.0 },
+        { 20.0, 16.6667, 42.0 },
+    };
+    std::vector<vec_col_t>  vec_expected  {
+        { 20.0, 16.6667, 28.0 }, { 20.0, 16.6667, 21.0 },
+        { 20.0, 16.6667, 35.0 }, { 20.0, 16.6667, 14.0 },
+        { 20.0, 16.6667, 42.0 },
+    };
+
+    df.load_column<ary_col_t>("ARY OBSV", std::move(ary_observed),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC OBSV", std::move(vec_observed),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY EXPT", std::move(ary_expected),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC EXPT", std::move(vec_expected),
+                              nan_policy::dont_pad_with_nans);
+
+    ChiSquaredTestVisitor<ary_col_t>    ary_chi;
+    ChiSquaredTestVisitor<vec_col_t>    vec_chi;
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY OBSV", "ARY EXPT", ary_chi);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC OBSV", "VEC EXPT", vec_chi);
+
+    assert(ary_chi.get_result().size() == dim);
+    assert(ary_chi.get_p_value(4).size() == dim);
+    assert(ary_chi.get_p_value({ 4, 4, 4 }).size() == dim);
+
+    assert(vec_chi.get_result().size() == dim);
+    assert(vec_chi.get_p_value(4).size() == dim);
+    assert(vec_chi.get_p_value({ 4, 4, 4 }).size() == dim);
+
+    assert(std::fabs(ary_chi.get_result()[0] - 0.5) < 0.01);
+    assert(std::fabs(ary_chi.get_result()[2] - 0.614286) < 0.000001);
+    assert(std::fabs(ary_chi.get_p_value(4)[0] - 0.892038) < 0.000001);
+    assert(std::fabs(ary_chi.get_p_value(4)[1] - 0.461508) < 0.000001);
+    assert(std::fabs(ary_chi.get_p_value(4)[2] - 0.884353) < 0.000001);
+    assert(std::fabs(ary_chi.get_p_value({4,4,4})[0] - 0.892038) < 0.000001);
+    assert(std::fabs(ary_chi.get_p_value({4,4,4})[1] - 0.461508) < 0.000001);
+    assert(std::fabs(ary_chi.get_p_value({4,4,4})[2] - 0.884353) < 0.000001);
+
+    assert(std::fabs(vec_chi.get_result()[0] - 0.5) < 0.01);
+    assert(std::fabs(vec_chi.get_result()[2] - 0.614286) < 0.000001);
+    assert(std::fabs(vec_chi.get_p_value(4)[0] - 0.892038) < 0.000001);
+    assert(std::fabs(vec_chi.get_p_value(4)[1] - 0.461508) < 0.000001);
+    assert(std::fabs(vec_chi.get_p_value(4)[2] - 0.884353) < 0.000001);
+    assert(std::fabs(vec_chi.get_p_value({4,4,4})[0] - 0.892038) < 0.000001);
+    assert(std::fabs(vec_chi.get_p_value({4,4,4})[1] - 0.461508) < 0.000001);
+    assert(std::fabs(vec_chi.get_p_value({4,4,4})[2] - 0.884353) < 0.000001);
 }
 
 // -----------------------------------------------------------------------------

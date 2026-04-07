@@ -12192,6 +12192,8 @@ using coni_v = ConfIntervalVisitor<T, I>;
 template<typename T, typename I = unsigned long>
 struct  CoeffVariationVisitor   {
 
+private:
+
     static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
     using data_t =
@@ -12252,21 +12254,40 @@ using cffv_v = CoeffVariationVisitor<T, I>;
 
 // Chi-squared test
 //
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  ChiSquaredTestVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_2
+private:
+
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
 
     template<typename K, typename H>
     inline void
-    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
-                const H &observed_begin, const H &observed_end,
-                const H &expected_begin, const H &expected_end)  {
+    operator()(const K & /*idx_begin*/, const K & /*idx_end*/,
+               const H &observed_begin, const H &observed_end,
+               const H &expected_begin, const H &expected_end)  {
 
-        const size_type col_s = std::distance(observed_begin, observed_end);
+        const size_type col_s {
+            size_type(std::distance(observed_begin, observed_end))
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        const size_type col2_s = std::distance(expected_begin, expected_end);
+        const size_type col2_s {
+            size_type(std::distance(expected_begin, expected_end))
+        };
 
         if (col_s < 4 || col2_s < 4)
             throw DataFrameError("ChiSquaredTestVisitor: "
@@ -12277,23 +12298,47 @@ struct  ChiSquaredTestVisitor  {
                                  "have the same length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const auto  thread_level =
+        const auto  thread_level {
             (col_s < ThreadPool::MUL_THR_THHOLD)
-                ? 0L : ThreadGranularity::get_thread_level();
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
         auto        lbd =
             [observed_begin = std::as_const(observed_begin),
              expected_begin = std::as_const(expected_begin)]
             (auto begin, auto end) -> result_type {
-                result_type res { 0 };
+                result_type res;
 
-                for (size_type i { begin }; i < end; ++i)  {
-                    const result_type   expt { *(expected_begin + i) };
+                if constexpr (! is_md_)  {  // Scalar path
+                    res = 0;
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const result_type   expt { *(expected_begin + i) };
 
-                    if (expt == 0)  continue;
+                        if (expt == result_type(0))  continue;
 
-                    const result_type   val = { *(observed_begin + i) - expt };
+                        const result_type   diff {
+                            *(observed_begin + i) - expt
+                        };
 
-                    res += (val * val) / expt;
+                        res += (diff * diff) / expt;
+                    }
+                    return res;
+                }
+                else  {  // MD path
+                    const size_type dim { expected_begin->size() };
+
+                    res.resize(dim, 0);
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const auto  &expt { *(expected_begin + i) };
+                        const auto  &obsv { *(observed_begin + i) };
+
+                        for (size_type j { 0 }; j < dim; ++j)  {
+                            if (expt[j] == data_t(0))  continue;
+
+                            const data_t    diff { obsv[j] - expt[j] };
+
+                            res[j] += (diff * diff) / expt[j];
+                        }
+                    }
                 }
                 return (res);
             };
@@ -12303,6 +12348,8 @@ struct  ChiSquaredTestVisitor  {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0), col_s, std::move(lbd));
 
+            if constexpr (is_md_)
+                result_.resize(expected_begin->size(), 0);
             for (auto &fut : futures)  result_ += fut.get();
         }
         else  {
@@ -12310,20 +12357,61 @@ struct  ChiSquaredTestVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result() const  { return (result_); }
+    inline void pre()  {
+
+        if constexpr (! is_md_)
+            result_ = 0;
+        else
+            result_.clear();  // will be re-sized in operator()
+    }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+
     inline result_type get_p_value(size_type deg_of_freedom) const  {
+ 
+        if constexpr (! is_md_)  {
+            const result_type   dof  { result_type(deg_of_freedom) };
+            const result_type   val  {
+                (result_ - dof) / std::sqrt(T(2.0) * dof)
+            };
+            return (T(0.5) * std::erfc(val / T(M_SQRT2)));
+        }
+        else  {
+            const data_t    dof { data_t(deg_of_freedom) };
+            result_type     p_vals;
 
-        const result_type   val =
-            (result_ - T(deg_of_freedom)) / sqrt(T(2.0) * T(deg_of_freedom));
+            p_vals.resize(result_.size());
+            for (size_type i { 0 }; const data_t chi : result_)  {
+                const data_t    val {
+                    (chi - dof) / std::sqrt(data_t(2.0) * dof)
+                };
 
-        return (T(0.5) * std::erfc(val / T(M_SQRT2)));
+                p_vals[i++] = data_t(0.5) * std::erfc(val / data_t(M_SQRT2));
+            }
+            return (p_vals);
+        }
+    }
+    inline result_type
+    get_p_value(const std::vector<size_type> &dofs) const requires is_md_  {
+ 
+        result_type p_vals;
+
+        p_vals.resize(result_.size());
+        for (size_type j { 0 }; j < result_.size(); ++j)  {
+            const data_t    dof { data_t(dofs[j]) };
+            const data_t    val {
+                (result_[j] - dof) / std::sqrt(data_t(2.0) * dof)
+            };
+
+            p_vals[j] = data_t(0.5) * std::erfc(val / data_t(M_SQRT2));
+        }
+        return (p_vals);;
     }
 
 private:
 
-    result_type result_ { 0 };  // Chi squared
+    result_type result_ { };  // Chi squared
 };
 
 template<typename T, typename I = unsigned long>

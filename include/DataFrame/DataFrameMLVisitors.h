@@ -1614,92 +1614,161 @@ using fft_v = FastFourierTransVisitor<T, I, A>;
 
 // ------------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  EntropyVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
+
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_ary_ = is_std_array_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_,
+                                    vec_t<data_t>,
+                                    vec_t<std::vector<data_t>>>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         if (roll_count_ == 0)  return;
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>  sum_v(
-            SumVisitor<T, I>(), roll_count_);
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>  sum_v {
+            SumVisitor<T, I>(), roll_count_
+        };
 
         sum_v.pre();
-        sum_v (idx_begin, idx_end, column_begin, column_end);
+        sum_v(idx_begin, idx_end, column_begin, column_end);
         sum_v.post();
 
-        result_type         result = std::move(sum_v.get_result());
-        const value_type    log_log_base = std::log(log_base_);
+        result_type     result;
+        const data_t    log_log_base { std::log(log_base_) };
+        auto            lbd =
+            [&column_begin, &result, log_log_base]
+             (auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)  {
+                    if constexpr (is_md_)  {
+                        auto    &r { result[i] };
 
+                        if (r.empty())
+                            r.resize(column_begin->size(), get_nan<data_t>());
+
+                        const auto                 &val_ref {
+                            *(column_begin + i) / r
+                        };
+                        const std::vector<data_t>   val (val_ref.begin(),
+                                                         val_ref.end());
+
+                        r = (data_t(-1) * val) * (_bc_log_(val) / log_log_base);
+                    }
+                    else  {
+                        auto        &r { result[i] };
+                        const auto  val { *(column_begin + i) / r };
+
+                        r = (data_t(-1) * val) * (_bc_log_(val) / log_log_base);
+                    }
+                }
+            };
+
+        if constexpr (is_md_)
+            result.assign(sum_v.get_result().begin(), sum_v.get_result().end());
+        else
+            result = sum_v.get_result();
         if (result.size() >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         result.size(),
-                        [&column_begin, &result, log_log_base]
-                        (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
-                                value_type          &r = result[i];
-                                const value_type    val =
-                                    *(column_begin + i) / r;
-
-                                r = -val * (std::log(val) / log_log_base);
-                            }
-                        });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  fut.get();
         }
         else  {
-            std::transform(column_begin, column_end,
-                           result.begin(),
-                           result.begin(),
-                           [log_log_base](auto c, auto r) -> value_type  {
-                               const value_type    val = c / r;
-
-                               return (-val * (std::log(val) / log_log_base));
-                           });
+            lbd(size_type(0), result.size());
         }
 
         sum_v.pre();
-        sum_v (idx_begin, idx_end,  // the idx iterators are unused
-               result.begin() + (roll_count_ - 1), result.end());
+        sum_v(idx_begin, idx_end,  // the idx iterators are unused
+              result.begin() + (roll_count_ - 1), result.end());
         sum_v.post();
 
-        for (size_type i = 0; i < roll_count_ - 1; ++i) [[likely]]
-            result[i] = get_nan<value_type>();
-        for (size_type i = 0; i < sum_v.get_result().size(); ++i) [[likely]]
-            result[i + roll_count_ - 1] = sum_v.get_result()[i];
+        const size_type sz { sum_v.get_result().size() };
+
+        if constexpr (! is_md_)  {
+            for (size_type i { 0 }; i < roll_count_ - 1; ++i) [[likely]]
+                result[i] = get_nan<data_t>();
+            for (size_type i { roll_count_ - 1 }; i < sz; ++i)
+                result[i] = sum_v.get_result()[i];
+        }
+        else  {
+            const std::vector<data_t>   nans(column_begin->size(),
+                                             get_nan<data_t>());
+
+            for (size_type i { 0 }; i < roll_count_ - 1; ++i) [[likely]]
+                result[i] = nans;
+            for (size_type i { roll_count_ - 1 }; i < sz; ++i)  {
+                if (sum_v.get_result()[i].empty())
+                    result[i].resize(column_begin->size(), get_nan<data_t>());
+                else
+                    result[i].assign(sum_v.get_result()[i].begin(),
+                                     sum_v.get_result()[i].end());
+            }
+        }
 
         result_.swap(result);
     }
 
-    OBO_PORT_OPT
+    inline void
+    operator()(const index_type &, const value_type &val)  {
+        obo_data_ = true;
+        aux_val_vec_.push_back(val);
+    }
 
-    inline void pre ()  {
+    inline void pre()  {
 
-        OBO_PORT_PRE
+        aux_val_vec_.clear();
+        aux_idx_vec_.clear();
+        obo_data_ = false;
         result_.clear();
     }
-    inline void post ()  { OBO_PORT_POST }
-    DEFINE_RESULT
+    inline void post()  {
+
+        if (obo_data_)
+            (*this)(aux_idx_vec_.begin(), aux_idx_vec_.end(),
+                    aux_val_vec_.begin(), aux_val_vec_.end());
+    }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
     explicit
-    EntropyVisitor(size_type roll_count, value_type log_base = 2)
+    EntropyVisitor(size_type roll_count, data_t log_base = 2)
         : roll_count_(roll_count), log_base_(log_base)  {   }
 
 private:
 
-    OBO_PORT_DECL
+    using idx_vec = std::vector<I, typename allocator_declare<I, A>::type>;
 
-    const size_type     roll_count_;
-    const value_type    log_base_;
-    result_type         result_ { };
+    result_type aux_val_vec_ {  };
+    idx_vec     aux_idx_vec_ {  };
+    bool        obo_data_ { false };  // one-by-one data passing
+
+    const size_type roll_count_;
+    const data_t    log_base_;
+    result_type     result_ { };
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

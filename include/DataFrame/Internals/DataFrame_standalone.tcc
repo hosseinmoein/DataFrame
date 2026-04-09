@@ -215,8 +215,8 @@ std::unordered_map<DT_FORMAT, const char *const>    _dtformat_str_  {
 
 // ----------------------------------------------------------------------------
 
-template<typename S, typename T>
-static S &operator << (S &stream, const std::vector<T> &data)  {
+template<typename S, typename T, typename A>
+static S &operator << (S &stream, const std::vector<T, A> &data)  {
 
     if (! data.empty())  {
         stream << data.size() << '[' << data[0];

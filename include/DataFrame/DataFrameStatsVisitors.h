@@ -219,10 +219,10 @@ static inline auto _bc_pow_(const V &v, S exp) noexcept  {
     else  {
         using data_t = typename V::value_type;
 
-        std::vector<data_t> res(v.size());
+        std::vector<data_t> res(v.begin(), v.end());
 
         for (std::size_t i { 0 }; i < v.size(); ++i)
-            res[i] = std::pow(v[i], exp);
+            res[i] = std::pow(res[i], exp);
         return (res);
     }
 }
@@ -236,10 +236,10 @@ static inline auto _bc_log_(const V &v) noexcept  {
     else  {
         using data_t = typename V::value_type;
 
-        std::vector<data_t> res(v.size());
+        std::vector<data_t> res(v.begin(), v.end());
 
         for (std::size_t i { 0 }; i < v.size(); ++i)
-            res[i] = std::log(v[i]);
+            res[i] = std::log(res[i]);
         return (res);
     }
 }
@@ -253,10 +253,10 @@ static inline auto _bc_exp_(const V &v) noexcept  {
     else  {
         using data_t = typename V::value_type;
 
-        std::vector<data_t> res(v.size());
+        std::vector<data_t> res(v.begin(), v.end());
 
         for (std::size_t i { 0 }; i < v.size(); ++i)
-            res[i] = std::exp(v[i]);
+            res[i] = std::exp(res[i]);
         return (res);
     }
 }
@@ -3177,8 +3177,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -3203,10 +3203,10 @@ public:
         }
     }
 
-    inline void pre ()  { visitor_.pre(); result_.clear(); }
-    inline void post ()  { visitor_.post(); }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline void pre()  { visitor_.pre(); result_.clear(); }
+    inline void post()  { visitor_.post(); }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
 
     SimpleRollAdopter(F &&functor, size_type r_count)
         : visitor_(std::move(functor)), roll_count_(r_count)  {   }

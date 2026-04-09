@@ -3868,13 +3868,76 @@ static void test_EntropyVisitor()  {
 
     assert(e_v.get_result().size() == 28);
     assert(std::isnan(e_v.get_result()[0]));
-    assert(std::isnan(e_v.get_result()[7]));
-    assert(std::abs(e_v.get_result()[8] - 2.18974) < 0.00001);
-    assert(std::abs(e_v.get_result()[10] - 1.98477) < 0.00001);
-    assert(std::abs(e_v.get_result()[14] - 1.7154) < 0.0001);
-    assert(std::abs(e_v.get_result()[27] - 0.596666) < 0.00001);
-    assert(std::abs(e_v.get_result()[25] - 0.822228) < 0.00001);
-    assert(std::abs(e_v.get_result()[22] - 1.49397) < 0.0001);
+    assert(std::isnan(e_v.get_result()[3]));
+    assert(std::abs(e_v.get_result()[4] - 2.18974) < 0.00001);
+    assert(std::abs(e_v.get_result()[6] - 1.98477) < 0.00001);
+    assert(std::abs(e_v.get_result()[10] - 1.7154) < 0.0001);
+    assert(std::abs(e_v.get_result()[23] - 0.596666) < 0.00001);
+    assert(std::abs(e_v.get_result()[21] - 0.822228) < 0.00001);
+    assert(std::abs(e_v.get_result()[18] - 1.49397) < 0.0001);
+    assert(std::abs(e_v.get_result()[26] - 0.08568) < 0.0001);
+    assert(std::abs(e_v.get_result()[27] - 0.00646) < 0.0001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    StlVecType<ary_col_t>   ary_md_x  {
+        { 1.0, 2.0, 1.0 }, { 2.0, 1.0, 3.0 }, { 3.0, 4.0, 2.0 },
+        { 2.0, 1.0, 2.0 }, { 1.0, 3.0, 1.0 }, { 4.0, 2.0, 4.0 },
+        { 2.0, 1.0, 3.0 }, { 3.0, 3.0, 2.0 }, { 1.0, 2.0, 1.0 },
+        { 2.0, 4.0, 3.0 },
+    };
+    StlVecType<vec_col_t>   vec_md_x  {
+        { 1.0, 2.0, 1.0 }, { 2.0, 1.0, 3.0 }, { 3.0, 4.0, 2.0 },
+        { 2.0, 1.0, 2.0 }, { 1.0, 3.0, 1.0 }, { 4.0, 2.0, 4.0 },
+        { 2.0, 1.0, 3.0 }, { 3.0, 3.0, 2.0 }, { 1.0, 2.0, 1.0 },
+        { 2.0, 4.0, 3.0 },
+    };
+
+    df.load_column<ary_col_t>("ARY MD COL", std::move(ary_md_x),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD COL", std::move(vec_md_x),
+                              nan_policy::dont_pad_with_nans);
+
+    EntropyVisitor<ary_col_t, unsigned long, 64>    ary_e_v (4);
+    EntropyVisitor<vec_col_t, unsigned long, 64>    vec_e_v (4);
+
+    df.single_act_visit<ary_col_t>("ARY MD COL", ary_e_v);
+    df.single_act_visit<vec_col_t>("VEC MD COL", vec_e_v);
+
+    const auto  &ary_result { ary_e_v.get_result() };
+    const auto  &vec_result { vec_e_v.get_result() };
+
+    assert(ary_result.size() == 10);
+    for (const auto &vec : ary_result)  {
+        assert(vec.size() == dim);
+    }
+    assert(vec_result.size() == 10);
+    for (const auto &vec : vec_result)  {
+        assert(vec.size() == dim);
+    }
+
+    assert(std::isnan(ary_result[0][0]));
+    assert(std::isnan(ary_result[0][2]));
+    assert(std::isnan(ary_result[2][2]));
+    assert(std::isnan(ary_result[2][2]));
+    assert(std::abs(ary_result[3][0] - 1.88598) < 0.00001);
+    assert(std::abs(ary_result[3][1] - 1.76876) < 0.00001);
+    assert(std::abs(ary_result[6][1] - 1.95814) < 0.00001);
+    assert(std::abs(ary_result[6][2] - 1.84599) < 0.00001);
+
+    assert(std::isnan(vec_result[0][0]));
+    assert(std::isnan(vec_result[0][2]));
+    assert(std::isnan(vec_result[2][2]));
+    assert(std::isnan(ary_result[2][2]));
+    assert(std::abs(vec_result[3][0] - 1.88598) < 0.00001);
+    assert(std::abs(vec_result[3][1] - 1.76876) < 0.00001);
+    assert(std::abs(vec_result[6][1] - 1.95814) < 0.00001);
+    assert(std::abs(vec_result[6][2] - 1.84599) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

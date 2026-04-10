@@ -315,6 +315,97 @@ static S &operator << (S &stream, const Matrix<T, MO> &data)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename T>
+struct FloatHash  {
+
+    explicit FloatHash(T e = T(1e-7)) : epsilon_(e)  {  }
+
+    std::size_t operator()(T val) const noexcept  {
+
+        if (std::isnan(val))  return (0);  // all NaNs hash equal
+        if (std::isinf(val))  return (std::hash<T>{}(val));
+
+        // Snap to epsilon grid: values within epsilon of each other
+        // round to the same grid point
+        //
+        const T snapped { std::round(val / epsilon_) * epsilon_ };
+
+        return (std::hash<T>{}(snapped));
+    }
+
+private:
+
+    const T epsilon_;
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+struct  VectorHasher  {
+
+    static constexpr bool   is_float { std::is_floating_point_v<T> };
+    using hasher_t =
+        typename std::conditional_t<is_float, FloatHash<T>, std::hash<T>>;
+
+    template<typename A>
+    std::size_t operator()(const std::vector<T, A> &vec) const  {
+
+        std::size_t seed { vec.size() };
+
+        for (const auto x : vec)
+            seed ^= hasher_t{}(x) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+
+        return (seed);
+    }
+
+    template<std::size_t N>
+    std::size_t operator()(const std::array<T, N> &ary) const  {
+
+        std::size_t seed { ary.size() };
+
+        for (const auto x : ary)
+            seed ^= hasher_t{}(x) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+
+        return (seed);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+struct  FloatEqual {
+
+    explicit FloatEqual(T e = T(1e-7)) : epsilon_(e)  {  }
+
+    inline bool
+    operator()(T a, T b) const noexcept { return(std::abs(a - b) < epsilon_); }
+
+    template<typename A1, typename A2>
+    bool operator()(const std::vector<T, A1> &vec1,
+                    const std::vector<T, A2> &vec2) const  {
+
+        if (vec1.size() != vec2.size())  return (false);
+        for (std::size_t i { 0 }; const auto x : vec1)
+            if (! (*this)(x, vec2[i++]))  return(false);
+        return (true);
+    }
+
+    template<std::size_t N>
+    bool operator()(const std::array<T, N> &ary1,
+                    const std::array<T, N> &ary2) const  {
+
+        for (std::size_t i { 0 }; const auto x : ary1)
+            if (! (*this)(x, ary2[i++]))  return(false);
+        return (true);
+    }
+
+private:
+
+    const T epsilon_;
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename DF, typename T>
 static inline auto &
 _create_column_from_triple_(DF &df, T &triple) {
@@ -2813,7 +2904,7 @@ V _kshape_cross_corr_(const V &x, const V &y)  {
 #endif // HMDF_SANITY_EXCEPTIONS
 
     const long  fft_s = _next_pow2_(2 * col_s);
-        
+
     // Prepare FFT inputs
     //
     std::vector<std::complex<value_type>>   X(fft_s, 0);
@@ -2823,21 +2914,21 @@ V _kshape_cross_corr_(const V &x, const V &y)  {
         X[i] = x[i];
         Y[i] = y[i];
     }
-        
+
     // Forward FFT
     //
     _kshape_fft_(X, false);
     _kshape_fft_(Y, false);
-        
+
     // Multiply in frequency domain (element-wise)
     //
     for (long i { 0 }; i < fft_s; ++i)
         X[i] *= std::conj(Y[i]);
-        
+
     // Inverse FFT
     //
     _kshape_fft_(X, true);
-        
+
     // Extract real parts for cross-correlation
     //
     std::vector<value_type, allocator_type> cc(2L * col_s - 1L);
@@ -2850,7 +2941,7 @@ V _kshape_cross_corr_(const V &x, const V &y)  {
     }
     for (long i { col_s }; i < (2L * col_s - 1L); ++i)
         cc[i] = X[i - col_s + 1].real();
-        
+
     return (cc);
 }
 

@@ -170,14 +170,14 @@ namespace hmdf
 
 #define OBO_PORT_OPT \
     inline void \
-    operator() (const index_type &, const value_type &val)  { \
+    operator()(const index_type &, const value_type &val)  { \
         obo_data_ = true; \
         aux_val_vec_.push_back(val); \
     }
 
 #define OBO_PORT_OPT2 \
     inline void \
-    operator() (const index_type &idx, const value_type &val)  { \
+    operator()(const index_type &idx, const value_type &val)  { \
         obo_data_ = true; \
         aux_val_vec_.push_back(val); \
         aux_idx_vec_.push_back(idx); \
@@ -240,6 +240,23 @@ static inline auto _bc_log_(const V &v) noexcept  {
 
         for (std::size_t i { 0 }; i < v.size(); ++i)
             res[i] = std::log(res[i]);
+        return (res);
+    }
+}
+
+template<typename V>
+static inline auto _bc_log2_(const V &v) noexcept  {
+
+    if constexpr (std::is_arithmetic_v<V>)  {
+        return (std::log2(v));
+    }
+    else  {
+        using data_t = typename V::value_type;
+
+        std::vector<data_t> res(v.begin(), v.end());
+
+        for (std::size_t i { 0 }; i < v.size(); ++i)
+            res[i] = std::log2(res[i]);
         return (res);
     }
 }

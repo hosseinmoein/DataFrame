@@ -1620,7 +1620,6 @@ struct  EntropyVisitor  {
 private:
 
     static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
-    static constexpr bool   is_ary_ = is_std_array_v<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -1779,24 +1778,51 @@ using ent_v = EntropyVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ImpurityVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES
+private:
 
-    using result_type =
-        std::vector<double, typename allocator_declare<double, A>::type>;
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using equal_t =
+        typename std::conditional_t<std::is_floating_point_v<data_t>,
+                                    FloatEqual<data_t>,
+                                    std::equal_to<data_t>>;
+
+    using map_t =
+        typename std::conditional_t<
+            ! is_md_,
+            std::unordered_map<T, double, std::hash<data_t>, equal_t>,
+            std::unordered_map<T, double, VectorHasher<data_t>, equal_t>>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type = vec_t<double>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &, const K &,
+               const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE2
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
         if (roll_count_ == 0 || roll_count_ > col_s)  return;
 
         map_t   table (roll_count_ / 2 + 1);
 
-        for (size_type i = 0; i < roll_count_; ++i) [[likely]]  {
-            auto    ret = table.insert(std::pair(*(column_begin + i), 0));
+        for (size_type i { 0 }; i < roll_count_; ++i) [[likely]]  {
+            auto    ret { table.insert(std::pair(*(column_begin + i), 0)) };
 
             ret.first->second += 1.0;
         }
@@ -1807,19 +1833,19 @@ struct  ImpurityVisitor  {
             (auto i, auto sum) -> bool  {
                 result.push_back(sum);
 
-                const size_type roll_end = i + this->roll_count_;
+                const size_type roll_end { i + roll_count_ };
 
                 if (roll_end > col_s)  return (false);
 
-                auto    find_ret = table.find(*(column_begin + (i - 1)));
+                auto    find_ret { table.find(*(column_begin + (i - 1))) };
 
                 find_ret->second -= 1.0; // It must find it -- no need to check
                 if (find_ret->second == 0)
                     table.erase(find_ret);
 
-                auto    insert_ret =
-                    table.insert(
-                        std::pair(*(column_begin + (roll_end - 1)), 0));
+                auto    insert_ret {
+                    table.insert(std::pair(*(column_begin + (roll_end - 1)), 0))
+                };
 
                 insert_ret.first->second += 1.0;
                 return (true);
@@ -1827,11 +1853,11 @@ struct  ImpurityVisitor  {
 
         result.reserve(col_s);
         if (imt_ == impurity_type::gini_index)  {
-            for (size_type i = 1; i < col_s; ++i) [[likely]]  {
-                double  sum = 0;
+            for (size_type i { 1 }; i < col_s; ++i) [[likely]]  {
+                double  sum { 0 };
 
                 for (const auto &citer : table)  {
-                    const auto  prob = citer.second / double(roll_count_);
+                    const auto  prob { citer.second / double(roll_count_) };
 
                     sum += prob * prob;
                 }
@@ -1840,13 +1866,13 @@ struct  ImpurityVisitor  {
             }
         }
         else  {  // impurity_type::info_entropy
-            for (size_type i = 1; i < col_s; ++i) [[likely]]  {
+            for (size_type i { 1 }; i < col_s; ++i) [[likely]]  {
                 double  sum = 0;
 
                 for (const auto &citer : table)  {
-                    const auto  prob = citer.second / double(roll_count_);
+                    const auto  prob { citer.second / double(roll_count_) };
 
-                    sum += prob * std::log2(prob);
+                    if (prob > 0.0)  sum += prob * std::log2(prob);
                 }
                 sum = -sum;
                 if (! func(i, sum))  break;
@@ -1855,14 +1881,28 @@ struct  ImpurityVisitor  {
         result_.swap(result);
     }
 
-    OBO_PORT_OPT
+    inline void
+    operator()(const index_type &idx, const value_type &val)  {
 
-    inline void pre ()  {
+        obo_data_ = true;
+        aux_val_vec_.push_back(val);
+        aux_idx_vec_.push_back(idx);
+    }
 
-        OBO_PORT_PRE
+    inline void pre()  {
+
+        aux_val_vec_.clear();
+        aux_idx_vec_.clear();
+        obo_data_ = false;
+
         result_.clear();
     }
-    inline void post ()  { OBO_PORT_POST }
+    inline void post()  {
+
+        if (obo_data_)
+            (*this)(aux_idx_vec_.begin(), aux_idx_vec_.end(),
+                    aux_val_vec_.begin(), aux_val_vec_.end());
+    }
     DEFINE_RESULT
 
     ImpurityVisitor(size_type roll_count, impurity_type it)
@@ -1870,13 +1910,11 @@ struct  ImpurityVisitor  {
 
 private:
 
-    using map_t = std::unordered_map<
-        T, double,
-        std::hash<T>,
-        std::equal_to<T>,
-        typename allocator_declare<std::pair<const T, double>, A>::type>;
-
-    OBO_PORT_DECL
+    using val_vec = std::vector<T, typename allocator_declare<T, A>::type>;
+    using idx_vec = std::vector<I, typename allocator_declare<I, A>::type>;
+    val_vec     aux_val_vec_ {  };
+    idx_vec     aux_idx_vec_ {  };
+    bool        obo_data_ { false };  // one-by-one data passing
 
     result_type         result_ { };
     const size_type     roll_count_;

@@ -1282,6 +1282,69 @@ static void test_ImpurityVisitor()  {
     assert(fabs(result6[15] - 0.9183) < 0.0001);
     assert(result6[14] == 0);
     assert(fabs(result6[13] - 0.9183) < 0.0001);
+
+    // Now multidimensional data
+    // NOTE: I am treating multidimensional vectors as categorical tokens,
+    //       not numeric vectors. So the input columns are labels not points
+    //       in a 3-dimensional space.
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    StlVecType<ary_col_t>   ary_md_x  {
+        { 1.0, 2.0, 3.0 }, { 4.5, 3.0, 2.5 }, { 1.0, 2.0, 3.0 },
+        { 4.0, 2.5, 2.0 }, { 1.5, 4.0, 1.76 }, { 4.0, 2.5, 2.0 },
+        { 2.55, 3.16, 2.001 }, { 1.5, 4.0, 1.76 }, { 2.55, 3.16, 2.001 },
+        { 4.5, 3.0, 2.5 },
+    };
+    StlVecType<vec_col_t>   vec_md_x  {
+        { 1.0, 2.0, 3.0 }, { 4.5, 3.0, 2.5 }, { 1.0, 2.0, 3.0 },
+        { 4.0, 2.5, 2.0 }, { 1.5, 4.0, 1.76 }, { 4.0, 2.5, 2.0 },
+        { 2.55, 3.16, 2.001 }, { 1.5, 4.0, 1.76 }, { 2.55, 3.16, 2.001 },
+        { 4.5, 3.0, 2.5 },
+    };
+
+    df.load_column<ary_col_t>("ARY MD", std::move(ary_md_x),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD", std::move(vec_md_x),
+                              nan_policy::dont_pad_with_nans);
+
+    impu_v<ary_col_t>   md_ien_ary { 3, impurity_type::info_entropy };
+    impu_v<vec_col_t>   md_ien_vec { 3, impurity_type::info_entropy };
+    impu_v<ary_col_t>   md_gix_ary { 3, impurity_type::gini_index };
+    impu_v<vec_col_t>   md_gix_vec { 3, impurity_type::gini_index };
+
+    df.single_act_visit<ary_col_t>("ARY MD", md_ien_ary);
+    df.single_act_visit<vec_col_t>("VEC MD", md_ien_vec);
+    df.single_act_visit<ary_col_t>("ARY MD", md_gix_ary);
+    df.single_act_visit<vec_col_t>("VEC MD", md_gix_vec);
+
+    assert(md_ien_ary.get_result().size() == 8);
+    assert(md_ien_vec.get_result().size() == 8);
+    assert(md_gix_ary.get_result().size() == 8);
+    assert(md_gix_vec.get_result().size() == 8);
+
+    assert(std::fabs(md_ien_ary.get_result()[0] - 0.918296) < 0.000001);
+    assert(std::fabs(md_ien_ary.get_result()[2] - 1.58496) < 0.00001);
+    assert(std::fabs(md_ien_ary.get_result()[3] - 0.918296) < 0.000001);
+    assert(std::fabs(md_ien_ary.get_result()[7] - 1.58496) < 0.00001);
+
+    assert(std::fabs(md_ien_vec.get_result()[0] - 0.918296) < 0.000001);
+    assert(std::fabs(md_ien_vec.get_result()[2] - 1.58496) < 0.00001);
+    assert(std::fabs(md_ien_vec.get_result()[3] - 0.918296) < 0.000001);
+    assert(std::fabs(md_ien_vec.get_result()[7] - 1.58496) < 0.00001);
+
+    assert(std::fabs(md_gix_ary.get_result()[0] - 0.444444) < 0.000001);
+    assert(std::fabs(md_gix_ary.get_result()[2] - 0.666667) < 0.000001);
+    assert(std::fabs(md_gix_ary.get_result()[3] - 0.444444) < 0.000001);
+    assert(std::fabs(md_gix_ary.get_result()[7] - 0.666667) < 0.000001);
+
+    assert(std::fabs(md_gix_vec.get_result()[0] - 0.444444) < 0.000001);
+    assert(std::fabs(md_gix_vec.get_result()[2] - 0.666667) < 0.000001);
+    assert(std::fabs(md_gix_vec.get_result()[3] - 0.444444) < 0.000001);
+    assert(std::fabs(md_gix_vec.get_result()[7] - 0.666667) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

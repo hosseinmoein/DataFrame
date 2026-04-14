@@ -227,6 +227,8 @@ static inline auto _bc_pow_(const V &v, S exp) noexcept  {
     }
 }
 
+// -------------------------------------
+
 template<typename V>
 static inline auto _bc_log_(const V &v) noexcept  {
 
@@ -243,6 +245,103 @@ static inline auto _bc_log_(const V &v) noexcept  {
         return (res);
     }
 }
+
+// -------------------------------------
+
+template<typename V>
+static inline auto _bc_sqrt_(const V &v) noexcept  {
+
+    if constexpr (std::is_arithmetic_v<V>)  {
+        return (std::sqrt(v));
+    }
+    else  {
+        using data_t = typename V::value_type;
+
+        std::vector<data_t> res(v.begin(), v.end());
+
+        for (std::size_t i { 0 }; i < v.size(); ++i)
+            res[i] = std::sqrt(res[i]);
+        return (res);
+    }
+}
+
+// -------------------------------------
+
+template<typename V>
+static inline auto _bc_tanh_(const V &v) noexcept  {
+
+    if constexpr (std::is_arithmetic_v<V>)  {
+        return (std::tanh(v));
+    }
+    else  {
+        using data_t = typename V::value_type;
+
+        std::vector<data_t> res(v.begin(), v.end());
+
+        for (std::size_t i { 0 }; i < v.size(); ++i)
+            res[i] = std::tanh(res[i]);
+        return (res);
+    }
+}
+
+// -------------------------------------
+
+template<typename V>
+static inline auto _bc_atan_(const V &v) noexcept  {
+
+    if constexpr (std::is_arithmetic_v<V>)  {
+        return (std::atan(v));
+    }
+    else  {
+        using data_t = typename V::value_type;
+
+        std::vector<data_t> res(v.begin(), v.end());
+
+        for (std::size_t i { 0 }; i < v.size(); ++i)
+            res[i] = std::atan(res[i]);
+        return (res);
+    }
+}
+
+// -------------------------------------
+
+template<typename V>
+static inline auto _bc_sinh_(const V &v) noexcept  {
+
+    if constexpr (std::is_arithmetic_v<V>)  {
+        return (std::sinh(v));
+    }
+    else  {
+        using data_t = typename V::value_type;
+
+        std::vector<data_t> res(v.begin(), v.end());
+
+        for (std::size_t i { 0 }; i < v.size(); ++i)
+            res[i] = std::sinh(res[i]);
+        return (res);
+    }
+}
+
+// -------------------------------------
+
+template<typename V>
+static inline auto _bc_erf_(const V &v) noexcept  {
+
+    if constexpr (std::is_arithmetic_v<V>)  {
+        return (std::erf(v));
+    }
+    else  {
+        using data_t = typename V::value_type;
+
+        std::vector<data_t> res(v.begin(), v.end());
+
+        for (std::size_t i { 0 }; i < v.size(); ++i)
+            res[i] = std::erf(res[i]);
+        return (res);
+    }
+}
+
+// -------------------------------------
 
 template<typename V>
 static inline auto _bc_log2_(const V &v) noexcept  {
@@ -261,6 +360,8 @@ static inline auto _bc_log2_(const V &v) noexcept  {
     }
 }
 
+// -------------------------------------
+
 template<typename V>
 static inline auto _bc_exp_(const V &v) noexcept  {
 
@@ -277,6 +378,8 @@ static inline auto _bc_exp_(const V &v) noexcept  {
         return (res);
     }
 }
+
+// -------------------------------------
 
 template<typename V>
 static inline auto _bc_fabs_(const V &v) noexcept  {
@@ -295,6 +398,8 @@ static inline auto _bc_fabs_(const V &v) noexcept  {
     }
 }
 
+// -------------------------------------
+
 template<typename V>
 static inline auto _bc_signbit_(const V &v) noexcept  {
 
@@ -312,6 +417,8 @@ static inline auto _bc_signbit_(const V &v) noexcept  {
     }
 }
 
+// -------------------------------------
+
 template<typename V>
 static inline auto _reduce_to_scalar_(const V &v) noexcept  {
 
@@ -328,6 +435,8 @@ static inline auto _reduce_to_scalar_(const V &v) noexcept  {
         return (sum);
     }
 }
+
+// -------------------------------------
 
 template<typename V>
 static inline auto _reduce_to_product_(const V &v) noexcept  {
@@ -12386,7 +12495,7 @@ public:
     inline result_type &get_result()  { return (result_); }
 
     inline result_type get_p_value(size_type deg_of_freedom) const  {
- 
+
         if constexpr (! is_md_)  {
             const result_type   dof  { result_type(deg_of_freedom) };
             const result_type   val  {
@@ -12411,7 +12520,7 @@ public:
     }
     inline result_type
     get_p_value(const std::vector<size_type> &dofs) const requires is_md_  {
- 
+
         result_type p_vals;
 
         p_vals.resize(result_.size());

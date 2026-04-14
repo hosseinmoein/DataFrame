@@ -1926,247 +1926,196 @@ using impu_v = ImpurityVisitor<T, I, A>;
 
 // ------------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  SigmoidVisitor  {
-
-    DEFINE_VISIT_BASIC_TYPES_3
 
 private:
 
-    template <typename H>
-    inline void logistic_(const H &column_begin, const H &column_end,
-                          size_type col_s, long thread_level)  {
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_,
+                                    vec_t<data_t>,
+                                    vec_t<std::vector<data_t>>>;
+
+private:
+
+    template<typename F>
+    static inline void
+    apply_func_(size_type col_s, long thread_level, F &&func) {
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    [&column_begin, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                           this->result_[i] =
-                               T(1) / (T(1) + std::exp(-*(column_begin + i)));
-                    });
+                    std::forward<F>(func))
+            };
 
-            for (auto &fut : futures)  fut.get();
+            for (auto &fut : futures) fut.get();
         }
-        else  {
-            std::transform(column_begin, column_end,
-                           result_.begin(),
-                           [](auto val) -> value_type  {
-                               return (T(1) / (T(1) + std::exp(-val)));
-                           });
-        }
+        else  func(size_type(0), col_s);
     }
-    template <typename H>
-    inline void algebraic_(const H &column_begin, const H &column_end,
-                           size_type col_s, long thread_level)  {
 
-        if (thread_level > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&column_begin, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                           this->result_[i] =
-                               T(1) /
-                               std::sqrt(T(1) +
-                                         std::pow(*(column_begin + i), T(2)));
-                    });
+    template<typename H>
+    inline void
+    logistic_(const H &column_begin, size_type col_s, long thread_level)  {
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            std::transform(column_begin, column_end,
-                           result_.begin(),
-                           [](auto val) -> value_type  {
-                           return (T(1) /
-                                   std::sqrt(T(1) + std::pow(val, T(2))));
-                           });
-        }
+        auto    lbd =
+            [&column_begin, this](auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)
+                   result_[i] =
+                       data_t(1) /
+                       (data_t(1) + _bc_exp_(*(column_begin + i) * data_t(-1)));
+            };
+
+        apply_func_(col_s, thread_level, std::move(lbd));
     }
-    template <typename H>
-    inline void hyperbolic_tan_(const H &column_begin, const H &column_end,
-                                size_type col_s, long thread_level)  {
+    template<typename H>
+    inline void
+    algebraic_(const H &column_begin, size_type col_s, long thread_level)  {
 
-        if (thread_level > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&column_begin, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                            this->result_[i] = std::tanh(*(column_begin + i));
-                    });
+        auto    lbd =
+            [&column_begin, this](auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)
+                   result_[i] =
+                       data_t(1) /
+                       _bc_sqrt_(data_t(1) + _bc_pow_(*(column_begin + i),
+                                                      data_t(2)));
+            };
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            std::transform(column_begin, column_end,
-                           result_.begin(),
-                           [](auto val) -> value_type  {
-                               return (std::tanh(val));
-                           });
-        }
+        apply_func_(col_s, thread_level, std::move(lbd));
     }
-    template <typename H>
-    inline void arc_tan_(const H &column_begin, const H &column_end,
-                         size_type col_s, long thread_level)  {
+    template<typename H>
+    inline void
+    hyperbolic_tan_(const H &column_begin, size_type col_s, long thread_level) {
 
-        if (thread_level > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&column_begin, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                            this->result_[i] = std::atan(*(column_begin + i));
-                    });
+        auto    lbd =
+            [&column_begin, this](auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)
+                    result_[i] = _bc_tanh_(*(column_begin + i));
+            };
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            std::transform(column_begin, column_end,
-                           result_.begin(),
-                           [](auto val) -> value_type  {
-                               return (std::atan(val));
-                           });
-        }
+        apply_func_(col_s, thread_level, std::move(lbd));
     }
-    template <typename H>
-    inline void error_function_(const H &column_begin, const H &column_end,
-                                size_type col_s, long thread_level)  {
+    template<typename H>
+    inline void
+    arc_tan_(const H &column_begin, size_type col_s, long thread_level)  {
 
-        if (thread_level > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&column_begin, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                            this->result_[i] = std::erf(*(column_begin + i));
-                    });
+        auto    lbd =
+            [&column_begin, this](auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)
+                    result_[i] = _bc_atan_(*(column_begin + i));
+            };
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            std::transform(column_begin, column_end,
-                           result_.begin(),
-                           [](auto val) -> value_type  {
-                               return (std::erf(val));
-                           });
-        }
+        apply_func_(col_s, thread_level, std::move(lbd));
     }
-    template <typename H>
-    inline void gudermannian_(const H &column_begin, const H &column_end,
-                              size_type col_s, long thread_level)  {
+    template<typename H>
+    inline void
+    error_function_(const H &column_begin, size_type col_s, long thread_level) {
 
-        if (thread_level > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&column_begin, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
-                            this->result_[i] =
-                                std::atan(std::sinh(*(column_begin + i)));
-                    });
+        auto    lbd =
+            [&column_begin, this](auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)
+                    result_[i] = _bc_erf_(*(column_begin + i));
+            };
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            std::transform(column_begin, column_end,
-                           result_.begin(),
-                           [](auto val) -> value_type  {
-                               return (std::atan(std::sinh(val)));
-                           });
-        }
+        apply_func_(col_s, thread_level, std::move(lbd));
     }
-    template <typename H>
-    inline void smoothstep_(const H &column_begin, const H &column_end,
-                            size_type col_s, long thread_level)  {
+    template<typename H>
+    inline void
+    gudermannian_(const H &column_begin, size_type col_s, long thread_level)  {
 
-        if (thread_level > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0),
-                    col_s,
-                    [&column_begin, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)  {
-                            const value_type    val = *(column_begin + i);
+        auto    lbd =
+            [&column_begin, this](auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)
+                    result_[i] = _bc_atan_(_bc_sinh_(*(column_begin + i)));
+            };
 
-                            if (val <= 0)
-                                this->result_[i] = 0;
-                            else if (val >= T(1))
-                                this->result_[i] = T(1);
-                            else
-                                this->result_[i] =
-                                    val * val * (T(3) - T(2) * val);
-                        }
-                    });
+        apply_func_(col_s, thread_level, std::move(lbd));
+    }
+    template<typename H>
+    inline void
+    smoothstep_(const H &column_begin, size_type col_s, long thread_level)
+        requires (! is_md_)  {
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            std::transform(column_begin, column_end,
-                           result_.begin(),
-                           [](auto val) -> value_type  {
-                               if (val <= 0)
-                                   return (0);
-                               else if (val >= T(1))
-                                   return (T(1));
-                               else
-                                   return (val * val * (T(3) - T(2) * val));
-                           });
-        }
+        auto    lbd =
+            [&column_begin, this](auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)  {
+                    const value_type    &val { *(column_begin + i) };
+
+                    if (val <= 0)
+                        result_[i] = 0;
+                    else if (val >= data_t(1))
+                        result_[i] = data_t(1);
+                    else
+                        result_[i] = val * val * (data_t(3) - data_t(2) * val);
+                }
+            };
+
+        apply_func_(col_s, thread_level, std::move(lbd));
     }
 
 public:
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &, const K &,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
-        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const auto  thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
 
-        result_.resize(std::distance(column_begin, column_end));
-        if (sigmoid_type_ == sigmoid_type::logistic)
-            logistic_(column_begin, column_end, col_s, thread_level);
-        else if (sigmoid_type_ == sigmoid_type::algebraic)
-            algebraic_(column_begin, column_end, col_s, thread_level);
-        else if (sigmoid_type_ == sigmoid_type::hyperbolic_tan)
-            hyperbolic_tan_(column_begin, column_end, col_s, thread_level);
-        else if (sigmoid_type_ == sigmoid_type::arc_tan)
-            arc_tan_(column_begin, column_end, col_s, thread_level);
-        else if (sigmoid_type_ == sigmoid_type::error_function)
-            error_function_(column_begin, column_end, col_s, thread_level);
-        else if (sigmoid_type_ == sigmoid_type::gudermannian)
-            gudermannian_(column_begin, column_end, col_s, thread_level);
-        else if (sigmoid_type_ == sigmoid_type::smoothstep)
-            smoothstep_(column_begin, column_end, col_s, thread_level);
+        result_.resize(col_s);
+        switch (sigmoid_type_)  {
+        case sigmoid_type::logistic:
+            logistic_(column_begin, col_s, thread_level);  break;
+        case sigmoid_type::algebraic:
+            algebraic_(column_begin, col_s, thread_level);  break;
+        case sigmoid_type::hyperbolic_tan:
+            hyperbolic_tan_(column_begin, col_s, thread_level);  break;
+        case sigmoid_type::arc_tan:
+            arc_tan_(column_begin, col_s, thread_level);  break;
+        case sigmoid_type::error_function:
+            error_function_(column_begin, col_s, thread_level);  break;
+        case sigmoid_type::gudermannian:
+            gudermannian_(column_begin, col_s, thread_level);  break;
+        case sigmoid_type::smoothstep:
+            if constexpr (! is_md_)
+                smoothstep_(column_begin, col_s, thread_level);
+            break;
+        default:
+            break;
+        }
     }
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_.clear();
     }
-    inline void post ()  { OBO_PORT_POST }
-    DEFINE_RESULT
+    inline void post()  { OBO_PORT_POST }
+
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
     explicit
     SigmoidVisitor(sigmoid_type st) : sigmoid_type_(st)  {   }

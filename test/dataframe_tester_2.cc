@@ -806,6 +806,71 @@ static void test_SigmoidVisitor()  {
         0.648, 0.784 };
     for (size_t i = 0; i < result.size(); ++i)
        assert(fabs(result[i] - smo_result[i]) < 0.00001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    StlVecType<ary_col_t>   ary_md  {
+        { 1.0, 2.0, 3.0 }, { 2.0, 3.0, 1.5 }, { 3.0, 1.0, 4.0 },
+        { 4.0, 2.5, 2.0 }, { 1.5, 4.0, 1.0 }, { 5.0, 1.5, 3.5 },
+        { 2.5, 3.5, 2.5 }, { 3.5, 2.0, 1.0 }, { 1.0, 5.0, 4.5 },
+        { 4.5, 3.0, 2.0 },
+    };
+    StlVecType<vec_col_t>   vec_md  {
+        { 1.0, 2.0, 3.0 }, { 2.0, 3.0, 1.5 }, { 3.0, 1.0, 4.0 },
+        { 4.0, 2.5, 2.0 }, { 1.5, 4.0, 1.0 }, { 5.0, 1.5, 3.5 },
+        { 2.5, 3.5, 2.5 }, { 3.5, 2.0, 1.0 }, { 1.0, 5.0, 4.5 },
+        { 4.5, 3.0, 2.0 },
+    };
+
+    df.load_column<ary_col_t>("ARY MD", std::move(ary_md),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD", std::move(vec_md),
+                              nan_policy::dont_pad_with_nans);
+
+    SigmoidVisitor<ary_col_t, unsigned long, 64>  md_log_v {
+        sigmoid_type::logistic
+    };
+    const auto                                    &md_log_res =
+        df.single_act_visit<ary_col_t>("ARY MD", md_log_v).get_result();
+
+    assert(md_log_res.size() == 10);
+    for (const auto &ary : md_log_res)
+        assert(ary.size() == dim);
+    assert(std::fabs(md_log_res[0][0] - 0.731059) < 0.000001);
+    assert(std::fabs(md_log_res[5][1] - 0.817574) < 0.000001);
+    assert(std::fabs(md_log_res[9][2] - 0.880797) < 0.000001);
+
+    SigmoidVisitor<vec_col_t, unsigned long, 64>  md_lgb_v {
+        sigmoid_type::algebraic
+    };
+    const auto                                    &md_lgb_res =
+        df.single_act_visit<vec_col_t>("VEC MD", md_lgb_v).get_result();
+
+    assert(md_lgb_res.size() == 10);
+    for (const auto &vec : md_lgb_res)
+        assert(vec.size() == dim);
+    assert(std::fabs(md_lgb_res[0][0] - 0.707107) < 0.000001);
+    assert(std::fabs(md_lgb_res[5][1] - 0.5547) < 0.0001);
+    assert(std::fabs(md_lgb_res[9][2] - 0.447214) < 0.000001);
+
+    SigmoidVisitor<ary_col_t, unsigned long, 64>  md_gud_v {
+        sigmoid_type::gudermannian
+    };
+    const auto                                    &md_gud_res =
+        df.single_act_visit<ary_col_t>("ARY MD", md_gud_v).get_result();
+
+    assert(md_gud_res.size() == 10);
+    for (const auto &ary : md_gud_res)
+        assert(ary.size() == dim);
+    assert(std::fabs(md_gud_res[0][0] - 0.865769) < 0.000001);
+    assert(std::fabs(md_gud_res[5][1] - 1.13173) < 0.00001);
+    assert(std::fabs(md_gud_res[9][2] - 1.30176) < 0.00001);
+
 }
 
 // -----------------------------------------------------------------------------

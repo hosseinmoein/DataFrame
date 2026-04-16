@@ -810,6 +810,20 @@ enum class  inclusiveness : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+// Enum defining the baseline/normalization mode
+// Used to reduce variance in the policy gradient loss:
+//   loss[i] = -log(π(aᵢ|sᵢ)) * (rᵢ - baseline)
+//
+enum class  policy_loss_baseline : unsigned char  {
+
+    none = 0,        // No baseline: loss = -log(ap) * r
+    constant = 1,    // Constant baseline: loss = -log(ap) * (r - b)
+    mean = 2,        // Mean baseline: loss = -log(ap) * (r - mean(r))
+    standardize = 3, // Standardized: loss = -log(ap) * (r - mean(r)) / std(r)
+};
+
+// ----------------------------------------------------------------------------
+
 // Different methods of detecting anomalous data points. Anomalous data don’t
 // mean NaN or missing datapoints. The best description is unusual datapoints.
 //

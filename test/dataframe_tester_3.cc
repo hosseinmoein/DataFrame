@@ -2421,6 +2421,94 @@ static void test_PolicyLearningLossVisitor()  {
     assert(std::abs(pll.get_result()[0] - 4.6052) < 0.0001);
     assert(std::abs(pll.get_result()[6] - 19.6939) < 0.0001);
     assert(std::abs(pll.get_result()[14] - 37.8859) < 0.0001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    StlVecType<ary_col_t>   ary_action  {
+        { 0.9,  0.8,  0.95 },  // high confidence, all dims
+        { 0.1,  0.05, 0.2  },  // low confidence, exercises log near 0
+        { 0.5,  0.5,  0.5  },  // uniform uncertainty
+        { 0.75, 0.3,  0.6  },  // mixed confidence
+        { 0.99, 0.99, 0.99 },  // near-certainty (log close to 0)
+        { 0.01, 0.01, 0.01 },  // near-zero probs (exercises epsilon clamp)
+        { 0.4,  0.7,  0.55 },  // moderate confidence
+        { 0.6,  0.45, 0.8  },  // mixed
+    };
+    StlVecType<vec_col_t>   vec_action  {
+        { 0.9,  0.8,  0.95 },  // high confidence, all dims
+        { 0.1,  0.05, 0.2  },  // low confidence, exercises log near 0
+        { 0.5,  0.5,  0.5  },  // uniform uncertainty
+        { 0.75, 0.3,  0.6  },  // mixed confidence
+        { 0.99, 0.99, 0.99 },  // near-certainty (log close to 0)
+        { 0.01, 0.01, 0.01 },  // near-zero probs (exercises epsilon clamp)
+        { 0.4,  0.7,  0.55 },  // moderate confidence
+        { 0.6,  0.45, 0.8  },  // mixed
+    };
+    StlVecType<ary_col_t>   ary_reward  {
+        {  1.0,   2.0,   0.5  }, // positive reward
+        { -1.0,  -0.5,  -2.0  }, // negative reward (bad action)
+        {  0.0,   0.0,   0.0  }, // zero reward (loss should be 0)
+        {  3.0,  -1.0,   1.5  }, // mixed signs across dims
+        {  0.1,   0.2,   0.05 }, // small positive
+        { -3.0,  -2.5,  -1.0  }, // large negative (penalises near-zero probs)
+        {  2.0,   1.0,  -0.5  }, // mixed signs
+        { -0.1,   0.8,   1.2  }, // mixed signs
+    };
+    StlVecType<vec_col_t>   vec_reward  {
+        {  1.0,   2.0,   0.5  }, // positive reward
+        { -1.0,  -0.5,  -2.0  }, // negative reward (bad action)
+        {  0.0,   0.0,   0.0  }, // zero reward (loss should be 0)
+        {  3.0,  -1.0,   1.5  }, // mixed signs across dims
+        {  0.1,   0.2,   0.05 }, // small positive
+        { -3.0,  -2.5,  -1.0  }, // large negative (penalises near-zero probs)
+        {  2.0,   1.0,  -0.5  }, // mixed signs
+        { -0.1,   0.8,   1.2  }, // mixed signs
+    };
+
+
+    df.load_column<ary_col_t>("ARY ACTION", std::move(ary_action),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC ACTION", std::move(vec_action),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY REWARD", std::move(ary_reward),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC REWARD", std::move(vec_reward),
+                              nan_policy::dont_pad_with_nans);
+
+    plloss_v<ary_col_t, unsigned long, 256> ary_pll {
+        policy_loss_baseline::mean
+    };
+    plloss_v<vec_col_t, unsigned long, 256> vec_pll {
+        policy_loss_baseline::mean
+    };
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY ACTION",
+                                              "ARY REWARD",
+                                              ary_pll);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC ACTION",
+                                              "VEC REWARD",
+                                              vec_pll);
+
+    assert(ary_pll.get_result().size() == 8);
+    for (const auto &ary : ary_pll.get_result())
+        assert(ary.size() == dim);
+    assert(std::abs(ary_pll.get_result()[0][0] - 0.079020) < 0.000001);
+    assert(ary_pll.get_result()[2][1] > -1e-16);
+    assert(std::abs(ary_pll.get_result()[5][1] - -11.5129) < 0.0001);
+    assert(std::abs(ary_pll.get_result()[7][2] - 0.274745) < 0.000001);
+
+    assert(vec_pll.get_result().size() == 8);
+    for (const auto &vec : vec_pll.get_result())
+        assert(vec.size() == dim);
+    assert(std::abs(vec_pll.get_result()[0][0] - 0.079020) < 0.000001);
+    assert(vec_pll.get_result()[2][1] > -1e-16);
+    assert(std::abs(vec_pll.get_result()[5][1] - -11.5129) < 0.0001);
+    assert(std::abs(vec_pll.get_result()[7][2] - 0.274745) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

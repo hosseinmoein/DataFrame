@@ -2391,66 +2391,141 @@ using recf_v = RectifyVisitor<T, I, A>;
 
 // ------------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  PolicyLearningLossVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+private:
+
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using scale_t =
+        typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_,
+                                    vec_t<data_t>,
+                                    vec_t<std::vector<data_t>>>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
-                const H &action_prob_begin, const H &action_prob_end,
-                const H &reward_begin, const H &reward_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &action_prob_begin, const H &action_prob_end,
+               const H &reward_begin, const H &reward_end)  {
 
-        const size_type col_s =
-            std::distance(action_prob_begin, action_prob_end);
+        const size_type col_s {
+            size_type(std::distance(action_prob_begin, action_prob_end))
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(reward_begin, reward_end)))
             throw DataFrameError("PolicyLearningLossVisitor: All columns must "
                                  "be of equal sizes");
+        if (baseline_ == policy_loss_baseline::constant &&
+            ! baseline_val_.has_value())
+            throw DataFrameError("PolicyLearningLossVisitor: constant baseline "
+                                 "mode requires a baseline value");
 #endif // HMDF_SANITY_EXCEPTIONS
+
+        // Compute the effective reward adjustment depending on mode
+        //
+        scale_t adjust;
+        scale_t scale;
+
+        if constexpr (! is_md_)  {
+            adjust = 0;
+            scale = 1;
+        }
+        if (baseline_ == policy_loss_baseline::constant)  {
+            if constexpr (is_md_)
+                adjust.resize(reward_begin->size(), *baseline_val_);
+            else
+                adjust = *baseline_val_;
+        }
+        else if (baseline_ == policy_loss_baseline::mean ||
+                 baseline_ == policy_loss_baseline::standardize)  {
+            StdVisitor<T, I>    std_v;
+
+            std_v.pre();
+            std_v(idx_begin, idx_end, reward_begin, reward_end);
+            std_v.post();
+
+            adjust = std_v.get_mean();
+
+            if (baseline_ == policy_loss_baseline::standardize)
+                scale = std_v.get_result();
+        }
+
+        if constexpr (is_md_)  {
+            if (adjust.empty())
+                adjust.resize(reward_begin->size(), 0);
+            if (scale.empty())
+                scale.resize(reward_begin->size(), 1);
+        }
 
         // Negative Log Likelihood
         //
         result_.resize(col_s);
+        auto   lbd =
+            [&action_prob_begin = std::as_const(action_prob_begin),
+             &reward_begin = std::as_const(reward_begin),
+             &adjust = std::as_const(adjust),
+             &scale = std::as_const(scale),
+             this]
+            (auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)  {
+                    const auto  &ap { *(action_prob_begin + i) };
+                    const auto  &r { *(reward_begin + i) };
+                    const auto  &adjusted_r { (r - adjust) / scale };
+
+                    result_[i] = (_bc_log_(ap) * data_t(-1))  * adjusted_r;
+                }
+            };
+
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    [&action_prob_begin, &reward_begin, this]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)  {
-                            const value_type    ap = *(action_prob_begin + i);
-                            const value_type    r = *(reward_begin + i);
-
-                            this->result_[i] = -std::log(ap) * r;
-                        }
-                    });
+                    std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            std::transform(action_prob_begin, action_prob_end,
-                           reward_begin,
-                           result_.begin(),
-                           [](const T &ap, const T &r) -> T  {
-                               return (-std::log(ap) * r);
-                           });
+            lbd(size_type(0), col_s);
         }
     }
 
     DEFINE_PRE_POST
     DEFINE_RESULT
 
-    PolicyLearningLossVisitor() = default;
+    explicit
+    PolicyLearningLossVisitor(
+        policy_loss_baseline baseline = policy_loss_baseline::none ,
+        std::optional<double> baseline_val = std::nullopt,
+        double epsilon = 1e-8)
+        : baseline_(baseline),
+          baseline_val_(baseline_val),
+          epsilon_(epsilon)  {  }
 
 private:
 
-    result_type result_ {  };
+    const policy_loss_baseline  baseline_ { };
+    const std::optional<data_t> baseline_val_ { };
+    const double                epsilon_ { };
+    result_type                 result_ { };
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

@@ -2470,7 +2470,6 @@ static void test_PolicyLearningLossVisitor()  {
         { -0.1,   0.8,   1.2  }, // mixed signs
     };
 
-
     df.load_column<ary_col_t>("ARY ACTION", std::move(ary_action),
                               nan_policy::dont_pad_with_nans);
     df.load_column<vec_col_t>("VEC ACTION", std::move(vec_action),
@@ -2583,12 +2582,181 @@ static void test_LossFunctionVisitor()  {
     loss_v<double, int> loss8 { loss_function_type::binary_cross_entropy };
 
     df.single_act_visit<double, double>("binary actual", "model_prob", loss8);
-    assert(std::abs(loss8.get_result() - 1.5972) < 0.0001);
+    assert(std::abs(loss8.get_result() - 1.6524) < 0.0001);
 
     loss_v<double, int> loss9 { loss_function_type::cross_entropy };
 
     df.single_act_visit<double, double>("actual", "model_prob", loss9);
     assert(std::abs(loss9.get_result() - 19.1365) < 0.0001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    StlVecType<ary_col_t>   ary_actual  {
+        { 0.933, 0.033, 0.033 }, { 0.033, 0.933, 0.033 },
+        { 0.033, 0.033, 0.933 }, { 0.933, 0.033, 0.033 },
+        { 0.033, 0.933, 0.033 }, { 0.033, 0.033, 0.933 },
+    };
+    StlVecType<vec_col_t>   vec_actual  {
+        { 0.933, 0.033, 0.033 }, { 0.033, 0.933, 0.033 },
+        { 0.033, 0.033, 0.933 }, { 0.933, 0.033, 0.033 },
+        { 0.033, 0.933, 0.033 }, { 0.033, 0.033, 0.933 },
+    };
+    StlVecType<ary_col_t>   ary_model  {
+        { 0.700, 0.200, 0.100 }, { 0.100, 0.800, 0.100 },
+        { 0.200, 0.300, 0.500 }, { 0.400, 0.400, 0.200 },
+        { 0.100, 0.600, 0.300 }, { 0.100, 0.100, 0.800 },
+    };
+    StlVecType<vec_col_t>   vec_model  {
+        { 0.700, 0.200, 0.100 }, { 0.100, 0.800, 0.100 },
+        { 0.200, 0.300, 0.500 }, { 0.400, 0.400, 0.200 },
+        { 0.100, 0.600, 0.300 }, { 0.100, 0.100, 0.800 },
+    };
+
+    df.load_column<ary_col_t>("ARY ACTUAL", std::move(ary_actual),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC ACTUAL", std::move(vec_actual),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY MODEL", std::move(ary_model),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MODEL", std::move(vec_model),
+                              nan_policy::dont_pad_with_nans);
+
+    loss_v<ary_col_t, int>  ary_loss1 { loss_function_type::kullback_leibler };
+    loss_v<vec_col_t, int>  vec_loss1 { loss_function_type::kullback_leibler };
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY ACTUAL",
+                                              "ARY MODEL",
+                                              ary_loss1);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC ACTUAL",
+                                              "VEC MODEL",
+                                              vec_loss1);
+    assert(ary_loss1.get_result().size() == dim);
+    assert(vec_loss1.get_result().size() == dim);
+    assert(std::abs(ary_loss1.get_result()[0] - 0.889052) < 0.000001);
+    assert(std::abs(ary_loss1.get_result()[2] - 0.52002) < 0.00001);
+    assert(std::abs(vec_loss1.get_result()[0] - 0.889052) < 0.000001);
+    assert(std::abs(vec_loss1.get_result()[2] - 0.52002) < 0.00001);
+
+    loss_v<ary_col_t, int>  ary_loss2 { loss_function_type::mean_abs_error };
+    loss_v<vec_col_t, int>  vec_loss2 { loss_function_type::mean_abs_error };
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY ACTUAL",
+                                              "ARY MODEL",
+                                              ary_loss2);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC ACTUAL",
+                                              "VEC MODEL",
+                                              vec_loss2);
+    assert(ary_loss2.get_result().size() == dim);
+    assert(vec_loss2.get_result().size() == dim);
+    assert(std::abs(ary_loss2.get_result()[0] - 0.189) < 0.001);
+    assert(std::abs(ary_loss2.get_result()[2] - 0.189) < 0.001);
+    assert(std::abs(vec_loss2.get_result()[0] - 0.189) < 0.001);
+    assert(std::abs(vec_loss2.get_result()[2] - 0.189) < 0.001);
+
+    loss_v<ary_col_t, int>  ary_loss3 { loss_function_type::mean_sqr_error };
+    loss_v<vec_col_t, int>  vec_loss3 { loss_function_type::mean_sqr_error };
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY ACTUAL",
+                                              "ARY MODEL",
+                                              ary_loss3);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC ACTUAL",
+                                              "VEC MODEL",
+                                              vec_loss3);
+    assert(ary_loss3.get_result().size() == dim);
+    assert(vec_loss3.get_result().size() == dim);
+    assert(std::abs(ary_loss3.get_result()[0] - 0.063289) < 0.000001);
+    assert(std::abs(ary_loss3.get_result()[2] - 0.052222) < 0.000001);
+    assert(std::abs(vec_loss3.get_result()[0] - 0.063289) < 0.000001);
+    assert(std::abs(vec_loss3.get_result()[2] - 0.052222) < 0.000001);
+
+    loss_v<ary_col_t, int> ary_loss4 { loss_function_type::mean_sqr_log_error };
+    loss_v<vec_col_t, int> vec_loss4 { loss_function_type::mean_sqr_log_error };
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY ACTUAL",
+                                              "ARY MODEL",
+                                              ary_loss4);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC ACTUAL",
+                                              "VEC MODEL",
+                                              vec_loss4);
+    assert(ary_loss4.get_result().size() == dim);
+    assert(vec_loss4.get_result().size() == dim);
+    assert(std::abs(ary_loss4.get_result()[0] - 0.025812) < 0.000001);
+    assert(std::abs(ary_loss4.get_result()[2] - 0.025434) < 0.000001);
+    assert(std::abs(vec_loss4.get_result()[0] - 0.025812) < 0.000001);
+    assert(std::abs(vec_loss4.get_result()[2] - 0.025434) < 0.000001);
+
+    loss_v<ary_col_t, int>  ary_loss5 { loss_function_type::categorical_hinge };
+    loss_v<vec_col_t, int>  vec_loss5 { loss_function_type::categorical_hinge };
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY ACTUAL",
+                                              "ARY MODEL",
+                                              ary_loss5);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC ACTUAL",
+                                              "VEC MODEL",
+                                              vec_loss5);
+    assert(ary_loss5.get_result().size() == dim);
+    assert(vec_loss5.get_result().size() == dim);
+    assert(std::abs(ary_loss5.get_result()[0] - 0.5144) < 0.0001);
+    assert(std::abs(ary_loss5.get_result()[2] - 0.528) < 0.001);
+    assert(std::abs(vec_loss5.get_result()[0] - 0.5144) < 0.0001);
+    assert(std::abs(vec_loss5.get_result()[2] - 0.528) < 0.001);
+
+    loss_v<ary_col_t, int>  ary_loss6 { loss_function_type::log_cosh };
+    loss_v<vec_col_t, int>  vec_loss6 { loss_function_type::log_cosh };
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY ACTUAL",
+                                              "ARY MODEL",
+                                              ary_loss6);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC ACTUAL",
+                                              "VEC MODEL",
+                                              vec_loss6);
+    assert(ary_loss6.get_result().size() == dim);
+    assert(vec_loss6.get_result().size() == dim);
+    assert(std::abs(ary_loss6.get_result()[0] - 0.0305499) < 0.0000001);
+    assert(std::abs(ary_loss6.get_result()[2] - 0.0255612) < 0.0000001);
+    assert(std::abs(vec_loss6.get_result()[0] - 0.0305499) < 0.0000001);
+    assert(std::abs(vec_loss6.get_result()[2] - 0.0255612) < 0.0000001);
+
+    loss_v<ary_col_t, int>  ary_loss7 {
+        loss_function_type::binary_cross_entropy
+    };
+    loss_v<vec_col_t, int>  vec_loss7 {
+        loss_function_type::binary_cross_entropy
+    };
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY ACTUAL",
+                                              "ARY MODEL",
+                                              ary_loss7);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC ACTUAL",
+                                              "VEC MODEL",
+                                              vec_loss7);
+    assert(ary_loss7.get_result().size() == dim);
+    assert(vec_loss7.get_result().size() == dim);
+    assert(std::abs(ary_loss7.get_result()[0] - 0.350844) < 0.000001);
+    assert(std::abs(ary_loss7.get_result()[2] - 0.336406) < 0.000001);
+    assert(std::abs(vec_loss7.get_result()[0] - 0.350844) < 0.000001);
+    assert(std::abs(vec_loss7.get_result()[2] - 0.336406) < 0.000001);
+
+    loss_v<ary_col_t, int>  ary_loss8 { loss_function_type::cross_entropy };
+    loss_v<vec_col_t, int>  vec_loss8 { loss_function_type::cross_entropy };
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY ACTUAL",
+                                              "ARY MODEL",
+                                              ary_loss8);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC ACTUAL",
+                                              "VEC MODEL",
+                                              vec_loss8);
+    assert(ary_loss8.get_result().size() == dim);
+    assert(vec_loss8.get_result().size() == dim);
+    assert(std::abs(ary_loss8.get_result()[0] - 0.244791) < 0.000001);
+    assert(std::abs(ary_loss8.get_result()[2] - 0.183285) < 0.000001);
+    assert(std::abs(vec_loss8.get_result()[0] - 0.244791) < 0.000001);
+    assert(std::abs(vec_loss8.get_result()[2] - 0.183285) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

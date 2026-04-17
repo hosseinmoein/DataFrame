@@ -2533,20 +2533,35 @@ using plloss_v = PolicyLearningLossVisitor<T, I, A>;
 
 // ------------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  LossFunctionVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
 
 public:
 
-    DEFINE_VISIT_BASIC_TYPES_2
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type =
+        typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &actual_begin, const H &actual_end,
-                const H &model_begin, const H &model_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &actual_begin, const H &actual_end,
+               const H &model_begin, const H &model_end)  {
 
-        const size_type col_s = std::distance(actual_begin, actual_end);
+        const size_type col_s {
+            size_type(std::distance(actual_begin, actual_end))
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(model_begin, model_end)))
@@ -2554,319 +2569,359 @@ public:
                                  "equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        // The linear and parallel versions on this type are the same.
-        // So, I am taking it out of the if-else chain
-        //
-        if (lft_ == loss_function_type::cosine_similarity)  {
-            DotProdVisitor<T, I>    dot_v;
+        const bool  multi_thr {
+            col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2
+        };
+        size_type   dim { 0 };
 
-            dot_v.pre();
-            dot_v (idx_begin, idx_end,
-                   actual_begin, actual_end, model_begin, model_end);
-            dot_v.post();
+        if constexpr (is_md_)  dim = actual_begin->size();
 
-            result_ = dot_v.get_result() /
-                      (dot_v.get_magnitude1() * dot_v.get_magnitude2());
-            return;
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (is_md_)  {
+            auto mit = model_begin;
+
+            for (auto ait = actual_begin; ait != actual_end; ++ait)
+                if (ait->size() != dim || (mit++)->size() != dim)
+                    throw DataFrameError("LossFunctionVisitor: "
+                                         "Inconsistent data dimensions");
         }
+#endif
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            std::vector<std::future<void>>  futures;
+        if (lft_ == loss_function_type::cosine_similarity)  {
+            if constexpr (! is_md_)  {
+                DotProdVisitor<T, I>    dot_v;
 
-            if (lft_ == loss_function_type::kullback_leibler)  {
+                dot_v.pre();
+                dot_v (idx_begin, idx_end,
+                       actual_begin, actual_end, model_begin, model_end);
+                dot_v.post();
+
+                result_ = dot_v.get_result() /
+                          (dot_v.get_magnitude1() * dot_v.get_magnitude2());
+            }
+            else
+                throw DataFrameError("LossFunctionVisitor: "
+                                     "cosine_similarity type only applies to "
+                                     "scalar data");
+        }
+        else if (lft_ == loss_function_type::kullback_leibler)  {
+            auto    lbd =
+                [&actual_begin = std::as_const(actual_begin),
+                 &model_begin = std::as_const(model_begin), dim]
+                (auto begin, auto end) -> result_type  {
+                    result_type sum;
+
+                    if constexpr (is_md_)  sum.resize(dim, 0);
+                    else  sum = 0;
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const auto  &a { *(actual_begin + i) };
+                        const auto  &m { *(model_begin + i) };
+
+                        sum += _bc_log_(a / m) * a;
+                    }
+                    return (sum);
+                };
+
+            if (multi_thr)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&actual_begin, &model_begin]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (size_type i = begin; i < end; ++i)  {
-                                const value_type    a = *(actual_begin + i);
-                                const value_type    m = *(model_begin + i);
-
-                                sum += a * std::log(a / m);
-                            }
-                            return (sum);
-                        });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  result_ += fut.get();
             }
-            else if (lft_ == loss_function_type::mean_abs_error)  {
+            else  {
+                result_ = lbd(size_type(0), col_s);
+            }
+        }
+        else if (lft_ == loss_function_type::mean_abs_error)  {
+            auto    lbd =
+                [&actual_begin = std::as_const(actual_begin),
+                 &model_begin = std::as_const(model_begin), dim]
+                (auto begin, auto end) -> result_type  {
+                    result_type sum;
+
+                    if constexpr (is_md_)  sum.resize(dim, 0);
+                    else  sum = 0;
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const auto  &a { *(actual_begin + i) };
+                        const auto  &m { *(model_begin + i) };
+
+                        sum += _bc_fabs_(a - m);
+                    }
+                    return (sum);
+                };
+
+            if (multi_thr)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&actual_begin, &model_begin]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (size_type i = begin; i < end; ++i)  {
-                                const value_type    a = *(actual_begin + i);
-                                const value_type    m = *(model_begin + i);
-
-                                sum += std::fabs(a - m);
-                            }
-                            return (sum);
-                        });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  result_ += fut.get();
-                result_ /= col_s;
             }
-            else if (lft_ == loss_function_type::mean_sqr_error)  {
+            else  {
+                result_ = lbd(size_type(0), col_s);
+            }
+            result_ /= data_t(col_s);
+        }
+        else if (lft_ == loss_function_type::mean_sqr_error)  {
+            auto    lbd =
+                [&actual_begin = std::as_const(actual_begin),
+                 &model_begin = std::as_const(model_begin), dim]
+                (auto begin, auto end) -> result_type  {
+                    result_type sum;
+
+                    if constexpr (is_md_)  sum.resize(dim, 0);
+                    else  sum = 0;
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const auto  &val {
+                            *(actual_begin + i) - *(model_begin + i)
+                        };
+
+                        sum = sum + val * val;
+                    }
+                    return (sum);
+                };
+
+            if (multi_thr)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&actual_begin, &model_begin]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (size_type i = begin; i < end; ++i)  {
-                                const value_type    val =
-                                    *(actual_begin + i) - *(model_begin + i);
-
-                                sum += val * val;
-                            }
-                            return (sum);
-                        });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  result_ += fut.get();
-                result_ /= col_s;
             }
-            else if (lft_ == loss_function_type::mean_sqr_log_error)  {
+            else  {
+                result_ = lbd(size_type(0), col_s);
+            }
+            result_ /= data_t(col_s);
+        }
+        else if (lft_ == loss_function_type::mean_sqr_log_error)  {
+            auto    lbd =
+                [&actual_begin = std::as_const(actual_begin),
+                 &model_begin = std::as_const(model_begin), dim]
+                (auto begin, auto end) -> result_type  {
+                    result_type sum;
+
+                    if constexpr (is_md_)  sum.resize(dim, 0);
+                    else  sum = 0;
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const auto  &val {
+                            _bc_log_(data_t(1) + *(actual_begin + i)) -
+                            _bc_log_(data_t(1) + *(model_begin + i))
+                        };
+
+                        sum = sum + val * val;
+                    }
+                    return (sum);
+                };
+
+            if (multi_thr)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&actual_begin, &model_begin]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (size_type i = begin; i < end; ++i)  {
-                                const value_type    val =
-                                    std::log(T(1) + *(actual_begin + i)) -
-                                    std::log(T(1) + *(model_begin + i));
-
-                                sum += val * val;
-                            }
-                            return (sum);
-                        });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  result_ += fut.get();
-                result_ /= col_s;
             }
-            else if (lft_ == loss_function_type::cross_entropy)  {
+            else  {
+                result_ = lbd(size_type(0), col_s);
+            }
+            result_ /= data_t(col_s);
+        }
+        else if (lft_ == loss_function_type::cross_entropy)  {
+            auto    lbd =
+                [&actual_begin = std::as_const(actual_begin),
+                 &model_begin = std::as_const(model_begin), dim]
+                (auto begin, auto end) -> result_type  {
+                    result_type sum;
+
+                    if constexpr (is_md_)  sum.resize(dim, 0);
+                    else  sum = 0;
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const auto  &a { *(actual_begin + i) };
+                        const auto  &m { *(model_begin + i) };
+
+                        sum += _bc_log_(m) * a;
+                    }
+                    return (sum);
+                };
+
+            if (multi_thr)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&actual_begin, &model_begin]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (size_type i = begin; i < end; ++i)  {
-                                const value_type    a = *(actual_begin + i);
-                                const value_type    m = *(model_begin + i);
-
-                                sum += a * std::log(m);
-                            }
-                            return (sum);
-                        });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  result_ += fut.get();
-                result_ = -(result_ / col_s);
             }
-            else if (lft_ == loss_function_type::binary_cross_entropy)  {
+            else  {
+                result_ = lbd(size_type(0), col_s);
+            }
+            result_ = data_t(-1) * (result_ / data_t(col_s));
+        }
+        else if (lft_ == loss_function_type::binary_cross_entropy)  {
+            auto    lbd =
+                [&actual_begin = std::as_const(actual_begin),
+                 &model_begin = std::as_const(model_begin), dim]
+                (auto begin, auto end) -> result_type  {
+                    result_type sum;
+
+                    if constexpr (is_md_)  sum.resize(dim, 0);
+                    else  sum = 0;
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const auto  &a { *(actual_begin + i) };
+                        const auto  &m { *(model_begin + i) };
+
+                        sum -= _bc_log_(m) * a +
+                               (data_t(1) - a) * _bc_log_(data_t(1) - m);
+                    }
+                    return (sum);
+                };
+
+            if (multi_thr)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&actual_begin, &model_begin]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (size_type i = begin; i < end; ++i)  {
-                                const value_type    a = *(actual_begin + i);
-                                const value_type    m = *(model_begin + i);
-
-                                sum += -(a * std::log(m)) +
-                                       (1 - a) * std::log(1 - m);
-                            }
-                            return (sum);
-                        });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  result_ += fut.get();
-                result_ /= col_s;
             }
-            else if (lft_ == loss_function_type::categorical_hinge)  {
-                auto        futures =
+            else  {
+                result_ = lbd(size_type(0), col_s);
+            }
+            result_ /= data_t(col_s);
+        }
+        else if (lft_ == loss_function_type::categorical_hinge)  {
+            auto    lbd1 =
+                [&actual_begin = std::as_const(actual_begin),
+                 &model_begin = std::as_const(model_begin), dim]
+                (auto begin, auto end) -> result_type  {
+                    result_type sum;
+
+                    if constexpr (is_md_)  sum.resize(dim, 0);
+                    else  sum = 0;
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const auto  &a { *(actual_begin + i) };
+                        const auto  &m { *(model_begin + i) };
+
+                        sum = sum + ((data_t(1) - a) * m);
+                    }
+                    return (sum);
+                };
+            auto    lbd2 =
+                [&actual_begin = std::as_const(actual_begin),
+                 &model_begin = std::as_const(model_begin), dim]
+                (auto begin, auto end) -> result_type  {
+                    result_type sum;
+
+                    if constexpr (is_md_)  sum.resize(dim, 0);
+                    else  sum = 0;
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const auto  &a { *(actual_begin + i) };
+                        const auto  &m { *(model_begin + i) };
+
+                        sum = sum + a * m;
+                    }
+                    return (sum);
+                };
+
+            result_type neg;
+            result_type pos;
+
+            if constexpr (is_md_)  {
+                neg.resize(dim, 0);
+                pos.resize(dim, 0);
+            }
+            else  {
+                neg = 0;
+                pos = 0;
+            }
+            if (multi_thr)  {
+                auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&actual_begin, &model_begin]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (size_type i = begin; i < end; ++i)  {
-                                const value_type    a = *(actual_begin + i);
-                                const value_type    m = *(model_begin + i);
-
-                                sum += (T(1) - a) * m;
-                            }
-                            return (sum);
-                        });
-                value_type  neg { 0 };
+                        std::move(lbd1));
 
                 for (auto &fut : futures)  neg += fut.get();
+
                 futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&actual_begin, &model_begin]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (size_type i = begin; i < end; ++i)  {
-                                const value_type    a = *(actual_begin + i);
-                                const value_type    m = *(model_begin + i);
-
-                                sum += a * m;
-                            }
-                            return (sum);
-                        });
-
-                value_type  pos { 0 };
-
+                        std::move(lbd2));
                 for (auto &fut : futures)  pos += fut.get();
-                result_ = std::max(neg - pos + T(1), T(0));;
             }
-            else if (lft_ == loss_function_type::log_cosh)  {
+            else  {
+                neg = lbd1(size_type(0), col_s);
+                pos = lbd2(size_type(0), col_s);
+            }
+            if constexpr (! is_md_)
+                result_ = std::max(neg - pos + data_t(1), data_t(0));
+            else  {
+                result_ = neg - pos + data_t(1);
+                for (auto &v : result_)  v = std::max(v, data_t(0));
+            }
+        }
+        else if (lft_ == loss_function_type::log_cosh)  {
+            auto    lbd =
+                [&actual_begin = std::as_const(actual_begin),
+                 &model_begin = std::as_const(model_begin), dim]
+                (auto begin, auto end) -> result_type  {
+                    result_type sum;
+
+                    if constexpr (is_md_)  sum.resize(dim, 0);
+                    else  sum = 0;
+                    for (size_type i { begin }; i < end; ++i)  {
+                        const auto  &a { *(actual_begin + i) };
+                        const auto  &m { *(model_begin + i) };
+
+                        sum += _bc_log_(_bc_cosh_(m - a));
+                    }
+                    return (sum);
+                };
+
+            if (multi_thr)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        [&actual_begin, &model_begin]
-                        (auto begin, auto end) -> value_type  {
-                            value_type  sum { 0 };
-
-                            for (size_type i = begin; i < end; ++i)  {
-                                const value_type    a = *(actual_begin + i);
-                                const value_type    m = *(model_begin + i);
-
-                                sum += std::log(std::cosh(m - a));
-                            }
-                            return (sum);
-                        });
+                        std::move(lbd));
 
                 for (auto &fut : futures)  result_ += fut.get();
-                result_ /= col_s;
             }
-        }
-        else  {
-            if (lft_ == loss_function_type::kullback_leibler)  {
-                result_ =
-                    std::transform_reduce(actual_begin, actual_end,
-                                          model_begin, T(0), std::plus { },
-                                          [](const T &a, const T &m) -> T  {
-                                              return (a * std::log(a / m));
-                                          });
+            else  {
+                result_ = lbd(size_type(0), col_s);
             }
-            else if (lft_ == loss_function_type::mean_abs_error)  {
-                result_ =
-                    std::transform_reduce(actual_begin, actual_end,
-                                          model_begin, T(0), std::plus { },
-                                          [](const T &a, const T &m) -> T {
-                                              return (std::fabs(a - m));
-                                          });
-                result_ /= col_s;
-            }
-            else if (lft_ == loss_function_type::mean_sqr_error)  {
-                result_ =
-                    std::transform_reduce(actual_begin, actual_end,
-                                          model_begin, T(0), std::plus { },
-                                          [](const T &a, const T &m) -> T  {
-                                              const T   val = a - m;
-
-                                              return (val * val);
-                                          });
-                result_ /= col_s;
-            }
-            else if (lft_ == loss_function_type::mean_sqr_log_error)  {
-                result_ =
-                    std::transform_reduce(actual_begin, actual_end,
-                                          model_begin, T(0), std::plus { },
-                                          [](const T &a, const T &m) -> T  {
-                                              const T   val =
-                                                  std::log(T(1) + a) -
-                                                  std::log(T(1) + m);
-
-                                              return (val * val);
-                                          });
-                result_ /= col_s;
-            }
-            else if (lft_ == loss_function_type::cross_entropy)  {
-                result_ =
-                    std::transform_reduce(actual_begin, actual_end,
-                                          model_begin, T(0), std::plus { },
-                                          [](const T &a, const T &m) -> T  {
-                                              return (a * std::log(m));
-                                          });
-                result_ = -(result_ / col_s);
-            }
-            else if (lft_ == loss_function_type::binary_cross_entropy)  {
-                result_ =
-                    std::transform_reduce(actual_begin, actual_end,
-                                          model_begin, T(0), std::plus { },
-                                          [](const T &a, const T &m) -> T  {
-                                              return (
-                                                  -(a * std::log(m)) +
-                                                  (1 - a) * std::log(1 - m));
-                                          });
-                result_ /= col_s;
-            }
-            else if (lft_ == loss_function_type::categorical_hinge)  {
-                const result_type   neg =
-                    std::transform_reduce(actual_begin, actual_end,
-                                          model_begin, T(0), std::plus { },
-                                          [](const T &a, const T &m) -> T  {
-                                              return ((T(1) - a) * m);
-                                          });
-                const result_type   pos =
-                    std::transform_reduce(actual_begin, actual_end,
-                                          model_begin, T(0), std::plus { },
-                                          [](const T &a, const T &m) -> T  {
-                                              return (a * m);
-                                          });
-
-                result_ = std::max(neg - pos + T(1), T(0));;
-            }
-            else if (lft_ == loss_function_type::log_cosh)  {
-                result_ =
-                    std::transform_reduce(actual_begin, actual_end,
-                                          model_begin, T(0), std::plus { },
-                                          [](const T &a, const T &m) -> T  {
-                                              return (
-                                                  std::log(std::cosh(m - a)));
-                                          });
-                result_ /= col_s;
-            }
+            result_ /= data_t(col_s);
         }
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
+    inline void pre()  {
 
-    inline result_type get_result() const  { return (result_); }
+        if constexpr (is_md_)  result_.clear();
+        else  result_ = 0;
+    }
+    inline void post()  {  }
+
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result() { return (result_); }
 
     explicit
     LossFunctionVisitor(loss_function_type lft) : lft_(lft)  {   }
 
 private:
 
-    result_type                 result_ { 0 };
+    result_type                 result_;
     const loss_function_type    lft_;
 };
 

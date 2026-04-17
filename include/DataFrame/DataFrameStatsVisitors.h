@@ -325,6 +325,25 @@ static inline auto _bc_sinh_(const V &v) noexcept  {
 // -------------------------------------
 
 template<typename V>
+static inline auto _bc_cosh_(const V &v) noexcept  {
+
+    if constexpr (std::is_arithmetic_v<V>)  {
+        return (std::cosh(v));
+    }
+    else  {
+        using data_t = typename V::value_type;
+
+        std::vector<data_t> res(v.begin(), v.end());
+
+        for (std::size_t i { 0 }; i < v.size(); ++i)
+            res[i] = std::cosh(res[i]);
+        return (res);
+    }
+}
+
+// -------------------------------------
+
+template<typename V>
 static inline auto _bc_erf_(const V &v) noexcept  {
 
     if constexpr (std::is_arithmetic_v<V>)  {

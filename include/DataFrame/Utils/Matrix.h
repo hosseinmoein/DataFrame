@@ -1512,16 +1512,14 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
 template<typename T, matrix_orient MO1, matrix_orient MO2,
          bool IS_SYM1, bool IS_SYM2>
 Matrix<T, MO1, IS_SYM1> &
-operator += (Matrix<T, MO1, IS_SYM1> &lhs,
-             const Matrix<T, MO2, IS_SYM2> &rhs);
+operator += (Matrix<T, MO1, IS_SYM1> &lhs, const Matrix<T, MO2, IS_SYM2> &rhs);
 
 // -------------------------------------
 
 template<typename T, matrix_orient MO1, matrix_orient MO2,
          bool IS_SYM1, bool IS_SYM2>
 Matrix<T, MO1, IS_SYM1> &
-operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
-             const Matrix<T, MO2, IS_SYM2> &rhs);
+operator -= (Matrix<T, MO1, IS_SYM1> &lhs, const Matrix<T, MO2, IS_SYM2> &rhs);
 
 // ----------------------------------------------------------------------------
 

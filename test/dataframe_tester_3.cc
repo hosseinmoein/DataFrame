@@ -3602,7 +3602,7 @@ static void test_VectorSimilarityVisitor()  {
     vs_v<vector_sim_type::simple_similarity, double>    vs_5;
 
     df.single_act_visit<double, double>("dbl_col5", "dbl_col6", vs_5);
-    assert(std::abs(vs_5.get_result() - -1.5) < 0.0001);
+    assert(std::abs(vs_5.get_result() - 0.05556) < 0.00001);
 
     vs_v<vector_sim_type::jaccard_similarity, double>   vs_6;
 
@@ -3614,7 +3614,7 @@ static void test_VectorSimilarityVisitor()  {
 
     df.single_act_visit<std::string, std::string>("str_col1",
                                                   "str_col2", vs_7);
-    assert(std::abs(vs_7.get_result() - 0.1765) < 0.0001);
+    assert(std::abs(vs_7.get_result() - 0.1875) < 0.0001);
 
     vs_v<vector_sim_type::hamming_dist, double> vs_8;
 
@@ -3626,6 +3626,59 @@ static void test_VectorSimilarityVisitor()  {
     df.single_act_visit<std::string, std::string>("str_col1",
                                                   "str_col2", vs_9);
     assert(std::abs(vs_9.get_result() - 9.0) < 0.0001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    StlVecType<ary_col_t>   ary_1  { {1, 0, 0}, {1, 2, 3}, {1, 0, 0} };
+    StlVecType<vec_col_t>   vec_1  { {1, 0, 0}, {1, 2, 3}, {1, 0, 0} };
+    StlVecType<ary_col_t>   ary_2  { {1, 0, 0}, {4, 5, 6}, {0, 1, 0} };
+    StlVecType<vec_col_t>   vec_2  { {1, 0, 0}, {4, 5, 6}, {0, 1, 0} };
+
+    df.load_column<ary_col_t>("ARY 1", std::move(ary_1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC 1", std::move(vec_1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY 2", std::move(ary_2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC 2", std::move(vec_2),
+                              nan_policy::dont_pad_with_nans);
+
+    vs_v<vector_sim_type::euclidean_dist, ary_col_t>    ary_md_ed;
+    vs_v<vector_sim_type::euclidean_dist, vec_col_t>    vec_md_ed;
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY 1", "ARY 2", ary_md_ed);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC 1", "VEC 2", vec_md_ed);
+    assert(std::abs(ary_md_ed.get_result() - 6.61037) < 0.00001);
+    assert(std::abs(vec_md_ed.get_result() - 6.61037) < 0.00001);
+
+    vs_v<vector_sim_type::manhattan_dist, ary_col_t>    ary_md_md;
+    vs_v<vector_sim_type::manhattan_dist, vec_col_t>    vec_md_md;
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY 1", "ARY 2", ary_md_md);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC 1", "VEC 2", vec_md_md);
+    assert(std::abs(ary_md_md.get_result() - 11.0) < 0.0001);
+    assert(std::abs(vec_md_md.get_result() - 11.0) < 0.0001);
+
+    vs_v<vector_sim_type::dot_product, ary_col_t>   ary_md_dp;
+    vs_v<vector_sim_type::dot_product, vec_col_t>   vec_md_dp;
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY 1", "ARY 2", ary_md_dp);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC 1", "VEC 2", vec_md_dp);
+    assert(std::abs(ary_md_dp.get_result() - 33.0) < 0.0001);
+    assert(std::abs(vec_md_dp.get_result() - 33.0) < 0.0001);
+
+    vs_v<vector_sim_type::jaccard_similarity, ary_col_t>    ary_md_js;
+    vs_v<vector_sim_type::jaccard_similarity, vec_col_t>    vec_md_js;
+
+    df.single_act_visit<ary_col_t, ary_col_t>("ARY 1", "ARY 2", ary_md_js);
+    df.single_act_visit<vec_col_t, vec_col_t>("VEC 1", "VEC 2", vec_md_js);
+    assert(std::abs(ary_md_js.get_result() - 0.25) < 0.0001);
+    assert(std::abs(vec_md_js.get_result() - 0.25) < 0.0001);
 }
 
 // ----------------------------------------------------------------------------

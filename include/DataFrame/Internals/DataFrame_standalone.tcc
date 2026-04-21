@@ -323,14 +323,17 @@ struct FloatHash  {
     std::size_t operator()(T val) const noexcept  {
 
         if (std::isnan(val))  return (0);  // all NaNs hash equal
-        if (std::isinf(val))  return (std::hash<T>{}(val));
+
+        const std::hash<T>  hasher { };
+
+        if (std::isinf(val))  return (hasher(val));
 
         // Snap to epsilon grid: values within epsilon of each other
         // round to the same grid point
         //
         const T snapped { std::round(val / epsilon_) * epsilon_ };
 
-        return (std::hash<T>{}(snapped));
+        return (hasher(snapped));
     }
 
 private:
@@ -344,27 +347,32 @@ template<typename T>
 struct  VectorHasher  {
 
     static constexpr bool   is_float { std::is_floating_point_v<T> };
+
     using hasher_t =
         typename std::conditional_t<is_float, FloatHash<T>, std::hash<T>>;
 
     template<typename A>
     std::size_t operator()(const std::vector<T, A> &vec) const  {
 
-        std::size_t seed { vec.size() };
-
-        for (const auto x : vec)
-            seed ^= hasher_t{}(x) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-
-        return (seed);
+        return (static_hasher_(vec));
     }
 
     template<std::size_t N>
     std::size_t operator()(const std::array<T, N> &ary) const  {
 
-        std::size_t seed { ary.size() };
+        return (static_hasher_(ary));
+    }
 
-        for (const auto x : ary)
-            seed ^= hasher_t{}(x) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+private:
+
+    template<typename U>
+    inline static std::size_t static_hasher_(const U &vec)  {
+
+        std::size_t     seed { vec.size() };
+        const hasher_t  hasher { };
+
+        for (const auto x : vec)
+            seed ^= hasher(x) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 
         return (seed);
     }

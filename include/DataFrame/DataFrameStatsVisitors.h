@@ -2906,7 +2906,9 @@ struct  DotProdVisitor  {
 
 private:
 
-    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+
+    using data_t = typename std::conditional_t<! is_md_,
                                                lazy_type<T>,
                                                value_type_of<T>>::type;
 
@@ -2918,27 +2920,28 @@ public:
     using result_type = data_t;
     using comp_result_t = std::vector<data_t>;
     using mag_t =
-        typename std::conditional_t<std::is_arithmetic_v<T>,
+        typename std::conditional_t<! is_md_,
                                     T,
                                     std::vector<data_t>>;
 
-    inline void operator() (const index_type &,
-                            const value_type &val1, const value_type &val2)  {
+    inline void operator()(const index_type &,
+                           const value_type &val1, const value_type &val2)  {
 
         result_ += val1 * val2;
         mag1_ += val1 * val1;
         mag2_ += val2 * val2;
 
-        const value_type    diff = val1 - val2;
+        const value_type    diff { val1 - val2 };
 
         euc_dist_ += diff * diff;
         man_dist_ += std::fabs(diff);
     }
+
     template <typename K, typename H>
     inline void
-    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
-                const H &column_begin1, const H &column_end1,
-                const H &column_begin2, const H &column_end2)  {
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const H &column_begin1, const H &column_end1,
+               const H &column_begin2, const H &column_end2)  {
 
         const size_type  col_s {
             size_type(std::distance(column_begin1, column_end1))
@@ -2955,40 +2958,42 @@ public:
 #endif // HMDF_SANITY_EXCEPTIONS
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
+            auto    lbd =
+                [](const auto &begin1, const auto &end1,
+                   const auto &begin2) -> std::tuple<result_type,
+                                                     result_type,
+                                                     result_type,
+                                                     result_type,
+                                                     result_type>  {
+                    value_type  result { 0 };
+                    value_type  mag1 { 0 };
+                    value_type  mag2 { 0 };
+                    value_type  euc_dist { 0 };
+                    value_type  man_dist { 0 };
+                    auto        iter2 { begin2 };
+
+                    for (auto iter1 { begin1 }; iter1 < end1; ++iter1, ++iter2) {
+                        const auto  val1 { *iter1 };
+                        const auto  val2 { *iter2 };
+
+                        result += val1 * val2;
+                        mag1 += val1 * val1;
+                        mag2 += val2 * val2;
+
+                        const value_type    diff { val1 - val2 };
+
+                        euc_dist += diff * diff;
+                        man_dist += std::fabs(diff);
+                    }
+                    return (std::make_tuple(result,
+                                            mag1,
+                                            mag2,
+                                            euc_dist,
+                                            man_dist));
+                };
+
             if (col_s >= ThreadPool::MUL_THR_THHOLD &&
                 ThreadGranularity::get_thread_level() > 2)  {
-                auto    lbd =
-                    []
-                    (const auto &begin1, const auto &end1,
-                     const auto &begin2) -> std::tuple<result_type,
-                                                       result_type,
-                                                       result_type,
-                                                       result_type,
-                                                       result_type>  {
-                        value_type  result { 0 };
-                        value_type  mag1 { 0 };
-                        value_type  mag2 { 0 };
-                        value_type  euc_dist { 0 };
-                        value_type  man_dist { 0 };
-                        auto        iter2 = begin2;
-
-                        for (auto iter1 = begin1; iter1 < end1;
-                             ++iter1, ++iter2) {
-                            const auto  val1 = *iter1;
-                            const auto  val2 = *iter2;
-
-                            result += val1 * val2;
-                            mag1 += val1 * val1;
-                            mag2 += val2 * val2;
-
-                            const value_type    diff = val1 - val2;
-
-                            euc_dist += diff * diff;
-                            man_dist += std::fabs(diff);
-                        }
-                        return (std::make_tuple(result, mag1, mag2,
-                                                euc_dist, man_dist));
-                    };
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop2<T>(
                         column_begin1,
@@ -3008,22 +3013,16 @@ public:
                 }
             }
             else  {
-                for (size_type i = 0; i < col_s; ++i)  {
-                    const auto  val1 = *(column_begin1 + i);
-                    const auto  val2 = *(column_begin2 + i);
+                const auto  ret = lbd(column_begin1, column_end1, column_begin2);
 
-                    result_ += val1 * val2;
-                    mag1_ += val1 * val1;
-                    mag2_ += val2 * val2;
-
-                    const value_type    diff = val1 - val2;
-
-                    euc_dist_ += diff * diff;
-                    man_dist_ += std::fabs(diff);
-                }
+                result_ = std::get<0>(ret);
+                mag1_ = std::get<1>(ret);
+                mag2_ = std::get<2>(ret);
+                euc_dist_ = std::get<3>(ret);
+                man_dist_ = std::get<4>(ret);
             }
         }
-        else  {
+        else  {  // Multidimensional path
             const size_type dim { column_begin1->size() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
@@ -3043,7 +3042,7 @@ public:
                     data_t  result { 0 };
                     auto    iter2 { begin2 };
 
-                    for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2)
+                    for (auto iter1 { begin1 }; iter1 < end1; ++iter1, ++iter2)
                         for (size_type i { 0 }; i < iter1->size(); ++i)
                             result += (*iter1)[i] * (*iter2)[i];
                     return (result);
@@ -3066,16 +3065,20 @@ public:
                 result_ = lbd(column_begin1, column_end1, column_begin2);
             }
 
-            // Component-wise dot product and Magnitudes
+            // Component-wise dot product, magnitudes, and distances
+            // euc_dist_ and man_dist_ accumulate per-row then are summed;
+            // sqrt is taken per-row here so post() must not apply it again.
             //
             comp_result_.resize(dim, 0);
             mag1_.resize(col_s);
             mag2_.resize(col_s);
             for (size_type n { 0 }; n < col_s; ++n)  {
-                data_t      mag1 { 0 };
-                data_t      mag2 { 0 };
-                const auto  &ary1 = *(column_begin1 + n);
-                const auto  &ary2 = *(column_begin2 + n);
+                data_t      mag1    { 0 };
+                data_t      mag2    { 0 };
+                data_t      euc     { 0 };
+                data_t      man     { 0 };
+                const auto  &ary1   { *(column_begin1 + n) };
+                const auto  &ary2   { *(column_begin2 + n) };
 
                 for (size_type d { 0 }; d < dim; ++d)  {
                     const auto  val1 = ary1[d];
@@ -3084,9 +3087,16 @@ public:
                     comp_result_[d] += val1 * val2;
                     mag1 += val1 * val1;
                     mag2 += val2 * val2;
+
+                    const data_t    diff { val1 - val2 };
+
+                    euc += diff * diff;
+                    man += std::abs(diff);
                 }
                 mag1_[n] = std::sqrt(mag1);
                 mag2_[n] = std::sqrt(mag2);
+                euc_dist_ += std::sqrt(euc);
+                man_dist_ += man;
             }
         }
     }

@@ -9757,7 +9757,7 @@ private:
             while (true)  {
                 // The x value at which we will fit this time
                 //
-                const data_t    xval { *(x_begin + curr_idx) };
+                const data_t    xval { data_t(*(x_begin + curr_idx)) };
                 // Describe the neighborhood around the current xval.
                 //
                 const data_t    radius {

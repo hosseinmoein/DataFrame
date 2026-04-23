@@ -2974,6 +2974,90 @@ static void test_SeasonalPeriodVisitor()  {
     assert(std::fabs(ssp.get_dominant_frequency() - 0.08346) < 0.00001);
     assert(std::fabs(ssp.get_period() - 11.9811) < 0.0001);
     assert(ssp.get_period() == ssp.get_result());
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    constexpr std::size_t   n { 120 };
+    constexpr double        two_pi { 2.0 * M_PI };
+    constexpr double        period_0 { 12.0 };
+    constexpr double        period_1 {  6.0 };
+    constexpr double        period_2 {  4.0 };
+ 
+    // Build index and data vectors
+    //
+    StlVecType<vec_col_t>   vec_col(n, vec_col_t(dim));
+    StlVecType<ary_col_t>   ary_col(n, ary_col_t());
+ 
+    for (std::size_t t { 0 }; t < n; ++t)  {
+        vec_col[t][0] = std::sin(two_pi * double(t) / period_0);
+        vec_col[t][1] = std::sin(two_pi * double(t) / period_1);
+        vec_col[t][2] = std::sin(two_pi * double(t) / period_2);
+
+        ary_col[t][0] = vec_col[t][0];
+        ary_col[t][1] = vec_col[t][1];
+        ary_col[t][2] = vec_col[t][2];
+    }
+
+    df.load_column<vec_col_t>("VEC MD COL", std::move(vec_col),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY MD COL", std::move(ary_col),
+                              nan_policy::dont_pad_with_nans);
+
+    // No detrending or de-serial-correlation needed for pure sine waves.
+    // sampling_rate = 1 (one sample per time unit).
+    //
+    SeasonalityParams<double>   params;
+
+    params.detrend = false;
+    params.de_serial_corr = false;
+    params.sampling_rate = 1;
+ 
+    SeasonalPeriodVisitor<vec_col_t>    vec_sp_v { params };
+    SeasonalPeriodVisitor<ary_col_t>    ary_sp_v { params };
+
+    df.single_act_visit<vec_col_t>("VEC MD COL", vec_sp_v);
+    df.single_act_visit<ary_col_t>("ARY MD COL", ary_sp_v);
+
+    assert(vec_sp_v.get_md_result().size() == dim);
+    assert(std::abs(vec_sp_v.get_md_result()[0] - 12.0) < 1e-9);
+    assert(std::abs(vec_sp_v.get_md_result()[1] - 6.0) < 1e-9);
+    assert(std::abs(vec_sp_v.get_md_result()[2] - 4.0) < 1e-9);
+    assert(ary_sp_v.get_md_result().size() == dim);
+    assert(std::abs(ary_sp_v.get_md_result()[0] - 12.0) < 1e-9);
+    assert(std::abs(ary_sp_v.get_md_result()[1] - 6.0) < 1e-9);
+    assert(std::abs(ary_sp_v.get_md_result()[2] - 4.0) < 1e-9);
+
+    assert(vec_sp_v.get_md_max_magnitude().size() == dim);
+    assert(std::abs(vec_sp_v.get_md_max_magnitude()[0] - 60.0) < 1e-9);
+    assert(std::abs(vec_sp_v.get_md_max_magnitude()[1] - 60.0) < 1e-9);
+    assert(std::abs(vec_sp_v.get_md_max_magnitude()[2] - 60.0) < 1e-9);
+    assert(ary_sp_v.get_md_max_magnitude().size() == dim);
+    assert(std::abs(ary_sp_v.get_md_max_magnitude()[0] - 60.0) < 1e-9);
+    assert(std::abs(ary_sp_v.get_md_max_magnitude()[1] - 60.0) < 1e-9);
+    assert(std::abs(ary_sp_v.get_md_max_magnitude()[2] - 60.0) < 1e-9);
+
+    assert(vec_sp_v.get_md_dominant_frequency().size() == dim);
+    assert(std::abs(vec_sp_v.get_md_dominant_frequency()[0] - 0.08333) < 1e-5);
+    assert(std::abs(vec_sp_v.get_md_dominant_frequency()[1] - 0.16667) < 1e-5);
+    assert(std::abs(vec_sp_v.get_md_dominant_frequency()[2] - 0.25) < 1e-9);
+    assert(ary_sp_v.get_md_dominant_frequency().size() == dim);
+    assert(std::abs(ary_sp_v.get_md_dominant_frequency()[0] - 0.08333) < 1e-5);
+    assert(std::abs(ary_sp_v.get_md_dominant_frequency()[1] - 0.16667) < 1e-5);
+    assert(std::abs(ary_sp_v.get_md_dominant_frequency()[2] - 0.25) < 1e-9);
+
+    assert(vec_sp_v.get_md_dominant_index().size() == dim);
+    assert(vec_sp_v.get_md_dominant_index()[0] == 10);
+    assert(vec_sp_v.get_md_dominant_index()[1] == 20);
+    assert(vec_sp_v.get_md_dominant_index()[2] == 30);
+    assert(ary_sp_v.get_md_dominant_index().size() == dim);
+    assert(ary_sp_v.get_md_dominant_index()[0] == 10);
+    assert(ary_sp_v.get_md_dominant_index()[1] == 20);
+    assert(ary_sp_v.get_md_dominant_index()[2] == 30);
 }
 
 // ----------------------------------------------------------------------------

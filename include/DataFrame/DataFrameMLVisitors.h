@@ -1502,8 +1502,8 @@ public:
                 }
             }
             else  {
-                const size_type col_s { result_.rows() };
-                const size_type dim { result_.cols() };
+                const size_type col_s { size_type(result_.rows()) };
+                const size_type dim { size_type(result_.cols()) };
 
                 magnitude_.resize(col_s, dim);
                 if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
@@ -3004,7 +3004,7 @@ public:
 #ifdef HMDF_SANITY_EXCEPTIONS
                     if (col_s1 != col_s2)
                         throw DataFrameError("VectorSimilarityVisitor: "
-                                             "All columns must be of equal sizes");
+                                           "All columns must be of equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS
 
                     // Must normalize the dot product first.
@@ -3342,25 +3342,40 @@ using spect_v = SpectralClusteringVisitor<K, T, I, A>;
 template<typename T, typename I = unsigned long>
 struct  SeasonalPeriodVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES
+private:
 
-    using result_type = T;
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type = double;
+    using md_result_type = std::vector<result_type>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
-        const size_type         col_s = std::distance(column_begin, column_end);
+        const size_type         col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
         std::vector<value_type> data (column_begin, column_end);
 
         if (params_.detrend)  {  // Take trend out
-            std::vector<value_type> xvals (col_s);
-            value_type              xvalue { 0 };
+            std::vector<size_type>  xvals (col_s);
+            size_type               xvalue { 0 };
 
             for (auto &val : xvals)  {
                 val = xvalue;
-                xvalue += T(params_.sampling_rate);
+                xvalue += params_.sampling_rate;
             }
 
             LowessVisitor<T, I> l_v {
@@ -3375,14 +3390,32 @@ struct  SeasonalPeriodVisitor  {
                  data.begin(), data.end(), xvals.begin(), xvals.end());
             l_v.post();
 
-            data -= l_v.get_result();
+            if constexpr (! is_md_)  {
+                // Scalar: both sides are vec_t<data_t>.
+                //
+                data -= l_v.get_result();
+            }
+            else  {
+                // MD: LowessVisitor result layout is fitted[col][row],
+                // but data layout is data[row] where data[row] is a T
+                // (vector/array) indexed by col.
+                // A direct data -= fitted would be a shape mismatch,
+                // so we must subtract element-wise with transposed indexing.
+                //
+                const auto      &fitted { l_v.get_result() };  // [col][row]
+                const size_type dim { fitted.size() };
+
+                for (size_type r { 0 }; r < col_s; ++r) [[likely]]
+                    for (size_type c { 0 }; c < dim; ++c)
+                        data[r][c] -= fitted[c][r];
+            }
         }
 
         if (params_.de_serial_corr)  {  // Take serial correlation out
             value_type  prev_val { data[0] };
 
             for (auto &datum : data)  {
-                const value_type    tmp = datum;
+                const value_type    tmp { datum };
 
                 datum -= prev_val;
                 prev_val = tmp;
@@ -3390,54 +3423,146 @@ struct  SeasonalPeriodVisitor  {
             data[0] = data[1];
         }
 
-        fft_v<T, I> fft;
+        FastFourierTransVisitor<T, I>   fft;
 
         fft.pre();
         fft (idx_begin, idx_end, data.begin(), data.end());
         fft.post();
 
-        const auto  &mags = fft.get_magnitude();
+        // mags is a vector in case of scalar input
+        // mags is a matrix in case of multidimensional input
+        //
+        const auto  &mags { fft.get_magnitude() };
 
-        for (size_type i { 0 }; const auto &mag : mags)  {
-            const double    val = std::fabs(mag);
+        if constexpr (! is_md_)  {
+            const size_type n_bins { mags.size() };
 
-            if (val > max_mag_)  {
-                max_mag_ = val;
-                dom_idx_ = i;
+            // For a real-valued input of length N, the FFT produces a
+            // symmetric spectrum — bin k and bin N-k carry identical
+            // magnitude.
+            // FIX: Restrict the scan to [1, N/2) — the unique, non-mirrored
+            // half of the spectrum.
+            //
+            const size_type scan_len {
+                ((n_bins & 0x01) == 0) ? n_bins / 2 : (n_bins + 1) / 2
+            };
+
+            // Skip bin 0 (DC component) — it carries no frequency information
+            // and would cause dom_freq_ = 0 and result_ = 1/0 = inf.
+            //
+            for (size_type i { 1 }; i < scan_len; ++i) [[likely]]  {
+                const result_type   val { std::fabs(mags[i]) };
+
+                if (val > max_mag_)  {
+                    max_mag_ = val;
+                    dom_idx_ = i;
+                }
             }
-            i += 1;
+
+            dom_freq_ =
+                result_type(dom_idx_) *
+                result_type(params_.sampling_rate) / result_type(mags.size());
+            result_   = result_type(1) / dom_freq_;
         }
-        dom_freq_ = T(dom_idx_) * T(params_.sampling_rate) / T(mags.size());
-        result_ = T(1.0) / dom_freq_;
+        else  {
+            const size_type dim { size_type(mags.cols()) };
+            const size_type n_bins { size_type(mags.rows()) };
+
+            // For a real-valued input of length N, the FFT produces a
+            // symmetric spectrum — bin k and bin N-k carry identical
+            // magnitude.
+            // FIX: Restrict the scan to [1, N/2) — the unique, non-mirrored
+            // half of the spectrum.
+            //
+            const size_type scan_len {
+                ((n_bins & 0x01) == 0) ? n_bins / 2 : (n_bins + 1) / 2
+            };
+
+            max_mag_vec_.resize(dim, 0);
+            dom_idx_vec_.resize(dim, 0);
+            dom_freq_vec_.resize(dim, 0);
+            result_vec_.resize(dim, 0);
+
+            for (size_type d { 0 }; d < dim; ++d)  {
+                // Skip bin 0 (DC) for the same reason as the scalar path.
+                //
+                for (size_type i { 1 }; i < scan_len; ++i) [[likely]]  {
+                    const result_type   val { std::fabs(mags(i, d)) };
+
+                    if (val > max_mag_vec_[d])  {
+                        max_mag_vec_[d] = val;
+                        dom_idx_vec_[d] = i;
+                    }
+                }
+
+                dom_freq_vec_[d] =
+                    result_type(dom_idx_vec_[d]) *
+                    result_type(params_.sampling_rate) / result_type(n_bins);
+                result_vec_[d] = result_type(1) / dom_freq_vec_[d];
+            }
+
+            // Mirror dim-0 into scalar members for backwards compatibility.
+            //
+            max_mag_ = max_mag_vec_[0];
+            dom_idx_ = dom_idx_vec_[0];
+            dom_freq_ = dom_freq_vec_[0];
+            result_ = result_vec_[0];
+        }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_ = max_mag_ = dom_freq_ = 0;
         dom_idx_ = 0;
+        max_mag_vec_.clear();
+        dom_idx_vec_.clear();
+        dom_freq_vec_.clear();
+        result_vec_.clear();
     }
-    inline void post ()  {  }
+    inline void post()  {  }
 
-    [[nodiscard]] inline result_type get_result () const  { return (result_); }
-    [[nodiscard]] inline result_type get_period () const  { return (result_); }
-    [[nodiscard]] inline result_type
-    get_max_magnitude () const  { return (max_mag_); }
-    [[nodiscard]] inline result_type
-    get_dominant_frequency () const  { return (dom_freq_); }
-    [[nodiscard]] inline size_type
-    get_dominant_index () const  { return (dom_idx_); }
+    inline result_type get_result() const  { return (result_); }
+    inline result_type get_period() const  { return (result_); }
+    inline result_type get_max_magnitude() const  { return (max_mag_); }
+    inline result_type get_dominant_frequency() const  { return (dom_freq_); }
+    inline size_type get_dominant_index() const  { return (dom_idx_); }
+
+    // Per-dimension accessors — only meaningful for MD input.
+    //
+    inline const md_result_type &
+    get_md_result() const  { return (result_vec_); }
+
+    inline const md_result_type &
+    get_md_period() const  { return (result_vec_); }
+
+    inline const md_result_type &
+    get_md_max_magnitude() const  { return (max_mag_vec_); }
+
+    inline const md_result_type &
+    get_md_dominant_frequency() const  { return (dom_freq_vec_); }
+
+    inline const std::vector<size_type> &
+    get_md_dominant_index() const  { return (dom_idx_vec_); }
 
     explicit
-    SeasonalPeriodVisitor(const SeasonalityParams<T> params = { })
+    SeasonalPeriodVisitor(const SeasonalityParams<result_type> params = { })
         : params_(params)  {   }
 
 private:
 
-    const SeasonalityParams<T>  params_;
-    result_type                 result_ { 0 };    // period
-    result_type                 max_mag_ { 0 };   // Max magnitude
-    result_type                 dom_freq_ { 0 };  // Dominant frequency
-    size_type                   dom_idx_ { 0 };   // Dominant index
+    const SeasonalityParams<result_type>    params_;
+
+    result_type             result_ { 0 };    // period
+    result_type             max_mag_ { 0 };   // Max magnitude
+    result_type             dom_freq_ { 0 };  // Dominant frequency
+    size_type               dom_idx_ { 0 };   // Dominant index
+
+    // Per-dimension storage — populated only when is_md_ == true.
+    //
+    md_result_type          result_vec_   {  };
+    md_result_type          max_mag_vec_  {  };
+    md_result_type          dom_freq_vec_ {  };
+    std::vector<size_type>  dom_idx_vec_  {  };
 };
 
 template<typename T, typename I = unsigned long>

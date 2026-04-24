@@ -2021,7 +2021,7 @@ void test_get_data_by_mshift()  {
     auto    dfs =
         df.get_data_by_mshift<double, double, long>
             ("IBM_Close", 1, 4, mean_shift_kernel::gaussian);
-   
+
     assert(views.size() == 38);
     assert(dfs.size() == 38);
     assert(views[0].get_index().size() == 56);
@@ -2987,12 +2987,12 @@ static void test_SeasonalPeriodVisitor()  {
     constexpr double        period_0 { 12.0 };
     constexpr double        period_1 {  6.0 };
     constexpr double        period_2 {  4.0 };
- 
+
     // Build index and data vectors
     //
     StlVecType<vec_col_t>   vec_col(n, vec_col_t(dim));
     StlVecType<ary_col_t>   ary_col(n, ary_col_t());
- 
+
     for (std::size_t t { 0 }; t < n; ++t)  {
         vec_col[t][0] = std::sin(two_pi * double(t) / period_0);
         vec_col[t][1] = std::sin(two_pi * double(t) / period_1);
@@ -3016,7 +3016,7 @@ static void test_SeasonalPeriodVisitor()  {
     params.detrend = false;
     params.de_serial_corr = false;
     params.sampling_rate = 1;
- 
+
     SeasonalPeriodVisitor<vec_col_t>    vec_sp_v { params };
     SeasonalPeriodVisitor<ary_col_t>    ary_sp_v { params };
 
@@ -3181,6 +3181,9 @@ static void test_DynamicTimeWarpVisitor()  {
 
     dtw_v<double, std::string>  dtw;
 
+    df.single_act_visit<double, double>("IBM_Close", "IBM_Close", dtw);
+    assert((std::fabs(dtw.get_result() - 0.0) < 1e-15));
+
     df.single_act_visit<double, double>("IBM_Open", "IBM_Close", dtw);
     assert((std::fabs(dtw.get_result() - 2682.91) < 0.01));
 
@@ -3202,6 +3205,9 @@ static void test_DynamicTimeWarpVisitor()  {
     DynamicTimeWarpVisitor<double, std::string> dtw2 (
         normalization_type::z_score);
 
+    df.single_act_visit<double, double>("IBM_Close", "IBM_Close", dtw2);
+    assert((std::fabs(dtw2.get_result() - 0.0) < 1e-15));
+
     df.single_act_visit<double, double>("IBM_Open", "IBM_Close", dtw2);
     assert((std::fabs(dtw2.get_result() - 70.4392) < 0.0001));
 
@@ -3219,6 +3225,84 @@ static void test_DynamicTimeWarpVisitor()  {
 
     df.single_act_visit<double, double>("IBM_Close", "IBM_High", dtw2);
     assert((std::fabs(dtw2.get_result() - 77.2344) < 0.0001));
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<vec_col_t>  x_vec  {
+        { 1.0, 0.0, 0.0 }, { 2.0, 1.0, 0.5 }, { 3.0, 2.0, 1.0 },
+        { 4.0, 3.0, 1.5 }, { 5.0, 4.0, 2.0 },
+    };
+    std::vector<ary_col_t>  x_ary  {
+        { 1.0, 0.0, 0.0 }, { 2.0, 1.0, 0.5 }, { 3.0, 2.0, 1.0 },
+        { 4.0, 3.0, 1.5 }, { 5.0, 4.0, 2.0 },
+    };
+    std::vector<vec_col_t>  y_vec  {
+        { 1.1, 0.1, 0.1 }, { 1.9, 0.9, 0.4 }, { 2.8, 1.8, 0.9 },
+        { 3.5, 2.8, 1.4 }, { 4.2, 3.5, 1.7 }, { 5.1, 4.1, 2.1 },
+    };
+    std::vector<ary_col_t>  y_ary  {
+        { 1.1, 0.1, 0.1 }, { 1.9, 0.9, 0.4 }, { 2.8, 1.8, 0.9 },
+        { 3.5, 2.8, 1.4 }, { 4.2, 3.5, 1.7 }, { 5.1, 4.1, 2.1 },
+    };
+    std::vector<vec_col_t>  z_vec  {
+        { 10.0, 20.0, 30.0 }, { 11.0, 21.0, 31.0 }, { 12.0, 22.0, 32.0 },
+        { 13.0, 23.0, 33.0 }, { 14.0, 24.0, 34.0 },
+    };
+    std::vector<ary_col_t>  z_ary  {
+        { 10.0, 20.0, 30.0 }, { 11.0, 21.0, 31.0 }, { 12.0, 22.0, 32.0 },
+        { 13.0, 23.0, 33.0 }, { 14.0, 24.0, 34.0 },
+    };
+
+    df.load_column<vec_col_t>("X COL VEC", std::move(x_vec),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("X COL ARY", std::move(x_ary),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("Y COL VEC", std::move(y_vec),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("Y COL ARY", std::move(y_ary),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("Z COL VEC", std::move(z_vec),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("Z COL ARY", std::move(z_ary),
+                              nan_policy::dont_pad_with_nans);
+
+    DynamicTimeWarpVisitor<vec_col_t, std::string>  vec_dtw {
+        normalization_type::z_score
+    };
+    DynamicTimeWarpVisitor<ary_col_t, std::string>  ary_dtw {
+        normalization_type::z_score
+    };
+
+    df.single_act_visit<vec_col_t, vec_col_t>
+        ("X COL VEC", "Y COL VEC", vec_dtw);
+    df.single_act_visit<ary_col_t, ary_col_t>
+        ("X COL ARY", "Y COL ARY", ary_dtw);
+    assert(std::abs(vec_dtw.get_result() - 1.91304) < 0.00001);
+    assert(std::abs(ary_dtw.get_result() - 1.91304) < 0.00001);
+
+    // Z-score normalization makes DTW shape-sensitive but
+    // magnitude/offset blind. Two sequences that differ only by a linear
+    // scaling or offset will have DTW = 0 after z-score. This is a feature
+    // when comparing signals of different amplitudes (e.g. sensor readings
+    // in different units), but a trap if you expect sequences in different
+    // regions of space to be far apart.
+    //
+    df.single_act_visit<ary_col_t, ary_col_t>
+        ("X COL ARY", "Z COL ARY", ary_dtw);
+    assert(std::abs(ary_dtw.get_result() - 0.0) < 1e-12);
+
+    DynamicTimeWarpVisitor<ary_col_t, std::string>  ary_dtw_nn {
+        normalization_type::none
+    };
+
+    df.single_act_visit<ary_col_t, ary_col_t>
+        ("X COL ARY", "Z COL ARY", ary_dtw_nn);
+    assert(std::abs(ary_dtw_nn.get_result() - 189.879) < 0.001);
 }
 
 // ----------------------------------------------------------------------------

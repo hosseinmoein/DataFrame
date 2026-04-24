@@ -3578,23 +3578,66 @@ struct  DynamicTimeWarpVisitor  {
 
 private:
 
-    using matrix_t = Matrix<double, matrix_orient::row_major>;
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
+    using result_type = double;
+    using distance_func = std::function<result_type(const T &x, const T &y)>;
+
+private:
+
+    using matrix_t = Matrix<result_type, matrix_orient::row_major>;
+
+    static result_type def_dist_(const value_type &x, const value_type &y)  {
+
+        if constexpr (! is_md_)  {  // Scalar path
+            return (std::fabs(x - y));
+        }
+        else  {  // Multidimensional path
+            // Works for both std::vector<data_t> and std::array<data_t, N>
+            // Requires x.size() == y.size() (same dimensionality)
+            //
+            result_type sum { 0 };
+            auto        xi { std::begin(x) };
+            auto        yi { std::begin(y) };
+
+            for (; xi != std::end(x); ++xi, ++yi)  {
+                const result_type   diff {
+                    static_cast<result_type>(*xi) - static_cast<result_type>(*yi)
+                };
+
+                sum += diff * diff;
+            }
+            return (std::sqrt(sum));
+        }
+    }
 
     template<typename H>
     inline void calc_(const H &x_begin, const H &x_end,
                       const H &y_begin, const H &y_end)  {
 
-        const long  x_col_s = long(std::distance(x_begin, x_end));
-        const long  y_col_s = long(std::distance(y_begin, y_end));
-        matrix_t    mt (x_col_s + 1, y_col_s + 1,
-                        std::numeric_limits<double>::infinity());
+        const long  x_col_s { long(std::distance(x_begin, x_end)) };
+        const long  y_col_s { long(std::distance(y_begin, y_end)) };
+        matrix_t    mt {
+            x_col_s + 1, y_col_s + 1,
+            std::numeric_limits<result_type>::infinity()
+        };
 
-        mt(0, 0) = 0.0;
+        mt(0, 0) = 0;
         for (long i { 1 }; i <= x_col_s; ++i)  {
-            const value_type    &xval = *(x_begin + (i - 1));
+            const value_type    &xval { *(x_begin + (i - 1)) };
 
             for (long j { 1 }; j <= y_col_s; ++j)  {
-                const double    cost = dfunc_(xval, *(y_begin + (j - 1)));
+                const result_type   cost { dfunc_(xval, *(y_begin + (j - 1))) };
 
                 mt(i, j) =
                     cost +
@@ -3607,16 +3650,11 @@ private:
 
 public:
 
-    DEFINE_VISIT_BASIC_TYPES
-
-    using result_type = double;
-    using distance_func = std::function<double(const T &x, const T &y)>;
-
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin, const IV &idx_end,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const IV &idx_begin, const IV &idx_end,
+               const H &x_begin, const H &x_end,
+               const H &y_begin, const H &y_end)  {
 
         if (nt_ > normalization_type::none)  {
             NormalizeVisitor<T, I>  x_norm_v { nt_ };
@@ -3636,18 +3674,15 @@ public:
         else  calc_(x_begin, x_end, y_begin, y_end);
     }
 
-    inline void pre ()  { result_ = 0.0; }
-    inline void post ()  {  }
+    inline void pre()  { result_ = 0.0; }
+    inline void post()  {  }
 
-    inline result_type get_result () const  { return (result_); }
+    inline result_type get_result() const  { return (result_); }
 
     explicit
     DynamicTimeWarpVisitor(
         normalization_type norm_type = normalization_type::none,
-        distance_func &&f =
-            [](const value_type &x, const value_type &y) -> double  {
-                return (std::fabs(x - y));
-            })
+        distance_func &&f = def_dist_)
         : nt_(norm_type), dfunc_(std::forward<distance_func>(f))  {   }
 
 private:

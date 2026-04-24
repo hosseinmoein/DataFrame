@@ -6887,8 +6887,8 @@ struct  NormalizeVisitor  {
                                  "unknown norm type or mismatched data type");
     }
 
-    inline void pre ()  { result_.clear(); done_ = false; }
-    inline void post ()  {  }
+    inline void pre()  { result_.clear(); done_ = false; }
+    inline void post()  {  }
 
     DEFINE_RESULT
 

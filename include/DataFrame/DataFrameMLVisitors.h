@@ -3700,22 +3700,47 @@ using dtw_v = DynamicTimeWarpVisitor<T, I>;
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AnomalyDetectByFFTVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES
+private:
 
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    // The correct FFT type for the inverse pass.
+    // Scalar: std::complex<T>  (same as before)
+    // MD:     T                (FFT result is already a matrix of complex;
+    //                           pass T itself so fft_v<T> picks the MD path)
+    //
+    using ifft_value_t =
+        typename std::conditional_t<! is_md_, std::complex<T>, T>;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type  = std::size_t;
     using result_type =
-        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
+        typename std::conditional_t<! is_md_,
+                                    vec_t<size_type>,
+                                    vec_t<std::pair<size_type, size_type>>>;
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (freq_num_ >= col_s)
-           throw DataFrameError("AnomalyDetectByFFTVisitor: "
-                                "freq num must be < column length");
+            throw DataFrameError("AnomalyDetectByFFTVisitor: "
+                                 "freq num must be < column length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         NormalizeVisitor<T, I, A>   norm { nt_ };
@@ -3736,36 +3761,140 @@ struct  AnomalyDetectByFFTVisitor  {
             fft(idx_begin, idx_end, column_begin, column_end);
         fft.post();
 
+        // fft_res type:
+        //   scalar --> channel_result_t  = vec<complex<T>>
+        //   MD     --> Matrix<cplx_t, row_major>
+        //
         auto    fft_res = std::move(fft.get_result());
 
-        for (size_type i { freq_num_ }; i < col_s; ++i)
-            fft_res[i] = T(0);
+        if constexpr (! is_md_)  {
+            // Zero out high frequencies
+            //
+            std::fill(fft_res.begin() + freq_num_, fft_res.end(),
+                      typename decltype(fft_res)::value_type { });
 
-        fft_v<std::complex<T>, I, A>    ifft(true); // Inverse FFT
+            // Inverse FFT: input is vec<cplx_t>, fft_v<complex<T>> picks
+            // the scalar path because complex<T> satisfies IS_SCALAR
+            //
+            fft_v<std::complex<T>, I, A>    ifft { true };
 
-        ifft.pre();
-        ifft(idx_begin, idx_end, fft_res.begin(), fft_res.end());
-        ifft.post();
+            ifft.pre();
+            ifft(idx_begin, idx_end, fft_res.begin(), fft_res.end());
+            ifft.post();
 
-        result_.reserve(32);
-        for (size_type i { 0 }; i < col_s; ++i)
-            if (std::abs(*(column_begin + i) - ifft.get_result()[i]) > ath_)
-                result_.push_back(i);
+            // vec<complex<complex<T>>>
+            //
+            const auto  &ifft_res = ifft.get_result();
+
+            result_.reserve(((col_s / 40) < 32) ? size_type(32) : col_s / 40);
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const data_t    residual {
+                    std::abs(*(column_begin + i) - ifft_res[i].real())
+                };
+
+                if (residual > ath_)  result_.push_back(i);
+            }
+        }
+        else  {
+            // -----------------------------------------------------------------
+            // MD PATH
+            // fft_res is Matrix<cplx_t, row_major>  (rows=samples, cols=dims)
+            //
+            // We cannot pass fft_res through fft_v<T> because:
+            //   • fft_v<T> expects iterators over T (= std::vector<double>)
+            //   • fft_res iterators dereference to cplx_t
+            //
+            // Instead we mirror exactly what FastFourierTransVisitor does in its
+            // MD operator() path: extract each column as a channel_result_t,
+            // call itransform_() directly on it, then scatter back.
+            //
+            // We reuse FastFourierTransVisitor's static itransform_() by
+            // instantiating a temporary fft_v<T> just to access the method.
+            // Since itransform_() is a private static, the cleanest approach
+            // that stays inside your existing design is to run a scalar inverse
+            // fft_v per channel, feeding it the column vector directly.
+            // -----------------------------------------------------------------
+
+            const size_type dim { size_type(fft_res.cols()) };
+
+            // Zero out high frequencies across all dims
+            //
+            for (size_type i { freq_num_ }; i < col_s; ++i)
+                for (size_type d { 0 }; d < dim; ++d)
+                    fft_res(i, d) = typename decltype(fft_res)::value_type { };
+
+            // We need cplx_t which is fft_v<T>::cplx_t.
+            // Derive it from the matrix element type to stay consistent.
+            //
+            using cplx_t = typename decltype(fft_res)::value_type; // = cplx_t
+            using channel_t = typename fft_v<T, I, A>::channel_result_t;
+            using matrix_t = Matrix<cplx_t, matrix_orient::row_major>;
+
+            // ifft_matrix will hold the reconstructed complex time-domain
+            // signal, same shape as fft_res
+            //
+            matrix_t    ifft_matrix { long(col_s), long(dim) };
+
+            for (size_type d { 0 }; d < dim; ++d)  {
+                // Extract column d from fft_res into a flat channel vector
+                //
+                channel_t   channel(col_s);
+
+                for (size_type i { 0 }; i < col_s; ++i)
+                    channel[i] = fft_res(i, d);
+
+                // Run a scalar inverse FFT on this channel.
+                // fft_v<cplx_t> satisfies IS_SCALAR (it's complex), so
+                // operator() takes the scalar path and calls itransform_()
+                // on the flat channel — exactly what we need.
+                //
+                fft_v<cplx_t, I, A>     ifft_chan { true };
+
+                ifft_chan.pre();
+                ifft_chan(idx_begin, idx_end, channel.begin(), channel.end());
+                ifft_chan.post();
+
+                // vec<complex<cplx_t>>
+                //
+                const auto  &chan_res { ifft_chan.get_result() };
+
+                // Scatter back: real part is the reconstructed signal value
+                //
+                for (size_type i { 0 }; i < col_s; ++i)
+                    ifft_matrix(i, d) = chan_res[i];
+            }
+
+            // Anomaly detection: compare original vs reconstructed per
+            // (sample, dim)
+            //
+            result_.reserve(((col_s / 40) < 32) ? size_type(32) : col_s / 40);
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &sample { *(column_begin + i) };
+
+                for (size_type d { 0 }; d < dim; ++d)  {
+                    const data_t    residual {
+                        std::abs(sample[d] - ifft_matrix(i, d).real())
+                    };
+
+                    if (residual > ath_)  result_.push_back({ i, d });
+                }
+            }
+        }
     }
 
     DEFINE_PRE_POST
     DEFINE_RESULT
 
     explicit
-    AnomalyDetectByFFTVisitor(size_type freq_num,
-                              value_type anomaly_threshold = T(1),
-                              normalization_type norm_type =
-                                  normalization_type::none)
+    AnomalyDetectByFFTVisitor(
+        size_type freq_num,
+        data_t anomaly_threshold = data_t(1),
+        normalization_type norm_type = normalization_type::none)
         : ath_(anomaly_threshold), freq_num_(freq_num), nt_(norm_type)  {   }
 
 private:
 
-    const value_type            ath_;
+    const data_t                ath_;
     const size_type             freq_num_;
     const normalization_type    nt_;
     result_type                 result_ { };

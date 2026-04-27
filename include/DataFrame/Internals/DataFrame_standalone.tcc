@@ -215,6 +215,15 @@ std::unordered_map<DT_FORMAT, const char *const>    _dtformat_str_  {
 
 // ----------------------------------------------------------------------------
 
+template<typename S, typename F, typename L>
+static S &operator << (S &stream, const std::pair<F, L> &data)  {
+
+    stream << '<' << data.first << ':' << data.second << '>';
+    return (stream);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename S, typename T, typename A>
 static S &operator << (S &stream, const std::vector<T, A> &data)  {
 
@@ -282,15 +291,6 @@ static S &operator << (S &stream, const std::unordered_map<K, V> &data)  {
             stream << '|' << citer->first << ':' << citer->second;
         stream << '}';
     }
-    return (stream);
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename S, typename F, typename L>
-static S &operator << (S &stream, const std::pair<F, L> &data)  {
-
-    stream << '<' << data.first << ':' << data.second << '>';
     return (stream);
 }
 

@@ -3371,8 +3371,7 @@ static void test_AnomalyDetectByFFTVisitor()  {
     //
     and_fft_v<double, std::string>  anomaly5(1000, 80.0);
     const std::vector<std::size_t>  result2 =
-        { 500, 501, 502, 503, 504, 998, 999, 1000, 1001, 1002, 1003, 2000,
-          2001, 2002, 2003, 2004 };
+        { 501, 502, 503, 1000, 1001, 1002, 2001, 2002, 2003 };
 
     ibm.single_act_visit<double>("IBM_Close", anomaly5);
     assert((anomaly5.get_result() == result2));
@@ -3383,6 +3382,75 @@ static void test_AnomalyDetectByFFTVisitor()  {
 
     ibm.single_act_visit<double>("IBM_Close", anomaly6);
     assert((anomaly6.get_result() == result3));
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+    constexpr double        two_pi { 2.0 * M_PI };
+    constexpr std::size_t   col_s { 128 };      // power-of-2 - radix-2 FFT
+    constexpr std::size_t   freq_num { 8 };     // keep only 8 low frequencies
+    constexpr double        amplitude { 1.0 };  // sine amplitude per channel
+    constexpr double        spike_mag { 15.0 }; // anomaly magnitude
+    constexpr std::size_t   spike_idx { 64 };   // time step of the spike
+    constexpr double        threshold { 2.0 };  // anomaly_threshold
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<vec_col_t>  no_anomaly_vec(col_s, vec_col_t(dim));
+    std::vector<ary_col_t>  no_anomaly_ary(col_s);
+
+    for (std::size_t i { 0 }; i < col_s; ++i)  {
+        for (std::size_t d { 0 }; d < dim; ++d)  {
+            no_anomaly_vec[i][d] =
+                amplitude *
+                std::sin(two_pi * double(d + 1) * double(i) / double(col_s));
+            no_anomaly_ary[i][d] = no_anomaly_vec[i][d];
+        }
+    }
+    df.load_column<vec_col_t>("NO ANOMALY VEC", std::move(no_anomaly_vec),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("NO ANOMALY ARY", std::move(no_anomaly_ary),
+                              nan_policy::dont_pad_with_nans);
+
+    std::vector<vec_col_t>  spiked_vec =
+        df.get_column<vec_col_t>("NO ANOMALY VEC");
+    std::vector<ary_col_t>  spiked_ary =
+        df.get_column<ary_col_t>("NO ANOMALY ARY");
+
+    for (std::size_t d { 0 }; d < dim; ++d)  {
+        spiked_vec[spike_idx][d] += spike_mag;
+        spiked_ary[spike_idx][d] += spike_mag;
+    }
+    df.load_column<vec_col_t>("SPIKED VEC", std::move(spiked_vec),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("SPIKED ARY", std::move(spiked_ary),
+                              nan_policy::dont_pad_with_nans);
+
+    and_fft_v<vec_col_t, std::string>  fft_vec { freq_num, threshold };
+    and_fft_v<ary_col_t, std::string>  fft_ary { freq_num, threshold };
+
+    df.single_act_visit<vec_col_t>("NO ANOMALY VEC", fft_vec);
+    df.single_act_visit<ary_col_t>("NO ANOMALY ARY", fft_ary);
+    assert(fft_vec.get_result().empty());
+    assert(fft_ary.get_result().empty());
+
+    df.single_act_visit<vec_col_t>("SPIKED VEC", fft_vec);
+    df.single_act_visit<ary_col_t>("SPIKED ARY", fft_ary);
+    assert(fft_vec.get_result().size() == dim);
+    assert(fft_vec.get_result()[0].first == spike_idx);
+    assert(fft_vec.get_result()[0].second == 0);
+    assert(fft_vec.get_result()[1].first == spike_idx);
+    assert(fft_vec.get_result()[1].second == 1);
+    assert(fft_vec.get_result()[2].first == spike_idx);
+    assert(fft_vec.get_result()[2].second == 2);
+    assert(fft_ary.get_result().size() == dim);
+    assert(fft_ary.get_result()[0].first == spike_idx);
+    assert(fft_ary.get_result()[0].second == 0);
+    assert(fft_ary.get_result()[1].first == spike_idx);
+    assert(fft_ary.get_result()[1].second == 1);
+    assert(fft_ary.get_result()[2].first == spike_idx);
+    assert(fft_ary.get_result()[2].second == 2);
 }
 
 // ----------------------------------------------------------------------------

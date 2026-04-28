@@ -3629,6 +3629,79 @@ static void test_AnomalyDetectByZScoreVisitor()  {
 
     ibm.single_act_visit<double>("IBM_Close", anomaly2);
     assert((anomaly2.get_result() == result2));
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<vec_col_t>  vec_col  {
+        {  0.1, 99.8, -50.1 },   // normal
+        {  0.2, 100.1, -49.9 },  // normal
+        { -0.1, 100.3, -50.2 },  // normal
+        {  0.0, 99.7, -50.0 },   // normal
+        {  0.3, 100.0, -49.8 },  // normal
+        { -0.2, 99.9, -50.3 },   // normal
+        {  0.1, 100.2, -50.1 },  // normal
+        {  0.0, 100.0, -50.0 },  // normal
+        { -0.1, 99.8, -49.9 },   // normal
+        {  0.2, 100.1, -50.2 },  // normal
+        {  0.1, 99.9, -50.1 },   // normal
+        {  0.0, 100.0, -50.0 },  // normal
+        { -0.2, 100.2, -49.8 },  // normal
+        {  0.1, 99.7, -50.2 },   // normal
+        {  0.3, 100.1, -50.0 },  // normal
+        {  0.0, 99.9, -49.9 },   // normal
+        {  0.2, 100.0, -50.1 },  // normal
+        { -0.1, 100.1, -50.0 },  // normal
+        { 15.0, 100.2, -50.1 },  // ANOMALY: dim 0 spike
+        {  0.1, 99.8, -120.0 },  // ANOMALY: dim 2 spike
+    };
+    std::vector<ary_col_t>  ary_col  {
+        {  0.1, 99.8, -50.1 },   // normal
+        {  0.2, 100.1, -49.9 },  // normal
+        { -0.1, 100.3, -50.2 },  // normal
+        {  0.0, 99.7, -50.0 },   // normal
+        {  0.3, 100.0, -49.8 },  // normal
+        { -0.2, 99.9, -50.3 },   // normal
+        {  0.1, 100.2, -50.1 },  // normal
+        {  0.0, 100.0, -50.0 },  // normal
+        { -0.1, 99.8, -49.9 },   // normal
+        {  0.2, 100.1, -50.2 },  // normal
+        {  0.1, 99.9, -50.1 },   // normal
+        {  0.0, 100.0, -50.0 },  // normal
+        { -0.2, 100.2, -49.8 },  // normal
+        {  0.1, 99.7, -50.2 },   // normal
+        {  0.3, 100.1, -50.0 },  // normal
+        {  0.0, 99.9, -49.9 },   // normal
+        {  0.2, 100.0, -50.1 },  // normal
+        { -0.1, 100.1, -50.0 },  // normal
+        { 15.0, 100.2, -50.1 },  // ANOMALY: dim 0 spike
+        {  0.1, 99.8, -120.0 },  // ANOMALY: dim 2 spike
+    };
+
+    df.load_column<vec_col_t>("COL VEC", std::move(vec_col),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("COL ARY", std::move(ary_col),
+                              nan_policy::dont_pad_with_nans);
+
+    and_zscr_v<vec_col_t>   vec_and_v { 2.5 };
+    and_zscr_v<ary_col_t>   ary_and_v { 2.5 };
+
+    df.single_act_visit<vec_col_t>("COL VEC", vec_and_v);
+    df.single_act_visit<ary_col_t>("COL ARY", ary_and_v);
+    assert(vec_and_v.get_result().size() == 2);
+    assert(vec_and_v.get_result()[0].first == 18);
+    assert(vec_and_v.get_result()[0].second == 0);
+    assert(vec_and_v.get_result()[1].first == 19);
+    assert(vec_and_v.get_result()[1].second == 2);
+    assert(ary_and_v.get_result().size() == 2);
+    assert(ary_and_v.get_result()[0].first == 18);
+    assert(ary_and_v.get_result()[0].second == 0);
+    assert(ary_and_v.get_result()[1].first == 19);
+    assert(ary_and_v.get_result()[1].second == 2);
 }
 
 // ----------------------------------------------------------------------------

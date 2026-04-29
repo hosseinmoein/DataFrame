@@ -55,7 +55,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -3848,7 +3847,6 @@ static void test_remove_data_by_zscore()  {
     ibm_view.remove_data_by_zscore<double, double, long>("IBM_Close", 15.0);
     assert((ibm_view.get_column<double>("IBM_Open").size() == (5031 - 3)));
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -3972,7 +3970,6 @@ static void test_AnomalyDetectByLOFVisitor()  {
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_detect_and_change()  {
 
     std::cout << "\nTesting detect_and_change( ) ..." << std::endl;
@@ -5540,7 +5537,6 @@ static void test_fl_valid_index()  {
     assert(res5.first == 1);
     assert(res5.second == 13);
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -5548,7 +5544,6 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -5602,9 +5597,7 @@ int main(int, char *[]) {
     test_AnomalyDetectByZScoreVisitor();
     test_remove_data_by_iqr();
     test_remove_data_by_zscore();
-*/
     test_AnomalyDetectByLOFVisitor();
-/*
     test_detect_and_change();
     test_KolmoSmirnovTestVisitor();
     test_MannWhitneyUTestVisitor();
@@ -5630,7 +5623,6 @@ int main(int, char *[]) {
     test_DivideToQuantilesVisitor();
     test_pipe();
     test_fl_valid_index();
-*/
 
     return (0);
 }

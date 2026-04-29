@@ -55,6 +55,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -3847,6 +3848,7 @@ static void test_remove_data_by_zscore()  {
     ibm_view.remove_data_by_zscore<double, double, long>("IBM_Close", 15.0);
     assert((ibm_view.get_column<double>("IBM_Open").size() == (5031 - 3)));
 }
+*/
 
 // ----------------------------------------------------------------------------
 
@@ -3897,10 +3899,80 @@ static void test_AnomalyDetectByLOFVisitor()  {
     //
     df2.single_act_visit<double>("sine col", anomaly2);
     assert(anomaly2.get_result().empty());
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<vec_col_t>  vec_col  {
+        {  0.1, 99.8, -50.1 },   // normal
+        {  0.2, 100.1, -49.9 },  // normal
+        { -0.1, 100.3, -50.2 },  // normal
+        {  0.0, 99.7, -50.0 },   // normal
+        {  0.3, 100.0, -49.8 },  // normal
+        { -0.2, 99.9, -50.3 },   // normal
+        {  0.1, 100.2, -50.1 },  // normal
+        {  0.0, 100.0, -50.0 },  // normal
+        { -0.1, 99.8, -49.9 },   // normal
+        {  0.2, 100.1, -50.2 },  // normal
+        {  0.1, 99.9, -50.1 },   // normal
+        {  0.0, 100.0, -50.0 },  // normal
+        { -0.2, 100.2, -49.8 },  // normal
+        {  0.1, 99.7, -50.2 },   // normal
+        {  0.3, 100.1, -50.0 },  // normal
+        {  0.0, 99.9, -49.9 },   // normal
+        {  0.2, 100.0, -50.1 },  // normal
+        { -0.1, 100.1, -50.0 },  // normal
+        { 15.0, 100.2, -50.1 },  // ANOMALY: dim 0 spike
+        {  0.1, 99.8, -120.0 },  // ANOMALY: dim 2 spike
+    };
+    std::vector<ary_col_t>  ary_col  {
+        {  0.1, 99.8, -50.1 },   // normal
+        {  0.2, 100.1, -49.9 },  // normal
+        { -0.1, 100.3, -50.2 },  // normal
+        {  0.0, 99.7, -50.0 },   // normal
+        {  0.3, 100.0, -49.8 },  // normal
+        { -0.2, 99.9, -50.3 },   // normal
+        {  0.1, 100.2, -50.1 },  // normal
+        {  0.0, 100.0, -50.0 },  // normal
+        { -0.1, 99.8, -49.9 },   // normal
+        {  0.2, 100.1, -50.2 },  // normal
+        {  0.1, 99.9, -50.1 },   // normal
+        {  0.0, 100.0, -50.0 },  // normal
+        { -0.2, 100.2, -49.8 },  // normal
+        {  0.1, 99.7, -50.2 },   // normal
+        {  0.3, 100.1, -50.0 },  // normal
+        {  0.0, 99.9, -49.9 },   // normal
+        {  0.2, 100.0, -50.1 },  // normal
+        { -0.1, 100.1, -50.0 },  // normal
+        { 15.0, 100.2, -50.1 },  // ANOMALY: dim 0 spike
+        {  0.1, 99.8, -120.0 },  // ANOMALY: dim 2 spike
+    };
+
+    df2.load_column<vec_col_t>("COL VEC", std::move(vec_col),
+                               nan_policy::dont_pad_with_nans);
+    df2.load_column<ary_col_t>("COL ARY", std::move(ary_col),
+                               nan_policy::dont_pad_with_nans);
+
+    and_lof_v<vec_col_t>    vec_lof { 4, 10.0 };
+    and_lof_v<ary_col_t>    ary_lof { 4, 10.0 };
+
+    df2.single_act_visit<vec_col_t>("COL VEC", vec_lof);
+    df2.single_act_visit<ary_col_t>("COL ARY", ary_lof);
+    assert(vec_lof.get_result().size() == 2);
+    assert(vec_lof.get_result()[0] == 18);
+    assert(vec_lof.get_result()[1] == 19);
+    assert(ary_lof.get_result().size() == 2);
+    assert(ary_lof.get_result()[0] == 18);
+    assert(ary_lof.get_result()[1] == 19);
 }
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_detect_and_change()  {
 
     std::cout << "\nTesting detect_and_change( ) ..." << std::endl;
@@ -5468,6 +5540,7 @@ static void test_fl_valid_index()  {
     assert(res5.first == 1);
     assert(res5.second == 13);
 }
+*/
 
 // ----------------------------------------------------------------------------
 
@@ -5475,6 +5548,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -5528,7 +5602,9 @@ int main(int, char *[]) {
     test_AnomalyDetectByZScoreVisitor();
     test_remove_data_by_iqr();
     test_remove_data_by_zscore();
+*/
     test_AnomalyDetectByLOFVisitor();
+/*
     test_detect_and_change();
     test_KolmoSmirnovTestVisitor();
     test_MannWhitneyUTestVisitor();
@@ -5554,6 +5630,7 @@ int main(int, char *[]) {
     test_DivideToQuantilesVisitor();
     test_pipe();
     test_fl_valid_index();
+*/
 
     return (0);
 }

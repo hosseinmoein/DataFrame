@@ -4166,16 +4166,51 @@ using and_zscr_v = AnomalyDetectByZScoreVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AnomalyDetectByLOFVisitor  {
 
+public:
+
     DEFINE_VISIT_BASIC_TYPES
 
-    using result_type =
-        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
+private:
+
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using dist_vec_t = std::vector<double>;
+    using pvec_t = std::vector<std::pair<double, size_type>> ;
+    using knn_mat_t =
+        Matrix<std::pair<double, size_type>, matrix_orient::row_major>;
+    using rch_mat_t = Matrix<double, matrix_orient::row_major>;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
+    using result_type = vec_t<size_type>;
     using distance_func = std::function<double(const T &x, const T &y)>;
+
+    static double def_dist(const value_type &x, const value_type &y)  {
+
+        if constexpr (! is_md_)  {  // Scalar path
+            return (std::fabs(x - y));
+        }
+        else  {  // Multidimensional path
+            double  sum { 0 };
+            auto    xi { std::begin(x) };
+            auto    yi { std::begin(y) };
+
+            for (; xi != std::end(x); ++xi, ++yi)  {
+                const double    diff { double(*xi - *yi) };
+
+                sum += diff * diff;
+            }
+            return (std::sqrt(sum));
+        }
+    }
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
@@ -4193,6 +4228,9 @@ struct  AnomalyDetectByLOFVisitor  {
             norm.post();
         }
 
+        // For MD, col_s is the number of rows (observations).
+        // dim is 1 for scalar, or the vector/array width for MD.
+        //
         pvec_t      dists(col_s);
         knn_mat_t   neighbors { long(col_s), long(k_) };
         rch_mat_t   reach_dists { long(col_s), long(k_) };
@@ -4204,7 +4242,7 @@ struct  AnomalyDetectByLOFVisitor  {
             else
                 get_knn_(column_begin, col_s, i, neighbors, dists);
 
-            double          sum_reach_dist { 0 };
+            double  sum_reach_dist { 0 };
 
             for (long j { 0 }; j < neighbors.cols(); ++j)  {
                 const double    reach_d =
@@ -4218,14 +4256,13 @@ struct  AnomalyDetectByLOFVisitor  {
             lrd[i] = double(k_) / sum_reach_dist;
         }
 
-        result_.reserve(32);
+        result_.reserve(((col_s / 40) < 32) ? size_type(32) : col_s / 40);
         for (size_type i { 0 }; i < col_s; ++i)  {
             double  sum_ratio { 0 };
 
             for (long j { 0 }; j < neighbors.cols(); ++j)
-                sum_ratio += lrd[neighbors(i, j).second] / lrd[i];
+                sum_ratio += lrd[neighbors(long(i), j).second] / lrd[i];
 
-            // std::cout << sum_ratio / double(k_) << "\n";
             if ((sum_ratio / double(k_)) > threshold_)
                 result_.push_back(i);
         }
@@ -4238,10 +4275,7 @@ struct  AnomalyDetectByLOFVisitor  {
         size_type k,
         double threshold,
         normalization_type norm_type = normalization_type::none,
-        distance_func &&f =
-            [](const value_type &x, const value_type &y) -> double  {
-                return (std::fabs(x - y));
-            })
+        distance_func &&f = def_dist)
         : k_(k),
           threshold_(threshold),
           nt_(norm_type),
@@ -4249,21 +4283,16 @@ struct  AnomalyDetectByLOFVisitor  {
 
 private:
 
-    using dist_vec_t = std::vector<double>;
-    using pvec_t = std::vector<std::pair<double, size_type>> ;
-    using knn_mat_t =
-        Matrix<std::pair<double, size_type>, matrix_orient::row_major>;
-    using rch_mat_t = Matrix<double, matrix_orient::row_major>;
-
     template <typename H>
     inline void
     get_knn_(const H &column_begin,
              size_type col_s, size_type index,
              knn_mat_t &neighbors, pvec_t &dists) const  {
 
-        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
-        const auto  &idx_val = *(column_begin + index);
+        const auto  thread_level { (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level()
+        };
+        const auto  &idx_val { *(column_begin + index) };
         auto        lbd =
             [&dists, this,
              &column_begin = std::as_const(column_begin),
@@ -4281,14 +4310,14 @@ private:
             for (auto &fut : futures)  fut.get();
             ThreadGranularity::thr_pool_.parallel_sort(
                 dists.begin(), dists.end(),
-                [] (const auto &lhs, const auto &rhs)  {
+                [](const auto &lhs, const auto &rhs)  {
                     return (lhs.first < rhs.first);
                 });
         }
         else  {
             lbd(size_type(0), col_s);
             std::sort(dists.begin(), dists.end(),
-                      [] (const auto &lhs, const auto &rhs)  {
+                      [](const auto &lhs, const auto &rhs)  {
                           return (lhs.first < rhs.first);
                       });
         }

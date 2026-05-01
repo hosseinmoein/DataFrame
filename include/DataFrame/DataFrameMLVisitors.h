@@ -4562,8 +4562,8 @@ struct  ARIMAVisitor  {
 #ifdef HMDF_SANITY_EXCEPTIONS
         GET_COL_SIZE2
 
-        if (col_s < 5)
-           throw DataFrameError("ARIMAVisitor: Time-series is too short");
+        if (col_s < 5 && n_ <= (std::max(p_, q_) + 1))
+            throw DataFrameError("ARIMAVisitor: Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         y_ = difference_(column_begin, column_end, d_);
@@ -4601,9 +4601,20 @@ struct  ARIMAVisitor  {
                 if (long(diffed.size()) >= i)
                     ar_part += ar_coeffs_[i - 1] * diffed[diffed.size() - i];
 
-            // assume future residuals = 0 for MA forecast
+            // Use known residuals from training for the first q_ steps.
+            // At step t, the residual at lag j corresponds to index (n_-j+t)
+            // in the residuals_ array. Once that index >= n_, the residual is
+            // from a future (unknown) period, so it contributes 0 — which is
+            // the standard ARIMA forecast assumption.
             //
-            const value_type    pred { ar_part + ma_part};
+            for (long j { 1 }; j <= q_; ++j) {
+                const long   idx { n_ - j + t };
+
+                if (idx >= 0 && idx < n_)
+                    ma_part += ma_coeffs_[j - 1] * residuals_[idx];
+            }
+
+            const value_type    pred { ar_part + ma_part };
 
             preds[t] = pred;
             diffed.push_back(pred);
@@ -4707,9 +4718,9 @@ private:
         //
         // const auto  coefs_mat { XtX.solve(XtY) };
 
-        // ar_coeffs_.reserve(coefs_mat.rows());
+        // ar_coeffs_.resize(coefs_mat.rows());
         // for (long r { 0 }; r < coefs_mat.rows(); ++r)
-        //     ar_coeffs_.push_back(coefs_mat(r, 0));
+        //     ar_coeffs_[r] = coefs_mat(r, 0);
     }
 
     // 2) Fit Moving Average coefficients iteratively (simplified)
@@ -4725,12 +4736,12 @@ private:
         constexpr long          max_iter { 50 };
         constexpr value_type    tol { T(1e-6) };
 
-        for (long iter = 0; iter < max_iter; ++iter) {
+        for (long iter { 0 }; iter < max_iter; ++iter) {
             compute_residuals_();
 
             // Update each MA coefficient with small step toward correlation
             //
-            for (long j { 0 }; j < q_; ++j)  {
+            for (long j { 1 }; j < q_; ++j)  {
                 value_type  numer { 0 };
                 value_type  denom { 0 };
 
@@ -4805,13 +4816,31 @@ private:
             return (inverted);
         }
 
-        const size_type diff_s = std::distance(diffed_begin, diffed_end);
+        const size_type diff_s {
+            size_type(std::distance(diffed_begin, diffed_end))
+        };
         result_type     inverted;
 
         inverted.resize(diff_s);
         for (size_type i { 0 }; i < diff_s; ++i)  {
             last_data += *(diffed_begin + i);
             inverted[i] = last_data;
+        }
+
+        // Apply remaining d-1 cumulative sum passes.
+        // Each pass simulates one level of undifferencing.
+        // We need an anchor (first element) from the original series for each
+        // pass, but since we only have the last observed value, we approximate
+        // by using the first element of the current inverted result as the
+        // running anchor for subsequent passes.
+        //
+        for (long pass { 1 }; pass < d; ++pass)  {
+            value_type  anchor { inverted[0] };
+
+            for (size_type i { 1 }; i < diff_s; ++i)  {
+                anchor += inverted[i];
+                inverted[i] = anchor;
+            }
         }
 
         return (inverted);

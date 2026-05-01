@@ -55,7 +55,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -4468,7 +4467,6 @@ static void test_read_selected_cols_from_file()  {
     assert((std::fabs(df2.get_column<double>("Low")[6] - 186.28) < 0.01));
     assert((std::fabs(df2.get_column<double>("Low")[11] - 187.86) < 0.01));
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -4566,7 +4564,6 @@ static void test_MutualInfoVisitor()  {
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_io_format_csv2_with_bars()  {
 
     std::cout << "\nTesting io_format_csv2_with_bars( ) ..." << std::endl;
@@ -5586,7 +5583,6 @@ static void test_fl_valid_index()  {
     assert(res5.first == 1);
     assert(res5.second == 13);
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -5594,7 +5590,6 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -5656,9 +5651,7 @@ int main(int, char *[]) {
     test_fast_ica();
     test_DateTime_write();
     test_read_selected_cols_from_file();
-*/
     test_MutualInfoVisitor();
-/*
     test_io_format_csv2_with_bars();
     test_AndersonDarlingTestVisitor();
     test_ShapiroWilkTestVisitor();
@@ -5676,7 +5669,6 @@ int main(int, char *[]) {
     test_DivideToQuantilesVisitor();
     test_pipe();
     test_fl_valid_index();
-*/
 
     return (0);
 }

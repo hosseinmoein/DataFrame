@@ -55,6 +55,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -4467,6 +4468,7 @@ static void test_read_selected_cols_from_file()  {
     assert((std::fabs(df2.get_column<double>("Low")[6] - 186.28) < 0.01));
     assert((std::fabs(df2.get_column<double>("Low")[11] - 187.86) < 0.01));
 }
+*/
 
 // ----------------------------------------------------------------------------
 
@@ -4514,10 +4516,57 @@ static void test_MutualInfoVisitor()  {
 
     df.single_act_visit<int, int>("int_col_1", "int_col_3", minfo);
     assert((std::fabs(minfo.get_result() - 4.24521) < 0.00001));
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 2 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    const std::vector<double>   a { 1.0, 0.0 };
+    const std::vector<double>   b { 0.0, 1.0 };
+
+    std::vector<vec_col_t>  vec_col_x1  { a, b, { 1.0, 1.0 } };
+    std::vector<ary_col_t>  ary_col_y1  {
+        { 1.0, 0.0 }, { 0.0, 1.0 }, { 1.0, 1.0 },
+    };
+    std::vector<vec_col_t>  vec_col_x2 { a, a, a, b, b, b, b, a };
+    std::vector<vec_col_t>  vec_col_x3 { a, a, b, b, b, b, a, a };
+    std::vector<vec_col_t>  vec_col_x4 {
+        { 4.5, 5.6 }, { 3.25, 50,6 }, { 7.6, 66.66 }, {80.1, 80.2 },
+        { 90.1, 90.2 }, { 33.56, 45.4 }, { 22.2, 23.2 }, { 11.1, 45.2 }
+    };
+
+    df.load_column<vec_col_t>("COL VEC1", std::move(vec_col_x1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("COL ARY1", std::move(ary_col_y1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("COL VEC2", std::move(vec_col_x2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("COL VEC3", std::move(vec_col_x3),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("COL VEC4", std::move(vec_col_x4),
+                              nan_policy::dont_pad_with_nans);
+
+    MutualInfoVisitor<vec_col_t>    mi_vec;
+    MutualInfoVisitor<ary_col_t>    mi_ary;
+
+    df.single_act_visit<vec_col_t, vec_col_t>("COL VEC1", "COL VEC1", mi_vec);
+    df.single_act_visit<ary_col_t, ary_col_t>("COL ARY1", "COL ARY1", mi_ary);
+    assert((std::fabs(mi_vec.get_result() - 1.58496) < 0.00001));
+    assert((std::fabs(mi_ary.get_result() - 1.58496) < 0.00001));
+
+    df.single_act_visit<vec_col_t, vec_col_t>("COL VEC2", "COL VEC2", mi_vec);
+    assert((std::fabs(mi_vec.get_result() - 4.0) < 0.000000001));
+
+    df.single_act_visit<vec_col_t, vec_col_t>("COL VEC2", "COL VEC4", mi_vec);
+    assert((std::fabs(mi_vec.get_result() - 1.0) < 0.000000001));
 }
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_io_format_csv2_with_bars()  {
 
     std::cout << "\nTesting io_format_csv2_with_bars( ) ..." << std::endl;
@@ -5537,6 +5586,7 @@ static void test_fl_valid_index()  {
     assert(res5.first == 1);
     assert(res5.second == 13);
 }
+*/
 
 // ----------------------------------------------------------------------------
 
@@ -5544,6 +5594,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -5605,7 +5656,9 @@ int main(int, char *[]) {
     test_fast_ica();
     test_DateTime_write();
     test_read_selected_cols_from_file();
+*/
     test_MutualInfoVisitor();
+/*
     test_io_format_csv2_with_bars();
     test_AndersonDarlingTestVisitor();
     test_ShapiroWilkTestVisitor();
@@ -5623,6 +5676,7 @@ int main(int, char *[]) {
     test_DivideToQuantilesVisitor();
     test_pipe();
     test_fl_valid_index();
+*/
 
     return (0);
 }

@@ -4343,22 +4343,58 @@ using and_lof_v = AnomalyDetectByLOFVisitor<T, I, A>;
 
 // Mutual Information
 //
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  MutualInfoVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    using equal_t =
+        typename std::conditional_t<std::is_floating_point_v<data_t>,
+                                    FloatEqual<data_t>,
+                                    std::equal_to<data_t>>;
+
+    using x_hasher_t = std::conditional_t<std::is_floating_point_v<data_t>,
+                                          FloatHash<data_t>,
+                                          std::hash<data_t>>;
+
+    using x_map_t =
+        typename std::conditional_t<
+            ! is_md_,
+            std::unordered_map<T, double, x_hasher_t, equal_t>,
+            std::unordered_map<T, double, VectorHasher<data_t>, equal_t>>;
+
+    using xy_map_t =
+        std::unordered_map<std::pair<T, T>,
+                           double,
+                           PairHasher<std::pair<T, T>>,
+                           PairEqual<std::pair<T, T>>>;
+
+public:
 
     DEFINE_VISIT_BASIC_TYPES
     using result_type = double;
 
     template<typename K, typename H>
     inline void
-    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
-                const H &column1_begin, const H &column1_end,
-                const H &column2_begin, const H &column2_end)  {
+    operator()(const K & /*idx_begin*/, const K & /*idx_end*/,
+               const H &column1_begin, const H &column1_end,
+               const H &column2_begin, const H &column2_end)  {
 
-        const size_type col_s = std::distance(column1_begin, column1_end);
+        const size_type col_s {
+            size_type(std::distance(column1_begin, column1_end))
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        const size_type col2_s = std::distance(column2_begin, column2_end);
+        const size_type col2_s {
+            size_type(std::distance(column2_begin, column2_end))
+        };
 
         if (col_s != col2_s)
             throw DataFrameError("MutualInfoVisitor: "
@@ -4366,53 +4402,59 @@ struct  MutualInfoVisitor  {
                                  "number of observations");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        std::unordered_map<value_type, double>              count_x;
-        std::unordered_map<value_type, double>              count_y;
-        std::unordered_map<
-            std::pair<value_type, value_type>, double,
-            PairHash_<std::pair<value_type, value_type>>,
-            PairEqual_<std::pair<value_type, value_type>>>  count_xy;
-
-        const auto  thread_level = (col_s < (ThreadPool::MUL_THR_THHOLD / 3))
-            ? 0L : ThreadGranularity::get_thread_level();
+        x_map_t     count_x;
+        x_map_t     count_y;
+        xy_map_t    count_xy;
+        const auto  thread_level {
+            (col_s < (ThreadPool::MUL_THR_THHOLD / 3))
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
 
         if (thread_level > 2)  {
             auto    fut1 =
                 ThreadGranularity::thr_pool_.dispatch(
-                      false,
-                      [&column1_begin = std::as_const(column1_begin),
-                       col_s, &count_x]() -> void  {
-                          for (size_type i { 0 }; i < col_s; ++i)  {
-                              const auto    &val = *(column1_begin + i);
+                    false,
+                    [&column1_begin = std::as_const(column1_begin),
+                     col_s, &count_x]() -> void  {
+                        for (size_type i { 0 }; i < col_s; ++i)  {
+                            const auto  &val { *(column1_begin + i) };
+                            auto        [it, inserted] {
+                                count_x.try_emplace(val, 0.0)
+                            };
 
-                              count_x.insert({ val, 0 }).first->second += 1.0;
-                          }
-                      });
+                            it->second += 1.0;
+                        }
+                    });
             auto    fut2 =
                 ThreadGranularity::thr_pool_.dispatch(
-                      false,
-                      [&column2_begin = std::as_const(column2_begin),
-                       col_s, &count_y]() -> void  {
-                          for (size_type i { 0 }; i < col_s; ++i)  {
-                              const auto    &val = *(column2_begin + i);
+                    false,
+                    [&column2_begin = std::as_const(column2_begin),
+                     col_s, &count_y]() -> void  {
+                        for (size_type i { 0 }; i < col_s; ++i)  {
+                            const auto  &val { *(column2_begin + i) };
+                            auto        [it, inserted] {
+                                count_y.try_emplace(val, 0.0)
+                            };
 
-                              count_y.insert({ val, 0 }).first->second += 1.0;
-                          }
-                      });
+                            it->second += 1.0;
+                        }
+                    });
             auto    fut3 =
                 ThreadGranularity::thr_pool_.dispatch(
-                      false,
-                      [&column1_begin = std::as_const(column1_begin),
-                       &column2_begin = std::as_const(column2_begin),
-                       col_s, &count_xy]() -> void  {
-                          for (size_type i { 0 }; i < col_s; ++i)  {
-                              const auto  &val1 = *(column1_begin + i);
-                              const auto  &val2 = *(column2_begin + i);
+                    false,
+                    [&column1_begin = std::as_const(column1_begin),
+                     &column2_begin = std::as_const(column2_begin),
+                     col_s, &count_xy]() -> void  {
+                        for (size_type i { 0 }; i < col_s; ++i)  {
+                            const auto  &val1 { *(column1_begin + i) };
+                            const auto  &val2 { *(column2_begin + i) };
+                            auto        [it, inserted] {
+                                count_xy.try_emplace({ val1, val2 }, 0.0)
+                            };
 
-                              count_xy.insert(
-                                  { { val1, val2 }, 0 }).first->second += 1.0;
-                          }
-                      });
+                            it->second += 1.0;
+                        }
+                    });
 
             fut1.get();
             fut2.get();
@@ -4420,8 +4462,8 @@ struct  MutualInfoVisitor  {
         }
         else  {
             for (size_type i { 0 }; i < col_s; ++i)  {
-                const auto  &val1 = *(column1_begin + i);
-                const auto  &val2 = *(column2_begin + i);
+                const auto  &val1 { *(column1_begin + i) };
+                const auto  &val2 { *(column2_begin + i) };
 
                 count_x.insert({ val1, 0 }).first->second += 1.0;
                 count_y.insert({ val2, 0 }).first->second += 1.0;
@@ -4441,23 +4483,26 @@ struct  MutualInfoVisitor  {
                 double  mi { 0 };
 
                 for (size_type i { begin }; i < end; ++i)  {
-                    const auto  &val1 = *(column1_begin + i);
-                    const auto  &val2 = *(column2_begin + i);
-                    const auto  p_x = count_x.find(val1)->second / col_s;
-                    const auto  p_y = count_y.find(val2)->second / col_s;
-                    const auto  p_xy =
-                        count_xy.find({ val1, val2 })->second / col_s;
+                    const auto  &val1 { *(column1_begin + i) };
+                    const auto  &val2 { *(column2_begin + i) };
+                    const auto  p_x { count_x.find(val1)->second / col_s };
+                    const auto  p_y { count_y.find(val2)->second / col_s };
+                    const auto  p_xy {
+                        count_xy.find({ val1, val2 })->second / col_s
+                    };
 
-                    mi += p_xy * std::log(p_xy / (p_x * p_y));
+                    if (p_xy > 0)
+                        mi += p_xy * std::log(p_xy / (p_x * p_y));
                 }
                 return (mi);
             };
 
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0), col_s, std::move(lbd));
+                    size_type(0), col_s, std::move(lbd))
+            };
 
             for (auto &fut : futures)  mi += fut.get();
         }
@@ -4480,34 +4525,17 @@ struct  MutualInfoVisitor  {
 
 private:
 
-    template<typename M>
-    inline static void map_reserve_(M &in_map, size_type in_size)  {
+    // template<typename M>
+    // inline static void map_reserve_(M &in_map, size_type in_size)  {
 
-        auto    c { std::move(in_map).extract() };
-        auto    key_vec { std::move(c.keys) };
-        auto    val_vec { std::move(c.values) };
+    //     auto    c { std::move(in_map).extract() };
+    //     auto    key_vec { std::move(c.keys) };
+    //     auto    val_vec { std::move(c.values) };
 
-        key_vec.reserve(in_size);
-        val_vec.reserve(in_size);
-        in_map.replace(std::move(key_vec), std::move(val_vec));
-    }
-
-    template<typename P>
-    struct  PairEqual_  {
-        inline bool operator()(const P &lhs, const P &rhs) const  {
-
-            return ((lhs.first == rhs.first) && (lhs.second == rhs.second));
-        }
-    };
-
-    template<typename P>
-    struct  PairHash_  {
-        inline std::size_t operator()(const P &lhs) const  {
-
-            return (std::hash<typename P::first_type>{}(lhs.first) ^
-                    (std::hash<typename P::second_type>{}(lhs.second) << 1));
-        }
-    };
+    //     key_vec.reserve(in_size);
+    //     val_vec.reserve(in_size);
+    //     in_map.replace(std::move(key_vec), std::move(val_vec));
+    // }
 
     result_type     result_ { 0 };
     const double    log_log_base_;

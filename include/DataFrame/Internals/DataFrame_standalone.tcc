@@ -316,7 +316,7 @@ static S &operator << (S &stream, const Matrix<T, MO> &data)  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
-struct FloatHash  {
+struct  FloatHash  {
 
     explicit FloatHash(T e = T(1e-7)) : epsilon_(e)  {  }
 
@@ -380,8 +380,62 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename P>
+struct  PairHasher  {
+
+    static constexpr bool   f_is_float {
+        std::is_floating_point_v<typename P::first_type>
+    };
+    static constexpr bool   s_is_float {
+        std::is_floating_point_v<typename P::second_type>
+    };
+
+    static constexpr bool   f_is_vector {
+        is_std_vector_v<typename P::first_type> ||
+        is_std_array_v<typename P::first_type>
+    };
+    static constexpr bool   s_is_vector {
+        is_std_vector_v<typename P::second_type> ||
+        is_std_array_v<typename P::second_type>
+    };
+
+    using f_hasher_flt_t =
+        typename std::conditional_t<f_is_float,
+                                    FloatHash<typename P::first_type>,
+                                    std::hash<typename P::first_type>>;
+    using s_hasher_flt_t =
+        typename std::conditional_t<s_is_float,
+                                    FloatHash<typename P::second_type>,
+                                    std::hash<typename P::second_type>>;
+
+    using f_data_t =
+        typename std::conditional_t<
+            ! f_is_vector,
+            lazy_type<typename P::first_type>,
+            value_type_of<typename P::first_type>>::type;
+    using s_data_t =
+        typename std::conditional_t<
+            ! s_is_vector,
+            lazy_type<typename P::second_type>,
+            value_type_of<typename P::second_type>>::type;
+
+    using f_hasher_t = typename std::conditional_t<f_is_vector,
+                                                   VectorHasher<f_data_t>,
+                                                   f_hasher_flt_t>;
+    using s_hasher_t = typename std::conditional_t<s_is_vector,
+                                                   VectorHasher<s_data_t>,
+                                                   s_hasher_flt_t>;
+
+    inline std::size_t operator()(const P &lhs) const  {
+
+        return (f_hasher_t{}(lhs.first) ^ (s_hasher_t{}(lhs.second) << 1));
+    }
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
-struct  FloatEqual {
+struct  FloatEqual  {
 
     explicit FloatEqual(T e = T(1e-7)) : epsilon_(e)  {  }
 
@@ -410,6 +464,54 @@ struct  FloatEqual {
 private:
 
     const T epsilon_;
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename P>
+struct  PairEqual  {
+
+    static constexpr bool   f_is_vector {
+        is_std_vector_v<typename P::first_type> ||
+        is_std_array_v<typename P::first_type>
+    };
+    static constexpr bool   s_is_vector {
+        is_std_vector_v<typename P::second_type> ||
+        is_std_array_v<typename P::second_type>
+    };
+
+    using f_data_t =
+        typename std::conditional_t<
+            ! f_is_vector,
+            lazy_type<typename P::first_type>,
+            value_type_of<typename P::first_type>>::type;
+    using s_data_t =
+        typename std::conditional_t<
+            ! s_is_vector,
+            lazy_type<typename P::second_type>,
+            value_type_of<typename P::second_type>>::type;
+
+    static constexpr bool   f_is_float { std::is_floating_point_v<f_data_t> };
+    static constexpr bool   s_is_float { std::is_floating_point_v<s_data_t> };
+
+    using f_equal_t =
+        std::conditional_t<f_is_vector, FloatEqual<f_data_t>,
+                           std::conditional_t<
+                               f_is_float,
+                               FloatEqual<typename P::first_type>,
+                               std::equal_to<typename P::first_type>>>;
+    using s_equal_t =
+        std::conditional_t<s_is_vector, FloatEqual<s_data_t>,
+                           std::conditional_t<
+                               s_is_float,
+                               FloatEqual<typename P::second_type>,
+                               std::equal_to<typename P::second_type>>>;
+
+    inline bool operator()(const P &lhs, const P &rhs) const  {
+
+        return (f_equal_t{}(lhs.first, rhs.first) &&
+                s_equal_t{}(lhs.second, rhs.second));
+    }
 };
 
 // ----------------------------------------------------------------------------

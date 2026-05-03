@@ -1643,6 +1643,21 @@ public:
     operator()(const K &idx_begin, const K &idx_end,
                const H &column_begin, const H &column_end)  {
 
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type  col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
+
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "EntropyVisitor: Inconsistent data dimensions");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
+
         if (roll_count_ == 0)  return;
 
         SimpleRollAdopter<SumVisitor<T, I>, T, I, A>  sum_v {
@@ -1816,6 +1831,17 @@ public:
         const size_type col_s {
             size_type(std::distance(column_begin, column_end))
         };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "ImpurityVisitor: Inconsistent data dimensions");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
 
         if (roll_count_ == 0 || roll_count_ > col_s)  return;
 
@@ -2076,6 +2102,17 @@ public:
                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "SigmoidVisitor: Inconsistent data dimensions");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
 
         const auto  thread_level {
             (col_s < ThreadPool::MUL_THR_THHOLD)
@@ -2436,6 +2473,17 @@ public:
             ! baseline_val_.has_value())
             throw DataFrameError("PolicyLearningLossVisitor: constant baseline "
                                  "mode requires a baseline value");
+
+        if constexpr (is_md_)  {
+            const size_type dim { action_prob_begin->size() };
+
+            for (size_type i { 0 }; i < col_s; ++i)
+                if ((action_prob_begin + i)->size() != dim ||
+                    (reward_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "PolicyLearningLossVisitor: "
+                        "Inconsistent data dimensions");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
         // Compute the effective reward adjustment depending on mode
@@ -2567,6 +2615,15 @@ public:
         if (col_s != size_type(std::distance(model_begin, model_end)))
             throw DataFrameError("LossFunctionVisitor: All columns must be of "
                                  "equal sizes");
+        if constexpr (is_md_)  {
+            const size_type dim { actual_begin->size() };
+
+            for (size_type i { 0 }; i < col_s; ++i)
+                if ((actual_begin + i)->size() != dim ||
+                    (model_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "LossFunctionVisitor: Inconsistent data dimensions");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
         const bool  multi_thr {
@@ -2972,6 +3029,23 @@ public:
             size_type(std::distance(column_begin2, column_end2))
         };
 
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s1 != col_s2)
+            throw DataFrameError(
+                "VectorSimilarityVisitor: "
+                "Two columns must be of the same length");
+
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin1->size() };
+
+            for (size_type i { 0 }; i < col_s1; ++i)
+                if ((column_begin1 + i)->size() != dim ||
+                    (column_begin2 + i)->size() != dim)
+                    throw DataFrameError(
+                        "VectorSimilarityVisitor: Inconsistent data dimensions");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
+
         if constexpr (TYP != vector_sim_type::jaccard_similarity &&
                       TYP != vector_sim_type::hamming_dist)  {
             DotProdVisitor<T, I>    dot_v;
@@ -3368,6 +3442,17 @@ public:
             size_type(std::distance(column_begin, column_end))
         };
         std::vector<value_type> data (column_begin, column_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "SeasonalPeriodVisitor: Inconsistent data dimensions");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
 
         if (params_.detrend)  {  // Take trend out
             std::vector<size_type>  xvals (col_s);
@@ -4886,11 +4971,46 @@ using arima_v = ARIMAVisitor<T, I>;
 
 // Holt–Winters Exponential Smoothing forecasting
 //
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  HWESForecastVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    inline static T make_zero_proto_(const T &proto)  {
+
+        if constexpr (! is_md_)  {
+            return (T{ 0 });
+        }
+        else  {
+            T   z = proto;  // copy shape
+
+            for (auto &v : z)  v = data_t(0);
+            return (z);
+        }
+    }
+
+    inline static void floor_zero_(T &x)  {
+
+        if constexpr (! is_md_)  {
+            if (x == data_t(0))  x = data_t(1e-8);
+        }
+        else  {
+            for (auto &v : x)
+                if (v == data_t(0))  v = data_t(1e-8);
+        }
+    }
+
+public:
+
     DEFINE_VISIT_BASIC_TYPES
-    using result_type = std::vector<T>;
+    using result_type = std::vector<value_type>;
 
     template<typename K, typename H>
     inline void
@@ -4907,14 +5027,23 @@ struct  HWESForecastVisitor  {
             throw DataFrameError("HWESForecastVisitor: "
                                  "Need at least two full seasons of data to "
                                  "initialize seasonal factors reliably");
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "HWESForecastVisitor: Inconsistent data dimensions");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
+        zero_proto_ = make_zero_proto_(*column_begin);
         fit_(column_begin, col_s);
 
         result_.resize(periods_);
         if (season_length_ == 0)  {  // Holt (no seasonality)
             for (size_type i { 1 }; i <= periods_; ++i)
-                result_[i - 1] = level_ + i * trend_;
+                result_[i - 1] = level_ + data_t(i) * trend_;
         }
         else  {  // Holt-Winters with seasonality
             // We need the most recent seasonal factors
@@ -4927,33 +5056,37 @@ struct  HWESForecastVisitor  {
 
                 if (season_type_ == decompose_type::additive)
                     result_[i - 1] =
-                        level_ + i * trend_ + seasonal_factors_[season_index];
+                        level_ + data_t(i) * trend_ +
+                        seasonal_factors_[season_index];
                 else
                     result_[i - 1] =
-                        (level_ + i * trend_) * seasonal_factors_[season_index];
+                        (level_ + data_t(i) * trend_) *
+                        seasonal_factors_[season_index];
             }
         }
     }
 
     inline void pre()  {
 
-        trend_ = 0;
-        level_ = 0;
+        trend_ = zero_proto_;
+        level_ = zero_proto_;
         fitted_.clear();
         result_.clear();
+        seasonal_factors_.clear();
     }
     inline void post()  {  }
     inline const result_type &get_result() const  { return (result_); }
     inline result_type &get_result()  { return (result_); }
     inline const result_type &
     get_seasonal_factors() const  { return (seasonal_factors_); }
+    inline const result_type &get_fitted() const  { return (fitted_); }
 
     explicit
     HWESForecastVisitor(long periods = 3,
                         size_type season_length = 0,
-                        value_type alpha = 0.25,
-                        value_type beta = 0.1,
-                        value_type gamma = 0.1,
+                        data_t alpha = 0.25,
+                        data_t beta = 0.1,
+                        data_t gamma = 0.1,
                         decompose_type season_type = decompose_type::additive)
         : periods_(periods),
           season_length_(season_length),
@@ -4981,24 +5114,25 @@ private:
     inline void
     fit_(const H &data_begin, size_type col_s)  {
 
-        fitted_.resize(col_s, get_nan<value_type>());
+        fitted_.resize(col_s, zero_proto_);
 
         if (season_length_ == 0)  {  // Simple Holt (no seasonality)
             init_level_and_trend_no_season_(data_begin, col_s);
 
-            std::vector<value_type> levels(col_s, 0), trends(col_s, 0);
+            result_type levels(col_s, zero_proto_);
+            result_type trends(col_s, zero_proto_);
 
             levels[0] = level_;
             trends[0] = trend_;
             fitted_[0] = levels[0];
             for (size_type t { 1 }; t < col_s; ++t)  {
-                const value_type    y { *(data_begin + t) };
+                const value_type    &y { *(data_begin + t) };
 
                 levels[t] = alpha_ * y +
-                            (T(1) - alpha_) * (levels[t - 1] +
+                            (data_t(1) - alpha_) * (levels[t - 1] +
                             trends[t - 1]);
                 trends[t] = beta_ * (levels[t] - levels[t - 1]) +
-                            (T(1) - beta_) * trends[t - 1];
+                            (data_t(1) - beta_) * trends[t - 1];
                 fitted_[t] = levels[t - 1] + trends[t - 1];
             }
             level_ = levels.back();
@@ -5011,9 +5145,9 @@ private:
 
             // Containers for level, trend, seasonal (we keep history)
             //
-            std::vector<value_type> levels(col_s, 0);
-            std::vector<value_type> trends(col_s, 0);
-            std::vector<value_type> seasons(col_s, 0);
+            result_type levels(col_s, zero_proto_);
+            result_type trends(col_s, zero_proto_);
+            result_type seasons(col_s, zero_proto_);
 
             levels[0] = level_;
             trends[0] = trend_;
@@ -5030,7 +5164,7 @@ private:
                              : (levels[0] + trends[0]) * seasons[0];
 
             for (size_type t { 1 }; t < col_s; ++t) {
-                const value_type    y { *(data_begin + t) };
+                const value_type    &y { *(data_begin + t) };
                 const long          idx_season_lag {
                     long(t) - long(season_length_)
                 };
@@ -5039,37 +5173,36 @@ private:
                         ? seasons[idx_season_lag]
                         : seasonal_factors_[(t % season_length_ +
                                              season_length_) %
-                                            season_length_] };
+                                            season_length_]
+                };
 
                 if (season_type_ == decompose_type::additive)  {
                     levels[t] =
                         alpha_ * (y - s_lag) +
-                        (T(1) - alpha_) * (levels[t - 1] +
+                        (data_t(1) - alpha_) * (levels[t - 1] +
                         trends[t - 1]);
                     trends[t] =
                         beta_ * (levels[t] - levels[t - 1]) +
-                        (T(1) - beta_) * trends[t - 1];
+                        (data_t(1) - beta_) * trends[t - 1];
                     seasons[t] =
-                        gamma_ * (y - levels[t]) + (T(1) - gamma_) * s_lag;
+                        gamma_ * (y - levels[t]) + (data_t(1) - gamma_) * s_lag;
 
                     // forecasted value for t using previous components
                     //
                     fitted_[t] = levels[t - 1] + trends[t - 1] + s_lag;
                 }
                 else  {  // Multiplicative formulas
-                    if (s_lag == 0)  s_lag = 1e-8; // Avoid division by zero
-
+                    floor_zero_(s_lag);
                     levels[t] =
                         alpha_ * (y / s_lag) +
-                        (T(1) - alpha_) * (levels[t - 1] +
-                        trends[t - 1]);
+                        (data_t(1) - alpha_) * (levels[t - 1] + trends[t - 1]);
                     trends[t] =
                         beta_ * (levels[t] - levels[t - 1]) +
-                        (T(1) - beta_) * trends[t - 1];
+                        (data_t(1) - beta_) * trends[t - 1];
 
-                    if (levels[t] == 0)  levels[t] = 1e-8;
+                    floor_zero_(levels[t]);
                     seasons[t] =
-                        gamma_ * (y / levels[t]) + (T(1) - gamma_) * s_lag;
+                        gamma_ * (y / levels[t]) + (data_t(1) - gamma_) * s_lag;
                     fitted_[t] = (levels[t - 1] + trends[t - 1]) * s_lag;
                 }
             }
@@ -5089,24 +5222,23 @@ private:
     inline void
     init_level_and_trend_no_season_(const H &data_begin, size_type col_s)  {
 
-        size_type   count { 0 };
-
         // level_ as first observation, trend_ estimated by average of first
         // differences over some points
         //
         level_ = *data_begin;
 
-        value_type  sumdiff { 0 };
+        value_type      sum_diff { zero_proto_ };
 
         // Use up to first 10 diffs for robust estimate
         //
         const size_type upto { std::min(col_s - 1, size_type(10)) };
+        size_type       count { 0 };
 
         for (size_type i { 0 }; i < upto; ++i)  {
-            sumdiff += (*(data_begin + (i + 1)) - *(data_begin + i));
+            sum_diff += (*(data_begin + (i + 1)) - *(data_begin + i));
             count += 1;
         }
-        trend_ = (count > 0) ? (sumdiff / T(count)) : T(0);
+        trend_ = (count > 0) ? (sum_diff / data_t(count)) : zero_proto_;
     }
 
     template<typename H>
@@ -5124,43 +5256,43 @@ private:
 
         // 1) Compute season_averages[j] for each season j
         //
-        std::vector<value_type> season_averages(n_seasons, 0);
+        result_type season_averages(n_seasons, zero_proto_);
 
         for (size_type j { 0 }; j < n_seasons; ++j) {
-            value_type  sum  { 0 };
+            value_type  sum  { zero_proto_ };
 
             for (size_type i { 0 }; i < season_length_; ++i)
                 sum += *(data_begin + (j * season_length_ + i));
-            season_averages[j] = sum / season_length_;
+            season_averages[j] = sum / data_t(season_length_);
         }
 
         // 2) Initial seasonal factors (for i=0..season_length_-1)
         //
-        seasonal_factors_.resize(season_length_, 0);
+        seasonal_factors_.resize(season_length_, zero_proto_);
         for (size_type i { 0 }; i < season_length_; ++i) {
-            value_type  sum_over_seasons { 0 };
+            value_type  sum_over_seasons { zero_proto_ };
             size_type   count { 0 };
 
             for (size_type j { 0 }; j < n_seasons; ++j) {
                 const size_type idx { j * season_length_ + i };
 
                 if (idx < col_s) {
+                    const value_type   &obs { *(data_begin + idx) };
+
                     if (season_type_ == decompose_type::additive) {
-                        sum_over_seasons +=
-                            (*(data_begin + idx) - season_averages[j]);
+                        sum_over_seasons += (obs - season_averages[j]);
                     }
-                    else {
-                        if (season_averages[j] == 0)
-                            sum_over_seasons += *(data_begin + idx) / 1e-8;
-                        else
-                            sum_over_seasons +=
-                                (*(data_begin + idx) / season_averages[j]);
+                    else  {
+                        value_type  denom { season_averages[j] };
+
+                        floor_zero_(denom);
+                        sum_over_seasons += (obs / denom);
                     }
                     count += 1;
                 }
             }
             seasonal_factors_[i] =
-                (count > 0) ? (sum_over_seasons / T(count)) : T(0);
+                (count > 0) ? (sum_over_seasons / data_t(count)) : zero_proto_;
         }
 
         // 3) Initial level: first season average (or overall mean)
@@ -5170,24 +5302,24 @@ private:
         // 4) Initial trend: average change in season averages per
         //    time / per-period slope
         //
-        if (n_seasons >= 2)  {
-            value_type  sum_diff { 0 };
+        value_type  sum_diff { zero_proto_ };
 
+        if (n_seasons >= 2)  {
             for (size_type j { 0 }; j < n_seasons - 1; ++j)
                 sum_diff += (season_averages[j + 1] - season_averages[j]);
 
             // convert difference per season into per-period trend by dividing
             // by season_length_ and by number of gaps
             //
-            trend_ = (sum_diff / T(n_seasons - 1)) / T(season_length_);
+            trend_ =
+                (sum_diff / data_t(n_seasons - 1)) / data_t(season_length_);
         }
         else  {  // Fallback: average of first-season differences
-            value_type      sumdiff { 0 };
             const size_type upto { std::min(season_length_ - 1, col_s - 1) };
 
             for (size_type i { 0 }; i < upto; ++i)
-                sumdiff += (*(data_begin + (i + 1)) - *(data_begin + i));
-            trend_ = (upto > 0) ? sumdiff / upto : 0.0;
+                sum_diff += (*(data_begin + (i + 1)) - *(data_begin + i));
+            trend_ = (upto > 0) ? sum_diff / data_t(upto) : zero_proto_;
         }
     }
 
@@ -5206,7 +5338,7 @@ private:
     // Low (close to 0), the level is smoothed heavily, slow to react
     // (more stable).
     //
-    const value_type        alpha_;
+    const data_t            alpha_;
 
     // Trend smoothing, Beta controls how quickly the trend (slope) adapts
     // over time. In the additive model
@@ -5215,7 +5347,7 @@ private:
     // often).
     // Low (close to 0), trend is stable (changes only slowly).
     //
-    const value_type        beta_;
+    const data_t            beta_;
 
     // Seasonal smoothing, Gamma controls how fast the seasonal pattern
     // e.g., monthly or weekly fluctuations) is updated.
@@ -5224,7 +5356,7 @@ private:
     // pattern changes over time).
     // Low (close to 0), seasonality assumed stable.
     //
-    const value_type        gamma_;
+    const data_t            gamma_;
 
     // season_type tells the algorithm how seasonal effects combine with the
     // base signal (level + trend).
@@ -5234,11 +5366,12 @@ private:
     //
     const decompose_type    season_type_;
 
-    value_type              trend_ { 0 };
-    value_type              level_ { 0 };
+    value_type              trend_ { };
+    value_type              level_ { };
     result_type             seasonal_factors_ { };
     result_type             fitted_ { };
     result_type             result_ { };
+    value_type              zero_proto_ { };
 };
 
 template<typename T, typename I = unsigned long>

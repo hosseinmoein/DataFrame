@@ -61,7 +61,7 @@ public:
     using const_reference = const value_type &;
     using pointer = value_type *;
     using const_pointer = const value_type *;
-    using self_t = Matrix<value_type, MO>;
+    using self_t = Matrix<value_type, MO, IS_SYM>;
 
     using trans_result_t =
         typename std::conditional<

@@ -59,12 +59,15 @@ body {
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
-        Holt-Winters' Exponential Smoothing (HWES) is a time series forecasting method that extends exponential smoothing to handle data with both trend and seasonality. It's also known as triple exponential smoothing and adds a third equation to capture the seasonal component, using smoothing parameters for level (alpha), trend (beta), and seasonality (gamma). The method can be implemented using additive (constant seasonal variations) or multiplicative (proportional seasonal variations) models, making it suitable for various time series data. <BR>
+        Holt-Winters' Exponential Smoothing (HWES) is a time series forecasting method that extends exponential smoothing to handle data with both trend and seasonality. It's also known as triple exponential smoothing and adds a third equation to capture the seasonal component, using smoothing parameters for level (alpha), trend (beta), and seasonality (gamma). The method can be implemented using additive (constant seasonal variations) or multiplicative (proportional seasonal variations) models, making it suitable for various time series data. <BR><BR>
 
-        <BR>
+        This works with both scalar and multidimensional (i.e. vectors and arrays) datasets.<BR><BR>
+		
         This visitor has the following methods to get results:<BR>
-        <I>get_result()</I>: Retruns a vector of forecasted datapoints for the next <I>periods</I> periods ahead.<BR>
-        <I>get_seasonal_factors()</I>: Returns a vector of seasonal factors. Each of these values captures the typical deviation or multiplicative ratio from the base level during that season.<BR>
+        <B>get_result()</B>: Retruns a vector of forecasted datapoints for the next <I>periods</I> periods ahead. In case of multidimensional input column, the result is a vector of input column type. If input is a column of vectors, the result will be vector of vectors. If input is a column of arrays, the result will be vector of arrays.<BR>
+        <B>get_seasonal_factors()</B>: Returns a vector of seasonal factors. Each of these values captures the typical deviation or multiplicative ratio from the base level during that season.<BR>
+        <B>get_fitted()</B>: Returns a vector of fitted values.<BR>
+
         <I>
         <PRE>
 explicit

@@ -1411,6 +1411,86 @@ static void test_HWESForecastVisitor()  {
     assert(std::fabs(result6[1] - 108.313) < 0.001);
     assert(std::fabs(result6[2] - 107.361) < 0.001);
     assert(std::fabs(result6[3] - 106.41) < 0.001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+    constexpr std::size_t   n { 24 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<vec_col_t>  vec_col1(n, vec_col_t(dim));
+
+    for (std::size_t t { 0 }; t < n; ++t)  {
+        vec_col1[t][0] = 10.0 + 2.0 * t;   // dim 0: upward
+        vec_col1[t][1] = 100.0 - 2.0 * t;  // dim 1: downward
+        vec_col1[t][2] = 50.0;             // dim 2: flat
+    }
+
+    // Add a repeating additive seasonal pattern of period 12 to all dims
+    // so the seasonal path is exercised meaningfully.
+    //
+    //
+    const std::vector<double>   pattern {
+        3, -3, 2, -2, 1, -1, 3, -3, 2, -2, 1, -1,
+    };
+
+    for (size_t t { 0 }; t < n; ++t)
+        for (size_t d { 0 }; d < dim; ++d)
+            vec_col1[t][d] += pattern[t % pattern.size()];
+
+    std::vector<ary_col_t>  ary_col1(n);
+
+    for (size_t t { 0 }; t < n; ++t)
+        for (size_t d { 0 }; d < dim; ++d)
+            ary_col1[t][d] = vec_col1[t][d];
+
+    df2.load_column<vec_col_t>("VEC OBSV", std::move(vec_col1),
+                               nan_policy::dont_pad_with_nans);
+    df2.load_column<ary_col_t>("ARY OBSV", std::move(ary_col1),
+                               nan_policy::dont_pad_with_nans);
+
+    // No seasons
+    //
+    HWESForecastVisitor<vec_col_t, std::string> vec_hwes1 { 5, 0, 0.3, 0.1 };
+    HWESForecastVisitor<ary_col_t, std::string> ary_hwes1 { 5, 0, 0.3, 0.1 };
+
+    df2.single_act_visit<vec_col_t>("VEC OBSV", vec_hwes1);
+    df2.single_act_visit<ary_col_t>("ARY OBSV", ary_hwes1);
+
+    assert(vec_hwes1.get_result().size() == 5);
+    for (const auto &vec : vec_hwes1.get_result())
+        assert(vec.size() == dim);
+    assert(ary_hwes1.get_result().size() == 5);
+    for (const auto &ary : ary_hwes1.get_result())
+        assert(ary.size() == dim);
+
+    // dim 0 is trending up — each forecast step should be increasing
+    //
+    for (std::size_t i { 1 }; i < vec_hwes1.get_result().size(); ++i)
+        assert(vec_hwes1.get_result()[i][0] > vec_hwes1.get_result()[i-1][0]);
+    // dim 1 is trending down — each step should be decreasing
+    //
+    for (std::size_t i { 1 }; i < ary_hwes1.get_result().size(); ++i)
+        assert(ary_hwes1.get_result()[i][1] < ary_hwes1.get_result()[i-1][1]);
+
+    // With seasons 12 periods
+    //
+    HWESForecastVisitor<vec_col_t, std::string> vec_hwes2 {
+        6, 12, 0.3, 0.1, 0.2, decompose_type::additive
+    };
+
+    df2.single_act_visit<vec_col_t>("VEC OBSV", vec_hwes2);
+    assert(vec_hwes2.get_result().size() == 6);
+    assert(vec_hwes2.get_fitted().size() == n);
+    assert(vec_hwes2.get_seasonal_factors().size() == pattern.size());
+    for (const auto &vec : vec_hwes2.get_result())
+        assert(vec.size() == dim);
+    assert(std::abs(vec_hwes2.get_result()[0][0] - 45.1255) < 0.0001);
+    assert(std::abs(vec_hwes2.get_result()[2][2] - 52.0) < 0.0001);
+    assert(std::abs(vec_hwes2.get_result()[4][1] - 59.49) < 0.0001);
+    assert(std::abs(vec_hwes2.get_result()[5][0] - 53.3878) < 0.0001);
 }
 
 // ----------------------------------------------------------------------------

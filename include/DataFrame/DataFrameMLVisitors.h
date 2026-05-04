@@ -5381,26 +5381,39 @@ using hwes_v = HWESForecastVisitor<T, I>;
 
 // Long Short-Term Memory (LSTM) forecasting
 //
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  LSTMForecastVisitor  {
-
-public:
-
-    DEFINE_VISIT_BASIC_TYPES
-    using result_type = std::vector<T>;
 
 private:
 
-    using matrix_t = Matrix<value_type, matrix_orient::column_major>;
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
 
-    static inline value_type
-    sigmoid_(value_type x)  { return (T(1) / (T(1) + std::exp(-x))); }
-    static inline value_type
-    dsigmoid_from_out_(value_type y)  { return (y * (T(1) - y)); }
-    static inline value_type
-    dtanh_from_out_(value_type y)  { return (T(1) - y * y); }
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
 
-    static inline value_type
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = std::vector<value_type>;
+
+private:
+
+    using matrix_t = Matrix<data_t, matrix_orient::column_major>;
+    using mat_vec_t = std::vector<matrix_t>;
+    using data_vec_t = std::vector<data_t>;
+
+    static inline data_t
+    sigmoid_(data_t x)  { return (data_t(1) / (std::exp(-x) + data_t(1))); }
+    static inline data_t
+    dsigmoid_from_out_(data_t y)  { return (y * (data_t(1) - y)); }
+    static inline data_t
+    dtanh_from_out_(data_t y)  { return (data_t(1) - y * y); }
+
+    static inline data_t
     mse_loss_and_grad_(const matrix_t &pred,
                        const matrix_t &target,
                        matrix_t &dout)  {
@@ -5413,30 +5426,32 @@ private:
 
         dout = matrix_t { pred.rows(), pred.cols(), 0 };
 
-        value_type          sum { 0 };
-        const value_type    data_s { T(pred.rows() * pred.cols()) };
-        auto                lbd =
+        data_t          sum { 0 };
+        const data_t    data_s { data_t(pred.rows() * pred.cols()) };
+        auto            lbd =
             [&dout, data_s,
              &pred = std::as_const(pred), &target = std::as_const(target)]
-            (long begin, long end) -> value_type  {
-                value_type  sum { 0 };
+            (long begin, long end) -> data_t  {
+                data_t  sum { 0 };
 
                 for (long c { begin }; c < end; ++c)
                     for (long r { 0 }; r < pred.rows(); ++r)  {
-                        const value_type    diff = pred(r, c) - target(r, c);
+                        const data_t    diff { pred(r, c) - target(r, c) };
 
                         sum += diff * diff;
-                        dout(r, c) = T(2) * diff / data_s;
+                        dout(r, c) = data_t(2) * diff / data_s;
                     }
                 return (sum);
             };
-        const auto          thread_level =
-            (pred.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
+        const auto      thread_level {
+            (pred.cols() < 500) ? 0L : ThreadGranularity::get_thread_level()
+        };
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, pred.cols(), std::move(lbd));
+                    0L, pred.cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  sum += fut.get();
         }
@@ -5457,8 +5472,16 @@ private:
         LSTMCell(long in, long hid, unsigned int seed)
             : input_size(in),
               hidden_size(hid),
-              W(matrix_t::get_random(in, 4 * hid, T(-0.1), T(0.1), seed)),
-              U(matrix_t::get_random(hid, 4 * hid, T(-0.1), T(0.1), seed)),
+              W(matrix_t::get_random(in,
+                                     4 * hid,
+                                     data_t(-0.1),
+                                     data_t(0.1),
+                                     seed)),
+              U(matrix_t::get_random(hid,
+                                     4 * hid,
+                                     data_t(-0.1),
+                                     data_t(0.1),
+                                     seed)),
               b(1, 4 * hid, 0),
               dW(in, 4 * hid, 0),
               dU(hid, 4 * hid, 0),
@@ -5475,10 +5498,10 @@ private:
                 const matrix_t &c_prev)  {
 
             const long  batch { x.rows() }, H { hidden_size };
-            matrix_t    gates = x * W + h_prev * U;
+            matrix_t    gates { x * W + h_prev * U };
 
             for (long c { 0 }; c < b.cols(); ++c)  {
-                const auto  val = b(0, c);
+                const auto  val { b(0, c) };
 
                 for (long r { 0 }; r < batch; ++r)
                     gates(r, c) += val;
@@ -5498,13 +5521,15 @@ private:
                         }
                     }
                 };
-            const auto  thread_level =
-                (H < 500) ? 0L : ThreadGranularity::get_thread_level();
+            const auto  thread_level {
+                (H < 500) ? 0L : ThreadGranularity::get_thread_level()
+            };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        0L, H, std::move(lbd1));
+                        0L, H, std::move(lbd1))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -5519,7 +5544,7 @@ private:
                     c_mat(r, c) = f(r, c) * c_prev(r, c) + i(r, c) * g(r, c);
 
             const matrix_t  tanh_c {
-                c_mat.apply([](const value_type &v) -> value_type {
+                c_mat.apply([](const data_t &v) -> data_t {
                                 return (std::tanh(v));
                             })
             };
@@ -5535,7 +5560,7 @@ private:
 
             const long  batch { cache.x.rows() }, H { hidden_size };
             matrix_t    tanh_c {
-                cache.c.apply([](const value_type &v) -> value_type {
+                cache.c.apply([](const data_t &v) -> data_t {
                                   return (std::tanh(v));
                               })
             };
@@ -5544,12 +5569,10 @@ private:
                 dct +
                 hadamard(
                     dht,
-                    hadamard(
-                        cache.o,
-                        tanh_c.self_apply(
-                            [](const value_type &v) -> value_type {
-                                return (T(1) - v * v);
-                            })))
+                    hadamard(cache.o,
+                             tanh_c.self_apply([](const data_t &v) -> data_t {
+                                                   return (data_t(1) - v * v);
+                                               })))
             };
             const matrix_t  di { hadamard(dc, cache.g) };
             const matrix_t  df { hadamard(dc, cache.c_prev) };
@@ -5577,13 +5600,15 @@ private:
                         }
                     }
                 };
-            const auto      thread_level =
-                (H < 500) ? 0L : ThreadGranularity::get_thread_level();
+            const auto      thread_level {
+                (H < 500) ? 0L : ThreadGranularity::get_thread_level()
+            };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        0L, H, std::move(lbd1));
+                        0L, H, std::move(lbd1))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -5610,9 +5635,10 @@ private:
                 };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        0L, H, std::move(lbd2));
+                        0L, H, std::move(lbd2))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -5626,7 +5652,7 @@ private:
             matrix_t    db_inc { 1, 4 * H };
 
             for (long c { 0 }; c < (4 * H); ++c)  {
-                value_type  s { 0 };
+                data_t  s { 0 };
 
                 for (long r { 0 }; r < batch; ++r)
                     s += dG(r, c);
@@ -5651,7 +5677,7 @@ private:
             dU.self_scale(0);
             db.self_scale(0);
         }
-        void step(value_type lr)  {
+        void step(data_t lr)  {
 
             auto    lbd1 =
                 [this, lr, &dW = std::as_const(dW)]
@@ -5674,13 +5700,15 @@ private:
                         for (long r { 0 }; r < b.rows(); ++r)
                             b(r, c) -= lr * db(r, c);
                 };
-            auto    thread_level =
-                (W.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
+            auto    thread_level {
+                (W.cols() < 500) ? 0L : ThreadGranularity::get_thread_level()
+            };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        0L, W.cols(), std::move(lbd1));
+                        0L, W.cols(), std::move(lbd1))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -5691,9 +5719,10 @@ private:
             thread_level =
                 (U.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        0L, U.cols(), std::move(lbd2));
+                        0L, U.cols(), std::move(lbd2))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -5704,9 +5733,10 @@ private:
             thread_level =
                 (b.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        0L, b.cols(), std::move(lbd3));
+                        0L, b.cols(), std::move(lbd3))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -5718,7 +5748,7 @@ private:
 
     // Linear layer
     //
-    struct  Linear {
+    struct  Linear  {
 
         const long  in, out;
         matrix_t    W, b, dW, db;
@@ -5726,7 +5756,11 @@ private:
         Linear(long in_dim, long out_dim, unsigned int seed)
             : in(in_dim),
               out(out_dim),
-              W(matrix_t::get_random(in_dim, out_dim, T(-0.1), T(0.1), seed)),
+              W(matrix_t::get_random(in_dim,
+                                     out_dim,
+                                     data_t(-0.1),
+                                     data_t(0.1),
+                                     seed)),
               b(1, out_dim, 0),
               dW(in_dim, out_dim, 0),
               db(1, out_dim, 0)  {   }
@@ -5736,7 +5770,7 @@ private:
             matrix_t    y { x * W };
 
             for (long c { 0 }; c < out; ++c)  {
-                const auto  val = b(0, c);
+                const auto  val { b(0, c) };
 
                 for (long r { 0 }; r < x.rows(); ++r)
                     y(r, c) += val;
@@ -5749,7 +5783,7 @@ private:
 
             dW = x.transpose() * dy;
             for (long c { 0 }; c < dy.cols(); ++c){
-                value_type  s { 0 };
+                data_t  s { 0 };
 
                 for (long r { 0 }; r < dy.rows(); ++r)
                     s += dy(r, c);
@@ -5764,7 +5798,7 @@ private:
             dW.self_scale(0);
             db.self_scale(0);
         }
-        void step(value_type lr) {
+        void step(data_t lr) {
 
             auto    lbd1 =
                 [this, lr, &dW = std::as_const(dW)]
@@ -5780,13 +5814,15 @@ private:
                         for (long r { 0 }; r < b.rows(); ++r)
                             b(r, c) -= lr * db(r, c);
                 };
-            auto    thread_level =
-                (W.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
+            auto    thread_level {
+                (W.cols() < 500) ? 0L : ThreadGranularity::get_thread_level()
+            };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        0L, W.cols(), std::move(lbd1));
+                        0L, W.cols(), std::move(lbd1))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -5797,9 +5833,10 @@ private:
             thread_level =
                 (b.cols() < 500) ? 0L : ThreadGranularity::get_thread_level();
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        0L, b.cols(), std::move(lbd2));
+                        0L, b.cols(), std::move(lbd2))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -5811,7 +5848,7 @@ private:
 
     // LSTM layer (sequence processing)
     //
-    struct LSTMLayer {
+    struct LSTMLayer  {
 
         using cache_t = typename LSTMForecastVisitor<T, I>::LSTMCell::Cache;
 
@@ -5822,14 +5859,14 @@ private:
         LSTMLayer(long in_sz, long hid_sz, unsigned int seed)
             : cell (in_sz, hid_sz, seed)  {   }
 
-        std::vector<matrix_t>
-        forward(const std::vector<matrix_t> &X)  {
+        mat_vec_t
+        forward(const std::deque<matrix_t> &X)  {
 
-            const long              time_steps { long(X.size()) },
-                                    batch { X[0].rows() },
-                                    H { cell.hidden_size };
-            matrix_t                h { batch, H, 0 }, c { batch, H, 0 };
-            std::vector<matrix_t>   outs;
+            const long  time_steps { long(X.size()) },
+                        batch { X[0].rows() },
+                        H { cell.hidden_size };
+            matrix_t    h { batch, H, 0 }, c { batch, H, 0 };
+            mat_vec_t   outs;
 
             caches.resize(time_steps);
             outs.resize(time_steps);
@@ -5847,8 +5884,8 @@ private:
             return (outs);
         }
 
-        std::vector<matrix_t>
-        backward(const std::vector<matrix_t> &douts)  {
+        mat_vec_t
+        backward(const mat_vec_t &douts)  {
 
             const long  time_steps { long(douts.size()) },
                         batch { caches[0].x.rows() },
@@ -5856,14 +5893,15 @@ private:
 
             // cell.zero_grad();
 
-            std::vector<matrix_t>   dxs(time_steps);
-            matrix_t                dh_next { batch, H, 0 },
-                                    dc_next { batch, H, 0 };
+            mat_vec_t   dxs(time_steps);
+            matrix_t    dh_next { batch, H, 0 },
+                        dc_next { batch, H, 0 };
 
             for (long t { time_steps - 1 }; t >= 0; --t)  {
                 const matrix_t  dh_total { douts[t] + dh_next };
-                const auto      [dx, dh_prev, dc_prev] =
-                    cell.backward(dh_total, dc_next, caches[t]);
+                const auto      [dx, dh_prev, dc_prev] {
+                    cell.backward(dh_total, dc_next, caches[t])
+                };
 
                 dxs[t] = dx;
                 dh_next = dh_prev;
@@ -5874,7 +5912,7 @@ private:
         }
 
         void zero_grad()  { cell.zero_grad(); }
-        void step(double lr)  { cell.step(lr); }
+        void step(data_t lr)  { cell.step(lr); }
     };
 
 public:
@@ -5888,117 +5926,180 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 5)
-           throw DataFrameError("LSTMForecastVisitor: "
-                                "Time-series is too short");
+            throw DataFrameError("LSTMForecastVisitor: "
+                                 "Time-series is too short");
         if (col_s < size_type(double(seq_len_) * 1.5))
-           throw DataFrameError("LSTMForecastVisitor: "
-                                "Time-series is too short for Number of time "
-                                "steps fed to the LSTM");
+            throw DataFrameError("LSTMForecastVisitor: "
+                                 "Time-series is too short for Number of time "
+                                 "steps fed to the LSTM");
+
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "LSTMForecastVisitor: Inconsistent data dimensions");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
+        // Derive the true input size from the data when MD.
+        //
+        long  eff_input_size { 1 };
+
+        if constexpr (is_md_)  eff_input_size = column_begin->size();
+
+        // Normalization
+        // norm_data[t][f] holds normalised value for time t, feature f.
+        // Scalar: one element per time step (eff_input_size == 1)
+        // MD:     one element per feature per time step
+        //
         StdVisitor<T, I>    stdv;
 
         stdv.pre();
         stdv(idx_begin, idx_end, column_begin, column_end);
         stdv.post();
 
-        std::vector<value_type> norm_data(col_s);
+        std::vector<data_vec_t> norm_data(col_s, data_vec_t(eff_input_size));
+        const auto              &mean { stdv.get_mean() };
+        const auto              &std_dev { stdv.get_result() };
 
-        for (long i { 0 }; i < long(col_s); ++i)
-            norm_data[i] =
-                (*(column_begin + i) - stdv.get_mean()) / stdv.get_result();
+
+        if constexpr (! is_md_)  {
+            for (long i { 0 }; i < long(col_s); ++i)
+                norm_data[i][0] =
+                    (*(column_begin + i) - mean) / std_dev;
+        }
+        else  {
+            for (long i { 0 }; i < long(col_s); ++i)  {
+                const auto  &elem { *(column_begin + i) };
+
+                for (long f { 0 }; f < eff_input_size; ++f)
+                    norm_data[i][f] = (elem[f] - mean[f]) / std_dev[f];
+            }
+        }
+
+        // Helper: fill one [batch_size_ x eff_input_size] input matrix
+        // from normalised data at time index t
+        //
+        const auto  make_input_matrix =
+            [this, eff_input_size, &norm_data = std::as_const(norm_data)]
+            (long t) -> matrix_t  {
+                matrix_t    mat { batch_size_, eff_input_size, data_t(0) };
+
+                for (long r { 0 }; r < batch_size_; ++r)
+                    for (long f { 0 }; f < eff_input_size; ++f)
+                        mat(r, f) = norm_data[t][f];
+                return (mat);
+            };
 
         // Create model
         //
-        LSTMLayer               lstm { input_size_, hidden_size_, seed_ };
-        Linear                  linear { hidden_size_, input_size_, seed_ };
-        std::vector<matrix_t>   inputs(seq_len_); // Build input sequence
+        LSTMLayer               lstm { eff_input_size, hidden_size_, seed_ };
+        Linear                  linear { hidden_size_, eff_input_size, seed_ };
+        std::deque<matrix_t>    inputs(seq_len_);
 
-        // Training loop over dataset
+        // Training loop
         //
         for (long epoch { 0 }; epoch < epochs_; ++epoch)  {
-            value_type  total_loss { 0 };
+            data_t  total_loss { 0 };
 
-            for (long i { 0 }; i < (long(col_s) - seq_len_ - 3); ++i) {
+            for (long i { 0 }; i < (long(col_s) - seq_len_ - 3); ++i)  {
                 for (long t { 0 }; t < seq_len_; ++t)
-                    inputs[t] =
-                        matrix_t { batch_size_, input_size_, norm_data[i + t] };
+                    inputs[t] = make_input_matrix(i + t);
 
-                // Target is the *next* value after the sequence
+                // Target is the next time step after the input sequence
                 //
-                const matrix_t  target {
-                    batch_size_, input_size_, norm_data[i + seq_len_]
-                };
-
-                // Zero gradients
-                //
-                // lstm.zero_grad();
-                // linear.zero_grad();
+                const matrix_t  target { make_input_matrix(i + seq_len_) };
 
                 // Forward pass
                 //
-                const std::vector<matrix_t> outputs = lstm.forward(inputs);
-                const matrix_t              y_pred {
-                    linear.forward(outputs.back())
-                };
+                const mat_vec_t outputs { lstm.forward(inputs) };
+                const matrix_t  y_pred { linear.forward(outputs.back()) };
 
-                // Compute loss
+                // Compute loss + gradient
                 //
-                matrix_t            dloss;
-                const value_type    loss {
-                    mse_loss_and_grad_(y_pred, target, dloss)
-                };
+                matrix_t     dloss;
+                const data_t loss { mse_loss_and_grad_(y_pred, target, dloss) };
 
                 total_loss += loss;
 
                 // Backward pass
                 //
-                const matrix_t  d_linear {
-                    linear.backward(lstm.h_last, dloss)
-                };
+                const matrix_t d_linear { linear.backward(lstm.h_last, dloss) };
 
                 lstm.backward({ d_linear });
 
-                // Now update parameters (separate from backward)
+                // Parameter update
                 //
                 linear.step(learning_rate_);
                 lstm.step(learning_rate_);
             }
-
-            // std::cout << "Epoch " << (epoch + 1)
-            //           << " -- Avg Loss: "
-            //           << (total_loss / (long(col_s) - seq_len_ - 3))
-            //           << std::endl;
         }
 
-        // Forecast next periods_ prices
+        // Forecast next periods_steps
+
+        // Per-feature mean and stdev as plain data_vec_t
+        // for uniform access in both scalar and MD paths
         //
-        // Start with last known seq_len_ points
+        data_vec_t  feat_mean(eff_input_size),
+                    feat_std (eff_input_size);
+
+        if constexpr (! is_md_)  {
+            feat_mean[0] = mean;
+            feat_std [0] = std_dev;
+        }
+        else  {
+            for (long f { 0 }; f < eff_input_size; ++f)  {
+                feat_mean[f] = mean[f];
+                feat_std [f] = std_dev[f];
+            }
+        }
+
+        // Seed the forecast window with the last seq_len_ known points
         //
-        std::vector<matrix_t>   sequence(seq_len_);
+        std::deque<matrix_t>    sequence(seq_len_);
 
         for (long t { 0 }; t < seq_len_; ++t)
-            sequence[t] = matrix_t {
-                batch_size_, input_size_, norm_data[long(col_s) - seq_len_ + t]
-            };
+            sequence[t] = make_input_matrix(long(col_s) - seq_len_ + t);
 
         result_.resize(periods_);
         for (long step { 0 }; step < periods_; ++step)  {
-            const std::vector<matrix_t> outputs = lstm.forward(sequence);
-            const matrix_t              next_pred {
-                linear.forward(outputs.back())
-            };
-            const value_type            norm_pred { next_pred(0, 0) };
+            const mat_vec_t outputs { lstm.forward(sequence) };
+            const matrix_t  next_pred { linear.forward(outputs.back()) };
 
-            // Denormalize prediction
+            // next_input is the matrix we feed back into the sequence
             //
-            result_[step] = norm_pred * stdv.get_result() + stdv.get_mean();
+            matrix_t    next_input { batch_size_, eff_input_size, data_t(0) };
 
-            // Feed predicted value as next input
+            if constexpr (! is_md_)  {
+                const data_t    norm_pred { next_pred(0, 0) };
+
+                result_[step] = norm_pred * feat_std[0] + feat_mean[0];
+                for (long r { 0 }; r < batch_size_; ++r)
+                    next_input(r, 0) = norm_pred;
+            }
+            else  {
+                T   elem { };
+
+                if constexpr (is_std_vector_v<T>)
+                    elem.resize(eff_input_size);
+
+                for (long f { 0 }; f < eff_input_size; ++f)  {
+                    const data_t    norm_pred { next_pred(0, f) };
+
+                    elem[f] = norm_pred * feat_std[f] + feat_mean[f];
+                    for (long r { 0 }; r < batch_size_; ++r)
+                        next_input(r, f) = norm_pred;
+                }
+
+                result_[step] = std::move(elem);
+            }
+
+            // Slide the forecast window forward one step
             //
-            sequence.erase(sequence.begin());
-            sequence.push_back(
-                matrix_t { batch_size_, input_size_, norm_pred });
+            sequence.pop_front();
+            sequence.push_back(std::move(next_input));
         }
     }
 
@@ -6008,16 +6109,14 @@ public:
     inline result_type &get_result()  { return (result_); }
 
     explicit
-    LSTMForecastVisitor(long input_size = 1,
-                        long hidden_size = 32,
+    LSTMForecastVisitor(long hidden_size = 32,
                         long seq_len = 10,
                         long batch_size = 1,
                         long epochs = 20,
-                        value_type learning_rate = 0.001,
+                        data_t learning_rate = 0.001,
                         long periods = 3,
                         unsigned int seed = static_cast<unsigned int>(-1))
-        : input_size_(input_size),
-          hidden_size_(hidden_size),
+        : hidden_size_(hidden_size),
           seq_len_(seq_len),
           batch_size_(batch_size),
           epochs_(epochs),
@@ -6026,12 +6125,6 @@ public:
           seed_(seed)  {   }
 
 private:
-
-    // Number of features per time step. Each input vector Xt has one feature.
-    // For example, if you’re forecasting a univariate time series (like daily
-    // temperature), each step is a single number.
-    //
-    const long          input_size_;
 
     // Number of LSTM hidden units (neurons). Controls how much "memory" or
     // capacity the LSTM has. Larger values -> can learn more complex temporal
@@ -6058,7 +6151,7 @@ private:
     // Step size for gradient descent. Controls how much weights are updated
     // during training. Too high = unstable; too low = slow learning.
     //
-    const value_type    learning_rate_;
+    const data_t        learning_rate_;
 
     const long          periods_;  // Number of periods to forecast
     const unsigned int  seed_;     // Seed for random number generator

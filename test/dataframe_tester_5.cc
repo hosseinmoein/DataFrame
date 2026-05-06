@@ -1959,6 +1959,118 @@ static void test_AnomalyDetectByKNNVisitor()  {
     assert(anomalous_indices2[0] == 502);
     assert(anomalous_indices2[1] == 1001);
     assert(anomalous_indices2[2] == 2002);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+    constexpr std::size_t   n { 120 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<vec_col_t>  vec_col;
+
+    vec_col.reserve(n);
+
+    // Normal region 1: cluster near (1, 2, 3)
+    //
+    for (std::size_t i { 0 }; i < 40; ++i)  {
+        double  t { i * 0.15 };
+
+        vec_col.push_back({ 1.0 + 0.1 * std::sin(t),
+                            2.0 + 0.1 * std::cos(t),
+                            3.0 + 0.05 * t });
+    }
+
+    // *** Anomaly A: sudden spike on all 3 axes ***
+    //
+    vec_col.push_back({ 9.5,  -7.0,  15.0 });   // idx 40
+    vec_col.push_back({ 10.0, -8.0,  16.0 });   // idx 41
+    vec_col.push_back({ 9.8,  -7.5,  15.5 });   // idx 42
+
+    // Normal region 2: cluster near (-1, 0, 1)
+    //
+    for (std::size_t i { 0 }; i < 35; ++i)  {
+        double  t { i * 0.15 };
+
+        vec_col.push_back({ -1.0 + 0.1 * std::sin(t),
+                            0.0 + 0.1 * std::cos(t),
+                            1.0 + 0.05 * t });
+    }
+
+    // *** Anomaly B: one axis goes wild, others stay normal ***
+    //
+    vec_col.push_back({ -1.0,  0.0,  50.0 });   // idx 78 — z-axis outlier
+    vec_col.push_back({ -1.1,  0.1,  52.0 });   // idx 79
+
+    // Normal region 3: cluster near (3, 3, 3)
+    //
+    for (std::size_t i { 0 }; i < 38; ++i)  {
+        double  t { i * 0.15 };
+
+        vec_col.push_back({ 3.0 + 0.1 * std::sin(t),
+                            3.0 + 0.1 * std::cos(t),
+                            3.0 + 0.05 * t });
+    }
+
+    // *** Anomaly C: isolated single point far from everything ***
+    //
+    vec_col.push_back({ -20.0, 20.0, -20.0 });  // idx 118
+
+    // Final normal cap
+    //
+    vec_col.push_back({ 3.0, 3.0, 3.0 });
+
+    std::vector<ary_col_t>  ary_col(n);
+
+    // Copy the vector of vectors to vector of arrays
+    //
+    for (std::size_t i { 0 }; i < vec_col.size(); ++i)  {
+        const auto  &vec = vec_col[i];
+        ary_col_t   ary;
+
+        for (std::size_t j { 0 }; j < vec.size(); ++j)
+            ary[j] = vec[j];
+        ary_col[i] = std::move(ary);
+    }
+
+    df.load_column<ary_col_t>("ARY COL", std::move(ary_col),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC COL", std::move(vec_col),
+                              nan_policy::dont_pad_with_nans);
+
+    and_knn_v<vec_col_t>    vec_knn { 4, 5 };
+    and_knn_v<ary_col_t>    ary_knn { 4, 5 };
+
+    df.single_act_visit<vec_col_t>("VEC COL", vec_knn);
+    df.single_act_visit<ary_col_t>("ARY COL", ary_knn);
+
+    const auto  &anom_idxs_vec { vec_knn.get_anomalous_indices(0.5) };
+    const auto  &anom_idxs_ary { ary_knn.get_anomalous_indices(0.5) };
+
+    // Why didn't all anomalies get caught:
+    // 1. Anomaly A (indices 40–42) is a cluster of 3 similar points. When the
+    //    tree scores index 41, its nearest neighbors are indices 40 and 42 —
+    //    they're close to each other, so the average KNN distance is small.
+    //    A cluster of outliers looks locally dense to KNN. This is a known
+    //    fundamental limitation of KNN anomaly detection.
+    // 2. Anomaly C (index 118) is a single point but near the end of the
+    //    series. With window=4, the buckets containing index 118 have very
+    //    few neighbors in the tree overall, and the score gets averaged down
+    //    by expand_scores_ across the window, diluting the signal.
+    // 3. The three normal clusters are far apart from each other — (1,2,3),
+    //    (-1,0,1), (3,3,3). This raises the baseline KNN distances for normal
+    //    points near cluster boundaries, compressing the relative contrast
+    //    with anomalies.
+    //
+    assert(anom_idxs_vec.size() == 3);
+    assert(anom_idxs_ary.size() == 3);
+    assert(anom_idxs_vec[0] == 41);
+    assert(anom_idxs_vec[1] == 79);
+    assert(anom_idxs_vec[2] == 118);
+    assert(anom_idxs_ary[0] == 41);
+    assert(anom_idxs_ary[1] == 79);
+    assert(anom_idxs_ary[2] == 118);
 }
 
 // ----------------------------------------------------------------------------

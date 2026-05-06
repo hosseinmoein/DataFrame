@@ -46,8 +46,8 @@ namespace hmdf
 {
 
 template<typename T>
-KDTree<T>::KDTree(size_type k, dist_func_t &&dist_func)
-    : k_(k), dist_func_(dist_func)  {   }
+KDTree<T>::KDTree(size_type dim, dist_func_t &&dist_func)
+    : dim_(dim), dist_func_(dist_func)  {   }
 
 // ----------------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ build(points_vec points)  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     for (const auto &vec : points)
-        if (vec.size() != k_)
+        if (vec.size() != dim_)
             throw DataFrameError("KDTree<T>::build(): "
                                  "All data vectors must have exactly "
                                  "K datapoints");
@@ -115,7 +115,7 @@ k_nearest_dists(const point_t &target, size_type k) const {
                 pq.push({ dist, node.point });
             }
 
-            const size_type     axis { state.depth % k_ };
+            const size_type     axis { state.depth % dim_ };
             const value_type    diff { target[axis] - node.point[axis] };
             const size_type     near_idx {
                 (diff < 0) ? node.left : node.right
@@ -134,7 +134,7 @@ k_nearest_dists(const point_t &target, size_type k) const {
                 stack.push(SearchState { near_idx, state.depth + 1 });
         }
         else  { // Visiting far side
-            const size_type     axis { state.depth % k_ };
+            const size_type     axis { state.depth % dim_ };
             const value_type    diff { target[axis] - node.point[axis] };
             const size_type     far_idx {
                 (diff < 0) ? node.right : node.left
@@ -200,7 +200,7 @@ void KDTree<T>::build_tree_(points_vec &points)  {
 
         if (task.start >= task.end)  continue;
 
-        const size_type axis { task.depth % k_ };
+        const size_type axis { task.depth % dim_ };
         const size_type mid { task.start + (task.end - task.start) / 2 };
 
         // Partition around median
@@ -284,7 +284,7 @@ nearest_(const point_t &target) const  {
                 best = node.point;
             }
 
-            const size_type     axis { state.depth % k_ };
+            const size_type     axis { state.depth % dim_ };
             const value_type    diff { target[axis] - node.point[axis] };
             const size_type     near_idx {
                 (diff < 0) ? node.left : node.right
@@ -304,7 +304,7 @@ nearest_(const point_t &target) const  {
                 stack.push(SearchState { near_idx, state.depth + 1 });
         }
         else  { // Visiting far side
-            const size_type     axis { state.depth % k_ };
+            const size_type     axis { state.depth % dim_ };
             const value_type    diff { target[axis] - node.point[axis] };
             const size_type     far_idx {
                 (diff < 0) ? node.right : node.left
@@ -352,7 +352,7 @@ k_nearest_(const point_t &target, size_type k) const  {
                 pq.push({ dist, node.point });
             }
 
-            const size_type     axis { state.depth % k_ };
+            const size_type     axis { state.depth % dim_ };
             const value_type    diff { target[axis] - node.point[axis] };
             const size_type     near_idx {
                 (diff < 0) ? node.left : node.right
@@ -371,7 +371,7 @@ k_nearest_(const point_t &target, size_type k) const  {
                 stack.push(SearchState { near_idx, state.depth + 1 });
         }
         else  { // Visiting far side
-            const size_type     axis { state.depth % k_ };
+            const size_type     axis { state.depth % dim_ };
             const value_type    diff { target[axis] - node.point[axis] };
             const size_type     far_idx {
                 (diff < 0) ? node.right : node.left
@@ -414,7 +414,7 @@ range_search_(const point_t &lower, const point_t &upper) const  {
         const Node  &node { nodes_[state.node_idx] };
         bool        in_range { true };  // Check if point is in range
 
-        for (size_type i = 0; i < k_; ++i)  {
+        for (size_type i = 0; i < dim_; ++i)  {
             if (node.point[i] < lower[i] || node.point[i] > upper[i])  {
                 in_range = false;
                 break;
@@ -422,7 +422,7 @@ range_search_(const point_t &lower, const point_t &upper) const  {
         }
         if (in_range)  result.push_back(node.point);
 
-        const size_type axis { state.depth % k_ };
+        const size_type axis { state.depth % dim_ };
 
         // Push children if they might contain points in range
         //

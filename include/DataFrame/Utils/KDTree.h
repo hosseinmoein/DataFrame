@@ -62,7 +62,7 @@ public:
     };
 
     explicit
-    KDTree(size_type k,
+    KDTree(size_type dim,
            dist_func_t &&dist_func =
                [](const point_t &a, const point_t &b) -> value_type {
                    value_type       sum { 0 };
@@ -131,7 +131,7 @@ private:
 
     std::vector<Node>   nodes_ { };
     size_type           root_idx_ { NULL_IDX };
-    const size_type     k_;
+    const size_type     dim_; // Number of dimensions
     dist_func_t         dist_func_;
 
     // Build tree iteratively using array-based storage

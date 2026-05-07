@@ -68,10 +68,7 @@ private:
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = size_type;
+    DEFINE_VISIT_BASIC_TYPES_4
 
     template <typename K, typename H>
     inline void
@@ -83,6 +80,16 @@ public:
         if (col_s < 3)
             throw DataFrameError("EhlersHighPassFilterVisitor: "
                                  "column size must be > 2");
+
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "EhlersHighPassFilterVisitor: "
+                        "Inconsistent data dimensions");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
         const data_t    ang { TAU / period_ };
@@ -100,10 +107,10 @@ public:
             if constexpr (is_std_vector_v<T>)
                  prev_filter.resize(column_begin->size(), data_t(0));
             else
-				prev_filter.fill(data_t(0));
+                prev_filter.fill(data_t(0));
         }
         else  prev_filter = 0;
-        for (size_type i = 1; i < col_s; ++i)  {
+        for (size_type i { 1 }; i < col_s; ++i)  {
             const value_type    &diff { *(column_begin + i) - prev_input };
             const value_type    filter {
                 (diff * t_plus) + (prev_filter * t_minus)
@@ -132,8 +139,19 @@ using ehpf_v = EhlersHighPassFilterVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  EhlersBandPassFilterVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
 
     DEFINE_VISIT_BASIC_TYPES_4
 
@@ -147,25 +165,48 @@ struct  EhlersBandPassFilterVisitor  {
         if (col_s < 10)
             throw DataFrameError("EhlersBandPassFilterVisitor: "
                                  "column size must be > 9");
+
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "EhlersBandPassFilterVisitor: "
+                        "Inconsistent data dimensions");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const value_type        beta { std::cos(TAU / period_) };
-        const value_type        gamma {
-            T(1) / std::cos(TAU * bandw_ / period_)
+        const data_t            beta { std::cos(TAU / period_) };
+        const data_t            gamma {
+            data_t(1) / std::cos(TAU * bandw_ / period_)
         };
-        const value_type        alpha {
-            gamma - std::sqrt(gamma * gamma - T(1))
+        const data_t            alpha {
+            gamma - std::sqrt(gamma * gamma - data_t(1))
         };
-        const value_type        f1 { T(0.5) * (T(1) - alpha) };
-        const value_type        f2 { beta * (T(1) + alpha) };
-        std::vector<value_type> filter(col_s, T(0));
+        const data_t            f1 { data_t(0.5) * (data_t(1) - alpha) };
+        const data_t            f2 { beta * (data_t(1) + alpha) };
+        std::vector<value_type> filter(col_s);
 
-        filter[2] = f1 * (*(column_begin + 2) - *(column_begin));
-        for (size_type i = 3; i < col_s; ++i)
+        if constexpr (is_md_)  {
+            if constexpr (is_std_vector_v<T>)  {
+                const auto  dim { column_begin->size() };
+
+                filter[0] = filter[1] = value_type(dim, 0);
+            }
+            else  {
+                filter[0] = filter[1] = value_type();
+            }
+        }
+        else  {
+            filter[0] = filter[1] = 0;
+        }
+        filter[2] = (*(column_begin + 2) - *(column_begin)) * f1;
+        for (size_type i { 3 }; i < col_s; ++i)
             filter[i] =
-                f1 * (*(column_begin + i) - *(column_begin + (i - 2))) +
-                f2 * filter[i - 1] - alpha * filter[i - 2];
-        for (size_type i = 0; i < col_s; ++i)
+                ((*(column_begin + i) - *(column_begin + (i - 2))) * f1) +
+                (filter[i - 1] * f2) - (filter[i - 2] * alpha);
+        for (size_type i { 0 }; i < col_s; ++i)
             *(column_begin + i) -= filter[i];
     }
 
@@ -174,17 +215,16 @@ struct  EhlersBandPassFilterVisitor  {
     inline result_type get_result() const  { return (0); }
 
     explicit
-    EhlersBandPassFilterVisitor(value_type period = 20,
-                                value_type bandwidth = 0.3)
+    EhlersBandPassFilterVisitor(data_t period = 20, data_t bandwidth = 0.3)
         : period_(period), bandw_(bandwidth)  {  }
 
 private:
 
-    const value_type    period_;
-    const value_type    bandw_;
+    const data_t    period_;
+    const data_t    bandw_;
 };
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 using ebpf_v = EhlersBandPassFilterVisitor<T, I>;
 
 // ----------------------------------------------------------------------------

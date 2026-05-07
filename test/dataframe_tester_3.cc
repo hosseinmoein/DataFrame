@@ -4572,7 +4572,7 @@ static void test_EhlersBandPassFilterVisitor()  {
 
     std::cout << "\nTesting EhlersBandPassFilterVisitor{ } ..." << std::endl;
 
-    typedef StdDataFrame64<std::string> StrDataFrame;
+    typedef StdDataFrame<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
@@ -4604,6 +4604,77 @@ static void test_EhlersBandPassFilterVisitor()  {
         std::cout << ex.what() << std::endl;
         ::exit(-1);
     }
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    // Note: z = x + 2.0 throughout, so you can sanity-check that all 3
+    // dimensions are being filtered independently
+    //
+    std::vector<ary_col_t>  ary_col  {
+        { 1.0, 2.0, 3.0 }, { 1.5, 2.5, 3.5 }, { 2.0, 3.0, 4.0 },
+        { 2.5, 3.5, 4.5 }, { 3.0, 4.0, 5.0 }, { 2.5, 3.5, 4.5 },
+        { 2.0, 3.0, 4.0 }, { 1.5, 2.5, 3.5 }, { 1.0, 2.0, 3.0 },
+        { 0.5, 1.5, 2.5 }, { 0.0, 1.0, 2.0 }, { 0.5, 1.5, 2.5 },
+        { 1.0, 2.0, 3.0 }, { 1.5, 2.5, 3.5 }, { 2.0, 3.0, 4.0 },
+        { 2.5, 3.5, 4.5 }, { 3.0, 4.0, 5.0 }, { 2.5, 3.5, 4.5 },
+        { 2.0, 3.0, 4.0 }, { 1.5, 2.5, 3.5 }
+    };
+    std::vector<vec_col_t>  vec_col  {
+        { 1.0, 2.0, 3.0 }, { 1.5, 2.5, 3.5 }, { 2.0, 3.0, 4.0 },
+        { 2.5, 3.5, 4.5 }, { 3.0, 4.0, 5.0 }, { 2.5, 3.5, 4.5 },
+        { 2.0, 3.0, 4.0 }, { 1.5, 2.5, 3.5 }, { 1.0, 2.0, 3.0 },
+        { 0.5, 1.5, 2.5 }, { 0.0, 1.0, 2.0 }, { 0.5, 1.5, 2.5 },
+        { 1.0, 2.0, 3.0 }, { 1.5, 2.5, 3.5 }, { 2.0, 3.0, 4.0 },
+        { 2.5, 3.5, 4.5 }, { 3.0, 4.0, 5.0 }, { 2.5, 3.5, 4.5 },
+        { 2.0, 3.0, 4.0 }, { 1.5, 2.5, 3.5 }
+    };
+
+    df.load_column<ary_col_t>("ARY COL", std::move(ary_col),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC COL", std::move(vec_col),
+                              nan_policy::dont_pad_with_nans);
+
+    ebpf_v<vec_col_t, std::string>  vec_ebpf(10);
+    ebpf_v<ary_col_t, std::string>  ary_ebpf(10);
+
+    df.single_act_visit<vec_col_t>("VEC COL", vec_ebpf);
+    df.single_act_visit<ary_col_t>("ARY COL", ary_ebpf);
+
+    const auto  &vec_col_ref = df.get_column<vec_col_t>("VEC COL");
+    const auto  &ary_col_ref = df.get_column<ary_col_t>("ARY COL");
+
+    assert(vec_col_ref.size() == 20);
+    assert(std::abs(vec_col_ref[0][0] - 1.0) < 0.00001);
+    assert(std::abs(vec_col_ref[0][1] - 2.0) < 0.00001);
+    assert(std::abs(vec_col_ref[0][2] - 3.0) < 0.00001);
+    assert(std::abs(vec_col_ref[1][0] - 1.5) < 0.00001);
+    assert(std::abs(vec_col_ref[1][1] - 2.5) < 0.00001);
+    assert(std::abs(vec_col_ref[1][2] - 3.5) < 0.00001);
+    assert(std::abs(vec_col_ref[10][0] - 0.59839) < 0.00001);
+    assert(std::abs(vec_col_ref[10][1] - 1.59839) < 0.00001);
+    assert(std::abs(vec_col_ref[10][2] - 2.59839) < 0.00001);
+    assert(std::abs(vec_col_ref[19][0] - 2.07294) < 0.00001);
+    assert(std::abs(vec_col_ref[19][1] - 3.07294) < 0.00001);
+    assert(std::abs(vec_col_ref[19][2] - 4.07294) < 0.00001);
+
+    assert(ary_col_ref.size() == 20);
+    assert(std::abs(ary_col_ref[0][0] - 1.0) < 0.00001);
+    assert(std::abs(ary_col_ref[0][1] - 2.0) < 0.00001);
+    assert(std::abs(ary_col_ref[0][2] - 3.0) < 0.00001);
+    assert(std::abs(ary_col_ref[1][0] - 1.5) < 0.00001);
+    assert(std::abs(ary_col_ref[1][1] - 2.5) < 0.00001);
+    assert(std::abs(ary_col_ref[1][2] - 3.5) < 0.00001);
+    assert(std::abs(ary_col_ref[10][0] - 0.59839) < 0.00001);
+    assert(std::abs(ary_col_ref[10][1] - 1.59839) < 0.00001);
+    assert(std::abs(ary_col_ref[10][2] - 2.59839) < 0.00001);
+    assert(std::abs(ary_col_ref[19][0] - 2.07294) < 0.00001);
+    assert(std::abs(ary_col_ref[19][1] - 3.07294) < 0.00001);
+    assert(std::abs(ary_col_ref[19][2] - 4.07294) < 0.00001);
 }
 
 // ----------------------------------------------------------------------------

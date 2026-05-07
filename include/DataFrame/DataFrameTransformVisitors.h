@@ -54,14 +54,28 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  EhlersHighPassFilterVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_4
+private:
+
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = size_type;
 
     template <typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end) {
 
         GET_COL_SIZE
 
@@ -71,18 +85,29 @@ struct  EhlersHighPassFilterVisitor  {
                                  "column size must be > 2");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const value_type    ang = TAU / period_;
-        const value_type    ang_cos = std::cos(ang);
-        const value_type    alpha =
-            ang_cos != T(0) ? (ang_cos + std::sin(ang) - T(1)) / ang_cos : T(0);
-        const value_type    t_plus = T(1) + alpha * T(0.5);
-        const value_type    t_minus = T(1) - alpha;
-        value_type          prev_input = *column_begin;
-        value_type          prev_filter = 0;
+        const data_t    ang { TAU / period_ };
+        const data_t    ang_cos { std::cos(ang) };
+        const data_t    alpha {
+            ang_cos != data_t(0)
+                ? (ang_cos + std::sin(ang) - data_t(1)) / ang_cos : data_t(0)
+        };
+        const data_t    t_plus { data_t(1) + alpha * data_t(0.5) };
+        const data_t    t_minus { data_t(1) - alpha };
+        value_type      prev_input { *column_begin };
+        value_type      prev_filter { };
 
+        if constexpr (is_md_)  {
+            if constexpr (is_std_vector_v<T>)
+                 prev_filter.resize(column_begin->size(), data_t(0));
+            else
+				prev_filter.fill(data_t(0));
+        }
+        else  prev_filter = 0;
         for (size_type i = 1; i < col_s; ++i)  {
-            const value_type    diff = *(column_begin + i) - prev_input;
-            const value_type    filter = t_plus * diff + t_minus * prev_filter;
+            const value_type    &diff { *(column_begin + i) - prev_input };
+            const value_type    filter {
+                (diff * t_plus) + (prev_filter * t_minus)
+            };
 
             prev_filter = filter;
             prev_input = *(column_begin + i);
@@ -90,19 +115,19 @@ struct  EhlersHighPassFilterVisitor  {
         }
     }
 
-    inline void pre ()  {  }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (0); }
+    inline void pre()  {  }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (0); }
 
     explicit
-    EhlersHighPassFilterVisitor(value_type period = 20) : period_(period)  {  }
+    EhlersHighPassFilterVisitor(data_t period = 20) : period_(period)  {  }
 
 private:
 
-    const value_type    period_;
+    const data_t    period_;
 };
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 using ehpf_v = EhlersHighPassFilterVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
@@ -114,7 +139,7 @@ struct  EhlersBandPassFilterVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end) {
 
         GET_COL_SIZE
 
@@ -124,25 +149,29 @@ struct  EhlersBandPassFilterVisitor  {
                                  "column size must be > 9");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const value_type        beta = std::cos(TAU / period_);
-        const value_type        gamma = T(1) / std::cos(TAU * bandw_ / period_);
-        const value_type        alpha =
-            gamma - std::sqrt(gamma * gamma - T(1));
-        const value_type        f1 = T(0.5) * (T(1) - alpha);
-        const value_type        f2 = beta * (T(1) + alpha);
+        const value_type        beta { std::cos(TAU / period_) };
+        const value_type        gamma {
+            T(1) / std::cos(TAU * bandw_ / period_)
+        };
+        const value_type        alpha {
+            gamma - std::sqrt(gamma * gamma - T(1))
+        };
+        const value_type        f1 { T(0.5) * (T(1) - alpha) };
+        const value_type        f2 { beta * (T(1) + alpha) };
         std::vector<value_type> filter(col_s, T(0));
 
         filter[2] = f1 * (*(column_begin + 2) - *(column_begin));
         for (size_type i = 3; i < col_s; ++i)
-            filter[i] = f1 * (*(column_begin + i) - *(column_begin + (i - 2))) +
-                        f2 * filter[i - 1] - alpha * filter[i - 2];
+            filter[i] =
+                f1 * (*(column_begin + i) - *(column_begin + (i - 2))) +
+                f2 * filter[i - 1] - alpha * filter[i - 2];
         for (size_type i = 0; i < col_s; ++i)
             *(column_begin + i) -= filter[i];
     }
 
-    inline void pre ()  {  }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (0); }
+    inline void pre()  {  }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (0); }
 
     explicit
     EhlersBandPassFilterVisitor(value_type period = 20,
@@ -165,7 +194,7 @@ struct  ClipVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_4
 
-    inline void operator() (const index_type &, value_type &val)  {
+    inline void operator()(const index_type &, value_type &val)  {
 
         if (val > upper_)  {
             val = upper_;
@@ -178,7 +207,7 @@ struct  ClipVisitor  {
     }
     template <typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end) {
 
         GET_COL_SIZE
 
@@ -244,7 +273,7 @@ struct  AbsVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_4
 
-    inline void operator() (const index_type &, value_type &val)  {
+    inline void operator()(const index_type &, value_type &val)  {
 
         if (val < T(0))  {
             if constexpr (std::is_floating_point<T>::value)
@@ -254,10 +283,11 @@ struct  AbsVisitor  {
             count_ += 1;
         }
     }
+
     // PASS_DATA_ONE_BY_ONE
     template <typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end) {
 
         GET_COL_SIZE
 
@@ -322,7 +352,7 @@ struct  ExpoSmootherVisitor {
 
     template<typename K, typename H>
     inline void
-    operator() (K, K, H column_begin, H column_end)  {
+    operator()(K, K, H column_begin, H column_end)  {
 
         count_ = std::distance(column_begin, column_end);
 
@@ -361,14 +391,14 @@ using exs_v = ExpoSmootherVisitor<T, I>;
 
 // Holt-Winters double exponential smoothing
 template<typename T, typename I = unsigned long>
-struct  HWExpoSmootherVisitor {
+struct  HWExpoSmootherVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_4
 
     template<typename K, typename H>
     inline void
-    operator() (K /*idx_begin*/, K /*idx_end*/,
-                H column_begin, H column_end)  {
+    operator()(K /*idx_begin*/, K /*idx_end*/,
+               H column_begin, H column_end)  {
 
         count_ = std::distance(column_begin, column_end);
 

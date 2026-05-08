@@ -232,65 +232,114 @@ using ebpf_v = EhlersBandPassFilterVisitor<T, I>;
 template<typename T, typename I = unsigned long>
 struct  ClipVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+public:
+
     DEFINE_VISIT_BASIC_TYPES_4
 
     inline void operator()(const index_type &, value_type &val)  {
 
-        if (val > upper_)  {
-            val = upper_;
-            count_ += 1;
+        if constexpr (! is_md_)  {
+            if (val > upper_)  {
+                val = upper_;
+                count_ += 1;
+            }
+            else if (val < lower_)  {
+                val = lower_;
+                count_ += 1;
+            }
         }
-        else if (val < lower_)  {
-            val = lower_;
-            count_ += 1;
+        else  {
+            if (val == nan_)  return;
+
+            const size_type dim { val.size() };
+
+            for (size_type j { 0 }; j < dim; ++j)  {
+                if (val[j] > upper_[j])  {
+                    val[j] = upper_[j];
+                    count_ += 1;
+                }
+                else if (val[j] < lower_[j])  {
+                    val[j] = lower_[j];
+                    count_ += 1;
+                }
+            }
         }
     }
+
     template <typename K, typename H>
     inline void
     operator()(K idx_begin, K idx_end, H column_begin, H column_end) {
 
         GET_COL_SIZE
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<T>(
-                    size_type(0),
-                    col_s,
-                    [&column_begin, this]
-                    (auto begin, auto end) -> result_type  {
-                        result_type count { 0 };
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
 
-                        for (size_type i = begin; i < end; ++i)  {
-                            value_type  &val = *(column_begin + i);
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "ClipVisitor: Inconsistent data dimensions");
 
-                            if (val > this->upper_)  {
-                                val = this->upper_;
+            if (upper_.size() != dim || lower_.size() != dim)
+                throw DataFrameError(
+                    "ClipVisitor: Upper and lower limits must of the same "
+                    "dimension as input data");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        auto    lbd =
+            [&column_begin, this](auto begin, auto end) -> result_type  {
+                result_type count { 0 };
+                size_type   dim { 1 };
+
+                if constexpr (is_md_)  dim = column_begin->size();
+                for (size_type i { begin }; i < end; ++i)  {
+                    value_type  &val { *(column_begin + i) };
+
+                    if constexpr (! is_md_)  {
+                        if (val > upper_)  {
+                            val = upper_;
+                            count += 1;
+                        }
+                        else if (val < lower_)  {
+                            val = lower_;
+                            count += 1;
+                        }
+                    }
+                    else  {
+                        for (size_type j { 0 }; j < dim; ++j)  {
+                            if (val[j] > upper_[j])  {
+                                val[j] = upper_[j];
                                 count += 1;
                             }
-                            else if (val < this->lower_)  {
-                                val = this->lower_;
+                            else if (val[j] < lower_[j])  {
+                                val[j] = lower_[j];
                                 count += 1;
                             }
                         }
-                        return (count);
-                    });
+                    }
+                }
+                return (count);
+            };
+
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    size_type(0),
+                    col_s,
+                    std::move(lbd))
+            };
 
             for (auto &fut : futures)  count_ += fut.get();
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i)  {
-                value_type  &val = *(column_begin + i);
-
-                if (val > upper_)  {
-                    val = upper_;
-                    count_ += 1;
-                }
-                else if (val < lower_)  {
-                    val = lower_;
-                    count_ += 1;
-                }
-            }
+            count_ = lbd(size_type(0), col_s);
         }
     }
 
@@ -304,6 +353,7 @@ private:
     result_type         count_ { 0 };
     const value_type    &upper_;
     const value_type    &lower_;
+    const value_type    nan_ { get_nan<T>() };
 };
 
 // ----------------------------------------------------------------------------

@@ -588,10 +588,12 @@ static void test_ClipVisitor()  {
                    std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
-    const double        upper = 14;
-    const double        lower = 5;
-    ClipVisitor<double> clip (upper, lower);
-    auto                result = df.visit<double>("dbl_col", clip).get_result();
+    const double        upper { 14 };
+    const double        lower { 5 };
+    ClipVisitor<double> clip { upper, lower };
+    auto                result {
+        df.visit<double>("dbl_col", clip).get_result()
+    };
 
     assert(result == 7);
     assert(df.get_column<double>("dbl_col")[0] == 5.0);
@@ -599,6 +601,74 @@ static void test_ClipVisitor()  {
     assert(df.get_column<double>("dbl_col")[2] == 14.0);
     assert(df.get_column<double>("dbl_col")[4] == 5.0);
     assert(df.get_column<double>("dbl_col")[5] == 12.0);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    StlVecType<ary_col_t>   ary_md  {
+        { 1.0, 2.0, 3.0 }, { 10.0, 3.0, 0.2 }, { 3.0, 1.0, 4.0 },
+        { 4.0, 2.5, 2.0 }, { 0.18, 12.0, 1.0 }, { 5.0, 1.5, 3.5 },
+        { 2.5, 3.5, 2.5 }, { 3.5, 2.0, 1.0 }, { 1.0, 40.0, 4.5 },
+        { 0.2, 3.0, 2.0 },
+    };
+    StlVecType<vec_col_t>   vec_md  {
+        { 1.0, 2.0, 3.0 }, { 10.0, 3.0, 0.2 }, { 3.0, 1.0, 4.0 },
+        { 4.0, 2.5, 2.0 }, { 0.18, 12.0, 1.0 }, { 5.0, 1.5, 3.5 },
+        { 2.5, 3.5, 2.5 }, { 3.5, 2.0, 1.0 }, { 1.0, 40.0, 4.5 },
+        { 0.2, 3.0, 2.0 },
+    };
+
+    df.load_column<ary_col_t>("ARY MD", std::move(ary_md),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC MD", std::move(vec_md),
+                              nan_policy::dont_pad_with_nans);
+
+    const vec_col_t         vec_upper = { 9.9, 10.0, 3.0 };
+    const vec_col_t         vec_lower = { 0.8, 0.5, 0.99 };
+    const ary_col_t         ary_upper = { 9.9, 10.0, 3.0 };
+    const ary_col_t         ary_lower = { 0.8, 0.5, 0.99 };
+    ClipVisitor<vec_col_t>  vec_clip {vec_upper, vec_lower};
+    ClipVisitor<ary_col_t>  ary_clip {ary_upper, ary_lower};
+
+    df.single_act_visit<vec_col_t>("VEC MD", vec_clip);
+    df.visit<ary_col_t>("ARY MD", ary_clip);
+
+    const auto  &vec_md_ref { df.get_column<vec_col_t>("VEC MD") };
+    const auto  &ary_md_ref { df.get_column<ary_col_t>("ARY MD") };
+
+    assert(vec_clip.get_result() == 9);
+    assert(ary_clip.get_result() == 9);
+    assert(vec_md_ref.size() == 10);
+    assert(ary_md_ref.size() == 10);
+
+    assert(vec_md_ref[0][0] == 1.0);
+    assert(vec_md_ref[0][1] == 2.0);
+    assert(vec_md_ref[0][2] == 3.0);
+    assert(vec_md_ref[1][0] == 9.9);
+    assert(vec_md_ref[1][1] == 3.0);
+    assert(vec_md_ref[1][2] == 0.99);
+    assert(vec_md_ref[4][0] == 0.8);
+    assert(vec_md_ref[4][1] == 10.0);
+    assert(vec_md_ref[4][2] == 1.0);
+    assert(vec_md_ref[9][0] == 0.8);
+    assert(vec_md_ref[9][1] == 3.0);
+    assert(vec_md_ref[9][2] == 2.0);
+    assert(ary_md_ref[0][0] == 1.0);
+    assert(ary_md_ref[0][1] == 2.0);
+    assert(ary_md_ref[0][2] == 3.0);
+    assert(ary_md_ref[1][0] == 9.9);
+    assert(ary_md_ref[1][1] == 3.0);
+    assert(ary_md_ref[1][2] == 0.99);
+    assert(ary_md_ref[4][0] == 0.8);
+    assert(ary_md_ref[4][1] == 10.0);
+    assert(ary_md_ref[4][2] == 1.0);
+    assert(ary_md_ref[9][0] == 0.8);
+    assert(ary_md_ref[9][1] == 3.0);
+    assert(ary_md_ref[9][2] == 2.0);
 }
 
 // -----------------------------------------------------------------------------

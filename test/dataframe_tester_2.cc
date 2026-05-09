@@ -4857,6 +4857,50 @@ static void test_AbsVisitor()  {
 
     assert((df.get_column<double>("dbl_col") == abs_dblvec));
     assert((df.get_column<int>("int_col") == abs_intvec));
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    StlVecType<ary_col_t>   ary_col  {
+        { 1.0, 2.0, -1.0 }, { 2.0, -1.0, 3.0 }, { 3.0, 4.0, 2.0 },
+        { 2.0, 1.0, 2.0 }, { -1.0, -3.0, -1.0 }, { 4.0, 2.0, 4.0 },
+        { 2.0, 1.0, 3.0 }, { 3.0, 3.0, 2.0 }, { -1.0, -2.0, 1.0 },
+        { 2.0, 4.0, 3.0 },
+    };
+    StlVecType<vec_col_t>   vec_col  {
+        { 1.0, 2.0, -1.0 }, { 2.0, -1.0, 3.0 }, { 3.0, 4.0, 2.0 },
+        { 2.0, 1.0, 2.0 }, { -1.0, -3.0, -1.0 }, { 4.0, 2.0, 4.0 },
+        { 2.0, 1.0, 3.0 }, { 3.0, 3.0, 2.0 }, { -1.0, -2.0, 1.0 },
+        { 2.0, 4.0, 3.0 },
+    };
+
+    df.load_column<ary_col_t>("ARY COL", std::move(ary_col),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC COL", std::move(vec_col),
+                              nan_policy::dont_pad_with_nans);
+
+    AbsVisitor<ary_col_t>   ary_abs;
+    AbsVisitor<vec_col_t>   vec_abs;
+
+    df.visit<ary_col_t>("ARY COL", ary_abs);
+    df.single_act_visit<vec_col_t>("VEC COL", vec_abs);
+
+    const auto  &vec_md_ref { df.get_column<vec_col_t>("VEC COL") };
+    const auto  &ary_md_ref { df.get_column<ary_col_t>("ARY COL") };
+
+    assert(vec_abs.get_result() == 7);
+    assert(ary_abs.get_result() == 7);
+
+    for (const auto &vec : vec_md_ref)
+        for (const auto val : vec)
+            assert(val >= 0.0);
+    for (const auto &ary : ary_md_ref)
+        for (const auto val : ary)
+            assert(val >= 0.0);
 }
 
 // -----------------------------------------------------------------------------

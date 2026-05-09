@@ -361,64 +361,96 @@ private:
 template<typename T, typename I = unsigned long>
 struct  AbsVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
+
     DEFINE_VISIT_BASIC_TYPES_4
 
     inline void operator()(const index_type &, value_type &val)  {
 
-        if (val < T(0))  {
-            if constexpr (std::is_floating_point<T>::value)
-                val = std::fabs(val);
-            else
+        if constexpr (! is_md_)  {
+            if (val < data_t(0))  {
                 val = std::abs(val);
-            count_ += 1;
+                count_ += 1;
+            }
+        }
+        else  {
+            const size_type dim { val.size() };
+
+            for (size_type j { 0 }; j < dim; ++j)  {
+                if (val[j] < data_t(0))  {
+                    val[j] = std::abs(val[j]);
+                    count_ += 1;
+                }
+            }
         }
     }
 
-    // PASS_DATA_ONE_BY_ONE
     template <typename K, typename H>
     inline void
-    operator()(K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end)  {
 
         GET_COL_SIZE
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<T>(
-                    size_type(0),
-                    col_s,
-                    [&column_begin]
-                    (auto begin, auto end) -> result_type  {
-                        result_type count { 0 };
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
 
-                        for (size_type i = begin; i < end; ++i)  {
-                            value_type  &val = *(column_begin + i);
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "AbsVisitor: Inconsistent data dimensions");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
 
-                            if (val < T(0))  {
-                                if constexpr (std::is_floating_point<T>::value)
-                                    val = std::fabs(val);
-                                else
-                                    val = std::abs(val);
+        auto    lbd =
+            [&column_begin](auto begin, auto end) -> result_type  {
+                result_type count { 0 };
+                size_type   dim { 1 };
+
+                if constexpr (is_md_)  dim = column_begin->size();
+                for (size_type i { begin }; i < end; ++i)  {
+                    value_type  &val { *(column_begin + i) };
+
+                    if constexpr (! is_md_)  {
+                        if (val < data_t(0))  {
+                            val = std::abs(val);
+                            count += 1;
+                        }
+                    }
+                    else  {
+                        for (size_type j { 0 }; j < dim; ++j)  {
+                            if (val[j] < data_t(0))  {
+                                val[j] = std::abs(val[j]);
                                 count += 1;
                             }
                         }
-                        return (count);
-                    });
+                    }
+                }
+                return (count);
+            };
+
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<T>(
+                    size_type(0),
+                    col_s,
+                    std::move(lbd))
+            };
 
             for (auto &fut : futures)  count_ += fut.get();
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i)  {
-                value_type  &val = *(column_begin + i);
-
-                if (val < T(0))  {
-                    if constexpr (std::is_floating_point<T>::value)
-                        val = std::fabs(val);
-                    else
-                        val = std::abs(val);
-                    count_ += 1;
-                }
-            }
+            count_ = lbd(size_type(0), col_s);
         }
     }
 
@@ -435,6 +467,7 @@ private:
 
 // The exponential smoothing could be done multiple times, if there is a
 // trend in the data
+//
 template<typename T, typename I = unsigned long>
 struct  ExpoSmootherVisitor {
 
@@ -446,13 +479,14 @@ struct  ExpoSmootherVisitor {
 
         count_ = std::distance(column_begin, column_end);
 
-        for (size_type j = 0; j < repeat_count_; ++j)  {
-            value_type  prev_v = *column_begin;
+        for (size_type j { 0 }; j < repeat_count_; ++j)  {
+            value_type  prev_v { *column_begin };
 
             // Y0 = X0
             // Yt = aXt + (1 - a)Yt-1
-            for (size_type i = 1; i < count_; ++i) [[likely]]  {
-                const value_type    curr_v = *(column_begin + i);
+            //
+            for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
+                const value_type    curr_v { *(column_begin + i) };
 
                 *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
                 prev_v = curr_v;
@@ -480,6 +514,7 @@ using exs_v = ExpoSmootherVisitor<T, I>;
 // ----------------------------------------------------------------------------
 
 // Holt-Winters double exponential smoothing
+//
 template<typename T, typename I = unsigned long>
 struct  HWExpoSmootherVisitor  {
 
@@ -497,11 +532,11 @@ struct  HWExpoSmootherVisitor  {
             throw DataFrameError("HWExpoSmootherVisitor: count must be > 2");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        value_type  prev_v = *column_begin;
-        value_type  tf = *(column_begin + 1) - prev_v;
+        value_type  prev_v { *column_begin };
+        value_type  tf { *(column_begin + 1) - prev_v };
 
-        for (size_type i = 1; i < count_; ++i) [[likely]]  {
-            const value_type    curr_v = *(column_begin + i);
+        for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
+            const value_type    curr_v { *(column_begin + i) };
 
             *(column_begin + i) =
                 alfa_ * curr_v + (T(1) - alfa_) * (prev_v + tf);

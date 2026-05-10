@@ -48,9 +48,9 @@ namespace hmdf
     using result_type = size_type;
 
 #define DEFINE_PRE_POST_2 \
-    inline void pre ()  { count_ = 0; } \
-    inline void post ()  {  } \
-    inline result_type get_result () const  { return (count_); }
+    inline void pre()  { count_ = 0; } \
+    inline void post()  {  } \
+    inline result_type get_result() const  { return (count_); }
 
 // ----------------------------------------------------------------------------
 
@@ -287,7 +287,7 @@ public:
 
             if (upper_.size() != dim || lower_.size() != dim)
                 throw DataFrameError(
-                    "ClipVisitor: Upper and lower limits must of the same "
+                    "ClipVisitor: Upper and lower limits must be of the same "
                     "dimension as input data");
         }
 #endif // HMDF_SANITY_EXCEPTIONS
@@ -469,27 +469,69 @@ private:
 // trend in the data
 //
 template<typename T, typename I = unsigned long>
-struct  ExpoSmootherVisitor {
+struct  ExpoSmootherVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
 
     DEFINE_VISIT_BASIC_TYPES_4
 
     template<typename K, typename H>
     inline void
-    operator()(K, K, H column_begin, H column_end)  {
+    operator()(K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end)  {
 
-        count_ = std::distance(column_begin, column_end);
+        count_ = size_type(std::distance(column_begin, column_end));
 
-        for (size_type j { 0 }; j < repeat_count_; ++j)  {
-            value_type  prev_v { *column_begin };
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
 
+            for (size_type i { 1 }; i < count_; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "ExpoSmootherVisitor: Inconsistent data dimensions");
+
+            if (alfa_.size() != dim)
+                throw DataFrameError(
+                    "ExpoSmootherVisitor: Alfa must be of the same "
+                    "dimension as input data");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        for (size_type r { 0 }; r < repeat_count_; ++r)  {
             // Y0 = X0
             // Yt = aXt + (1 - a)Yt-1
             //
-            for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
-                const value_type    curr_v { *(column_begin + i) };
+            value_type  prev_v { *column_begin };
 
-                *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
-                prev_v = curr_v;
+            if constexpr (! is_md_)  {
+                for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
+                    const value_type    curr_v { *(column_begin + i) };
+
+                    *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
+                    prev_v = curr_v;
+                }
+            }
+            else  {
+                const size_type dim { column_begin->size() };
+
+                for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
+                    const value_type    curr_v { *(column_begin + i) };
+
+                    for (size_type d { 0 }; d < dim; ++d) [[likely]]  {
+                        (*(column_begin + i))[d] =
+                            prev_v[d] + alfa_[d] * (curr_v[d] - prev_v[d]);
+                        prev_v[d] = curr_v[d];
+                    }
+                }
             }
         }
     }
@@ -497,13 +539,14 @@ struct  ExpoSmootherVisitor {
     DEFINE_PRE_POST_2
 
     explicit
-    ExpoSmootherVisitor(value_type data_smoothing_factor, size_type rc = 1)
+    ExpoSmootherVisitor(const value_type &data_smoothing_factor,
+                        size_type rc = 1)
         : alfa_(data_smoothing_factor),
           repeat_count_(rc)  {   }
 
 private:
 
-    const value_type    alfa_;
+    const value_type    &alfa_;
     const size_type     repeat_count_;
     result_type         count_ { 0 };
 };
@@ -522,10 +565,9 @@ struct  HWExpoSmootherVisitor  {
 
     template<typename K, typename H>
     inline void
-    operator()(K /*idx_begin*/, K /*idx_end*/,
-               H column_begin, H column_end)  {
+    operator()(K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end)  {
 
-        count_ = std::distance(column_begin, column_end);
+        count_ = size_type(std::distance(column_begin, column_end));
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (count_ <= 2)

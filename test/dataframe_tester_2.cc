@@ -3116,6 +3116,80 @@ static void test_HWExpoSmootherVisitor()  {
 
     for (size_t i = 0; i < col1.size(); ++i)
        assert(fabs(col1[i] - actual3[i]) < 0.0001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    StlVecType<ary_col_t>   ary_col  {
+        {   2.5,     2.45, -1.65  },
+        {  -0.1,    -1.1,   1.87  },
+        {   0.98,    0.34,  1.56  },
+        { -12.34,    2.3,  -0.34  },
+        {  -1.9,     0.387, 0.123 },
+        {   1.06,   -0.65,  2.03  },
+        {   0.4,    -1.0,   0.59  },
+        {   0.125,   1.9,  -0.68  },
+        {   2.0045, 50.8,  -1.0   },
+        {   0.78,    0.48,  1.99  },
+        {  -0.97,    1.03,  8.678 },
+        {  -1.4,     1.59,  0.7   }
+    };
+    StlVecType<vec_col_t>   vec_col  {
+        {   2.5,     2.45, -1.65  },
+        {  -0.1,    -1.1,   1.87  },
+        {   0.98,    0.34,  1.56  },
+        { -12.34,    2.3,  -0.34  },
+        {  -1.9,     0.387, 0.123 },
+        {   1.06,   -0.65,  2.03  },
+        {   0.4,    -1.0,   0.59  },
+        {   0.125,   1.9,  -0.68  },
+        {   2.0045, 50.8,  -1.0   },
+        {   0.78,    0.48,  1.99  },
+        {  -0.97,    1.03,  8.678 },
+        {  -1.4,     1.59,  0.7   }
+    };
+
+    df.load_column<ary_col_t>("ARY COL", std::move(ary_col),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC COL", std::move(vec_col),
+                              nan_policy::dont_pad_with_nans);
+
+    const ary_col_t                     ary_alfa = { 0.8, 0.8, 0.8 };
+    const ary_col_t                     ary_beta = { 0.8, 0.8, 0.8 };
+    HWExpoSmootherVisitor<ary_col_t>    ary_es (ary_alfa, ary_beta);
+    const vec_col_t                     vec_alfa = { 0.8, 0.8, 0.8 };
+    const vec_col_t                     vec_beta = { 0.8, 0.8, 0.8 };
+    HWExpoSmootherVisitor<vec_col_t>    vec_es (vec_alfa, vec_beta);
+
+    df.single_act_visit<ary_col_t>("ARY COL", ary_es);
+    df.single_act_visit<vec_col_t>("VEC COL", vec_es);
+
+    assert(ary_es.get_result() == 12);
+    assert(vec_es.get_result() == 12);
+
+    const auto  &ary_col_ref { df.get_column<ary_col_t>("ARY COL") };
+    const auto  &vec_col_ref { df.get_column<vec_col_t>("VEC COL") };
+
+    assert(std::abs(ary_col_ref[0][0] - 2.5) < 0.00001);
+    assert(std::abs(ary_col_ref[0][2] - -1.65) < 0.00001);
+    assert(std::abs(ary_col_ref[3][0] - -9.6072) < 0.0001);
+    assert(std::abs(ary_col_ref[3][1] - 1.9964) < 0.0001);
+    assert(std::abs(ary_col_ref[8][1] - 41.4642) < 0.0001);
+    assert(std::abs(ary_col_ref[8][2] - -1.17294) < 0.00001);
+    assert(std::abs(ary_col_ref[11][0] - -1.62144) < 0.00001);
+    assert(std::abs(ary_col_ref[11][2] - 3.45742) < 0.00001);
+    assert(std::abs(vec_col_ref[0][0] - 2.5) < 0.00001);
+    assert(std::abs(vec_col_ref[0][2] - -1.65) < 0.00001);
+    assert(std::abs(vec_col_ref[3][0] - -9.6072) < 0.0001);
+    assert(std::abs(vec_col_ref[3][1] - 1.9964) < 0.0001);
+    assert(std::abs(vec_col_ref[8][1] - 41.4642) < 0.0001);
+    assert(std::abs(vec_col_ref[8][2] - -1.17294) < 0.00001);
+    assert(std::abs(vec_col_ref[11][0] - -1.62144) < 0.00001);
+    assert(std::abs(vec_col_ref[11][2] - 3.45742) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

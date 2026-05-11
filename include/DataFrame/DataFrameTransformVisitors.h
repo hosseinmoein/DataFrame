@@ -561,6 +561,17 @@ using exs_v = ExpoSmootherVisitor<T, I>;
 template<typename T, typename I = unsigned long>
 struct  HWExpoSmootherVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
+
     DEFINE_VISIT_BASIC_TYPES_4
 
     template<typename K, typename H>
@@ -572,6 +583,20 @@ struct  HWExpoSmootherVisitor  {
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (count_ <= 2)
             throw DataFrameError("HWExpoSmootherVisitor: count must be > 2");
+
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < count_; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "HWExpoSmootherVisitor: Inconsistent data dimensions");
+
+            if (alfa_.size() != dim || beta_.size() != dim)
+                throw DataFrameError(
+                    "HWExpoSmootherVisitor: Alfa/Beta must be of the same "
+                    "dimension as input data");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
         value_type  prev_v { *column_begin };
@@ -581,16 +606,16 @@ struct  HWExpoSmootherVisitor  {
             const value_type    curr_v { *(column_begin + i) };
 
             *(column_begin + i) =
-                alfa_ * curr_v + (T(1) - alfa_) * (prev_v + tf);
-            tf = beta_ * (curr_v - prev_v) + (T(1) - beta_) * tf;
+                alfa_ * curr_v + (data_t(1) - alfa_) * (prev_v + tf);
+            tf = beta_ * (curr_v - prev_v) + (data_t(1) - beta_) * tf;
             prev_v = curr_v;
         }
     }
 
     DEFINE_PRE_POST_2
 
-    HWExpoSmootherVisitor(value_type data_smoothing_factor,
-                          value_type trend_smoothing_factor)
+    HWExpoSmootherVisitor(const value_type &data_smoothing_factor,
+                          const value_type &trend_smoothing_factor)
         : alfa_(data_smoothing_factor), beta_(trend_smoothing_factor)  {   }
 
 private:

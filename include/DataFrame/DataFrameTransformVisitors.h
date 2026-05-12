@@ -59,7 +59,7 @@ struct  EhlersHighPassFilterVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -144,7 +144,7 @@ struct  EhlersBandPassFilterVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -234,7 +234,7 @@ struct  ClipVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
 public:
 
@@ -363,7 +363,7 @@ struct  AbsVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -473,7 +473,7 @@ struct  ExpoSmootherVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -563,7 +563,7 @@ struct  HWExpoSmootherVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,

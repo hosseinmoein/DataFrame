@@ -293,6 +293,14 @@ constexpr bool  is_std_vector_v = is_std_vector<T>::value;
 
 // ----------------------------------------------------------------------------
 
+template<typename T>
+concept random_acc_cont = requires(T t, std::size_t idx)  {
+    requires hmdf::container<T>;
+
+    t.at(idx);
+    t.operator[](idx);
+};
+
 // Local Variables:
 // mode:C++
 // tab-width:4

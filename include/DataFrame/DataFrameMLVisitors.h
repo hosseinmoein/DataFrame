@@ -547,6 +547,10 @@ public:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  DBSCANVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
 public:
 
     DEFINE_VISIT_BASIC_TYPES
@@ -572,7 +576,7 @@ private:
     inline static distance_func
     get_dist_func_()  {
 
-        if constexpr (std::is_arithmetic_v<value_type>)
+        if constexpr (! is_md_)
             return ([](const T &x, const T &y) -> double  {
                         return (static_cast<double>((x - y) * (x - y)));
                     });
@@ -745,6 +749,10 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  MeanShiftVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
 public:
 
     DEFINE_VISIT_BASIC_TYPES
@@ -765,7 +773,7 @@ private:
     inline static distance_func
     get_dist_func_()  {
 
-        if constexpr (std::is_arithmetic_v<value_type>)
+        if constexpr (! is_md_)
             return ([](const T &x, const T &y) -> double  {
                         return (static_cast<double>((x - y) * (x - y)));
                     });
@@ -1619,7 +1627,7 @@ struct  EntropyVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -1795,7 +1803,7 @@ struct  ImpurityVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -1957,7 +1965,7 @@ struct  SigmoidVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2433,7 +2441,7 @@ struct  PolicyLearningLossVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2586,7 +2594,7 @@ struct  LossFunctionVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2992,7 +3000,7 @@ struct  VectorSimilarityVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3162,6 +3170,10 @@ template<std::size_t K,
          typename T, typename I = unsigned long, std::size_t A = 0>
 struct  SpectralClusteringVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
 public:
 
     DEFINE_VISIT_BASIC_TYPES
@@ -3194,7 +3206,7 @@ private:
     inline static similarity_func
     get_sim_func_()  {
 
-        if constexpr (std::is_arithmetic_v<value_type>)
+        if constexpr (! is_md_)
             return ([](const T &x, const T &y, double sigma) -> double  {
                         const double    diff { x - y };
 
@@ -3418,7 +3430,7 @@ struct  SeasonalPeriodVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3663,7 +3675,7 @@ struct  DynamicTimeWarpVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3787,7 +3799,7 @@ struct  AnomalyDetectByFFTVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -4171,7 +4183,7 @@ struct  AnomalyDetectByZScoreVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -4257,7 +4269,7 @@ public:
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using dist_vec_t = std::vector<double>;
     using pvec_t = std::vector<std::pair<double, size_type>> ;
@@ -4433,7 +4445,7 @@ struct  MutualInfoVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -4976,7 +4988,7 @@ struct  HWESForecastVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -5386,7 +5398,7 @@ struct  LSTMForecastVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -6172,7 +6184,7 @@ struct  AnomalyDetectByKNNVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -6413,6 +6425,10 @@ using and_knn_v = AnomalyDetectByKNNVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  BIRCHVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
 public:
 
     using value_type = T;
@@ -6441,7 +6457,7 @@ private:
     inline static distance_func
     get_dist_func_()  {
 
-        if constexpr (std::is_arithmetic_v<value_type>)
+        if constexpr (! is_md_)
             return ([](const T &x, const T &y) -> double  {
                         return (static_cast<double>(std::abs(x - y)));
                     });
@@ -6594,7 +6610,7 @@ public:
         CFTree<value_type>  tree { };
 
 
-        if constexpr (std::is_arithmetic_v<value_type>)  {
+        if constexpr (! is_md_)  {
             CFTree<value_type>  tmp_tree { threshold_, 1, get_dist_func_() };
 
             tree = std::move(tmp_tree);

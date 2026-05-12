@@ -295,7 +295,9 @@ constexpr bool  is_std_vector_v = is_std_vector<T>::value;
 
 template<typename T>
 concept random_acc_cont = requires(T t, std::size_t idx)  {
-    requires hmdf::container<T>;
+    requires hmdf::container<T> &&
+    ! std::same_as<std::remove_cvref_t<T>, std::string> &&
+    ! std::same_as<std::remove_cvref_t<T>, std::wstring>;
 
     t.at(idx);
     t.operator[](idx);

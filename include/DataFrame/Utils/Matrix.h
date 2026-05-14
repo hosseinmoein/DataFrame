@@ -557,7 +557,7 @@ private:
                                     value_type_of<T>>::type;
 
     inline static constexpr bool    resizable_ { is_md_ && Resizable<T> };
-    inline static constexpr data_t  EPSILON_ { data_t(2.220446e-16) };
+    inline static constexpr double  EPSILON_ { double(2.220446e-16) };
 
     using storage_t = std::vector<value_type>;
 

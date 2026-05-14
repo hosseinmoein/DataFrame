@@ -55,7 +55,6 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -2538,7 +2537,6 @@ static void test_StationaryCheckVisitor()  {
     assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 10.76) < 0.01);
     assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 189.563) < 0.001);
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -2671,7 +2669,6 @@ static void test_covariance_matrix()  {
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_pca_by_eigen()  {
 
     std::cout << "\nTesting pca_by_eigen( ) ..." << std::endl;
@@ -5671,7 +5668,6 @@ static void test_fl_valid_index()  {
     assert(res5.first == 1);
     assert(res5.second == 13);
 }
-*/
 
 // ----------------------------------------------------------------------------
 
@@ -5679,7 +5675,6 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
-/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -5716,9 +5711,7 @@ int main(int, char *[]) {
     test_PartialAutoCorrVisitor();
     test_make_stationary();
     test_StationaryCheckVisitor();
-*/
     test_covariance_matrix();
-/*
     test_pca_by_eigen();
     test_compact_svd();
     test_SpectralClusteringVisitor();
@@ -5761,7 +5754,6 @@ int main(int, char *[]) {
     test_DivideToQuantilesVisitor();
     test_pipe();
     test_fl_valid_index();
-*/
 
     return (0);
 }

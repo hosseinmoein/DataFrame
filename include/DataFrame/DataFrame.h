@@ -4712,7 +4712,8 @@ public: // Read/access and slicing interfaces
     //   Default is not normalizing
     //
     template<typename T>
-    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    [[nodiscard]]
+    typename Matrix<T, matrix_orient::column_major>::covar_result_t
     covariance_matrix(
         std::vector<const char *> &&col_names,
         normalization_type norm_type = normalization_type::none) const;

@@ -711,7 +711,7 @@ private:
 
     static constexpr bool   is_md_ = random_acc_cont<T>;
 
-    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
+    using data_t = typename std::conditional_t<! is_md_,
                                                lazy_type<T>,
                                                value_type_of<T>>::type;
 

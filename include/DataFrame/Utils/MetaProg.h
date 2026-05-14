@@ -472,6 +472,18 @@ using cons_t = typename cons<T, LIST>::type;
 
 // ----------------------------------------------------------------------------
 
+// A wrapper that computes type only when asked
+//
+template <typename T>
+struct  lazy_type  { using type = T; };
+
+// Solves the double::value_type error by delaying its evaluation
+//
+template <typename T>
+struct  value_type_of  { using type = typename T::value_type; };
+
+// ----------------------------------------------------------------------------
+
 template<typename ... Ts>
 struct  overload : Ts ...  {
 

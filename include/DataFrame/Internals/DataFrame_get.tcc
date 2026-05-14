@@ -1199,7 +1199,8 @@ DataFrame<I, H>::difference(const DataFrame &other) const  {
 
 template<typename I, typename H>
 template<typename T>
-Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+typename Matrix<T, matrix_orient::column_major>::covar_result_t
+DataFrame<I, H>::
 covariance_matrix(std::vector<const char *> &&col_names,
                   normalization_type norm_type) const  {
 

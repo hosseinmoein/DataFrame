@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameTypes.h>
+#include <DataFrame/Utils/Concepts.h>
+#include <DataFrame/Utils/MetaProg.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
 #include <functional>
@@ -68,6 +70,11 @@ public:
             MO == matrix_orient::column_major,
             Matrix<T, matrix_orient::row_major>,
             Matrix<T, matrix_orient::column_major>>::type;
+
+    using covar_result_t =
+        Matrix<typename std::conditional_t<! random_acc_cont<T>,
+                                            lazy_type<T>,
+                                            value_type_of<T>>::type, MO>;
 
     Matrix() = default;
     Matrix(size_type rows, size_type cols, const_reference def_v = T());
@@ -233,9 +240,14 @@ public:
     // variance, we have only one independent observation, since the two
     // observations are equally distant from the mean.
     //
-    // For a nXm matrix, you will get a mXm covariance matrix
+    // NOTE: This works with both scalar and multidimensional (MD),
+    //       vectors and arrays, data.
     //
-    [[nodiscard]] Matrix
+    // For a nXm scalar matrix, you will get a mXm covariance matrix.
+    // For a nXm MD matrix you will get a m*dXm*d matrix, where d is the
+    // dimensionality of data
+    //
+    [[nodiscard]] covar_result_t
     covariance(bool is_unbiased = true) const;
 
     // Let A be an nXn matrix. The number l is an eigenvalue of A if there
@@ -498,6 +510,13 @@ public:
     Matrix &ew_multiply(value_type val) noexcept;
     Matrix &ew_divide(value_type val) noexcept;
 
+    // These return the inner (dot) product of the given rows/columns
+    // NOTE: These work with both scalar and multidimensional
+    //       (i.e. vectors and arrays) data.
+    //
+    value_type row_inner_prod(size_type row1, size_type row2) const;
+    value_type col_inner_prod(size_type col1, size_type col2) const;
+
     // Get a matrix filled with real uniform random numbers. T can only be a
     // floating point type
     //
@@ -529,11 +548,23 @@ public:
 
 private:
 
-    static constexpr size_type  NOPOS_ = static_cast<size_type>(-9);
+    inline static constexpr size_type   NOPOS_ { static_cast<size_type>(-9) };
+    inline static constexpr bool        is_md_ { random_acc_cont<T> };
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    inline static constexpr bool    resizable_ { is_md_ && Resizable<T> };
+    inline static constexpr data_t  EPSILON_ { data_t(2.220446e-16) };
 
     using storage_t = std::vector<value_type>;
 
-    inline static constexpr double  EPSILON_ { double(2.220446e-16) };
+    // Initializes the val to zero(s)
+    //
+    inline void
+    zero_out_(value_type &val) const;
 
     // Partial pivoting for Gaussian elimination:
     //

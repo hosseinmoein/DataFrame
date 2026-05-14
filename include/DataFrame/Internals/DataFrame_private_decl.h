@@ -1945,9 +1945,9 @@ get_scaled_data_matrix_(std::vector<const char *> &&col_names,
         [norm_type, &data_mat, &columns = std::as_const(columns), this]
         (auto begin, auto end) -> void  {
             if (norm_type > normalization_type::none)  {
-                for (size_type c { begin }; c < end; ++c)  {
-                    NormalizeVisitor<T, I>  norm_v { norm_type };
+                NormalizeVisitor<T, I>  norm_v { norm_type };
 
+                for (size_type c { begin }; c < end; ++c)  {
                     norm_v.pre();
                     norm_v(indices_.begin(), indices_.end(),
                            columns[c]->begin(), columns[c]->end());

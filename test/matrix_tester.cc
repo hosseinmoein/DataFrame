@@ -992,6 +992,30 @@ int main(int, char *[]) {
         assert((vec2 == std::vector<double>{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }));
     }
 
+    // Test inner/outer products
+    //
+    {
+        using col_dmat_t = Matrix<double, matrix_orient::column_major>;
+
+        col_dmat_t  mat { 3, 4 };
+
+        mat(0, 0) = 1.0;
+        mat(0, 1) = 1.0;
+        mat(0, 2) = 1.5;
+        mat(0, 3) = 1.1;
+        mat(1, 0) = 2.0;
+        mat(1, 1) = 2.0;
+        mat(1, 2) = 2.5;
+        mat(1, 3) = 2.1;
+        mat(2, 0) = 3.0;
+        mat(2, 1) = 3.0;
+        mat(2, 2) = 3.5;
+        mat(2, 3) = 3.1;
+
+        assert(std::abs(mat.row_inner_prod(0, 2) - 14.66) < 0.00001);
+        assert(std::abs(mat.col_inner_prod(0, 2) - 17.0) < 0.00001);
+    }
+
     test_thread_pool();
     return (0);
 }

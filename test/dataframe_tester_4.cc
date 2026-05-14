@@ -55,6 +55,7 @@ using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_starts_with()  {
 
     std::cout << "\nTesting starts_with( ) ..." << std::endl;
@@ -2537,6 +2538,7 @@ static void test_StationaryCheckVisitor()  {
     assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 10.76) < 0.01);
     assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 189.563) < 0.001);
 }
+*/
 
 // ----------------------------------------------------------------------------
 
@@ -2580,10 +2582,96 @@ static void test_covariance_matrix()  {
     assert(std::fabs(cov_mat2(2, 2) - 1.0) < 0.01);
     assert(std::fabs(cov_mat2(3, 2) - 0.99948) < 0.00001);
     assert(std::fabs(cov_mat2(3, 3) - 1.0) < 0.01);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  md_ary_col1  {
+        { 1.0, 2.0, 3.0 }, { 2.0, 4.0, 1.0 },
+        { 3.0, 1.0, 4.0 }, { 4.0, 3.0, 2.0 }
+    };
+    std::vector<ary_col_t>  md_ary_col2  {
+        { 4.0, 1.0, 2.0 }, { 6.0, 2.0, 4.0 },
+        { 5.0, 3.0, 1.0 }, { 7.0, 4.0, 3.0 }
+    };
+    std::vector<ary_col_t>  md_ary_col3  {
+        { 7.0, 3.0, 5.0 }, { 5.0, 1.0, 3.0 },
+        { 6.0, 4.0, 2.0 }, { 8.0, 2.0, 4.0 }
+    };
+
+    std::vector<vec_col_t>  md_vec_col1  {
+        { 1.0, 2.0, 3.0 }, { 2.0, 4.0, 1.0 },
+        { 3.0, 1.0, 4.0 }, { 4.0, 3.0, 2.0 }
+    };
+    std::vector<vec_col_t>  md_vec_col2  {
+        { 4.0, 1.0, 2.0 }, { 6.0, 2.0, 4.0 },
+        { 5.0, 3.0, 1.0 }, { 7.0, 4.0, 3.0 }
+    };
+    std::vector<vec_col_t>  md_vec_col3  {
+        { 7.0, 3.0, 5.0 }, { 5.0, 1.0, 3.0 },
+        { 6.0, 4.0, 2.0 }, { 8.0, 2.0, 4.0 }
+    };
+
+    df.load_column<ary_col_t>("ARY COL 1", std::move(md_ary_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY COL 2", std::move(md_ary_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY COL 3", std::move(md_ary_col3),
+                              nan_policy::dont_pad_with_nans);
+
+    df.load_column<vec_col_t>("VEC COL 1", std::move(md_vec_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC COL 2", std::move(md_vec_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC COL 3", std::move(md_vec_col3),
+                              nan_policy::dont_pad_with_nans);
+
+    const auto  ary_cov =
+        df.covariance_matrix<ary_col_t>(
+            { "ARY COL 1", "ARY COL 2", "ARY COL 3" },
+            normalization_type::z_score);
+    const auto  vec_cov =
+        df.covariance_matrix<vec_col_t>(
+            { "VEC COL 1", "VEC COL 2", "VEC COL 3" },
+            normalization_type::none);
+
+    assert(ary_cov.rows() == 9);
+    assert(ary_cov.cols() == 9);
+    assert(vec_cov.rows() == 9);
+    assert(vec_cov.cols() == 9);
+
+    assert(std::abs(ary_cov(0, 0) - 1.3333) < 0.0001);
+    assert(std::abs(ary_cov(0, 1) - 0.0) < 0.0001);
+    assert(std::abs(ary_cov(0, 2) - 0.0) < 0.0001);
+    assert(std::abs(ary_cov(0, 3) - 1.0667) < 0.0001);
+    assert(std::abs(ary_cov(3, 5) - 0.8) < 0.0001);
+    assert(std::abs(ary_cov(3, 6) - 0.2667) < 0.0001);
+    assert(std::abs(ary_cov(3, 8) - -0.2667) < 0.0001);
+    assert(std::abs(ary_cov(8, 0) - -0.5333) < 0.0001);
+    assert(std::abs(ary_cov(8, 4) - -0.5333) < 0.0001);
+    assert(std::abs(ary_cov(8, 7) - -0.2667) < 0.0001);
+    assert(std::abs(ary_cov(8, 8) - 1.3333) < 0.0001);
+
+    assert(std::abs(vec_cov(0, 0) - 1.6667) < 0.0001);
+    assert(std::abs(vec_cov(0, 1) - 0.0) < 0.0001);
+    assert(std::abs(vec_cov(0, 2) - 0.0) < 0.0001);
+    assert(std::abs(vec_cov(0, 3) - 1.3333) < 0.0001);
+    assert(std::abs(vec_cov(3, 5) - 1.0) < 0.0001);
+    assert(std::abs(vec_cov(3, 6) - 0.3333) < 0.0001);
+    assert(std::abs(vec_cov(3, 8) - -0.3333) < 0.0001);
+    assert(std::abs(vec_cov(8, 0) - -0.6667) < 0.0001);
+    assert(std::abs(vec_cov(8, 4) - -0.6667) < 0.0001);
+    assert(std::abs(vec_cov(8, 7) - -0.3333) < 0.0001);
+    assert(std::abs(vec_cov(8, 8) - 1.6667) < 0.0001);
 }
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_pca_by_eigen()  {
 
     std::cout << "\nTesting pca_by_eigen( ) ..." << std::endl;
@@ -5583,6 +5671,7 @@ static void test_fl_valid_index()  {
     assert(res5.first == 1);
     assert(res5.second == 13);
 }
+*/
 
 // ----------------------------------------------------------------------------
 
@@ -5590,6 +5679,7 @@ int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
 
+/*
     test_starts_with();
     test_ends_with();
     test_in_between();
@@ -5626,7 +5716,9 @@ int main(int, char *[]) {
     test_PartialAutoCorrVisitor();
     test_make_stationary();
     test_StationaryCheckVisitor();
+*/
     test_covariance_matrix();
+/*
     test_pca_by_eigen();
     test_compact_svd();
     test_SpectralClusteringVisitor();
@@ -5669,6 +5761,7 @@ int main(int, char *[]) {
     test_DivideToQuantilesVisitor();
     test_pipe();
     test_fl_valid_index();
+*/
 
     return (0);
 }

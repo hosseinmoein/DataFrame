@@ -66,7 +66,7 @@ body {
         4. It runs an inverse FFT (IFFT) on the modified frequency spectrums.<BR>
         5. It compares the original data with the data coming out of IFFT. Any data  point whose difference is greater than <I>anomaly_threshold</I> is considered an outlier. <BR><BR>
 
-        This works with both scalar and multidimensional (i.e. vector and arrays) datasets.<BR><BR>
+        This works with both scalar and multidimensional (i.e. vectors and arrays) datasets.<BR><BR>
 
         <B>get_result()</B> returns a vector of indices to the original data that were deemed outliers. In case of multidimensional input column, the result is a vector of <I>std::pair</I>s. The first integer is the index into the input column and the second integer is the index into the dimension.<BR>
 

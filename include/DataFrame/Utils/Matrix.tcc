@@ -488,7 +488,7 @@ inline void Matrix<T, MO, IS_SYM>::zero_out_(value_type &val) const  {
 
     if (empty())  return;
 
-    if constexpr (! is_md_)  val = 0;
+    if constexpr (! IS_MD)  val = 0;
     else  {
         if constexpr (resizable_)
             val.resize(at(0, 0).size(), 0);
@@ -1787,7 +1787,7 @@ covariance(bool is_unbiased) const  {
 
     covar_result_t  result;
 
-    if constexpr (! is_md_)  {
+    if constexpr (! IS_MD)  {
         auto        lbd =
             [&result, this, denom](auto begin, auto end) -> void  {
                 for (size_type cr = begin; cr < end; ++cr)  {
@@ -3441,6 +3441,31 @@ col_inner_prod(size_type col1, size_type col2) const  {
     }
     else  {
         result = lbd(0L, data_s);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,  matrix_orient MO, bool IS_SYM>
+typename Matrix<T, MO, IS_SYM>::covar_result_t Matrix<T, MO, IS_SYM>::
+get_faltten() const requires (IS_MD)  {
+
+    const size_type dim { size_type(at(0, 0).size()) };
+    covar_result_t  result { rows(), cols() * dim };
+
+    if constexpr (MO == matrix_orient::column_major)  {
+        for (size_type c { 0 }; c < cols(); ++c)
+            for (size_type r { 0 }; r < rows(); ++r)
+                for (size_type d { 0 }; d < dim; ++d)
+                    result(r, c * dim + d) = at(r, c)[d];
+    }
+    else  {
+        for (size_type r { 0 }; r < rows(); ++r)
+            for (size_type c { 0 }; c < cols(); ++c)
+                for (size_type d { 0 }; d < dim; ++d)
+                    result(r, c * dim + d) = at(r, c)[d];
     }
 
     return (result);

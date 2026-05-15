@@ -65,6 +65,13 @@ public:
     using const_pointer = const value_type *;
     using self_t = Matrix<value_type, MO, IS_SYM>;
 
+    inline static constexpr bool    IS_MD { random_acc_cont<T> };
+
+    using data_t =
+        typename std::conditional_t<! IS_MD,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
     using trans_result_t =
         typename std::conditional<
             MO == matrix_orient::column_major,
@@ -72,7 +79,7 @@ public:
             Matrix<T, matrix_orient::column_major>>::type;
 
     using covar_result_t =
-        Matrix<typename std::conditional_t<! random_acc_cont<T>,
+        Matrix<typename std::conditional_t<! IS_MD,
                                             lazy_type<T>,
                                             value_type_of<T>>::type, MO>;
 
@@ -510,6 +517,10 @@ public:
     Matrix &ew_multiply(value_type val) noexcept;
     Matrix &ew_divide(value_type val) noexcept;
 
+    // Return a scalar matrix where multidimensional data is flattened
+	//
+    covar_result_t get_faltten() const requires (IS_MD);
+
     // These return the inner (dot) product of the given rows/columns
     // NOTE: These work with both scalar and multidimensional
     //       (i.e. vectors and arrays) data.
@@ -549,15 +560,8 @@ public:
 private:
 
     inline static constexpr size_type   NOPOS_ { static_cast<size_type>(-9) };
-    inline static constexpr bool        is_md_ { random_acc_cont<T> };
-
-    using data_t =
-        typename std::conditional_t<! is_md_,
-                                    lazy_type<T>,
-                                    value_type_of<T>>::type;
-
-    inline static constexpr bool    resizable_ { is_md_ && Resizable<T> };
-    inline static constexpr double  EPSILON_ { double(2.220446e-16) };
+    inline static constexpr bool        resizable_ { IS_MD && Resizable<T> };
+    inline static constexpr double      EPSILON_ { double(2.220446e-16) };
 
     using storage_t = std::vector<value_type>;
 

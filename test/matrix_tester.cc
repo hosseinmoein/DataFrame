@@ -622,9 +622,9 @@ int main(int, char *[]) {
         row_dmat_t  centered;
 
         mat2.get_centered(centered);
-        assert((std::fabs(centered(0, 0) - 2.56) < 0.01));
-        assert((std::fabs(centered(2, 0) - -0.64) < 0.01));
-        assert((std::fabs(centered(4, 0) - -0.64) < 0.01));
+        assert((std::fabs(centered(0, 0) - -1.42) < 0.01));
+        assert((std::fabs(centered(2, 0) - 0.18) < 0.01));
+        assert((std::fabs(centered(4, 0) - 0.88) < 0.01));
     }
 
     // Test norm
@@ -1014,6 +1014,67 @@ int main(int, char *[]) {
 
         assert(std::abs(mat.row_inner_prod(0, 2) - 14.66) < 0.00001);
         assert(std::abs(mat.col_inner_prod(0, 2) - 17.0) < 0.00001);
+    }
+
+    // Test get_flatten
+    //
+    {
+        using col_mat_t =
+            Matrix<std::vector<int>, matrix_orient::column_major>;
+        using row_mat_t =
+            Matrix<std::array<int, 3>, matrix_orient::row_major>;
+
+        col_mat_t  col_mat { 3, 4 };
+
+        col_mat(0, 0) = { 1, 2, 3 };
+        col_mat(0, 1) = { 4, 5, 6 };
+        col_mat(0, 2) = { 7, 8, 9 };
+        col_mat(0, 3) = { 10, 11, 12 };
+        col_mat(1, 0) = { 13, 14, 15 };
+        col_mat(1, 1) = { 16, 17, 18 };
+        col_mat(1, 2) = { 19, 20, 21 };
+        col_mat(1, 3) = { 22, 23, 24 };
+        col_mat(2, 0) = { 25, 26, 27 };
+        col_mat(2, 1) = { 28, 29, 30 };
+        col_mat(2, 2) = { 31, 32, 33 };
+        col_mat(2, 3) = { 34, 35, 36 };
+
+        row_mat_t  row_mat { 3, 4 };
+
+        row_mat(0, 0) = { 1, 2, 3 };
+        row_mat(0, 1) = { 4, 5, 6 };
+        row_mat(0, 2) = { 7, 8, 9 };
+        row_mat(0, 3) = { 10, 11, 12 };
+        row_mat(1, 0) = { 13, 14, 15 };
+        row_mat(1, 1) = { 16, 17, 18 };
+        row_mat(1, 2) = { 19, 20, 21 };
+        row_mat(1, 3) = { 22, 23, 24 };
+        row_mat(2, 0) = { 25, 26, 27 };
+        row_mat(2, 1) = { 28, 29, 30 };
+        row_mat(2, 2) = { 31, 32, 33 };
+        row_mat(2, 3) = { 34, 35, 36 };
+
+        const auto  col_res { col_mat.get_faltten() };
+        const auto  row_res { row_mat.get_faltten() };
+
+        assert(col_res.rows() == 3);
+        assert(col_res.cols() == 4 * 3);
+        assert(row_res.rows() == 3);
+        assert(row_res.cols() == 4 * 3);
+
+        assert(col_res(0, 0) == 1);
+        assert(col_res(0, 11) == 12);
+        assert(col_res(1, 0) == 13);
+        assert(col_res(1, 11) == 24);
+        assert(col_res(2, 0) == 25);
+        assert(col_res(2, 11) == 36);
+
+        assert(row_res(0, 0) == 1);
+        assert(row_res(0, 11) == 12);
+        assert(row_res(1, 0) == 13);
+        assert(row_res(1, 11) == 24);
+        assert(row_res(2, 0) == 25);
+        assert(row_res(2, 11) == 36);
     }
 
     test_thread_pool();

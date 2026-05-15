@@ -2717,12 +2717,12 @@ void Matrix<T, MO, IS_SYM>::get_centered(MA &cmatrix) const noexcept  {
     cmatrix.resize(rows(), cols(), 0);
     if constexpr (MO == matrix_orient::column_major)  {
         for (size_type c = 0; c < cols(); ++c)
-            for (size_type r = c; r < rows(); ++r)
+            for (size_type r = 0; r < rows(); ++r)
                 cmatrix(r, c) = at(r, c);
     }
     else  {
         for (size_type r = 0; r < rows(); ++r)
-            for (size_type c = r; c < cols(); ++c)
+            for (size_type c = 0; c < cols(); ++c)
                 cmatrix(r, c) = at(r, c);
     }
     cmatrix.center();

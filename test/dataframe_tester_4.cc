@@ -2993,10 +2993,10 @@ static void test_canon_corr()  {
                                                { "IBM_High", "IBM_Low" });
 
     assert(result.coeffs.size() == 2);
-    assert(std::fabs(result.coeffs[0] - 0.999944) < 0.000001);
-    assert(std::fabs(result.coeffs[1] - 0.262927) < 0.000001);
-    assert(std::fabs(result.x_red_idx - 0.534073) < 0.000001);
-    assert(std::fabs(result.y_red_idx - 0.535897) < 0.000001);
+    assert(std::fabs(result.coeffs[0] - 0.999962) < 0.000001);
+    assert(std::fabs(result.coeffs[1] - 0.001256) < 0.000001);
+    assert(std::fabs(result.x_red_idx - 0.853052) < 0.000001);
+    assert(std::fabs(result.y_red_idx - 0.729354) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

@@ -2387,7 +2387,7 @@ _read_binary_str_dbl_map_(STRM &strm, V &map_vec, bool needs_flipping,
 
 template<typename MA>
 inline static typename std::remove_reference<MA>::type
-_calc_centered_cov_(const MA &mat1, const MA &mat2)  {
+_calc_centered_cov_(const MA &mat1, const MA &mat2, bool is_unbiased = true)  {
 
     using mat_t = typename std::remove_reference<MA>::type;
 
@@ -2397,17 +2397,19 @@ _calc_centered_cov_(const MA &mat1, const MA &mat2)  {
     mat1.get_centered(X);
     mat2.get_centered(Y);
 
-    mat_t                               result = X.transpose2() * Y;
-    const typename mat_t::value_type    denom = X.rows() - 1;
+    mat_t       result { X.transpose2() * Y };
+    const auto  denom {
+        typename mat_t::value_type(is_unbiased ? X.rows() - 1 : X.rows())
+    };
 
     if constexpr (result.orientation() == matrix_orient::column_major)  {
-        for (long c = 0; c < result.cols(); ++c)
-            for (long r = 0; r < result.rows(); ++r)
+        for (long c { 0 }; c < result.cols(); ++c)
+            for (long r { 0 }; r < result.rows(); ++r)
                 result(r, c) /= denom;
     }
     else  {
-        for (long r = 0; r < result.rows(); ++r)
-            for (long c = 0; c < result.cols(); ++c)
+        for (long r { 0 }; r < result.rows(); ++r)
+            for (long c { 0 }; c < result.cols(); ++c)
                 result(r, c) /= denom;
     }
 

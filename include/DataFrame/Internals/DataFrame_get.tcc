@@ -1581,34 +1581,93 @@ canon_corr(std::vector<const char *> &&X_col_names,
 
     CanonCorrResult<T>  result;
 
-    result.coeffs.reserve(S.rows());
-    for (long i { 0 }; i < S.rows(); ++i)
-        result.coeffs.push_back(S(i, 0));
+    // min(p, q) after relaxing the p==q constraint
+    //
+    const long  n_pairs { S.rows() };
 
-    T   X_cov_diag_sum { 0 };
-    T   Y_cov_diag_sum { 0 };
+    result.coeffs.reserve(n_pairs);
+    for (long i { 0 }; i < n_pairs; ++i)
+        result.coeffs.push_back(std::sqrt(S(i, 0)));
 
-    for (long i { 0 }; i < X_cov.rows(); ++i)  {
-        X_cov_diag_sum += X_cov(i, i);
-        Y_cov_diag_sum += Y_cov(i, i);
+    // Canonical loadings for X
+    // alpha_k  = X_cov_inv * U[:,k]
+    // Var(u_k) = U[:,k]^T * X_cov_inv * U[:,k]
+    // Lambda_X[j,k] = U[j,k] / (sqrt(X_cov[j,j]) * sqrt(Var(u_k)))
+    //
+    const auto  X_cov_inv { X_cov.inverse() };
+    const auto  X_cov_inv_U { X_cov_inv * U };   // p x p
+    col_mat_t   lambda_X { X_cov.rows(), n_pairs, 0 };
+
+    for (long k { 0 }; k < n_pairs; ++k)  {
+        T   var_uk { 0 };
+
+        // U[:,k]^T * X_cov_inv * U[:,k]
+        //
+        for (long j { 0 }; j < X_cov.rows(); ++j)
+            var_uk += U(j, k) * X_cov_inv_U(j, k);
+
+        const T denom_k { std::sqrt(var_uk) };
+
+        for (long j { 0 }; j < X_cov.rows(); ++j)
+            lambda_X(j, k) = U(j, k) / (std::sqrt(X_cov(j, j)) * denom_k);
     }
 
-    T   redun { 0 };
+    // Canonical loadings for Y
+    // Y side: decompose
+    //     sq_root_mat_Y = Y_cov_inv * XY_cov^T * X_cov_inv * XY_cov
+    // Its eigenvectors U_Y play the same role as U did for X.
+    //
+    const auto      Y_cov_inv { Y_cov.inverse() };
+    const col_mat_t sq_root_Y {
+        Y_cov_inv * XY_cov.transpose() * X_cov_inv * XY_cov
+    };
+    col_mat_t       U_Y, S_Y, V_Y;
 
-    for (long i { 0 }; i < X_cov.rows(); ++i)  {
-        const T S_val = S(i, 0);
+    sq_root_Y.svd(U_Y, S_Y, V_Y, false);
 
-        redun += S_val * S_val * X_cov(i, i);
+    const col_mat_t Y_cov_inv_UY { Y_cov_inv * U_Y };   // q x q
+    col_mat_t       lambda_Y { Y_cov.rows(), n_pairs, 0 };
+
+    for (long k { 0 }; k < n_pairs; ++k)  {
+        T   var_vk { 0 };
+
+        for (long j { 0 }; j < Y_cov.rows(); ++j)
+            var_vk += U_Y(j, k) * Y_cov_inv_UY(j, k);
+
+        const T denom_k { std::sqrt(var_vk) };
+
+        for (long j { 0 }; j < Y_cov.rows(); ++j)
+            lambda_Y(j, k) = U_Y(j, k) / (std::sqrt(Y_cov(j, j)) * denom_k);
     }
-    result.x_red_idx = redun / X_cov_diag_sum;
 
-    redun = 0;
-    for (long i { 0 }; i < Y_cov.rows(); ++i)  {
-        const T S_val = S(i, 0);
+    // Stewart-Love redundancy indices
+    // R_X|Y = sum_k( rho_k^2 * V_k^X )
+    // where V_k^X = (1/p) * sum_j Lambda_X[j,k]^2
+    // R_Y|X = sum_k( rho_k^2 * V_k^Y )
+    // where V_k^Y = (1/q) * sum_j Lambda_Y[j,k]^2
+    //
+    const long  p { X_cov.rows() };
+    const long  q { Y_cov.rows() };
+    T           x_redun { 0 };
+    T           y_redun { 0 };
 
-        redun += S_val * S_val * Y_cov(i, i);
+    for (long k { 0 }; k < n_pairs; ++k)  {
+        const T rho_sq { S(k, 0) }; // S(k,0) = rho_k^2 from sq_root_mat SVD
+        T       vx { 0 };
+
+        for (long j { 0 }; j < p; ++j)
+            vx += lambda_X(j, k) * lambda_X(j, k);
+
+        T   vy { 0 };
+
+        for (long j { 0 }; j < q; ++j)
+            vy += lambda_Y(j, k) * lambda_Y(j, k);
+
+        x_redun += rho_sq * (vx / T(p));
+        y_redun += rho_sq * (vy / T(q));
     }
-    result.y_red_idx = redun / Y_cov_diag_sum;
+    result.x_red_idx = x_redun;
+    result.y_red_idx = y_redun;
 
     return (result);
 }
@@ -1783,7 +1842,7 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
         norm_v(fake_index.begin(), fake_index.end(),
                columns[i]->begin(), columns[i]->end());
         norm_v.post();
- 
+
         ncolumns[i] = std::move(norm_v.get_result());
     }
 
@@ -1817,7 +1876,7 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
             norm_v(fake_index.begin(), fake_index.end(),
                    centroids[c].begin(), centroids[c].end());
             norm_v.post();
- 
+
             ncentroids[c] = std::move(norm_v.get_result());
         }
 

@@ -2997,6 +2997,89 @@ static void test_canon_corr()  {
     assert(std::fabs(result.coeffs[1] - 0.001256) < 0.000001);
     assert(std::fabs(result.x_red_idx - 0.853052) < 0.000001);
     assert(std::fabs(result.y_red_idx - 0.729354) < 0.000001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  md_ary_col1  {
+        {3,1,3}, {3,4,3}, {6,3,2}, {4,4,7}, {4,1,5}, {4,6,1}, {8,2,6}, {7,8,4},
+        {8,3,1}, {7,4,6}, {5,4,3}, {8,6,4}, {4,5,3}, {2,4,2}, {5,5,4}, {1,4,4},
+        {2,3,1}, {8,1,7}, {1,1,2}, {5,8,1}, {1,4,5}, {7,8,2}, {8,8,3}, {7,3,6},
+        {5,6,5}, {4,4,1}, {2,1,2}, {1,6,5}, {1,6,7}, {6,4,4},
+    };
+    std::vector<ary_col_t>  md_ary_col2  {
+        {1,7,3}, {5,7,3}, {4,5,3}, {6,4,2}, {3,7,3}, {4,3,1}, {8,8,6}, {4,8,7},
+        {3,6,7}, {1,6,8}, {2,5,4}, {2,2,2}, {6,2,8}, {3,2,8}, {7,5,4}, {4,2,1},
+        {3,3,3}, {8,3,2}, {4,8,5}, {6,2,6}, {8,8,2}, {7,3,6}, {1,7,7}, {7,8,8},
+        {7,5,7}, {1,3,4}, {5,4,1}, {5,1,8}, {2,3,2}, {5,6,2},
+    };
+    std::vector<ary_col_t>  md_ary_col3  {
+        {5,2,5}, {7,7,6}, {1,4,6}, {3,1,5}, {5,6,8}, {6,2,1}, {3,4,3}, {7,4,1},
+        {6,7,5}, {2,6,2}, {1,6,6}, {1,3,8}, {5,4,7}, {4,5,1}, {7,6,6}, {5,6,2},
+        {2,3,5}, {5,8,2}, {8,1,4}, {6,3,7}, {1,1,8}, {7,2,7}, {6,3,2}, {1,6,7},
+        {4,1,2}, {3,4,5}, {7,1,6}, {5,8,5}, {8,8,7}, {8,8,8},
+    };
+
+    std::vector<vec_col_t>  md_vec_col1  {
+        {3,1,3}, {3,4,3}, {6,3,2}, {4,4,7}, {4,1,5}, {4,6,1}, {8,2,6}, {7,8,4},
+        {8,3,1}, {7,4,6}, {5,4,3}, {8,6,4}, {4,5,3}, {2,4,2}, {5,5,4}, {1,4,4},
+        {2,3,1}, {8,1,7}, {1,1,2}, {5,8,1}, {1,4,5}, {7,8,2}, {8,8,3}, {7,3,6},
+        {5,6,5}, {4,4,1}, {2,1,2}, {1,6,5}, {1,6,7}, {6,4,4},
+    };
+    std::vector<vec_col_t>  md_vec_col2  {
+        {1,7,3}, {5,7,3}, {4,5,3}, {6,4,2}, {3,7,3}, {4,3,1}, {8,8,6}, {4,8,7},
+        {3,6,7}, {1,6,8}, {2,5,4}, {2,2,2}, {6,2,8}, {3,2,8}, {7,5,4}, {4,2,1},
+        {3,3,3}, {8,3,2}, {4,8,5}, {6,2,6}, {8,8,2}, {7,3,6}, {1,7,7}, {7,8,8},
+        {7,5,7}, {1,3,4}, {5,4,1}, {5,1,8}, {2,3,2}, {5,6,2},
+    };
+    std::vector<vec_col_t>  md_vec_col3  {
+        {5,2,5}, {7,7,6}, {1,4,6}, {3,1,5}, {5,6,8}, {6,2,1}, {3,4,3}, {7,4,1},
+        {6,7,5}, {2,6,2}, {1,6,6}, {1,3,8}, {5,4,7}, {4,5,1}, {7,6,6}, {5,6,2},
+        {2,3,5}, {5,8,2}, {8,1,4}, {6,3,7}, {1,1,8}, {7,2,7}, {6,3,2}, {1,6,7},
+        {4,1,2}, {3,4,5}, {7,1,6}, {5,8,5}, {8,8,7}, {8,8,8},
+    };
+
+    df.load_column<ary_col_t>("ARY COL 1", std::move(md_ary_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY COL 2", std::move(md_ary_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY COL 3", std::move(md_ary_col3),
+                              nan_policy::dont_pad_with_nans);
+
+    df.load_column<vec_col_t>("VEC COL 1", std::move(md_vec_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC COL 2", std::move(md_vec_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC COL 3", std::move(md_vec_col3),
+                              nan_policy::dont_pad_with_nans);
+
+    const auto  ary_res =
+        df.canon_corr<ary_col_t>({ "ARY COL 1", "ARY COL 2" },
+                                 { "ARY COL 1", "ARY COL 3" });
+    const auto  vec_res =
+        df.canon_corr<vec_col_t>({ "VEC COL 1", "VEC COL 2" },
+                                 { "VEC COL 1", "VEC COL 3" });
+
+    assert(ary_res.coeffs.size() == 2 * dim);
+    assert(vec_res.coeffs.size() == 2 * dim);
+
+    assert(std::fabs(ary_res.coeffs[0] - 1.04006) < 0.00001);
+    assert(std::fabs(ary_res.coeffs[2] - 1.01905) < 0.00001);
+    assert(std::fabs(ary_res.coeffs[4] - 0.158262) < 0.000001);
+    assert(std::fabs(ary_res.coeffs[5] - 0.015345) < 0.000001);
+    assert(std::fabs(vec_res.coeffs[0] - 1.04006) < 0.00001);
+    assert(std::fabs(vec_res.coeffs[2] - 1.01905) < 0.00001);
+    assert(std::fabs(vec_res.coeffs[4] - 0.158262) < 0.000001);
+    assert(std::fabs(vec_res.coeffs[5] - 0.015345) < 0.000001);
+
+    assert(std::fabs(ary_res.x_red_idx - 0.485319) < 0.000001);
+    assert(std::fabs(ary_res.y_red_idx - 0.53155) < 0.00001);
+    assert(std::fabs(vec_res.x_red_idx - 0.485319) < 0.000001);
+    assert(std::fabs(vec_res.y_red_idx - 0.53155) < 0.00001);
 }
 
 // ----------------------------------------------------------------------------

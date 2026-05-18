@@ -1054,8 +1054,8 @@ int main(int, char *[]) {
         row_mat(2, 2) = { 31, 32, 33 };
         row_mat(2, 3) = { 34, 35, 36 };
 
-        const auto  col_res { col_mat.get_faltten() };
-        const auto  row_res { row_mat.get_faltten() };
+        const auto  col_res { col_mat.get_flatten() };
+        const auto  row_res { row_mat.get_flatten() };
 
         assert(col_res.rows() == 3);
         assert(col_res.cols() == 4 * 3);

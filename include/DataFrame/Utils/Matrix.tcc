@@ -3450,7 +3450,7 @@ col_inner_prod(size_type col1, size_type col2) const  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 typename Matrix<T, MO, IS_SYM>::covar_result_t Matrix<T, MO, IS_SYM>::
-get_faltten() const requires (IS_MD)  {
+get_flatten() const requires (IS_MD)  {
 
     const size_type dim { size_type(at(0, 0).size()) };
     covar_result_t  result { rows(), cols() * dim };

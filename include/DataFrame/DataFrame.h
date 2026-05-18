@@ -4871,7 +4871,7 @@ public: // Read/access and slicing interfaces
     //   Names of the second set of columns
     //
     template<typename T>
-    [[nodiscard]] CanonCorrResult<T>
+    [[nodiscard]] CanonCorrResult<double>
     canon_corr(std::vector<const char *> &&X_col_names,
                std::vector<const char *> &&Y_col_names) const;
 

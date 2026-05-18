@@ -519,7 +519,7 @@ public:
 
     // Return a scalar matrix where multidimensional data is flattened
 	//
-    covar_result_t get_faltten() const requires (IS_MD);
+    covar_result_t get_flatten() const requires (IS_MD);
 
     // These return the inner (dot) product of the given rows/columns
     // NOTE: These work with both scalar and multidimensional

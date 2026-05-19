@@ -1775,7 +1775,7 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
 // ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
-typename Matrix<T, MO, IS_SYM>::covar_result_t Matrix<T, MO, IS_SYM>::
+typename Matrix<T, MO, IS_SYM>::scalar_ma_t Matrix<T, MO, IS_SYM>::
 covariance(bool is_unbiased) const  {
 
     const data_t   denom = data_t(is_unbiased ? rows() - 1 : rows());
@@ -1785,7 +1785,7 @@ covariance(bool is_unbiased) const  {
         throw NotFeasible("Matrix::covariance(): Not solvable");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    covar_result_t  result;
+    scalar_ma_t result;
 
     if constexpr (! IS_MD)  {
         auto        lbd =
@@ -3449,23 +3449,41 @@ col_inner_prod(size_type col1, size_type col2) const  {
 // ----------------------------------------------------------------------------
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
-typename Matrix<T, MO, IS_SYM>::covar_result_t Matrix<T, MO, IS_SYM>::
-get_flatten() const requires (IS_MD)  {
+typename Matrix<T, MO, IS_SYM>::scalar_ma_t Matrix<T, MO, IS_SYM>::
+get_flatten(bool col_wise) const requires (IS_MD)  {
 
     const size_type dim { size_type(at(0, 0).size()) };
-    covar_result_t  result { rows(), cols() * dim };
+    scalar_ma_t     result;
 
-    if constexpr (MO == matrix_orient::column_major)  {
-        for (size_type c { 0 }; c < cols(); ++c)
+    if (col_wise)  {
+        result.resize(rows(), cols() * dim);
+        if constexpr (MO == matrix_orient::column_major)  {
+            for (size_type c { 0 }; c < cols(); ++c)
+                for (size_type r { 0 }; r < rows(); ++r)
+                    for (size_type d { 0 }; d < dim; ++d)
+                        result(r, c * dim + d) = at(r, c)[d];
+        }
+        else  {
             for (size_type r { 0 }; r < rows(); ++r)
-                for (size_type d { 0 }; d < dim; ++d)
-                    result(r, c * dim + d) = at(r, c)[d];
+                for (size_type c { 0 }; c < cols(); ++c)
+                    for (size_type d { 0 }; d < dim; ++d)
+                        result(r, c * dim + d) = at(r, c)[d];
+        }
     }
     else  {
-        for (size_type r { 0 }; r < rows(); ++r)
+        result.resize(rows() * dim, cols());
+        if constexpr (MO == matrix_orient::column_major)  {
             for (size_type c { 0 }; c < cols(); ++c)
-                for (size_type d { 0 }; d < dim; ++d)
-                    result(r, c * dim + d) = at(r, c)[d];
+                for (size_type r { 0 }; r < rows(); ++r)
+                    for (size_type d { 0 }; d < dim; ++d)
+                        result(r * dim + d, c) = at(r, c)[d];
+        }
+        else  {
+            for (size_type r { 0 }; r < rows(); ++r)
+                for (size_type c { 0 }; c < cols(); ++c)
+                    for (size_type d { 0 }; d < dim; ++d)
+                        result(r * dim + d, c) = at(r, c)[d];
+        }
     }
 
     return (result);

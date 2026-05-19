@@ -1075,6 +1075,44 @@ int main(int, char *[]) {
         assert(row_res(1, 11) == 24);
         assert(row_res(2, 0) == 25);
         assert(row_res(2, 11) == 36);
+
+        const auto  col_row_wise { col_mat.get_flatten(false) };
+        const auto  row_row_wise { row_mat.get_flatten(false) };
+
+        assert(col_row_wise.rows() == 3 * 3);
+        assert(col_row_wise.cols() == 4);
+        assert(row_row_wise.rows() == 3 * 3);
+        assert(row_row_wise.cols() == 4);
+
+        assert(col_row_wise(0, 0) == 1);
+        assert(col_row_wise(0, 3) == 12);
+        assert(col_row_wise(4, 0) == 13);
+        assert(col_row_wise(4, 3) == 24);
+        assert(col_row_wise(8, 0) == 25);
+        assert(col_row_wise(8, 3) == 36);
+
+
+
+
+    for (long r = 0; r < col_res.rows(); ++r)  {
+        for (long c = 0; c < col_res.cols(); ++c)  {
+            std::cout << col_res(r, c) << ", ";
+        }
+        std::cout << '\n';
+    }
+    std::cout << "\n\n";
+
+    for (long r = 0; r < col_row_wise.rows(); ++r)  {
+        for (long c = 0; c < col_row_wise.cols(); ++c)  {
+            std::cout << col_row_wise(r, c) << ", ";
+        }
+        std::cout << '\n';
+    }
+    std::cout << "\n\n";
+
+
+
+
     }
 
     test_thread_pool();

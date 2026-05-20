@@ -2788,6 +2788,127 @@ static void test_compact_svd()  {
     assert(std::fabs(V(2, 2) - 0.700869) < 0.000001);
     assert(std::fabs(V(3, 1) - -0.00079) < 0.000001);
     assert(std::fabs(V(3, 3) - 0.491216) < 0.000001);
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  md_ary_col1  {
+        {3,1,3}, {3,4,3}, {6,3,2}, {4,4,7}, {4,1,5}, {4,6,1}, {8,2,6}, {7,8,4},
+        {8,3,1}, {7,4,6}, {5,4,3}, {8,6,4}, {4,5,3}, {2,4,2}, {5,5,4}, {1,4,4},
+        {2,3,1}, {8,1,7}, {1,1,2}, {5,8,1}, {1,4,5}, {7,8,2}, {8,8,3}, {7,3,6},
+        {5,6,5}, {4,4,1}, {2,1,2}, {1,6,5}, {1,6,7}, {6,4,4},
+    };
+    std::vector<ary_col_t>  md_ary_col2  {
+        {1,7,3}, {5,7,3}, {4,5,3}, {6,4,2}, {3,7,3}, {4,3,1}, {8,8,6}, {4,8,7},
+        {3,6,7}, {1,6,8}, {2,5,4}, {2,2,2}, {6,2,8}, {3,2,8}, {7,5,4}, {4,2,1},
+        {3,3,3}, {8,3,2}, {4,8,5}, {6,2,6}, {8,8,2}, {7,3,6}, {1,7,7}, {7,8,8},
+        {7,5,7}, {1,3,4}, {5,4,1}, {5,1,8}, {2,3,2}, {5,6,2},
+    };
+    std::vector<ary_col_t>  md_ary_col3  {
+        {5,2,5}, {7,7,6}, {1,4,6}, {3,1,5}, {5,6,8}, {6,2,1}, {3,4,3}, {7,4,1},
+        {6,7,5}, {2,6,2}, {1,6,6}, {1,3,8}, {5,4,7}, {4,5,1}, {7,6,6}, {5,6,2},
+        {2,3,5}, {5,8,2}, {8,1,4}, {6,3,7}, {1,1,8}, {7,2,7}, {6,3,2}, {1,6,7},
+        {4,1,2}, {3,4,5}, {7,1,6}, {5,8,5}, {8,8,7}, {8,8,8},
+    };
+
+    std::vector<vec_col_t>  md_vec_col1  {
+        {3,1,3}, {3,4,3}, {6,3,2}, {4,4,7}, {4,1,5}, {4,6,1}, {8,2,6}, {7,8,4},
+        {8,3,1}, {7,4,6}, {5,4,3}, {8,6,4}, {4,5,3}, {2,4,2}, {5,5,4}, {1,4,4},
+        {2,3,1}, {8,1,7}, {1,1,2}, {5,8,1}, {1,4,5}, {7,8,2}, {8,8,3}, {7,3,6},
+        {5,6,5}, {4,4,1}, {2,1,2}, {1,6,5}, {1,6,7}, {6,4,4},
+    };
+    std::vector<vec_col_t>  md_vec_col2  {
+        {1,7,3}, {5,7,3}, {4,5,3}, {6,4,2}, {3,7,3}, {4,3,1}, {8,8,6}, {4,8,7},
+        {3,6,7}, {1,6,8}, {2,5,4}, {2,2,2}, {6,2,8}, {3,2,8}, {7,5,4}, {4,2,1},
+        {3,3,3}, {8,3,2}, {4,8,5}, {6,2,6}, {8,8,2}, {7,3,6}, {1,7,7}, {7,8,8},
+        {7,5,7}, {1,3,4}, {5,4,1}, {5,1,8}, {2,3,2}, {5,6,2},
+    };
+    std::vector<vec_col_t>  md_vec_col3  {
+        {5,2,5}, {7,7,6}, {1,4,6}, {3,1,5}, {5,6,8}, {6,2,1}, {3,4,3}, {7,4,1},
+        {6,7,5}, {2,6,2}, {1,6,6}, {1,3,8}, {5,4,7}, {4,5,1}, {7,6,6}, {5,6,2},
+        {2,3,5}, {5,8,2}, {8,1,4}, {6,3,7}, {1,1,8}, {7,2,7}, {6,3,2}, {1,6,7},
+        {4,1,2}, {3,4,5}, {7,1,6}, {5,8,5}, {8,8,7}, {8,8,8},
+    };
+
+    df.load_column<ary_col_t>("ARY COL 1", std::move(md_ary_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY COL 2", std::move(md_ary_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY COL 3", std::move(md_ary_col3),
+                              nan_policy::dont_pad_with_nans);
+
+    df.load_column<vec_col_t>("VEC COL 1", std::move(md_vec_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC COL 2", std::move(md_vec_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC COL 3", std::move(md_vec_col3),
+                              nan_policy::dont_pad_with_nans);
+
+    const auto  [ary_U, ary_S, ary_V] =
+        df.compact_svd<ary_col_t>({ "ARY COL 1", "ARY COL 2", "ARY COL 3" });
+    const auto  [vec_U, vec_S, vec_V] =
+        df.compact_svd<vec_col_t>({ "VEC COL 1", "VEC COL 2", "VEC COL 3" });
+
+    assert(ary_U.rows() == 30);
+    assert(ary_U.cols() == 9);
+    assert(vec_U.rows() == 30);
+    assert(vec_U.cols() == 9);
+    assert(std::fabs(ary_U(0, 0) - 0.18325) < 0.00001);
+    assert(std::fabs(ary_U(0, 5) - 0.063227) < 0.000001);
+    assert(std::fabs(ary_U(5, 2) - 0.094879) < 0.000001);
+    assert(std::fabs(ary_U(5, 6) - 0.338979) < 0.000001);
+    assert(std::fabs(ary_U(29, 0) - 0.006552) < 0.000001);
+    assert(std::fabs(ary_U(29, 4) - -0.134926) < 0.000001);
+    assert(std::fabs(ary_U(29, 8) - 0.075926) < 0.000001);
+    assert(std::fabs(vec_U(0, 0) - 0.18325) < 0.00001);
+    assert(std::fabs(vec_U(0, 5) - 0.063227) < 0.000001);
+    assert(std::fabs(vec_U(5, 2) - 0.094879) < 0.000001);
+    assert(std::fabs(vec_U(5, 6) - 0.338979) < 0.000001);
+    assert(std::fabs(vec_U(29, 0) - 0.006552) < 0.000001);
+    assert(std::fabs(vec_U(29, 4) - -0.134926) < 0.000001);
+    assert(std::fabs(vec_U(29, 8) - 0.075926) < 0.000001);
+
+    assert(ary_S.rows() == 9);
+    assert(ary_S.cols() == 9);
+    assert(vec_S.rows() == 9);
+    assert(vec_S.cols() == 9);
+    assert(std::fabs(ary_S(0, 0) - 7.08301) < 0.00001);
+    assert(std::fabs(ary_S(1, 1) - 6.97274) < 0.00001);
+    assert(std::fabs(ary_S(4, 4) - 5.57452) < 0.00001);
+    assert(std::fabs(ary_S(8, 8) - 2.63947) < 0.00001);
+    assert(std::fabs(ary_S(0, 1) - 0.0) < 0.00000001);
+    assert(std::fabs(ary_S(4, 5) - 0.0) < 0.00000001);
+    assert(std::fabs(ary_S(8, 0) - 0.0) < 0.00000001);
+    assert(std::fabs(ary_S(8, 5) - 0.0) < 0.00000001);
+    assert(std::fabs(vec_S(0, 0) - 7.08301) < 0.00001);
+    assert(std::fabs(vec_S(1, 1) - 6.97274) < 0.00001);
+    assert(std::fabs(vec_S(4, 4) - 5.57452) < 0.00001);
+    assert(std::fabs(vec_S(8, 8) - 2.63947) < 0.00001);
+    assert(std::fabs(vec_S(0, 1) - 0.0) < 0.00000001);
+    assert(std::fabs(vec_S(4, 5) - 0.0) < 0.00000001);
+    assert(std::fabs(vec_S(8, 0) - 0.0) < 0.00000001);
+    assert(std::fabs(vec_S(8, 5) - 0.0) < 0.00000001);
+
+    assert(ary_V.rows() == 9);
+    assert(ary_V.cols() == 9);
+    assert(vec_V.rows() == 9);
+    assert(vec_V.cols() == 9);
+    assert(std::fabs(ary_V(0, 0) - -0.57947) < 0.00001);
+    assert(std::fabs(ary_V(0, 5) - 0.32352) < 0.00001);
+    assert(std::fabs(ary_V(6, 3) - -0.03933) < 0.00001);
+    assert(std::fabs(ary_V(6, 8) - -0.34836) < 0.00001);
+    assert(std::fabs(ary_V(8, 1) - -0.314893) < 0.000001);
+    assert(std::fabs(ary_V(8, 6) - -0.200483) < 0.000001);
+    assert(std::fabs(vec_V(0, 0) - -0.57947) < 0.00001);
+    assert(std::fabs(vec_V(0, 5) - 0.32352) < 0.00001);
+    assert(std::fabs(vec_V(6, 3) - -0.03933) < 0.00001);
+    assert(std::fabs(vec_V(6, 8) - -0.34836) < 0.00001);
+    assert(std::fabs(vec_V(8, 1) - -0.314893) < 0.000001);
+    assert(std::fabs(vec_V(8, 6) - -0.200483) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

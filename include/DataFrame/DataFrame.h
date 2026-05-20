@@ -4844,9 +4844,11 @@ public: // Read/access and slicing interfaces
     //   Type of normalization applied to raw data first
     //
     template<typename T>
-    [[nodiscard]] std::tuple<Matrix<T, matrix_orient::column_major>,  // U
-                             Matrix<T, matrix_orient::column_major>,  // S
-                             Matrix<T, matrix_orient::column_major>>  // V
+    [[nodiscard]]
+    std::tuple<
+        typename Matrix<T, matrix_orient::column_major>::scalar_ma_t,  // U
+        typename Matrix<T, matrix_orient::column_major>::scalar_ma_t,  // S
+        typename Matrix<T, matrix_orient::column_major>::scalar_ma_t>  // V
     compact_svd(std::vector<const char *> &&col_names,
                 normalization_type norm_type =
                     normalization_type::z_score) const;

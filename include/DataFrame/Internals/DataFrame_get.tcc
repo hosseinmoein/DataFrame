@@ -1499,14 +1499,15 @@ knn(std::vector<const char *> &&col_names,
 
 template<typename I, typename H>
 template<typename T>
-std::tuple<Matrix<T, matrix_orient::column_major>,  // U
-           Matrix<T, matrix_orient::column_major>,  // S
-           Matrix<T, matrix_orient::column_major>>  // V
+std::tuple<typename Matrix<T, matrix_orient::column_major>::scalar_ma_t,  // U
+           typename Matrix<T, matrix_orient::column_major>::scalar_ma_t,  // S
+           typename Matrix<T, matrix_orient::column_major>::scalar_ma_t>  // V
 DataFrame<I, H>::
 compact_svd(std::vector<const char *> &&col_names,
             normalization_type norm_type) const  {
 
-    using col_mat_t = Matrix<T, matrix_orient::column_major>;
+    using col_mat_t =
+        typename Matrix<T, matrix_orient::column_major>::scalar_ma_t;
 
     // Copy the data matrix
     //
@@ -1518,7 +1519,10 @@ compact_svd(std::vector<const char *> &&col_names,
     col_mat_t   S;
     col_mat_t   V;
 
-    scaled_data_mat.svd(U, S, V, true);
+    if constexpr (scaled_data_mat.IS_MD)
+        scaled_data_mat.get_flatten().svd(U, S, V, true);
+    else
+        scaled_data_mat.svd(U, S, V, true);
 
     return (std::make_tuple(U, S, V));
 }

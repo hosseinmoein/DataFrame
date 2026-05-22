@@ -2737,6 +2737,157 @@ static void test_pca_by_eigen()  {
     assert(std::fabs(pca_mat2(5030, 0) - 219.555) < 0.001);
     assert(std::fabs(pca_mat2(5030, 1) - -2.66858) < 0.001);
     assert(std::fabs(pca_mat2(5030, 2) - 2.85412) < 0.001);
+
+    // Now multidimensional data
+    //
+    using ary_col_t2 = std::array<double, 2>;
+    using ary_col_t3 = std::array<double, 3>;
+    using vec_col_t = std::vector<double>;
+
+    // 1) Variance is almost entirely in the x-component
+    //
+    std::vector<ary_col_t2> ary_xvar_1  {
+        { 1.0, 0.1 }, { 4.0, 0.2 }, { 7.0, 0.1 }, { 2.0, 0.0 },
+        { 3.0, 0.2 }, { 1.0, 0.1 }
+    };
+    std::vector<ary_col_t2> ary_xvar_2  {
+        { 2.0, 0.2 }, { 5.0, 0.0 }, { 8.0, 0.3 }, { 4.0, 0.1 },
+        { 6.0, 0.1 }, { 3.0, 0.0 }
+    };
+    std::vector<ary_col_t2> ary_xvar_3  {
+        { 3.0, -0.1 }, { 6.0, 0.1 }, { 9.0, -0.2 }, { 6.0, 0.2 },
+        { 9.0, -0.1 }, { 5.0, 0.1 }
+    };
+
+    std::vector<vec_col_t>  vec_xvar_1  {
+        { 1.0, 0.1 }, { 4.0, 0.2 }, { 7.0, 0.1 }, { 2.0, 0.0 },
+        { 3.0, 0.2 }, { 1.0, 0.1 }
+    };
+    std::vector<vec_col_t>  vec_xvar_2  {
+        { 2.0, 0.2 }, { 5.0, 0.0 }, { 8.0, 0.3 }, { 4.0, 0.1 },
+        { 6.0, 0.1 }, { 3.0, 0.0 }
+    };
+    std::vector<vec_col_t>  vec_xvar_3  {
+        { 3.0, -0.1 }, { 6.0, 0.1 }, { 9.0, -0.2 }, { 6.0, 0.2 },
+        { 9.0, -0.1 }, { 5.0, 0.1 }
+    };
+
+    df.load_column<ary_col_t2>("ARY XVAR 1", std::move(ary_xvar_1),
+                               nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t2>("ARY XVAR 2", std::move(ary_xvar_2),
+                               nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t2>("ARY XVAR 3", std::move(ary_xvar_3),
+                               nan_policy::dont_pad_with_nans);
+
+    df.load_column<vec_col_t>("VEC XVAR 1", std::move(vec_xvar_1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC XVAR 2", std::move(vec_xvar_2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC XVAR 3", std::move(vec_xvar_3),
+                              nan_policy::dont_pad_with_nans);
+
+    const auto  ary_xvar_res = df.pca_by_eigen<ary_col_t2>(
+        { "ARY XVAR 1", "ARY XVAR 2", "ARY XVAR 3" },
+        { .num_comp_to_keep = 1 });
+    const auto  vec_xvar_res = df.pca_by_eigen<vec_col_t>(
+        { "VEC XVAR 1", "VEC XVAR 2", "VEC XVAR 3" },
+        { .num_comp_to_keep = 1 });
+
+    assert(ary_xvar_res.cols() == 1);
+    assert(ary_xvar_res.rows() == 6);
+    assert(vec_xvar_res.cols() == 1);
+    assert(vec_xvar_res.rows() == 6);
+
+    assert(std::abs(ary_xvar_res(0, 0) - -2.98144) < 0.00001);
+    assert(std::abs(ary_xvar_res(3, 0) - -5.6686) < 0.0001);
+    assert(std::abs(ary_xvar_res(5, 0) - -4.2447) < 0.0001);
+    assert(std::abs(vec_xvar_res(0, 0) - -2.98144) < 0.00001);
+    assert(std::abs(vec_xvar_res(3, 0) - -5.6686) < 0.0001);
+    assert(std::abs(vec_xvar_res(5, 0) - -4.2447) < 0.0001);
+
+    // 2) x and y components carry equal but orthogonal variance
+    //
+    std::vector<ary_col_t2> ary_xyvar_1  {
+        { 1.0, 4.0 }, { 2.0, -4.0 }, { 3.0, 4.0 }, { 4.0, -4.0 },
+        { 1.5, 4.0 }, { 2.5, -4.0 }, { 3.5, 4.0 }, { 4.5, -4.0 }
+    };
+    std::vector<ary_col_t2> ary_xyvar_2  {
+        { 2.0, 3.0 }, { 4.0, -3.0 }, { 6.0, 3.0 }, { 8.0, -3.0 },
+        { 3.0, 3.0 }, { 5.0, -3.0 }, { 7.0, 3.0 }, { 9.0, -3.0 }
+    };
+    std::vector<ary_col_t2> ary_xyvar_3  {
+        { 3.0, 2.0 }, { 6.0, -2.0 }, { 9.0, 2.0 }, { 12.0, -2.0 },
+        { 4.5, 2.0 }, { 7.5, -2.0 }, { 10.5, 2.0 }, { 13.5, -2.0 }
+    };
+    std::vector<ary_col_t2> ary_xyvar_4  {
+        { 4.0, 1.0 }, { 8.0, -1.0 }, { 12.0, 1.0 }, { 16.0, -1.0 },
+        { 6.0, 1.0 }, { 10.0, -1.0 }, { 14.0, 1.0 }, { 18.0, -1.0 }
+    };
+
+    df.load_column<ary_col_t2>("ARY XYVAR 1", std::move(ary_xyvar_1),
+                               nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t2>("ARY XYVAR 2", std::move(ary_xyvar_2),
+                               nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t2>("ARY XYVAR 3", std::move(ary_xyvar_3),
+                               nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t2>("ARY XYVAR 4", std::move(ary_xyvar_4),
+                               nan_policy::dont_pad_with_nans);
+
+    const auto  ary_xyvar_res = df.pca_by_eigen<ary_col_t2>(
+        { "ARY XYVAR 1", "ARY XYVAR 2", "ARY XYVAR 3", "ARY XYVAR 4" },
+        { .pct_comp_to_keep = 0.95 });
+
+    assert(ary_xyvar_res.cols() == 2);
+    assert(ary_xyvar_res.rows() == 8);
+
+    assert(std::abs(ary_xyvar_res(0, 0) - 0.0) < 0.00000000001);
+    assert(std::abs(ary_xyvar_res(0, 1) - -7.07107) < 0.0001);
+    assert(std::abs(ary_xyvar_res(3, 1) - -10.6066) < 0.0001);
+    assert(std::abs(ary_xyvar_res(5, 0) - -12.3744) < 0.0001);
+    assert(std::abs(ary_xyvar_res(7, 0) - -19.4454) < 0.0001);
+    assert(std::abs(ary_xyvar_res(7, 1) - -12.3744) < 0.0001);
+
+    // 3) Redundant component (rank-deficient). cOmponent 2 is always x + y
+    //
+    std::vector<ary_col_t3> ary_red_1  {
+        { 1.0, 2.0, 3.0 }, { 2.0, 3.0, 5.0 }, { 3.0, 1.0, 4.0 },
+        { 4.0, 2.0, 6.0 }, { 5.0, 3.0, 8.0 }, { 6.0, 1.0, 7.0 }
+    };
+    std::vector<ary_col_t3> ary_red_2  {
+        { 2.0, 1.0, 3.0 }, { 3.0, 2.0, 5.0 }, { 4.0, 3.0, 7.0 },
+        { 5.0, 4.0, 9.0 }, { 6.0, 2.0, 8.0 }, { 7.0, 3.0, 10.0 }
+    };
+    std::vector<ary_col_t3> ary_red_3  {
+        { 3.0, 3.0, 6.0 }, { 4.0, 4.0, 8.0 }, { 5.0, 2.0, 7.0 },
+        { 6.0, 1.0, 7.0 }, { 7.0, 3.0, 10.0 }, { 8.0, 2.0, 10.0 }
+    };
+    std::vector<ary_col_t3> ary_red_4  {
+        { 4.0, 2.0, 6.0 }, { 5.0, 3.0, 8.0 }, { 6.0, 1.0, 7.0 },
+        { 7.0, 2.0, 9.0 }, { 8.0, 4.0, 12.0 }, { 9.0, 1.0, 10.0 }
+    };
+
+    df.load_column<ary_col_t3>("ARY RED 1", std::move(ary_red_1),
+                               nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t3>("ARY RED 2", std::move(ary_red_2),
+                               nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t3>("ARY RED 3", std::move(ary_red_3),
+                               nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t3>("ARY RED 4", std::move(ary_red_4),
+                               nan_policy::dont_pad_with_nans);
+
+    const auto  ary_red_res = df.pca_by_eigen<ary_col_t3>(
+        { "ARY RED 1", "ARY RED 2", "ARY RED 3", "ARY RED 4" },
+        { .num_comp_to_keep = 4 });
+
+    assert(ary_red_res.cols() == 4);
+    assert(ary_red_res.rows() == 6);
+    assert(std::abs(ary_red_res(0, 0) - 8.77192) < 0.00001);
+    assert(std::abs(ary_red_res(0, 2) - 1.20476) < 0.00001);
+    assert(std::abs(ary_red_res(3, 1) - 5.40356) < 0.00001);
+    assert(std::abs(ary_red_res(3, 2) - -0.937747) < 0.000001);
+    assert(std::abs(ary_red_res(5, 0) - 22.7284) < 0.0001);
+    assert(std::abs(ary_red_res(5, 1) - 6.16921) < 0.00001);
+    assert(std::abs(ary_red_res(5, 3) - 3.43023) < 0.00001);
 }
 
 // ----------------------------------------------------------------------------

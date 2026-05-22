@@ -323,6 +323,8 @@ public:
     // else:
     //     reduce to Hessenberg form, then reduce to real Schur form.
     //
+    // If sort_values is true, eigen values are sorted in ascending order
+    //
     template<typename MA1, typename MA2>
     void eigen_space(MA1 &eigenvalues,
                      MA2 &eigenvectors,

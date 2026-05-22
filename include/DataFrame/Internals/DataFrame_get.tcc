@@ -1222,7 +1222,7 @@ covariance_matrix(std::vector<const char *> &&col_names,
 
 template<typename I, typename H>
 template<typename T>
-Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+typename Matrix<T, matrix_orient::column_major>::scalar_ma_t DataFrame<I, H>::
 pca_by_eigen(std::vector<const char *> &&col_names,
              const PCAParams params) const  {
 
@@ -1233,61 +1233,76 @@ pca_by_eigen(std::vector<const char *> &&col_names,
         throw NotFeasible("pca_by_eigen(): num_comp_to_keep > #input columns");
 #endif // HMDF_SANITY_EXCEPTIONS
 
+    using matrix_t = Matrix<T, matrix_orient::column_major>;
+    using scalar_mat_t = typename matrix_t::scalar_ma_t;
+    using data_t = scalar_mat_t::value_type;
+
+    scalar_mat_t    var_cov;
+    const auto      data_mat {
+        get_scaled_data_matrix_<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            params.norm_type)
+    };
+
     // Get the covariance matrix of normalized data
     //
-    const auto  var_cov =
-        covariance_matrix<T>(
-            std::forward<std::vector<const char *>>(col_names),
-            params.norm_type);
+    if constexpr (matrix_t::IS_MD)
+        var_cov = data_mat.get_flatten().covariance();
+    else
+        var_cov = data_mat.covariance();
 
     // Calculate Eigen space
     //
-    Matrix<T, matrix_orient::row_major>     eigenvals;
-    Matrix<T, matrix_orient::column_major>  eigenvecs;
+    Matrix<data_t, matrix_orient::row_major>    eigenvals;
+    Matrix<data_t, matrix_orient::column_major> eigenvecs;
 
     var_cov.eigen_space(eigenvals, eigenvecs, true);
 
     // Keep the most significant columns
     //
-    Matrix<T, matrix_orient::column_major>  mod_evecs { };
-    long                                    col_count { 0 };
+    Matrix<data_t, matrix_orient::column_major> mod_evecs { };
+    long                                        col_count { 0 };
 
     if (params.num_comp_to_keep > 0)  {
         col_count = params.num_comp_to_keep;
     }
     else  {
-        T   ev_sum { 0 };
+        data_t  ev_sum { 0 };
 
-        for (long c = 0; c < eigenvals.cols(); ++c)
-            ev_sum += std::fabs(eigenvals(0, c));
+        for (long c { 0 }; c < eigenvals.cols(); ++c)
+            ev_sum += std::abs(eigenvals(0, c));
 
-        T   kept_sum { 0 };
+        data_t  kept_sum { 0 };
 
-        for (long c = eigenvals.cols() - 1; c >= 0; --c)  {
-            kept_sum += std::fabs(eigenvals(0, c));
+        for (long c { eigenvals.cols() - 1 }; c >= 0; --c)  {
+            kept_sum += std::abs(eigenvals(0, c));
             col_count += 1;
             if ((kept_sum / ev_sum) >= params.pct_comp_to_keep)
                 break;
         }
     }
     mod_evecs.resize(eigenvecs.rows(), col_count);
-    for (long c = 0; c < col_count; ++c)  {
-        const long  col = eigenvecs.cols() - c - 1;
+    for (long c { 0 }; c < col_count; ++c)  {
+        const long  col { eigenvecs.cols() - c - 1 };
 
-        for (long r = 0; r < eigenvecs.rows(); ++r)
+        for (long r { 0 }; r < eigenvecs.rows(); ++r)
             mod_evecs(r, c) = eigenvecs(r, col);
     }
 
     // Copy the data matrix
     //
-    const auto  data_mat =
+    const auto  data_mat_no_norm {
         get_scaled_data_matrix_<T>(
             std::forward<std::vector<const char *>>(col_names),
-            normalization_type::none);
+            normalization_type::none)
+    };
 
     // Return PCA
     //
-    return (data_mat * mod_evecs);
+    if constexpr (matrix_t::IS_MD)
+        return (data_mat_no_norm.get_flatten() * mod_evecs);
+    else
+        return (data_mat_no_norm * mod_evecs);
 }
 
 // ----------------------------------------------------------------------------

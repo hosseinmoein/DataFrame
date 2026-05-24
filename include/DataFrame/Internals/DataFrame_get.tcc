@@ -1309,63 +1309,86 @@ pca_by_eigen(std::vector<const char *> &&col_names,
 
 template<typename I, typename H>
 template<typename T>
-Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+typename Matrix<T, matrix_orient::column_major>::scalar_ma_t DataFrame<I, H>::
 fast_ica(std::vector<const char *> &&col_names,
          size_type num_ind_features,
          const ICAParams params) const  {
 
-    using mat_t = Matrix<T, matrix_orient::column_major>;
-    using dist_t = std::normal_distribution<T>;
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (num_ind_features == 0)
+        throw NotFeasible("fast_ica(): num_ind_features must be > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
 
-    auto    data_mat =
+    using matrix_t = Matrix<T, matrix_orient::column_major>;
+    using scalar_ma_t = typename matrix_t::scalar_ma_t;
+    using data_t = scalar_ma_t::value_type;
+    using dist_t = std::normal_distribution<data_t>;
+
+    auto        data_mat {
         get_scaled_data_matrix_<T>(
             std::forward<std::vector<const char *>>(col_names),
-            normalization_type::none);
+            normalization_type::none)
+    };
+    scalar_ma_t data_mat_flat;
 
-    if (params.center)  data_mat.center();
-    data_mat.whiten(false);
+    if constexpr (matrix_t::IS_MD)
+        data_mat_flat = data_mat.get_flatten();
+    else
+        data_mat_flat = data_mat;
 
-    const auto          features = data_mat.cols();
-    const auto          samples = data_mat.rows();
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (num_ind_features > size_type(data_mat_flat.cols()))
+        throw NotFeasible(
+            "fast_ica(): num_ind_features must be <= number of "
+            "flattened columns");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    if (params.center)  data_mat_flat.center();
+    data_mat_flat.whiten(/*do_center=*/ false);
+
+    const auto          features { data_mat_flat.cols() };
+    const auto          samples { data_mat_flat.rows() };
     std::random_device  rd;
-    std::mt19937        gen((params.seed != seed_t(-1)) ? params.seed : rd());
-    dist_t              dist(T(0), T(1));
-    mat_t               weight { long(num_ind_features), features };
-    mat_t               w { 1L, features };
+    std::mt19937        gen {
+        (params.seed != seed_t(-1)) ? params.seed : rd()
+    };
+    dist_t              dist { data_t(0), data_t(1) };
+    scalar_ma_t         weight { long(num_ind_features), features };
+    scalar_ma_t         w { 1L, features };
     auto                get_row_mat =
-        [](const auto &mat, auto row) -> mat_t  {
-            mat_t result { 1, mat.cols() };
+        [](const auto &mat, auto row) -> scalar_ma_t  {
+            scalar_ma_t result { 1, mat.cols() };
 
-            for (long col = 0; col < mat.cols(); ++col)
+            for (long col { 0 }; col < mat.cols(); ++col)
                 result(0, col) = mat(row, col);
             return (result);
         };
     auto                row_and_normalize =
         [](auto &rhs, const auto &lhs, auto row) -> void  {
-            T   norm { 0 };
+            data_t  norm { 0 };
 
-            for (long col = 0; col < lhs.cols(); ++col)  {
-                const auto  val = lhs(row, col);
+            for (long col { 0 }; col < lhs.cols(); ++col)  {
+                const auto  val { lhs(row, col) };
 
                 norm += val * val;
                 rhs(0, col) = val;
             }
             norm = std::sqrt(norm);
-            for (long col = 0; col < rhs.cols(); ++col)
+            for (long col { 0 }; col < rhs.cols(); ++col)
                 rhs(0, col) /= norm;
         };
     auto                randomize =
         [&dist, &gen](auto &mat) -> void  {
-            for (long col = 0; col < mat.cols(); ++col)
-                for (long row = 0; row < mat.rows(); ++row)
+            for (long col { 0 }; col < mat.cols(); ++col)
+                for (long row { 0 }; row < mat.rows(); ++row)
                     mat(row, col) = dist(gen);
         };
     auto                get_norm =
-        [](const auto &mat) -> T  {
-            T   norm { 0 };
+        [](const auto &mat) -> data_t  {
+            data_t  norm { 0 };
 
-            for (long j = 0; j < mat.cols(); ++j)  {
-                const auto  val = mat(0, j);
+            for (long j { 0 }; j < mat.cols(); ++j)  {
+                const auto  val { mat(0, j) };
 
                 norm += val * val;
             }
@@ -1373,7 +1396,7 @@ fast_ica(std::vector<const char *> &&col_names,
         };
     auto                normalize =
         [](auto &mat, const auto norm) -> void  {
-            for (long j = 0; j < mat.cols(); ++j)
+            for (long j { 0 }; j < mat.cols(); ++j)
                 mat(0, j) /= norm;
         };
     auto                do_tanh = [](auto &mat) -> void  { mat.ew_tanh(); };
@@ -1381,50 +1404,53 @@ fast_ica(std::vector<const char *> &&col_names,
         [&do_tanh](auto &mat) -> void  {
             do_tanh(mat);
             mat.ew_square();
-            for (long col = 0; col < mat.cols(); ++col)  {
-                auto    &val { mat(0, col) };
+            for (long row { 0 }; row < mat.rows(); ++row)  {
+                auto    &val { mat(row, 0) };
 
-                val = T(1) - val;
+                val = data_t(1) - val;
             }
         };
 
     randomize(weight);
-    for (long row = 0; row < long(num_ind_features); ++row)  {
+    for (long row { 0 }; row < long(num_ind_features); ++row)  {
         row_and_normalize(w, weight, row);
 
-        for (long iter = 0; iter < long(params.num_iter); ++iter)  {
-            const auto  wx = data_mat * w.transpose(); // shape: (samples)
-            auto        gwx = wx;
-            auto        gwx_deriv = wx;
+        for (long iter { 0 }; iter < long(params.num_iter); ++iter)  {
+            const auto  wx { data_mat_flat * w.transpose() };
+            auto        gwx { wx };
+            auto        gwx_deriv { wx };
 
             do_tanh(gwx);
             do_tanh_deriv(gwx_deriv);
 
-            auto    w_new = gwx.transpose() * data_mat;
+            auto    w_new { gwx.transpose() * data_mat_flat };
 
-            w_new.ew_divide(T(samples));
+            w_new.ew_divide(data_t(samples));
             w.ew_multiply(gwx_deriv.mean());
             w_new -= w;
 
-            for (long rows2 = 0; rows2 < row; ++rows2)  {
-                const auto  mat = get_row_mat(weight, rows2);
+            for (long rows2 { 0 }; rows2 < row; ++rows2)  {
+                const auto  mat { get_row_mat(weight, rows2) };
 
                 w_new -=
                     (mat.transpose() * (mat * w_new.transpose())).transpose();
             }
-            normalize(w, get_norm(w));
 
-            if ((w - w_new).norm() < params.epsilon)  break;
+            normalize(w_new, get_norm(w_new));
+
+            const auto  delta { (w - w_new).norm() };
+
             w = w_new;
+            if (delta < params.epsilon)  break;
         }
 
-        for (long col = 0; col <  weight.cols(); ++col)
+        for (long col { 0 }; col <  weight.cols(); ++col)
             weight(row, col) = w(0, col);
     }
 
     // Extract independent components
     //
-    return (data_mat * weight.transpose());
+    return (data_mat_flat * weight.transpose());
 }
 
 // ----------------------------------------------------------------------------

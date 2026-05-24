@@ -4772,7 +4772,8 @@ public: // Read/access and slicing interfaces
     //   Parameters necessary for this operation
     //
     template<typename T>
-    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    [[nodiscard]]
+    typename Matrix<T, matrix_orient::column_major>::scalar_ma_t
     fast_ica(std::vector<const char *> &&col_names,
              size_type num_ind_features,
              const ICAParams params = { }) const;

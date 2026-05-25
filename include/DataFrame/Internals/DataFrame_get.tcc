@@ -1461,34 +1461,36 @@ KNNResult<T> DataFrame<I, H>::
 knn(std::vector<const char *> &&col_names,
     const std::vector<T> &target,
     size_type k,
-    KNNDistFunc<T> &&dfunc) const  {
+    KNNDistFunc<T>::func_t &&dfunc) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (target.size() != col_names.size())
-        throw NotFeasible("knn(): Target dimension != number of features");
+        throw NotFeasible(
+            "knn(): Target dimension must equal number of features");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     size_type                               col_s { indices_.size() };
     const size_type                         fet_s { col_names.size() };
     std::vector<const ColumnVecType<T> *>   columns(fet_s, nullptr);
-    SpinGuard                               guard { lock_ };
 
-    for (size_type i { 0 }; i < fet_s; ++i)  {
-        columns[i] = &get_column<T>(col_names[i], false);
-        if (columns[i]->size() < col_s) [[unlikely]]
-            col_s = columns[i]->size();
+    {
+        SpinGuard   guard { lock_ };
+
+        for (size_type i { 0 }; i < fet_s; ++i)  {
+            columns[i] = &get_column<T>(col_names[i], false);
+            if (columns[i]->size() < col_s) [[unlikely]]
+                col_s = columns[i]->size();
+        }
     }
-    guard.release();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (k >= col_s || k == 0)
-        throw NotFeasible("knn(): K must be < number of features and > 0");
+        throw NotFeasible("knn(): k must be > 0 and < number of data rows");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     using dist_t = std::pair<double, size_type>;
 
-    const auto          thread_level =
-        (col_s < 60000) ? 0L : get_thread_level();
+    const auto          thread_level { col_s < 6e4 ? 0L : get_thread_level() };
     std::vector<dist_t> distances(col_s);
     auto                lbd =
         [&columns = std::as_const(columns), &target = std::as_const(target),
@@ -1504,10 +1506,11 @@ knn(std::vector<const char *> &&col_names,
         };
 
     if (thread_level > 2)  {
-        auto    futuers =
-            thr_pool_.parallel_loop<T>(size_type(0), col_s, std::move(lbd));
+        auto    futures {
+            thr_pool_.parallel_loop<T>(size_type(0), col_s, std::move(lbd))
+        };
 
-        for (auto &fut : futuers)  fut.get();
+        for (auto &fut : futures)  fut.get();
         thr_pool_.parallel_sort(distances.begin(), distances.end(),
                                 [](const auto &lhs, const auto &rhs) -> bool  {
                                     return (lhs.first < rhs.first);
@@ -1523,16 +1526,14 @@ knn(std::vector<const char *> &&col_names,
 
     KNNResult<T>    result(k);
 
-    for (size_type i { 0 }; i < k; ++i)  {
-        KNNPair<T>  item;
+    for (size_type i { 0 }; i < k; ++i) {
+        auto    &item { result[i] };
 
+        item.second = distances[i].second;  // original row index
         item.first.resize(fet_s);
         for (size_type j { 0 }; j < fet_s; ++j)
             item.first[j] = columns[j]->at(distances[i].second);
-        item.second = distances[i].second;
-        result[i] = std::move(item);
     }
-
     return (result);
 }
 

@@ -3601,6 +3601,132 @@ static void test_knn()  {
     assert((std::fabs(result[3].first[0] - 79.25) < 0.01));
     assert((std::fabs(result[3].first[2] - 78.87) < 0.01));
     assert((std::fabs(result[3].first[3] - 80.36) < 0.01));
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    std::vector<ary_col_t>  md_ary_col1  {
+        { 0.1, 0.2, 0.3 }, { 0.4, 0.5, 0.6 }, { 0.0, 0.1, 0.0 },
+        { 0.7, 0.8, 0.9 }, { 3.0, 3.1, 3.2 }, { 3.3, 3.4, 3.5 },
+        { 3.6, 3.7, 3.8 }, { 8.0, 8.1, 8.2 }, { 8.3, 8.4, 8.5 },
+        { 8.6, 8.7, 8.8 },
+    };
+    std::vector<ary_col_t>  md_ary_col2  {
+        { 1.0, 1.1, 1.2 }, { 1.3, 1.4, 1.5 }, { 1.6, 1.7, 1.8 },
+        { 1.9, 2.0, 2.1 }, { 6.0, 6.1, 6.2 }, { 6.3, 6.4, 6.5 },
+        { 6.6, 6.7, 6.8 }, { 3.0, 3.1, 3.2 }, { 3.3, 3.4, 3.5 },
+        { 3.6, 3.7, 3.8 },
+    };
+    std::vector<ary_col_t>  md_ary_col3  {
+        { 5.0, 5.1, 5.0 }, { 5.2, 5.3, 5.1 }, { 5.4, 5.5, 5.3 },
+        { 4.8, 4.9, 5.0 }, { 2.0, 2.1, 2.2 }, { 2.3, 2.4, 2.5 },
+        { 2.6, 2.7, 2.8 }, { 7.0, 7.1, 7.2 }, { 7.3, 7.4, 7.5 },
+        { 7.6, 7.7, 7.8 },
+    };
+    std::vector<ary_col_t>  md_ary_col4  {
+        { 9.0, 9.1, 9.2 }, { 9.3, 9.4, 9.5 }, { 9.6, 9.7, 9.8 },
+        { 8.7, 8.8, 8.9 }, { 7.0, 7.1, 7.2 }, { 7.3, 7.4, 7.5 },
+        { 7.6, 7.7, 7.8 }, { 1.0, 1.1, 1.2 }, { 1.3, 1.4, 1.5 },
+        { 1.6, 1.7, 1.8 },
+    };
+
+    std::vector<vec_col_t>  md_vec_col1  {
+        { 0.1, 0.2, 0.3 }, { 0.4, 0.5, 0.6 }, { 0.0, 0.1, 0.0 },
+        { 0.7, 0.8, 0.9 }, { 3.0, 3.1, 3.2 }, { 3.3, 3.4, 3.5 },
+        { 3.6, 3.7, 3.8 }, { 8.0, 8.1, 8.2 }, { 8.3, 8.4, 8.5 },
+        { 8.6, 8.7, 8.8 },
+    };
+    std::vector<vec_col_t>  md_vec_col2  {
+        { 1.0, 1.1, 1.2 }, { 1.3, 1.4, 1.5 }, { 1.6, 1.7, 1.8 },
+        { 1.9, 2.0, 2.1 }, { 6.0, 6.1, 6.2 }, { 6.3, 6.4, 6.5 },
+        { 6.6, 6.7, 6.8 }, { 3.0, 3.1, 3.2 }, { 3.3, 3.4, 3.5 },
+        { 3.6, 3.7, 3.8 },
+    };
+    std::vector<vec_col_t>  md_vec_col3  {
+        { 5.0, 5.1, 5.0 }, { 5.2, 5.3, 5.1 }, { 5.4, 5.5, 5.3 },
+        { 4.8, 4.9, 5.0 }, { 2.0, 2.1, 2.2 }, { 2.3, 2.4, 2.5 },
+        { 2.6, 2.7, 2.8 }, { 7.0, 7.1, 7.2 }, { 7.3, 7.4, 7.5 },
+        { 7.6, 7.7, 7.8 },
+    };
+    std::vector<vec_col_t>  md_vec_col4  {
+        { 9.0, 9.1, 9.2 }, { 9.3, 9.4, 9.5 }, { 9.6, 9.7, 9.8 },
+        { 8.7, 8.8, 8.9 }, { 7.0, 7.1, 7.2 }, { 7.3, 7.4, 7.5 },
+        { 7.6, 7.7, 7.8 }, { 1.0, 1.1, 1.2 }, { 1.3, 1.4, 1.5 },
+        { 1.6, 1.7, 1.8 },
+    };
+
+    df.load_column<ary_col_t>("AryCol1", std::move(md_ary_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("AryCol2", std::move(md_ary_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("AryCol3", std::move(md_ary_col3),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("AryCol4", std::move(md_ary_col4),
+                              nan_policy::dont_pad_with_nans);
+
+    df.load_column<vec_col_t>("VecCol1", std::move(md_vec_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VecCol2", std::move(md_vec_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VecCol3", std::move(md_vec_col3),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VecCol4", std::move(md_vec_col4),
+                              nan_policy::dont_pad_with_nans);
+
+    std::vector<ary_col_t>  ary_target  {
+        { 0.2, 0.3, 0.4 },  // Close to col_1 of rows 0 – 2
+        { 1.1, 1.2, 1.3 },  // Close to col_2 of rows 0 – 1
+        { 5.1, 5.2, 5.1 },  // Close to col_3 of rows 0 – 1
+        { 9.1, 9.2, 9.3 },  // Close to col_4 of rows 0 – 1
+	};
+    std::vector<vec_col_t>  vec_target  {
+        { 0.2, 0.3, 0.4 },  // Close to col_1 of rows 0 – 2
+        { 1.1, 1.2, 1.3 },  // Close to col_2 of rows 0 – 1
+        { 5.1, 5.2, 5.1 },  // Close to col_3 of rows 0 – 1
+        { 9.1, 9.2, 9.3 },  // Close to col_4 of rows 0 – 1
+	};
+    const auto              ary_res =
+        df.knn<ary_col_t>({ "AryCol1", "AryCol2", "AryCol3", "AryCol4" },
+                          ary_target, 4);
+    const auto              vec_res =
+        df.knn<vec_col_t>({ "VecCol1", "VecCol2", "VecCol3", "VecCol4" },
+                          vec_target, 4);
+
+    assert(ary_res.size() == 4);
+    assert(ary_res[0].second == 0);  // Index into the Ary... columns
+    assert(ary_res[1].second == 1);  // Index into the Ary... columns
+    assert(ary_res[2].second == 2);  // Index into the Ary... columns
+    assert(ary_res[3].second == 3);  // Index into the Ary... columns
+
+    assert(vec_res.size() == 4);
+    assert(vec_res[0].second == 0);  // Index into the Vec... columns
+    assert(vec_res[1].second == 1);  // Index into the Vec... columns
+    assert(vec_res[2].second == 2);  // Index into the Vec... columns
+    assert(vec_res[3].second == 3);  // Index into the Vec... columns
+
+    assert(ary_res[0].first.size() == 4);
+    assert((std::fabs(ary_res[0].first[0][0] - 0.1) < 0.01));
+    assert((std::fabs(ary_res[0].first[0][2] - 0.3) < 0.01));
+    assert((std::fabs(ary_res[1].first[1][1] - 1.4) < 0.01));
+    assert((std::fabs(ary_res[1].first[3][2] - 9.5) < 0.01));
+    assert((std::fabs(ary_res[2].first[2][0] - 5.4) < 0.01));
+    assert((std::fabs(ary_res[2].first[2][2] - 5.3) < 0.01));
+    assert((std::fabs(ary_res[3].first[1][2] - 2.1) < 0.01));
+    assert((std::fabs(ary_res[3].first[3][1] - 8.8) < 0.01));
+
+    assert(vec_res[0].first.size() == 4);
+    assert((std::fabs(vec_res[0].first[0][0] - 0.1) < 0.01));
+    assert((std::fabs(vec_res[0].first[0][2] - 0.3) < 0.01));
+    assert((std::fabs(vec_res[1].first[1][1] - 1.4) < 0.01));
+    assert((std::fabs(vec_res[1].first[3][2] - 9.5) < 0.01));
+    assert((std::fabs(vec_res[2].first[2][0] - 5.4) < 0.01));
+    assert((std::fabs(vec_res[2].first[2][2] - 5.3) < 0.01));
+    assert((std::fabs(vec_res[3].first[1][2] - 2.1) < 0.01));
+    assert((std::fabs(vec_res[3].first[3][1] - 8.8) < 0.01));
 }
 
 // ----------------------------------------------------------------------------

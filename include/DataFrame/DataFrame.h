@@ -4810,16 +4810,29 @@ public: // Read/access and slicing interfaces
     knn(std::vector<const char *> &&col_names,
         const std::vector<T> &target,
         size_type k,
-        KNNDistFunc<T> &&dfunc =
-            [](const std::vector<T> &X, const std::vector<T> &y) -> T  {
-                T   dist { 0 };
+        typename KNNDistFunc<T>::func_t &&dfunc =
+            [](const std::vector<T> &x, const std::vector<T> &y) {
+                typename KNNDistFunc<T>::data_t dist_sum { 0 };
 
-                for (std::size_t i { 0 }; const auto &xval : X)  {
-                    const T &yval = y[i++];
+                if constexpr (! KNNDistFunc<T>::IS_MD)  {
+                    for (std::size_t i { 0 }; const auto &xval : x)  {
+                        const auto  diff { xval  - y[i++] };
 
-                    dist += (xval - yval) * (xval - yval);
+                        dist_sum += diff * diff;
+                    }
                 }
-                return (std::sqrt(dist));
+                else  {
+                    for (std::size_t i { 0 }; const auto &xval : x)  {
+                        const auto  &yval { y[i++] };
+
+                        for (std::size_t j { 0 }; j < xval.size(); ++j)  {
+                            const auto  diff { xval[j] - yval[j] };
+
+                            dist_sum += diff * diff;
+                        }
+                    }
+                }
+                return (std::sqrt(dist_sum));
             }
         ) const;
 

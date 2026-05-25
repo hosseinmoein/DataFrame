@@ -1168,8 +1168,22 @@ template<typename T>
 using KNNResult = std::vector<KNNPair<T>>;
 
 template<typename T>
-using KNNDistFunc =
-    std::function<T(const std::vector<T> &X, const std::vector<T> &y)>;
+struct  KNNDistFunc  {
+
+    // Is T a random access container? In other words, are we
+    // dealing with multidimensional data?
+    //
+    static constexpr bool   IS_MD { random_acc_cont<T> };
+
+    using data_t =
+        typename std::conditional_t<! IS_MD,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    using func_t = std::function<data_t(const std::vector<T> &x,
+                                        const std::vector<T> &y)>;
+
+};
 
 // ----------------------------------------------------------------------------
 

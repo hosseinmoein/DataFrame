@@ -57,54 +57,36 @@ permutation_vec(const char *name, sort_spec dir) const  {
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
     std::iota(result.begin(), result.end(), 0);
-    if (dir == sort_spec::ascen)  {
-        auto    a =
-            [&vec = std::as_const(*vec)]
-            (const auto &lhs, const auto &rhs) -> bool {
-                return (vec[lhs] < vec[rhs]);
-            };
 
+    // Single dispatch helper — avoids repeating the thread_level check for
+    // each sort direction.
+    auto    do_sort = [&](auto &&cmp) {
         if (thread_level > 2)
-            thr_pool_.parallel_sort(result.begin(), result.end(), a);
+            thr_pool_.parallel_sort(result.begin(), result.end(), cmp);
         else
-            std::sort(result.begin(), result.end(), a);
-    }
-    else if (dir == sort_spec::desce)  {
-        auto    d =
-            [&vec = std::as_const(*vec)]
-            (const auto &lhs, const auto &rhs) -> bool {
-                return (vec[lhs] > vec[rhs]);
-            };
+            std::sort(result.begin(), result.end(), cmp);
+    };
 
-        if (thread_level > 2)
-            thr_pool_.parallel_sort(result.begin(), result.end(), d);
-        else
-            std::sort(result.begin(), result.end(), d);
-    }
-    else if (dir == sort_spec::abs_ascen)  {
-        auto    aa =
-            [&vec = std::as_const(*vec)]
-            (const auto &lhs, const auto &rhs) -> bool {
-                return (abs__(vec[lhs]) < abs__(vec[rhs]));
-            };
-
-        if (thread_level > 2)
-            thr_pool_.parallel_sort(result.begin(), result.end(), aa);
-        else
-            std::sort(result.begin(), result.end(), aa);
-    }
-    else if (dir == sort_spec::abs_desce)  {
-        auto    ad =
-            [&vec = std::as_const(*vec)]
-            (const auto &lhs, const auto &rhs) -> bool {
-                return (abs__(vec[lhs]) > abs__(vec[rhs]));
-            };
-
-        if (thread_level > 2)
-            thr_pool_.parallel_sort(result.begin(), result.end(), ad);
-        else
-            std::sort(result.begin(), result.end(), ad);
-    }
+    if (dir == sort_spec::ascen)
+        do_sort([&vec = std::as_const(*vec)]
+                (const auto &lhs, const auto &rhs) noexcept -> bool {
+                    return (vec[lhs] < vec[rhs]);
+                });
+    else if (dir == sort_spec::desce)
+        do_sort([&vec = std::as_const(*vec)]
+                (const auto &lhs, const auto &rhs) noexcept -> bool {
+                    return (vec[lhs] > vec[rhs]);
+                });
+    else if (dir == sort_spec::abs_ascen)
+        do_sort([&vec = std::as_const(*vec)]
+                (const auto &lhs, const auto &rhs) noexcept -> bool {
+                    return (abs__(vec[lhs]) < abs__(vec[rhs]));
+                });
+    else if (dir == sort_spec::abs_desce)
+        do_sort([&vec = std::as_const(*vec)]
+                (const auto &lhs, const auto &rhs) noexcept -> bool {
+                    return (abs__(vec[lhs]) > abs__(vec[rhs]));
+                });
 
     return (result);
 }
@@ -131,19 +113,6 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
     else
         vec = &(get_column<T>(name, false));
 
-    auto    a = [](const auto &lhs, const auto &rhs) -> bool {
-                    return (std::get<0>(lhs) < std::get<0>(rhs));
-                };
-    auto    d = [](const auto &lhs, const auto &rhs) -> bool {
-                    return (std::get<0>(lhs) > std::get<0>(rhs));
-                };
-    auto    aa = [](const auto &lhs, const auto &rhs) -> bool {
-                    return (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)));
-                 };
-    auto    ad = [](const auto &lhs, const auto &rhs) -> bool {
-                    return (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)));
-                 };
-
     const size_type         idx_s = indices_.size();
     StlVecType<size_type>   sorting_idxs(idx_s);
 
@@ -155,62 +124,39 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
     const auto  thread_level =
         (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
-    if (dir == sort_spec::ascen)  {
+    // Single dispatch helper — avoids repeating the thread_level/ignore_index
+    // check for each of the four sort directions.
+    auto    do_sort = [&](auto &&cmp) {
         if (thread_level > 2)  {
             if (! ignore_index)
-                thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), a);
+                thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), cmp);
             else
-                thr_pool_.parallel_sort(zip.begin(), zip.end(), a);
+                thr_pool_.parallel_sort(zip.begin(), zip.end(), cmp);
         }
         else  {
             if (! ignore_index)
-                std::ranges::sort(zip_idx, a);
+                std::ranges::sort(zip_idx, cmp);
             else
-                std::ranges::sort(zip, a);
+                std::ranges::sort(zip, cmp);
         }
-    }
-    else if (dir == sort_spec::desce)  {
-        if (thread_level > 2)  {
-            if (! ignore_index)
-                thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), d);
-            else
-                thr_pool_.parallel_sort(zip.begin(), zip.end(), d);
-        }
-        else  {
-            if (! ignore_index)
-                std::ranges::sort(zip_idx, d);
-            else
-                std::ranges::sort(zip, d);
-        }
-    }
-    else if (dir == sort_spec::abs_ascen)  {
-        if (thread_level > 2)  {
-            if (! ignore_index)
-                thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), aa);
-            else
-                thr_pool_.parallel_sort(zip.begin(), zip.end(), aa);
-        }
-        else  {
-            if (! ignore_index)
-                std::ranges::sort(zip_idx, aa);
-            else
-                std::ranges::sort(zip, aa);
-        }
-    }
-    else if (dir == sort_spec::abs_desce)  {
-        if (thread_level > 2)  {
-            if (! ignore_index)
-                thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), ad);
-            else
-                thr_pool_.parallel_sort(zip.begin(), zip.end(), ad);
-        }
-        else  {
-            if (! ignore_index)
-                std::ranges::sort(zip_idx, ad);
-            else
-                std::ranges::sort(zip, ad);
-        }
-    }
+    };
+
+    if (dir == sort_spec::ascen)
+        do_sort([](const auto &lhs, const auto &rhs) noexcept -> bool {
+            return (std::get<0>(lhs) < std::get<0>(rhs));
+        });
+    else if (dir == sort_spec::desce)
+        do_sort([](const auto &lhs, const auto &rhs) noexcept -> bool {
+            return (std::get<0>(lhs) > std::get<0>(rhs));
+        });
+    else if (dir == sort_spec::abs_ascen)
+        do_sort([](const auto &lhs, const auto &rhs) noexcept -> bool {
+            return (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)));
+        });
+    else if (dir == sort_spec::abs_desce)
+        do_sort([](const auto &lhs, const auto &rhs) noexcept -> bool {
+            return (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)));
+        });
 
     if (((column_list_.size() - 1) > 1) && get_thread_level() > 2)  {
         auto    lbd = [name,

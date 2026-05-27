@@ -709,9 +709,7 @@ struct  MeanBase  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
-
-    using data_t = typename std::conditional_t<! is_md_,
+    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
                                                lazy_type<T>,
                                                value_type_of<T>>::type;
 
@@ -727,7 +725,7 @@ public:
 
         _sum.pre();
         _cnt = 0;
-        if constexpr (! is_md_)
+        if constexpr (std::is_arithmetic_v<value_type>)
             _mean = 0;
         else
             _mean.clear();
@@ -2908,7 +2906,7 @@ struct  DotProdVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
     using data_t = typename std::conditional_t<! is_md_,
                                                lazy_type<T>,
@@ -7479,7 +7477,7 @@ private:
 
     // True when T is a container (multidimensional x input)
     //
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -7896,7 +7894,7 @@ private:
 
     // True when T is a container (multidimensional x input)
     //
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -8195,7 +8193,7 @@ private:
 
     // True when T is a container (multidimensional x input)
     //
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -8454,7 +8452,7 @@ private:
 
     // True when T is a container (multidimensional x input)
     //
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -8733,7 +8731,7 @@ private:
 
     // True when T is a container (multidimensional x input)
     //
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -9068,7 +9066,7 @@ struct  CubicSplineFitVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
     static constexpr bool   is_ary_ = is_std_array_v<T>;
 
     using data_t =
@@ -9286,7 +9284,7 @@ struct  LowessVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
     static constexpr bool   is_ary_ = is_std_array_v<T>;
 
     using data_t =
@@ -10088,7 +10086,7 @@ struct  DecomposeVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
     static constexpr bool   is_ary_ = is_std_array_v<T>;
 
     using data_t =
@@ -10495,7 +10493,7 @@ struct  BiasVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
     static constexpr bool   is_ary_ = is_std_array_v<T>;
 
     using data_t =
@@ -10692,7 +10690,7 @@ struct  StationaryCheckVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
     static constexpr bool   is_ary_ = is_std_array_v<T>;
 
     using data_t =
@@ -12224,7 +12222,7 @@ struct  ConfIntervalVisitor   {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -12351,7 +12349,7 @@ struct  CoeffVariationVisitor   {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -12416,7 +12414,7 @@ struct  ChiSquaredTestVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,

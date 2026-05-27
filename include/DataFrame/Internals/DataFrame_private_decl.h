@@ -1922,121 +1922,6 @@ get_mem_numbers_(const StlVecType<T> &container,
 
 // ----------------------------------------------------------------------------
 
-template<typename MA>
-inline CanonCorrResult<double>
-canon_corr_imp_(const MA &X, const MA &Y) const  {
-
-    using value_type = typename MA::data_t;
-    using col_mat_t = Matrix<value_type, matrix_orient::column_major>;
-
-    const auto  XY_cov = _calc_centered_cov_(X, Y);
-    const auto  X_cov = _calc_centered_cov_(X, X);
-    const auto  Y_cov = _calc_centered_cov_(Y, Y);
-    const auto  sq_root_mat =
-        X_cov.inverse() * XY_cov * Y_cov.inverse() * XY_cov.transpose();
-    col_mat_t   U;
-    col_mat_t   S;
-    col_mat_t   V;
-
-    sq_root_mat.svd(U, S, V, false);
-
-    CanonCorrResult<value_type> result;
-
-    // min(p, q) after relaxing the p==q constraint
-    //
-    const long  n_pairs { S.rows() };
-
-    result.coeffs.reserve(n_pairs);
-    for (long i { 0 }; i < n_pairs; ++i)
-        result.coeffs.push_back(std::sqrt(S(i, 0)));
-
-    // Canonical loadings for X
-    // alpha_k  = X_cov_inv * U[:,k]
-    // Var(u_k) = U[:,k]^T * X_cov_inv * U[:,k]
-    // Lambda_X[j,k] = U[j,k] / (sqrt(X_cov[j,j]) * sqrt(Var(u_k)))
-    //
-    const auto  X_cov_inv { X_cov.inverse() };
-    const auto  X_cov_inv_U { X_cov_inv * U };   // p x p
-    col_mat_t   lambda_X { X_cov.rows(), n_pairs, 0 };
-
-    for (long k { 0 }; k < n_pairs; ++k)  {
-        value_type  var_uk { 0 };
-
-        // U[:,k]^T * X_cov_inv * U[:,k]
-        //
-        for (long j { 0 }; j < X_cov.rows(); ++j)
-            var_uk += U(j, k) * X_cov_inv_U(j, k);
-
-        const value_type    denom_k { std::sqrt(var_uk) };
-
-        for (long j { 0 }; j < X_cov.rows(); ++j)
-            lambda_X(j, k) = U(j, k) / (std::sqrt(X_cov(j, j)) * denom_k);
-    }
-
-    // Canonical loadings for Y
-    // Y side: decompose
-    //     sq_root_mat_Y = Y_cov_inv * XY_cov^T * X_cov_inv * XY_cov
-    // Its eigenvectors U_Y play the same role as U did for X.
-    //
-    const auto      Y_cov_inv { Y_cov.inverse() };
-    const col_mat_t sq_root_Y {
-        Y_cov_inv * XY_cov.transpose() * X_cov_inv * XY_cov
-    };
-    col_mat_t       U_Y, S_Y, V_Y;
-
-    sq_root_Y.svd(U_Y, S_Y, V_Y, false);
-
-    const col_mat_t Y_cov_inv_UY { Y_cov_inv * U_Y };   // q x q
-    col_mat_t       lambda_Y { Y_cov.rows(), n_pairs, 0 };
-
-    for (long k { 0 }; k < n_pairs; ++k)  {
-        value_type  var_vk { 0 };
-
-        for (long j { 0 }; j < Y_cov.rows(); ++j)
-            var_vk += U_Y(j, k) * Y_cov_inv_UY(j, k);
-
-        const value_type    denom_k { std::sqrt(var_vk) };
-
-        for (long j { 0 }; j < Y_cov.rows(); ++j)
-            lambda_Y(j, k) = U_Y(j, k) / (std::sqrt(Y_cov(j, j)) * denom_k);
-    }
-
-    // Stewart-Love redundancy indices
-    // R_X|Y = sum_k( rho_k^2 * V_k^X )
-    // where V_k^X = (1/p) * sum_j Lambda_X[j,k]^2
-    // R_Y|X = sum_k( rho_k^2 * V_k^Y )
-    // where V_k^Y = (1/q) * sum_j Lambda_Y[j,k]^2
-    //
-    const long  p { X_cov.rows() };
-    const long  q { Y_cov.rows() };
-    value_type  x_redun { 0 };
-    value_type  y_redun { 0 };
-
-    for (long k { 0 }; k < n_pairs; ++k)  {
-        // S(k,0) = rho_k^2 from sq_root_mat SVD
-        //
-        const value_type    rho_sq { S(k, 0) };
-        value_type          vx { 0 };
-
-        for (long j { 0 }; j < p; ++j)
-            vx += lambda_X(j, k) * lambda_X(j, k);
-
-        value_type  vy { 0 };
-
-        for (long j { 0 }; j < q; ++j)
-            vy += lambda_Y(j, k) * lambda_Y(j, k);
-
-        x_redun += rho_sq * (vx / value_type(p));
-        y_redun += rho_sq * (vy / value_type(q));
-    }
-    result.x_red_idx = double(x_redun);
-    result.y_red_idx = double(y_redun);
-
-    return (result);
-}
-
-// ----------------------------------------------------------------------------
-
 template<typename T>
 inline Matrix<T, matrix_orient::column_major>
 get_scaled_data_matrix_(std::vector<const char *> &&col_names,
@@ -2060,9 +1945,9 @@ get_scaled_data_matrix_(std::vector<const char *> &&col_names,
         [norm_type, &data_mat, &columns = std::as_const(columns), this]
         (auto begin, auto end) -> void  {
             if (norm_type > normalization_type::none)  {
-                NormalizeVisitor<T, I>  norm_v { norm_type };
-
                 for (size_type c { begin }; c < end; ++c)  {
+                    NormalizeVisitor<T, I>  norm_v { norm_type };
+
                     norm_v.pre();
                     norm_v(indices_.begin(), indices_.end(),
                            columns[c]->begin(), columns[c]->end());

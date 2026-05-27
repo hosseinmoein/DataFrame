@@ -132,8 +132,13 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor, bool in_reverse)  {
 
     visitor.pre();
     if (! in_reverse) [[likely]]  {
-        for (; i < min_s; ++i)
+        for (; i < min_s; ++i)  {
+            if ((i + HMDF_PF_DIST) < min_s)  {
+                HMDF_PREFETCH_R(indices_.data() + i + HMDF_PF_DIST);
+                HMDF_PREFETCH_R(vec.data()      + i + HMDF_PF_DIST);
+            }
             visitor (indices_[i], vec[i]);
+        }
         for (; i < idx_s; ++i)
             visitor (indices_[i], nan_val);
     }
@@ -221,8 +226,14 @@ visit (const char *name1, const char *name2, V &visitor, bool in_reverse)  {
 
     visitor.pre();
     if (! in_reverse) [[likely]]  {
-        for (; i < min_s; ++i) [[likely]]
+        for (; i < min_s; ++i) [[likely]]  {
+            if ((i + HMDF_PF_DIST) < min_s)  {
+                HMDF_PREFETCH_R(indices_.data() + i + HMDF_PF_DIST);
+                HMDF_PREFETCH_R(vec1.data()     + i + HMDF_PF_DIST);
+                HMDF_PREFETCH_R(vec2.data()     + i + HMDF_PF_DIST);
+            }
             visitor (indices_[i], vec1[i], vec2[i]);
+        }
         for (; i < idx_s; ++i)
             visitor (indices_[i],
                      i < data_s1 ? vec1[i] : nan_val1,

@@ -35,6 +35,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include<algorithm>
 
+// Helper function to replace std::ranges::contains for compatibility
+// across different C++ standards and compilers
+namespace hmdf_compat {
+    template<typename Range, typename T>
+    inline bool contains(const Range& r, const T& value) {
+        return std::find(r.begin(), r.end(), value) != r.end();
+    }
+}
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -4022,7 +4031,7 @@ get_data_on_days(const std::vector<DT_WEEKDAY> &days) const  {
 
     col_indices.reserve(idx_s / 6);
     for (size_type i = 0; i < idx_s; ++i)
-        if (std::ranges::contains(days, indices_[i].dweek()))
+        if (hmdf_compat::contains(days, indices_[i].dweek()))
             col_indices.push_back(i);
 
     return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -4045,7 +4054,7 @@ get_view_on_days(const std::vector<DT_WEEKDAY> &days)  {
 
     col_indices.reserve(idx_s / 6);
     for (size_type i = 0; i < idx_s; ++i)  {
-        if (std::ranges::contains(days, indices_[i].dweek()))  {
+        if (hmdf_compat::contains(days, indices_[i].dweek()))  {
             col_indices.push_back(i);
         }
     }
@@ -4069,7 +4078,7 @@ get_view_on_days(const std::vector<DT_WEEKDAY> &days) const  {
 
     col_indices.reserve(idx_s / 6);
     for (size_type i = 0; i < idx_s; ++i)
-        if (std::ranges::contains(days, indices_[i].dweek()))
+        if (hmdf_compat::contains(days, indices_[i].dweek()))
             col_indices.push_back(i);
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -4093,7 +4102,7 @@ get_data_on_days_in_month(
 
     col_indices.reserve(idx_s / 6);
     for (size_type i = 0; i < idx_s; ++i)
-        if (std::ranges::contains(days, indices_[i].dmonth()))
+        if (hmdf_compat::contains(days, indices_[i].dmonth()))
             col_indices.push_back(i);
 
     return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -4117,7 +4126,7 @@ get_view_on_days_in_month(
 
     col_indices.reserve(idx_s / 6);
     for (size_type i = 0; i < idx_s; ++i)
-        if (std::ranges::contains(days, indices_[i].dmonth()))
+        if (hmdf_compat::contains(days, indices_[i].dmonth()))
             col_indices.push_back(i);
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -4140,7 +4149,7 @@ get_view_on_days_in_month(
 
     col_indices.reserve(idx_s / 6);
     for (size_type i = 0; i < idx_s; ++i)
-        if (std::ranges::contains(days, indices_[i].dmonth()))
+        if (hmdf_compat::contains(days, indices_[i].dmonth()))
             col_indices.push_back(i);
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -4163,7 +4172,7 @@ get_data_in_months(const std::vector<DT_MONTH> &months) const  {
 
     col_indices.reserve(idx_s / 6);
     for (size_type i = 0; i < idx_s; ++i)
-        if (std::ranges::contains(months, indices_[i].month()))
+        if (hmdf_compat::contains(months, indices_[i].month()))
             col_indices.push_back(i);
 
     return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -4186,7 +4195,7 @@ get_view_in_months(const std::vector<DT_MONTH> &months)  {
 
     col_indices.reserve(idx_s / 6);
     for (size_type i = 0; i < idx_s; ++i)
-        if (std::ranges::contains(months, indices_[i].month()))
+        if (hmdf_compat::contains(months, indices_[i].month()))
             col_indices.push_back(i);
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -4208,7 +4217,7 @@ get_view_in_months(const std::vector<DT_MONTH> &months) const  {
 
     col_indices.reserve(idx_s / 6);
     for (size_type i = 0; i < idx_s; ++i)
-        if (std::ranges::contains(months, indices_[i].month()))
+        if (hmdf_compat::contains(months, indices_[i].month()))
             col_indices.push_back(i);
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));

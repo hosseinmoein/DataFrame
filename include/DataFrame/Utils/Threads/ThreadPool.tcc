@@ -488,9 +488,18 @@ ThreadPool::thread_routine_(size_type local_q_idx) noexcept  {
     while (true)  {
         ++available_threads_;
 
+        // Spin-poll for up to 79 iterations to service tasks with low
+        // latency.  Break early once 16 consecutive polls find nothing —
+        // that indicates the pool is idle and burning CPU is pointless.
         size_type   counter { 0 };
+        size_type   idle_spins { 0 };
 
-        while (++counter < 80)  run_task();
+        while (++counter < 80)  {
+            if (run_task())
+                idle_spins = 0;
+            else if (++idle_spins > 16)
+                break;
+        }
 
         WorkUnit    work_unit { };
         const auto  opt_ret = global_queue_.pop_front(true); // Wait

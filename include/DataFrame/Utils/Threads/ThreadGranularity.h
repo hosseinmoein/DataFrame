@@ -36,6 +36,43 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <thread>
 
+// Lightweight CPU pause hint — reduces pipeline flushes in spin loops on
+// hyperthreaded x86 and signals to the CPU that this is a spin-wait.
+#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
+#  include <intrin.h>
+#  define HMDF_CPU_PAUSE() _mm_pause()
+#elif defined(__x86_64__) || defined(__i386__)
+#  define HMDF_CPU_PAUSE() __builtin_ia32_pause()
+#else
+#  define HMDF_CPU_PAUSE() std::this_thread::yield()
+#endif
+
+// Software prefetch hints for read and read-for-write access.
+// Pass the raw pointer of the element you want loaded into L1/L2 cache
+// before it is needed.  On unsupported platforms the macro expands to a
+// no-op cast so it compiles cleanly everywhere.
+//
+//   HMDF_PREFETCH_R(ptr)  — hint that *ptr will be read soon
+//   HMDF_PREFETCH_W(ptr)  — hint that *ptr will be written soon
+//                           (requests exclusive ownership of the cache line,
+//                            avoiding an invalidation round-trip on write)
+//
+// Prefetch distance: issue the prefetch HMDF_PF_DIST iterations ahead of the
+// current loop index.  16 elements covers two 64-byte cache lines for 8-byte
+// types (double / int64), which matches typical L2 fill latency (~30 ns).
+#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
+#  define HMDF_PREFETCH_R(ptr)  _mm_prefetch((const char *)(ptr), _MM_HINT_T0)
+#  define HMDF_PREFETCH_W(ptr)  _mm_prefetch((const char *)(ptr), _MM_HINT_T0)
+#elif defined(__GNUC__) || defined(__clang__)
+#  define HMDF_PREFETCH_R(ptr)  __builtin_prefetch((ptr), 0, 3)
+#  define HMDF_PREFETCH_W(ptr)  __builtin_prefetch((ptr), 1, 3)
+#else
+#  define HMDF_PREFETCH_R(ptr)  ((void)(ptr))
+#  define HMDF_PREFETCH_W(ptr)  ((void)(ptr))
+#endif
+
+static constexpr std::size_t    HMDF_PF_DIST = 16;
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -82,10 +119,14 @@ struct  SpinLock  {
 #ifdef __cpp_lib_atomic_flag_test
             while (true) {
                 if (! lock_.test_and_set(std::memory_order_acquire)) break;
-                while (lock_.test(std::memory_order_relaxed)) ;
+                // TTAS inner loop: spin on plain test() (no bus-lock) until
+                // the lock is released, yielding to the CPU each iteration.
+                while (lock_.test(std::memory_order_relaxed))
+                    HMDF_CPU_PAUSE();
             }
 #else
-            while (lock_.test_and_set(std::memory_order_acquire)) ;
+            while (lock_.test_and_set(std::memory_order_acquire))
+                HMDF_CPU_PAUSE();
 #endif // __cpp_lib_atomic_flag_test
             owner_ = thr_id;
         }
@@ -197,6 +238,9 @@ struct  SeqLock  {
                 if (seq_1 == seq_.load (std::memory_order_relaxed)) [[likely]]
                     return (copy);
             }
+            // A write is in progress (odd sequence); pause before retrying
+            // to avoid burning memory bandwidth on the shared cache line.
+            HMDF_CPU_PAUSE();
         }
     }
 

@@ -2387,7 +2387,7 @@ _read_binary_str_dbl_map_(STRM &strm, V &map_vec, bool needs_flipping,
 
 template<typename MA>
 inline static typename std::remove_reference<MA>::type
-_calc_centered_cov_(const MA &mat1, const MA &mat2, bool is_unbiased = true)  {
+_calc_centered_cov_(const MA &mat1, const MA &mat2)  {
 
     using mat_t = typename std::remove_reference<MA>::type;
 
@@ -2397,19 +2397,17 @@ _calc_centered_cov_(const MA &mat1, const MA &mat2, bool is_unbiased = true)  {
     mat1.get_centered(X);
     mat2.get_centered(Y);
 
-    mat_t       result { X.transpose2() * Y };
-    const auto  denom {
-        typename mat_t::value_type(is_unbiased ? X.rows() - 1 : X.rows())
-    };
+    mat_t                               result = X.transpose2() * Y;
+    const typename mat_t::value_type    denom = X.rows() - 1;
 
     if constexpr (result.orientation() == matrix_orient::column_major)  {
-        for (long c { 0 }; c < result.cols(); ++c)
-            for (long r { 0 }; r < result.rows(); ++r)
+        for (long c = 0; c < result.cols(); ++c)
+            for (long r = 0; r < result.rows(); ++r)
                 result(r, c) /= denom;
     }
     else  {
-        for (long r { 0 }; r < result.rows(); ++r)
-            for (long c { 0 }; c < result.cols(); ++c)
+        for (long r = 0; r < result.rows(); ++r)
+            for (long c = 0; c < result.cols(); ++c)
                 result(r, c) /= denom;
     }
 
@@ -2475,6 +2473,8 @@ _sort_by_sorted_index_(T &to_be_sorted,
 
     std::ranges::fill(done_vec, 0);
     for (std::size_t i = 0; i < idx_s; ++i) [[likely]]  {
+        if ((i + HMDF_PF_DIST) < idx_s)
+            HMDF_PREFETCH_R(sorting_idxs.data() + i + HMDF_PF_DIST);
         if (! done_vec[i]) [[likely]]  {
             done_vec[i] = 1;
 
@@ -2482,10 +2482,18 @@ _sort_by_sorted_index_(T &to_be_sorted,
             std::size_t j = sorting_idxs[i];
 
             while (i != j) [[likely]]  {
+                // One-step lookahead: we already know the next destination j,
+                // so resolve sorting_idxs[j] now and prefetch the two cache
+                // lines that the next swap iteration will touch.  This hides
+                // the random-access latency of the scatter pattern.
+                const std::size_t next_j = sorting_idxs[j];
+                HMDF_PREFETCH_W(to_be_sorted.data() + next_j);
+                HMDF_PREFETCH_R(sorting_idxs.data() + next_j);
+
                 std::swap(to_be_sorted[prev_j], to_be_sorted[j]);
                 done_vec[j] = 1;
                 prev_j = j;
-                j = sorting_idxs[j];
+                j = next_j;
             }
         }
     }

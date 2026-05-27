@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<typename ... Ts>
 struct  consistent_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline consistent_functor_ (size_type s) : size(s)  {   }
+    inline consistent_functor_ (size_type s) noexcept : size(s)  {   }
 
     const DataFrame::size_type  size;
     template<typename T>
@@ -52,7 +52,7 @@ struct  consistent_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct  shrink_to_fit_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline shrink_to_fit_functor_()  {   }
+    inline shrink_to_fit_functor_() noexcept  {   }
 
     template<typename T>
     void operator() (T &vec) const;
@@ -63,7 +63,7 @@ struct  shrink_to_fit_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct  remove_column_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline remove_column_functor_ (const char *cn, DataFrame &d)
+    inline remove_column_functor_ (const char *cn, DataFrame &d) noexcept
         : col_name(cn), df(d)  {   }
 
     const char  *col_name;
@@ -162,7 +162,7 @@ struct  load_all_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct  remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline remove_functor_ (std::size_t b, std::size_t e)
+    inline remove_functor_ (std::size_t b, std::size_t e) noexcept
         : begin (b), end (e)  {   }
 
     const std::size_t   begin;
@@ -177,7 +177,7 @@ struct  remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct  truncate_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline truncate_functor_ (size_type b, size_type a)
+    inline truncate_functor_ (size_type b, size_type a) noexcept
         : before (b), after (a)  {   }
 
     const size_type before;
@@ -330,7 +330,7 @@ struct  print_csv2_data_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct  equal_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline equal_functor_ (const char *n, const DataFrame &d)
+    inline equal_functor_ (const char *n, const DataFrame &d) noexcept
         : name(n), df(d)  {  }
 
     const char      *name;
@@ -349,7 +349,7 @@ struct  mod_by_idx_functor_ : DataVec::template visitor_base<Ts ...>  {
     inline mod_by_idx_functor_ (const char *n,
                                 const DataFrame &d,
                                 size_type li,
-                                size_type ri)
+                                size_type ri) noexcept
         : name(n), rhs_df(d), lhs_idx(li), rhs_idx(ri)  {  }
 
     const char      *name;
@@ -425,7 +425,7 @@ struct  concat_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct  vertical_shift_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline vertical_shift_functor_ (size_type periods, shift_policy sh_po)
+    inline vertical_shift_functor_ (size_type periods, shift_policy sh_po) noexcept
         : n(periods), sp(sh_po)  {   }
 
     const size_type     n;
@@ -443,7 +443,7 @@ friend struct vertical_shift_functor_;
 template<typename ... Ts>
 struct  rotate_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline rotate_functor_ (size_type periods, shift_policy sh_po)
+    inline rotate_functor_ (size_type periods, shift_policy sh_po) noexcept
         : n(periods), sp(sh_po)  {   }
 
     const DataFrame::size_type  n;
@@ -624,7 +624,7 @@ struct  concat_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct  sel_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline sel_remove_functor_ (const StlVecType<size_type> &si)
+    inline sel_remove_functor_ (const StlVecType<size_type> &si) noexcept
         : sel_indices (si)  {   }
 
     const StlVecType<size_type>    &sel_indices;
@@ -638,7 +638,7 @@ struct  sel_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct  shuffle_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline shuffle_functor_ (std::mt19937 &g) : g_(g)  {  }
+    inline shuffle_functor_ (std::mt19937 &g) noexcept : g_(g)  {  }
 
     std::mt19937    &g_;
 
@@ -876,7 +876,7 @@ struct  stringfy_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename T>
 struct  gather_vecs_functor_ : DataVec::template visitor_base<T>  {
 
-    inline gather_vecs_functor_()  {   }
+    inline gather_vecs_functor_() noexcept  {   }
 
     std::vector<const ColumnVecType<T> *>   vecs { };
     size_type                               max_rows { 0 };

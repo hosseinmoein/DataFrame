@@ -4809,14 +4809,19 @@ public: // Read/access and slicing interfaces
         size_type k,
         KNNDistFunc<T> &&dfunc =
             [](const std::vector<T> &X, const std::vector<T> &y) -> T  {
-                T   dist { 0 };
+                if constexpr (std::is_arithmetic_v<T>)  {
+                    T   dist { 0 };
 
-                for (std::size_t i { 0 }; const auto &xval : X)  {
-                    const T &yval = y[i++];
+                    for (std::size_t i { 0 }; const auto &xval : X)  {
+                        const T &yval = y[i++];
 
-                    dist += (xval - yval) * (xval - yval);
+                        dist += (xval - yval) * (xval - yval);
+                    }
+                    return (std::sqrt(dist));
                 }
-                return (std::sqrt(dist));
+                else  {
+                    return (T { });
+                }
             }
         ) const;
 

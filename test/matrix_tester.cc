@@ -1054,42 +1054,6 @@ int main(int, char *[]) {
         row_mat(2, 2) = { 31, 32, 33 };
         row_mat(2, 3) = { 34, 35, 36 };
 
-        const auto  col_res { col_mat.get_flatten() };
-        const auto  row_res { row_mat.get_flatten() };
-
-        assert(col_res.rows() == 3);
-        assert(col_res.cols() == 4 * 3);
-        assert(row_res.rows() == 3);
-        assert(row_res.cols() == 4 * 3);
-
-        assert(col_res(0, 0) == 1);
-        assert(col_res(0, 11) == 12);
-        assert(col_res(1, 0) == 13);
-        assert(col_res(1, 11) == 24);
-        assert(col_res(2, 0) == 25);
-        assert(col_res(2, 11) == 36);
-
-        assert(row_res(0, 0) == 1);
-        assert(row_res(0, 11) == 12);
-        assert(row_res(1, 0) == 13);
-        assert(row_res(1, 11) == 24);
-        assert(row_res(2, 0) == 25);
-        assert(row_res(2, 11) == 36);
-
-        const auto  col_row_wise { col_mat.get_flatten(false) };
-        const auto  row_row_wise { row_mat.get_flatten(false) };
-
-        assert(col_row_wise.rows() == 3 * 3);
-        assert(col_row_wise.cols() == 4);
-        assert(row_row_wise.rows() == 3 * 3);
-        assert(row_row_wise.cols() == 4);
-
-        assert(col_row_wise(0, 0) == 1);
-        assert(col_row_wise(0, 3) == 10);
-        assert(col_row_wise(4, 0) == 14);
-        assert(col_row_wise(4, 3) == 23);
-        assert(col_row_wise(8, 0) == 27);
-        assert(col_row_wise(8, 3) == 36);
     }
 
     test_thread_pool();

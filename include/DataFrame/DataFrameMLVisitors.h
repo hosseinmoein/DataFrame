@@ -6268,15 +6268,20 @@ struct  AnomalyDetectByKNNVisitor  {
         normalization_type norm_type = normalization_type::none,
         distance_func &&f =
            [](const win_type &a, const win_type &b) -> value_type {
-               value_type       sum { 0 };
-               const size_type  sz { a.size() };
+               if constexpr (std::is_arithmetic_v<value_type>)  {
+                   value_type       sum { 0 };
+                   const size_type  sz { a.size() };
 
-               for (size_type i { 0 }; i < sz; ++i)  {
-                   const value_type    diff { a[i] - b[i] };
+                   for (size_type i { 0 }; i < sz; ++i)  {
+                       const value_type    diff { a[i] - b[i] };
 
-                   sum += diff * diff;
+                       sum += diff * diff;
+                   }
+                   return (std::sqrt(sum));
                }
-               return (std::sqrt(sum));
+               else  {
+                   return (value_type { });
+               }
            })
         : window_(window),
           k_(k),

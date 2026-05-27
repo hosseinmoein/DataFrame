@@ -30,8 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameTypes.h>
-#include <DataFrame/Utils/Concepts.h>
-#include <DataFrame/Utils/MetaProg.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
 #include <functional>
@@ -65,23 +63,11 @@ public:
     using const_pointer = const value_type *;
     using self_t = Matrix<value_type, MO, IS_SYM>;
 
-    inline static constexpr bool    IS_MD { random_acc_cont<T> };
-
-    using data_t =
-        typename std::conditional_t<! IS_MD,
-                                    lazy_type<T>,
-                                    value_type_of<T>>::type;
-
     using trans_result_t =
         typename std::conditional<
             MO == matrix_orient::column_major,
             Matrix<T, matrix_orient::row_major>,
             Matrix<T, matrix_orient::column_major>>::type;
-
-    using scalar_ma_t =
-        Matrix<typename std::conditional_t<! IS_MD,
-                                           lazy_type<T>,
-                                           value_type_of<T>>::type, MO>;
 
     Matrix() = default;
     Matrix(size_type rows, size_type cols, const_reference def_v = T());
@@ -247,14 +233,9 @@ public:
     // variance, we have only one independent observation, since the two
     // observations are equally distant from the mean.
     //
-    // NOTE: This works with both scalar and multidimensional (MD),
-    //       vectors and arrays, data.
+    // For a nXm matrix, you will get a mXm covariance matrix
     //
-    // For a nXm scalar matrix, you will get a mXm covariance matrix.
-    // For a nXm MD matrix you will get a m*dXm*d matrix, where d is the
-    // dimensionality of data
-    //
-    [[nodiscard]] scalar_ma_t
+    [[nodiscard]] Matrix
     covariance(bool is_unbiased = true) const;
 
     // Let A be an nXn matrix. The number l is an eigenvalue of A if there
@@ -322,8 +303,6 @@ public:
     //     first tridiagonalize, then diagonalize.
     // else:
     //     reduce to Hessenberg form, then reduce to real Schur form.
-    //
-    // If sort_values is true, eigen values are sorted in ascending order
     //
     template<typename MA1, typename MA2>
     void eigen_space(MA1 &eigenvalues,
@@ -519,19 +498,6 @@ public:
     Matrix &ew_multiply(value_type val) noexcept;
     Matrix &ew_divide(value_type val) noexcept;
 
-    // Return a scalar matrix where multidimensional data is flattened.
-    // if col_wise is true the dimensions in the matrix data are flattened
-    // into columns, otherwise they are flattened into rows.
-	//
-    scalar_ma_t get_flatten(bool col_wise = true) const requires (IS_MD);
-
-    // These return the inner (dot) product of the given rows/columns
-    // NOTE: These work with both scalar and multidimensional
-    //       (i.e. vectors and arrays) data.
-    //
-    value_type row_inner_prod(size_type row1, size_type row2) const;
-    value_type col_inner_prod(size_type col1, size_type col2) const;
-
     // Get a matrix filled with real uniform random numbers. T can only be a
     // floating point type
     //
@@ -548,31 +514,26 @@ public:
     template<typename TT, matrix_orient MO1, matrix_orient MO2,
              bool IS_SYM1, bool IS_SYM2>
     friend typename std::conditional<IS_SYM1 && IS_SYM2,
-                                     Matrix<TT, MO1, true>,
-                                     Matrix<TT, MO1, false>>::type
+                                            Matrix<TT, MO1, true>,
+                                            Matrix<TT, MO1, false>>::type
     operator + (const Matrix<TT, MO1, IS_SYM1> &lhs,
                 const Matrix<TT, MO2, IS_SYM2> &rhs);
 
     template<typename TT, matrix_orient MO1, matrix_orient MO2,
              bool IS_SYM1, bool IS_SYM2>
     friend typename std::conditional<IS_SYM1 && IS_SYM2,
-                                     Matrix<TT, MO1, true>,
-                                     Matrix<TT, MO1, false>>::type
+                                            Matrix<TT, MO1, true>,
+                                            Matrix<TT, MO1, false>>::type
     operator - (const Matrix<TT, MO1, IS_SYM1> &lhs,
                 const Matrix<TT, MO2, IS_SYM2> &rhs);
 
 private:
 
-    inline static constexpr size_type   NOPOS_ { static_cast<size_type>(-9) };
-    inline static constexpr bool        resizable_ { IS_MD && Resizable<T> };
-    inline static constexpr double      EPSILON_ { double(2.220446e-16) };
+    static constexpr size_type  NOPOS_ = static_cast<size_type>(-9);
 
     using storage_t = std::vector<value_type>;
 
-    // Initializes the val to zero(s)
-    //
-    inline void
-    zero_out_(value_type &val) const;
+    inline static constexpr double  EPSILON_ { double(2.220446e-16) };
 
     // Partial pivoting for Gaussian elimination:
     //
@@ -604,7 +565,7 @@ private:
     //
     template<typename MA1, typename MA2, typename MA3>
     static inline void
-    diagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept;
+    diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept;
 
     // Nonsymmetric reduction to Hessenberg form.
     //
@@ -666,12 +627,12 @@ public:
         using const_reference = const value_type &;
         using difference_type = typename std::vector<T>::difference_type;
 
-        inline row_const_iterator() = default;
+        inline row_const_iterator () = default;
 
         inline row_const_iterator(const self_t *m,
                                   size_type row = 0,
                                   size_type col = 0)
-            : mptr_(m), row_(row), col_(col)  {   }
+            : mptr_ (m), row_ (row), col_(col)  {   }
 
         inline bool operator == (const row_const_iterator &rhs) const  {
 

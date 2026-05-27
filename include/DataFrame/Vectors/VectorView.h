@@ -117,11 +117,6 @@ public:
     [[nodiscard]] inline const_reference
     back() const noexcept  { return (*(end_ptr_ - 1)); }
 
-    [[nodiscard]] inline pointer
-    data() noexcept  { return (begin_ptr_); }
-    [[nodiscard]] inline const_pointer
-    data() const noexcept  { return (begin_ptr_); }
-
     // These are to match the std::vector interface, so things will compile
     //
     inline void shrink_to_fit()  {  }
@@ -545,9 +540,6 @@ public:
     ront() const noexcept  { return (*begin_ptr_); }
     [[nodiscard]] inline const_reference
     back() const noexcept  { return (*(end_ptr_ - 1)); }
-
-    [[nodiscard]] inline const_pointer
-    data() const noexcept  { return (begin_ptr_); }
 
     // These are to match the std::vector interface, so things will compile
     //

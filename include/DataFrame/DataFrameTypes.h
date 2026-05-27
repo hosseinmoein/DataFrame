@@ -33,7 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Concepts.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/DateTime.h>
-#include <DataFrame/Utils/MetaProg.h>
 
 #include <complex>
 #include <limits>
@@ -1168,22 +1167,8 @@ template<typename T>
 using KNNResult = std::vector<KNNPair<T>>;
 
 template<typename T>
-struct  KNNDistFunc  {
-
-    // Is T a random access container? In other words, are we
-    // dealing with multidimensional data?
-    //
-    static constexpr bool   IS_MD { random_acc_cont<T> };
-
-    using data_t =
-        typename std::conditional_t<! IS_MD,
-                                    lazy_type<T>,
-                                    value_type_of<T>>::type;
-
-    using func_t = std::function<data_t(const std::vector<T> &x,
-                                        const std::vector<T> &y)>;
-
-};
+using KNNDistFunc =
+    std::function<T(const std::vector<T> &X, const std::vector<T> &y)>;
 
 // ----------------------------------------------------------------------------
 
@@ -1236,6 +1221,18 @@ template<typename T>
 struct  is_complex<std::complex<T>>  {
     inline static constexpr bool    value = true;
 };
+
+// ----------------------------------------------------------------------------
+
+// A wrapper that computes type only when asked
+//
+template <typename T>
+struct  lazy_type  { using type = T; };
+
+// Solves the double::value_type error by delaying its evaluation
+//
+template <typename T>
+struct  value_type_of  { using type = typename T::value_type; };
 
 // ----------------------------------------------------------------------------
 

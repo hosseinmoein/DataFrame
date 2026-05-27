@@ -1199,7 +1199,8 @@ DataFrame<I, H>::difference(const DataFrame &other) const  {
 
 template<typename I, typename H>
 template<typename T>
-Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+typename Matrix<T, matrix_orient::column_major>::scalar_ma_t
+DataFrame<I, H>::
 covariance_matrix(std::vector<const char *> &&col_names,
                   normalization_type norm_type) const  {
 
@@ -1221,7 +1222,7 @@ covariance_matrix(std::vector<const char *> &&col_names,
 
 template<typename I, typename H>
 template<typename T>
-Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+typename Matrix<T, matrix_orient::column_major>::scalar_ma_t DataFrame<I, H>::
 pca_by_eigen(std::vector<const char *> &&col_names,
              const PCAParams params) const  {
 
@@ -1232,124 +1233,162 @@ pca_by_eigen(std::vector<const char *> &&col_names,
         throw NotFeasible("pca_by_eigen(): num_comp_to_keep > #input columns");
 #endif // HMDF_SANITY_EXCEPTIONS
 
+    using matrix_t = Matrix<T, matrix_orient::column_major>;
+    using scalar_mat_t = typename matrix_t::scalar_ma_t;
+    using data_t = scalar_mat_t::value_type;
+
+    scalar_mat_t    var_cov;
+    const auto      data_mat {
+        get_scaled_data_matrix_<T>(
+            std::forward<std::vector<const char *>>(col_names),
+            params.norm_type)
+    };
+
     // Get the covariance matrix of normalized data
     //
-    const auto  var_cov =
-        covariance_matrix<T>(
-            std::forward<std::vector<const char *>>(col_names),
-            params.norm_type);
+    if constexpr (matrix_t::IS_MD)
+        var_cov = data_mat.get_flatten().covariance();
+    else
+        var_cov = data_mat.covariance();
 
     // Calculate Eigen space
     //
-    Matrix<T, matrix_orient::row_major>     eigenvals;
-    Matrix<T, matrix_orient::column_major>  eigenvecs;
+    Matrix<data_t, matrix_orient::row_major>    eigenvals;
+    Matrix<data_t, matrix_orient::column_major> eigenvecs;
 
     var_cov.eigen_space(eigenvals, eigenvecs, true);
 
     // Keep the most significant columns
     //
-    Matrix<T, matrix_orient::column_major>  mod_evecs { };
-    long                                    col_count { 0 };
+    Matrix<data_t, matrix_orient::column_major> mod_evecs { };
+    long                                        col_count { 0 };
 
     if (params.num_comp_to_keep > 0)  {
         col_count = params.num_comp_to_keep;
     }
     else  {
-        T   ev_sum { 0 };
+        data_t  ev_sum { 0 };
 
-        for (long c = 0; c < eigenvals.cols(); ++c)
-            ev_sum += std::fabs(eigenvals(0, c));
+        for (long c { 0 }; c < eigenvals.cols(); ++c)
+            ev_sum += std::abs(eigenvals(0, c));
 
-        T   kept_sum { 0 };
+        data_t  kept_sum { 0 };
 
-        for (long c = eigenvals.cols() - 1; c >= 0; --c)  {
-            kept_sum += std::fabs(eigenvals(0, c));
+        for (long c { eigenvals.cols() - 1 }; c >= 0; --c)  {
+            kept_sum += std::abs(eigenvals(0, c));
             col_count += 1;
             if ((kept_sum / ev_sum) >= params.pct_comp_to_keep)
                 break;
         }
     }
     mod_evecs.resize(eigenvecs.rows(), col_count);
-    for (long c = 0; c < col_count; ++c)  {
-        const long  col = eigenvecs.cols() - c - 1;
+    for (long c { 0 }; c < col_count; ++c)  {
+        const long  col { eigenvecs.cols() - c - 1 };
 
-        for (long r = 0; r < eigenvecs.rows(); ++r)
+        for (long r { 0 }; r < eigenvecs.rows(); ++r)
             mod_evecs(r, c) = eigenvecs(r, col);
     }
 
     // Copy the data matrix
     //
-    const auto  data_mat =
+    const auto  data_mat_no_norm {
         get_scaled_data_matrix_<T>(
             std::forward<std::vector<const char *>>(col_names),
-            normalization_type::none);
+            normalization_type::none)
+    };
 
     // Return PCA
     //
-    return (data_mat * mod_evecs);
+    if constexpr (matrix_t::IS_MD)
+        return (data_mat_no_norm.get_flatten() * mod_evecs);
+    else
+        return (data_mat_no_norm * mod_evecs);
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
 template<typename T>
-Matrix<T, matrix_orient::column_major> DataFrame<I, H>::
+typename Matrix<T, matrix_orient::column_major>::scalar_ma_t DataFrame<I, H>::
 fast_ica(std::vector<const char *> &&col_names,
          size_type num_ind_features,
          const ICAParams params) const  {
 
-    using mat_t = Matrix<T, matrix_orient::column_major>;
-    using dist_t = std::normal_distribution<T>;
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (num_ind_features == 0)
+        throw NotFeasible("fast_ica(): num_ind_features must be > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
 
-    auto    data_mat =
+    using matrix_t = Matrix<T, matrix_orient::column_major>;
+    using scalar_ma_t = typename matrix_t::scalar_ma_t;
+    using data_t = scalar_ma_t::value_type;
+    using dist_t = std::normal_distribution<data_t>;
+
+    auto        data_mat {
         get_scaled_data_matrix_<T>(
             std::forward<std::vector<const char *>>(col_names),
-            normalization_type::none);
+            normalization_type::none)
+    };
+    scalar_ma_t data_mat_flat;
 
-    if (params.center)  data_mat.center();
-    data_mat.whiten(false);
+    if constexpr (matrix_t::IS_MD)
+        data_mat_flat = data_mat.get_flatten();
+    else
+        data_mat_flat = data_mat;
 
-    const auto          features = data_mat.cols();
-    const auto          samples = data_mat.rows();
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (num_ind_features > size_type(data_mat_flat.cols()))
+        throw NotFeasible(
+            "fast_ica(): num_ind_features must be <= number of "
+            "flattened columns");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    if (params.center)  data_mat_flat.center();
+    data_mat_flat.whiten(/*do_center=*/ false);
+
+    const auto          features { data_mat_flat.cols() };
+    const auto          samples { data_mat_flat.rows() };
     std::random_device  rd;
-    std::mt19937        gen((params.seed != seed_t(-1)) ? params.seed : rd());
-    dist_t              dist(T(0), T(1));
-    mat_t               weight { long(num_ind_features), features };
-    mat_t               w { 1L, features };
+    std::mt19937        gen {
+        (params.seed != seed_t(-1)) ? params.seed : rd()
+    };
+    dist_t              dist { data_t(0), data_t(1) };
+    scalar_ma_t         weight { long(num_ind_features), features };
+    scalar_ma_t         w { 1L, features };
     auto                get_row_mat =
-        [](const auto &mat, auto row) -> mat_t  {
-            mat_t result { 1, mat.cols() };
+        [](const auto &mat, auto row) -> scalar_ma_t  {
+            scalar_ma_t result { 1, mat.cols() };
 
-            for (long col = 0; col < mat.cols(); ++col)
+            for (long col { 0 }; col < mat.cols(); ++col)
                 result(0, col) = mat(row, col);
             return (result);
         };
     auto                row_and_normalize =
         [](auto &rhs, const auto &lhs, auto row) -> void  {
-            T   norm { 0 };
+            data_t  norm { 0 };
 
-            for (long col = 0; col < lhs.cols(); ++col)  {
-                const auto  val = lhs(row, col);
+            for (long col { 0 }; col < lhs.cols(); ++col)  {
+                const auto  val { lhs(row, col) };
 
                 norm += val * val;
                 rhs(0, col) = val;
             }
             norm = std::sqrt(norm);
-            for (long col = 0; col < rhs.cols(); ++col)
+            for (long col { 0 }; col < rhs.cols(); ++col)
                 rhs(0, col) /= norm;
         };
     auto                randomize =
         [&dist, &gen](auto &mat) -> void  {
-            for (long col = 0; col < mat.cols(); ++col)
-                for (long row = 0; row < mat.rows(); ++row)
+            for (long col { 0 }; col < mat.cols(); ++col)
+                for (long row { 0 }; row < mat.rows(); ++row)
                     mat(row, col) = dist(gen);
         };
     auto                get_norm =
-        [](const auto &mat) -> T  {
-            T   norm { 0 };
+        [](const auto &mat) -> data_t  {
+            data_t  norm { 0 };
 
-            for (long j = 0; j < mat.cols(); ++j)  {
-                const auto  val = mat(0, j);
+            for (long j { 0 }; j < mat.cols(); ++j)  {
+                const auto  val { mat(0, j) };
 
                 norm += val * val;
             }
@@ -1357,7 +1396,7 @@ fast_ica(std::vector<const char *> &&col_names,
         };
     auto                normalize =
         [](auto &mat, const auto norm) -> void  {
-            for (long j = 0; j < mat.cols(); ++j)
+            for (long j { 0 }; j < mat.cols(); ++j)
                 mat(0, j) /= norm;
         };
     auto                do_tanh = [](auto &mat) -> void  { mat.ew_tanh(); };
@@ -1365,50 +1404,53 @@ fast_ica(std::vector<const char *> &&col_names,
         [&do_tanh](auto &mat) -> void  {
             do_tanh(mat);
             mat.ew_square();
-            for (long col = 0; col < mat.cols(); ++col)  {
-                auto    &val { mat(0, col) };
+            for (long row { 0 }; row < mat.rows(); ++row)  {
+                auto    &val { mat(row, 0) };
 
-                val = T(1) - val;
+                val = data_t(1) - val;
             }
         };
 
     randomize(weight);
-    for (long row = 0; row < long(num_ind_features); ++row)  {
+    for (long row { 0 }; row < long(num_ind_features); ++row)  {
         row_and_normalize(w, weight, row);
 
-        for (long iter = 0; iter < long(params.num_iter); ++iter)  {
-            const auto  wx = data_mat * w.transpose(); // shape: (samples)
-            auto        gwx = wx;
-            auto        gwx_deriv = wx;
+        for (long iter { 0 }; iter < long(params.num_iter); ++iter)  {
+            const auto  wx { data_mat_flat * w.transpose() };
+            auto        gwx { wx };
+            auto        gwx_deriv { wx };
 
             do_tanh(gwx);
             do_tanh_deriv(gwx_deriv);
 
-            auto    w_new = gwx.transpose() * data_mat;
+            auto    w_new { gwx.transpose() * data_mat_flat };
 
-            w_new.ew_divide(T(samples));
+            w_new.ew_divide(data_t(samples));
             w.ew_multiply(gwx_deriv.mean());
             w_new -= w;
 
-            for (long rows2 = 0; rows2 < row; ++rows2)  {
-                const auto  mat = get_row_mat(weight, rows2);
+            for (long rows2 { 0 }; rows2 < row; ++rows2)  {
+                const auto  mat { get_row_mat(weight, rows2) };
 
                 w_new -=
                     (mat.transpose() * (mat * w_new.transpose())).transpose();
             }
-            normalize(w, get_norm(w));
 
-            if ((w - w_new).norm() < params.epsilon)  break;
+            normalize(w_new, get_norm(w_new));
+
+            const auto  delta { (w - w_new).norm() };
+
             w = w_new;
+            if (delta < params.epsilon)  break;
         }
 
-        for (long col = 0; col <  weight.cols(); ++col)
+        for (long col { 0 }; col <  weight.cols(); ++col)
             weight(row, col) = w(0, col);
     }
 
     // Extract independent components
     //
-    return (data_mat * weight.transpose());
+    return (data_mat_flat * weight.transpose());
 }
 
 // ----------------------------------------------------------------------------
@@ -1419,34 +1461,36 @@ KNNResult<T> DataFrame<I, H>::
 knn(std::vector<const char *> &&col_names,
     const std::vector<T> &target,
     size_type k,
-    KNNDistFunc<T> &&dfunc) const  {
+    KNNDistFunc<T>::func_t &&dfunc) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (target.size() != col_names.size())
-        throw NotFeasible("knn(): Target dimension != number of features");
+        throw NotFeasible(
+            "knn(): Target dimension must equal number of features");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     size_type                               col_s { indices_.size() };
     const size_type                         fet_s { col_names.size() };
     std::vector<const ColumnVecType<T> *>   columns(fet_s, nullptr);
-    SpinGuard                               guard { lock_ };
 
-    for (size_type i { 0 }; i < fet_s; ++i)  {
-        columns[i] = &get_column<T>(col_names[i], false);
-        if (columns[i]->size() < col_s) [[unlikely]]
-            col_s = columns[i]->size();
+    {
+        SpinGuard   guard { lock_ };
+
+        for (size_type i { 0 }; i < fet_s; ++i)  {
+            columns[i] = &get_column<T>(col_names[i], false);
+            if (columns[i]->size() < col_s) [[unlikely]]
+                col_s = columns[i]->size();
+        }
     }
-    guard.release();
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (k >= col_s || k == 0)
-        throw NotFeasible("knn(): K must be < number of features and > 0");
+        throw NotFeasible("knn(): k must be > 0 and < number of data rows");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     using dist_t = std::pair<double, size_type>;
 
-    const auto          thread_level =
-        (col_s < 60000) ? 0L : get_thread_level();
+    const auto          thread_level { col_s < 6e4 ? 0L : get_thread_level() };
     std::vector<dist_t> distances(col_s);
     auto                lbd =
         [&columns = std::as_const(columns), &target = std::as_const(target),
@@ -1462,10 +1506,11 @@ knn(std::vector<const char *> &&col_names,
         };
 
     if (thread_level > 2)  {
-        auto    futuers =
-            thr_pool_.parallel_loop<T>(size_type(0), col_s, std::move(lbd));
+        auto    futures {
+            thr_pool_.parallel_loop<T>(size_type(0), col_s, std::move(lbd))
+        };
 
-        for (auto &fut : futuers)  fut.get();
+        for (auto &fut : futures)  fut.get();
         thr_pool_.parallel_sort(distances.begin(), distances.end(),
                                 [](const auto &lhs, const auto &rhs) -> bool  {
                                     return (lhs.first < rhs.first);
@@ -1481,16 +1526,14 @@ knn(std::vector<const char *> &&col_names,
 
     KNNResult<T>    result(k);
 
-    for (size_type i { 0 }; i < k; ++i)  {
-        KNNPair<T>  item;
+    for (size_type i { 0 }; i < k; ++i) {
+        auto    &item { result[i] };
 
+        item.second = distances[i].second;  // original row index
         item.first.resize(fet_s);
         for (size_type j { 0 }; j < fet_s; ++j)
             item.first[j] = columns[j]->at(distances[i].second);
-        item.second = distances[i].second;
-        result[i] = std::move(item);
     }
-
     return (result);
 }
 
@@ -1498,14 +1541,15 @@ knn(std::vector<const char *> &&col_names,
 
 template<typename I, typename H>
 template<typename T>
-std::tuple<Matrix<T, matrix_orient::column_major>,  // U
-           Matrix<T, matrix_orient::column_major>,  // S
-           Matrix<T, matrix_orient::column_major>>  // V
+std::tuple<typename Matrix<T, matrix_orient::column_major>::scalar_ma_t,  // U
+           typename Matrix<T, matrix_orient::column_major>::scalar_ma_t,  // S
+           typename Matrix<T, matrix_orient::column_major>::scalar_ma_t>  // V
 DataFrame<I, H>::
 compact_svd(std::vector<const char *> &&col_names,
             normalization_type norm_type) const  {
 
-    using col_mat_t = Matrix<T, matrix_orient::column_major>;
+    using col_mat_t =
+        typename Matrix<T, matrix_orient::column_major>::scalar_ma_t;
 
     // Copy the data matrix
     //
@@ -1517,7 +1561,10 @@ compact_svd(std::vector<const char *> &&col_names,
     col_mat_t   S;
     col_mat_t   V;
 
-    scaled_data_mat.svd(U, S, V, true);
+    if constexpr (scaled_data_mat.IS_MD)
+        scaled_data_mat.get_flatten().svd(U, S, V, true);
+    else
+        scaled_data_mat.svd(U, S, V, true);
 
     return (std::make_tuple(U, S, V));
 }
@@ -1526,7 +1573,7 @@ compact_svd(std::vector<const char *> &&col_names,
 
 template<typename I, typename H>
 template<typename T>
-CanonCorrResult<T> DataFrame<I, H>::
+CanonCorrResult<double> DataFrame<I, H>::
 canon_corr(std::vector<const char *> &&X_col_names,
            std::vector<const char *> &&Y_col_names) const  {
 
@@ -1567,49 +1614,10 @@ canon_corr(std::vector<const char *> &&X_col_names,
     for (size_type i { 0 }; i < Y_col_names.size(); ++i)
         Y.set_column(columns[i + X_col_names.size()]->begin(), i);
 
-    const auto  XY_cov = _calc_centered_cov_(X, Y);
-    const auto  X_cov = _calc_centered_cov_(X, X);
-    const auto  Y_cov = _calc_centered_cov_(Y, Y);
-    const auto  sq_root_mat =
-        X_cov.inverse() * XY_cov * Y_cov.inverse() * XY_cov.transpose();
-    col_mat_t   U;
-    col_mat_t   S;
-    col_mat_t   V;
-
-    sq_root_mat.svd(U, S, V, false);
-
-    CanonCorrResult<T>  result;
-
-    result.coeffs.reserve(S.rows());
-    for (long i { 0 }; i < S.rows(); ++i)
-        result.coeffs.push_back(S(i, 0));
-
-    T   X_cov_diag_sum { 0 };
-    T   Y_cov_diag_sum { 0 };
-
-    for (long i { 0 }; i < X_cov.rows(); ++i)  {
-        X_cov_diag_sum += X_cov(i, i);
-        Y_cov_diag_sum += Y_cov(i, i);
-    }
-
-    T   redun { 0 };
-
-    for (long i { 0 }; i < X_cov.rows(); ++i)  {
-        const T S_val = S(i, 0);
-
-        redun += S_val * S_val * X_cov(i, i);
-    }
-    result.x_red_idx = redun / X_cov_diag_sum;
-
-    redun = 0;
-    for (long i { 0 }; i < Y_cov.rows(); ++i)  {
-        const T S_val = S(i, 0);
-
-        redun += S_val * S_val * Y_cov(i, i);
-    }
-    result.y_red_idx = redun / Y_cov_diag_sum;
-
-    return (result);
+    if constexpr (col_mat_t::IS_MD)
+        return (canon_corr_imp_(X.get_flatten(), Y.get_flatten()));
+    else
+        return (canon_corr_imp_(X, Y));
 }
 
 // ----------------------------------------------------------------------------
@@ -1782,7 +1790,7 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
         norm_v(fake_index.begin(), fake_index.end(),
                columns[i]->begin(), columns[i]->end());
         norm_v.post();
- 
+
         ncolumns[i] = std::move(norm_v.get_result());
     }
 
@@ -1816,7 +1824,7 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
             norm_v(fake_index.begin(), fake_index.end(),
                    centroids[c].begin(), centroids[c].end());
             norm_v.post();
- 
+
             ncentroids[c] = std::move(norm_v.get_result());
         }
 

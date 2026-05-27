@@ -48,20 +48,31 @@ namespace hmdf
     using result_type = size_type;
 
 #define DEFINE_PRE_POST_2 \
-    inline void pre ()  { count_ = 0; } \
-    inline void post ()  {  } \
-    inline result_type get_result () const  { return (count_); }
+    inline void pre()  { count_ = 0; } \
+    inline void post()  {  } \
+    inline result_type get_result() const  { return (count_); }
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  EhlersHighPassFilterVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
 
     DEFINE_VISIT_BASIC_TYPES_4
 
     template <typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end) {
 
         GET_COL_SIZE
 
@@ -69,52 +80,103 @@ struct  EhlersHighPassFilterVisitor  {
         if (col_s < 3)
             throw DataFrameError("EhlersHighPassFilterVisitor: "
                                  "column size must be > 2");
+
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "EhlersHighPassFilterVisitor: "
+                        "Inconsistent data dimensions");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const value_type    ang = TAU / period_;
-        const value_type    ang_cos = std::cos(ang);
-        const value_type    alpha =
-            ang_cos != T(0) ? (ang_cos + std::sin(ang) - T(1)) / ang_cos : T(0);
-        const value_type    t_plus = T(1) + alpha * T(0.5);
-        const value_type    t_minus = T(1) - alpha;
-        value_type          prev_input = *column_begin;
-        value_type          prev_filter = 0;
+        const data_t    ang { TAU / period_ };
+        const data_t    ang_cos { std::cos(ang) };
+        const data_t    alpha {
+            ang_cos != data_t(0)
+                ? (ang_cos + std::sin(ang) - data_t(1)) / ang_cos : data_t(0)
+        };
+        const data_t    t_plus { data_t(1) + alpha * data_t(0.5) };
+        const data_t    t_minus { data_t(1) - alpha };
+        value_type      prev_input { *column_begin };
+        value_type      prev_filter { };
 
-        for (size_type i = 1; i < col_s; ++i)  {
-            const value_type    diff = *(column_begin + i) - prev_input;
-            const value_type    filter = t_plus * diff + t_minus * prev_filter;
+        if constexpr (is_md_)  {
+            if constexpr (is_std_vector_v<T>)
+                 prev_filter.resize(column_begin->size(), data_t(0));
+            else
+                prev_filter.fill(data_t(0));
+        }
+        else  prev_filter = 0;
+        for (size_type i { 1 }; i < col_s; ++i)  {
+            if constexpr (! is_md_)  {
+                const value_type    &diff { *(column_begin + i) - prev_input };
+                const value_type    filter {
+                    (diff * t_plus) + (prev_filter * t_minus)
+                };
 
-            prev_filter = filter;
-            prev_input = *(column_begin + i);
-            *(column_begin + i) -= filter;
+                prev_filter = filter;
+                prev_input = *(column_begin + i);
+                *(column_begin + i) -= filter;
+            }
+            else  {
+                const auto      &cur { *(column_begin + i) };
+                const size_type dim { cur.size() };
+                value_type      filter;
+
+                if constexpr (is_std_vector_v<T>)
+                    filter.resize(dim);
+                for (size_type d { 0 }; d < dim; ++d)  {
+                    const data_t    diff { cur[d] - prev_input[d] };
+
+                    filter[d] = (diff * t_plus) + (prev_filter[d] * t_minus);
+                }
+                prev_filter = filter;
+                prev_input = cur;
+                for (size_type d { 0 }; d < dim; ++d)
+                    (*(column_begin + i))[d] -= filter[d];
+            }
         }
     }
 
-    inline void pre ()  {  }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (0); }
+    inline void pre()  {  }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (0); }
 
     explicit
-    EhlersHighPassFilterVisitor(value_type period = 20) : period_(period)  {  }
+    EhlersHighPassFilterVisitor(data_t period = 20) : period_(period)  {  }
 
 private:
 
-    const value_type    period_;
+    const data_t    period_;
 };
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 using ehpf_v = EhlersHighPassFilterVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 struct  EhlersBandPassFilterVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
 
     DEFINE_VISIT_BASIC_TYPES_4
 
     template <typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end) {
 
         GET_COL_SIZE
 
@@ -122,40 +184,91 @@ struct  EhlersBandPassFilterVisitor  {
         if (col_s < 10)
             throw DataFrameError("EhlersBandPassFilterVisitor: "
                                  "column size must be > 9");
+
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "EhlersBandPassFilterVisitor: "
+                        "Inconsistent data dimensions");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const value_type        beta = std::cos(TAU / period_);
-        const value_type        gamma = T(1) / std::cos(TAU * bandw_ / period_);
-        const value_type        alpha =
-            gamma - std::sqrt(gamma * gamma - T(1));
-        const value_type        f1 = T(0.5) * (T(1) - alpha);
-        const value_type        f2 = beta * (T(1) + alpha);
-        std::vector<value_type> filter(col_s, T(0));
+        const data_t            beta { std::cos(TAU / period_) };
+        const data_t            gamma {
+            data_t(1) / std::cos(TAU * bandw_ / period_)
+        };
+        const data_t            alpha {
+            gamma - std::sqrt(gamma * gamma - data_t(1))
+        };
+        const data_t            f1 { data_t(0.5) * (data_t(1) - alpha) };
+        const data_t            f2 { beta * (data_t(1) + alpha) };
+        std::vector<value_type> filter(col_s);
 
-        filter[2] = f1 * (*(column_begin + 2) - *(column_begin));
-        for (size_type i = 3; i < col_s; ++i)
-            filter[i] = f1 * (*(column_begin + i) - *(column_begin + (i - 2))) +
-                        f2 * filter[i - 1] - alpha * filter[i - 2];
-        for (size_type i = 0; i < col_s; ++i)
-            *(column_begin + i) -= filter[i];
+        if constexpr (is_md_)  {
+            if constexpr (is_std_vector_v<T>)  {
+                const auto  dim { column_begin->size() };
+
+                filter[0] = filter[1] = value_type(dim, 0);
+            }
+            else  {
+                filter[0] = filter[1] = value_type();
+            }
+        }
+        else  {
+            filter[0] = filter[1] = 0;
+        }
+        if constexpr (! is_md_)  {
+            filter[2] = (*(column_begin + 2) - *(column_begin)) * f1;
+            for (size_type i { 3 }; i < col_s; ++i)
+                filter[i] =
+                    ((*(column_begin + i) - *(column_begin + (i - 2))) * f1) +
+                    (filter[i - 1] * f2) - (filter[i - 2] * alpha);
+            for (size_type i { 0 }; i < col_s; ++i)
+                *(column_begin + i) -= filter[i];
+        }
+        else  {
+            const size_type dim { column_begin->size() };
+
+            if constexpr (is_std_vector_v<T>)
+                filter[2].resize(dim);
+            for (size_type d { 0 }; d < dim; ++d)
+                filter[2][d] =
+                    ((*(column_begin + 2))[d] - (*column_begin)[d]) * f1;
+
+            for (size_type i { 3 }; i < col_s; ++i)  {
+                if constexpr (is_std_vector_v<T>)
+                    filter[i].resize(dim);
+                for (size_type d { 0 }; d < dim; ++d)
+                    filter[i][d] =
+                        (((*(column_begin + i))[d] -
+                          (*(column_begin + (i - 2)))[d]) * f1) +
+                        (filter[i - 1][d] * f2) -
+                        (filter[i - 2][d] * alpha);
+            }
+            for (size_type i { 0 }; i < col_s; ++i)
+                for (size_type d { 0 }; d < dim; ++d)
+                    (*(column_begin + i))[d] -= filter[i][d];
+        }
     }
 
-    inline void pre ()  {  }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (0); }
+    inline void pre()  {  }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (0); }
 
     explicit
-    EhlersBandPassFilterVisitor(value_type period = 20,
-                                value_type bandwidth = 0.3)
+    EhlersBandPassFilterVisitor(data_t period = 20, data_t bandwidth = 0.3)
         : period_(period), bandw_(bandwidth)  {  }
 
 private:
 
-    const value_type    period_;
-    const value_type    bandw_;
+    const data_t    period_;
+    const data_t    bandw_;
 };
 
-template<arithmetic T, typename I = unsigned long>
+template<typename T, typename I = unsigned long>
 using ebpf_v = EhlersBandPassFilterVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
@@ -163,65 +276,114 @@ using ebpf_v = EhlersBandPassFilterVisitor<T, I>;
 template<typename T, typename I = unsigned long>
 struct  ClipVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+public:
+
     DEFINE_VISIT_BASIC_TYPES_4
 
-    inline void operator() (const index_type &, value_type &val)  {
+    inline void operator()(const index_type &, value_type &val)  {
 
-        if (val > upper_)  {
-            val = upper_;
-            count_ += 1;
+        if constexpr (! is_md_)  {
+            if (val > upper_)  {
+                val = upper_;
+                count_ += 1;
+            }
+            else if (val < lower_)  {
+                val = lower_;
+                count_ += 1;
+            }
         }
-        else if (val < lower_)  {
-            val = lower_;
-            count_ += 1;
+        else  {
+            if (val == nan_)  return;
+
+            const size_type dim { val.size() };
+
+            for (size_type j { 0 }; j < dim; ++j)  {
+                if (val[j] > upper_[j])  {
+                    val[j] = upper_[j];
+                    count_ += 1;
+                }
+                else if (val[j] < lower_[j])  {
+                    val[j] = lower_[j];
+                    count_ += 1;
+                }
+            }
         }
     }
+
     template <typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end) {
 
         GET_COL_SIZE
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<T>(
-                    size_type(0),
-                    col_s,
-                    [&column_begin, this]
-                    (auto begin, auto end) -> result_type  {
-                        result_type count { 0 };
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
 
-                        for (size_type i = begin; i < end; ++i)  {
-                            value_type  &val = *(column_begin + i);
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "ClipVisitor: Inconsistent data dimensions");
 
-                            if (val > this->upper_)  {
-                                val = this->upper_;
+            if (upper_.size() != dim || lower_.size() != dim)
+                throw DataFrameError(
+                    "ClipVisitor: Upper and lower limits must be of the same "
+                    "dimension as input data");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        auto    lbd =
+            [&column_begin, this](auto begin, auto end) -> result_type  {
+                result_type count { 0 };
+                size_type   dim { 1 };
+
+                if constexpr (is_md_)  dim = column_begin->size();
+                for (size_type i { begin }; i < end; ++i)  {
+                    value_type  &val { *(column_begin + i) };
+
+                    if constexpr (! is_md_)  {
+                        if (val > upper_)  {
+                            val = upper_;
+                            count += 1;
+                        }
+                        else if (val < lower_)  {
+                            val = lower_;
+                            count += 1;
+                        }
+                    }
+                    else  {
+                        for (size_type j { 0 }; j < dim; ++j)  {
+                            if (val[j] > upper_[j])  {
+                                val[j] = upper_[j];
                                 count += 1;
                             }
-                            else if (val < this->lower_)  {
-                                val = this->lower_;
+                            else if (val[j] < lower_[j])  {
+                                val[j] = lower_[j];
                                 count += 1;
                             }
                         }
-                        return (count);
-                    });
+                    }
+                }
+                return (count);
+            };
+
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    size_type(0),
+                    col_s,
+                    std::move(lbd))
+            };
 
             for (auto &fut : futures)  count_ += fut.get();
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i)  {
-                value_type  &val = *(column_begin + i);
-
-                if (val > upper_)  {
-                    val = upper_;
-                    count_ += 1;
-                }
-                else if (val < lower_)  {
-                    val = lower_;
-                    count_ += 1;
-                }
-            }
+            count_ = lbd(size_type(0), col_s);
         }
     }
 
@@ -235,6 +397,7 @@ private:
     result_type         count_ { 0 };
     const value_type    &upper_;
     const value_type    &lower_;
+    const value_type    nan_ { get_nan<T>() };
 };
 
 // ----------------------------------------------------------------------------
@@ -242,63 +405,96 @@ private:
 template<typename T, typename I = unsigned long>
 struct  AbsVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
+
     DEFINE_VISIT_BASIC_TYPES_4
 
-    inline void operator() (const index_type &, value_type &val)  {
+    inline void operator()(const index_type &, value_type &val)  {
 
-        if (val < T(0))  {
-            if constexpr (std::is_floating_point<T>::value)
-                val = std::fabs(val);
-            else
+        if constexpr (! is_md_)  {
+            if (val < data_t(0))  {
                 val = std::abs(val);
-            count_ += 1;
+                count_ += 1;
+            }
+        }
+        else  {
+            const size_type dim { val.size() };
+
+            for (size_type j { 0 }; j < dim; ++j)  {
+                if (val[j] < data_t(0))  {
+                    val[j] = std::abs(val[j]);
+                    count_ += 1;
+                }
+            }
         }
     }
-    // PASS_DATA_ONE_BY_ONE
+
     template <typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end)  {
 
         GET_COL_SIZE
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<T>(
-                    size_type(0),
-                    col_s,
-                    [&column_begin]
-                    (auto begin, auto end) -> result_type  {
-                        result_type count { 0 };
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
 
-                        for (size_type i = begin; i < end; ++i)  {
-                            value_type  &val = *(column_begin + i);
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "AbsVisitor: Inconsistent data dimensions");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
 
-                            if (val < T(0))  {
-                                if constexpr (std::is_floating_point<T>::value)
-                                    val = std::fabs(val);
-                                else
-                                    val = std::abs(val);
+        auto    lbd =
+            [&column_begin](auto begin, auto end) -> result_type  {
+                result_type count { 0 };
+                size_type   dim { 1 };
+
+                if constexpr (is_md_)  dim = column_begin->size();
+                for (size_type i { begin }; i < end; ++i)  {
+                    value_type  &val { *(column_begin + i) };
+
+                    if constexpr (! is_md_)  {
+                        if (val < data_t(0))  {
+                            val = std::abs(val);
+                            count += 1;
+                        }
+                    }
+                    else  {
+                        for (size_type j { 0 }; j < dim; ++j)  {
+                            if (val[j] < data_t(0))  {
+                                val[j] = std::abs(val[j]);
                                 count += 1;
                             }
                         }
-                        return (count);
-                    });
+                    }
+                }
+                return (count);
+            };
+
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<T>(
+                    size_type(0),
+                    col_s,
+                    std::move(lbd))
+            };
 
             for (auto &fut : futures)  count_ += fut.get();
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i)  {
-                value_type  &val = *(column_begin + i);
-
-                if (val < T(0))  {
-                    if constexpr (std::is_floating_point<T>::value)
-                        val = std::fabs(val);
-                    else
-                        val = std::abs(val);
-                    count_ += 1;
-                }
-            }
+            count_ = lbd(size_type(0), col_s);
         }
     }
 
@@ -315,27 +511,71 @@ private:
 
 // The exponential smoothing could be done multiple times, if there is a
 // trend in the data
+//
 template<typename T, typename I = unsigned long>
-struct  ExpoSmootherVisitor {
+struct  ExpoSmootherVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
 
     DEFINE_VISIT_BASIC_TYPES_4
 
     template<typename K, typename H>
     inline void
-    operator() (K, K, H column_begin, H column_end)  {
+    operator()(K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end)  {
 
-        count_ = std::distance(column_begin, column_end);
+        count_ = size_type(std::distance(column_begin, column_end));
 
-        for (size_type j = 0; j < repeat_count_; ++j)  {
-            value_type  prev_v = *column_begin;
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
 
+            for (size_type i { 1 }; i < count_; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "ExpoSmootherVisitor: Inconsistent data dimensions");
+
+            if (alfa_.size() != dim)
+                throw DataFrameError(
+                    "ExpoSmootherVisitor: Alfa must be of the same "
+                    "dimension as input data");
+        }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        for (size_type r { 0 }; r < repeat_count_; ++r)  {
             // Y0 = X0
             // Yt = aXt + (1 - a)Yt-1
-            for (size_type i = 1; i < count_; ++i) [[likely]]  {
-                const value_type    curr_v = *(column_begin + i);
+            //
+            value_type  prev_v { *column_begin };
 
-                *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
-                prev_v = curr_v;
+            if constexpr (! is_md_)  {
+                for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
+                    const value_type    curr_v { *(column_begin + i) };
+
+                    *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
+                    prev_v = curr_v;
+                }
+            }
+            else  {
+                const size_type dim { column_begin->size() };
+
+                for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
+                    const value_type    curr_v { *(column_begin + i) };
+
+                    for (size_type d { 0 }; d < dim; ++d) [[likely]]  {
+                        (*(column_begin + i))[d] =
+                            prev_v[d] + alfa_[d] * (curr_v[d] - prev_v[d]);
+                        prev_v[d] = curr_v[d];
+                    }
+                }
             }
         }
     }
@@ -343,13 +583,14 @@ struct  ExpoSmootherVisitor {
     DEFINE_PRE_POST_2
 
     explicit
-    ExpoSmootherVisitor(value_type data_smoothing_factor, size_type rc = 1)
+    ExpoSmootherVisitor(const value_type &data_smoothing_factor,
+                        size_type rc = 1)
         : alfa_(data_smoothing_factor),
           repeat_count_(rc)  {   }
 
 private:
 
-    const value_type    alfa_;
+    const value_type    &alfa_;
     const size_type     repeat_count_;
     result_type         count_ { 0 };
 };
@@ -360,40 +601,65 @@ using exs_v = ExpoSmootherVisitor<T, I>;
 // ----------------------------------------------------------------------------
 
 // Holt-Winters double exponential smoothing
+//
 template<typename T, typename I = unsigned long>
-struct  HWExpoSmootherVisitor {
+struct  HWExpoSmootherVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+public:
 
     DEFINE_VISIT_BASIC_TYPES_4
 
     template<typename K, typename H>
     inline void
-    operator() (K /*idx_begin*/, K /*idx_end*/,
-                H column_begin, H column_end)  {
+    operator()(K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end)  {
 
-        count_ = std::distance(column_begin, column_end);
+        count_ = size_type(std::distance(column_begin, column_end));
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (count_ <= 2)
             throw DataFrameError("HWExpoSmootherVisitor: count must be > 2");
+
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < count_; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "HWExpoSmootherVisitor: Inconsistent data dimensions");
+
+            if (alfa_.size() != dim || beta_.size() != dim)
+                throw DataFrameError(
+                    "HWExpoSmootherVisitor: Alfa/Beta must be of the same "
+                    "dimension as input data");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        value_type  prev_v = *column_begin;
-        value_type  tf = *(column_begin + 1) - prev_v;
+        value_type  prev_v { *column_begin };
+        value_type  tf { *(column_begin + 1) - prev_v };
 
-        for (size_type i = 1; i < count_; ++i) [[likely]]  {
-            const value_type    curr_v = *(column_begin + i);
+        for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
+            const value_type    curr_v { *(column_begin + i) };
 
             *(column_begin + i) =
-                alfa_ * curr_v + (T(1) - alfa_) * (prev_v + tf);
-            tf = beta_ * (curr_v - prev_v) + (T(1) - beta_) * tf;
+                alfa_ * curr_v + (data_t(1) - alfa_) * (prev_v + tf);
+            tf = beta_ * (curr_v - prev_v) + (data_t(1) - beta_) * tf;
             prev_v = curr_v;
         }
     }
 
     DEFINE_PRE_POST_2
 
-    HWExpoSmootherVisitor(value_type data_smoothing_factor,
-                          value_type trend_smoothing_factor)
+    HWExpoSmootherVisitor(const value_type &data_smoothing_factor,
+                          const value_type &trend_smoothing_factor)
         : alfa_(data_smoothing_factor), beta_(trend_smoothing_factor)  {   }
 
 private:

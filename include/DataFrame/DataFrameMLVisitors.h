@@ -547,6 +547,10 @@ public:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  DBSCANVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
 public:
 
     DEFINE_VISIT_BASIC_TYPES
@@ -572,7 +576,7 @@ private:
     inline static distance_func
     get_dist_func_()  {
 
-        if constexpr (std::is_arithmetic_v<value_type>)
+        if constexpr (! is_md_)
             return ([](const T &x, const T &y) -> double  {
                         return (static_cast<double>((x - y) * (x - y)));
                     });
@@ -745,6 +749,10 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  MeanShiftVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
 public:
 
     DEFINE_VISIT_BASIC_TYPES
@@ -765,7 +773,7 @@ private:
     inline static distance_func
     get_dist_func_()  {
 
-        if constexpr (std::is_arithmetic_v<value_type>)
+        if constexpr (! is_md_)
             return ([](const T &x, const T &y) -> double  {
                         return (static_cast<double>((x - y) * (x - y)));
                     });
@@ -1619,7 +1627,7 @@ struct  EntropyVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -1795,7 +1803,7 @@ struct  ImpurityVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -1957,7 +1965,7 @@ struct  SigmoidVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2433,7 +2441,7 @@ struct  PolicyLearningLossVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2586,7 +2594,7 @@ struct  LossFunctionVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = ! std::is_arithmetic_v<T>;
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2992,7 +3000,7 @@ struct  VectorSimilarityVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3162,6 +3170,10 @@ template<std::size_t K,
          typename T, typename I = unsigned long, std::size_t A = 0>
 struct  SpectralClusteringVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
 public:
 
     DEFINE_VISIT_BASIC_TYPES
@@ -3194,7 +3206,7 @@ private:
     inline static similarity_func
     get_sim_func_()  {
 
-        if constexpr (std::is_arithmetic_v<value_type>)
+        if constexpr (! is_md_)
             return ([](const T &x, const T &y, double sigma) -> double  {
                         const double    diff { x - y };
 
@@ -3418,7 +3430,7 @@ struct  SeasonalPeriodVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3663,7 +3675,7 @@ struct  DynamicTimeWarpVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3787,7 +3799,7 @@ struct  AnomalyDetectByFFTVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -4171,7 +4183,7 @@ struct  AnomalyDetectByZScoreVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -4257,7 +4269,7 @@ public:
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using dist_vec_t = std::vector<double>;
     using pvec_t = std::vector<std::pair<double, size_type>> ;
@@ -4433,7 +4445,7 @@ struct  MutualInfoVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -4976,7 +4988,7 @@ struct  HWESForecastVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -5386,7 +5398,7 @@ struct  LSTMForecastVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { is_std_vector_v<T> || is_std_array_v<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -6166,20 +6178,56 @@ using lstm_v = LSTMForecastVisitor<T, I>;
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AnomalyDetectByKNNVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
 
-    using win_type = std::vector<value_type>;
-    using result_type =
-        std::vector<value_type, typename allocator_declare<value_type, A>::type>;
-    using index_vec_t =
-        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+    using data_t =
+        typename std::conditional_t<! is_md_,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
+    using result_type = vec_t<data_t>;
+    using index_vec_t = vec_t<size_type>;
+
+    // KDTree<double>::point_t is std::vector<double>.
+    // For the scalar path, a "window" flattened to vector<data_t> is
+    // just {x[0], x[1], ..., x[window-1]}.
+    // For the MD path, a "window" is the concatenation of all inner elements
+    // across the window: {x[0][0],...,x[0][d-1], x[1][0],...,x[w-1][d-1]}.
+    //
+    using tree_point_t  = std::vector<data_t>;
+    using tree_points_t = std::vector<tree_point_t>;
+
     using distance_func =
-        std::function<value_type(const win_type &x, const win_type &y)>;
+        std::function<double(const tree_point_t &x, const tree_point_t &y)>;
+
+    static double def_dist(const tree_point_t &x, const tree_point_t &y)  {
+
+        double           sum { 0 };
+        const size_type  sz { x.size() };
+
+        for (size_type i { 0 }; i < sz; ++i)  {
+            const double    diff { double(x[i]) - double(y[i]) };
+
+            sum += diff * diff;
+        }
+        return (std::sqrt(sum));
+    }
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
@@ -6193,9 +6241,19 @@ struct  AnomalyDetectByKNNVisitor  {
         if (window_ <= 1)
             throw DataFrameError("AnomalyDetectByKNNVisitor: "
                                  "Window must be > 1");
+
+        if constexpr (is_md_)  {
+            const size_type dim { column_begin->size() };
+
+            for (size_type i { 1 }; i < col_s; ++i)
+                if ((column_begin + i)->size() != dim)
+                    throw DataFrameError(
+                        "AnomalyDetectByKNNVisitor: "
+                        "Inconsistent data dimensions");
+        }
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        std::vector<std::vector<value_type>>    buckets;
+        tree_points_t   buckets;
 
         if (nt_ > normalization_type::none)  {
             NormalizeVisitor<T, I, A>   norm { nt_ };
@@ -6208,23 +6266,31 @@ struct  AnomalyDetectByKNNVisitor  {
         else
             buckets = bucketize_(column_begin, col_s);
 
-        KDTree<double>  tree { window_, std::forward<distance_func>(dfunc_) };
+        // tree_point dimension:
+        //   scalar path: window_ (one scalar per step)
+        //   MD path: window_ * inner_dim (all elements concatenated)
+        //
+        const size_type tree_dim {
+            buckets.empty() ? window_ : buckets[0].size()
+        };
+
+        KDTree<data_t>  tree { tree_dim, std::forward<distance_func>(dfunc_) };
 
         tree.build(buckets);
 
-        // Now score
+        // Score each bucket: average distance to k nearest neighbors.
+        // +1 because the nearest neighbor is always the point itself.
         //
         result_type scores;
 
         scores.reserve(buckets.size());
-        for (const auto &vec : buckets)  {
-            // +1 because nearest neighbor is the point itself
-            //
-            const auto  dists { tree.k_nearest_dists(vec, k_ + 1) };
-            value_type  sum { 0 };
+        for (const auto &pt : buckets)  {
+            const auto  dists { tree.k_nearest_dists(pt, k_ + 1) };
+            data_t      sum { 0 };
 
-            for (size_type i { 1 }; i < dists.size(); ++i)  sum += dists[i];
-            scores.push_back(sum / T(k_));
+            for (size_type i { 1 }; i < dists.size(); ++i)
+                sum += data_t(dists[i]);
+            scores.push_back(sum / data_t(k_));
         }
 
         result_ = expand_scores_(scores, col_s);
@@ -6234,7 +6300,7 @@ struct  AnomalyDetectByKNNVisitor  {
     DEFINE_RESULT
 
     index_vec_t
-    get_anomalous_indices(value_type threshold = T(0.0000001)) const  {
+    get_anomalous_indices(data_t threshold = data_t(0.0000001)) const  {
 
         const size_type col_s { result_.size() };
         size_type       idx { 0 };
@@ -6242,11 +6308,11 @@ struct  AnomalyDetectByKNNVisitor  {
 
         anom_idxs.reserve(64);
         while (idx < col_s)  {
-            value_type  val = result_[idx];
+            data_t  val { result_[idx] };
 
             if (val > threshold) [[unlikely]]  {
-                size_type       max_idx { idx };
-                value_type      max_val { val };
+                size_type   max_idx { idx };
+                data_t      max_val { val };
 
                 while (val > threshold && idx < (col_s - 1))  {
                     val = result_[++idx];
@@ -6266,18 +6332,7 @@ struct  AnomalyDetectByKNNVisitor  {
         size_type window,
         size_type k,
         normalization_type norm_type = normalization_type::none,
-        distance_func &&f =
-           [](const win_type &a, const win_type &b) -> value_type {
-               value_type       sum { 0 };
-               const size_type  sz { a.size() };
-
-               for (size_type i { 0 }; i < sz; ++i)  {
-                   const value_type    diff { a[i] - b[i] };
-
-                   sum += diff * diff;
-               }
-               return (std::sqrt(sum));
-           })
+        distance_func &&f = def_dist)
         : window_(window),
           k_(k),
           nt_(norm_type),
@@ -6285,15 +6340,44 @@ struct  AnomalyDetectByKNNVisitor  {
 
 private:
 
+    // Flatten each sliding window of value_type elements into a
+    // tree_point_t (std::vector<data_t>) that KDTree<data_t> expects.
+    //
+    // Scalar path  (T = double):
+    //   value_type = double, one element per position → [v0, v1, ..., v_{w-1}]
+    //
+    // MD path (T = std::vector<double> or std::array<double, N>):
+    //   Each position contributes its inner elements concatenated →
+    //   [v0[0],...,v0[d-1], v1[0],...,v_{w-1}[d-1]]
+    //
     template <typename H>
-    inline std::vector<std::vector<value_type>>
+    inline tree_points_t
     bucketize_(const H &column_begin, size_type col_s) const  {
 
-        std::vector<result_type>    result;
+        tree_points_t   result;
+        size_type       inner_dim { 1 };
 
+        if constexpr (is_md_)  inner_dim = column_begin->size();
         result.reserve(col_s - window_ + 1);
-        for (size_type i { 0 }; (i + window_) <= col_s; ++i)
-            result.emplace_back(column_begin + i, column_begin + (i + window_));
+        for (size_type i { 0 }; (i + window_) <= col_s; ++i)  {
+            tree_point_t    pt;
+
+            if constexpr (! is_md_)  { // Scalar: copy window raw values directly
+                pt.resize(window_);
+                for (size_type j { 0 }; j < window_; ++j)
+                    pt[j] = data_t(*(column_begin + i + j));
+            }
+            else  { // MD: concatenate inner elements across the window
+                pt.reserve(window_ * inner_dim);
+                for (size_type j { 0 }; j < window_; ++j)  {
+                    const auto  &elem { *(column_begin + i + j) };
+
+                    for (const auto &v : elem)
+                        pt.push_back(data_t(v));
+                }
+            }
+            result.push_back(std::move(pt));
+        }
         return (result);
     }
 
@@ -6311,7 +6395,7 @@ private:
         }
 
         for (size_type i { 0 }; i < col_s; ++i)
-            if (counts[i] > 0)  expanded[i] /= T(counts[i]);
+            if (counts[i] > 0)  expanded[i] /= data_t(counts[i]);
 
         return (expanded);
     }
@@ -6341,6 +6425,10 @@ using and_knn_v = AnomalyDetectByKNNVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  BIRCHVisitor  {
 
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
 public:
 
     using value_type = T;
@@ -6369,7 +6457,7 @@ private:
     inline static distance_func
     get_dist_func_()  {
 
-        if constexpr (std::is_arithmetic_v<value_type>)
+        if constexpr (! is_md_)
             return ([](const T &x, const T &y) -> double  {
                         return (static_cast<double>(std::abs(x - y)));
                     });
@@ -6522,7 +6610,7 @@ public:
         CFTree<value_type>  tree { };
 
 
-        if constexpr (std::is_arithmetic_v<value_type>)  {
+        if constexpr (! is_md_)  {
             CFTree<value_type>  tmp_tree { threshold_, 1, get_dist_func_() };
 
             tree = std::move(tmp_tree);

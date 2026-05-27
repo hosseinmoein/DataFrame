@@ -4712,7 +4712,8 @@ public: // Read/access and slicing interfaces
     //   Default is not normalizing
     //
     template<typename T>
-    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    [[nodiscard]]
+    typename Matrix<T, matrix_orient::column_major>::scalar_ma_t
     covariance_matrix(
         std::vector<const char *> &&col_names,
         normalization_type norm_type = normalization_type::none) const;
@@ -4743,7 +4744,8 @@ public: // Read/access and slicing interfaces
     //   Parameters necessary for this operation
     //
     template<typename T>
-    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    [[nodiscard]]
+    typename Matrix<T, matrix_orient::column_major>::scalar_ma_t
     pca_by_eigen(std::vector<const char *> &&col_names,
                  const PCAParams params = { }) const;
 
@@ -4770,7 +4772,8 @@ public: // Read/access and slicing interfaces
     //   Parameters necessary for this operation
     //
     template<typename T>
-    [[nodiscard]] Matrix<T, matrix_orient::column_major>
+    [[nodiscard]]
+    typename Matrix<T, matrix_orient::column_major>::scalar_ma_t
     fast_ica(std::vector<const char *> &&col_names,
              size_type num_ind_features,
              const ICAParams params = { }) const;
@@ -4807,16 +4810,29 @@ public: // Read/access and slicing interfaces
     knn(std::vector<const char *> &&col_names,
         const std::vector<T> &target,
         size_type k,
-        KNNDistFunc<T> &&dfunc =
-            [](const std::vector<T> &X, const std::vector<T> &y) -> T  {
-                T   dist { 0 };
+        typename KNNDistFunc<T>::func_t &&dfunc =
+            [](const std::vector<T> &x, const std::vector<T> &y) {
+                typename KNNDistFunc<T>::data_t dist_sum { 0 };
 
-                for (std::size_t i { 0 }; const auto &xval : X)  {
-                    const T &yval = y[i++];
+                if constexpr (! KNNDistFunc<T>::IS_MD)  {
+                    for (std::size_t i { 0 }; const auto &xval : x)  {
+                        const auto  diff { xval  - y[i++] };
 
-                    dist += (xval - yval) * (xval - yval);
+                        dist_sum += diff * diff;
+                    }
                 }
-                return (std::sqrt(dist));
+                else  {
+                    for (std::size_t i { 0 }; const auto &xval : x)  {
+                        const auto  &yval { y[i++] };
+
+                        for (std::size_t j { 0 }; j < xval.size(); ++j)  {
+                            const auto  diff { xval[j] - yval[j] };
+
+                            dist_sum += diff * diff;
+                        }
+                    }
+                }
+                return (std::sqrt(dist_sum));
             }
         ) const;
 
@@ -4843,9 +4859,11 @@ public: // Read/access and slicing interfaces
     //   Type of normalization applied to raw data first
     //
     template<typename T>
-    [[nodiscard]] std::tuple<Matrix<T, matrix_orient::column_major>,  // U
-                             Matrix<T, matrix_orient::column_major>,  // S
-                             Matrix<T, matrix_orient::column_major>>  // V
+    [[nodiscard]]
+    std::tuple<
+        typename Matrix<T, matrix_orient::column_major>::scalar_ma_t,  // U
+        typename Matrix<T, matrix_orient::column_major>::scalar_ma_t,  // S
+        typename Matrix<T, matrix_orient::column_major>::scalar_ma_t>  // V
     compact_svd(std::vector<const char *> &&col_names,
                 normalization_type norm_type =
                     normalization_type::z_score) const;
@@ -4870,7 +4888,7 @@ public: // Read/access and slicing interfaces
     //   Names of the second set of columns
     //
     template<typename T>
-    [[nodiscard]] CanonCorrResult<T>
+    [[nodiscard]] CanonCorrResult<double>
     canon_corr(std::vector<const char *> &&X_col_names,
                std::vector<const char *> &&Y_col_names) const;
 

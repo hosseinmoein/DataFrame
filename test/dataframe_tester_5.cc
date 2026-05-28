@@ -1808,6 +1808,283 @@ static void test_kshape_groups()  {
                                        "Sine Wave 2", "Sine Wave 3",
                                        "Sine Wave 4"
             }));
+
+    // Now multidimensional data
+    //
+    constexpr std::size_t   dim { 3 };
+
+    using ary_col_t = std::array<double, dim>;
+    using vec_col_t = std::vector<double>;
+
+    // Dataset 1 — Two clearly separated clusters (sine vs. linear ramp)
+    //
+    // Cluster A — sinusoidal pattern across all dims
+    //
+    std::vector<ary_col_t>  ary_sin_col1  {
+        { 0.0, 0.0, 0.0 }, { 0.71, 0.50, 0.35 }, { 1.0, 0.87, 0.64 },
+        { 0.71, 0.97, 0.87 }, { 0.0, 0.87, 1.0 }, { -0.71, 0.50, 0.97 },
+        { -1.0, 0.0, 0.87 }, { -0.71, -0.50, 0.64 }
+    };
+    std::vector<ary_col_t>  ary_sin_col2  {
+        { 0.05, -0.03, 0.02 }, { 0.68, 0.52, 0.37 }, { 0.97, 0.85, 0.61 },
+        { 0.74, 0.99, 0.90 }, { 0.03, 0.85, 0.98 }, { -0.69, 0.53, 0.99 },
+        { -0.98, 0.02, 0.85 }, { -0.73, -0.48, 0.62 }
+    };
+    std::vector<ary_col_t>  ary_sin_col3  {
+        { -0.02, 0.01, 0.03 }, { 0.73, 0.48, 0.33 }, { 1.02, 0.89, 0.67 },
+        { 0.69, 0.95, 0.85 }, { -0.02, 0.90, 1.02 }, { -0.74, 0.48, 0.95 },
+        { -1.02, -0.02, 0.89 }, { -0.69, -0.52, 0.66 }
+    };
+
+    std::vector<vec_col_t>  vec_sin_col1  {
+        { 0.0, 0.0, 0.0 }, { 0.71, 0.50, 0.35 }, { 1.0, 0.87, 0.64 },
+        { 0.71, 0.97, 0.87 }, { 0.0, 0.87, 1.0 }, { -0.71, 0.50, 0.97 },
+        { -1.0, 0.0, 0.87 }, { -0.71, -0.50, 0.64 }
+    };
+    std::vector<vec_col_t>  vec_sin_col2  {
+        { 0.05, -0.03, 0.02 }, { 0.68, 0.52, 0.37 }, { 0.97, 0.85, 0.61 },
+        { 0.74, 0.99, 0.90 }, { 0.03, 0.85, 0.98 }, { -0.69, 0.53, 0.99 },
+        { -0.98, 0.02, 0.85 }, { -0.73, -0.48, 0.62 }
+    };
+    std::vector<vec_col_t>  vec_sin_col3  {
+        { -0.02, 0.01, 0.03 }, { 0.73, 0.48, 0.33 }, { 1.02, 0.89, 0.67 },
+        { 0.69, 0.95, 0.85 }, { -0.02, 0.90, 1.02 }, { -0.74, 0.48, 0.95 },
+        { -1.02, -0.02, 0.89 }, { -0.69, -0.52, 0.66 }
+    };
+
+    df.load_column<ary_col_t>("ARY sin COL 1", std::move(ary_sin_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY sin COL 2", std::move(ary_sin_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY sin COL 3", std::move(ary_sin_col3),
+                              nan_policy::dont_pad_with_nans);
+
+    df.load_column<vec_col_t>("VEC sin COL 1", std::move(vec_sin_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC sin COL 2", std::move(vec_sin_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC sin COL 3", std::move(vec_sin_col3),
+                              nan_policy::dont_pad_with_nans);
+
+    // Cluster B — linear ramp pattern across all dims
+    //
+    std::vector<ary_col_t>  ary_lin_col1  {
+        { -1.0, -0.8, -0.5 }, { -0.71, -0.57, -0.36 }, { -0.43, -0.34, -0.21 },
+        { -0.14, -0.11, -0.07 }, { 0.14, 0.11, 0.07 }, { 0.43, 0.34, 0.21 },
+        { 0.71, 0.57, 0.36 }, { 1.0, 0.8, 0.5 }
+    };
+    std::vector<ary_col_t>  ary_lin_col2  {
+        { -0.98, -0.82, -0.52 }, { -0.73, -0.55, -0.34 },
+        { -0.41, -0.36, -0.23 }, { -0.16, -0.09, -0.05 }, { 0.12, 0.13, 0.09 },
+        { 0.45, 0.32, 0.19 }, { 0.69, 0.59, 0.38 }, { 1.02, 0.78, 0.48 }
+    };
+    std::vector<ary_col_t>  ary_lin_col3  {
+        { -1.02, -0.78, -0.48 }, { -0.69, -0.59, -0.38 },
+        { -0.45, -0.32, -0.19 }, { -0.12, -0.13, -0.09 }, { 0.16, 0.09, 0.05 },
+        { 0.41, 0.36, 0.23 }, { 0.73, 0.55, 0.34 }, { 0.98, 0.82, 0.52 }
+    };
+
+    std::vector<vec_col_t>  vec_lin_col1  {
+        { -1.0, -0.8, -0.5 }, { -0.71, -0.57, -0.36 }, { -0.43, -0.34, -0.21 },
+        { -0.14, -0.11, -0.07 }, { 0.14, 0.11, 0.07 }, { 0.43, 0.34, 0.21 },
+        { 0.71, 0.57, 0.36 }, { 1.0, 0.8, 0.5 }
+    };
+    std::vector<vec_col_t>  vec_lin_col2  {
+        { -0.98, -0.82, -0.52 }, { -0.73, -0.55, -0.34 },
+        { -0.41, -0.36, -0.23 }, { -0.16, -0.09, -0.05 }, { 0.12, 0.13, 0.09 },
+        { 0.45, 0.32, 0.19 }, { 0.69, 0.59, 0.38 }, { 1.02, 0.78, 0.48 }
+    };
+    std::vector<vec_col_t>  vec_lin_col3  {
+        { -1.02, -0.78, -0.48 }, { -0.69, -0.59, -0.38 },
+        { -0.45, -0.32, -0.19 }, { -0.12, -0.13, -0.09 }, { 0.16, 0.09, 0.05 },
+        { 0.41, 0.36, 0.23 }, { 0.73, 0.55, 0.34 }, { 0.98, 0.82, 0.52 }
+    };
+
+    df.load_column<ary_col_t>("ARY lin COL 1", std::move(ary_lin_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY lin COL 2", std::move(ary_lin_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY lin COL 3", std::move(ary_lin_col3),
+                              nan_policy::dont_pad_with_nans);
+
+    df.load_column<vec_col_t>("VEC lin COL 1", std::move(vec_lin_col1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC lin COL 2", std::move(vec_lin_col2),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<vec_col_t>("VEC lin COL 3", std::move(vec_lin_col3),
+                              nan_policy::dont_pad_with_nans);
+
+    const auto  ary_res1 =
+        df.kshape_groups<ary_col_t>(
+            { "ARY sin COL 1", "ARY sin COL 2", "ARY sin COL 3",
+              "ARY lin COL 1", "ARY lin COL 2", "ARY lin COL 3" },
+            2L,
+            { .seed = 123 });
+    const auto  vec_res1 =
+        df.kshape_groups<vec_col_t>(
+            { "VEC sin COL 1", "VEC sin COL 2", "VEC sin COL 3",
+              "VEC lin COL 1", "VEC lin COL 2", "VEC lin COL 3" },
+            2L,
+            { .seed = 123 });
+
+    assert(ary_res1.size() == 2);
+    assert((ary_res1[0] ==
+            std::vector<std::string> { "ARY lin COL 1", "ARY lin COL 2",
+                                       "ARY lin COL 3" }));
+    assert((ary_res1[1] ==
+            std::vector<std::string> { "ARY sin COL 1", "ARY sin COL 2",
+                                       "ARY sin COL 3" }));
+
+    assert(vec_res1.size() == 2);
+    assert((vec_res1[0] ==
+            std::vector<std::string> { "VEC lin COL 1", "VEC lin COL 2",
+                                       "VEC lin COL 3" }));
+    assert((vec_res1[1] ==
+            std::vector<std::string> { "VEC sin COL 1", "VEC sin COL 2",
+                                       "VEC sin COL 3" }));
+
+    // Dataset 2 — Shifted copies (tests the lag/alignment path)
+    //
+    // Columns 0–2 are the same shape, each shifted by 1 timestep.
+    // The algorithm should still cluster them together since SBD is
+    // shift-invariant.
+    //
+    std::vector<ary_col_t>  ary_base  {
+        { 0.0, 0.0, 0.0 }, { 0.5, 0.3, 0.1 }, { 1.0, 0.8, 0.5 },
+        { 0.8, 1.0, 0.9 }, { 0.3, 0.7, 1.0 }, { -0.2, 0.2, 0.8 },
+        { -0.7, -0.3, 0.4 }, { -1.0, -0.8, 0.0 }
+    };
+    std::vector<ary_col_t>  ary_shift_0 = ary_base;
+    std::vector<ary_col_t>  ary_shift_1  {
+        { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.5, 0.3, 0.1 },
+        { 1.0, 0.8, 0.5 }, { 0.8, 1.0, 0.9 }, { 0.3, 0.7, 1.0 },
+        { -0.2, 0.2, 0.8 }, { -0.7, -0.3, 0.4 }
+    };
+    std::vector<ary_col_t>  ary_shift_2  {
+        { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 },
+        { 0.5, 0.3, 0.1 }, { 1.0, 0.8, 0.5 }, { 0.8, 1.0, 0.9 },
+        { 0.3, 0.7, 1.0 }, { -0.2, 0.2, 0.8 }
+    };
+
+    df.load_column<ary_col_t>("ARY BASE", std::move(ary_base),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY SHIFT 0", std::move(ary_shift_0),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY SHIFT 1", std::move(ary_shift_1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY SHIFT 2", std::move(ary_shift_2),
+                              nan_policy::dont_pad_with_nans);
+
+    // // Cluster B — flat/constant series, clearly different
+    //
+    std::vector<ary_col_t>  ary_flat_0  {
+        { 0.5, 0.5, 0.5 }, { 0.5, 0.5, 0.5 }, { 0.5, 0.5, 0.5 },
+        { 0.5, 0.5, 0.5 }, { 0.5, 0.5, 0.5 }, { 0.5, 0.5, 0.5 },
+        { 0.5, 0.5, 0.5 }, { 0.5, 0.5, 0.5 }
+    };
+    std::vector<ary_col_t>  ary_flat_1  {
+        { 0.48, 0.51, 0.50 }, { 0.50, 0.49, 0.51 }, { 0.51, 0.50, 0.49 },
+        { 0.49, 0.51, 0.50 }, { 0.50, 0.50, 0.50 }, { 0.51, 0.49, 0.51 },
+        { 0.50, 0.50, 0.48 }, { 0.49, 0.51, 0.50 }
+    };
+    std::vector<ary_col_t>  ary_flat_2  {
+        { 0.51, 0.50, 0.49 }, { 0.50, 0.51, 0.50 }, { 0.49, 0.50, 0.51 },
+        { 0.51, 0.49, 0.50 }, { 0.50, 0.50, 0.52 }, { 0.49, 0.51, 0.50 },
+        { 0.52, 0.50, 0.49 }, { 0.50, 0.49, 0.51 }
+    };
+
+    df.load_column<ary_col_t>("ARY FLAT 0", std::move(ary_flat_0),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY FLAT 1", std::move(ary_flat_1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY FLAT 2", std::move(ary_flat_2),
+                              nan_policy::dont_pad_with_nans);
+
+    const auto  ary_res2 =
+        df.kshape_groups<ary_col_t>(
+            { "ARY BASE", "ARY SHIFT 0", "ARY SHIFT 1", "ARY SHIFT 2",
+              "ARY FLAT 0", "ARY FLAT 1", "ARY FLAT 1" },
+            2L,
+            { .seed = 123 });
+
+    assert(ary_res2.size() == 2);
+    assert((ary_res2[0] ==
+            std::vector<std::string> { "ARY FLAT 0", "ARY FLAT 1",
+                                       "ARY FLAT 1" }));
+    assert((ary_res2[1] ==
+            std::vector<std::string> { "ARY BASE", "ARY SHIFT 0",
+                                       "ARY SHIFT 1", "ARY SHIFT 2" }));
+
+    // Dataset 3 — Three clusters, k=3 (stress test)
+    //
+    // Cluster A — decaying exponential shape
+    //
+    std::vector<ary_col_t>  ary_de_exp_1  {
+        { 1.0, 0.8, 0.6 }, { 0.61, 0.49, 0.37 }, { 0.37, 0.30, 0.22 },
+        { 0.22, 0.18, 0.14 }, { 0.14, 0.11, 0.08 }, { 0.08, 0.07, 0.05 },
+        { 0.05, 0.04, 0.03 }, { 0.03, 0.02, 0.02 }
+    };
+    std::vector<ary_col_t>  ary_de_exp_2  {
+        { 1.02, 0.78, 0.58 }, { 0.59, 0.51, 0.39 }, { 0.39, 0.28, 0.20 },
+        { 0.20, 0.20, 0.16 }, { 0.16, 0.09, 0.06 }, { 0.06, 0.09, 0.07 },
+        { 0.07, 0.02, 0.01 }, { 0.01, 0.04, 0.04 }
+    };
+
+    df.load_column<ary_col_t>("ARY DE EXP 1", std::move(ary_de_exp_1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY DE EXP 2", std::move(ary_de_exp_2),
+                              nan_policy::dont_pad_with_nans);
+
+    // Cluster B — step function shape
+    //
+    std::vector<ary_col_t>  ary_step_1  {
+        { -1.0, -1.0, -0.8 }, { -1.0, -1.0, -0.8 }, { -1.0, -1.0, -0.8 },
+        { -1.0, -1.0, -0.8 }, { 1.0, 1.0, 0.8 }, { 1.0, 1.0, 0.8 },
+        { 1.0, 1.0, 0.8 }, { 1.0, 1.0, 0.8 }
+    };
+    std::vector<ary_col_t>  ary_step_2  {
+        { -0.98, -1.02, -0.82 }, { -1.02, -0.98, -0.78 },
+        { -0.99, -1.01, -0.81 }, { -1.01, -0.99, -0.79 }, { 0.99, 1.01, 0.82 },
+        { 1.01, 0.99, 0.78 }, { 0.98, 1.02, 0.81 }, { 1.02, 0.98, 0.79 }
+    };
+
+    df.load_column<ary_col_t>("ARY STEP 1", std::move(ary_step_1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY STEP 2", std::move(ary_step_2),
+                              nan_policy::dont_pad_with_nans);
+
+    // Cluster C — V-shape (decrease then increase)
+    //
+    std::vector<ary_col_t>  ary_vshape_1  {
+        { 1.0, 0.9, 0.7 }, { 0.5, 0.45, 0.35 }, { 0.0, 0.0, 0.0 },
+        { -0.5, -0.45,-0.35 }, { -1.0, -0.9, -0.7 }, { -0.5, -0.45, -0.35 },
+        { 0.0, 0.0, 0.0 }, { 0.5, 0.45, 0.35 }
+    };
+    std::vector<ary_col_t>  ary_vshape_2  {
+        { 1.02, 0.88, 0.68 }, { 0.48, 0.47, 0.37 }, { 0.02, -0.01, 0.01 },
+        { -0.52, -0.43, -0.33 }, { -0.98, -0.92, -0.72 },
+        { -0.48, -0.47, -0.37 }, { 0.02, 0.01, -0.01 }, { 0.48, 0.43, 0.33 }
+    };
+
+    df.load_column<ary_col_t>("ARY VSHAPE 1", std::move(ary_vshape_1),
+                              nan_policy::dont_pad_with_nans);
+    df.load_column<ary_col_t>("ARY VSHAPE 2", std::move(ary_vshape_2),
+                              nan_policy::dont_pad_with_nans);
+
+    const auto  ary_res3 =
+        df.kshape_groups<ary_col_t>(
+            { "ARY DE EXP 1", "ARY DE EXP 2", "ARY STEP 1", "ARY STEP 2",
+              "ARY VSHAPE 1", "ARY VSHAPE 2" },
+            3L,
+            { .seed = 123 });
+
+    assert(ary_res3.size() == 3);
+    assert((ary_res3[0] ==
+            std::vector<std::string> { "ARY STEP 1", "ARY STEP 2" }));
+    assert((ary_res3[1] ==
+            std::vector<std::string> { "ARY VSHAPE 1", "ARY VSHAPE 2" }));
+    assert((ary_res3[2] ==
+            std::vector<std::string> { "ARY DE EXP 1", "ARY DE EXP 2" }));
 }
 
 // ----------------------------------------------------------------------------

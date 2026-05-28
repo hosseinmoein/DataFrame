@@ -1080,6 +1080,16 @@ struct  SeasonalityParams  {
 template<typename T>
 struct  KShapeParams  {
 
+    // Is T a random access container? In other words, are we
+    // dealing with multidimensional data?
+    //
+    static constexpr bool   IS_MD { random_acc_cont<T> };
+
+    using data_t =
+        typename std::conditional_t<! IS_MD,
+                                    lazy_type<T>,
+                                    value_type_of<T>>::type;
+
     using seed_t = std::random_device::result_type;
 
     // Parameter for how to normalize the columns
@@ -1096,7 +1106,7 @@ struct  KShapeParams  {
 
     // The min difference in the main loop to break out
     //
-    T                   epsilon { T(1e-8) };
+    data_t              epsilon { data_t(1e-8) };
 
     // Seed for the random number generator. The default is random seed
     //

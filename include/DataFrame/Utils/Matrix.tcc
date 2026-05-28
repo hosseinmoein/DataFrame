@@ -3388,7 +3388,7 @@ row_inner_prod(size_type row1, size_type row2) const  {
                 sum += at(row1, c) * at(row2, c);
             return (sum);
         };
-    value_type      result;
+    value_type      result { 0 };
 
     if (thread_level > 2)  {
         auto    futures {
@@ -3427,7 +3427,7 @@ col_inner_prod(size_type col1, size_type col2) const  {
                 sum += at(r, col1) * at(r, col2);
             return (sum);
         };
-    value_type      result;
+    value_type      result { 0 };
 
     if (thread_level > 2)  {
         auto    futures {

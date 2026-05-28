@@ -1736,6 +1736,9 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
                                long k,
                                const KShapeParams<T> params) const  {
 
+    using data_t = typename  KShapeParams<T>::data_t;
+    using seed_t = typename KShapeParams<T>::seed_t;
+
     const long  name_s { long(col_names.size()) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
@@ -1777,13 +1780,13 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
         labels[i] = dis(gen);
 
     std::vector<ColumnVecType<T>>           centroids(k);
-    T                                       prev_intertia {
-        std::numeric_limits<T>::max()
+    data_t                                  prev_inertia {
+        std::numeric_limits<data_t>::max()
     };
     NormalizeVisitor<T, long, align_value>  norm_v { params.norm_t };
     std::vector<const ColumnVecType<T> *>   cluster;
     const std::vector<long>                 fake_index;
-    std::vector<ColumnVecType<T>>           ncolumns (name_s);
+    std::vector<ColumnVecType<T>>           ncolumns(name_s);
 
     for (long i { 0 }; i < name_s; ++i)  {
         norm_v.pre();
@@ -1814,9 +1817,7 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
                 centroids[c] = *(columns[dis(gen)]);
         }
 
-        // Assign series to nearest centroid
-        //
-        T                               inertia { 0 };
+        data_t                          inertia { 0 };
         std::vector<ColumnVecType<T>>   ncentroids(k);
 
         for (long c { 0 }; c < k; ++c)  {
@@ -1828,8 +1829,10 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
             ncentroids[c] = std::move(norm_v.get_result());
         }
 
+        // Assign series to nearest centroid
+        //
         for (long i { 0 }; i < name_s; ++i)  {
-            T       min_dist { std::numeric_limits<T>::max() };
+            data_t  min_dist { std::numeric_limits<data_t>::max() };
             long    best_cluster { 0 };
 
             for (long c { 0 }; c < k; ++c)  {
@@ -1850,10 +1853,10 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
 
         // Check convergence
         //
-        if (std::abs(prev_intertia - inertia) < params.epsilon)
+        if (std::abs(prev_inertia - inertia) < params.epsilon)
             break;
 
-        prev_intertia = inertia;
+        prev_inertia = inertia;
     }
 
     std::vector<std::vector<std::string>>   result(k);

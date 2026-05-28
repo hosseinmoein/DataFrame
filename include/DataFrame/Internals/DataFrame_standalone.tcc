@@ -2938,8 +2938,21 @@ V _shift_vector_(const V &vec, long shift)  {
 
     using value_type = typename V::value_type;
 
-    const long  col_s = static_cast<long>(vec.size());
-    V           shifted(col_s, value_type { 0 });
+    const long  col_s { static_cast<long>(vec.size()) };
+    auto        make_zero_elem =
+        [&vec = std::as_const(vec)]() -> value_type  {
+            if constexpr (random_acc_cont<value_type>)  {
+                // value_type is itself a container (vector/array of doubles)
+                //
+                return (value_type {
+                            typename value_type::value_type(vec[0].size()),
+                            0 });
+            }
+            else  {
+                return (value_type { 0 });
+            }
+        };
+    V           shifted(col_s, make_zero_elem());
 
     for (long i { 0 }; i < col_s; ++i)  {
         const auto  j { i - shift };
@@ -2968,16 +2981,18 @@ std::int64_t _next_pow2_(std::int64_t n) {
 
     // Incrementing the number is next power of 2
     //
-    return (n + 1L);
+    return (n + std::int64_t(1));
 }
 
 // ----------------------------------------------------------------------------
 
+// Cooley-Tukey in-place FFT
+//
 template<typename T>
 static inline void
 _kshape_fft_(std::vector<std::complex<T>> &x, bool inverse = false) {
 
-    const long  col_s = x.size();
+    const long  col_s { static_cast<long>(x.size()) };
 
     if (col_s <= 1)  return;
 
@@ -2986,7 +3001,7 @@ _kshape_fft_(std::vector<std::complex<T>> &x, bool inverse = false) {
     for (long i { 0 }, j { 0 }; i < col_s; ++i) {
         if (j > i)  std::swap(x[i], x[j]);
 
-        long    m = col_s >> 1;
+        long    m { col_s >> 1 };
 
         while (j >= m && m >= 2)  {
             j -= m;
@@ -3025,12 +3040,12 @@ _kshape_fft_(std::vector<std::complex<T>> &x, bool inverse = false) {
 
 template<typename V>
 static inline
-V _kshape_cross_corr_(const V &x, const V &y)  {
+V _kshape_cross_corr_scalar_(const V &x, const V &y)  {
 
     using value_type = typename V::value_type;
     using allocator_type = typename V::allocator_type;
 
-    const long  col_s = static_cast<long>(x.size());
+    const long  col_s { static_cast<long>(x.size()) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (col_s != static_cast<long>(y.size()))
@@ -3069,7 +3084,7 @@ V _kshape_cross_corr_(const V &x, const V &y)  {
     std::vector<value_type, allocator_type> cc(2L * col_s - 1L);
 
     for (long i { 0 }; i < col_s; ++i)  {
-        const auto  idx = fft_s - col_s + 1L + i;
+        const auto  idx { fft_s - col_s + 1L + i };
 
         if (idx < fft_s) [[likely]]
             cc[i] = X[fft_s - col_s + 1L + i].real();
@@ -3084,38 +3099,90 @@ V _kshape_cross_corr_(const V &x, const V &y)  {
 
 template<typename V>
 static inline
-std::pair<typename V::value_type, long>
-_shape_based_dist_(const V &x, const V &y) {
+std::vector<typename KShapeParams<typename V::value_type>::data_t>
+_kshape_cross_corr_(const V &x, const V &y)  {
 
     using value_type = typename V::value_type;
+    using data_t = typename KShapeParams<typename V::value_type>::data_t;
 
-    const long  col_s = static_cast<long>(x.size());
+    const long  col_s { static_cast<long>(x.size()) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (col_s != static_cast<long>(y.size()))
-        throw DataFrameError("_kshape_dist_(): "
+        throw DataFrameError("_kshape_cross_corr_(): "
                              "x and y vectors must be of the same length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const V cc = _kshape_cross_corr_(x, y);
+    // Scalar path
+    //
+    if constexpr (! random_acc_cont<value_type>)  {
+        return (_kshape_cross_corr_scalar_(x, y));
+    }
+    else  {  // MD path
+        const long          n_dims { static_cast<long>(x[0].size()) };
+        std::vector<data_t> cc_accum(2L * col_s - 1L, data_t { 0 });
+
+        for (long d { 0 }; d < n_dims; ++d)  {
+            // Extract channel d from x and y
+            //
+            std::vector<data_t> xd(col_s), yd(col_s);
+
+            for (long t { 0 }; t < col_s; ++t)  {
+                xd[t] = x[t][d];
+                yd[t] = y[t][d];
+            }
+
+            // Scalar cross-correlation on this channel
+            //
+            const auto  cc_d = _kshape_cross_corr_scalar_(xd, yd);
+
+            // Accumulate (sum across channels)
+            //
+            for (long i { 0 }; i < static_cast<long>(cc_accum.size()); ++i)
+                cc_accum[i] += cc_d[i];
+        }
+
+        return (cc_accum);
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+static inline
+std::pair<typename KShapeParams<typename V::value_type>::data_t, long>
+_shape_based_dist_(const V &x, const V &y) {
+
+    using data_t = typename KShapeParams<typename V::value_type>::data_t;
+
+    const long  col_s { static_cast<long>(x.size()) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (col_s != static_cast<long>(y.size()))
+        throw DataFrameError("_shape_based_dist_(): "
+                             "x and y vectors must be of the same length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    const auto  cc = _kshape_cross_corr_(x, y);
 
     // Find maximum cross-correlation
     //
-    const long          max_idx =
-        long(std::max_element(cc.begin(), cc.end()) - cc.begin());
-    const value_type    max_cc = cc[max_idx];
+    const long  max_idx {
+        long(std::max_element(cc.begin(), cc.end()) - cc.begin())
+    };
+    const auto  max_cc { cc[max_idx] };
 
     // Normalize by sequence lengths
     //
-    const value_type    ncc = max_cc / value_type(col_s);
+    const auto  ncc { max_cc / data_t(col_s) };
 
     // shape based distance (1 - normalized cross-correlation)
     //
-    const value_type    sbd = value_type(1) - ncc;
+    const auto  sbd { data_t(1) - ncc };
 
     // Shift amount
     //
-    const long  shift = max_idx - (col_s - 1L);
+    const long  shift { max_idx - (col_s - 1L) };
 
     return (std::make_pair(sbd, shift));
 }
@@ -3123,6 +3190,7 @@ _shape_based_dist_(const V &x, const V &y) {
 // ----------------------------------------------------------------------------
 
 // Extract centroid (shape) from cluster members
+//
 template<typename V, typename NT>
 static inline
 V _kshape_extract_shape_(const std::vector<const V *> &cluster,
@@ -3132,9 +3200,10 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
     if (cluster.empty())   return (V());
 
     using value_type = typename V::value_type;
+    using data_t = typename KShapeParams<typename V::value_type>::data_t;
 
-    const long              col_s = static_cast<long>(cluster[0]->size());
-    V                       centroid = *(cluster[0]);
+    const long              col_s { static_cast<long>(cluster[0]->size()) };
+    auto                    centroid = *(cluster[0]);
     const std::vector<long> fake_index;
     NT                      norm_v2 { norm_v };
 
@@ -3143,9 +3212,16 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
            centroid.begin(), centroid.end());
     norm_v.post();
 
+    auto    zero_elem = [](value_type &elem) -> void  {
+        if constexpr (random_acc_cont<value_type>)
+            std::fill(elem.begin(), elem.end(), data_t { 0 });
+        else
+            elem = data_t(0);
+    };
+
     // Iterative refinement
     //
-    for (long iter { 0 }; iter < max_iter; ++iter) {
+    for (long iter { 0 }; iter < max_iter; ++iter)  {
         std::vector<V>  aligned(cluster.size());
 
         // Align all series to current centroid
@@ -3164,11 +3240,12 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
 
         // Compute mean of aligned series
         //
-        std::fill(centroid.begin(), centroid.end(), value_type { 0 });
+        for (long i { 0 }; i < col_s; ++i)
+            zero_elem(centroid[i]);
         for (const auto &series : aligned)
             centroid += series;
 
-        const auto  align_s = static_cast<value_type>(aligned.size());
+        const auto  align_s { static_cast<data_t>(aligned.size()) };
 
         for (long i { 0 }; i < col_s; ++i)
             centroid[i] /= align_s;

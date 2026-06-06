@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/Utils/Concepts.h>
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/Endianness.h>
 #include <DataFrame/Utils/FixedSizeString.h>
@@ -3261,6 +3262,265 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
     }
 
     return (centroid);
+}
+
+// ----------------------------------------------------------------------------
+
+//
+// Markov Chain stationary distribution stuff
+//
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+[[nodiscard]] inline std::size_t _num_dims_(const T &val) noexcept  {
+
+    static constexpr bool   is_md { random_acc_cont<T> };
+
+    if constexpr (is_md)
+        return (val.size());
+    else
+        return (std::size_t(1));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+[[nodiscard]] inline auto _elem_(const T &val, std::size_t d) noexcept  {
+
+    static constexpr bool   is_md { random_acc_cont<T> };
+
+    if constexpr (is_md)
+        return (val[d]);
+    else
+        return (val);  // scalar: the value itself, d ignored
+}
+
+// ----------------------------------------------------------------------------
+
+// Compute per-dimension min/max from a sequence of N-D points.
+//
+template<typename T, typename A>
+void _compute_bounds_(const std::vector<T, A> &column,
+                      std::vector<scalar_t<T>> &out_min,
+                      std::vector<scalar_t<T>> &out_max)  {
+
+    static constexpr bool   is_md { random_acc_cont<T> };
+    const std::size_t       ndim  { _num_dims_(column[0]) };
+
+    if (out_min.empty())
+        out_min.resize(ndim);
+    if (out_max.empty())
+        out_max.resize(ndim);
+
+    out_min.assign(ndim, _elem_(column[0], 0));
+    out_max.assign(ndim, _elem_(column[0], 0));
+    if constexpr (is_md)  {
+        for (const auto &pt : column)
+            for (std::size_t d { 0 }; d < ndim; ++d)  {
+                if (pt[d] < out_min[d])  out_min[d] = pt[d];
+                if (pt[d] > out_max[d])  out_max[d] = pt[d];
+            }
+    }
+    else  {
+        for (const auto &v : column)  {
+            if (v < out_min[0])  out_min[0] = v;
+            if (v > out_max[0])  out_max[0] = v;
+        }
+    }
+
+    // Nudge max outward so the top value lands inside the last bin,
+    // not on the right edge.
+    //
+    using data_t = scalar_t<T>;
+
+    for (std::size_t d { 0 }; d < ndim; ++d)
+        out_max[d] += std::numeric_limits<data_t>::epsilon() *
+                      std::abs(out_max[d]) * data_t(100);
+}
+
+// ----------------------------------------------------------------------------
+
+// Maps one scalar value to a bin index in [0, bins-1].
+//
+template<typename S>
+[[nodiscard]] inline std::size_t
+_discretize_single_dim_(S val, S lo, S hi, std::size_t bins) noexcept  {
+
+    const S range { hi - lo };
+
+    return (static_cast<std::size_t>(
+        std::min<S>(S(bins - 1),
+                    std::max<S>(S(0),
+                                std::floor((val - lo) / range * S(bins))))));
+}
+
+// ----------------------------------------------------------------------------
+
+// Maps a full T observation to a single flat state index using
+// row-major (C-order) flattening across all dimensions.
+//
+// Scalar:  flat = bin(dim0)                    (bins^1 states)
+// MD:      flat = bin(d0)*bins^(N-1) + ...     (bins^N states)
+//
+template<typename T>
+[[nodiscard]] std::size_t
+_discretize_joint_(const T &pt,
+                   const std::vector<scalar_t<T>> &lo,
+                   const std::vector<scalar_t<T>> &hi,
+                   std::size_t bins) noexcept  {
+
+    static constexpr bool   is_md { random_acc_cont<T> };
+    const std::size_t       ndim  { _num_dims_(pt) };
+    std::size_t             flat  { 0 };
+
+    if constexpr (is_md)  {
+        for (std::size_t d { 0 }; d < ndim; ++d)
+            flat = flat * bins +
+                   _discretize_single_dim_(pt[d], lo[d], hi[d], bins);
+    }
+    else  {
+        flat = _discretize_single_dim_(pt, lo[0], hi[0], bins);
+    }
+    return (flat);
+}
+
+// ----------------------------------------------------------------------------
+
+// Accumulates raw transition counts into a flat
+// (num_states × num_states) row-major count matrix.
+//
+// For option A: call with full joint discretization.
+// For option C: call once per dimension with 1-D projection.
+//
+template<typename T, typename A>
+[[nodiscard]] std::vector<std::size_t>
+_count_transitions_(const std::vector<T, A> &column,
+                    const std::vector<scalar_t<T>> &lo,
+                    const std::vector<scalar_t<T>> &hi,
+                    std::size_t bins,
+                    std::size_t num_states)  {
+
+    std::vector<std::size_t>    counts(num_states * num_states, 0);
+
+    for (std::size_t i { 0 }; (i + 1) < column.size(); ++i)  {
+        const std::size_t   from {
+            _discretize_joint_<T>(column[i], lo, hi, bins)
+        };
+        const std::size_t   to {
+            _discretize_joint_<T>(column[i + 1], lo, hi, bins)
+        };
+
+        counts[from * num_states + to] += 1;
+    }
+    return (counts);
+}
+
+// ----------------------------------------------------------------------------
+
+// Converts raw counts -> row-stochastic probability matrix.
+// Rows with zero total get a uniform distribution so the
+// matrix stays ergodic for power iteration.
+//
+template<typename S>
+[[nodiscard]] std::vector<S>
+_normalize_rows_(const std::vector<std::size_t> &counts,
+                 std::size_t num_states)  {
+
+    std::vector<S>  prob(num_states * num_states, S(0));
+
+    for (std::size_t r { 0 }; r < num_states; ++r)  {
+        std::size_t row_sum { 0 };
+
+        for (std::size_t c { 0 }; c < num_states; ++c)
+            row_sum += counts[r * num_states + c];
+
+        // Laplace smoothing: add 1 to every count.
+        // Visited rows: data dominates, smoothing is negligible.
+        // Unvisited rows: small uniform prior instead of hard uniform,
+        // keeping the matrix ergodic without swamping real signal.
+        //
+        const S inv { S(1) / S(row_sum + num_states) };
+
+        for (std::size_t c { 0 }; c < num_states; ++c)
+            prob[r * num_states + c] = S(counts[r * num_states + c] + 1) * inv;
+
+        /*
+        if (row_sum == 0)  {
+            const S unif { S(1) / S(num_states) };
+
+            for (std::size_t c { 0 }; c < num_states; ++c)
+                prob[r * num_states + c] = unif;
+        }
+        else  {
+            const S inv { S(1) / S(row_sum) };
+
+            for (std::size_t c { 0 }; c < num_states; ++c)
+                prob[r * num_states + c] = S(counts[r * num_states + c]) * inv;
+        }
+        */
+    }
+    return (prob);
+}
+
+// ----------------------------------------------------------------------------
+
+//   T = double                -> 1-D, bins states
+//   T = std::vector<double>   -> N-D, bins^N states (runtime N)
+//   T = std::array<double, N> -> N-D, bins^N states (compile N)
+//
+// Discretizes column into a joint state space, counts transitions,
+// normalizes, and loads num_states columns named
+//   col_prefix + "0" .. col_prefix + "<num_states-1>"
+// into df.
+//
+// Returns the column names, ready to pass to MC_station_dist().
+//
+template<typename V>
+[[nodiscard]]
+std::vector<scalar_t<typename V::value_type>>
+_build_transition_column_(const V &column, std::size_t bins)  {
+
+    using T = typename V::value_type;
+    using A = typename V::allocator_type;
+    using S = scalar_t<T>;
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (column.size() < 2)
+        throw DataFrameError(
+            "_build_transition_column_(): column must have >= 2 points");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    // Compute state space size (bins^N).  Cap to avoid accidental explosion.
+    //
+    const std::size_t   ndim { _num_dims_(column[0]) };
+    std::size_t         num_states { 1 };
+
+    for (std::size_t d { 0 }; d < ndim; ++d)  {
+        if (num_states > (std::size_t(10000) / bins))
+            throw DataFrameError(
+                "_build_transition_column_(): state space too large; "
+                "reduce bins or number of dimensions");
+        num_states *= bins;
+    }
+
+    // 1. Bounds
+    //
+    std::vector<S>  low, high;
+
+    _compute_bounds_<T>(column, low, high);
+
+    // 2. Count transitions
+    //
+    const auto  counts {
+        _count_transitions_<T, A>(column, low, high, bins, num_states)
+    };
+
+    // 3. Normalize
+    //
+    const auto  prob { _normalize_rows_<S>(counts, num_states) };
+
+    return (prob);
 }
 
 } // namespace hmdf

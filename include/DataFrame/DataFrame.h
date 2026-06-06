@@ -4918,10 +4918,12 @@ public: // Read/access and slicing interfaces
     //   Threshold for convergence
     //
     template<typename T>
-    [[nodiscard]] std::vector<T>
-    MC_station_dist(std::vector<const char *> &&trans_col_name,
+    [[nodiscard]] std::vector<scalar_t<T>>
+    MC_station_dist(std::vector<const char *> &&col_names,
+                    bool build_trans_cols = true,
+                    size_type bins = 0,
                     size_type max_iter = 1000,
-                    T epsilon = T(1e-8)) const;
+                    double epsilon = double(1e-8)) const;
 
     // K-shape is a powerful, unsupervised time-series clustering algorithm
     // that groups sequences based on their shape, not just magnitude, by

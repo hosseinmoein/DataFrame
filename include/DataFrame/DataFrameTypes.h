@@ -1308,6 +1308,18 @@ using StdDataFrame1024 = DataFrame<I, HeteroVector<1024>>;
 
 // ----------------------------------------------------------------------------
 
+template<typename T>
+struct  _scalar_type_  { using type = T; };
+
+template<typename T>
+requires random_acc_cont<T>
+struct  _scalar_type_<T>  { using type = typename T::value_type; };
+
+template<typename T>
+using scalar_t = typename _scalar_type_<T>::type;
+	
+// ----------------------------------------------------------------------------
+
 inline static const std::vector<std::string>   describe_index_col  {
     "COUNT", "MISSING", "MEAN", "STD", "MIN", "MAX", "25%", "50%", "75%"
 };

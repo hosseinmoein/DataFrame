@@ -1624,51 +1624,182 @@ canon_corr(std::vector<const char *> &&X_col_names,
 
 template<typename I, typename H>
 template<typename T>
-std::vector<T> DataFrame<I, H>::
-MC_station_dist(std::vector<const char *> &&trans_col_names,
+std::vector<scalar_t<T>> DataFrame<I, H>::
+MC_station_dist(std::vector<const char *> &&col_names,
+                bool build_trans_cols,
+                size_type bins,
                 size_type max_iter,
-                T epsilon) const  {
+                double epsilon) const  {
 
-    using col_mat_t = Matrix<T, matrix_orient::column_major>;
+    static constexpr bool   is_md { random_acc_cont<T> };
 
-    const size_type                         cols_s { trans_col_names.size() };
+    using data_t = scalar_t<T>;
+    using col_mat_t = Matrix<data_t, matrix_orient::column_major>;
+
+    size_type                               cols_s { col_names.size() };
     size_type                               min_col_s { indices_.size() };
     std::vector<const ColumnVecType<T> *>   columns (cols_s, nullptr);
-    SpinGuard                               guard { lock_ };
 
-    for (size_type i { 0 }; i < cols_s; ++i)  {
-        columns[i] = &get_column<T>(trans_col_names[i], false);
-        if (columns[i]->size() < min_col_s)
-            min_col_s = columns[i]->size();
+    {
+        SpinGuard   guard { lock_ };
+
+        for (size_type i { 0 }; i < cols_s; ++i)  {
+            columns[i] = &get_column<T>(col_names[i], false);
+            if (columns[i]->size() < min_col_s)
+                min_col_s = columns[i]->size();
+        }
     }
-    guard.release();
 
+    col_mat_t   data_mat;
+
+    if (build_trans_cols)  {
+        min_col_s = columns[0]->size();
+        if (bins == 0)  {
+            if constexpr (is_md)  {
+                const std::size_t   ndim { _num_dims_(columns[0]->front()) };
+                const double        target_states {
+                    std::max(2.0, double(min_col_s) / 10.0)
+                };
+                bins = size_type(
+                    std::clamp(
+                        std::size_t(std::pow(target_states, 1.0 /
+                                             double(ndim))),
+                        std::size_t(2),
+                        std::size_t(50)));
+            }
+            else  {
+                bins = size_type(
+                    std::clamp(
+                        std::size_t(std::ceil(
+                            2.0 * std::pow(double(min_col_s), 1.0 / 3.0))),
+                        std::size_t(2),
+                        std::size_t(50)));
+            }
+        }
+
+        if constexpr (is_md)  {
+            // MD path: each named column is a full observation sequence
+            // of N-D points. _build_transition_column_ returns the entire
+            // num_states x num_states matrix flattened row-major.
+            // Multiple columns are averaged into a single transition matrix.
+            //
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (cols_s != min_col_s)
-        throw NotFeasible("MC_station_dist(): The matrix must be squared");
+            if (columns[0]->empty())
+                throw NotFeasible("MC_station_dist(): MD column is empty");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    col_mat_t   mat { long(cols_s), long(cols_s) };
+            // Derive num_states from the first column's first observation.
+            //
+            const std::size_t   ndim {
+                _num_dims_(columns[0]->front())
+            };
+            std::size_t         num_states { 1 };
 
-    for (size_type i { 0 }; i < cols_s; ++i)
-        mat.set_column(columns[i]->begin(), i);
+            for (std::size_t d { 0 }; d < ndim; ++d)  {
+                if (num_states > std::size_t(10000) / bins)
+                    throw NotFeasible(
+                        "MC_station_dist(): state space too large; "
+                        "reduce bins or number of dimensions");
+                num_states *= bins;
+            }
 
-    std::vector<T>  result;
-    col_mat_t       pi { 1L, long(cols_s), T(1) / T(cols_s) };
-    auto            normalize = [](auto &mat) -> void  {
-        T   sum { 0 };
+            // Accumulate prob matrices across all named columns, then
+            // average. This lets the caller pass multiple independent
+            // observation sequences for the same process.
+            //
+            std::vector<data_t> prob_sum(num_states * num_states, data_t(0));
 
-        for (long c { 0 }; c < mat.cols(); ++c)
-            sum += mat(0, c);
-        for (long c { 0 }; c < mat.cols(); ++c)
-            mat(0, c) /= sum;
-    };
+            for (size_type i { 0 }; i < cols_s; ++i)  {
+                const auto  prob {
+                    _build_transition_column_(*columns[i], bins)
+                };
+
+                for (std::size_t k { 0 }; k < prob_sum.size(); ++k)
+                    prob_sum[k] += prob[k];
+            }
+
+            const data_t    inv { data_t(1) / data_t(cols_s) };
+
+            for (auto &v : prob_sum)  v *= inv;
+
+            // Load the averaged matrix into data_mat column by column.
+            // prob_sum is row-major, set_column expects a contiguous
+            // column slice — extract each column explicitly.
+            //
+            data_mat.resize(long(num_states), long(num_states));
+            for (std::size_t j { 0 }; j < num_states; ++j)  {
+                std::vector<data_t> col_data(num_states);
+
+                for (std::size_t r { 0 }; r < num_states; ++r)
+                    col_data[r] = prob_sum[r * num_states + j];
+                data_mat.set_column(col_data.begin(), long(j));
+            }
+            cols_s = num_states;
+        }
+        else  {
+            const auto      col0  {
+                _build_transition_column_(*columns[0], bins)
+            };
+            const size_type col0_s {
+                size_type(std::sqrt(double(col0.size())))
+            };
+            auto            load_prob =
+                [col0_s, &data_mat](const std::vector<data_t> &prob) -> void  {
+                    for (size_type j { 0 }; j < col0_s; ++j)  {
+                        std::vector<data_t> col_data(col0_s);
+
+                        for (size_type r { 0 }; r < col0_s; ++r)
+                            col_data[r] = prob[r * col0_s + j];
+                        data_mat.set_column(col_data.begin(), long(j));
+                    }
+                };
+
+            data_mat.resize(long(col0_s), long(col0_s));
+            load_prob(col0);
+            for (size_type i { 1 }; i < cols_s; ++i)
+                load_prob(_build_transition_column_(*columns[i], bins));
+
+            cols_s = col0_s;
+        }
+    }
+    else if constexpr (! is_md)  {
+        // Pre-built path: caller has already loaded a square transition
+        // matrix as named columns.  Scalar and MD are identical here —
+        // the matrix is already data_t regardless of original T.
+        //
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (cols_s != min_col_s)
+            throw NotFeasible("MC_station_dist(): The matrix must be squared");
+#endif // HMDF_SANITY_EXCEPTIONS
+        data_mat.resize(long(cols_s), long(cols_s));
+        for (size_type i { 0 }; i < cols_s; ++i)
+            data_mat.set_column(columns[i]->begin(), long(i));
+    }
+    else  {
+        static_assert(true, "MC_station_dist(): If user has already built the "
+                            "transition columns, than the type T must be "
+                            "scalar");
+    }
+
+    // Power iteration
+    //
+    std::vector<data_t> result;
+    col_mat_t           pi { 1L, long(cols_s), data_t(1) / data_t(cols_s) };
+    auto                normalize =
+        [](auto &mat) -> void  {
+            data_t  sum { 0 };
+
+            for (long c { 0 }; c < mat.cols(); ++c)
+                sum += mat(0, c);
+            for (long c { 0 }; c < mat.cols(); ++c)
+                mat(0, c) /= sum;
+        };
 
     for (size_type i { 0 }; i < max_iter; ++i)  {
-        auto    new_pi = pi * mat;
+        auto    new_pi { pi * data_mat };
 
         normalize(new_pi);
-        if ((new_pi - pi).norm() < epsilon)  {
+        if (double((new_pi - pi).norm()) < epsilon)  {
             result.resize(pi.cols());
             for (long c { 0 }; c < pi.cols(); ++c)
                 result[c] = pi(0, c);

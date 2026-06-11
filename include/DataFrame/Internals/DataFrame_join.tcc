@@ -115,20 +115,27 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 template<typename I, typename H>
 template<typename RHS_T,
          comparable LHS_COL_T, comparable RHS_COL_T,
+         typename F,
          typename ... Ts>
 DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::
 gen_join(const RHS_T &rhs,
          const char *lhs_col_name,
          const char *rhs_col_name,
-         std::function<gen_join_type(const IndexType &,
+         F &predicate) const requires
+std::invocable<F, const IndexType &,
+                  const typename RHS_T::IndexType &,
+                  const LHS_COL_T &,
+                  const RHS_COL_T &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
                                      const typename RHS_T::IndexType &,
                                      const LHS_COL_T &,
-                                     const RHS_COL_T &)> &&predicate) const  {
+                                     const RHS_COL_T &>,
+             gen_join_type>  {
 
     static_assert(comparable<I>, "Index type must have comparison operators");
 
-    const ColumnVecType<LHS_COL_T>  *lhs_col = nullptr;
+    const ColumnVecType<LHS_COL_T>  *lhs_col { nullptr };
 
     if (! ::strcmp(lhs_col_name, DF_INDEX_COL_NAME))  {
         lhs_col = (const ColumnVecType<LHS_COL_T> *) &(get_index());
@@ -137,7 +144,9 @@ gen_join(const RHS_T &rhs,
         lhs_col = &(get_column<LHS_COL_T>(lhs_col_name));
     }
 
-    const typename RHS_T::template ColumnVecType<RHS_COL_T>  *rhs_col = nullptr;
+    const typename RHS_T::template ColumnVecType<RHS_COL_T>  *rhs_col {
+        nullptr
+    };
 
     if (! ::strcmp(rhs_col_name, DF_INDEX_COL_NAME))  {
         rhs_col = (const typename RHS_T::template ColumnVecType<RHS_COL_T> *)
@@ -148,29 +157,28 @@ gen_join(const RHS_T &rhs,
                       &(rhs.template get_column<RHS_COL_T>(rhs_col_name));
     }
 
-    const auto      &lhs_index = get_index();
-    const auto      &rhs_index = rhs.get_index();
-    const size_type col_s =
+    const auto      &lhs_index { get_index() };
+    const auto      &rhs_index { rhs.get_index() };
+    const size_type col_s {
         std::min({ lhs_col->size(), rhs_col->size(),
-                   lhs_index.size(), rhs_index.size() });
+                   lhs_index.size(), rhs_index.size() })
+    };
     IndexIdxVector  joined_index_idx;
+    constexpr auto  max_val { std::numeric_limits<size_type>::max() };
 
     joined_index_idx.reserve(col_s);
     for (size_type i { 0 }; i < col_s; ++i)  {
-        const auto  gjtype =
+        const auto  gjtype {
             predicate(lhs_index[i], rhs_index[i],
-                      (*(lhs_col))[i], (*(rhs_col))[i]);
+                      (*(lhs_col))[i], (*(rhs_col))[i])
+        };
 
         switch(gjtype)  {
         case gen_join_type::include_left:
-            joined_index_idx.emplace_back(
-                i,
-                std::numeric_limits<size_type>::max());
+            joined_index_idx.emplace_back(i, max_val);
             break;
         case gen_join_type::include_right:
-            joined_index_idx.emplace_back(
-                std::numeric_limits<size_type>::max(),
-                i);
+            joined_index_idx.emplace_back(max_val, i);
             break;
         case gen_join_type::include_both:
             joined_index_idx.emplace_back(i, i);
@@ -181,10 +189,11 @@ gen_join(const RHS_T &rhs,
         }
     }
 
-    const bool  is_same_col =
+    const bool  is_same_col {
         (! std::strcmp(lhs_col_name, rhs_col_name)) &&
         std::type_index(typeid(LHS_COL_T)) ==
-            std::type_index(typeid(RHS_COL_T));
+            std::type_index(typeid(RHS_COL_T))
+    };
 
     if (is_same_col)
         return(column_join_helper_<DataFrame, RHS_T, LHS_COL_T, Ts ...>

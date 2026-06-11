@@ -738,30 +738,31 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
     else
         gb_vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
 
-    StlVecType<std::size_t> sort_v (gb_vec->size(), 0);
+    StlVecType<std::size_t> sort_v(gb_vec->size(), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
     std::ranges::sort(sort_v,
-                      [gb_vec](std::size_t i, std::size_t j) -> bool  {
-                          return (gb_vec->at(i) < gb_vec->at(j));
+                      [&gb_vec = std::as_const(*gb_vec)]
+                      (std::size_t i, std::size_t j) -> bool  {
+                          return (gb_vec[i] < gb_vec[j]);
                       });
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
-    res_t   res;
+    res_t   result;
     auto    args_tuple = std::tuple<Ts ...>(args ...);
     auto    func =
         [this,
-         &res,
-         gb_vec,
+         &result,
+         &gb_vec = std::as_const(*gb_vec),
          &sort_v = std::as_const(sort_v),
          idx_visitor = std::forward<I_V>(idx_visitor),
          col_name](auto &triple) mutable -> void {
             _load_groupby_data_1_(*this,
-                                  res,
+                                  result,
                                   triple,
                                   idx_visitor,
-                                  *gb_vec,
+                                  gb_vec,
                                   sort_v,
                                   col_name);
         };
@@ -769,7 +770,7 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
     const SpinGuard guard(lock_);
 
     for_each_in_tuple (args_tuple, func);
-    return (res);
+    return (result);
 }
 
 // ----------------------------------------------------------------------------
@@ -808,13 +809,12 @@ groupby2(const char *col_name1,
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
     std::ranges::sort(sort_v,
-                      [gb_vec1, gb_vec2]
+                      [&gb_vec1 = std::as_const(*gb_vec1),
+                       &gb_vec2 = std::as_const(*gb_vec2)]
                       (std::size_t i, std::size_t j) -> bool  {
-                          if (gb_vec1->at(i) < gb_vec1->at(j))
-                              return (true);
-                          else if (gb_vec1->at(i) > gb_vec1->at(j))
-                              return (false);
-                          return (gb_vec2->at(i) < gb_vec2->at(j));
+                          if (gb_vec1[i] != gb_vec1[j])
+                              return (gb_vec1[i] < gb_vec1[j]);
+                          return (gb_vec2[i] < gb_vec2[j]);
                       });
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
@@ -824,8 +824,8 @@ groupby2(const char *col_name1,
     auto    func =
         [*this,
          &res,
-         gb_vec1,
-         gb_vec2,
+         &gb_vec1 = std::as_const(*gb_vec1),
+         &gb_vec2 = std::as_const(*gb_vec2),
          &sort_v = std::as_const(sort_v),
          idx_visitor = std::forward<I_V>(idx_visitor),
          col_name1,
@@ -834,8 +834,8 @@ groupby2(const char *col_name1,
                                   res,
                                   triple,
                                   idx_visitor,
-                                  *gb_vec1,
-                                  *gb_vec2,
+                                  gb_vec1,
+                                  gb_vec2,
                                   sort_v,
                                   col_name1,
                                   col_name2);
@@ -898,17 +898,15 @@ groupby3(const char *col_name1,
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
     std::ranges::sort(sort_v,
-                      [gb_vec1, gb_vec2, gb_vec3]
+                      [&gb_vec1 = std::as_const(*gb_vec1),
+                       &gb_vec2 = std::as_const(*gb_vec2),
+                       &gb_vec3 = std::as_const(*gb_vec3)]
                       (std::size_t i, std::size_t j) -> bool  {
-                          if (gb_vec1->at(i) < gb_vec1->at(j))
-                              return (true);
-                          else if (gb_vec1->at(i) > gb_vec1->at(j))
-                              return (false);
-                          else if (gb_vec2->at(i) < gb_vec2->at(j))
-                              return (true);
-                          else if (gb_vec2->at(i) > gb_vec2->at(j))
-                              return (false);
-                          return (gb_vec3->at(i) < gb_vec3->at(j));
+                          if (gb_vec1[i] != gb_vec1[j])
+                              return (gb_vec1[i] < gb_vec1[j]);
+                          if (gb_vec2[i] != gb_vec2[j])
+                              return (gb_vec2[i] < gb_vec2[j]);
+                          return (gb_vec3[i] < gb_vec3[j]);
                       });
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
@@ -918,9 +916,9 @@ groupby3(const char *col_name1,
     auto    func =
         [*this,
          &res,
-         gb_vec1,
-         gb_vec2,
-         gb_vec3,
+         &gb_vec1 = std::as_const(*gb_vec1),
+         &gb_vec2 = std::as_const(*gb_vec2),
+         &gb_vec3 = std::as_const(*gb_vec3),
          &sort_v = std::as_const(sort_v),
          idx_visitor = std::forward<I_V>(idx_visitor),
          col_name1,
@@ -930,9 +928,9 @@ groupby3(const char *col_name1,
                                   res,
                                   triple,
                                   idx_visitor,
-                                  *gb_vec1,
-                                  *gb_vec2,
-                                  *gb_vec3,
+                                  gb_vec1,
+                                  gb_vec2,
+                                  gb_vec3,
                                   sort_v,
                                   col_name1,
                                   col_name2,

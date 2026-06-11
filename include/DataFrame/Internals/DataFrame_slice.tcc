@@ -684,14 +684,14 @@ get_data_by_sel (const char *name, F &sel_functor) const requires
 std::invocable<F, const IndexType &, const T &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 
-    const ColumnVecType<T>  &vec = get_column<T>(name);
-    const size_type         idx_s = indices_.size();
-    const size_type         col_s = vec.size();
+    const ColumnVecType<T>  &vec { get_column<T>(name) };
+    const size_type         idx_s { indices_.size() };
+    const size_type         col_s { vec.size() };
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < col_s; ++i)
-        if (sel_functor (indices_[i], vec[i]))
+    for (size_type i { 0 }; i < col_s; ++i)
+        if (sel_functor(indices_[i], vec[i]))
             col_indices.push_back(i);
 
     return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
@@ -706,13 +706,13 @@ get_view_by_sel (const char *name, F &sel_functor) requires
 std::invocable<F, const IndexType &, const T &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 
-    const ColumnVecType<T>  &vec = get_column<T>(name);
-    const size_type         idx_s = indices_.size();
-    const size_type         col_s = vec.size();
+    const ColumnVecType<T>  &vec { get_column<T>(name) };
+    const size_type         idx_s { indices_.size() };
+    const size_type         col_s { vec.size() };
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < col_s; ++i) [[likely]]
+    for (size_type i { 0 }; i < col_s; ++i) [[likely]]
         if (sel_functor (indices_[i], vec[i])) [[unlikely]]
             col_indices.push_back(i);
 
@@ -728,13 +728,13 @@ get_view_by_sel (const char *name, F &sel_functor) const requires
 std::invocable<F, const IndexType &, const T &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 
-    const ColumnVecType<T>  &vec = get_column<T>(name);
-    const size_type         idx_s = indices_.size();
-    const size_type         col_s = vec.size();
+    const ColumnVecType<T>  &vec { get_column<T>(name) };
+    const size_type         idx_s { indices_.size() };
+    const size_type         col_s { vec.size() };
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < col_s; ++i) [[likely]]
+    for (size_type i { 0 }; i < col_s; ++i) [[likely]]
         if (sel_functor (indices_[i], vec[i])) [[unlikely]]
             col_indices.push_back(i);
 

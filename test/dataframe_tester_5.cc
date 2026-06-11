@@ -699,9 +699,10 @@ static void test_gen_join()  {
 
     std::cout << "\nTesting gen_join( ) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
-        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<unsigned long>  idx = {
+        123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457, 123458,
+        123459, 123460, 123461, 123462, 123466
+    };
     std::vector<double>         d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
     std::vector<double>         d2 =
@@ -717,19 +718,21 @@ static void test_gen_join()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    auto    vw =
-        df.get_view<double, int>( { "col_1", "col_2", "col_3", "col_4" });
+    auto    vw = df.get_view<double, int>(
+                     { "col_1", "col_2", "col_3", "col_4" });
 
-    std::vector<unsigned long>  idx2 =
-        { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
-          223454, 223456, 223457, 223459, 223460, 223461, 223462 };
+    std::vector<unsigned long>  idx2 = {
+        123452, 123453, 123455, 123458, 123466, 223450, 223451, 223454, 223456,
+        223457, 223459, 223460, 223461, 223462
+    };
     std::vector<double>         d12 =
         { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
     std::vector<double>         d22 =
         { 8, 19, 110, 111, 9, 113, 114, 99, 122, 123, 130, 131, 20, 11.89 };
-    std::vector<double>         d32 =
-        { 115, 116, 115, 118, 119, 116, 121, 10.34, 11.56, 10.34, 12.3, 10.34,
-          119.0 };
+    std::vector<double>         d32 = {
+        115, 116, 115, 118, 119, 116, 121, 10.34, 11.56, 10.34, 12.3, 10.34,
+        119.0
+    };
     std::vector<int>            i12 = { 122, 123, 124, 125, 199 };
     ULDataFrame                 df2;
 
@@ -739,8 +742,8 @@ static void test_gen_join()  {
                   std::make_pair("xcol_3", d32),
                   std::make_pair("col_4", i12));
 
-    auto    vw2 =
-        df2.get_view<double, int>( { "xcol_1", "col_2", "xcol_3", "col_4" });
+    auto    vw2 = df2.get_view<double, int>(
+                      { "xcol_1", "col_2", "xcol_3", "col_4" });
 
     auto    predicate =
         [](const unsigned long &, const unsigned long &,
@@ -750,24 +753,20 @@ static void test_gen_join()  {
             return (gen_join_type::no_match);
         };
 
-    // df.write<std::ostream, double, int>(
-    //      std::cout, io_format::pretty_prt, { .precision = 2 });
-    // std::cout << "\n\n\n";
-
-    // df2.write<std::ostream, double, int>(
-    //      std::cout, io_format::pretty_prt, { .precision = 2 });
-    // std::cout << "\n\n\n";
-
     auto    inner_result =
-        df.gen_join<decltype(df2), double, double, double, int>
-            (df2, "col_2", "col_2", predicate);
+        df.gen_join<decltype(df2),
+                    double,
+                    double,
+                    decltype(predicate),
+                    double,
+                    int>(df2, "col_2", "col_2", predicate);
     auto    inner_result_vw =
-        vw.gen_join<decltype(df2), double, double, double, int>
-            (df2, "col_2", "col_2", predicate);
-
-    // inner_result.write<std::ostream, double, int, unsigned long>(
-    //      std::cout, io_format::pretty_prt, { .precision = 2 });
-    // std::cout << "\n\n\n";
+        vw.gen_join<decltype(df2),
+                    double,
+                    double,
+                    decltype(predicate),
+                    double,
+                    int>(df2, "col_2", "col_2", predicate);
 
     assert(inner_result.get_index().size() == 1);
     assert(inner_result.get_column<double>("xcol_1")[0] == 11.0);
@@ -790,12 +789,12 @@ static void test_gen_join()  {
         };
 
     auto    result_vw2 =
-        vw.gen_join<decltype(df2), double, double, double, int>
-            (df2, "col_2", "col_2", predicate2);
-
-    // result_vw2.write<std::ostream, double, int, unsigned long>(
-    //      std::cout, io_format::pretty_prt, { .precision = 2 });
-    // std::cout << "\n\n\n";
+        vw.gen_join<decltype(df2),
+                    double,
+                    double,
+                    decltype(predicate2),
+                    double,
+                    int>(df2, "col_2", "col_2", predicate2);
 
     assert(result_vw2.get_index().size() == 14);
     assert(result_vw2.get_column<double>("xcol_1")[0] == 11.0);
@@ -822,12 +821,12 @@ static void test_gen_join()  {
         };
 
     auto    result_vw3 =
-        vw.gen_join<ULDataFrame, int, double, double, int>
-            (df2, "col_4", "xcol_1", predicate3);
-
-    // result_vw3.write<std::ostream, double, int, unsigned long>(
-    //      std::cout, io_format::pretty_prt, { .precision = 2 });
-    // std::cout << "\n\n\n";
+        vw.gen_join<ULDataFrame,
+                    int,
+                    double,
+                    decltype(predicate3),
+                    double,
+                    int>(df2, "col_4", "xcol_1", predicate3);
 
     assert(result_vw3.get_index().size() == 3);
     assert(result_vw3.get_column<double>("xcol_1")[0] == 11.0);

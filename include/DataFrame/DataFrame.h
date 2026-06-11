@@ -2549,17 +2549,23 @@ public:  // Data manipulation
     //
     template<typename RHS_T,
              comparable LHS_COL_T, comparable RHS_COL_T,
+             typename F,
              typename ... Ts>
     [[nodiscard]]
     DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
     gen_join(const RHS_T &rhs,
              const char *lhs_col_name,
              const char *rhs_col_name,
-             std::function<gen_join_type(
-                 const IndexType &,
-                 const typename RHS_T::IndexType &,
-                 const LHS_COL_T &,
-                 const RHS_COL_T &)> &&predicate) const;
+             F &predicate) const requires
+    std::invocable<F, const IndexType &,
+                      const typename RHS_T::IndexType &,
+                      const LHS_COL_T &,
+                      const RHS_COL_T &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const typename RHS_T::IndexType &,
+                                         const LHS_COL_T &,
+                                         const RHS_COL_T &>,
+                 gen_join_type>;
 
     // It concatenates rhs to the end of self and returns the result as
     // another DataFrame.

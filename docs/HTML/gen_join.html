@@ -69,7 +69,7 @@ body {
     <tr bgcolor="Azure">
       <td>
 <pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> RHS_T<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">         comparable LHS_COL_T<span style="color:#808030; ">,</span> comparable RHS_COL_T<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <a href="https://github.com/hosseinmoein/DataFrame/blob/master/include/DataFrame/Utils/Concepts.h#L66">comparable</a> LHS_COL_T<span style="color:#808030; ">,</span> <a href="https://github.com/hosseinmoein/DataFrame/blob/master/include/DataFrame/Utils/Concepts.h#L66">comparable</a> RHS_COL_T<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> F<span style="color:#808030; ">,</span></span>
 <span class="line_wrapper">         <span style="color:#800000; font-weight:bold; ">typename</span> <span style="color:#808030; ">.</span><span style="color:#808030; ">.</span><span style="color:#808030; ">.</span> Ts<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">DataFrame</span>
@@ -89,7 +89,8 @@ body {
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
-        This is the most general method to join two DataFrames. It requires the name of two columns, one from self (lhs) and one from rhs. The columns may or may not have the same type. It also takes a function called <I>predicate</I>. Datapoints from both self and rhs indices and the two columns are passed to predicate one by one.<BR><BR>
+        This is the most general method to join two DataFrames. It requires the name of two columns, one from self (lhs) and one from rhs. The columns may or may not have the same type. It also takes a function called <I>predicate</I>. Datapoints from both self and rhs indices and the two columns are passed to predicate one by one.<BR>
+        The returned DataFrame's index column is <I>unsigned long</I>.<BR><BR>
 
         <B>NOTE</B>: The datapoints are passed to predicate in the same order that they are. So DataFrames' order (sorting) and predicate logic must match.<BR>
         <B>NOTE</B>: The columns are processed until the minimum length of the two columns. If you have columns of different length, you may consider calling <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/make_consistent.html">make_consistent()</a> before joining.<BR>

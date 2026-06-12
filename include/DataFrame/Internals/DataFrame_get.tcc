@@ -1867,7 +1867,7 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
                                long k,
                                const KShapeParams<T> params) const  {
 
-    using data_t = typename  KShapeParams<T>::data_t;
+    using data_t = typename KShapeParams<T>::data_t;
     using seed_t = typename KShapeParams<T>::seed_t;
 
     const long  name_s { long(col_names.size()) };
@@ -1905,18 +1905,17 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
     std::mt19937                        gen {
         (params.seed != seed_t(-1)) ? params.seed : rd()
     };
-    std::uniform_int_distribution<long> dis { 0, k - 1 };
+    std::uniform_int_distribution<long> k_dis { 0, k - 1 };
 
     for (long i { 0 }; i < name_s; ++i)
-        labels[i] = dis(gen);
+        labels[i] = k_dis(gen);
 
     std::vector<ColumnVecType<T>>           centroids(k);
     data_t                                  prev_inertia {
         std::numeric_limits<data_t>::max()
     };
-    NormalizeVisitor<T, long, align_value>  norm_v { params.norm_t };
-    std::vector<const ColumnVecType<T> *>   cluster;
-    const std::vector<long>                 fake_index;
+    NormalizeVisitor<T, char, align_value>  norm_v { params.norm_t };
+    const std::vector<char>                 fake_index;
     std::vector<ColumnVecType<T>>           ncolumns(name_s);
 
     for (long i { 0 }; i < name_s; ++i)  {
@@ -1927,6 +1926,9 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
 
         ncolumns[i] = std::move(norm_v.get_result());
     }
+
+    std::vector<const ColumnVecType<T> *>   cluster;
+    std::uniform_int_distribution<long>     name_dis { 0, name_s - 1 };
 
     // Main K-Shape iteration
     //
@@ -1945,7 +1947,7 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
                 centroids[c] =
                     _kshape_extract_shape_(cluster, params.shape_iter, norm_v);
             else  // Reinitialize empty cluster
-                centroids[c] = *(columns[dis(gen)]);
+                centroids[c] = *(columns[name_dis(gen)]);
         }
 
         data_t                          inertia { 0 };

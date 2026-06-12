@@ -1794,18 +1794,18 @@ static void test_kshape_groups()  {
                                        "Linear Inc 4"
             }));
     assert((result[1] ==
-            std::vector<std::string> { "Exponential Inc 0", "Exponential Inc 1",
-                                       "Exponential Inc 2", "Exponential Inc 3",
-                                       "Exponential Inc 4"
+            std::vector<std::string> { "Sine Wave 0", "Sine Wave 1",
+                                       "Sine Wave 2", "Sine Wave 3",
+                                       "Sine Wave 4"
             }));
     assert((result[2] ==
             std::vector<std::string> { "IBM_Open", "IBM_High", "IBM_Low",
                                        "IBM_Close"
             }));
     assert((result[3] ==
-            std::vector<std::string> { "Sine Wave 0", "Sine Wave 1",
-                                       "Sine Wave 2", "Sine Wave 3",
-                                       "Sine Wave 4"
+            std::vector<std::string> { "Exponential Inc 0", "Exponential Inc 1",
+                                       "Exponential Inc 2", "Exponential Inc 3",
+                                       "Exponential Inc 4"
             }));
 
     // Now multidimensional data
@@ -2008,11 +2008,11 @@ static void test_kshape_groups()  {
 
     assert(ary_res2.size() == 2);
     assert((ary_res2[0] ==
-            std::vector<std::string> { "ARY FLAT 0", "ARY FLAT 1",
-                                       "ARY FLAT 1" }));
-    assert((ary_res2[1] ==
             std::vector<std::string> { "ARY BASE", "ARY SHIFT 0",
                                        "ARY SHIFT 1", "ARY SHIFT 2" }));
+    assert((ary_res2[1] ==
+            std::vector<std::string> { "ARY FLAT 0", "ARY FLAT 1",
+                                       "ARY FLAT 1" }));
 
     // Dataset 3 — Three clusters, k=3 (stress test)
     //
@@ -2074,16 +2074,16 @@ static void test_kshape_groups()  {
         df.kshape_groups<ary_col_t>(
             { "ARY DE EXP 1", "ARY DE EXP 2", "ARY STEP 1", "ARY STEP 2",
               "ARY VSHAPE 1", "ARY VSHAPE 2" },
-            3L,
+            4L,
             { .seed = 123 });
 
-    assert(ary_res3.size() == 3);
+    assert(ary_res3.size() == 4);
     assert((ary_res3[0] ==
-            std::vector<std::string> { "ARY STEP 1", "ARY STEP 2" }));
-    assert((ary_res3[1] ==
             std::vector<std::string> { "ARY VSHAPE 1", "ARY VSHAPE 2" }));
+    assert((ary_res3[1] == std::vector<std::string> { "ARY STEP 1" }));
     assert((ary_res3[2] ==
             std::vector<std::string> { "ARY DE EXP 1", "ARY DE EXP 2" }));
+    assert((ary_res3[3] == std::vector<std::string> { "ARY STEP 2" }));
 }
 
 // ----------------------------------------------------------------------------

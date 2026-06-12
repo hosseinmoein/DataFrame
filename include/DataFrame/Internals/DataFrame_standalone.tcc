@@ -2966,6 +2966,12 @@ V _shift_vector_(const V &vec, long shift)  {
 
 // ----------------------------------------------------------------------------
 
+//
+// KShape stuff
+//
+
+// ----------------------------------------------------------------------------
+
 // If n is already a power of 2, return n
 //
 static inline
@@ -3054,7 +3060,7 @@ V _kshape_cross_corr_scalar_(const V &x, const V &y)  {
                              "x and y vectors must be of the same length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const long  fft_s = _next_pow2_(2 * col_s);
+    const long  fft_s { _next_pow2_(2 * col_s) };
 
     // Prepare FFT inputs
     //
@@ -3084,14 +3090,15 @@ V _kshape_cross_corr_scalar_(const V &x, const V &y)  {
     //
     std::vector<value_type, allocator_type> cc(2L * col_s - 1L);
 
-    for (long i { 0 }; i < col_s; ++i)  {
-        const auto  idx { fft_s - col_s + 1L + i };
+    // Negative lags: cc[0 .. col_s-2] <- X[fft_s - col_s + 1 .. fft_s - 1]
+    //
+    for (long i { 0 }; i < (col_s - 1L); ++i)
+        cc[i] = X[fft_s - col_s + 1L + i].real();
 
-        if (idx < fft_s) [[likely]]
-            cc[i] = X[fft_s - col_s + 1L + i].real();
-    }
-    for (long i { col_s }; i < (2L * col_s - 1L); ++i)
-        cc[i] = X[i - col_s + 1].real();
+    // Zero lag and positive lags: cc[col_s-1 .. 2*col_s-2] <- X[0 .. col_s-1]
+    //
+    for (long i { 0 }; i < col_s; ++i)
+        cc[col_s - 1L + i] = X[i].real();
 
     return (cc);
 }

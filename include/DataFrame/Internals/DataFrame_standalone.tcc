@@ -3060,7 +3060,7 @@ V _kshape_cross_corr_scalar_(const V &x, const V &y)  {
                              "x and y vectors must be of the same length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const long  fft_s { _next_pow2_(2 * col_s) };
+    const long  fft_s { long(_next_pow2_(2 * col_s)) };
 
     // Prepare FFT inputs
     //

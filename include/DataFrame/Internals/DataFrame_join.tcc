@@ -135,32 +135,17 @@ std::same_as<std::invoke_result_t<F, const IndexType &,
 
     static_assert(comparable<I>, "Index type must have comparison operators");
 
-    const ColumnVecType<LHS_COL_T>  *lhs_col { nullptr };
-
-    if (! ::strcmp(lhs_col_name, DF_INDEX_COL_NAME))  {
-        lhs_col = (const ColumnVecType<LHS_COL_T> *) &(get_index());
-    }
-    else  {
-        lhs_col = &(get_column<LHS_COL_T>(lhs_col_name));
-    }
-
-    const typename RHS_T::template ColumnVecType<RHS_COL_T>  *rhs_col {
-        nullptr
+    const ColumnVecType<LHS_COL_T>                          &lhs_col {
+        get_column<LHS_COL_T>(lhs_col_name)
     };
-
-    if (! ::strcmp(rhs_col_name, DF_INDEX_COL_NAME))  {
-        rhs_col = (const typename RHS_T::template ColumnVecType<RHS_COL_T> *)
-                      &(rhs.get_index());
-    }
-    else  {
-        rhs_col = (const typename RHS_T::template ColumnVecType<RHS_COL_T> *)
-                      &(rhs.template get_column<RHS_COL_T>(rhs_col_name));
-    }
+    const typename RHS_T::template ColumnVecType<RHS_COL_T> &rhs_col {
+        rhs.template get_column<RHS_COL_T>(rhs_col_name)
+    };
 
     const auto      &lhs_index { get_index() };
     const auto      &rhs_index { rhs.get_index() };
     const size_type col_s {
-        std::min({ lhs_col->size(), rhs_col->size(),
+        std::min({ lhs_col.size(), rhs_col.size(),
                    lhs_index.size(), rhs_index.size() })
     };
     IndexIdxVector  joined_index_idx;
@@ -169,8 +154,7 @@ std::same_as<std::invoke_result_t<F, const IndexType &,
     joined_index_idx.reserve(col_s);
     for (size_type i { 0 }; i < col_s; ++i)  {
         const auto  gjtype {
-            predicate(lhs_index[i], rhs_index[i],
-                      (*(lhs_col))[i], (*(rhs_col))[i])
+            predicate(lhs_index[i], rhs_index[i], lhs_col[i], rhs_col[i])
         };
 
         switch(gjtype)  {
@@ -200,6 +184,50 @@ std::same_as<std::invoke_result_t<F, const IndexType &,
                    (*this, rhs, lhs_col_name, joined_index_idx));
     return(column_join_helper2_<DataFrame, RHS_T, LHS_COL_T, RHS_COL_T, Ts ...>
                (*this, rhs, lhs_col_name, rhs_col_name, joined_index_idx));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename RHS_T, typename F, typename ... Ts>
+DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
+gen_join(const RHS_T &rhs, F &predicate) const requires
+std::invocable<F, const IndexType &, const typename RHS_T::IndexType &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &,
+                                     const typename RHS_T::IndexType &>,
+             gen_join_type>  {
+
+    static_assert(comparable<I>, "Index type must have comparison operators");
+
+    const auto      &lhs_index { get_index() };
+    const auto      &rhs_index { rhs.get_index() };
+    const size_type col_s { std::min(lhs_index.size(), rhs_index.size()) };
+    IndexIdxVector  joined_index_idx;
+    constexpr auto  max_val { std::numeric_limits<size_type>::max() };
+
+    joined_index_idx.reserve(col_s);
+    for (size_type i { 0 }; i < col_s; ++i)  {
+        const auto  gjtype { predicate(lhs_index[i], rhs_index[i]) };
+
+        switch(gjtype)  {
+        case gen_join_type::include_left:
+            joined_index_idx.emplace_back(i, max_val);
+            break;
+        case gen_join_type::include_right:
+            joined_index_idx.emplace_back(max_val, i);
+            break;
+        case gen_join_type::include_both:
+            joined_index_idx.emplace_back(i, i);
+            break;
+        case gen_join_type::no_match:
+        default:
+            break;
+        }
+    }
+
+    return (column_join_helper_<DataFrame, RHS_T, IndexType, Ts ...>
+                (*this, rhs, DF_INDEX_COL_NAME, joined_index_idx));
 }
 
 // ----------------------------------------------------------------------------
@@ -490,55 +518,94 @@ column_join_helper_(const LHS_T &lhs,
     result.load_index(
         result_t::gen_sequence_index(0, static_cast<unsigned long>(col_s), 1));
 
+    const bool  with_col { bool(::strcmp(col_name, DF_INDEX_COL_NAME)) };
+
     // Load the lhs and rhs indices into two columns in the result
     // Also load the unified named column
     //
     StlVecType<lhs_idx_t>   lhs_index(col_s);
     StlVecType<rhs_idx_t>   rhs_index(col_s);
-    StlVecType<T>           result_col_vec(col_s);
-    const auto              &lhs_named_col_vec =
-        lhs.template get_column<T>(col_name);
-    const auto              &rhs_named_col_vec =
-        rhs.template get_column<T>(col_name);
-    auto                    lbd =
-        [&joined_index_idx = std::as_const(joined_index_idx),
-         &lhs_index, &rhs_index, &result_col_vec,
-         &lhs = std::as_const(lhs),
-         &rhs = std::as_const(rhs),
-         &lhs_named_col_vec = std::as_const(lhs_named_col_vec),
-         &rhs_named_col_vec = std::as_const(rhs_named_col_vec)]
-        (const auto begin, const auto end) -> void  {
-            for (size_type i = begin; i < end; ++i) [[likely]]  {
-                const size_type lhs_i = std::get<0>(joined_index_idx[i]);
-                const size_type rhs_i = std::get<1>(joined_index_idx[i]);
+    StlVecType<T>           result_col_vec;
 
-                if (lhs_i != std::numeric_limits<size_type>::max())  {
-                    lhs_index[i] = lhs.indices_[lhs_i];
-                    result_col_vec[i] = lhs_named_col_vec[lhs_i];
-                }
-                else  {
-                    lhs_index[i] = get_nan<lhs_idx_t>();
-                }
+    if (with_col)  {
+        const auto              &lhs_named_col_vec =
+            lhs.template get_column<T>(col_name);
+        const auto              &rhs_named_col_vec =
+            rhs.template get_column<T>(col_name);
+        auto                    lbd =
+            [&joined_index_idx = std::as_const(joined_index_idx),
+             &lhs_index, &rhs_index, &result_col_vec,
+             &lhs = std::as_const(lhs),
+             &rhs = std::as_const(rhs),
+             &lhs_named_col_vec = std::as_const(lhs_named_col_vec),
+             &rhs_named_col_vec = std::as_const(rhs_named_col_vec)]
+            (const auto begin, const auto end) -> void  {
+                for (size_type i = begin; i < end; ++i) [[likely]]  {
+                    const size_type lhs_i = std::get<0>(joined_index_idx[i]);
+                    const size_type rhs_i = std::get<1>(joined_index_idx[i]);
 
-                if (rhs_i != std::numeric_limits<size_type>::max())  {
-                    rhs_index[i] = rhs.indices_[rhs_i];
-                    result_col_vec[i] = rhs_named_col_vec[rhs_i];
-                }
-                else  {
-                    rhs_index[i] = get_nan<rhs_idx_t>();
-                }
-            }
-        };
+                    if (lhs_i != std::numeric_limits<size_type>::max())  {
+                        lhs_index[i] = lhs.indices_[lhs_i];
+                        result_col_vec[i] = lhs_named_col_vec[lhs_i];
+                    }
+                    else  {
+                        lhs_index[i] = get_nan<lhs_idx_t>();
+                    }
 
-    if (col_s >= ThreadPool::MUL_THR_THHOLD && get_thread_level() > 2)  {
-        auto    futures =
-            thr_pool_.parallel_loop<double>(
-                size_type(0), col_s, std::move(lbd));
+                    if (rhs_i != std::numeric_limits<size_type>::max())  {
+                        rhs_index[i] = rhs.indices_[rhs_i];
+                        result_col_vec[i] = rhs_named_col_vec[rhs_i];
+                    }
+                    else  {
+                        rhs_index[i] = get_nan<rhs_idx_t>();
+                    }
+                }
+            };
 
-        for (auto &fut : futures)  fut.get();
+        result_col_vec.resize(col_s);
+        if (col_s >= ThreadPool::MUL_THR_THHOLD && get_thread_level() > 2)  {
+            auto    futures =
+                thr_pool_.parallel_loop<double>(
+                    size_type(0), col_s, std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else
+            lbd(0, col_s);
     }
-    else
-        lbd(0, col_s);
+    else  {
+        auto    lbd =
+            [&joined_index_idx = std::as_const(joined_index_idx),
+             &lhs_index, &rhs_index,
+             &lhs = std::as_const(lhs),
+             &rhs = std::as_const(rhs)]
+            (const auto begin, const auto end) -> void  {
+                for (size_type i = begin; i < end; ++i) [[likely]]  {
+                    const size_type lhs_i = std::get<0>(joined_index_idx[i]);
+                    const size_type rhs_i = std::get<1>(joined_index_idx[i]);
+
+                    if (lhs_i != std::numeric_limits<size_type>::max())
+                        lhs_index[i] = lhs.indices_[lhs_i];
+                    else
+                        lhs_index[i] = get_nan<lhs_idx_t>();
+
+                    if (rhs_i != std::numeric_limits<size_type>::max())
+                        rhs_index[i] = rhs.indices_[rhs_i];
+                    else
+                        rhs_index[i] = get_nan<rhs_idx_t>();
+                }
+            };
+
+        if (col_s >= ThreadPool::MUL_THR_THHOLD && get_thread_level() > 2)  {
+            auto    futures =
+                thr_pool_.parallel_loop<double>(
+                    size_type(0), col_s, std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else
+            lbd(0, col_s);
+    }
 
     {
         char            buffer[MAX_COL_NAME_SIZE];
@@ -554,14 +621,15 @@ column_join_helper_(const LHS_T &lhs,
                                                std::move(rhs_index),
                                                nan_policy::pad_with_nans,
                                                false);
-        result.template load_column<T>(col_name,
-                                       std::move(result_col_vec),
-                                       nan_policy::pad_with_nans,
-                                       false);
+        if (with_col)
+            result.template load_column<T>(col_name,
+                                           std::move(result_col_vec),
+                                           nan_policy::pad_with_nans,
+                                           false);
     }
 
     join_helper_common_<LHS_T, RHS_T, unsigned long, Ts ...>
-        (lhs, rhs, joined_index_idx, result, col_name);
+        (lhs, rhs, joined_index_idx, result, with_col ? col_name : nullptr);
     return(result);
 }
 

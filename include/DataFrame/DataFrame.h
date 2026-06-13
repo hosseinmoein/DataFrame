@@ -2567,6 +2567,22 @@ public:  // Data manipulation
                                          const RHS_COL_T &>,
                  gen_join_type>;
 
+    // This is like the above gen_join but the joining logic is only based on
+    // index columns of LHS (self) and RHS (there is no data column involved).
+    //
+    // The predicate has the following parameters:
+    //     1. A const reference to the index datapoint of self
+    //     2. A const reference to the index datapoint of rhs
+    //
+    template<typename RHS_T, typename F, typename ... Ts>
+    [[nodiscard]]
+    DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
+    gen_join(const RHS_T &rhs, F &predicate) const requires
+    std::invocable<F, const IndexType &, const typename RHS_T::IndexType &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const typename RHS_T::IndexType &>,
+                 gen_join_type>;
+
     // It concatenates rhs to the end of self and returns the result as
     // another DataFrame.
     // Concatenation is done based on policy

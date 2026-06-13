@@ -722,8 +722,8 @@ static void test_gen_join()  {
                      { "col_1", "col_2", "col_3", "col_4" });
 
     std::vector<unsigned long>  idx2 = {
-        123452, 123453, 123455, 123458, 123466, 223450, 223451, 223454, 223456,
-        223457, 223459, 223460, 223461, 223462
+        123452, 123453, 123455, 123458, 123454, 223450, 223451, 223454, 223456,
+        123459, 223459, 223460, 223461, 123466
     };
     std::vector<double>         d12 =
         { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
@@ -819,7 +819,6 @@ static void test_gen_join()  {
                 return (gen_join_type::include_both);
             return (gen_join_type::no_match);
         };
-
     auto    result_vw3 =
         vw.gen_join<ULDataFrame,
                     int,
@@ -837,7 +836,7 @@ static void test_gen_join()  {
     assert(result_vw3.get_column<unsigned long>("lhs.INDEX")[2] == 123466);
     assert(result_vw3.get_column<unsigned long>("rhs.INDEX")[0] == 123452);
     assert(result_vw3.get_column<unsigned long>("rhs.INDEX")[1] == 223461);
-    assert(result_vw3.get_column<unsigned long>("rhs.INDEX")[2] == 223462);
+    assert(result_vw3.get_column<unsigned long>("rhs.INDEX")[2] == 123466);
     assert(result_vw3.get_column<int>("lhs.col_4")[0] == 22);
     assert(result_vw3.get_column<int>("lhs.col_4")[1] == 0);
     assert(result_vw3.get_column<int>("lhs.col_4")[2] == 0);
@@ -856,6 +855,47 @@ static void test_gen_join()  {
     assert(result_vw3.get_column<double>("xcol_3")[0] == 115.0);
     assert(result_vw3.get_column<double>("xcol_3")[1] == 119.0);
     assert(std::isnan(result_vw3.get_column<double>("xcol_3")[2]));
+
+    // Now join only by index
+    //
+    auto    pred_by_idx =
+        []
+        (const unsigned long &lhs_idx,
+         const unsigned long &rhs_idx) -> gen_join_type  {
+            if (lhs_idx == rhs_idx)  return (gen_join_type::include_both);
+            return (gen_join_type::no_match);
+        };
+    auto    res_by_idx =
+        df.gen_join<ULDataFrame,
+                    decltype(pred_by_idx),
+                    double,
+                    int>(df2, pred_by_idx);
+
+    // res_by_idx.write<std::ostream, unsigned long, double, int>
+    //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+    assert(res_by_idx.get_index().size() == 3);
+    assert(res_by_idx.get_column<double>("xcol_1")[0] == 15.0);
+    assert(res_by_idx.get_column<double>("xcol_1")[1] == 110.0);
+    assert(res_by_idx.get_column<double>("xcol_1")[2] == 114.0);
+    assert(res_by_idx.get_column<double>("xcol_3")[0] == 119.0);
+    assert(res_by_idx.get_column<double>("xcol_3")[1] == 10.34);
+    assert(std::isnan(res_by_idx.get_column<double>("xcol_3")[2]));
+    assert(res_by_idx.get_column<unsigned long>("lhs.INDEX")[0] == 123454);
+    assert(res_by_idx.get_column<unsigned long>("lhs.INDEX")[1] == 123459);
+    assert(res_by_idx.get_column<unsigned long>("lhs.INDEX")[2] == 123466);
+    assert(res_by_idx.get_column<unsigned long>("rhs.INDEX")[0] == 123454);
+    assert(res_by_idx.get_column<unsigned long>("rhs.INDEX")[1] == 123459);
+    assert(res_by_idx.get_column<unsigned long>("rhs.INDEX")[2] == 123466);
+    assert(res_by_idx.get_column<int>("lhs.col_4")[0] == 99);
+    assert(res_by_idx.get_column<int>("lhs.col_4")[1] == 0);
+    assert(res_by_idx.get_column<int>("lhs.col_4")[2] == 0);
+    assert(res_by_idx.get_column<double>("rhs.col_2")[0] == 9.0);
+    assert(res_by_idx.get_column<double>("rhs.col_2")[1] == 123.0);
+    assert(res_by_idx.get_column<double>("rhs.col_2")[2] == 11.89);
+    assert(res_by_idx.get_column<double>("lhs.col_2")[0] == 12.0);
+    assert(res_by_idx.get_column<double>("lhs.col_2")[1] == 23.0);
+    assert(res_by_idx.get_column<double>("lhs.col_2")[2] == 1.89);
 }
 
 // -----------------------------------------------------------------------------

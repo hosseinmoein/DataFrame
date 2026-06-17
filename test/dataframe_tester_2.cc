@@ -217,20 +217,22 @@ static void test_retype_column()  {
     StlVecType<std::string>    strvec =
         { "11", "22", "33", "44", "55", "66", "-77", "88", "99", "100",
           "101", "102", "103", "104", "-105" };
-
-    MyDataFrame df;
+    MyDataFrame                df;
 
     df.load_data(std::move(idxvec),
                  std::make_pair("str_col", strvec),
                  std::make_pair("int_col", intvec));
 
-    df.retype_column<int, unsigned int>("int_col");
+    df.retype_column<int, long>("int_col",
+                                [](const int &val) -> long {
+                                    return (long(val));
+                                });
     assert(df.get_index().size() == 15);
-    assert(df.get_column<unsigned int>("int_col").size() == 15);
-    assert(df.get_column<unsigned int>("int_col")[0] == 4294967295);
-    assert(df.get_column<unsigned int>("int_col")[1] == 2);
-    assert(df.get_column<unsigned int>("int_col")[6] == 4294967290);
-    assert(df.get_column<unsigned int>("int_col")[8] == 11);
+    assert(df.get_column<long>("int_col").size() == 15);
+    assert(df.get_column<long>("int_col")[0] == -1L);
+    assert(df.get_column<long>("int_col")[1] == 2L);
+    assert(df.get_column<long>("int_col")[6] == -6L);
+    assert(df.get_column<long>("int_col")[8] == 11L);
     assert(df.get_column<std::string>("str_col")[0] == "11");
     assert(df.get_column<std::string>("str_col")[6] == "-77");
 
@@ -239,10 +241,10 @@ static void test_retype_column()  {
                                            return (std::stoi(val));
                                        });
     assert(df.get_index().size() == 15);
-    assert(df.get_column<unsigned int>("int_col").size() == 15);
+    assert(df.get_column<long>("int_col").size() == 15);
     assert(df.get_column<int>("str_col").size() == 15);
-    assert(df.get_column<unsigned int>("int_col")[6] == 4294967290);
-    assert(df.get_column<unsigned int>("int_col")[8] == 11);
+    assert(df.get_column<long>("int_col")[6] == -6L);
+    assert(df.get_column<long>("int_col")[8] == 11L);
     assert(df.get_column<int>("str_col")[0] == 11);
     assert(df.get_column<int>("str_col")[6] == -77);
 }

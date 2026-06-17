@@ -179,10 +179,11 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename FROM_T, typename TO_T>
+template<typename FROM_T, typename TO_T, typename F>
 void DataFrame<I, H>::
-retype_column (const char *name,
-               std::function<TO_T (const FROM_T &)> convert_func)  {
+retype_column (const char *name, F &&convert_func) requires
+std::invocable<F, const FROM_T &> &&
+std::same_as<std::invoke_result_t<F, const FROM_T &>, TO_T>  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call retype_column()");
@@ -194,9 +195,9 @@ retype_column (const char *name,
     const ColumnVecType<FROM_T> &old_vec = get_column<FROM_T>(name);
     StlVecType<TO_T>            new_vec;
 
-    new_vec.reserve(old_vec.size());
-    for (const auto &citer : old_vec)
-        new_vec.push_back(std::move(convert_func(citer)));
+    new_vec.resize(old_vec.size());
+    for (size_type i { 0 }; const auto &citer : old_vec)
+        new_vec[i++] = std::move(convert_func(citer));
     remove_column<FROM_T>(name);
     load_column<TO_T>(name, std::move(new_vec));
     return;

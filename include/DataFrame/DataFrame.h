@@ -204,19 +204,19 @@ public:  // Load/append/remove interfaces
     //   Current type of the named column
     // TO_T:
     //   New type to be of the named column
+    // F:
+    //   Converter function type
     // name:
     //   Column name
     // convert_func:
     //   A function to change each element of named column from FROM_T to TO_T
-    //   type. The default is C-style cast
+    //   type.
     //
-    template<typename FROM_T, typename TO_T>
+    template<typename FROM_T, typename TO_T, typename F>
     void
-    retype_column(const char *name,
-                  std::function<TO_T (const FROM_T &)> convert_func =
-                      [](const FROM_T &val) -> TO_T  {
-                          return ((TO_T) (*(&val)));
-                      });
+    retype_column(const char *name, F &&convert_func) requires
+    std::invocable<F, const FROM_T &> &&
+    std::same_as<std::invoke_result_t<F, const FROM_T &>, TO_T>;
 
     // This is the most generalized load function. It creates and loads an
     // index and a variable number of columns. The index vector and all

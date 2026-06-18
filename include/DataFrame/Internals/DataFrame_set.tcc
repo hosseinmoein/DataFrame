@@ -192,10 +192,9 @@ std::same_as<std::invoke_result_t<F, const FROM_T &>, TO_T>  {
         throw DataFrameError ("DataFrame::retype_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
 
-    const ColumnVecType<FROM_T> &old_vec = get_column<FROM_T>(name);
-    StlVecType<TO_T>            new_vec;
+    const ColumnVecType<FROM_T> &old_vec { get_column<FROM_T>(name) };
+    StlVecType<TO_T>            new_vec(old_vec.size());
 
-    new_vec.resize(old_vec.size());
     for (size_type i { 0 }; const auto &citer : old_vec)
         new_vec[i++] = std::move(convert_func(citer));
     remove_column<FROM_T>(name);
@@ -666,13 +665,11 @@ load_align_column(
                         const DataFrame::IndexType &,
                         const DataFrame::IndexType &)> diff_func)  {
 
-    const size_type idx_s = indices_.size();
-    const size_type data_s = column.size();
+    const size_type idx_s { indices_.size() };
+    const size_type data_s { column.size() };
 
-    using value_t = typename StlVecType<T>::value_type;
-
-    StlVecType<value_t> new_col(idx_s, null_value);
-    size_type           idx_idx { 0 };
+    StlVecType<T>   new_col(idx_s, null_value);
+    size_type       idx_idx { 0 };
 
     if (start_from_beginning)  {
         new_col[0] = std::move(column[0]);
@@ -683,8 +680,9 @@ load_align_column(
     size_type   data_idx { idx_idx };
 
     for ( ; data_idx < data_s && idx_idx < idx_s; ++idx_idx)  {
-        const size_type idx_diff =
-            diff_func(indices_[idx_ref_idx], indices_[idx_idx]);
+        const size_type idx_diff {
+            diff_func(indices_[idx_ref_idx], indices_[idx_idx])
+        };
 
         if (idx_diff < interval)  continue;
         new_col[idx_idx + (idx_diff > interval ? -1 : 0)] =
@@ -693,7 +691,7 @@ load_align_column(
         data_idx += 1;
     }
 
-    return (load_column<value_t>(name, std::move(new_col)));
+    return (load_column<T>(name, std::move(new_col)));
 }
 
 // ----------------------------------------------------------------------------
@@ -751,21 +749,23 @@ load_random_sample(const char *name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename NT, typename ET>
+template<typename NT, typename ET, typename F>
 DataFrame<I, H>::size_type DataFrame<I, H>::
 load_column(const char *new_col_name,
             const char *existing_col_name,
-            std::function<NT(const IndexType &, const ET &)> &&func,
+            F &&func,
             nan_policy padding,
-            bool do_lock)  {
+            bool do_lock) requires
+std::invocable<F, const IndexType &, const ET &> &&
+std::same_as<std::invoke_result_t<F, const IndexType &, const ET &>, NT>  {
 
-    const auto          &e_col = get_column<ET>(existing_col_name);
-    ColumnVecType<NT>   n_col;
+    const auto          &e_col { get_column<ET>(existing_col_name) };
+    ColumnVecType<NT>   n_col(padding == nan_policy::pad_with_nans
+                                  ? indices_.size() : e_col.size());
 
-    n_col.reserve(padding == nan_policy::pad_with_nans
-                      ? indices_.size() : e_col.size());
-    for (const auto &[idx, val] : std::ranges::views::zip(indices_, e_col))
-        n_col.push_back(func(idx, val));
+    for (size_type i { 0 };
+         const auto &[idx, val] : std::ranges::views::zip(indices_, e_col))
+        n_col[i++] = func(idx, val);
     return (load_column<NT>(new_col_name, std::move(n_col), padding, do_lock));
 }
 

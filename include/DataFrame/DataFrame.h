@@ -341,12 +341,9 @@ public:  // Load/append/remove interfaces
         size_type interval,
         bool start_from_beginning,
         const T &null_value = hmdf::get_nan<T>(),
-        std::function<std::size_t (
-            const typename DataFrame<I, H>::IndexType &,
-            const typename DataFrame<I, H>::IndexType &)> diff_func =
-            [](const typename DataFrame<I, H>::IndexType &t_1,
-               const typename DataFrame<I, H>::IndexType &t) ->
-                   typename std::size_t  {
+        std::function<std::size_t (const IndexType &,
+                                   const IndexType &)> diff_func =
+            [](const IndexType &t_1, const IndexType &t) -> std::size_t  {
                 return (static_cast<std::size_t>(t - t_1));
             });
 
@@ -383,19 +380,23 @@ public:  // Load/append/remove interfaces
     //   Type of the new column
     // ET:
     //   Type of the existing column
+    // F:
+    //   Type of the functor to generate new column
     // func:
     //   Functor to create the new column content
     // padding:
     //   If true, it pads the data new column with nan, if it is shorter than
     //   the index column.
     //
-    template<typename NT, typename ET>
+    template<typename NT, typename ET, typename F>
     size_type
     load_column(const char *new_col_name,
                 const char *existing_col_name,
-                std::function<NT(const IndexType &, const ET &)> &&func,
+                F &&func,
                 nan_policy padding = nan_policy::pad_with_nans,
-                bool do_lock = true);
+                bool do_lock = true) requires
+    std::invocable<F, const IndexType &, const ET &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &, const ET &>, NT>;
 
     // This method loads the result() of a visitor to the named column.
     // For this method to work:

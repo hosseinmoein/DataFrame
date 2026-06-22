@@ -1115,6 +1115,121 @@ struct  KShapeParams  {
 
 // ----------------------------------------------------------------------------
 
+// The theoretical variogram/covariance model used to characterize spatial
+// (or spatio-temporal) correlation as a function of separation distance h.
+//
+enum class  VariogramModel : unsigned char  {
+
+    spherical = 1,    // Bounded - Most common default. Linear near origin.
+    exponential = 2,  // Bounded - Gradual decay. Common in hydrology.
+    gaussian = 3,     // Bounded - Parabolic near origin - very smooth fields.
+    matern = 4,       // Bounded - Generalizes exponential/Gaussian via smooth.
+    power = 5,        // Unbounded - Non-stationary / fractal processes.
+    linear = 6,       // Unbounded - Special case of power with exponent = 1.
+    logarithmic = 7,  // Unbounded - Intrinsic random functions of order 1.
+};
+
+// All tunable hyper-parameters of a Kriging model are grouped into this one
+// structure, decoupling "what the model is" from "how it is computed". The
+// same KrigingVisitor implementation dispatches on params_.model at runtime,
+// so switching models is a one-field change with no recompilation of logic.
+//
+template<typename T = double>
+struct  KrigingParams  {
+
+    using value_type = T;
+
+    // Which theoretical variogram/covariance family to use.
+    //
+    VariogramModel  model { VariogramModel::spherical };
+
+    // Nugget (c0): discontinuity at h=0 -- measurement error / micro-scale
+    // variability. Must be >= 0.
+    //
+    value_type      nugget { 0 };
+
+    // Partial sill (c): structural variance above the nugget. Total sill is
+    // (nugget + sill). Ignored by power/linear/logarithmic (unbounded).
+    // Must be >= 0.
+    //
+    value_type      sill { 1 };
+
+    // Range (a): practical correlation distance for bounded models. Must be
+    // > 0. For Matérn this acts as the length-scale ρ.
+    //
+    value_type      range { 1 };
+
+    // Matérn smoothness parameter ν (nu). Common values: 0.5 (== exponential)
+    // 1.5, 2.5, and the limit ν -> infinity (== Gaussian). Only used when
+    // model == matern. Must be > 0.
+    //
+    value_type      matern_smoothness { 1.5 };
+
+    // Exponent α for the power model, 0 < α < 2.  α == 1 reduces to the
+    // linear model (also selectable directly via model == linear).
+    // Only used when model == power.
+    //
+    value_type      power_exponent { 1.0 };
+
+    // Small positive jitter added to the diagonal of the kriging system
+    // before factorization, purely for numerical stability (handles
+    // near-duplicate coordinates / ill-conditioning). This is independent of
+    // the statistical nugget effect above.
+    //
+    value_type      ridge { 1e-10 };
+
+    // If true, perform Ordinary Kriging (unknown constant mean, estimated
+    // via the Lagrange-multiplier-augmented system). If false, perform
+    // Simple Kriging assuming a known mean (simple_mean below) with zero-mean
+    // residuals -- this drops the Lagrange row/column and is cheaper.
+    //
+    bool            ordinary { true };
+
+    // Used only when ordinary == false.
+    //
+    value_type      simple_mean { 0 };
+
+    // Geometric anisotropy: stretch distances along a preferred direction
+    // before evaluating the variogram. anisotropy_ratio is range_minor /
+    // range_major (1 == isotropic). anisotropy_angle is the direction of the
+    // major axis in radians, measured counter-clockwise from the x-axis.
+    // Only meaningful for 2D coordinates.
+    //
+    value_type      anisotropy_ratio { 1.0 };
+    value_type      anisotropy_angle { 0.0 };
+
+    // If > 0, switches to local (moving-window) Kriging: only the
+    // max_neighbors closest known points are used to predict each unknown
+    // location, turning an O(N^3) global solve into many small solves --
+    // essential for large N. 0 means use all points (global Kriging).
+    //
+    std::size_t     max_neighbors { 0 };
+
+    inline void sanity_check() const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (nugget < 0)
+            throw DataFrameError("KrigingParams: nugget must be >= 0");
+        if (sill < 0)
+            throw DataFrameError("KrigingParams: sill must be >= 0");
+        if (range <= 0)
+            throw DataFrameError("KrigingParams: range must be > 0");
+        if (model == VariogramModel::matern && matern_smoothness <= 0)
+            throw DataFrameError(
+                "KrigingParams: matern_smoothness must be > 0");
+        if (model == VariogramModel::power &&
+            (power_exponent <= 0 || power_exponent >= 2))
+            throw DataFrameError(
+                "KrigingParams: power_exponent must be in (0, 2)");
+        if (anisotropy_ratio <= 0 || anisotropy_ratio > 1.0)
+            throw DataFrameError(
+                "KrigingParams: anisotropy_ratio must be in (0, 1]");
+#endif // HMDF_SANITY_EXCEPTIONS
+    }
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
 

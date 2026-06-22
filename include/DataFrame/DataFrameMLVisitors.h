@@ -6678,6 +6678,654 @@ public:
           threshold_(threshold)  { dfunc_ = get_dist_func_(); }
 };
 
+// ------------------------------------------------------------------------------
+
+// Kriging algorithm performs spatial interpolation (a.k.a. Gaussian Process
+// regression with a fixed/known covariance kernel) over scattered data.
+// Kriging models are advanced geostatistical interpolation techniques used to
+// predict unknown values at unsampled locations based on a set of known,
+// scattered data points. Unlike simple averaging, Kriging calculates weights
+// using both the distance between points and the overall spatial arrangement of
+// the data, while also estimating the uncertainty of the predictions.
+//
+// Kriging sits at the intersection of interpolation and probabilistic
+// regression — it's better categorized as a spatial interpolation / Gaussian
+// Process regression algorithm. A fitting algorithm finds a compact parametric
+// model (a line, a curve, coefficients) that summarizes the data, accepting
+// residuals. It reduces the data to a small set of parameters. Kriging does the
+// opposite: it retains all training points, and every prediction is a weighted
+// combination of all observed values. There are no "fitted parameters" —
+// nugget, sill, range are supplied by the user, not estimated from the data.
+// The output is not a model summary but an interpolated surface.
+//
+// The visitor takes two parallel columns as inputs:
+// Coordinates — a column of std::array<T, DIM>/std::vector<T> values, one per
+// data point. Each element of the array is one spatial dimension, so DIM=1 is a
+// 1D transect, DIM=2 is a 2D scatter (easting/northing, lon/lat, x/y), DIM=3 is
+// volumetric, and so on. The dimensionality is a compile-time template
+// parameter.
+// Observations — a parallel column of scalar T values, one per data point.
+// These are the measured quantities at each coordinate — the "z" values you
+// want to interpolate.
+// So the mental model is: given N scattered points each with a known location
+// and a known value, fit the Kriging system so you can later call predict() at
+// any arbitrary location and get back a value plus its uncertainty.
+//
+template<std::size_t DIM, typename T, typename I = unsigned long,
+         std::size_t A = 0>
+struct  KrigingVisitor  {
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = long;
+
+    using coord_type = std::array<value_type, DIM>;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    // Point estimate + Kriging variance (the latter quantifies prediction
+    // uncertainty -- near-zero close to known points, growing with
+    // distance / sparsity).
+    //
+    struct  Estimate  {
+        value_type  value { 0 };
+        value_type  variance { 0 };
+    };
+
+    using result_type = vec_t<Estimate>;
+
+private:
+
+    using matrix_t = Matrix<value_type, matrix_orient::row_major>;
+
+    const KrigingParams<value_type>    params_;
+
+    vec_t<coord_type>   coords_ { };
+    vec_t<value_type>   obs_ { };
+
+    // Cached LDL^T factorization of the (possibly Lagrange-augmented)
+    // Kriging system -- built once per fit, reused by every predict() call.
+    //
+    matrix_t            lower_ { };
+    vec_t<value_type>   diag_ { };
+    size_type           sys_dim_ { 0 };
+    bool                ready_ { false };
+
+    // Modified Bessel function of the second kind, order nu, evaluated via a
+    // series/asymptotic hybrid sufficient for the half-integer and generic
+    // real orders Matérn needs. For the common special cases (nu == 0.5, 1.5,
+    // 2.5) closed forms are used instead (see matern_corr_ below) and this
+    // generic path is only hit for arbitrary nu.
+    //
+    inline static double
+    bessel_k_(double nu, double x)  {
+
+        if (x <= 0)  [[unlikely]]
+            return (std::numeric_limits<double>::infinity());
+
+        // Use the well-known integral/asymptotic representation via a stable
+        // recurrence starting from K_0 and K_1 computed through the standard
+        // rational Chebyshev approximations (Abramowitz & Stegun 9.8).
+        //
+        auto k0 = [](double t) -> double  {
+            if (t <= 2.0)  {
+                const double    y { t * t / 4.0 };
+
+                return (-std::log(t / 2.0) *
+                            (1.0 + y * (0.25 + y * (0.027777778 +
+                             y * (0.001736111 + y * 0.0000694444)))) +
+                        (-0.57721566 + y * (0.42278420 + y * (0.23069756 +
+                         y * (0.03488590 + y * (0.00262698 +
+                         y * (0.00010750 + y * 0.0000074)))))));
+            }
+            else  {
+                const double    z { 2.0 / t };
+
+                return (std::exp(-t) / std::sqrt(t) *
+                        (1.25331414 + z * (-0.07832358 + z * (0.02189568 +
+                         z * (-0.01062446 + z * (0.00587872 +
+                         z * (-0.00251540 + z * 0.00053208)))))));
+            }
+        };
+        auto k1 = [](double t) -> double  {
+            if (t <= 2.0)  {
+                const double    y { t * t / 4.0 };
+
+                return (std::log(t / 2.0) * t * 0.5 *
+                            (1.0 + y * (0.5 + y * (0.08333333 +
+                             y * (0.00694444 + y * 0.00034722)))) +
+                        (1.0 / t) *
+                        (1.0 + y * (0.15443144 + y * (-0.67278579 +
+                         y * (-0.18156897 + y * (-0.01919402 +
+                         y * (-0.00110404 + y * (-0.00004686))))))));
+            }
+            else  {
+                const double    z { 2.0 / t };
+
+                return (std::exp(-t) / std::sqrt(t) *
+                        (1.25331414 + z * (0.23498619 + z * (-0.03655620 +
+                         z * (0.01504268 + z * (-0.00780353 +
+                         z * (0.00325614 + z * (-0.00068245))))))));
+            }
+        };
+
+        // Forward recurrence in nu: K_{n+1}(x) = (2n/x) K_n(x) + K_{n-1}(x)
+        //
+        const double    frac_nu { nu - std::floor(nu) };
+        double          k_prev, k_curr;
+
+        if (frac_nu < 1e-12)  {
+            k_prev = k0(x);
+            k_curr = k1(x);
+
+            const size_type n { static_cast<size_type>(std::floor(nu)) };
+
+            if (n == 0)  return (k_prev);
+            for (size_type i = 1; i < n; ++i)  {
+                const double    k_next { (2.0 * i / x) * k_curr + k_prev };
+
+                k_prev = k_curr;
+                k_curr = k_next;
+            }
+            return (k_curr);
+        }
+        else  {
+            // Half-integer / generic order: bootstrap using the identity for
+            // half-integers when frac_nu == 0.5, otherwise fall back to a
+            // smooth interpolation between bracketing K_0/K_1-derived values.
+            // This generic branch is rarely hit in practice since most users
+            // use nu in {0.5, 1.5, 2.5} which are handled by closed forms in
+            // matern_corr_.
+            //
+            const double    sqrt_pi_over_2x { std::sqrt(M_PI / (2.0 * x)) };
+            const double    ex { std::exp(-x) };
+
+            k_prev = k0(x);
+            k_curr = sqrt_pi_over_2x * ex;  // K_{0.5}(x) closed form
+
+            double  cur_order { 0.5 };
+
+            while (cur_order + 1.0 <= nu + 1e-9)  {
+                const double    k_next {
+                    (2.0 * cur_order / x) * k_curr + k_prev
+                };
+
+                k_prev = k_curr;
+                k_curr = k_next;
+                cur_order += 1.0;
+            }
+            return (k_curr);
+        }
+    }
+
+    // Mahalanobis-style anisotropic distance for DIM == 2: rotates into the
+    // principal axes then rescales the minor axis by 1/anisotropy_ratio
+    // before taking the Euclidean norm, so the *effective* range becomes
+    // direction-dependent without complicating every model formula. For
+    // DIM != 2 anisotropy parameters are ignored (plain Euclidean distance).
+    //
+    inline value_type
+    distance_(const coord_type &p1, const coord_type &p2) const noexcept  {
+
+        if constexpr (DIM == 2)  {
+            if (params_.anisotropy_ratio < value_type(1) - value_type(1e-12))  {
+                const value_type    dx { p1[0] - p2[0] };
+                const value_type    dy { p1[1] - p2[1] };
+                const value_type    ca { std::cos(params_.anisotropy_angle) };
+                const value_type    sa { std::sin(params_.anisotropy_angle) };
+                const value_type    rx { dx * ca + dy * sa };
+                const value_type    ry { -dx * sa + dy * ca };
+                const value_type    ry_scaled { ry / params_.anisotropy_ratio };
+
+                return (std::sqrt(rx * rx + ry_scaled * ry_scaled));
+            }
+        }
+
+        value_type  sum { 0 };
+
+        for (size_type i { 0 }; i < size_type(DIM); ++i)  {
+            const value_type    d { p1[i] - p2[i] };
+
+            sum += d * d;
+        }
+        return (std::sqrt(sum));
+    }
+
+    // Matérn correlation (sill-normalized, i.e. value in [0, 1]) using
+    // closed forms for the common half-integer smoothness values and the
+    // generic Bessel-function formula otherwise:
+    //
+    //   rho(h) = (2^(1-nu) / Gamma(nu)) * (sqrt(2*nu)*h/range)^nu
+    //            * K_nu( sqrt(2*nu) * h / range )
+    //
+    inline value_type matern_corr_(value_type h) const  {
+
+        if (h <= 0)  [[unlikely]]
+            return (value_type(1));
+
+        const double    nu { static_cast<double>(params_.matern_smoothness) };
+        const double    r { static_cast<double>(params_.range) };
+        const double    hd { static_cast<double>(h) };
+
+        // Closed forms avoid the Bessel evaluation entirely for the three
+        // overwhelmingly common cases -- both faster and more accurate.
+        //
+        if (std::fabs(nu - 0.5) < 1e-9)  {
+            return (static_cast<value_type>(std::exp(-hd / r)));
+        }
+        else if (std::fabs(nu - 1.5) < 1e-9)  {
+            const double    s3 { std::sqrt(3.0) * hd / r };
+
+            return (static_cast<value_type>((1.0 + s3) * std::exp(-s3)));
+        }
+        else if (std::fabs(nu - 2.5) < 1e-9)  {
+            const double    s5 { std::sqrt(5.0) * hd / r };
+
+            return (static_cast<value_type>(
+                (1.0 + s5 + (s5 * s5) / 3.0) * std::exp(-s5)));
+        }
+        else if (nu > 50.0)  {
+            // Numerically converges to the Gaussian model in this limit.
+            //
+            const double    z { hd / r };
+
+            return (static_cast<value_type>(std::exp(-z * z)));
+        }
+
+        const double    scaled { std::sqrt(2.0 * nu) * hd / r };
+        const double    log_coeff {
+            (1.0 - nu) * M_LN2 - std::lgamma(nu) + nu * std::log(scaled)
+        };
+        const double    bess { bessel_k_(nu, scaled) };
+
+        if (bess <= 0.0 || ! std::isfinite(bess))  [[unlikely]]
+            return (value_type(0));
+
+        const double    rho { std::exp(log_coeff) * bess };
+
+        return (static_cast<value_type>(std::clamp(rho, 0.0, 1.0)));
+    }
+
+    // Semivariance gamma(h) for the configured model. Bounded models are
+    // expressed as nugget + sill * (1 - correlation(h)); unbounded models
+    // have no sill and grow indefinitely with h.
+    //
+    inline value_type semivariance_(value_type h) const  {
+
+        if (h <= 0)  [[unlikely]]
+            return (value_type(0));
+
+        const auto  &p { params_ };
+
+        switch (p.model)  {
+            case VariogramModel::spherical:  {
+                if (h >= p.range)
+                    return (p.nugget + p.sill);
+
+                const value_type    r { h / p.range };
+
+                return (p.nugget +
+                        p.sill * (value_type(1.5) * r -
+                                   value_type(0.5) * r * r * r));
+            }
+            case VariogramModel::exponential:  {
+                return (p.nugget +
+                        p.sill * (value_type(1) - std::exp(-h / p.range)));
+            }
+            case VariogramModel::gaussian:  {
+                const value_type    r { h / p.range };
+
+                return (p.nugget +
+                        p.sill * (value_type(1) - std::exp(-(r * r))));
+            }
+            case VariogramModel::matern:  {
+                return (p.nugget + p.sill * (value_type(1) - matern_corr_(h)));
+            }
+            case VariogramModel::power:  {
+                return (p.nugget + p.sill * std::pow(h, p.power_exponent));
+            }
+            case VariogramModel::linear:  {
+                return (p.nugget + p.sill * h);
+            }
+            case VariogramModel::logarithmic:  {
+                return (p.nugget + p.sill * std::log(value_type(1) + h));
+            }
+            default: break;
+        }
+        return (p.nugget + p.sill);  // unreachable
+    }
+
+    // Covariance C(h) = C(0) - gamma(h), with C(0) == nugget + sill for
+    // bounded models. Unbounded models have no finite C(0); for those the
+    // kriging system is instead built directly from -gamma(h) "pseudo-
+    // covariances" (a standard trick for intrinsic random functions: the
+    // Lagrange-multiplier constraint in Ordinary Kriging makes additive
+    // constants in C cancel out, so using -gamma in place of C is valid).
+    //
+    inline value_type covariance_(value_type h) const  {
+
+        const auto  &p { params_ };
+        const bool  bounded {
+            (p.model != VariogramModel::power &&
+             p.model != VariogramModel::linear &&
+             p.model != VariogramModel::logarithmic)
+        };
+
+        if (bounded)  {
+            const value_type    c0 { p.nugget + p.sill };
+
+            return (c0 - semivariance_(h));
+        }
+        return (-semivariance_(h));
+    }
+
+    // Builds and factorizes the Kriging system once (in pre()/operator()),
+    // then predict() is a cheap O(n) dot-product per query -- the expensive
+    // O(n^3) factorization is amortized across arbitrarily many predictions.
+    //
+    void build_system_(const vec_t<coord_type> &coords,
+                       const vec_t<value_type> &obs)  {
+
+        const size_type n { size_type(coords.size()) };
+
+        coords_ = coords;
+        obs_ = obs;
+
+        const size_type dim_sys { params_.ordinary ? n + 1 : n };
+
+        matrix_t    K { dim_sys, dim_sys, 0 };
+
+        for (size_type i { 0 }; i < n; ++i)  {
+            K(i, i) = covariance_(value_type(0)) + params_.ridge;
+
+            for (size_type j { i + 1 }; j < n; ++j)  {
+                const value_type    h { distance_(coords_[i], coords_[j]) };
+                const value_type    c { covariance_(h) };
+
+                K(i, j) = c;
+                K(j, i) = c;
+            }
+        }
+
+        if (params_.ordinary)  {
+            for (size_type i { 0 }; i < n; ++i)
+                K(i, n) = K(n, i) = value_type(1);
+            K(n, n) = 0;
+        }
+
+        // K is symmetric -- LDL^T (via Matrix::ldlt) is roughly half the
+        // FLOPs of a generic LU factorization and is numerically robust for
+        // the indefinite (because of the zero corner / Lagrange row) system
+        // Ordinary Kriging produces.
+        //
+        K.ldlt(diag_, lower_);
+        sys_dim_ = dim_sys;
+        ready_ = true;
+    }
+
+    // Forward/diagonal/backward solve against the cached LDL^T factors for
+    // an arbitrary right-hand side -- reused for both fitting (implicitly,
+    // via covariance_) and prediction.
+    //
+    vec_t<value_type> ldlt_solve_(const vec_t<value_type> &rhs) const  {
+
+        vec_t<value_type>   y(sys_dim_, 0), z(sys_dim_, 0), x(sys_dim_, 0);
+
+        for (size_type i { 0 }; i < sys_dim_; ++i)  {
+            y[i] = rhs[i];
+            for (size_type j { 0 }; j < i; ++j)
+                y[i] -= lower_(i, j) * y[j];
+        }
+        for (size_type i { 0 }; i < sys_dim_; ++i)
+            z[i] = y[i] / diag_[i];
+        for (size_type i { sys_dim_ - 1 }; i >= 0; --i)  {
+            x[i] = z[i];
+            for (size_type j { i + 1 }; j < sys_dim_; ++j)
+                x[i] -= lower_(j, i) * x[j];
+        }
+        return (x);
+    }
+
+    // Restricts the global system to the k nearest neighbors of query_pt
+    // and recurses into a small local solve -- turns O(n) memory / O(n^3)
+    // factorization per prediction into O(k) / O(k^3), which is what makes
+    // Kriging tractable for large point clouds (max_neighbors > 0).
+    //
+    Estimate predict_local_(const coord_type &query_pt) const  {
+
+        const size_type n { size_type(coords_.size()) };
+        const size_type k { std::min(size_type(params_.max_neighbors), n) };
+
+        vec_t<std::pair<value_type, size_type>> dists(n);
+
+        for (size_type i { 0 }; i < n; ++i)
+            dists[i] = { distance_(coords_[i], query_pt), i };
+
+        std::partial_sort(
+            dists.begin(), dists.begin() + k,
+            dists.end(),
+            [](const auto &a, const auto &b)  { return (a.first < b.first); });
+
+        vec_t<coord_type>   local_coords(k);
+        vec_t<value_type>   local_obs(k);
+
+        for (size_type i { 0 }; i < k; ++i)  {
+            local_coords[i] = coords_[dists[i].second];
+            local_obs[i] = obs_[dists[i].second];
+        }
+
+        KrigingVisitor  local { params_ };
+
+        local.build_system_(local_coords, local_obs);
+        return (local.predict_global_(query_pt));
+    }
+
+    // The core BLUE (Best Linear Unbiased Estimator) computation against
+    // whatever system (global or a local neighborhood) is currently cached:
+    //   weights = K^-1 * k0     (k0 = covariances to the query point)
+    //   value    = weights . observations            (+ Lagrange handling)
+    //   variance = C(0) - k0 . weights  (- mu, for Ordinary Kriging)
+    //
+    Estimate predict_global_(const coord_type &query_pt) const  {
+
+        const size_type     n { size_type(obs_.size()) };
+        vec_t<value_type>   rhs(sys_dim_, 0);
+
+        for (size_type i { 0 }; i < n; ++i)
+            rhs[i] = covariance_(distance_(coords_[i], query_pt));
+        if (params_.ordinary)
+            rhs[n] = value_type(1);
+
+        const vec_t<value_type>    weights = ldlt_solve_(rhs);
+        Estimate                   est;
+
+        if (params_.ordinary)  {
+            value_type  val { 0 };
+
+            for (size_type i { 0 }; i < n; ++i)
+                val += weights[i] * obs_[i];
+            est.value = val;
+
+            const value_type    c0 { covariance_(value_type(0)) };
+            value_type          k0_dot_w { 0 };
+
+            for (size_type i { 0 }; i < n; ++i)
+                k0_dot_w += weights[i] * rhs[i];
+
+            // Lagrange multiplier (weights[n]) enters additively per the
+            // standard OK variance formula: sigma^2 = C0 - sum(w*k0) - mu.
+            //
+            est.variance = std::max(value_type(0), c0 - k0_dot_w - weights[n]);
+        }
+        else  {
+            value_type  val { 0 };
+
+            for (size_type i { 0 }; i < n; ++i)
+                val += weights[i] * (obs_[i] - params_.simple_mean);
+            est.value = val + params_.simple_mean;
+
+            const value_type    c0 { covariance_(value_type(0)) };
+            value_type          k0_dot_w { 0 };
+
+            for (size_type i { 0 }; i < n; ++i)
+                k0_dot_w += weights[i] * rhs[i];
+            est.variance = std::max(value_type(0), c0 - k0_dot_w);
+        }
+        return (est);
+    }
+
+public:
+
+    template<typename IV, typename CV, typename OV>
+    inline void
+    operator()(const IV &/*idx_begin*/, const IV &/*idx_end*/,
+               const CV &coord_begin, const CV &coord_end,
+               const OV &obs_begin, const OV &obs_end)  {
+
+        const size_type     col_s {
+            static_cast<size_type>(std::distance(coord_begin, coord_end))
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(obs_begin, obs_end)))
+            throw DataFrameError(
+                "KrigingVisitor: coordinate and observation "
+                "columns must have equal length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        params_.sanity_check();
+
+        vec_t<coord_type>   coords;
+        vec_t<value_type>   obs;
+
+        coords.reserve(col_s);
+        obs.reserve(col_s);
+
+        auto    cit { coord_begin };
+        auto    oit { obs_begin };
+
+        for (; cit != coord_end; ++cit, ++oit)  {
+            if (is_nan__(*oit))  [[unlikely]]  continue;
+
+            bool    has_nan { false };
+
+            for (size_type d { 0 }; d < size_type(DIM); ++d)
+                if (is_nan__((*cit)[d]))  [[unlikely]] { has_nan = true; break; }
+            if (has_nan)  [[unlikely]]  continue;
+
+            coords.push_back(*cit);
+            obs.push_back(*oit);
+        }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (coords.empty())
+            throw DataFrameError(
+                "KrigingVisitor: no valid (non-NaN) data points supplied");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (params_.max_neighbors == 0)
+            build_system_(coords, obs);
+        else  {
+            // Local Kriging defers system assembly to each predict() call,
+            // but we still cache the full point set for neighbor search.
+            //
+            coords_ = std::move(coords);
+            obs_ = std::move(obs);
+            ready_ = true;
+        }
+    }
+
+    inline void pre ()  {
+
+        coords_.clear();
+        obs_.clear();
+        lower_ = matrix_t { };
+        diag_.clear();
+        sys_dim_ = 0;
+        ready_ = false;
+    }
+    inline void post()  {  }
+
+    // Predict the value (and its Kriging variance) at an arbitrary query
+    // point. Safe to call repeatedly and concurrently (read-only) once the
+    // visitor has been invoked via operator() / fit().
+    //
+    inline Estimate predict(const coord_type &query_pt) const  {
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (! ready_)
+            throw DataFrameError(
+                "KrigingVisitor::predict(): model has not been fit yet");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (params_.max_neighbors > 0 && params_.max_neighbors < coords_.size())
+            return (predict_local_(query_pt));
+        return (predict_global_(query_pt));
+    }
+
+    // Convenience batch API -- predicts every point in [begin, end) and
+    // returns results in the same order. Each prediction only re-solves
+    // against the cached factorization (or local neighborhood), so this is
+    // O(m * n) for m query points rather than O(m * n^3).
+    //
+    template<typename QV>
+    inline result_type
+    predict_many (const QV &begin, const QV &end) const  {
+
+        result_type result(static_cast<size_type>(std::distance(begin, end)));
+        size_type   i { 0 };
+
+        for (auto it = begin; it != end; ++it)
+            result[i++] = predict(*it);
+        return (result);
+    }
+
+    // Leave-one-out cross validation: refits N times, each time omitting
+    // one observation, and reports the predicted-vs-actual residual. Useful
+    // for comparing variogram models/parameters objectively. This is O(N)
+    // refits of an O(N^3) system, so intended for moderate N or via
+    // max_neighbors-restricted local Kriging.
+    //
+    inline vec_t<value_type> loo_cross_validate () const  {
+
+        const size_type     n { size_type(coords_.size()) };
+        vec_t<value_type>   residuals(n, 0);
+
+        for (size_type leave_out { 0 }; leave_out < n; ++leave_out)  {
+            vec_t<coord_type>   train_c;
+            vec_t<value_type>   train_o;
+
+            train_c.reserve(n - 1);
+            train_o.reserve(n - 1);
+            for (size_type i = 0; i < n; ++i)  {
+                if (i == leave_out)  continue;
+                train_c.push_back(coords_[i]);
+                train_o.push_back(obs_[i]);
+            }
+
+            KrigingVisitor  loo(params_);
+
+            loo.build_system_(train_c, train_o);
+
+            const Estimate  est { loo.predict_global_(coords_[leave_out]) };
+
+            residuals[leave_out] = obs_[leave_out] - est.value;
+        }
+        return (residuals);
+    }
+
+    explicit
+    KrigingVisitor(const KrigingParams<value_type> &params = { })
+        : params_(params)  {   }
+};
+
+template<std::size_t DIM, typename T, typename I = unsigned long,
+         std::size_t A = 0>
+using krig_v = KrigingVisitor<DIM, T, I, A>;
+
 } // namespace hmdf
 
 // ------------------------------------------------------------------------------

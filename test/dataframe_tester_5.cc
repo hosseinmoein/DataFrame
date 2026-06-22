@@ -2712,6 +2712,181 @@ void test_md_stats()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_KrigingVisitor()  {
+
+    std::cout << "\nTesting KrigingVisitor{ } ..." << std::endl;
+
+    ULDataFrame df;
+
+    try  {
+        df.read("FORD.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    // Duplicate points
+    //
+    std::vector<std::array<double, 2>>  coords {
+        { 0.0, 0.0 }, { 0.0, 0.0 }, { 5.0, 5.0 }, { 1.0, 1.0 }
+    };
+    std::vector<double>                 obs { 1.0, 1.2, 4.0, 1.5 };
+
+    df.load_column("COORDS 1", std::move(coords),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("OBSERV 1", std::move(obs), nan_policy::dont_pad_with_nans);
+
+    KrigingParams<double>  params;
+
+    params.model = VariogramModel::spherical;
+    params.range = 3.0;
+    params.ridge = 1e-8;
+
+    KrigingVisitor<2, double>   kv1 { params };
+
+    df.single_act_visit<std::array<double, 2>, double>
+        ("COORDS 1", "OBSERV 1", kv1);
+
+    const auto  estimate1 { kv1.predict({ 0.0, 0.0 }) };
+    const auto  leave_one_out1 { kv1.loo_cross_validate() };
+
+    assert(std::abs(estimate1.value - 1.1) < 0.001);
+    assert(estimate1.variance < 0.00000001);
+    assert(leave_one_out1.size() == 4);
+    assert(std::abs(leave_one_out1[0] - -0.2) < 0.001);
+    assert(std::abs(leave_one_out1[1] - 0.2) < 0.001);
+    assert(std::abs(leave_one_out1[3] - -0.549356) < 0.000001);
+
+    // Filtering NaN
+    //
+    constexpr double   qnan = std::numeric_limits<double>::quiet_NaN();
+
+    std::vector<std::array<double, 2>>  coords2 {
+        { 0.0, 0.0 }, { 1.0, 1.0 }, { qnan, 2.0 }, { 3.0, 3.0 }, { 4.0, 4.0 }
+    };
+    std::vector<double>                 obs2 { 1.0, 2.0, 3.0, qnan, 5.0 };
+
+    df.load_column("COORDS 2", std::move(coords2),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("OBSERV 2", std::move(obs2),
+                   nan_policy::dont_pad_with_nans);
+
+    KrigingParams<double>   params2;
+
+    params2.model = VariogramModel::exponential;
+    params2.range = 2.0;
+
+    KrigingVisitor<2, double>   kv2 { params2 };
+
+    df.single_act_visit<std::array<double, 2>, double>
+        ("COORDS 2", "OBSERV 2", kv2);
+
+    const auto  estimate2 { kv2.predict({ 0.0, 0.0 }) };
+    const auto  leave_one_out2 { kv2.loo_cross_validate() };
+
+    assert(std::abs(estimate2.value - 1.0) < 0.001);
+    assert(estimate2.variance < 0.000000001);
+    assert(leave_one_out2.size() == 3);
+    assert(std::abs(leave_one_out2[0] - -1.7604) < 0.0001);
+    assert(std::abs(leave_one_out2[1] - -0.206722) < 0.000001);
+    assert(std::abs(leave_one_out2[2] - 3.44006) < 0.00001);
+
+    // 3D
+    //
+    std::vector<std::array<double, 3>>  coords3;
+    std::vector<double>                 obs3;
+
+    for (int i = 0; i < 30; ++i)  {
+        const double    x = (i % 3) * 2.0;
+        const double    y = ((i / 3) % 3) * 2.0;
+        const double    z = (i / 9) * 2.0;
+
+        coords3.push_back({ x, y, z });
+        obs3.push_back(x + 2.0 * y - z);
+    }
+    df.load_column("COORDS 3", std::move(coords3),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("OBSERV 3", std::move(obs3),
+                   nan_policy::dont_pad_with_nans);
+
+    KrigingParams<double>   params3;
+
+    params3.model = VariogramModel::matern;
+    params3.matern_smoothness = 2.5;
+    params3.range = 4.0;
+
+    KrigingVisitor<3, double>   kv3 { params3 };
+
+    df.single_act_visit<std::array<double, 3>, double>
+        ("COORDS 3", "OBSERV 3", kv3);
+
+    const auto  estimate3 { kv3.predict({ 1.0, 1.0, 1.0 }) };
+    const auto  leave_one_out3 { kv3.loo_cross_validate() };
+
+    assert(std::abs(estimate3.value - 1.60219) < 0.00001);
+    assert(std::abs(estimate3.variance - 0.018453) < 0.000001);
+    assert(leave_one_out3.size() == 30);
+    assert(std::abs(leave_one_out3[0] - -0.276349) < 0.000001);
+    assert(std::abs(leave_one_out3[10] - 0.030186) < 0.000001);
+    assert(std::abs(leave_one_out3[29] - -0.800075) < 0.000001);
+
+    // Generic Bessel-K path
+    //
+    std::vector<std::array<double, 1>>  coords4 {
+        { 0.0 }, { 1.0 }, { 2.0 }, { 3.0 }, { 4.0 }, { 5.0 }
+    };
+    std::vector<double>                 obs4 { 0.0, 1.0, 0.5, 1.5, 1.0, 2.0 };
+
+    df.load_column("COORDS 4", std::move(coords4),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("OBSERV 4", std::move(obs4),
+                   nan_policy::dont_pad_with_nans);
+    for (double nu : { 0.7, 1.0, 1.8, 3.3 })  {
+        KrigingParams<double>  params;
+
+        params.model = VariogramModel::matern;
+        params.matern_smoothness = nu;
+        params.range = 2.0;
+
+        KrigingVisitor<1, double>     kv { params };
+
+        df.single_act_visit<std::array<double, 1>, double>
+            ("COORDS 4", "OBSERV 4", kv);
+
+        const auto  estimate = kv.predict({ 2.5 });
+        const auto  leave_one_out { kv.loo_cross_validate() };
+
+        assert(leave_one_out.size() == 6);
+        assert(std::abs(estimate.value - 1.0) < 0.001);
+        if (nu == 0.7)  {
+            assert(std::abs(estimate.variance - 0.38837) < 0.00001);
+            assert(std::abs(leave_one_out[0] - -1.08785) < 0.00001);
+            assert(std::abs(leave_one_out[3] - 0.663442) < 0.000001);
+            assert(std::abs(leave_one_out[5] - 1.08785) < 0.00001);
+        }
+        else if (nu == 1.0)  {
+            assert(std::abs(estimate.variance - 0.072554) < 0.000001);
+            assert(std::abs(leave_one_out[0] - -1.25466) < 0.00001);
+            assert(std::abs(leave_one_out[3] - 0.930086) < 0.000001);
+            assert(std::abs(leave_one_out[5] - 1.25466) < 0.00001);
+        }
+        else if (nu == 1.8)  {
+            assert(std::abs(estimate.variance - 0.593665) < 0.000001);
+            assert(std::abs(leave_one_out[0] - -1.11348) < 0.00001);
+            assert(std::abs(leave_one_out[3] - 0.682445) < 0.000001);
+            assert(std::abs(leave_one_out[5] - 1.11348) < 0.00001);
+        }
+        else if (nu == 3.3)  {
+            assert(std::abs(estimate.variance - 0.872824) < 0.000001);
+            assert(std::abs(leave_one_out[0] - -1.02868) < 0.00001);
+            assert(std::abs(leave_one_out[3] - 0.443655) < 0.000001);
+            assert(std::abs(leave_one_out[5] - 1.02868) < 0.00001);
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
 
 int main(int, char *[])  {
 
@@ -2742,6 +2917,7 @@ int main(int, char *[])  {
     test_BIRCHVisitor();
     test_get_data_by_birch();
     test_md_stats();
+    test_KrigingVisitor();
 
     return (0);
 }

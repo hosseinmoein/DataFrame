@@ -93,8 +93,7 @@ int main(int, char *[])  {
 
     std::vector<unsigned long>  idx_col2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     std::vector<std::string>    str_col = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };
-    std::vector<std::string>    cool_col =
-        { "Azadi", "Hello", " World", "!", "Hype", "cubic spline", "Shawshank", "Silverado", "Arash", "Pardis" };
+    std::vector<std::string>    cool_col = { "Azadi", "Hello", " World", "!", "Hype", "cubic spline", "Shawshank", "Silverado", "Arash", "Pardis" };
     std::vector<double>         dbl_col2 = { 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0 };
 
     ULDataFrame ul_df2;
@@ -120,8 +119,8 @@ int main(int, char *[])  {
     // get_column() involves 1 or sometimes 2 hash-table lookups. So, you should not call it repeatedly in a loop. Instead
     // get a reference to it and use the reference.
     //
-    const auto  &cool_col_ref = ul_df2.get_column<std::string>("Cool Column");
-    const auto  &str_col_ref = ul_df2.get_column<std::string>("string col");
+    const auto  &cool_col_ref { ul_df2.get_column<std::string>("Cool Column") };
+    const auto  &str_col_ref { ul_df2.get_column<std::string>("string col") };
 
     std::cout << cool_col_ref[1] << cool_col_ref[2] << cool_col_ref[3] << std::endl;
     std::cout << "Str Column = ";
@@ -141,7 +140,7 @@ int main(int, char *[])  {
     // You can serialize and deserialize the DataFrame both in string and binary formats.
     // This could be used to transmit a DataFrame from one node to another or store a DataFrame in databases, caches, ...
     //
-    const std::string  ibm_df_serialized = ibm_df.serialize<double, long>();
+    const std::string  ibm_df_serialized { ibm_df.serialize<double, long>() };
     StrDataFrame       ibm_df_2;
 
     ibm_df_2.deserialize(ibm_df_serialized);
@@ -157,21 +156,22 @@ int main(int, char *[])  {
     // You must specify all the column types, but only once.
     //
     auto    above_150_fn = [](const std::string &, const double &val)-> bool { return val > 150.0; };
-    auto    above_150_df = ibm_df.get_data_by_sel<double, decltype(above_150_fn), double, long>("IBM_Close", above_150_fn);
+    auto    above_150_df { ibm_df.get_data_by_sel<double, decltype(above_150_fn), double, long>("IBM_Close", above_150_fn) };
 
     // Or, you could choose to get a view. See docs for views.
     //
-    auto    above_150_view = ibm_df.get_view_by_sel<double, decltype(above_150_fn), double, long>("IBM_Close", above_150_fn);
+    auto    above_150_view { ibm_df.get_view_by_sel<double, decltype(above_150_fn), double, long>("IBM_Close", above_150_fn) };
 
     // You can get another DataFrame by group-bying on one or multiple columns.
     // You must specify only the type(s) of column(s), you are group-bying.
     //
     // Group-by column dbl_col, and I am specifying how to summarize the index column and each of the other columns.
     //
-    auto    gb_df = ul_df1.groupby1<double>("dbl_col",
+    auto    gb_df { ul_df1.groupby1<double>("dbl_col",
                                             LastVisitor<ul_idx_t, ul_idx_t>(),
                                             std::make_tuple("integers",    "sum_int",      SumVisitor<int>()),
-                                            std::make_tuple("my_data_col", "last_my_data", LastVisitor<MyData>()));
+                                            std::make_tuple("my_data_col", "last_my_data", LastVisitor<MyData>()))
+    };
 
     // You can run statistical, financial, ML, ... algorithms on one or multiple columns by using visitors. You must specify
     // the column(s) type(s). The visitor's data column is of type double and its index column is of type std::string.
@@ -213,24 +213,22 @@ int main(int, char *[])  {
     CorrVisitor<double, DateTime>   corrl_v;
 
     std::cout << "Correlation between AAPL and IBM close prices: "
-              << aapl_ibm.visit<double, double>("AAPL_Close Stationary", "IBM_Close Stationary", corrl_v).get_result()
-              << std::endl;
+              << aapl_ibm.visit<double, double>("AAPL_Close Stationary", "IBM_Close Stationary", corrl_v).get_result() << std::endl;
 
     // Now let’s do something more sophisticated and calculate rolling exponentially weighted correlations between IBM and
     // Apple close prices. Since this is a rolling -- moving -- analysis the result is a vector of exponentially weighted
     // correlations for each date in the data stream.
     //
     ewm_corr_v<double>  ewmcorr { exponential_decay_spec::span, 3 };
-    const auto          &ewmcorr_result = aapl_ibm.single_act_visit<double, double>("AAPL_Close Stationary", "IBM_Close Stationary", ewmcorr).get_result();
+    const auto          &ewmcorr_result { aapl_ibm.single_act_visit<double, double>("AAPL_Close Stationary", "IBM_Close Stationary", ewmcorr).get_result() };
 
-    std::cout << "The last exponentailly weighted correlation between AAPL and IBM close prices: "
-              << ewmcorr_result.back() << std::endl;
+    std::cout << "The last exponentailly weighted correlation between AAPL and IBM close prices: " << ewmcorr_result.back() << std::endl;
 
     using dt_idx_t = DTDataFrame::IndexType;  // This is just DateTime.
 
     // Appel data are daily. Let’s create 10-day OHLC (plus a bunch of other stats) for close prices.
     //
-    DTDataFrame aapl_ohlc =
+    DTDataFrame aapl_ohlc {
         aapl_dt_df.bucketize(bucket_type::by_count,
                              10,
                              LastVisitor<dt_idx_t, dt_idx_t>(),  // How to bucketize the index column
@@ -249,7 +247,8 @@ int main(int, char *[])  {
                              std::make_tuple("AAPL_Close",  "Z Score",       ZScoreVisitor<double, dt_idx_t>()),
                              // "Return Vector" column is a column of std::vector<double>'s
                              std::make_tuple("AAPL_Close",  "Return Vector", ReturnVisitor<double, dt_idx_t>(return_policy::log)),
-                             std::make_tuple("AAPL_Volume", "Volume",        SumVisitor<long, dt_idx_t>()));
+                             std::make_tuple("AAPL_Volume", "Volume",        SumVisitor<long, dt_idx_t>()))
+    };
 
     // Big output
     //
@@ -257,7 +256,7 @@ int main(int, char *[])  {
 
     // Now let's get a view of a random sample of appel data. We randomly sample 35% of the data.
     //
-    auto    random_view = aapl_dt_df.get_view_by_rand<double, long>(random_policy::frac_rows_no_seed, 0.35);
+    auto    random_view { aapl_dt_df.get_view_by_rand<double, long>(random_policy::frac_rows_no_seed, 0.35) };
 
     // ---------------------------------------------------
     //
@@ -284,7 +283,7 @@ int main(int, char *[])  {
 
     ibm_dt_df.single_act_visit<double>("IBM_Return", kmeans_v);
 
-    const auto  &cluster_means = kmeans_v.get_result();
+    const auto  &cluster_means { kmeans_v.get_result() };
 
     std::cout << "Means of clusters are: ";
     for (const auto &mean : cluster_means)

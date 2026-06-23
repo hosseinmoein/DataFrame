@@ -989,28 +989,6 @@ column_left_right_join_(const LHS_T &lhs,
 }
 
 // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ----------------------------------------------------------------------------
 // get_asof_index_idx_vector_
 //
 // For every lhs row, binary-search rhs_index and record the best matching

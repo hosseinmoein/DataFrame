@@ -1192,34 +1192,6 @@ DataFrame<I, H>::asof_join(const RHS_T &rhs,
     return (index_asof_join_<RHS_T, Ts ...> (rhs, joined_idx));
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
@@ -1262,7 +1234,6 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
         }
     }
 }
-
 
 // ----------------------------------------------------------------------------
 

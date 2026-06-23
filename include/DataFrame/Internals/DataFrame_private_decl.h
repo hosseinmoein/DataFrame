@@ -210,7 +210,6 @@ DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_asof_join_(const RHS_T &rhs,
                  const IndexIdxVector &joined_index_idx) const;
 
-
 // ----------------------------------------------------------------------------
 
 template<typename T, typename ITR>

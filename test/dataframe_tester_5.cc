@@ -2888,6 +2888,277 @@ static void test_KrigingVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_asof_join()  {
+
+    std::cout << "\nTesting asof_join( ) ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    MyDataFrame lhs, rhs;
+
+    lhs.load_index(std::vector<unsigned long>{ 1, 3, 5, 7, 9 });
+    lhs.load_column<double>("price",
+                            std::vector<double>{ 1.1, 3.3, 5.5, 7.7, 9.9 });
+
+    rhs.load_index(std::vector<unsigned long>{ 2, 4, 6 });
+    rhs.load_column<double>("quote", std::vector<double>{ 20.0, 40.0, 60.0 });
+
+    // Test backward
+    //
+    {
+        const auto  result {
+            lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::backward)
+        };
+        const auto  &ridx { result.get_index() };
+
+        assert(ridx.size() == 5);
+        assert(ridx[0] == 1 && ridx[1] == 3 && ridx[2] == 5 &&
+               ridx[3] == 7 && ridx[4] == 9);
+
+        // lhs price column should be present unmodified
+        //
+        const auto  &price { result.get_column<double>("price") };
+
+        assert(price[0] == 1.1 && price[4] == 9.9);
+
+        // rhs quote column: lhs=1 has no rhs before it -> NaN
+        //
+        const auto  &quote { result.get_column<double>("quote") };
+
+        assert(std::isnan(quote[0]));  // lhs=1: no rhs <= 1
+        assert(quote[1] == 20.0);  // lhs=3: rhs=2 -> 20
+        assert(quote[2] == 40.0);  // lhs=5: rhs=4 -> 40
+        assert(quote[3] == 60.0);  // lhs=7: rhs=6 -> 60
+        assert(quote[4] == 60.0);  // lhs=9: rhs=6 -> 60 (last carry)
+    }
+
+    // Test foreward
+    //
+    {
+        const auto  result {
+            lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::forward)
+        };
+        const auto  &ridx { result.get_index() };
+
+        assert(ridx.size() == 5);
+        assert(ridx[0] == 1 && ridx[1] == 3 && ridx[2] == 5 &&
+               ridx[3] == 7 && ridx[4] == 9);
+
+        const auto  &quote { result.get_column<double>("quote") };
+
+        // lhs price column should be present unmodified
+        //
+        const auto  &price { result.get_column<double>("price") };
+
+        assert(price[0] == 1.1 && price[4] == 9.9);
+
+        assert(quote[0] == 20.0);      // lhs=1: rhs=2 -> 20
+        assert(quote[1] == 40.0);      // lhs=3: rhs=4 -> 40
+        assert(quote[2] == 60.0);      // lhs=5: rhs=6 -> 60
+        assert(std::isnan(quote[3]));  // lhs=7: no rhs >= 7
+        assert(std::isnan(quote[4]));  // lhs=9: no rhs >= 9
+    }
+
+    // Test nearest
+    //
+    {
+        const auto  result {
+            lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::nearest)
+        };
+        const auto  &ridx { result.get_index() };
+
+        assert(ridx.size() == 5);
+        assert(ridx[0] == 1 && ridx[1] == 3 && ridx[2] == 5 &&
+               ridx[3] == 7 && ridx[4] == 9);
+
+        const auto  &quote { result.get_column<double>("quote") };
+
+        // lhs price column should be present unmodified
+        //
+        const auto  &price { result.get_column<double>("price") };
+
+        assert(price[0] == 1.1 && price[4] == 9.9);
+
+        assert(quote[0] == 20.0);  // lhs=1: only forward rhs=2
+        assert(quote[1] == 20.0);  // lhs=3: tie → backward -> rhs=2
+        assert(quote[2] == 40.0);  // lhs=5: tie → backward -> rhs=4
+        assert(quote[3] == 60.0);  // lhs=7: only backward -> rhs=6
+        assert(quote[4] == 60.0);  // lhs=9: only backward -> rhs=6
+    }
+
+    // Test exact match
+    //
+    {
+        MyDataFrame lhs, rhs;
+
+        lhs.load_index(std::vector<unsigned long>{ 3, 5, 8 });
+        lhs.load_column<double>("x", std::vector<double>{ 3.0, 5.0, 8.0 });
+
+        rhs.load_index(std::vector<unsigned long>{ 2, 5, 9 });
+        rhs.load_column<double>("y",
+                                std::vector<double>{ 200.0, 500.0, 900.0 });
+
+        // Backward
+        //
+        auto        rb {
+            lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::backward)
+        };
+        const auto  &yb { rb.get_column<double>("y") };
+
+        assert(yb[0] == 200.0);  // lhs=3: rhs=2 (back)
+        assert(yb[1] == 500.0);  // lhs=5: exact rhs=5
+        assert(yb[2] == 500.0);  // lhs=8: rhs=5 (back, next is 9 which is >8)
+
+        // forward
+        //
+        auto        rf {
+            lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::forward)
+        };
+        const auto  &yf { rf.get_column<double>("y") };
+
+        assert(yf[0] == 500.0);   // lhs=3: rhs=5 (fwd)
+        assert(yf[1] == 500.0);   // lhs=5: exact rhs=5
+        assert(yf[2] == 900.0);   // lhs=8: rhs=9 (fwd)
+    }
+
+    // Test tolerance
+    //
+    {
+        const unsigned long tol { 1UL };
+        const auto          result {
+            lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::backward, tol)
+        };
+        const auto          &ridx { result.get_index() };
+
+        assert(ridx.size() == 5);
+        assert(ridx[0] == 1 && ridx[1] == 3 && ridx[2] == 5 &&
+               ridx[3] == 7 && ridx[4] == 9);
+
+        // lhs price column should be present unmodified
+        //
+        const auto  &price { result.get_column<double>("price") };
+
+        assert(price[0] == 1.1 && price[4] == 9.9);
+
+        const auto  &quote { result.get_column<double>("quote") };
+
+        assert(std::isnan(quote[0]));  // lhs=1: no rhs <= 1 -> NaN
+        assert(quote[1] == 20.0);      // lhs=3: dist 1 <= tol
+        assert(quote[2] == 40.0);      // lhs=5: dist 1 <= tol
+        assert(quote[3] == 60.0);      // lhs=7: dist 1 <= tol
+        assert(std::isnan(quote[4]));  // lhs=9: dist 3 > tol -> NaN
+    }
+
+    // Empty rhs
+    //
+    {
+        MyDataFrame lhs, rhs;
+
+        lhs.load_index(std::vector<unsigned long>{ 1, 2, 3 });
+        lhs.load_column<double>("price", std::vector<double>{ 1.0, 2.0, 3.0 });
+
+        rhs.load_index(std::vector<unsigned long>{ });
+        rhs.load_column<double>("quote", std::vector<double>{ });
+
+        const auto  result {
+            lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::backward)
+        };
+        const auto  &ridx { result.get_index() };
+
+        assert(ridx.size() == 3);
+        assert(ridx[0] == 1 && ridx[1] == 2 && ridx[2] == 3);
+
+        // lhs price column should be present unmodified
+        //
+        const auto  &price { result.get_column<double>("price") };
+
+        assert(price[0] == 1.0 && price[1] == 2.0 && price[2] == 3.0);
+
+        const auto  &quote { result.get_column<double>("quote") };
+
+        for (const auto &v : quote)
+            assert(std::isnan(v));
+    }
+
+    // Same column names
+    //
+    {
+        MyDataFrame lhs, rhs;
+
+        lhs.load_index(std::vector<unsigned long>{ 1, 3, 5 });
+        lhs.load_column<double>("value",
+                                std::vector<double>{ 10.0, 30.0, 50.0 });
+
+        rhs.load_index(std::vector<unsigned long>{ 2, 4 });
+        rhs.load_column<double>("value", std::vector<double>{ 20.0, 40.0 });
+
+        const auto  result {
+            lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::backward)
+        };
+
+        assert(result.has_column("lhs.value"));
+        assert(result.has_column("rhs.value"));
+
+        const auto  &lv { result.get_column<double>("lhs.value") };
+        const auto  &rv { result.get_column<double>("rhs.value") };
+
+        assert(lv[0] == 10.0 && lv[1] == 30.0 && lv[2] == 50.0);
+        assert(std::isnan(rv[0]));  // lhs=1: no rhs <= 1
+        assert(rv[1] == 20.0);      // lhs=3: rhs=2
+    }
+
+    // Single elements
+    //
+    {
+        {   // Single lhs, single rhs, exact
+            MyDataFrame lhs, rhs;
+
+            lhs.load_index(std::vector<unsigned long>{ 5 });
+            lhs.load_column<double>("x", std::vector<double>{ 1.0 });
+            rhs.load_index(std::vector<unsigned long>{ 5 });
+            rhs.load_column<double>("y", std::vector<double>{ 99.0 });
+
+            const auto  r {
+                lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::backward)
+            };
+
+            assert(r.get_column<double>("y")[0] == 99.0);
+        }
+
+        {   // Single lhs, single rhs, lhs before rhs (backward → NaN)
+            MyDataFrame lhs, rhs;
+
+            lhs.load_index(std::vector<unsigned long>{ 3 });
+            lhs.load_column<double>("x", std::vector<double>{ 1.0 });
+            rhs.load_index(std::vector<unsigned long>{ 5 });
+            rhs.load_column<double>("y", std::vector<double>{ 99.0 });
+
+            const auto  r {
+                lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::backward)
+            };
+
+            assert(std::isnan(r.get_column<double>("y")[0]));
+        }
+
+        {   // Single lhs, single rhs, lhs before rhs (forward → value)
+            MyDataFrame lhs, rhs;
+
+            lhs.load_index(std::vector<unsigned long>{ 3 });
+            lhs.load_column<double>("x", std::vector<double>{ 1.0 });
+            rhs.load_index(std::vector<unsigned long>{ 5 });
+            rhs.load_column<double>("y", std::vector<double>{ 99.0 });
+
+            const auto  r {
+                lhs.asof_join<MyDataFrame, double>(rhs, asof_policy::forward)
+            };
+
+            assert(r.get_column<double>("y")[0] == 99.0);
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -2918,6 +3189,7 @@ int main(int, char *[])  {
     test_get_data_by_birch();
     test_md_stats();
     test_KrigingVisitor();
+    test_asof_join();
 
     return (0);
 }

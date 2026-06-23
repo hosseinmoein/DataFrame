@@ -188,6 +188,31 @@ column_left_right_join_(const LHS_T &lhs,
 
 // ----------------------------------------------------------------------------
 
+// asof_join helpers
+// Build the (lhs_idx, rhs_idx) mapping vector for asof_join.
+// rhs_index must be sorted ascending.  For each lhs entry the function
+// binary-searches rhs and records the matched rhs position (or max() when
+// tolerance is positive and the nearest rhs row is too far away).
+//
+template<typename RHS_T>
+IndexIdxVector
+get_asof_index_idx_vector_(const RHS_T &rhs,
+                           asof_policy ap,
+                           const IndexType &tolerance) const;
+
+// Materialise the asof IndexIdxVector into a result DataFrame.
+// The result carries lhs's index and uses index_join_helper_'s column
+// scatter logic, so common columns get lhs./rhs. prefixes exactly as in
+// join_by_index.
+//
+template<typename RHS_T, typename ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+index_asof_join_(const RHS_T &rhs,
+                 const IndexIdxVector &joined_index_idx) const;
+
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename ITR>
 void
 setup_view_column_(const char *name, Index2D<ITR> range)  {

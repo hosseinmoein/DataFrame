@@ -990,6 +990,238 @@ column_left_right_join_(const LHS_T &lhs,
 
 // ----------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+// get_asof_index_idx_vector_
+//
+// For every lhs row, binary-search rhs_index and record the best matching
+// rhs row according to the requested asof_policy and optional tolerance.
+//
+// When tolerance > 0 and the nearest rhs timestamp is further away than
+// tolerance, we store max() in the rhs slot so that index_asof_join_() will
+// fill rhs columns with NaN for that lhs row.
+//
+template<typename I, typename H>
+template<typename RHS_T>
+typename DataFrame<I, H>::IndexIdxVector DataFrame<I, H>::
+get_asof_index_idx_vector_(const RHS_T &rhs,
+                           asof_policy ap,
+                           const IndexType &tolerance) const  {
+
+    static_assert(comparable<I>,
+                  "Type must support comparison operators for asof_join");
+
+    const auto      &lhs_idx { indices_ };
+    const auto      &rhs_idx { rhs.indices_ };
+    const size_type lhs_s { lhs_idx.size() };
+    const size_type rhs_s { rhs_idx.size() };
+    constexpr auto  NONE { std::numeric_limits<size_type>::max() };
+    const bool      use_tol { tolerance != IndexType { } };
+    IndexIdxVector  result;
+
+    result.reserve(lhs_s);
+    for (size_type li { 0 }; li < lhs_s; ++li) [[likely]]  {
+        const auto  &lv { lhs_idx[li] };
+
+        if (rhs_s == 0) [[unlikely]]  {
+            result.emplace_back(li, NONE);
+            continue;
+        }
+
+        // Binary-search for the first rhs index >= lv
+        //
+        size_type   lo { 0 };
+        size_type   hi { rhs_s };
+
+        while (lo < hi)  {
+            const size_type mid { lo + (hi - lo) / 2 };
+
+            if (rhs_idx[mid] < lv)  lo = mid + 1;
+            else  hi = mid;
+        }
+        // lo     = First rhs position with rhs_idx[lo] >= lv  (rhs_s if none)
+        // lo - 1 = Last rhs position with rhs_idx[lo-1] < lv (invalid if 0)
+
+        size_type   best { NONE };
+
+        if (ap == asof_policy::backward)  {
+            if (lo < rhs_s && rhs_idx[lo] == lv)  // largest rhs idx <= lv
+                best = lo;
+            else if (lo > 0)
+                best = lo - 1;
+        }
+        else if (ap == asof_policy::forward)  {
+            if (lo < rhs_s)  // smallest rhs idx >= lv
+                best = lo;
+        }
+        else  {  // nearest, ties -> backward
+            const bool  has_back { lo > 0 };
+            const bool  has_forward { lo < rhs_s };
+
+            if (has_back && has_forward)  {
+                // Both candidates exist; pick the closer one
+                // Use subtraction carefully: IndexType may be integral or
+                // DateTime – we rely on operator- being defined.
+                //
+                const auto  dist_back { lv - rhs_idx[lo - 1] };  // >= 0
+                const auto  dist_fwd { rhs_idx[lo] - lv };      // >= 0
+
+                best = (dist_fwd < dist_back) ? lo : lo - 1;
+            }
+            else if (has_back)
+                best = lo - 1;
+            else if (has_forward)
+                best = lo;
+        }
+
+        // Apply tolerance filter
+        //
+        if (best != NONE && use_tol)  {
+            const auto  dist {
+                (rhs_idx[best] < lv)
+                    ? (lv - rhs_idx[best]) : (rhs_idx[best] - lv)
+            };
+
+            if (tolerance < dist)
+                best = NONE;
+        }
+
+        result.emplace_back(li, best);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+// index_asof_join_
+//
+// Given the (lhs_i, rhs_i) pairing vector produced by
+// get_asof_index_idx_vector_(), assemble the output DataFrame.
+//
+// The output carries lhs's own index (not a synthetic sequence like
+// column_join_helper_ does).  For each row:
+//   – index      : lhs_idx[lhs_i]
+//   – lhs cols   : lhs value at lhs_i
+//   – rhs cols   : rhs value at rhs_i, or NaN when rhs_i == max()
+//
+// Column naming follows the same convention as index_join_helper_:
+// columns that exist on both sides are disambiguated with lhs./rhs. prefixes.
+//
+template<typename I, typename H>
+template<typename RHS_T, typename ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+index_asof_join_(const RHS_T &rhs,
+                 const IndexIdxVector &joined_index_idx) const  {
+
+    using result_t = DataFrame<I, HeteroVector<align_value>>;
+
+    result_t        result;
+    const size_type col_s { joined_index_idx.size() };
+
+    // Build the result index from the lhs side (always present)
+    //
+    StlVecType<IndexType>   result_index(col_s);
+    auto                    idx_lbd =
+        [&joined_index_idx = std::as_const(joined_index_idx),
+         &result_index, this]
+        (const auto begin, const auto end) -> void  {
+            for (size_type i = begin; i < end; ++i) [[likely]]
+                result_index[i] = indices_[std::get<0>(joined_index_idx[i])];
+        };
+
+    if (col_s >= ThreadPool::MUL_THR_THHOLD && get_thread_level() > 2)  {
+        auto    futures {
+            thr_pool_.parallel_loop<IndexType>(
+                size_type(0), col_s, std::move(idx_lbd))
+        };
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else
+        idx_lbd(0, col_s);
+
+    result.load_index(std::move(result_index));
+
+    // Reuse join_helper_common_ for column scatter.
+    // The IndexIdxVector already carries (lhs_i, rhs_i) in the slots that
+    // index_join_functor_oneside_ and index_join_functor_common_ expect,
+    // so we can call the shared helper directly.
+    //
+    join_helper_common_<DataFrame, RHS_T, I, Ts ...>
+        (*this, rhs, joined_index_idx, result);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+// asof_join  (public entry point)
+//
+template<typename I, typename H>
+template<typename RHS_T, typename ... Ts>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::asof_join(const RHS_T &rhs,
+                            asof_policy ap,
+                            IndexType tolerance) const  {
+
+    static_assert(comparable<I>,
+                  "Type must support comparison operators for asof_join");
+
+    const IndexIdxVector    joined_idx {
+        get_asof_index_idx_vector_(rhs, ap, tolerance)
+    };
+
+    return (index_asof_join_<RHS_T, Ts ...> (rhs, joined_idx));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 void DataFrame<I, H>::

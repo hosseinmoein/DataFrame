@@ -2584,6 +2584,45 @@ public:  // Data manipulation
                                          const typename RHS_T::IndexType &>,
                  gen_join_type>;
 
+    // For every row in self (lhs), find the nearest row in rhs by index and
+    // combine their columns.  The result carries lhs's index as its own index.
+    //
+    // Unlike join_by_index, which requires exact index matches, asof_join
+    // performs a nearest-neighbour lookup so it is well-suited for
+    // irregularly-sampled time series (tick data vs quotes, signals vs bars,
+    // etc.).  Only lhs rows are kept (this is a left-join by design: every
+    // lhs row appears exactly once in the result).
+    //
+    // Both DataFrames must be sorted ascending by their index before calling
+    // this method.  The implementation uses binary search (O(N log M)) and
+    // never modifies either input.
+    //
+    // Columns present in both frames are disambiguated with "lhs." / "rhs."
+    // prefixes, following the same convention used by join_by_index.
+    //
+    // RHS_T:
+    //   Type of DataFrame rhs (must have the same IndexType as self)
+    // Ts:
+    //   List of all distinct column types across both frames
+    // rhs:
+    //   The rhs DataFrame to join against
+    // ap:
+    //   asof_policy::backward (default) – for each lhs index find the greatest
+    //     rhs index <= lhs index ("last known value").
+    //   asof_policy::forward – find the smallest rhs index >= lhs index.
+    //   asof_policy::nearest – find the closest rhs index; ties go backward.
+    // tolerance:
+    //   Optional upper bound on |lhs_idx - rhs_idx|.  When the nearest rhs
+    //   index is further away than tolerance, the rhs columns for that lhs row
+    //   are filled with NaN.  A tolerance of 0 (the default) disables the
+    //   check and always propagates the nearest value regardless of distance.
+    //
+    template<typename RHS_T, typename ... Ts>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+    asof_join(const RHS_T &rhs,
+              asof_policy ap = asof_policy::backward,
+              IndexType tolerance = IndexType { }) const;
+
     // It concatenates rhs to the end of self and returns the result as
     // another DataFrame.
     // Concatenation is done based on policy

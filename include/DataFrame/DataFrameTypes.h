@@ -162,6 +162,32 @@ enum class  gen_join_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+// Policy for asof_join(): controls how each lhs value is matched to the
+// nearest rhs value when an exact match does not exist.
+//
+enum class  asof_policy : unsigned char  {
+
+    // Default:
+    // For each lhs value, find the greatest rhs value that is <= lhs value.
+    // This is the classic "last known value" lookup used in time series work
+    // (align trade prices to the most recent quote available at that time).
+    //
+    backward = 1,
+
+    // For each lhs value, find the smallest rhs value that is >= lhs value.
+    // Useful for "next event" lookups (e.g. next scheduled earnings date).
+    //
+    forward  = 2,
+
+    // For each lhs value, find the rhs value whose absolute distance to the
+    // lhs value is smallest. Ties are broken in favour of backward (i.e. the
+    // earlier rhs row).
+    //
+    nearest  = 3,
+};
+
+// ----------------------------------------------------------------------------
+
 enum class  concat_policy : unsigned char  {
 
     common_columns = 1,

@@ -900,6 +900,177 @@ static void test_gen_join()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_gen_join2()  {
+
+    std::cout << "\nTesting gen_join( ) two columns ..." << std::endl;
+
+    // Reuse the same frames as test_gen_join() so the two tests
+    // are easy to compare side-by-side.
+    //
+    std::vector<unsigned long>  idx = {
+        123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457, 123458,
+        123459, 123460, 123461, 123462, 123466
+    };
+    std::vector<double>         d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double>         d2 =
+        { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
+    std::vector<double>         d3 =
+        { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    ULDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::vector<unsigned long>  idx2 = {
+        123452, 123453, 123455, 123458, 123454, 223450, 223451, 223454, 223456,
+        123459, 223459, 223460, 223461, 123466
+    };
+    std::vector<double>         d12 =
+        { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
+    std::vector<double>         d22 =
+        { 8, 19, 110, 111, 9, 113, 114, 99, 122, 123, 130, 131, 20, 11.89 };
+    std::vector<double>         d32 = {
+        115, 116, 115, 118, 119, 116, 121, 10.34, 11.56, 10.34, 12.3, 10.34,
+        119.0
+    };
+    std::vector<int>            i12 = { 122, 123, 124, 125, 199 };
+    ULDataFrame                 df2;
+
+    df2.load_data(std::move(idx2),
+                  std::make_pair("xcol_1", d12),
+                  std::make_pair("col_2", d22),
+                  std::make_pair("xcol_3", d32),
+                  std::make_pair("col_4", i12));
+
+    // Predicate 1 — pure inner join.
+    // Both column pairs must satisfy their condition simultaneously:
+    //   col_2 (lhs) == col_2 (rhs)   AND   col_1 (lhs) < 10
+    // Only position 0 qualifies (lhs col_2=8 == rhs col_2=8, lhs col_1=1<10).
+    //
+    auto    pred_1 =
+        [](const unsigned long &, const unsigned long &,
+           const double &lhs_col2, const double &rhs_col2,
+           const double &lhs_col1, const double &) -> gen_join_type  {
+            if (lhs_col2 == rhs_col2 && lhs_col1 < 10.0)
+                return (gen_join_type::include_both);
+            return (gen_join_type::no_match);
+        };
+
+    auto    result_1 {
+        df.gen_join<decltype(df2),
+                    double, double,  // lhs_col2, rhs_col2 types
+                    double, double,  // lhs_col1, rhs_col1 types
+                    decltype(pred_1),
+                    double,
+                    int>(df2,
+                         "col_2", "col_2",   // first column pair
+                         "col_1", "xcol_1",  // second column pair
+                         pred_1)
+    };
+
+    // col_2 is the same name on both sides -> lhs.col_2 / rhs.col_2
+    // col_1 only exists on lhs, xcol_1 only on rhs -> no prefix needed
+    //
+    assert(result_1.get_index().size() == 1);
+    assert(result_1.get_column<unsigned long>("lhs.INDEX")[0] == 123450UL);
+    assert(result_1.get_column<unsigned long>("rhs.INDEX")[0] == 123452UL);
+    assert(result_1.get_column<double>("col_1")[0] == 1.0);
+    assert(result_1.get_column<double>("xcol_1")[0] == 11.0);
+    assert(result_1.get_column<double>("lhs.col_2")[0] == 8.0);
+    assert(result_1.get_column<double>("rhs.col_2")[0] == 8.0);
+    assert(result_1.get_column<double>("xcol_3")[0] == 115.0);
+    assert(result_1.get_column<double>("col_3")[0] == 15.0);
+
+    // Predicate 2 — three distinct outcomes.
+    // include_both  when lhs col_2 == rhs col_2  (position 0 only)
+    // include_left  when lhs col_1 < rhs xcol_1  (positions 1-13, always true
+    //               because d1 tops out at 14 and d12 starts at 11 with d12[0]
+    //               already > d1[0]; positions 1+ all have d1<d12)
+    // include_right never fires here (lhs col_1 is always < rhs xcol_1 when
+    //               the col_2 condition doesn't hold), so we get 14 rows:
+    //               1 both + 13 left.
+    //
+    auto    pred_2 =
+        [](const unsigned long &, const unsigned long &,
+           const double &lhs_col2, const double &rhs_col2,
+           const double &lhs_col1, const double &rhs_xcol1) -> gen_join_type  {
+            if (lhs_col2 == rhs_col2)
+                return (gen_join_type::include_both);
+            if (lhs_col1 < rhs_xcol1)
+                return (gen_join_type::include_left);
+            return (gen_join_type::include_right);
+        };
+
+    auto    result_2 {
+        df.gen_join<decltype(df2),
+                    double, double,  // lhs_col2, rhs_col2 types
+                    double, double,  // lhs_col1, rhs_xcol1 types
+                    decltype(pred_2),
+                    double,
+                    int>(df2,
+                         "col_2", "col_2",
+                         "col_1", "xcol_1",
+                         pred_2)
+    };
+
+    assert(result_2.get_index().size() == 14);
+
+    // row 0: include_both (lhs col_2[0]=8 == rhs col_2[0]=8)
+    //
+    assert(result_2.get_column<unsigned long>("lhs.INDEX")[0] == 123450UL);
+    assert(result_2.get_column<unsigned long>("rhs.INDEX")[0] == 123452UL);
+    assert(result_2.get_column<double>("col_1")[0] == 1.0);
+    assert(result_2.get_column<double>("xcol_1")[0] == 11.0);
+    assert(result_2.get_column<double>("lhs.col_2")[0] == 8.0);
+    assert(result_2.get_column<double>("rhs.col_2")[0] == 8.0);
+
+    // row 1: include_left (lhs col_1[1]=2 < rhs xcol_1[1]=12, col_2 mismatch)
+    //
+    assert(result_2.get_column<unsigned long>("lhs.INDEX")[1] == 123451UL);
+    assert(result_2.get_column<unsigned long>("rhs.INDEX")[1] == 0UL);
+    assert(result_2.get_column<double>("col_1")[1] == 2.0);
+    assert(std::isnan(result_2.get_column<double>("xcol_1")[1]));
+    assert(result_2.get_column<double>("lhs.col_2")[1] == 9.0);
+    assert(std::isnan(result_2.get_column<double>("rhs.col_2")[1]));
+
+    // row 7: include_left — verify mid-sequence
+    //
+    assert(result_2.get_column<unsigned long>("lhs.INDEX")[7] == 123457UL);
+    assert(result_2.get_column<unsigned long>("rhs.INDEX")[7] == 0UL);
+    assert(result_2.get_column<double>("col_1")[7] == 8.0);
+    assert(std::isnan(result_2.get_column<double>("xcol_1")[7]));
+    assert(result_2.get_column<double>("lhs.col_2")[7] == 20.0);
+    assert(std::isnan(result_2.get_column<double>("rhs.col_2")[7]));
+
+    // row 13: include_left — last row
+    //
+    assert(result_2.get_column<unsigned long>("lhs.INDEX")[13] == 123466UL);
+    assert(result_2.get_column<unsigned long>("rhs.INDEX")[13] == 0UL);
+    assert(result_2.get_column<double>("col_1")[13] == 14.0);
+    assert(std::isnan(result_2.get_column<double>("xcol_1")[13]));
+    assert(result_2.get_column<double>("lhs.col_2")[13] == 1.89);
+    assert(std::isnan(result_2.get_column<double>("rhs.col_2")[13]));
+
+    // Columns not involved in the predicate are still carried through
+    // by join_helper_common_: col_3 (lhs-only), xcol_3 (rhs-only),
+    // and col_4 (present in both -> lhs.col_4 / rhs.col_4).
+    //
+    assert(result_2.get_column<double>("col_3")[0] == 15.0);
+    assert(result_2.get_column<double>("col_3")[1] == 16.0);
+    assert(std::isnan(result_2.get_column<double>("xcol_3")[1]));
+    assert(result_2.get_column<int>("lhs.col_4")[0] == 22);
+    assert(result_2.get_column<int>("lhs.col_4")[1] == 23);
+    assert(result_2.get_column<int>("rhs.col_4")[0] == 122);
+    assert(result_2.get_column<int>("rhs.col_4")[1] == 0);
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_ChiSquaredTestVisitor()  {
 
     std::cout << "\nTesting ChiSquaredTestVisitor{ } ..." << std::endl;
@@ -3175,6 +3346,7 @@ int main(int, char *[])  {
     test_ConfIntervalVisitor();
     test_CoeffVariationVisitor();
     test_gen_join();
+    test_gen_join2();
     test_ChiSquaredTestVisitor();
     test_get_matrix();
     test_get_matrix_2();

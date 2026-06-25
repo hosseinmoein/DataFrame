@@ -2568,6 +2568,44 @@ public:  // Data manipulation
                                          const RHS_COL_T &>,
                  gen_join_type>;
 
+    // This is like the above gen_join but the joining logic is based on
+    // two sets of columns.
+    //
+    // The predicate has the following parameters:
+    //     1. A const reference to the index datapoint of self
+    //     2. A const reference to the index datapoint of rhs
+    //     3. A const reference to the lhs (self) first column datapoint
+    //     4. A const reference to the rhs first column datapoint
+    //     5. A const reference to the lhs (self) second column datapoint
+    //     6. A const reference to the rhs second column datapoint
+    //
+    template<typename RHS_T,
+             comparable LHS_COL1_T, comparable RHS_COL1_T,
+             comparable LHS_COL2_T, comparable RHS_COL2_T,
+             typename F,
+             typename ... Ts>
+    [[nodiscard]]
+    DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
+    gen_join(const RHS_T &rhs,
+             const char *lhs_col1_name,
+             const char *rhs_col1_name,
+             const char *lhs_col2_name,
+             const char *rhs_col2_name,
+             F &predicate) const requires
+    std::invocable<F, const IndexType &,
+                      const typename RHS_T::IndexType &,
+                      const LHS_COL1_T &,
+                      const RHS_COL1_T &,
+                      const LHS_COL2_T &,
+                      const RHS_COL2_T &> &&
+    std::same_as<std::invoke_result_t<F, const IndexType &,
+                                         const typename RHS_T::IndexType &,
+                                         const LHS_COL1_T &,
+                                         const RHS_COL1_T &,
+                                         const LHS_COL2_T &,
+                                         const RHS_COL2_T &>,
+                 gen_join_type>;
+
     // This is like the above gen_join but the joining logic is only based on
     // index columns of LHS (self) and RHS (there is no data column involved).
     //

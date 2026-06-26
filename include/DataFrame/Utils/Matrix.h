@@ -65,6 +65,8 @@ public:
     using const_pointer = const value_type *;
     using self_t = Matrix<value_type, MO, IS_SYM>;
 
+    // Is matrix data multidimensional
+    //
     inline static constexpr bool    IS_MD { random_acc_cont<T> };
 
     using data_t =
@@ -72,16 +74,13 @@ public:
                                     lazy_type<T>,
                                     value_type_of<T>>::type;
 
+    using scalar_ma_t = Matrix<data_t, MO>;
+
     using trans_result_t =
         typename std::conditional<
             MO == matrix_orient::column_major,
             Matrix<T, matrix_orient::row_major>,
             Matrix<T, matrix_orient::column_major>>::type;
-
-    using scalar_ma_t =
-        Matrix<typename std::conditional_t<! IS_MD,
-                                           lazy_type<T>,
-                                           value_type_of<T>>::type, MO>;
 
     Matrix() = default;
     Matrix(size_type rows, size_type cols, const_reference def_v = T());
@@ -148,7 +147,7 @@ public:
     [[nodiscard]]
     Matrix<T, MO> get_row_mat(size_type row) const noexcept;
 
-    bool is_square() const noexcept;
+    [[nodiscard]] bool is_square() const noexcept;
 
     // A matrix is either structurally symmetric (IS_SYM is true) or the data
     // in the matrix is symmetric. In both cases this returns true.
@@ -408,7 +407,7 @@ public:
     // MA can be either a matrix of one column or a std::vector.
     //
     template<typename MA>
-    [[nodiscard]] inline Matrix<T, MO> solve(const MA &rhs) const;
+    [[nodiscard]] inline Matrix solve(const MA &rhs) const;
     [[nodiscard]] inline Matrix solve() const;  // rhs is the last column
 
     // In 2-D, when you talk about the point (2, 4), you can think of the
@@ -523,13 +522,16 @@ public:
     // if col_wise is true the dimensions in the matrix data are flattened
     // into columns, otherwise they are flattened into rows.
 	//
+    [[nodiscard]]
     scalar_ma_t get_flatten(bool col_wise = true) const requires (IS_MD);
 
     // These return the inner (dot) product of the given rows/columns
     // NOTE: These work with both scalar and multidimensional
     //       (i.e. vectors and arrays) data.
     //
+    [[nodiscard]]
     value_type row_inner_prod(size_type row1, size_type row2) const;
+    [[nodiscard]]
     value_type col_inner_prod(size_type col1, size_type col2) const;
 
     // Get a matrix filled with real uniform random numbers. T can only be a
@@ -1431,35 +1433,43 @@ public:
 
     // Forwards
     //
+    [[nodiscard]]
     inline row_iterator row_begin() noexcept  {
 
         return (row_iterator(this, 0, 0));
     }
+    [[nodiscard]]
     inline row_const_iterator row_cbegin() const noexcept  {
 
         return (row_const_iterator(this, 0, 0));
     }
+    [[nodiscard]]
     inline row_iterator row_end() noexcept  {
 
         return (row_iterator(this, rows(), cols()));
     }
+    [[nodiscard]]
     inline row_const_iterator row_cend() const noexcept  {
 
         return (row_const_iterator(this, rows(), cols()));
     }
 
+    [[nodiscard]]
     inline col_iterator col_begin() noexcept  {
 
         return (col_iterator(this, 0, 0));
     }
+    [[nodiscard]]
     inline col_const_iterator col_cbegin() const noexcept  {
 
         return (col_const_iterator(this, 0, 0));
     }
+    [[nodiscard]]
     inline col_iterator col_end() noexcept  {
 
         return (col_iterator(this, rows(), cols()));
     }
+    [[nodiscard]]
     inline col_const_iterator col_cend() const noexcept  {
 
         return (col_const_iterator(this, rows(), cols()));
@@ -1474,35 +1484,43 @@ public:
 
     // Reverses
     //
+    [[nodiscard]]
     inline reverse_row_iterator row_rbegin() noexcept  {
 
         return (std::make_reverse_iterator(row_end()));
     }
+    [[nodiscard]]
     inline reverse_row_const_iterator row_crbegin() const noexcept  {
 
         return (std::make_reverse_iterator(row_cend()));
     }
+    [[nodiscard]]
     inline reverse_row_iterator row_rend() noexcept  {
 
         return (std::make_reverse_iterator(row_begin()));
     }
+    [[nodiscard]]
     inline reverse_row_const_iterator row_crend() const noexcept  {
 
         return (std::make_reverse_iterator(row_cbegin()));
     }
 
+    [[nodiscard]]
     inline reverse_col_iterator col_rbegin() noexcept  {
 
         return (std::make_reverse_iterator(col_end()));
     }
+    [[nodiscard]]
     inline reverse_col_const_iterator col_crbegin() const noexcept  {
 
         return (std::make_reverse_iterator(col_cend()));
     }
+    [[nodiscard]]
     inline reverse_col_iterator col_rend() noexcept  {
 
         return (std::make_reverse_iterator(col_begin()));
     }
+    [[nodiscard]]
     inline reverse_col_const_iterator col_crend() const noexcept  {
 
         return (std::make_reverse_iterator(col_cbegin()));

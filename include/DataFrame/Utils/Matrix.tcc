@@ -2477,7 +2477,7 @@ ldlt(std::vector<T> &D, MA &L) const  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA>
-Matrix<T, MO> Matrix<T, MO, IS_SYM>::
+Matrix<T, MO, IS_SYM> Matrix<T, MO, IS_SYM>::
 solve(const MA &rhs) const  {
 
     constexpr bool  is_vec = is_std_vector_v<MA>;

@@ -1908,6 +1908,64 @@ public:  // Data manipulation
     [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
     value_counts(const char *col_name) const;
 
+    // Compute a cross-tabulation (contingency table) of two categorical
+    // columns (or one column and the index).  For every unique value in the
+    // row-axis column, a row is added to the result DataFrame.  For every
+    // unique value in the column-axis column, a column is added to the result
+    // DataFrame. Each cell contains the number of times that the (row-value,
+    // col-value) pair appears together in the input.
+    //
+    // The result DataFrame is indexed by the sorted unique values of the row
+    // column (type ROW_T). Each data column is named after the corresponding
+    // unique value from the column-axis column (via std::to_string() or, for
+    // string-like types, using the value directly).
+    //
+    // Either row_col_name or col_col_name may be set to DF_INDEX_COL_NAME
+    // ("INDEX") to use the DataFrame index as that axis, following the same
+    // convention used by fl_valid_index() and the groupby family.
+    //
+    // margins:
+    //   When true, an additional "All" row and "All" column are appended
+    //   containing the marginal totals. They are computed before any
+    //   normalisation.
+    //
+    // normalize:
+    //   crosstab_normalize_t::none   (default) – raw counts
+    //   crosstab_normalize_t::all    – each cell / grand total
+    //   crosstab_normalize_t::row    – each cell / row total
+    //   crosstab_normalize_t::column – each cell / column total
+    //   When normalize != none the value columns change from size_type to
+    //   double. Margin columns (if any) are also normalised.
+    //
+    // NOTE: NaN values in either axis column are silently skipped (the row
+    //       is excluded from all counts), matching the behaviour of
+    //       value_counts().
+    //
+    // ROW_T:
+    //   Type of the row-axis column. Must be hashable and equality-comparable
+    //   (same constraint as value_counts). When row_col_name ==
+    //   DF_INDEX_COL_NAME, ROW_T must match IndexType.
+    // COL_T:
+    //   Type of the column-axis column. Same constraints as ROW_T.  Column
+    //   names in the result are formed by converting COL_T values to strings
+    //   via std::to_string(); for std::string / const char * the value is
+    //   used directly.
+    // row_col_name:
+    //   Name of the row-axis data column, or DF_INDEX_COL_NAME.
+    // col_col_name:
+    //   Name of the column-axis data column, or DF_INDEX_COL_NAME.
+    // margins:
+    //   If true, append "All" row and "All" column marginal totals.
+    // normalize:
+    //   Normalisation mode (see crosstab_norm_policy).
+    //
+    template<hashable_equal ROW_T, hashable_equal COL_T>
+    [[nodiscard]] DataFrame<ROW_T, HeteroVector<std::size_t(H::align_value)>>
+    crosstab(const char *row_col_name,
+             const char *col_col_name,
+             bool margins = false,
+             crosstab_norm_policy norm_p = crosstab_norm_policy::none) const;
+
     // This passes every datapoint in the named column to the functor along
     // with its corresponding index datapoint. It counts and returns the number
     // of times functor returns true.

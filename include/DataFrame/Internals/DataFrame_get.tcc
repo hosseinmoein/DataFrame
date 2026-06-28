@@ -2001,6 +2001,276 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
     return (result);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<hashable_equal ROW_T, hashable_equal COL_T>
+DataFrame<ROW_T, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+crosstab(const char *row_col_name,
+         const char *col_col_name,
+         bool margins,
+         crosstab_norm_policy norm_p) const  {
+
+    // 1. Resolve both axis vectors (index or data column)
+    //
+    const ColumnVecType<ROW_T>  *row_vec { nullptr };
+    const ColumnVecType<COL_T>  *col_vec { nullptr };
+
+    {
+        const SpinGuard guard { lock_ };
+
+        if (! ::strcmp(row_col_name, DF_INDEX_COL_NAME))
+            row_vec =
+                reinterpret_cast<const ColumnVecType<ROW_T> *>(&(get_index()));
+        else
+            row_vec = &(get_column<ROW_T>(row_col_name, false));
+
+        if (! ::strcmp(col_col_name, DF_INDEX_COL_NAME))
+            col_vec =
+                reinterpret_cast<const ColumnVecType<COL_T> *>(&(get_index()));
+        else
+            col_vec = &(get_column<COL_T>(col_col_name, false));
+    }
+
+    // 2. Collect sorted unique values for both axes
+    //
+    // Use a reference-wrapper unordered_map, same pattern as value_counts()
+    //
+    auto    row_hash =
+        [](std::reference_wrapper<const ROW_T> v) -> std::size_t  {
+            return (std::hash<ROW_T>{}(v.get()));
+        };
+    auto    row_eq =
+        [](std::reference_wrapper<const ROW_T> a,
+           std::reference_wrapper<const ROW_T> b) -> bool  {
+            return (a.get() == b.get());
+        };
+    auto    col_hash =
+        [](std::reference_wrapper<const COL_T> v) -> std::size_t  {
+            return (std::hash<COL_T>{}(v.get()));
+        };
+    auto    col_eq =
+        [](std::reference_wrapper<const COL_T> a,
+           std::reference_wrapper<const COL_T> b) -> bool  {
+            return (a.get() == b.get());
+        };
+
+    using row_map_t =
+        std::unordered_map<std::reference_wrapper<const ROW_T>,
+                           size_type,
+                           decltype(row_hash),
+                           decltype(row_eq)>;
+    using col_map_t =
+        std::unordered_map<std::reference_wrapper<const COL_T>,
+                           size_type,
+                           decltype(col_hash),
+                           decltype(col_eq)>;
+
+    // First pass: record every non-NaN unique row/col value and assign a
+    // stable ordinal to it.
+    //
+    const size_type     col_s { std::min(row_vec->size(), col_vec->size()) };
+    row_map_t           row_ordinal(col_s, row_hash, row_eq);
+    col_map_t           col_ordinal(col_s, col_hash, col_eq);
+    StlVecType<ROW_T>   uniq_rows;
+    StlVecType<COL_T>   uniq_cols;
+
+    uniq_rows.reserve(col_s / 2);
+    uniq_cols.reserve(col_s / 2);
+    for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+        const ROW_T &rv { (*row_vec)[i] };
+        const COL_T &cv { (*col_vec)[i] };
+
+        if (is_nan<ROW_T>(rv) || is_nan<COL_T>(cv)) [[unlikely]]
+            continue;
+
+        if (row_ordinal.emplace(std::cref(rv), row_ordinal.size()).second)
+            uniq_rows.push_back(rv);
+        if (col_ordinal.emplace(std::cref(cv), col_ordinal.size()).second)
+            uniq_cols.push_back(cv);
+    }
+
+    // Sort both unique-value lists for deterministic, ascending column order
+    //
+    std::sort(uniq_rows.begin(), uniq_rows.end());
+    std::sort(uniq_cols.begin(), uniq_cols.end());
+
+    // Rebuild ordinal maps using the sorted vectors so the ordinal equals
+    // the position in the sorted list
+    //
+    row_ordinal.clear();
+    col_ordinal.clear();
+
+    for (size_type i { 0 }; i < uniq_rows.size(); ++i)
+        row_ordinal.emplace(std::cref(uniq_rows[i]), i);
+    for (size_type i { 0 }; i < uniq_cols.size(); ++i)
+        col_ordinal.emplace(std::cref(uniq_cols[i]), i);
+
+    const size_type n_rows { uniq_rows.size() };
+    const size_type n_cols { uniq_cols.size() };
+
+    // 3. Second pass: accumulate counts into a flat row-major matrix
+    //
+    // cell(r, c) holds count(row_value=uniq_rows[r], col_value=uniq_cols[c])
+    //
+    Matrix<size_type, matrix_orient::row_major> cell {
+        long(n_rows), long(n_cols), 0
+    };
+
+    for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+        const ROW_T &rv { (*row_vec)[i] };
+        const COL_T &cv { (*col_vec)[i] };
+
+        if (is_nan<ROW_T>(rv) || is_nan<COL_T>(cv)) [[unlikely]]
+            continue;
+
+        const size_type r { row_ordinal.find(std::cref(rv))->second };
+        const size_type c { col_ordinal.find(std::cref(cv))->second };
+
+        cell(long(r), long(c)) += 1;
+    }
+
+    // 4. Compute marginal totals (always as size_type, before normalise)
+    //
+    StlVecType<size_type>   row_total(n_rows, 0);  // sum over cols
+    StlVecType<size_type>   col_total(n_cols, 0);  // sum over rows
+    size_type               grand_total { 0 };
+
+    for (size_type r { 0 }; r < n_rows; ++r)  {
+        for (size_type c { 0 }; c < n_cols; ++c)  {
+            const size_type v { cell(long(r), long(c)) };
+
+            row_total[r] += v;
+            col_total[c] += v;
+            grand_total += v;
+        }
+    }
+
+    // 5. Build the result DataFrame
+    //    - index: uniq_rows  (+ "All" sentinel if margins)
+    //    - columns: one per uniq_col value (+ "All" column if margins)
+    //    - cell type: size_type when norm_p==none, else double
+    //
+    using res_t = DataFrame<ROW_T, HeteroVector<align_value>>;
+
+    res_t   result;
+
+    // Build result index
+    //
+    {
+        StlVecType<ROW_T>   res_idx = uniq_rows;
+
+        if (margins)
+            res_idx.push_back(get_nan<ROW_T>());  // "All" row sentinel
+
+        result.load_index(std::move(res_idx));
+    }
+
+    const bool  do_norm { norm_p != crosstab_norm_policy::none };
+
+    // Lambda that writes one column-axis column into the result DataFrame
+    //
+    auto    write_col =
+        [do_norm, margins, grand_total, norm_p, n_rows,
+         &result,
+         &cell = std::as_const(cell),
+         &row_total = std::as_const(row_total),
+         &col_total = std::as_const(col_total)]
+        (const ColNameType &cname, size_type cidx, bool is_all_col)  {
+            if (! do_norm)  {
+                // Raw count column (size_type)
+                //
+                StlVecType<size_type>   col_data;
+
+                col_data.reserve(n_rows + (margins ? 1 : 0));
+                for (size_type r { 0 }; r < n_rows; ++r)
+                    col_data.push_back(
+                        is_all_col ? row_total[r] : cell(long(r), long(cidx)));
+
+                if (margins)
+                    col_data.push_back(
+                        is_all_col ? grand_total : col_total[cidx]);
+
+                result.template load_column<size_type>(
+                    cname.c_str(),
+                    std::move(col_data),
+                    nan_policy::dont_pad_with_nans,
+                    false);
+            }
+            else  {  // Normalised column (double)
+                StlVecType<double>  col_data;
+
+                col_data.reserve(n_rows + (margins ? 1 : 0));
+                for (size_type r { 0 }; r < n_rows; ++r)  {
+                    const double    raw {
+                        static_cast<double>(
+                            is_all_col ? row_total[r]
+                                       : cell(long(r), long(cidx)))
+                    };
+                    double          denom { 1.0 };
+
+                    if (norm_p == crosstab_norm_policy::all)
+                        denom = static_cast<double>(grand_total);
+                    else if (norm_p == crosstab_norm_policy::row)
+                        denom = static_cast<double>(row_total[r]);
+                    else  // column
+                        denom = static_cast<double>(
+                                    is_all_col ? grand_total : col_total[cidx]);
+
+                    col_data.push_back(denom > 0.0 ? (raw / denom) : 0.0);
+                }
+
+                if (margins)  {
+                    const double    raw {
+                        static_cast<double>(
+                            is_all_col ? grand_total : col_total[cidx])
+                    };
+                    double          denom { 1.0 };
+
+                    if (norm_p == crosstab_norm_policy::all)
+                        denom = static_cast<double>(grand_total);
+                    else if (norm_p == crosstab_norm_policy::row)
+                        denom = static_cast<double>(grand_total);
+                    else  // column
+                        denom = static_cast<double>(
+                                    is_all_col ? grand_total : col_total[cidx]);
+
+                    col_data.push_back(denom > 0.0 ? (raw / denom) : 0.0);
+                }
+
+                result.template load_column<double>(
+                    cname.c_str(),
+                    std::move(col_data),
+                    nan_policy::dont_pad_with_nans,
+                    false);
+            }
+        };
+
+    // Convert a COL_T value to a ColNameType string.
+    // String-like types are used directly; everything else goes through
+    // std::to_string().
+    //
+    auto            col_name_of =
+        [](const COL_T &val) -> ColNameType  {
+            if constexpr (std::is_same_v<COL_T, std::string>)
+                return (ColNameType(val.c_str()));
+            else if constexpr (std::is_same_v<COL_T, const char *> ||
+                               std::is_same_v<COL_T, char *>)
+                return (ColNameType(val));
+            else
+                return (ColNameType(std::to_string(val).c_str()));
+        };
+    const SpinGuard guard { lock_ };
+
+    for (size_type c { 0 }; c < n_cols; ++c)
+        write_col(col_name_of(uniq_cols[c]), c, false);
+
+    if (margins)
+        write_col(ColNameType("All"), 0, true);
+
+    return (result);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

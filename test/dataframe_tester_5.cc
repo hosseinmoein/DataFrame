@@ -3330,6 +3330,362 @@ static void test_asof_join()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_crosstab()  {
+
+    std::cout << "\nTesting crosstab( ) ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    MyDataFrame df;
+
+    df.load_index(std::vector<unsigned long>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+    df.load_column<std::string>(
+        "dept",
+        std::vector<std::string>{ "A","A","A","B","B","B","C","C","C","C" });
+    df.load_column<std::string>(
+        "grade",
+        std::vector<std::string>{ "X","Y","X","Y","X","Y","X","X","Y","Y" });
+
+    // Raw counts
+    //
+    {
+        const auto  result {
+            df.crosstab<std::string, std::string>("dept", "grade")
+        };
+
+        // result.write<std::ostream, unsigned long>
+        //     (std::cout, io_format::pretty_prt);
+
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C");
+
+        // Column names must be sorted unique grade values: X, Y
+        //
+        assert(result.has_column("X"));
+        assert(result.has_column("Y"));
+
+        const auto  &X { result.get_column<std::size_t>("X") };
+        const auto  &Y { result.get_column<std::size_t>("Y") };
+
+        assert(X[0] == 2 && X[1] == 1 && X[2] == 2);  // dept A,B,C vs X
+        assert(Y[0] == 1 && Y[1] == 2 && Y[2] == 2);  // dept A,B,C vs Y
+    }
+
+    // Margins
+    //
+    {
+        const auto  result {
+            df.crosstab<std::string, std::string>(
+                "dept", "grade",
+                /*margins=*/true)
+        };
+
+        // result.write<std::ostream, unsigned long>
+        //     (std::cout, io_format::pretty_prt);
+
+        // 4 rows: A, B, C, ""
+        //
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 4);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C" &&
+               idx[3].empty());
+
+        // 3 columns: X, Y, All
+        //
+        assert(result.has_column("X"));
+        assert(result.has_column("Y"));
+        assert(result.has_column("All"));
+
+        const auto  &X { result.get_column<std::size_t>("X") };
+        const auto  &Y { result.get_column<std::size_t>("Y") };
+        const auto  &All { result.get_column<std::size_t>("All") };
+
+        // Row totals (All column)
+        //
+        assert(All[0] == 3);   // A: 2+1
+        assert(All[1] == 3);   // B: 1+2
+        assert(All[2] == 4);   // C: 2+2
+        assert(All[3] == 10);  // grand total
+
+        // Column totals (All row, index 3)
+        //
+        assert(X[3] == 5);     // 2+1+2
+        assert(Y[3] == 5);     // 1+2+2
+        assert(All[3] == 10);  // grand total
+    }
+
+    // Normalize all
+    //
+    {
+        const auto  result {
+            df.crosstab<std::string, std::string>(
+                "dept", "grade",
+                /*margins=*/false,
+                crosstab_norm_policy::all)
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C");
+
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+
+        // Grand total = 10
+        //
+        assert(std::abs(X[0] - 0.2) < 1e-9);  // A/X = 2/10
+        assert(std::abs(Y[0] - 0.1) < 1e-9);  // A/Y = 1/10
+        assert(std::abs(X[1] - 0.1) < 1e-9);  // B/X = 1/10
+        assert(std::abs(Y[1] - 0.2) < 1e-9);  // B/Y = 2/10
+        assert(std::abs(X[2] - 0.2) < 1e-9);  // C/X = 2/10
+        assert(std::abs(Y[2] - 0.2) < 1e-9);  // C/Y = 2/10
+
+        // All cells must sum to 1.0
+        //
+        double  total { 0.0 };
+
+        for (std::size_t i { 0 }; i < 3; ++i)
+            total += X[i] + Y[i];
+        assert(std::abs(total - 1.0) < 1e-9);
+    }
+
+    // Normalize row
+    //
+    {
+        const auto  result {
+            df.crosstab<std::string, std::string>(
+                "dept", "grade",
+                /*margins=*/false,
+                crosstab_norm_policy::row)
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C");
+
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+
+        // Row totals: A=3, B=3, C=4
+        //
+        assert(X.size() == 3);
+        assert(Y.size() == 3);
+        assert(std::abs(X[0] - 2.0/3.0) < 1e-9);
+        assert(std::abs(Y[0] - 1.0/3.0) < 1e-9);
+        assert(std::abs(X[1] - 1.0/3.0) < 1e-9);
+        assert(std::abs(Y[1] - 2.0/3.0) < 1e-9);
+        assert(std::abs(X[2] - 0.5) < 1e-9);
+        assert(std::abs(Y[2] - 0.5) < 1e-9);
+
+        // Each row must sum to 1.0
+        //
+        for (std::size_t i { 0 }; i < 3; ++i)
+            assert(std::abs(X[i] + Y[i] - 1.0) < 1e-9);
+    }
+
+    // Normalize column
+    //
+    {
+        const auto  result {
+            df.crosstab<std::string, std::string>(
+                "dept", "grade",
+                /*margins=*/false,
+                crosstab_norm_policy::column)
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C");
+
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+
+        // Column totals: X=5, Y=5
+        //
+        assert(std::abs(X[0] - 2.0/5.0) < 1e-9);
+        assert(std::abs(Y[0] - 1.0/5.0) < 1e-9);
+        assert(std::abs(X[1] - 1.0/5.0) < 1e-9);
+        assert(std::abs(Y[1] - 2.0/5.0) < 1e-9);
+        assert(std::abs(X[2] - 2.0/5.0) < 1e-9);
+        assert(std::abs(Y[2] - 2.0/5.0) < 1e-9);
+
+        // Each column must sum to 1.0
+        //
+        double  sum_X { 0.0 }, sum_Y { 0.0 };
+
+        for (std::size_t i { 0 }; i < 3; ++i)  {
+            sum_X += X[i];
+            sum_Y += Y[i];
+        }
+        assert(std::abs(sum_X - 1.0) < 1e-9);
+        assert(std::abs(sum_Y - 1.0) < 1e-9);
+    }
+
+    // Row from index column
+    //
+    {
+        MyDataFrame df;
+
+        df.load_index(std::vector<unsigned long>{ 10, 10, 20, 20, 30, 30 });
+        df.load_column<std::string>(
+            "grade",
+            std::vector<std::string>{ "X","Y","X","Y","X","Y" });
+
+        const auto  result {
+            df.crosstab<unsigned long, std::string>(
+                DF_INDEX_COL_NAME, "grade")
+        };
+
+        // result.write<std::ostream, unsigned long>
+        //     (std::cout, io_format::pretty_prt);
+
+        const auto &idx = result.get_index();
+
+        assert(idx.size() == 3);
+        assert(idx[0] == 10 && idx[1] == 20 && idx[2] == 30);
+
+        const auto  &X { result.get_column<unsigned long>("X") };
+        const auto  &Y { result.get_column<unsigned long>("Y") };
+
+        for (std::size_t i { 0 }; i < 3; ++i)  {
+            assert(X[i] == 1);
+            assert(Y[i] == 1);
+        }
+    }
+
+    // Column from index column
+    //
+    {
+        MyDataFrame df;
+
+        df.load_index(std::vector<unsigned long>{ 1, 2, 1, 2 });
+        df.load_column<std::string>(
+            "dept",
+            std::vector<std::string>{ "A","A","B","B" });
+
+        const auto  result {
+            df.crosstab<std::string, unsigned long>(
+                "dept", DF_INDEX_COL_NAME)
+        };
+
+        // result.write<std::ostream, unsigned long>
+        //     (std::cout, io_format::pretty_prt);
+
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 2);
+        assert(idx[0] == "A" && idx[1] == "B");
+
+        // Column names are the stringified index values "1" and "2"
+        //
+        assert(result.has_column("1"));
+        assert(result.has_column("2"));
+
+        const auto  &c1 { result.get_column<unsigned long>("1") };
+        const auto  &c2 { result.get_column<unsigned long>("2") };
+
+        assert(c1[0] == 1 && c1[1] == 1);
+        assert(c2[0] == 1 && c2[1] == 1);
+    }
+
+    // Integer types
+    //
+    {
+        MyDataFrame df;
+
+        df.load_index(std::vector<unsigned long>{ 0,1,2,3,4,5 });
+        df.load_column<int>("row_key", std::vector<int>{ 1,1,2,2,3,3 });
+        df.load_column<int>("col_key", std::vector<int>{ 10,20,10,20,10,20 });
+
+        const auto  result { df.crosstab<int, int>("row_key", "col_key") };
+
+        // result.write<std::ostream, unsigned long>
+        //     (std::cout, io_format::pretty_prt);
+
+        // Index: 1, 2, 3
+        //
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(idx[0] == 1 && idx[1] == 2 && idx[2] == 3);
+
+        // Column names: "10", "20"
+        //
+        assert(result.has_column("10"));
+        assert(result.has_column("20"));
+
+        const auto  &c10 { result.get_column<unsigned long>("10") };
+        const auto  &c20 { result.get_column<unsigned long>("20") };
+
+        for (std::size_t i { 0 }; i < 3; ++i)  {
+            assert(c10[i] == 1);
+            assert(c20[i] == 1);
+        }
+    }
+
+    // Normalize all margins
+    //
+    {
+        const auto  result {
+            df.crosstab<std::string, std::string>(
+                "dept", "grade",
+                /*margins=*/true,
+                crosstab_norm_policy::all)
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        // 4 rows: A, B, C, ""
+        //
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 4);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C" &&
+               idx[3].empty());
+
+        // Grand total = 10; the "All/All" cell should be 1.0
+        //
+        const auto  &All { result.get_column<double>("All") };
+
+        assert(All.size() == 4);
+        assert(std::abs(All[0] - 0.3) < 1e-9);
+        assert(std::abs(All[2] - 0.4) < 1e-9);
+        assert(std::abs(All.back() - 1.0) < 1e-9);
+
+        // All row: X_total/grand = 5/10 = 0.5; Y_total/grand = 0.5
+        //
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+
+        assert(X.size() == 4);
+        assert(Y.size() == 4);
+        assert(std::abs(X[0] - 0.2) < 1e-9);
+        assert(std::abs(X[2] - 0.2) < 1e-9);
+        assert(std::abs(X.back() - 0.5) < 1e-9);
+        assert(std::abs(Y[0] - 0.1) < 1e-9);
+        assert(std::abs(Y[2] - 0.2) < 1e-9);
+        assert(std::abs(Y.back() - 0.5) < 1e-9);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -3362,6 +3718,7 @@ int main(int, char *[])  {
     test_md_stats();
     test_KrigingVisitor();
     test_asof_join();
+    test_crosstab();
 
     return (0);
 }

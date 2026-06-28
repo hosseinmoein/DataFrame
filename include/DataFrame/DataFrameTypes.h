@@ -197,6 +197,28 @@ enum class  concat_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+// Controls whether and how crosstab() normalises the count matrix.
+//
+enum class  crosstab_norm_policy : unsigned char  {
+
+    none = 1,  // Return raw integer counts.
+
+    // Divide every cell by the grand total so every cell is a fraction in
+    // [0, 1] and all cells sum to 1.
+    //
+    all = 2,
+
+    // Divide each cell by its row total. Each row therefore sums to 1.
+    //
+    row = 3,
+
+    // Divide each cell by its column total. Each column therefore sums to 1.
+    //
+    column = 4,
+};
+
+// ----------------------------------------------------------------------------
+
 // This policy is relative to a tabular data structure
 //
 enum class  shift_policy : unsigned char  {
@@ -1458,7 +1480,7 @@ struct  _scalar_type_<T>  { using type = typename T::value_type; };
 
 template<typename T>
 using scalar_t = typename _scalar_type_<T>::type;
-	
+
 // ----------------------------------------------------------------------------
 
 inline static const std::vector<std::string>   describe_index_col  {

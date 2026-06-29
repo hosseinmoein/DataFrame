@@ -1966,6 +1966,61 @@ public:  // Data manipulation
              bool margins = false,
              crosstab_norm_policy norm_p = crosstab_norm_policy::none) const;
 
+    // Compute an aggregated pivot table.
+    //
+    // For each unique value in the row-axis column and each unique value in
+    // the col-axis column, the supplied visitor is applied to the subset of
+    // values in val_col_name that belong to that (row, col) group.  The
+    // visitor's result is stored in the corresponding cell.  Missing
+    // (row, col) combinations are filled with get_nan<VAL_T>().
+    //
+    // The result DataFrame is indexed by the sorted unique values of the
+    // row-axis column (type ROW_T).  Each unique col-axis value becomes a
+    // named data column (type VAL_T), whose name is derived from the col
+    // value via std::to_string() — or, for string-like COL_T, the value
+    // itself — following the same convention as crosstab().
+    //
+    // Either row_col_name or col_col_name may be set to DF_INDEX_COL_NAME
+    // ("INDEX") to use the DataFrame's own index as that axis, following the
+    // same convention used by fl_valid_index() and the groupby family.
+    //
+    // The visitor type V must follow the standard DataFrame visitor contract:
+    //   pre()         – called once before each group
+    //   operator()(i, v) – called for each (index, value) element
+    //   post()        – called once after each group
+    //   get_result()  – returns the aggregated value (type VAL_T)
+    //
+    // Typical visitors: MeanVisitor<VAL_T>, SumVisitor<VAL_T>,
+    //   CountVisitor<VAL_T>, MedianVisitor<VAL_T>, MinVisitor<VAL_T>,
+    //   MaxVisitor<VAL_T>, etc.
+    //
+    // ROW_T:
+    //   Type of the row-axis column.  Must satisfy comparable and
+    //   hashable_equal.  When row_col_name == DF_INDEX_COL_NAME, ROW_T
+    //   must match IndexType.
+    // COL_T:
+    //   Type of the col-axis column.  Same constraints.
+    // VAL_T:
+    //   Type of the values column and of each result cell.
+    // V:
+    //   Visitor type used for aggregation (see contract above).
+    // row_col_name:
+    //   Name of the row-axis column, or DF_INDEX_COL_NAME.
+    // col_col_name:
+    //   Name of the col-axis column, or DF_INDEX_COL_NAME.
+    // val_col_name:
+    //   Name of the values column to aggregate.
+    // visitor:
+    //   Aggregation visitor instance; it is copied once per cell group.
+    //
+    template<hashable_equal ROW_T, hashable_equal COL_T,
+             typename VAL_T, visitor_t V>
+    [[nodiscard]] DataFrame<ROW_T, HeteroVector<std::size_t(H::align_value)>>
+    pivot_table(const char *row_col_name,
+                const char *col_col_name,
+                const char *val_col_name,
+                V &&visitor) const;
+
     // This passes every datapoint in the named column to the functor along
     // with its corresponding index datapoint. It counts and returns the number
     // of times functor returns true.

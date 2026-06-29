@@ -2176,7 +2176,7 @@ crosstab(const char *row_col_name,
          &cell = std::as_const(cell),
          &row_total = std::as_const(row_total),
          &col_total = std::as_const(col_total)]
-        (const ColNameType &cname, size_type cidx, bool is_all_col)  {
+        (const ColNameType &cname, size_type cidx, bool is_all_col) -> void  {
             if (! do_norm)  {
                 // Raw count column (size_type)
                 //
@@ -2267,6 +2267,196 @@ crosstab(const char *row_col_name,
 
     if (margins)
         write_col(ColNameType("All"), 0, true);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<hashable_equal ROW_T, hashable_equal COL_T,
+         typename VAL_T, visitor_t V>
+DataFrame<ROW_T, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+pivot_table(const char *row_col_name,
+            const char *col_col_name,
+            const char *val_col_name,
+            V &&visitor) const  {
+
+    // 1. Resolve all three source vectors (index or data column)
+    //
+    const ColumnVecType<ROW_T>  *row_vec { nullptr };
+    const ColumnVecType<COL_T>  *col_vec { nullptr };
+    const ColumnVecType<VAL_T>  *val_vec { nullptr };
+
+    {
+        const SpinGuard guard { lock_ };
+
+        if (! ::strcmp(row_col_name, DF_INDEX_COL_NAME))
+            row_vec = reinterpret_cast<const ColumnVecType<ROW_T> *>(
+                          &(get_index()));
+        else
+            row_vec = &(get_column<ROW_T>(row_col_name, false));
+
+        if (! ::strcmp(col_col_name, DF_INDEX_COL_NAME))
+            col_vec = reinterpret_cast<const ColumnVecType<COL_T> *>(
+                          &(get_index()));
+        else
+            col_vec = &(get_column<COL_T>(col_col_name, false));
+
+        val_vec = &(get_column<VAL_T>(val_col_name, false));
+    }
+
+    const size_type col_s {
+        std::min({ row_vec->size(), col_vec->size(), val_vec->size() })
+    };
+
+    // 2. Sort row indices by (row_key, col_key) — same as groupby2
+    //
+    StlVecType<size_type>   sort_v(col_s, 0);
+
+    std::iota(sort_v.begin(), sort_v.end(), 0);
+    std::ranges::sort(
+        sort_v,
+        [&rv = std::as_const(*row_vec), &cv = std::as_const(*col_vec)]
+        (size_type i, size_type j) -> bool  {
+            if (rv[i] != rv[j])  return (rv[i] < rv[j]);
+            return (cv[i] < cv[j]);
+        });
+
+    // 3. Collect sorted unique row and col values
+    //
+    StlVecType<ROW_T>   uniq_rows;
+    StlVecType<COL_T>   uniq_cols;
+
+    uniq_rows.reserve(col_s / 4 + 1);
+    uniq_cols.reserve(col_s / 4 + 1);
+    for (size_type i { 0 }; i < col_s; ++i)  {
+        const ROW_T &rv { (*row_vec)[sort_v[i]] };
+        // const COL_T &cv { (*col_vec)[sort_v[i]] };
+
+        if (uniq_rows.empty() || rv != uniq_rows.back())
+            uniq_rows.push_back(rv);
+        // if (uniq_cols.empty() || cv != uniq_cols.back())  {
+            // col values are not globally sorted yet — we need a full scan
+            // first, then sort them. Collect into uniq_cols unsorted for now.
+            //
+            // Actually: they appear sorted within each row group, but a new
+            // col value seen in row group 2 might not appear in row group 1.
+            // We therefore accumulate into a set for true uniqueness.
+        // }
+    }
+
+    // True unique col values — build via sorted set so we get stable order
+    //
+    DFSet<COL_T>    col_set;
+
+    for (size_type i { 0 }; i < col_s; ++i)
+        col_set.insert((*col_vec)[i]);
+
+    uniq_cols.assign(col_set.begin(), col_set.end());
+
+    // Rebuild unique rows in sorted order (sort_v gives sorted-by-row order,
+    // but we collected them in sort_v order which is row-sorted already)
+    // uniq_rows was built in sort_v order above, so it is already sorted.
+    //
+    const size_type n_rows { uniq_rows.size() };
+    const size_type n_cols { uniq_cols.size() };
+
+    // Build col-value → ordinal map for O(log col_s) cell lookup
+    //
+    DFMap<COL_T, size_type>  col_ordinal;
+
+    for (size_type c { 0 }; c < n_cols; ++c)
+        col_ordinal.emplace(uniq_cols[c], c);
+
+    using data_t = typename V::result_type;
+	
+    // 4. Aggregate: scan sorted (row, col) groups and invoke the visitor
+    //    Cells are stored row-major in a flat vector of VAL_T.
+    //
+    Matrix<data_t, matrix_orient::row_major> cell {
+        long(n_rows), long(n_cols), get_nan<data_t>()
+    };
+
+    // Build row-value → ordinal map
+    //
+    DFMap<ROW_T, size_type> row_ordinal;
+
+    for (size_type r { 0 }; r < n_rows; ++r)
+        row_ordinal.emplace(uniq_rows[r], r);
+
+    // Scan the sort_v array in (row,col)-sorted order.  Each time the
+    // (row,col) key changes we flush the current group through the visitor.
+    //
+    size_type   marker { 0 };
+    auto        flush_group =
+        [&row_vec = std::as_const(row_vec),
+         &col_vec = std::as_const(col_vec),
+         &sort_v = std::as_const(sort_v),
+         &val_vec = std::as_const(val_vec),
+         &row_ordinal = std::as_const(row_ordinal),
+         &col_ordinal = std::as_const(col_ordinal),
+         &cell, &visitor, this]
+        (size_type begin, size_type end) -> void  {
+            const ROW_T &rv { (*row_vec)[sort_v[begin]] };
+            const COL_T &cv { (*col_vec)[sort_v[begin]] };
+
+            visitor.pre();
+            for (size_type k { begin }; k < end; ++k)
+                visitor(indices_[sort_v[k]], (*val_vec)[sort_v[k]]);
+            visitor.post();
+
+            const size_type r { row_ordinal.find(rv)->second };
+            const size_type c { col_ordinal.find(cv)->second };
+
+            cell(long(r), long(c)) = visitor.get_result();
+        };
+
+    for (size_type i { 1 }; i < col_s; ++i) [[likely]]  {
+        if ((*row_vec)[sort_v[i]] != (*row_vec)[sort_v[marker]] ||
+            (*col_vec)[sort_v[i]] != (*col_vec)[sort_v[marker]])  {
+            flush_group(marker, i);
+            marker = i;
+        }
+    }
+    if (col_s > 0)
+        flush_group(marker, col_s);
+
+    // 5. Assemble the result DataFrame
+    //
+    // Column name helper: same logic as crosstab()
+    //
+    auto    col_name_of =
+        [](const COL_T &val) -> ColNameType  {
+            if constexpr (std::is_same_v<COL_T, std::string>)
+                return (ColNameType(val.c_str()));
+            else if constexpr (std::is_same_v<COL_T, const char *> ||
+                               std::is_same_v<COL_T, char *>)
+                return (ColNameType(val));
+            else
+                return (ColNameType(std::to_string(val).c_str()));
+        };
+
+    using res_t = DataFrame<ROW_T, HeteroVector<align_value>>;
+
+    res_t   result;
+
+    result.load_index(StlVecType<ROW_T>(uniq_rows));
+
+    SpinGuard   guard { lock_ };
+
+    for (size_type c { 0 }; c < n_cols; ++c)  {
+        StlVecType<VAL_T>   col_data(n_rows);
+
+        for (size_type r { 0 }; r < n_rows; ++r)
+            col_data[r] = cell(long(r), long(c));
+
+        result.template load_column<VAL_T>(
+            col_name_of(uniq_cols[c]).c_str(),
+            std::move(col_data),
+            nan_policy::dont_pad_with_nans,
+            false);
+    }
 
     return (result);
 }

@@ -153,6 +153,18 @@ concept has_result = requires (const std::remove_reference_t<T> &a)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename T>
+concept visitor_t = requires (T t)  {
+    typename T::result_type;
+    typename T::value_type;
+    typename T::size_type;
+    t.get_result();
+    t.pre();
+    t.post();
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename F, typename U, typename V>
 concept replace_callable = requires (F &&f, const U &u, V &v)  {
     std::invoke(std::forward<F>(f), u, v);

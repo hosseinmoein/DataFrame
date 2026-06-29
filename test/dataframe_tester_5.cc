@@ -3378,8 +3378,7 @@ static void test_crosstab()  {
     {
         const auto  result {
             df.crosstab<std::string, std::string>(
-                "dept", "grade",
-                /*margins=*/true)
+                "dept", "grade", true)
         };
 
         // result.write<std::ostream, unsigned long>
@@ -3423,7 +3422,7 @@ static void test_crosstab()  {
         const auto  result {
             df.crosstab<std::string, std::string>(
                 "dept", "grade",
-                /*margins=*/false,
+                false,
                 crosstab_norm_policy::all)
         };
 
@@ -3462,7 +3461,7 @@ static void test_crosstab()  {
         const auto  result {
             df.crosstab<std::string, std::string>(
                 "dept", "grade",
-                /*margins=*/false,
+                false,
                 crosstab_norm_policy::row)
         };
 
@@ -3500,7 +3499,7 @@ static void test_crosstab()  {
         const auto  result {
             df.crosstab<std::string, std::string>(
                 "dept", "grade",
-                /*margins=*/false,
+                false,
                 crosstab_norm_policy::column)
         };
 
@@ -3644,7 +3643,7 @@ static void test_crosstab()  {
         const auto  result {
             df.crosstab<std::string, std::string>(
                 "dept", "grade",
-                /*margins=*/true,
+                true,
                 crosstab_norm_policy::all)
         };
 
@@ -3686,6 +3685,388 @@ static void test_crosstab()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_pivot_table()  {
+
+    std::cout << "\nTesting pivot_table( ) ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    MyDataFrame df;
+
+    df.load_index(std::vector<unsigned long>{ 0,1,2,3,4,5,6,7 });
+    df.load_column<std::string>(
+        "dept",
+        std::vector<std::string>{ "A","A","A","B","B","B","C","C" });
+    df.load_column<std::string>(
+        "region",
+        std::vector<std::string>{ "X","Y","X","Y","X","X","Y","Y" });
+    df.load_column<double>(
+        "sales",
+        std::vector<double>{ 10,20,30,40,50,60,70,80 });
+
+    // Sum
+    //
+    {
+        const auto  result {
+            df.pivot_table<std::string, std::string, double,
+                           SumVisitor<double>>(
+                "dept", "region", "sales",
+                SumVisitor<double>{ })
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        // Index: A, B, C  (sorted)
+        //
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C");
+
+        // Columns: X, Y
+        //
+        assert(result.has_column("X"));
+        assert(result.has_column("Y"));
+
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+
+        assert(X.size() == 3);
+        assert(Y.size() == 3);
+        assert(std::abs(X[0] - 40.0) < 1e-9);   // A/X: 10+30
+        assert(std::abs(Y[0] - 20.0) < 1e-9);   // A/Y: 20
+        assert(std::abs(X[1] - 110.0) < 1e-9);  // B/X: 50+60
+        assert(std::abs(Y[1] - 40.0) < 1e-9);   // B/Y: 40
+        assert(std::isnan(X[2]));               // C/X: no data → NaN
+        assert(std::abs(Y[2] - 150.0) < 1e-9);  // C/Y: 70+80
+    }
+
+    // Mean
+    //
+    {
+        const auto  result {
+            df.pivot_table<std::string, std::string, double,
+                           MeanVisitor<double>>(
+                "dept", "region", "sales",
+                MeanVisitor<double>{ })
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        // Index: A, B, C  (sorted)
+        //
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C");
+
+        // Columns: X, Y
+        //
+        assert(result.has_column("X"));
+        assert(result.has_column("Y"));
+
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+
+        assert(X.size() == 3);
+        assert(Y.size() == 3);
+        assert(std::abs(X[0] - 20.0) < 1e-9);  // A/X: avg(10,30)
+        assert(std::abs(Y[0] - 20.0) < 1e-9);  // A/Y: avg(20)
+        assert(std::abs(X[1] - 55.0) < 1e-9);  // B/X: avg(50,60)
+        assert(std::abs(Y[1] - 40.0) < 1e-9);  // B/Y: avg(40)
+        assert(std::isnan(X[2]));              // C/X: no data → NaN
+        assert(std::abs(Y[2] - 75.0) < 1e-9);  // C/Y: avg(70,80)
+    }
+
+    // Count
+    //
+    {
+        MyDataFrame df;
+
+        df.load_index(std::vector<unsigned long>{ 0,1,2,3,4,5,6,7 });
+        df.load_column<std::string>(
+           "dept",
+           std::vector<std::string>{ "A","A","A","B","B","B","C","C" });
+        df.load_column<std::string>(
+           "region",
+           std::vector<std::string>{ "X","Y","X","Y","X","X","Y","Y" });
+        df.load_column<double>(
+           "ones",
+           std::vector<double>{ 1,1,1,1,1,1,1,1 });
+
+        const auto  result {
+            df.pivot_table<std::string, std::string, double,
+                           CountVisitor<std::size_t>>(
+                "dept", "region", "ones",
+                CountVisitor<std::size_t>{ })
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        // Index: A, B, C  (sorted)
+        //
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C");
+
+        // Columns: X, Y
+        //
+        assert(result.has_column("X"));
+        assert(result.has_column("Y"));
+
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+
+        assert(X.size() == 3);
+        assert(Y.size() == 3);
+
+        assert(std::abs(X[0] - 2.0) < 1e-9);  // A/X: 2 rows
+        assert(std::abs(Y[0] - 1.0) < 1e-9);  // A/Y: 1 row
+        assert(std::abs(X[1] - 2.0) < 1e-9);  // B/X: 2 rows
+        assert(std::abs(Y[1] - 1.0) < 1e-9);  // B/Y: 1 row
+        assert(X[2] == 0.0);                  // C/X: 0 rows
+        assert(std::abs(Y[2] - 2.0) < 1e-9);  // C/Y: 2 rows
+    }
+
+    // Max
+    //
+    {
+        const auto  result {
+            df.pivot_table<std::string, std::string, double,
+                           MaxVisitor<double>>(
+                "dept", "region", "sales",
+                MaxVisitor<double>{ })
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        // Index: A, B, C  (sorted)
+        //
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C");
+
+        // Columns: X, Y
+        //
+        assert(result.has_column("X"));
+        assert(result.has_column("Y"));
+
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+
+        assert(X.size() == 3);
+        assert(Y.size() == 3);
+        assert(std::abs(X[0] - 30.0) < 1e-9);  // A/X: max(10,30)
+        assert(std::abs(Y[0] - 20.0) < 1e-9);  // A/Y: max(20)
+        assert(std::abs(X[1] - 60.0) < 1e-9);  // B/X: max(50,60)
+        assert(std::abs(Y[1] - 40.0) < 1e-9);  // B/Y: max(40)
+        assert(std::isnan(X[2]));              // C/X: NaN
+        assert(std::abs(Y[2] - 80.0) < 1e-9);  // C/Y: max(70,80)
+    }
+
+    // Row from index
+    //
+    {
+        MyDataFrame df;
+
+        df.load_index(std::vector<unsigned long>{ 1, 1, 2, 2 });
+        df.load_column<std::string>(
+            "region",
+            std::vector<std::string>{ "X","Y","X","Y" });
+        df.load_column<double>(
+            "sales",
+            std::vector<double>{ 10, 20, 30, 40 });
+
+        const auto  result {
+            df.pivot_table<unsigned long, std::string, double,
+                           SumVisitor<double>>(
+                DF_INDEX_COL_NAME, "region", "sales",
+                SumVisitor<double>{ })
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 2);
+        assert(idx[0] == 1 && idx[1] == 2);
+
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+
+        assert(std::abs(X[0] - 10.0) < 1e-9);
+        assert(std::abs(Y[0] - 20.0) < 1e-9);
+        assert(std::abs(X[1] - 30.0) < 1e-9);
+        assert(std::abs(Y[1] - 40.0) < 1e-9);
+    }
+
+    // Column from index
+    //
+    {
+        MyDataFrame df;
+
+        df.load_index(std::vector<unsigned long>{ 1, 2, 1, 2 });
+        df.load_column<std::string>(
+            "dept",
+            std::vector<std::string>{ "A","A","B","B" });
+        df.load_column<double>(
+            "sales",
+            std::vector<double>{ 10, 20, 30, 40 });
+
+        const auto  result {
+            df.pivot_table<std::string, unsigned long, double,
+                           SumVisitor<double>>(
+                "dept", DF_INDEX_COL_NAME, "sales",
+                SumVisitor<double>{ })
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 2);
+        assert(idx[0] == "A" && idx[1] == "B");
+
+        // Column names are stringified index values
+        //
+        assert(result.has_column("1"));
+        assert(result.has_column("2"));
+
+        const auto  &c1 { result.get_column<double>("1") };
+        const auto  &c2 { result.get_column<double>("2") };
+
+        assert(std::abs(c1[0] - 10.0) < 1e-9);
+        assert(std::abs(c2[0] - 20.0) < 1e-9);
+        assert(std::abs(c1[1] - 30.0) < 1e-9);
+        assert(std::abs(c2[1] - 40.0) < 1e-9);
+    }
+
+    // Integer keys
+    //
+    {
+        MyDataFrame df;
+
+        df.load_index(std::vector<unsigned long>{ 0,1,2,3,4,5 });
+        df.load_column<int>("row_key", std::vector<int>{ 1,1,2,2,3,3 });
+        df.load_column<int>("col_key", std::vector<int>{ 10,20,10,20,10,20 });
+        df.load_column<double>("val",  std::vector<double>{ 1,2,3,4,5,6 });
+
+        const auto  result {
+            df.pivot_table<int, int, double, SumVisitor<double>>(
+                "row_key", "col_key", "val",
+                SumVisitor<double>{ })
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(result.has_column("10") && result.has_column("20"));
+
+        const auto  &c10 { result.get_column<double>("10") };
+        const auto  &c20 { result.get_column<double>("20") };
+
+        assert(std::abs(c10[0] - 1.0) < 1e-9);
+        assert(std::abs(c20[0] - 2.0) < 1e-9);
+        assert(std::abs(c10[1] - 3.0) < 1e-9);
+        assert(std::abs(c20[1] - 4.0) < 1e-9);
+        assert(std::abs(c10[2] - 5.0) < 1e-9);
+        assert(std::abs(c20[2] - 6.0) < 1e-9);
+    }
+
+    // Single per cell
+    //
+    {
+        MyDataFrame df;
+
+        df.load_index(std::vector<unsigned long>{ 0,1,2,3 });
+        df.load_column<std::string>(
+            "r", std::vector<std::string>{ "A","A","B","B" });
+        df.load_column<std::string>(
+            "c", std::vector<std::string>{ "X","Y","X","Y" });
+        df.load_column<double>(
+            "v", std::vector<double>{ 1.5, 2.5, 3.5, 4.5 });
+
+        const auto  result {
+            df.pivot_table<std::string, std::string, double,
+                           MeanVisitor<double>>(
+                "r", "c", "v",
+                MeanVisitor<double>{ })
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+
+        // Each cell is just the single value itself
+        //
+        assert(std::abs(X[0] - 1.5) < 1e-9);
+        assert(std::abs(Y[0] - 2.5) < 1e-9);
+        assert(std::abs(X[1] - 3.5) < 1e-9);
+        assert(std::abs(Y[1] - 4.5) < 1e-9);
+    }
+
+    // Sparse cells
+    //
+    {
+        MyDataFrame df;
+
+        df.load_index(std::vector<unsigned long>{ 0,1,2 });
+        df.load_column<std::string>(
+            "r", std::vector<std::string>{ "A","B","C" });
+        df.load_column<std::string>(
+            "c", std::vector<std::string>{ "X","Y","Z" });
+        df.load_column<double>(
+            "v", std::vector<double>{ 10, 20, 30 });
+
+        const auto  result {
+            df.pivot_table<std::string, std::string, double,
+                           SumVisitor<double>>(
+                "r", "c", "v",
+                SumVisitor<double>{ })
+        };
+
+        // result.write<std::ostream, double>
+        //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+        const auto  &idx { result.get_index() };
+
+        assert(idx.size() == 3);
+        assert(idx[0] == "A" && idx[1] == "B" && idx[2] == "C");
+
+        // 3x3 result, diagonal populated, off-diagonal NaN
+        //
+        const auto  &X { result.get_column<double>("X") };
+        const auto  &Y { result.get_column<double>("Y") };
+        const auto  &Z { result.get_column<double>("Z") };
+
+        assert(std::abs(X[0] - 10.0) < 1e-9);
+        assert(std::isnan(Y[0]));
+        assert(std::isnan(Z[0]));
+
+        assert(std::isnan(X[1]));
+        assert(std::abs(Y[1] - 20.0) < 1e-9);
+        assert(std::isnan(Z[1]));
+
+        assert(std::isnan(X[2]));
+        assert(std::isnan(Y[2]));
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -3719,6 +4100,7 @@ int main(int, char *[])  {
     test_KrigingVisitor();
     test_asof_join();
     test_crosstab();
+    test_pivot_table();
 
     return (0);
 }

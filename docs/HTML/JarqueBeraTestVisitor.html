@@ -1,0 +1,239 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <font size="+3">&#8592;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><a href="https://github.com/hosseinmoein/DataFrame/blob/master/include/DataFrame/Utils/Concepts.h#L46">arithmetic</a> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  JarqueBeraTestVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> jb_test_v <span style="color:#808030; ">=</span> JarqueBeraTestVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        Jarque-Bera Test for Normality<BR>
+        Tests whether sample data have skewness and kurtosis matching a normal distribution. The null hypothesis is that the data are drawn from a normal distribution.<BR><BR>
+
+        <PRE>
+The test statistic is:
+  JB = (n / 6) * (S<sup>2</sup> + K<sup>2</sup> / 4)
+  where
+    n = sample size
+    S = sample skewness (third standardised moment)
+    K = sample excess kurtosis (fourth standardised moment minus 3)
+        </PRE>
+
+        Under H0 the statistic is asymptotically χ<sup>2</sup>, so the p-value is the χ<sup>2</sup> survival function evaluated at JB:<BR>
+
+        <PRE>
+p = exp(-JB / 2)   (exact for 2 d.o.f.)
+        </PRE>
+
+        A small p-value (conventionally < 0.05) gives evidence against normality.<BR>
+        The skewness and excess kurtosis are computed in a single pass using the Welford / Knuth online algorithm via StatsVisitor, so the implementation is numerically stable and requires no extra allocation.<BR>
+
+        <PRE>
+References:
+  Jarque, C.M. and Bera, A.K. (1980). "Efficient tests for normality,
+   homoscedasticity and serial independence of regression residuals",
+  Economics Letters 6(3): 255–259.
+  Jarque, C.M. and Bera, A.K. (1987). "A test for normality of
+  observations and regression residuals",
+  International Statistical Review 55(2): 163–172.
+        </PRE>
+
+        <B>NOTE</B>: The test is asymptotic and requires a reasonably large sample (typically n >= 30, though the guard below is set at 8 to allow rolling-window use). For small samples prefer ShapiroWilkTestVisitor.<BR><BR>
+										  
+        <I><B>get_result()</B></I>  Returns the JB test statistic (χ<sup>2</sup> under H0).<BR>
+        <I><B>get_p_value()</B></I> Returns the p-value of the test. Small values give evidence against the null hypothesis of normality.<BR>
+        <I><B>get_skewness()</B></I> Returns the sample skewness used in the computation.<BR>
+        <I><B>get_excess_kurtosis()</B></I> Returns the sample excess kurtosis used in the computation.<BR>
+        <I>
+        <PRE>
+explicit
+JarqueBeraTestVisitor(bool skipnan = false);
+        </PRE>
+        </I>
+      </td>
+      <td width="22%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_JarqueBeraTestVisitor<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing JarqueBeraTestVisitor{ } ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> MyDataFrame <span style="color:#808030; ">=</span> StdDataFrame<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">constexpr</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>   col_s <span style="color:#800080; ">{</span> <span style="color:#008c00; ">1000</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>  idx<span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>iota<span style="color:#808030; ">(</span>idx<span style="color:#808030; ">.</span>begin<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> idx<span style="color:#808030; ">.</span>end<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    MyDataFrame df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>load_index<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>idx<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   p<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    p<span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Normal data</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        jb_test_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   jb<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> jb<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// JB statistic should be modest for a large normal sample</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// (typical range 0–6 for n=1000 normal data)</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">1.63788</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-5</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// p-value well above any conventional significance level</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.440899</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-6</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Skew and excess kurtosis individually small</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_skewness<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.090082</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-6</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_excess_kurtosis<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.082764</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-6</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Uniform data</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">y</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_uniform_real_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        jb_test_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   jb<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">y</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> jb<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-9</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-9</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_skewness<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-9</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_excess_kurtosis<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-9</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Laplace data</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">bool</span><span style="color:#800080; ">&gt;</span>   p2<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        p2<span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> p<span style="color:#808030; ">.</span>seed<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>          expon <span style="color:#800080; ">{</span> gen_exponential_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>          berno <span style="color:#800080; ">{</span> gen_bernoulli_dist<span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p2<span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span> col <span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> <span style="color:#800000; font-weight:bold; ">auto</span> <span style="color:#808030; ">&amp;</span>val <span style="color:#800080; ">:</span> col<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">            val <span style="color:#808030; ">=</span> <span style="color:#808030; ">(</span>berno<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#800080; ">?</span> <span style="color:#008000; ">1.0</span> <span style="color:#800080; ">:</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">1.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> expon<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            i <span style="color:#808030; ">+</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">z</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>col<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        jb_test_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   jb<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">z</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> jb<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">392.055</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-3</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">7.35058e-86</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-80</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_skewness<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">1.15893</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-4</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Excess kurtosis should be clearly positive (leptokurtic)</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_excess_kurtosis<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">2.0092</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-4</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Formula</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Data: n=200 points split evenly between +1 and −1.</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// S = 0  (symmetric)</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Raw kurtosis = E[X⁴]/E[X²]² = 1/1 = 1  → excess kurtosis = 1−3 = −2</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// JB = (200/6) * (0 + 4/4) = 200/6 ≈ 33.333</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>   col_s <span style="color:#800080; ">{</span> <span style="color:#008c00; ">200</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span> col<span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> col_s<span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            col<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span> <span style="color:#808030; ">(</span>i <span style="color:#808030; ">%</span> <span style="color:#008c00; ">2</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">?</span> <span style="color:#008000; ">1.0</span> <span style="color:#800080; ">:</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">1.0</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">A</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>col<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        jb_test_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   jb<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">A</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> jb<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-9</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-9</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_skewness<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-9</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>jb<span style="color:#808030; ">.</span>get_excess_kurtosis<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-9</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

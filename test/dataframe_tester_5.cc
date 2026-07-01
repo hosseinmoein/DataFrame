@@ -4067,6 +4067,124 @@ static void test_pivot_table()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_JarqueBeraTestVisitor()  {
+
+    std::cout << "\nTesting JarqueBeraTestVisitor{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    constexpr std::size_t   col_s { 1000 };
+
+    std::vector<unsigned long>  idx(col_s);
+
+    std::iota(idx.begin(), idx.end(), 0UL);
+
+    MyDataFrame df;
+
+    df.load_index(std::move(idx));
+
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+
+    // Normal data
+    //
+    {
+        df.load_column<double>("x", gen_normal_dist<double>(col_s, p));
+
+        jb_test_v<double>   jb;
+
+        df.single_act_visit<double>("x", jb);
+
+        // JB statistic should be modest for a large normal sample
+        // (typical range 0–6 for n=1000 normal data)
+        //
+        assert(std::abs(jb.get_result() - 1.63788) < 1e-5);
+
+        // p-value well above any conventional significance level
+        //
+        assert(std::abs(jb.get_p_value() - 0.440899) < 1e-6);
+
+        // Skew and excess kurtosis individually small
+        //
+        assert(std::abs(jb.get_skewness() - -0.090082) < 1e-6);
+        assert(std::abs(jb.get_excess_kurtosis() - 0.082764) < 1e-6);
+    }
+
+    // Uniform data
+    //
+    {
+        df.load_column<double>("y", gen_uniform_real_dist<double>(col_s, p));
+
+        jb_test_v<double>   jb;
+
+        df.single_act_visit<double>("y", jb);
+
+        assert(std::abs(jb.get_result() - 0.0) < 1e-9);
+        assert(std::abs(jb.get_p_value() - 1.0) < 1e-9);
+        assert(std::abs(jb.get_skewness() - 0.0) < 1e-9);
+        assert(std::abs(jb.get_excess_kurtosis() - 0.0) < 1e-9);
+    }
+
+    // Laplace data
+    //
+    {
+        RandGenParams<bool>   p2;
+
+        p2.seed = p.seed;
+
+        const auto          expon { gen_exponential_dist<double>(col_s, p) };
+        const auto          berno { gen_bernoulli_dist(col_s, p2) };
+        std::vector<double> col (col_s);
+
+        for (std::size_t i { 0 }; auto &val : col)  {
+            val = (berno[i] ? 1.0 : -1.0) * expon[i];
+            i += 1;
+        }
+        df.load_column<double>("z", std::move(col));
+
+        jb_test_v<double>   jb;
+
+        df.single_act_visit<double>("z", jb);
+
+        assert(std::abs(jb.get_result() - 392.055) < 1e-3);
+        assert(std::abs(jb.get_p_value() - 7.35058e-86) < 1e-80);
+        assert(std::abs(jb.get_skewness() - -1.15893) < 1e-4);
+
+        // Excess kurtosis should be clearly positive (leptokurtic)
+        //
+        assert(std::abs(jb.get_excess_kurtosis() - 2.0092) < 1e-4);
+    }
+
+    // Formula
+    //
+    {
+        // Data: n=200 points split evenly between +1 and −1.
+        // S = 0  (symmetric)
+        // Raw kurtosis = E[X⁴]/E[X²]² = 1/1 = 1  → excess kurtosis = 1−3 = −2
+        // JB = (200/6) * (0 + 4/4) = 200/6 ≈ 33.333
+        //
+        const std::size_t   col_s { 200 };
+        std::vector<double> col(col_s);
+
+        for (std::size_t i = 0; i < col_s; ++i)
+            col[i] = (i % 2 == 0) ? 1.0 : -1.0;
+
+        df.load_column<double>("A", std::move(col));
+
+        jb_test_v<double>   jb;
+
+        df.single_act_visit<double>("A", jb);
+
+        assert(std::abs(jb.get_result() - 0.0) < 1e-9);
+        assert(std::abs(jb.get_p_value() - 1.0) < 1e-9);
+        assert(std::abs(jb.get_skewness() - 0.0) < 1e-9);
+        assert(std::abs(jb.get_excess_kurtosis() - 0.0) < 1e-9);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -4101,6 +4219,7 @@ int main(int, char *[])  {
     test_asof_join();
     test_crosstab();
     test_pivot_table();
+    test_JarqueBeraTestVisitor();
 
     return (0);
 }

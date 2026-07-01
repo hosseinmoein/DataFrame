@@ -3502,7 +3502,7 @@ struct  StatsVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    inline void operator() (const index_type &, const value_type &val)  {
+    inline void operator()(const index_type &, const value_type &val)  {
 
         SKIP_NAN
 
@@ -3527,26 +3527,25 @@ struct  StatsVisitor  {
         n_ = 0;
         m1_ = m2_ = m3_ = m4_ = 0;
     }
-    inline void post ()  {  }
+    inline void post()  {  }
 
-    inline size_type get_count () const  { return (n_); }
-    inline result_type get_mean () const  { return (m1_); }
-    inline result_type get_variance () const  {
+    inline size_type get_count() const  { return (n_); }
+    inline result_type get_mean() const  { return (m1_); }
+    inline result_type get_variance() const  {
 
-        return static_cast<result_type>(m2_ / (value_type(n_) - 1.0));
+        return (result_type(m2_ / (value_type(n_) - 1.0)));
     }
-    inline result_type get_std () const  {
+    inline result_type get_std() const  {
 
-        return static_cast<result_type>(::sqrt(get_variance()));
+        return (result_type(::sqrt(get_variance())));
     }
-    inline result_type get_skew () const  {
+    inline result_type get_skew() const  {
 
-        return static_cast<result_type>(::sqrt(n_) * m3_ / ::pow(m2_, 1.5));
+        return (result_type(::sqrt(n_) * m3_ / ::pow(m2_, 1.5)));
     }
-    inline result_type get_kurtosis () const  {
+    inline result_type get_kurtosis() const  {
 
-        return static_cast<result_type>
-            (value_type(n_) * m4_ / (m2_ * m2_) - 3.0);
+        return (result_type(value_type(n_) * m4_ / (m2_ * m2_) - 3.0));
     }
 
     DECL_CTOR(StatsVisitor)
@@ -12573,6 +12572,152 @@ private:
 
 template<typename T, typename I = unsigned long>
 using chis_test_v = ChiSquaredTestVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+// Jarque-Bera Test for Normality
+//
+// Tests whether sample data have skewness and kurtosis matching a normal
+// distribution. The null hypothesis is that the data are drawn from a
+// normal distribution.
+//
+// The test statistic is:
+//
+//   JB = (n / 6) * (S<sup>2</sup> + K<sup>2</sup> / 4)
+//
+//   where
+//     n = sample size
+//     S = sample skewness (third standardised moment)
+//     K = sample excess kurtosis (fourth standardised moment minus 3)
+//
+// Under H₀ the statistic is asymptotically χ<sup>2</sup>, so the p-value is
+// the χ<sup>2</sup> survival function evaluated at JB:
+//
+//   p = exp(-JB / 2)   (exact for 2 d.o.f.)
+//
+// A small p-value (conventionally < 0.05) gives evidence against normality.
+//
+// The skewness and excess kurtosis are computed in a single pass using the
+// Welford / Knuth online algorithm via StatsVisitor, so the implementation
+// is numerically stable and requires no extra allocation.
+//
+// References:
+//   Jarque, C.M. and Bera, A.K. (1980). "Efficient tests for normality,
+//   homoscedasticity and serial independence of regression residuals",
+//   Economics Letters 6(3): 255–259.
+//
+//   Jarque, C.M. and Bera, A.K. (1987). "A test for normality of observations
+//   and regression residuals", International Statistical Review 55(2): 163–172.
+//
+// NOTE: The test is asymptotic and requires a reasonably large sample
+//       (typically n >= 30, though the guard below is set at 8 to allow
+//       rolling-window use). For small samples prefer ShapiroWilkTestVisitor.
+//
+template<arithmetic T, typename I = unsigned long>
+struct  JarqueBeraTestVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type = double;
+    using data_t = double;
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
+
+        const size_type col_s {
+            size_type(std::min(std::distance(idx_begin, idx_end),
+                               std::distance(column_begin, column_end)))
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 8)
+            throw DataFrameError(
+                "JarqueBeraTestVisitor: Time-series is too short");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        // Single-pass accumulation of skew and excess kurtosis.
+        //
+        // NOTE: stats_ is always StatsVisitor<double, I> regardless of T.
+        //       If T is an integral type, accumulating the higher moments in
+        //       T would silently truncate every intermediate division
+        //       (StatsVisitor's recurrence divides by n_ in value_type), and
+        //       produce garbage skew/kurtosis instead of an error.  We avoid
+        //       that entirely by always feeding double-converted values into
+        //       a double-typed accumulator, one element at a time.
+        //
+        auto    idx_it { idx_begin };
+        auto    col_it { column_begin };
+
+        stats_.pre();
+        for (size_type i { 0 }; i < col_s; ++i, ++idx_it, ++col_it)
+            stats_(*idx_it, static_cast<data_t>(*col_it));
+        stats_.post();
+
+        const result_type   data_s { result_type(stats_.get_count()) };
+        const result_type   var { stats_.get_variance() };
+
+        // Degenerate (zero-variance / constant) input makes both skewness
+        // and kurtosis mathematically 0/0.  A constant series has no
+        // asymmetry and no tail behaviour to speak of, so we define both as
+        // 0 rather than propagating NaN through the rest of the pipeline.
+        //
+        if (var <= result_type(0) || ! std::isfinite(var)) [[unlikely]]  {
+            skew_ = 0;
+            xkurt_ = 0;
+        }
+        else  {
+            skew_ = stats_.get_skew();
+            xkurt_ = stats_.get_kurtosis();   // excess kurtosis
+        }
+
+        result_  = (data_s / 6.0) * (skew_ * skew_ + (xkurt_ * xkurt_) / 4.0);
+
+        // χ²(2) survival function: p = exp(-JB/2) — exact for 2 d.o.f.
+        //
+        p_value_ = std::exp(-result_ / 2.0);
+    }
+
+    inline void pre()  {
+
+        result_ = p_value_ = skew_ = xkurt_ = 0;
+        stats_.pre();
+    }
+    inline void post()  {  }
+
+    // Returns the JB test statistic (χ^2 under H0).
+    //
+    inline result_type get_result()  const  { return (result_); }
+
+    // Returns the p-value of the test. Small values give evidence against
+    // the null hypothesis of normality.
+    //
+    inline result_type get_p_value() const  { return (p_value_); }
+
+    // Returns the sample skewness used in the computation.
+    //
+    inline result_type get_skewness() const  { return (skew_); }
+
+    // Returns the sample excess kurtosis used in the computation.
+    //
+    inline result_type
+    get_excess_kurtosis() const  { return (xkurt_); }
+
+    explicit
+    JarqueBeraTestVisitor(bool skipnan = false) : stats_(skipnan)  {   }
+
+private:
+
+    StatsVisitor<data_t, I>  stats_ { };
+    result_type              result_ { 0 };
+    result_type              p_value_ { 0 };
+    result_type              skew_ { 0 };
+    result_type              xkurt_ { 0 };
+};
+
+template<typename T, typename I = unsigned long>
+using jb_test_v = JarqueBeraTestVisitor<T, I>;
 
 } // namespace hmdf
 

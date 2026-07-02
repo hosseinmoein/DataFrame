@@ -44,12 +44,9 @@ body {
 
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper">gen_log_space_nums<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                   T first<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                   T last<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                   T base<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> allocator_declare<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span>type<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">gen_log_space_nums<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span> T first<span style="color:#808030; ">,</span> T last<span style="color:#808030; ">,</span> T base<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
@@ -59,6 +56,7 @@ body {
       </td>
       <td>
         <B>T</B>: Any type that supports arithmetic<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
         <B>n</B>: Number of numerics to generate<BR>
         <B>first</B>: Starting power to raise the base to<BR>
         <B>last</B>: Last power to raise the base to<BR>
@@ -68,11 +66,9 @@ body {
 
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper">gen_even_space_nums<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                    T first<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                    T last<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> allocator_declare<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span>type<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">gen_even_space_nums<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span> T first<span style="color:#808030; ">,</span> T last<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
@@ -82,6 +78,7 @@ body {
       </td>
       <td>
         <B>T</B>: Any type that supports arithmetic<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
         <B>n</B>: Number of values to generate<BR>
         <B>first</B>: Starting value<BR>
         <B>last</B>: Last value (excluded)<BR>
@@ -90,10 +87,9 @@ body {
 
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper">gen_triangular_nums<span style="color:#808030; ">(</span>T last<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                    T first <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> allocator_declare<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span>type<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">gen_triangular_nums<span style="color:#808030; ">(</span>T last<span style="color:#808030; ">,</span> T first <span style="color:#808030; ">=</span> T<span style="color:#808030; ">(</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
@@ -105,6 +101,7 @@ body {
       </td>
       <td width="30%">
         <B>T</B>: Any type that supports arithmetic<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
         <B>last</B>: Last value<BR>
         <B>last</B>: Starting value defaulted to 1<BR>
       </td>
@@ -112,11 +109,9 @@ body {
 
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper">gen_sym_triangle<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                 <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>start_val<span style="color:#808030; ">,</span></span>
-<span class="line_wrapper">                 <span style="color:#800000; font-weight:bold; ">bool</span> normalize <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> allocator_declare<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span>type<span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper">gen_sym_triangle<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>start_val<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">bool</span> normalize <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
       <td>
@@ -126,6 +121,7 @@ body {
       </td>
       <td width="30%">
         <B>T</B>: Any type that supports arithmetic<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
         <B>start_val</B>: Starting value of the result<BR>
         <B>normalize</B>: if true, result numbers are divided by the sum of all numbers<BR>
       </td>
@@ -133,8 +129,8 @@ body {
 
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> allocator_declare<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span>type<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">gen_dft_sample_freq<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span> T spacing <span style="color:#808030; ">=</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
@@ -146,6 +142,7 @@ body {
       </td>
       <td width="30%">
         <B>T</B>: Any type that supports arithmetic<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
         <B>n</B>: Window length<BR>
         <B>spacing</B>: Sample spacing (inverse of the sampling rate). Defaults to 1<BR>
       </td>

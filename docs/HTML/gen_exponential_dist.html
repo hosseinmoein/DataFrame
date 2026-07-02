@@ -44,8 +44,8 @@ body {
 
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
-<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> allocator_declare<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">::</span>type<span style="color:#800080; ">&gt;</span></span>
 <span class="line_wrapper">gen_exponential_dist<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> n<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/RandGenParams.html">RandGenParams</a><span style="color:#800080; ">&lt;</span>T<span style="color:#800080; ">&gt;</span> <span style="color:#808030; ">&amp;</span>params <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>
       </td>
@@ -60,6 +60,7 @@ body {
       </td>
       <td>
         <B>T</B>: Type can only be float, double, or long double<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
         <B>n</B>: Number of numerics to generate<BR>
         <B>params</B>: List of all applicable parameters, see DataFrameTypes.h
       </td>

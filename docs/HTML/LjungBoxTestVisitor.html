@@ -1,0 +1,314 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <font size="+3">&#8592;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#004a43; ">#</span><span style="color:#004a43; ">include </span><span style="color:#800000; ">&lt;</span><span style="color:#40015a; ">DataFrame/DataFrameStatsVisitors.h</span><span style="color:#800000; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><a href="https://github.com/hosseinmoein/DataFrame/blob/master/include/DataFrame/Utils/Concepts.h#L46">arithmetic</a> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  LjungBoxTestVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> lb_test_v <span style="color:#808030; ">=</span> LjungBoxTestVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        Ljung-Box Test for Residual Autocorrelation<BR>
+
+        Tests whether any of the first m autocorrelations of a time series are non-zero. The null hypothesis H0 is that the data are independently distributed (i.e. the residuals are white noise).<BR><BR>
+
+        The test statistic is:
+         <PRE>
+  Q(m) = n(n+2) * &Sigma;_{k=1}^{m}  &rho;&#770;<sup>2</sup>(k) / (n − k)
+         </PRE>
+          where<BR>
+            n = sample size<BR>
+            m = number of lags tested<BR>
+            &rho;&#770;̂(k) = sample autocorrelation at lag k<BR><BR>
+
+         Under H0 the statistic Q(m) is asymptotically &Chi;<sup>2</sup>(m) distributed when the series has no fitted parameters (raw residuals). When the series is the residual of an ARIMA(p, d, q) model, the degrees of freedom should be reduced to m − p − q.<BR><BR>
+
+         The p-value is the &Chi;<sup>2</sup>(dof) survival function, computed via the regularized upper incomplete gamma function:<BR>
+         <PRE>
+  p = 1 − P(dof / 2, Q / 2) = &Gamma;(dof / 2, Q / 2) / &Gamma;(dof / 2)
+         </PRE>
+
+         A small p-value (conventionally < 0.05) gives evidence against H0, i.e. the series has significant autocorrelation up to lag m. Individual per-lag Q statistics and autocorrelations are also available so that callers can pinpoint which lags are driving any rejection.<BR>
+         This visitor is the natural companion to <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/ARIMAVisitor.html">ARIMAVisitor</a> and <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/HWESForecastVisitor.html">HWESForecastVisitor</a>; run the forecast residuals through LjungBoxTestVisitor to confirm that no predictable structure was left in the errors.<BR>
+
+         <PRE>
+  References:
+    Ljung, G.M. and Box, G.E.P. (1978). "On a measure of lack of fit in
+    time series models", Biometrika 65(2): 297–303.
+
+    Box, G.E.P. and Pierce, D.A. (1970). "Distribution of residual
+    autocorrelations in autoregressive-integrated moving average time
+    series models", JASA 65(332): 1509–1526.
+         </PRE>
+										  
+        <I><B>get_result()</B></I> Overall Q(m) statistic<BR>
+        <I><B>get_p_value()</B></I> χ<sup>2</sup>(dof) p-value of the overall Q(m)<BR>
+        <I><B>get_acf()</B></I> Per-lag autocorrelations ρ̂(1) … ρ̂(m), size == max_lag<BR>
+        <I><B>get_q_stats()</B></I> Cumulative Q(k) statistics k=1…m, size == max_lag<BR>
+        <I><B>get_p_values()</B></I> Per-lag p-values for each Q(k), size == max_lag<BR>
+        <I>
+        <PRE>
+explicit
+LjungBoxTestVisitor(size_type max_lag, size_type dof_adjust = 0);
+        </PRE>
+        </I>
+        <I><B>max_lag()</B></I> Number of lags m to include in the Q statistic. The rule of thumb is min(10, n/5) for non-seasonal data (Hyndman & Athanasopoulos).<BR>
+        <I><B>dof_adjust()</B></I> Subtract this from max_lag to get the &Chi;<sup>2</sup> degrees of freedom. Set to p+q when testing ARIMA(p,d,q) residuals. Default is 0 (raw series / white-noise test).<BR>
+      </td>
+      <td width="22%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_LjungBoxTestVisitor<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing LjungBoxTestVisitor{ } ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> MyDataFrame <span style="color:#808030; ">=</span> StdDataFrame<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">constexpr</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>   col_s <span style="color:#800080; ">{</span> <span style="color:#008c00; ">500</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>  idx<span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>iota<span style="color:#808030; ">(</span>idx<span style="color:#808030; ">.</span>begin<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> idx<span style="color:#808030; ">.</span>end<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    MyDataFrame df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>load_index<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>idx<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   p<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    p<span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// White noise</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        lb_test_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   lb <span style="color:#800080; ">{</span> <span style="color:#008c00; ">10</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> lb<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">9.70203</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.00001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Overall Q(10) should be small, p-value large</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.467012</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Result vectors are the right length</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_q_stats<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_p_values<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// All per-lag ACF should be close to 0</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span> <span style="color:#808030; ">&amp;</span>rho <span style="color:#800080; ">:</span> lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>rho<span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.2</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.025529</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">5</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.009931</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">9</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.072755</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Q stats must be non-decreasing</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> lb<span style="color:#808030; ">.</span>get_q_stats<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_q_stats<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">&gt;</span><span style="color:#808030; ">=</span> lb<span style="color:#808030; ">.</span>get_q_stats<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span>i <span style="color:#808030; ">-</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_q_stats<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.327812</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_q_stats<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">5</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">1.28697</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.00001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_q_stats<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">9</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">9.70203</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.00001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// AR -- strong autocorrelation at lag 1</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">auto</span>                y <span style="color:#808030; ">=</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">constexpr</span> <span style="color:#800000; font-weight:bold; ">double</span>    phi <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.9</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> col_s<span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            y<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span> phi <span style="color:#808030; ">*</span> y<span style="color:#808030; ">[</span>i <span style="color:#808030; ">-</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">+</span> y<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">y</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        lb_test_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   lb <span style="color:#800080; ">{</span> <span style="color:#008c00; ">10</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">y</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> lb<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Strong autocorrelation — Q should be very large, p near 0</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">1305.37</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.01</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-20</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// ACF at lag 1 should be strongly positive</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.874076</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Sine wave</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span> z<span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">constexpr</span> <span style="color:#800000; font-weight:bold; ">double</span>    freq <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.1</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> col_s<span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            z<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">sin</span><span style="color:#808030; ">(</span><span style="color:#008000; ">2.0</span> <span style="color:#808030; ">*</span> M_PI <span style="color:#808030; ">*</span> freq <span style="color:#808030; ">*</span> <span style="color:#800000; font-weight:bold; ">static_cast</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>i<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">z</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>z<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        lb_test_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   lb <span style="color:#800080; ">{</span> <span style="color:#008c00; ">20</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">z</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> lb<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Strong autocorrelation — Q should be very large, p near 0</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">4909.6</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-20</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Formula wave</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span> A<span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> col_s<span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            A<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span> <span style="color:#808030; ">(</span>i <span style="color:#808030; ">%</span> <span style="color:#008c00; ">2</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">?</span> <span style="color:#008000; ">1.0</span> <span style="color:#800080; ">:</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">1.0</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">A</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>A<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        LjungBoxTestVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span> lb <span style="color:#800080; ">{</span> <span style="color:#008c00; ">2</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">A</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> lb<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">1000.99</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.01</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-20</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// rho(1) should be very close to −1</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// rho(2) should be very close to +1</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.998</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.996</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Verify Q(2) against the formula</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> nd <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">static_cast</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> r1 <span style="color:#800080; ">{</span> lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> r2 <span style="color:#800080; ">{</span> lb<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> q_exp <span style="color:#800080; ">{</span> nd <span style="color:#808030; ">*</span> <span style="color:#808030; ">(</span>nd <span style="color:#808030; ">+</span> <span style="color:#008000; ">2.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#808030; ">(</span>r1 <span style="color:#808030; ">*</span> r1 <span style="color:#808030; ">/</span> <span style="color:#808030; ">(</span>nd <span style="color:#808030; ">-</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">+</span> r2 <span style="color:#808030; ">*</span> r2 <span style="color:#808030; ">/</span> <span style="color:#808030; ">(</span>nd <span style="color:#808030; ">-</span> <span style="color:#008000; ">2.0</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_q_stats<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> q_exp<span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-9</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// p-value = chi2_survival(dof/2=1, Q/2) for each cumulative Q</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// For lag 1: dof=1, Q(1) large → p near 0</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_p_values<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-10</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>lb<span style="color:#808030; ">.</span>get_p_values<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-10</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Degree of freedom (DOF) adjustment for ARIMA resdiduals</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">B</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        lb_test_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   lb_raw <span style="color:#800080; ">{</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// no adjustment</span></span>
+<span class="line_wrapper">        lb_test_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   lb_adj <span style="color:#800080; ">{</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// AR(1) residuals</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">B</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> lb_raw<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">B</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> lb_adj<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Q stats must be identical (adjustment only affects dof, not Q)</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>qs_raw <span style="color:#800080; ">{</span> lb_raw<span style="color:#808030; ">.</span>get_q_stats<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>qs_adj <span style="color:#800080; ">{</span> lb_adj<span style="color:#808030; ">.</span>get_q_stats<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">10</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>qs_raw<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> qs_adj<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-12</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// ACF must be identical too</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>acf_raw <span style="color:#800080; ">{</span> lb_raw<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>acf_adj <span style="color:#800080; ">{</span> lb_adj<span style="color:#808030; ">.</span>get_acf<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">10</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>acf_raw<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> acf_adj<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-12</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// p-values differ because dof differs.</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// With dof_adjust=1 each lag k uses dof=k-1 instead of dof=k.</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// For moderate Q values the χ^2(k-1) right tail is lighter than the</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// χ^2(k) right tail, so a smaller dof gives a smaller p-value.</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// At lag 1 dof clamps to 1 in both cases, so lag 0 is excluded.</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>pv_raw <span style="color:#800080; ">{</span> lb_raw<span style="color:#808030; ">.</span>get_p_values<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>pv_adj <span style="color:#800080; ">{</span> lb_adj<span style="color:#808030; ">.</span>get_p_values<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">10</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span>pv_adj<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">&lt;</span> pv_raw<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>lb_raw<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&gt;</span> lb_adj<span style="color:#808030; ">.</span>get_p_value<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>lb_raw<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> lb_adj<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">1e-12</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

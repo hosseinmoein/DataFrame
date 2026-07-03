@@ -4185,6 +4185,198 @@ static void test_JarqueBeraTestVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_LjungBoxTestVisitor()  {
+
+    std::cout << "\nTesting LjungBoxTestVisitor{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    constexpr std::size_t   col_s { 500 };
+
+    std::vector<unsigned long>  idx(col_s);
+
+    std::iota(idx.begin(), idx.end(), 0UL);
+
+    MyDataFrame df;
+
+    df.load_index(std::move(idx));
+
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+
+    // White noise
+    //
+    {
+        df.load_column<double>("x", gen_normal_dist<double>(col_s, p));
+
+        lb_test_v<double>   lb { 10 };
+
+        df.single_act_visit<double>("x", lb);
+
+        assert(std::abs(lb.get_result() - 9.70203) < 0.00001);
+
+        // Overall Q(10) should be small, p-value large
+        //
+        assert(std::abs(lb.get_p_value() - 0.467012) < 0.000001);
+
+        // Result vectors are the right length
+        //
+        assert(lb.get_acf().size() == 10);
+        assert(lb.get_q_stats().size() == 10);
+        assert(lb.get_p_values().size() == 10);
+
+        // All per-lag ACF should be close to 0
+        //
+        for (const auto &rho : lb.get_acf())
+            assert(std::abs(rho) < 0.2);
+        assert(std::abs(lb.get_acf()[0] - -0.025529) < 0.000001);
+        assert(std::abs(lb.get_acf()[5] - -0.009931) < 0.000001);
+        assert(std::abs(lb.get_acf()[9] - 0.072755) < 0.000001);
+
+        // Q stats must be non-decreasing
+        //
+        for (std::size_t i = 1; i < lb.get_q_stats().size(); ++i)
+            assert(lb.get_q_stats()[i] >= lb.get_q_stats()[i - 1]);
+        assert(std::abs(lb.get_q_stats()[0] - 0.327812) < 0.000001);
+        assert(std::abs(lb.get_q_stats()[5] - 1.28697) < 0.00001);
+        assert(std::abs(lb.get_q_stats()[9] - 9.70203) < 0.00001);
+    }
+
+    // AR -- strong autocorrelation at lag 1
+    //
+    {
+        auto                y = gen_normal_dist<double>(col_s, p);
+        constexpr double    phi { 0.9 };
+
+        for (std::size_t i = 1; i < col_s; ++i)
+            y[i] = phi * y[i - 1] + y[i];
+
+        df.load_column<double>("y", std::move(y));
+
+        lb_test_v<double>   lb { 10 };
+
+        df.single_act_visit<double>("y", lb);
+
+        // Strong autocorrelation — Q should be very large, p near 0
+        //
+        assert(std::abs(lb.get_result() - 1305.37) < 0.01);
+        assert(lb.get_p_value() < 1e-20);
+
+        // ACF at lag 1 should be strongly positive
+        //
+        assert(std::abs(lb.get_acf()[0] - 0.874076) < 0.000001);
+    }
+
+    // Sine wave
+    //
+    {
+        std::vector<double> z(col_s);
+        constexpr double    freq { 0.1 };
+
+        for (std::size_t i = 0; i < col_s; ++i)
+            z[i] = std::sin(2.0 * M_PI * freq * static_cast<double>(i));
+
+        df.load_column<double>("z", std::move(z));
+
+        lb_test_v<double>   lb { 20 };
+
+        df.single_act_visit<double>("z", lb);
+
+        // Strong autocorrelation — Q should be very large, p near 0
+        //
+        assert(std::abs(lb.get_result() - 4909.6) < 0.1);
+        assert(lb.get_p_value() < 1e-20);
+    }
+
+    // Formula wave
+    //
+    {
+        std::vector<double> A(col_s);
+
+        for (std::size_t i = 0; i < col_s; ++i)
+            A[i] = (i % 2 == 0) ? 1.0 : -1.0;
+
+        df.load_column<double>("A", std::move(A));
+
+        LjungBoxTestVisitor<double> lb { 2 };
+
+        df.single_act_visit<double>("A", lb);
+
+        assert(std::abs(lb.get_result() - 1000.99) < 0.01);
+        assert(lb.get_p_value() < 1e-20);
+
+        // rho(1) should be very close to −1
+        // rho(2) should be very close to +1
+        //
+        assert(lb.get_acf().size() == 2);
+        assert(std::abs(lb.get_acf()[0] - -0.998) < 0.001);
+        assert(std::abs(lb.get_acf()[1] - 0.996) < 0.001);
+
+        // Verify Q(2) against the formula
+        //
+        const double nd { static_cast<double>(col_s) };
+        const double r1 { lb.get_acf()[0] };
+        const double r2 { lb.get_acf()[1] };
+        const double q_exp {
+            nd * (nd + 2.0) * (r1 * r1 / (nd - 1.0) + r2 * r2 / (nd - 2.0))
+        };
+
+        assert(std::abs(lb.get_q_stats()[1] - q_exp) < 1e-9);
+
+        // p-value = chi2_survival(dof/2=1, Q/2) for each cumulative Q
+        // For lag 1: dof=1, Q(1) large → p near 0
+        //
+        assert(lb.get_p_values()[0] < 1e-10);
+        assert(lb.get_p_values()[1] < 1e-10);
+    }
+
+    // Degree of freedom (DOF) adjustment for ARIMA resdiduals
+    //
+    {
+        df.load_column<double>("B", gen_normal_dist<double>(col_s, p));
+
+        lb_test_v<double>   lb_raw { 10, 0 };  // no adjustment
+        lb_test_v<double>   lb_adj { 10, 1 };  // AR(1) residuals
+
+        df.single_act_visit<double>("B", lb_raw);
+        df.single_act_visit<double>("B", lb_adj);
+
+        // Q stats must be identical (adjustment only affects dof, not Q)
+        //
+        const auto  &qs_raw { lb_raw.get_q_stats() };
+        const auto  &qs_adj { lb_adj.get_q_stats() };
+
+        for (std::size_t i = 0; i < 10; ++i)
+            assert(std::abs(qs_raw[i] - qs_adj[i]) < 1e-12);
+
+        // ACF must be identical too
+        //
+        const auto  &acf_raw { lb_raw.get_acf() };
+        const auto  &acf_adj { lb_adj.get_acf() };
+
+        for (std::size_t i = 0; i < 10; ++i)
+            assert(std::abs(acf_raw[i] - acf_adj[i]) < 1e-12);
+
+        // p-values differ because dof differs.
+        // With dof_adjust=1 each lag k uses dof=k-1 instead of dof=k.
+        // For moderate Q values the χ^2(k-1) right tail is lighter than the
+        // χ^2(k) right tail, so a smaller dof gives a smaller p-value.
+        // At lag 1 dof clamps to 1 in both cases, so lag 0 is excluded.
+        //
+        const auto  &pv_raw { lb_raw.get_p_values() };
+        const auto  &pv_adj { lb_adj.get_p_values() };
+
+        for (std::size_t i = 1; i < 10; ++i)
+            assert(pv_adj[i] < pv_raw[i]);
+
+        assert(lb_raw.get_p_value() > lb_adj.get_p_value());
+        assert(std::abs(lb_raw.get_result() - lb_adj.get_result()) < 1e-12);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -4220,6 +4412,7 @@ int main(int, char *[])  {
     test_crosstab();
     test_pivot_table();
     test_JarqueBeraTestVisitor();
+    test_LjungBoxTestVisitor();
 
     return (0);
 }

@@ -12719,6 +12719,308 @@ private:
 template<typename T, typename I = unsigned long>
 using jb_test_v = JarqueBeraTestVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Ljung-Box Test for Residual Autocorrelation
+//
+// Tests whether any of the first m autocorrelations of a time series are
+// non-zero. The null hypothesis H0 is that the data are independently
+// distributed (i.e. the residuals are white noise).
+//
+// The test statistic is:
+//
+//   Q(m) = n(n+2) * &Sigma;_{k=1}^{m}  &rho;&#770;<sup>2</sup>(k) / (n−k)
+//
+//   where
+//     n = sample size
+//     m = number of lags tested
+//     &rho;&#770;̂(k) = sample autocorrelation at lag k
+//
+// Under H0 the statistic Q(m) is asymptotically &Chi;<sup>2</sup>(m)
+// distributed when the series has no fitted parameters (raw residuals). When
+// the series is the residual of an ARIMA(p, d, q) model, the degrees of
+// freedom should be reduced to m − p − q.
+//
+// The p-value is the &Chi;<sup>2</sup>(dof) survival function, computed via
+// the regularized upper incomplete gamma function:
+//
+//   p = 1 − P(dof/2, Q/2) = &Gamma;(dof/2, Q/2) / &Gamma;(dof/2)
+//
+// A small p-value (conventionally < 0.05) gives evidence against H0,
+// i.e. the series has significant autocorrelation up to lag m.
+//
+// Individual per-lag Q statistics and autocorrelations are also available
+// so that callers can pinpoint which lags are driving any rejection.
+//
+// This visitor is the natural companion to ARIMAVisitor and
+// HWESForecastVisitor; run the forecast residuals through LjungBoxTestVisitor
+// to confirm that no predictable structure was left in the errors.
+//
+// References:
+//   Ljung, G.M. and Box, G.E.P. (1978). "On a measure of lack of fit in
+//   time series models", Biometrika 65(2): 297–303.
+//
+//   Box, G.E.P. and Pierce, D.A. (1970). "Distribution of residual
+//   autocorrelations in autoregressive-integrated moving average time
+//   series models", JASA 65(332): 1509–1526.
+//
+template<arithmetic T, typename I = unsigned long>
+struct  LjungBoxTestVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type = double;
+    using data_t = double;
+    using vec_result_type = std::vector<result_type>;
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < max_lag_ + 3)
+            throw DataFrameError(
+                "LjungBoxTestVisitor: Time-series is too short for the "
+                "requested number of lags");
+        if (max_lag_ < 1)
+            throw DataFrameError(
+                "LjungBoxTestVisitor: max_lag must be >= 1");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        // 1. Compute the sample mean (needed for lag-0 variance below)
+        //
+        data_t  mean { 0 };
+
+        for (size_type i { 0 }; i < col_s; ++i)
+            mean += *(column_begin + i);
+        mean /= static_cast<data_t>(col_s);
+
+        // 2. Compute lag-0 variance (denominator of all &rho;&#770;̂(k))
+        //    using the biased estimator: Σ(xᵢ − x̄)<sup>2</sup> / n
+        //    This matches the convention in Ljung & Box (1978) and
+        //    produces the same p^ that the ACF plot in standard
+        //    statistical packages uses.
+        //
+        data_t  var0 { 0 };
+
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const data_t    d { *(column_begin + i) - mean };
+
+            var0 += d * d;
+        }
+        var0 /= static_cast<data_t>(col_s);  // biased variance
+
+        if (var0 <= std::numeric_limits<data_t>::epsilon() *
+                    (mean * mean + 1.0) ||
+            ! std::isfinite(var0)) [[unlikely]]  {
+            // Constant series: p^ (k) = 0 for all k, Q = 0, p = 1
+            //
+            acf_.assign(max_lag_, 0.0);
+            q_stats_.assign(max_lag_, 0.0);
+            p_values_.assign(max_lag_, 1.0);
+            q_stat_ = 0.0;
+            p_value_ = 1.0;
+            return;
+        }
+
+        // 3. Compute &rho;&#770;̂(k) for k = 1 … max_lag_
+        //    ρ̂(k) = [Σᵢ₌₁ⁿ⁻ᵏ (xᵢ − x̄)(xᵢ₊ₖ − x̄)] / (col_s · var0)
+        //
+        //    We compute this directly (no CorrVisitor) so that we
+        //    can use the same mean and var0 for all lags, matching
+        //    the formula in Ljung & Box (1978) exactly.  CorrVisitor
+        //    re-estimates mean separately per window, which would
+        //    produce subtly different — and for this test, incorrect
+        //    — autocorrelations.
+        //
+        acf_.resize(max_lag_);
+
+        for (size_type k { 1 }; k <= max_lag_; ++k)  {
+            data_t  c_k { 0 };
+
+            for (size_type i { 0 }; i < (col_s - k); ++i)  {
+                c_k += (*(column_begin + i) - mean) *
+                       (*(column_begin + (i + k)) - mean);
+            }
+            acf_[k - 1] = c_k / (static_cast<data_t>(col_s) * var0);
+        }
+
+        // 4. Accumulate Q(k) for k = 1 … max_lag_
+        //    Q(k) = col_s(n+2) · Σⱼ₌₁ᵏ ρ̂<sup>2</sup>(j) / (col_s − j)
+        //
+        const data_t    col_s_d { static_cast<data_t>(col_s) };
+        const data_t    coeff { col_s_d * (col_s_d + 2.0) };
+
+        q_stats_.resize(max_lag_);
+        p_values_.resize(max_lag_);
+
+        data_t  q_accum { 0 };
+
+        for (size_type k { 1 }; k <= max_lag_; ++k)  {
+            const data_t    rho { acf_[k - 1] };
+
+            q_accum += (rho * rho) / (col_s_d - static_cast<data_t>(k));
+            q_stats_[k - 1] = coeff * q_accum;
+
+            // 6. p-value from χ<sup>2</sup>(dof) survival function
+            //    Use the regularised upper incomplete gamma:
+            //      p = Γ(dof/2, Q/2) / Γ(dof/2)
+            //        = 1 − regularised lower incomplete gamma
+            //        = std::erfc is only exact for dof=2; for general
+            //          dof we need the series expansion.  We implement
+            //          the standard continued-fraction / series
+            //          algorithm (same approach as ChiSquaredTestVisitor).
+            //
+            const size_type dof_k {
+                (k > dof_adjust_) ? (k - dof_adjust_) : size_type(1)
+            };
+            const data_t    q_k { q_stats_[k - 1] };
+            const data_t    half_k { static_cast<data_t>(dof_k) / 2.0 };
+            const data_t    half_q { q_k / 2.0 };
+
+            p_values_[k - 1] = chi2_survival_(half_k, half_q);
+        }
+
+        q_stat_ = q_stats_.back();
+        p_value_ = p_values_.back();
+    }
+
+    inline void pre()  {
+        acf_.clear();
+        q_stats_.clear();
+        p_values_.clear();
+        q_stat_ = 0.0;
+        p_value_ = 0.0;
+    }
+    inline void post()  {  }
+
+    // Overall Q(m) statistic
+    //
+    inline result_type get_result() const  { return (q_stat_); }
+
+    // χ<sup>2</sup>(dof) p-value of the overall Q(m)
+    //
+    inline result_type get_p_value() const  { return (p_value_); }
+
+    // Per-lag autocorrelations ρ̂(1) … ρ̂(m), size == max_lag
+    //
+    inline const vec_result_type &get_acf() const  { return (acf_); }
+
+    // Cumulative Q(k) statistics k=1…m, size == max_lag
+    //
+    inline const vec_result_type &get_q_stats() const  { return (q_stats_); }
+
+    // Per-lag p-values for each Q(k), size == max_lag
+    //
+    inline const vec_result_type &get_p_values() const  { return (p_values_); }
+
+    explicit
+    LjungBoxTestVisitor(size_type max_lag, size_type dof_adjust = 0)
+        : max_lag_(max_lag), dof_adjust_(dof_adjust)  {  }
+
+private:
+
+    // Number of lags m to include in the Q statistic. The rule of thumb is
+    // min(10, n/5) for non-seasonal data (Hyndman & Athanasopoulos).
+    //
+    const size_type max_lag_;
+
+    // Subtract this from max_lag to get the &Chi;<sup>2</sup> degrees of
+    // freedom.
+    // Set to p+q when testing ARIMA(p,d,q) residuals. Default is 0
+    // (raw series / white-noise test).
+    //
+    const size_type dof_adjust_;
+
+    result_type     q_stat_ { 0 };
+    result_type     p_value_ { 0 };
+    vec_result_type acf_ {  };
+    vec_result_type q_stats_ {  };
+    vec_result_type p_values_ {  };
+
+    // a = shape; x = z = value
+    // Regularised upper incomplete gamma function:
+    //   Γ(a, x) / Γ(a) = 1 − P(a, x)
+    // i.e. the χ<sup>2</sup>(2a) survival function evaluated at 2x.
+    //
+    // Uses the series representation for x < a+1 and the
+    // continued-fraction representation otherwise, following the
+    // algorithm in Numerical Recipes (Press et al., §6.2).
+    //
+    static result_type
+    chi2_survival_(data_t shape, data_t value)  {
+
+        if (value <= 0.0) [[unlikely]]
+            return (1.0);
+        if (! std::isfinite(value)) [[unlikely]]
+            return (0.0);
+
+        // log-gamma via std::lgamma
+        //
+        const data_t    log_gam_shape { std::lgamma(shape) };
+
+        if (value < shape + 1.0)  {
+            // Series expansion for the lower incomplete gamma P(shape, value),
+            // then return 1 − P.
+            //
+            data_t  ap { shape };
+            data_t  sum { 1.0 / shape };
+            data_t  del { sum };
+
+            for (int n { 0 }; n < 200; ++n)  {
+                ap += 1.0;
+                del *= value / ap;
+                sum += del;
+                if (std::abs(del) < std::abs(sum) * 3e-15)
+                    break;
+            }
+            const data_t    p_lower {
+                std::exp(-value +
+                         shape * std::log(value) - log_gam_shape) *
+                sum
+            };
+
+            return (1.0 - p_lower);
+        }
+        else  {
+            // Continued-fraction expansion for the upper incomplete gamma
+            // (Lentz's method).
+            //
+            constexpr data_t    FPMIN { 1e-300 };
+
+            data_t  b { value + 1.0 - shape };
+            data_t  c { 1.0 / FPMIN };
+            data_t  d { 1.0 / b };
+            data_t  h { d };
+
+            for (int n { 1 }; n <= 200; ++n)  {
+                const data_t    shape_n  {
+                    -static_cast<data_t>(n) * (static_cast<data_t>(n) - shape)
+                };
+
+                b += 2.0;
+                d = shape_n * d + b;
+                if (std::abs(d) < FPMIN)  d = FPMIN;
+                c = b + shape_n / c;
+                if (std::abs(c) < FPMIN)  c = FPMIN;
+                d = 1.0 / d;
+                h *= d * c;
+
+                if (std::abs(d * c - 1.0) < 3e-15)  break;
+            }
+            return (std::exp(-value +
+                             shape * std::log(value) - log_gam_shape) *
+                    h);
+        }
+    }
+};
+
+template<typename T, typename I = unsigned long>
+using lb_test_v = LjungBoxTestVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

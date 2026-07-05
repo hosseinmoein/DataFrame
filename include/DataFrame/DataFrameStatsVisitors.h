@@ -13021,6 +13021,175 @@ private:
 template<typename T, typename I = unsigned long>
 using lb_test_v = LjungBoxTestVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Durbin-Watson Test for First-Order Serial Autocorrelation in Residuals
+//
+// Computes the Durbin-Watson d statistic on a single column of regression
+// residuals eₜ:
+//
+//    &Sigma;<sub>i=2<sup>n</sup></sub> (e<sub>i</sub> − e<sub<i - 1</sub>ᵢ₋₁)<sup>2</sup>
+//  d = ────────────────────--
+//         &Sigma;<sub>i=1<sup>n</sup></sub> e<sub>i<sup>2</sup></sub>
+//
+// The statistic ranges over [0, 4]:
+//   d ≈ 0: strong positive first-order autocorrelation
+//   d ≈ 2: no first-order autocorrelation (H₀)
+//   d ≈ 4: strong negative first-order autocorrelation
+//
+// Note that d ≈ 2(1 − &rho;&#x302;) where &rho;&#x302;̂ is the lag-1 sample
+// autocorrelation, so get_rho() gives &rho;&#x302;̂ without running a separate
+// AutoCorrVisitor.
+//
+// Classification (get_result_category()):
+//   The Durbin-Watson bounds test classifies d against critical values
+//   dL and dU that strictly depend on n, k (regressors), and &alpha;.  Because
+//   shipping the full Savin-White table inside a header is impractical,
+//   this visitor accepts user-supplied dL/dU through the constructor and
+//   falls back to the widely-used rule-of-thumb (dL=1.5, dU=2.5, α≈0.05,
+//   moderate n, k=1) when they are not provided.  For precise inference
+//   look up dL and dU from the Durbin-Watson table for your n, k, and &alpha;
+//   and pass them to the constructor.
+//
+// The relationship between d and the bounds is:
+//   d < dL -> positive_autocorr (reject H0)
+//   d > 4−dL -> negative_autocorr (reject H0)
+//   dU < d < 4−dU -> no_autocorr (fail to reject H0)
+//   otherwise -> inconclusive
+//
+// Usage pattern — regress, extract residuals, then test:
+//
+//   LinearFitVisitor<double> lf;
+//   df.single_act_visit<double, double>("x", "y", lf);
+//
+//   Build a residual column: &#375; = lf.get_result(), y is the original
+//   residuals[i] = y[i] - &#375;[i]
+//
+//   DurbinWatsonVisitor<double> dw;
+//   df.single_act_visit<double>("residuals", dw);
+//
+// References:
+//   Durbin, J. and Watson, G.S. (1950). "Testing for serial correlation in
+//   least squares regression. I", Biometrika 37(3–4): 409–428.
+//
+//   Durbin, J. and Watson, G.S. (1951). "Testing for serial correlation in
+//   least squares regression. II", Biometrika 38(1–2): 159–178.
+//
+//   Savin, N.E. and White, K.J. (1977). "The Durbin-Watson test for serial
+//   correlation with extreme sample sizes or many regressors", Econometrica
+//   45(8): 1989–1996.
+//
+template<arithmetic T, typename I = unsigned long>
+struct  DurbinWatsonVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = T;
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 3)
+            throw DataFrameError(
+                "DurbinWatsonVisitor: Too few non-NaN observations "
+                "(need >= 3)");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        // 1. Numerator: Σ (eᵢ − eᵢ₋₁)² (col_s−1 terms)
+        //    Denominator: Σ eᵢ² (col_s terms)
+        // Both accumulated in one pass.
+        //
+        value_type  num { 0 };
+        value_type  den { *column_begin * *column_begin };
+
+        for (size_type i { 1 }; i < col_s; ++i)  {
+            const auto  i_data { *(column_begin + i) };
+            const auto  diff { i_data - *(column_begin + (i - 1)) };
+
+            num += diff * diff;
+            den += i_data * i_data;
+        }
+
+        // 2. Guard: zero denominator means all residuals are 0 (perfect fit
+        //    or constant series).  DW is undefined; we return 2 (no autocorr)
+        //    and set rho = 0, mirroring JarqueBeraTestVisitor's treatment of
+        //    degenerate input.
+        //
+        const value_type    eps_den {
+            std::numeric_limits<value_type>::epsilon() *
+            static_cast<value_type>(col_s)
+        };
+
+        if (den <= eps_den) [[unlikely]]  {
+            d_ = T(2);
+            rho_ = 0;
+            cat_ = dw_autocorr_t::no_autocorr;
+            return;
+        }
+
+        d_ = num / den;
+
+        // ρ̂ ≈ 1 − d/2  (first-order autocorrelation estimate)
+        //
+        rho_ = T(1) - d_ / T(2);
+
+        // 3. Classify against the user-supplied (or default) bounds
+        //
+        const auto  d_upper_mirror { T(4) - d_upper_ };
+        const auto  d_lower_mirror { T(4) - d_lower_ };
+
+        if (d_ < d_lower_)
+            cat_ = dw_autocorr_t::positive_autocorr;
+        else if (d_ > d_lower_mirror)
+            cat_ = dw_autocorr_t::negative_autocorr;
+        else if (d_ > d_upper_ && d_ < d_upper_mirror)
+            cat_ = dw_autocorr_t::no_autocorr;
+        else
+            cat_ = dw_autocorr_t::inconclusive;
+    }
+
+    inline void pre()  { d_ = rho_ = 0; cat_ = dw_autocorr_t::inconclusive; }
+    inline void post()  {  }
+
+    // The Durbin-Watson d statistic ∈ [0, 4]
+    //
+    inline result_type get_result() const  { return (d_); }
+
+    // Approximate lag-1 autocorrelation ρ̂ = 1 − d/2 ∈ [−1, 1]
+    //
+    inline result_type get_rho() const  { return (rho_); }
+
+    // Bounds-test classification of d (see dw_autocorr_t)
+    //
+    inline dw_autocorr_t get_result_category() const  { return (cat_); }
+
+    explicit
+    DurbinWatsonVisitor(result_type d_lower = result_type(1.5),
+                        result_type d_upper = result_type(2.5))
+        : d_lower_(d_lower), d_upper_(d_upper)  {  }
+
+private:
+
+    // Lower Durbin-Watson critical bound dL. Defaults to 1.5.
+    //
+    const result_type   d_lower_;
+
+    // Upper Durbin-Watson critical bound dU. Defaults to 2.5.
+    //
+    const result_type   d_upper_;
+
+    result_type         d_ { 0.0 };
+    result_type         rho_ { 0.0 };
+    dw_autocorr_t       cat_ { dw_autocorr_t::inconclusive };
+};
+
+template<typename T, typename I = unsigned long>
+using dw_test_v = DurbinWatsonVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

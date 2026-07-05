@@ -503,6 +503,25 @@ enum class  linreg_moving_mean_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+// Interpretation of the Durbin-Watson d statistic.
+//
+// The Durbin-Watson bounds test compares d against critical values dL and dU
+// that depend on n (sample size), k (number of regressors excluding the
+// intercept), and the chosen significance level.  Rather than shipping the
+// full table of critical values inside the visitor, DurbinWatsonVisitor
+// returns one of these four classifications based on the commonly-used
+// rule-of-thumb thresholds (see get_result_category() documentation).
+//
+enum class  dw_autocorr_t : unsigned char  {
+
+    positive_autocorr = 1,  // d < dL: reject H0 in favour of +ve AR(1)
+    negative_autocorr = 2,  // d > 4−dL: reject H0 in favour of −ve AR(1)
+    no_autocorr = 3,        // dU < d < 4−dU: fail to reject H0
+    inconclusive = 4,       // dL <= d <= dU or 4−dU <= d <= 4−dL
+};
+
+// ----------------------------------------------------------------------------
+
 // The additive decomposition is the most appropriate if the magnitude of the
 // seasonal fluctuations, or the variation around the trend-cycle, does not
 // vary with the level of the time series. When the variation in the seasonal

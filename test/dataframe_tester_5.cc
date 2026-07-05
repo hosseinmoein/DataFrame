@@ -4377,6 +4377,185 @@ static void test_LjungBoxTestVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_DurbinWatsonVisitor()  {
+
+    std::cout << "\nTesting DurbinWatsonVisitor{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    constexpr std::size_t   col_s { 500 };
+
+    std::vector<unsigned long>  idx(col_s);
+
+    std::iota(idx.begin(), idx.end(), 0UL);
+
+    MyDataFrame df;
+
+    df.load_index(std::move(idx));
+
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+
+    // Formula
+    //
+    {
+        df.load_column("x", std::vector<double>{ 1.0, -1.0, 1.0, -1.0 },
+                       nan_policy::dont_pad_with_nans);
+
+        dw_test_v<double>   dw;
+
+        df.single_act_visit<double>("x", dw);
+
+        assert(std::abs(dw.get_result() - 3.0) < 1e-12);
+        assert(std::abs(dw.get_rho() - -0.5) < 1e-12);
+
+        // d=3 with default bounds (dL=1.5, dU=2.5): 4−dL=2.5, 4−dU=1.5
+        // d=3 > 4−dU=1.5 and d=3 < 4−dL=2.5? No: 3 > 2.5 = 4−dL
+        // So d > 4−dL → negative_autocorr
+        //
+        assert(dw.get_result_category() == dw_autocorr_t::negative_autocorr);
+    }
+
+    // White noise
+    //
+    {
+        df.load_column("y", gen_normal_dist<double>(col_s, p),
+                       nan_policy::dont_pad_with_nans);
+
+        dw_test_v<double>   dw;
+
+        df.single_act_visit<double>("y", dw);
+
+        // d should be close to 2 for white noise
+        //
+        assert(std::abs(dw.get_result() - 2.04668) < 1e-5);
+        assert(std::abs(dw.get_rho() - -0.0233394) < 1e-7);
+        assert(dw.get_result_category() == dw_autocorr_t::inconclusive);
+    }
+
+    // Positive correlation
+    //
+    {
+        auto                z = gen_normal_dist<double>(col_s, p);
+        constexpr double    phi { 0.9 };
+
+        for (std::size_t i = 1; i < col_s; ++i)
+            z[i] = phi * z[i - 1] + z[i];
+
+        df.load_column("z", std::move(z));
+
+        dw_test_v<double>   dw;
+
+        df.single_act_visit<double>("z", dw);
+
+        assert(std::abs(dw.get_result() - 0.248076) < 1e-6);
+        assert(std::abs(dw.get_rho() - 0.875962) < 1e-6);
+        assert(dw.get_result_category() == dw_autocorr_t::positive_autocorr);
+    }
+
+    // Negative correlation
+    //
+    {
+        auto                A = gen_normal_dist<double>(col_s, p);
+        constexpr double    phi { -0.9 };
+
+        for (std::size_t i = 1; i < col_s; ++i)
+            A[i] = phi * A[i - 1] + A[i];
+
+        df.load_column<double>("A", std::move(A));
+
+        dw_test_v<double>   dw;
+
+        df.single_act_visit<double>("A", dw);
+
+        // d should be well above 4−dL = 2.5
+        //
+        assert(std::abs(dw.get_result() - 3.86027) < 1e-5);
+        assert(std::abs(dw.get_rho() - -0.930136) < 1e-6);
+        assert(dw.get_result_category() == dw_autocorr_t::negative_autocorr);
+    }
+
+    // Rho formula
+    //
+    {
+        for (double phi : { -0.8, -0.4, 0.0, 0.4, 0.8 })  {
+            auto    B = gen_normal_dist<double>(col_s, p);
+
+            for (std::size_t i = 1; i < col_s; ++i)
+                B[i] = phi * B[i - 1] + B[i];
+
+            df.load_column("B", std::move(B));
+
+            dw_test_v<double>   dw;
+
+            df.single_act_visit<double>("B", dw);
+
+            const double    d { dw.get_result() };
+            const double    rho { dw.get_rho() };
+
+            // The visitor formula: rho = 1 − d/2
+            //
+            assert(std::abs(rho - (1.0 - d / 2.0)) < 1e-12);
+
+            // For large n, sample rho ≈ phi, so d ≈ 2(1−phi)
+            //
+            assert(std::abs(d - 2.0 * (1.0 - phi)) < 0.3);
+        }
+    }
+
+    // Custom bounds
+    //
+    {
+        auto                C = gen_normal_dist<double>(col_s, p);
+        constexpr double    phi { 0.6 };
+
+        for (std::size_t i = 1; i < col_s; ++i)
+            C[i] = phi * C[i - 1] + C[i];
+
+        df.load_column<double>("C", std::move(C));
+
+        DurbinWatsonVisitor<double> dw_default { 1.5, 2.5 };
+        DurbinWatsonVisitor<double> dw_tight { 0.5, 0.6 };
+
+        df.single_act_visit<double>("C", dw_default);
+        df.single_act_visit<double>("C", dw_tight);
+
+        // d value must be identical (bounds don't affect the statistic)
+        //
+        assert((std::abs(dw_default.get_result() -
+                         dw_tight.get_result()) < 1e-12));
+        assert((std::abs(dw_default.get_rho() -
+                         dw_tight.get_rho()) < 1e-12));
+
+        // Under default bounds d<1.5 → positive_autocorr
+        //
+        assert((dw_default.get_result_category() ==
+                dw_autocorr_t::positive_autocorr));
+
+        // Under very tight bounds d>dU=0.6 and d<4−dU=3.4 → no_autocorr
+        //
+        assert(dw_tight.get_result_category() == dw_autocorr_t::no_autocorr);
+    }
+
+    // Zero residuals
+    //
+    {
+        df.load_column<double>("D", std::vector<double>(col_s, 0));
+
+        DurbinWatsonVisitor<double> dw;
+
+        df.single_act_visit<double>("D", dw);
+
+        assert(dw.get_result() == 2.0);
+        assert(dw.get_rho() == 0.0);
+        assert(dw.get_result_category() == dw_autocorr_t::no_autocorr);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -4413,6 +4592,7 @@ int main(int, char *[])  {
     test_pivot_table();
     test_JarqueBeraTestVisitor();
     test_LjungBoxTestVisitor();
+    test_DurbinWatsonVisitor();
 
     return (0);
 }

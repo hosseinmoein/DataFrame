@@ -4555,6 +4555,193 @@ static void test_DurbinWatsonVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_SilhouetteScoreVisitor()  {
+
+    std::cout << "\nTesting SilhouetteScoreVisitor{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    constexpr std::size_t   col_s { 100 };
+
+    std::vector<unsigned long>  idx(col_s);
+
+    std::iota(idx.begin(), idx.end(), 0UL);
+
+    MyDataFrame df;
+
+    df.load_index(std::move(idx));
+
+    // Two clusters
+    //
+    {
+        df.load_column("x1", std::vector<double>{ 0.0, 1.0, 10.0, 11.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl1", std::vector<long>{ 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        sil_score_v<double> sil;
+
+        df.single_act_visit<double, long>("x1", "lbl1", sil);
+
+        // All scores should be > 0.9 for perfectly separated clusters
+        //
+        for (const auto &s : sil.get_result())
+            assert(s > 0.9);
+
+        // Mean score ≈ same as individual scores
+        //
+        assert(sil.get_mean_score() > 0.9);
+    }
+
+    // Three tight clusters
+    //
+    {
+        df.load_column("x2",
+                        std::vector<double>{ 0.0, 0.1, 0.2, 10.0, 10.1,
+                                             10.2, 20.0, 20.1, 20.2 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl2", std::vector<long>{ 0, 0, 0, 1, 1, 1, 2, 2, 2 },
+                       nan_policy::dont_pad_with_nans);
+
+        sil_score_v<double> sil;
+
+        df.single_act_visit<double, long>("x2", "lbl2", sil);
+
+        for (const auto &s : sil.get_result())
+            assert(s > 0.99);
+        assert(sil.get_mean_score() > 0.99);
+    }
+
+    // Overlapping clusters
+    //
+    {
+        df.load_column("x3", std::vector<double>{ 0.0, 5.0, 2.0, 10.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl3", std::vector<long>{ 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        sil_score_v<double> sil;
+
+        df.single_act_visit<double, long>("x3", "lbl3", sil);
+
+        assert(std::abs(sil.get_result()[0] - 0.519231) < 1e-6);
+        assert(std::abs(sil.get_result()[1] - -0.32) < 1e-2);
+        assert(std::abs(sil.get_result()[2] - -0.898438) < 1e-6);
+        assert(std::abs(sil.get_result()[3] - -0.0234375) < 1e-7);
+        assert(sil.get_mean_score() < 0.0);
+    }
+
+    // Singleton clusters
+    //
+    {
+        df.load_column("x4", std::vector<double>{ 0.0,  10.0, 11.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl4", std::vector<long>{ 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        sil_score_v<double> sil;
+
+        df.single_act_visit<double, long>("x4", "lbl4", sil);
+
+        // Point 0 is a singleton -> score must be 0
+        //
+        assert(std::abs(sil.get_result()[0] - 0.0) < 1e-10);
+
+        // Points 1 and 2 are in a proper cluster -> positive scores
+        //
+        assert(std::abs(sil.get_result()[1] - 0.99) < 1e-3);
+        assert(std::abs(sil.get_result()[2] - 0.991736) < 1e-6);
+        assert(std::abs(sil.get_mean_score() - 0.660579) < 1e-6);
+    }
+
+    // Noise points
+    //
+    {
+        df.load_column("x5", std::vector<double>{ 5.0, 0.0, 1.0, 10.0, 11.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl5", std::vector<long>{ -1, 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        sil_score_v<double> sil;
+
+        df.single_act_visit<double, long>("x5", "lbl5", sil);
+
+        // Noise point score must be 0
+        //
+        assert(std::abs(sil.get_result()[0] - 0.0) < 1e-10);
+
+        // Non-noise points should have high scores (well-separated clusters)
+        //
+        assert(std::abs(sil.get_result()[1] - 0.99095) < 1e-5);
+        assert(std::abs(sil.get_result()[2] - 0.98895) < 1e-5);
+        assert(std::abs(sil.get_result()[3] - 0.98895) < 1e-5);
+        assert(std::abs(sil.get_result()[4] - 0.99095) < 1e-5);
+        assert(std::abs(sil.get_mean_score() - 0.98995) < 1e-5);
+    }
+
+    // Single cluster
+    //
+    {
+        df.load_column("x6", std::vector<double>{ 1.0, 2.0, 3.0, 4.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl6", std::vector<long>{ 0, 0, 0, 0 },
+                       nan_policy::dont_pad_with_nans);
+
+        sil_score_v<double> sil;
+
+        df.single_act_visit<double, long>("x6", "lbl6", sil);
+
+        // Cannot compute silhouette without at least 2 clusters
+        //
+        assert(sil.get_mean_score() == 0.0);
+        for (const auto s : sil.get_result())
+            assert(s == 0.0);
+    }
+
+    // Score range
+    //
+    {
+        df.load_column("x6", std::vector<double>{ 1,2,3,4,5,6,7,8,9,10,11,12 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl6", std::vector<long>{ 0,0,0,0,1,1,1,1,2,2,2,2},
+                       nan_policy::dont_pad_with_nans);
+
+        sil_score_v<double> sil;
+
+        df.single_act_visit<double, long>("x6", "lbl6", sil);
+
+        for (const auto s : sil.get_result())
+            assert(s > 0.1 && s < 1.0);
+        assert(std::abs(sil.get_mean_score() - 0.703015) < 1e-6);
+    }
+
+    // Custom distance
+    //
+    {
+        df.load_column("x7", std::vector<double>{ 0.0, 1.0, 10.0, 11.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl7", std::vector<long>{ 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        // Absolute difference: dist(x, y) = |x - y|
+        //
+        auto               abs_dist =
+            [](const double &x, const double &y) -> double  {
+                return (std::abs(x - y));
+            };
+        sil_score_v<double> sil { abs_dist };
+
+        df.single_act_visit<double, long>("x7", "lbl7", sil);
+
+        assert(std::abs(sil.get_result()[0] - 0.904762) < 1e-6);
+        assert(std::abs(sil.get_result()[1] - 0.894737) < 1e-6);
+        assert(std::abs(sil.get_result()[2] - 0.894737) < 1e-6);
+        assert(std::abs(sil.get_result()[3] - 0.904762) < 1e-6);
+        assert(std::abs(sil.get_mean_score() - 0.899749) < 1e-6);
+    }
+}
+
+// -----------------------------------------------------------------------------
 
 int main(int, char *[])  {
 
@@ -4593,6 +4780,7 @@ int main(int, char *[])  {
     test_JarqueBeraTestVisitor();
     test_LjungBoxTestVisitor();
     test_DurbinWatsonVisitor();
+    test_SilhouetteScoreVisitor();
 
     return (0);
 }

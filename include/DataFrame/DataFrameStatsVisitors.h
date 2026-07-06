@@ -12577,42 +12577,6 @@ using chis_test_v = ChiSquaredTestVisitor<T, I>;
 
 // Jarque-Bera Test for Normality
 //
-// Tests whether sample data have skewness and kurtosis matching a normal
-// distribution. The null hypothesis is that the data are drawn from a
-// normal distribution.
-//
-// The test statistic is:
-//
-//   JB = (n / 6) * (S<sup>2</sup> + K<sup>2</sup> / 4)
-//
-//   where
-//     n = sample size
-//     S = sample skewness (third standardised moment)
-//     K = sample excess kurtosis (fourth standardised moment minus 3)
-//
-// Under H₀ the statistic is asymptotically χ<sup>2</sup>, so the p-value is
-// the χ<sup>2</sup> survival function evaluated at JB:
-//
-//   p = exp(-JB / 2)   (exact for 2 d.o.f.)
-//
-// A small p-value (conventionally < 0.05) gives evidence against normality.
-//
-// The skewness and excess kurtosis are computed in a single pass using the
-// Welford / Knuth online algorithm via StatsVisitor, so the implementation
-// is numerically stable and requires no extra allocation.
-//
-// References:
-//   Jarque, C.M. and Bera, A.K. (1980). "Efficient tests for normality,
-//   homoscedasticity and serial independence of regression residuals",
-//   Economics Letters 6(3): 255–259.
-//
-//   Jarque, C.M. and Bera, A.K. (1987). "A test for normality of observations
-//   and regression residuals", International Statistical Review 55(2): 163–172.
-//
-// NOTE: The test is asymptotic and requires a reasonably large sample
-//       (typically n >= 30, though the guard below is set at 8 to allow
-//       rolling-window use). For small samples prefer ShapiroWilkTestVisitor.
-//
 template<arithmetic T, typename I = unsigned long>
 struct  JarqueBeraTestVisitor  {
 
@@ -12722,47 +12686,6 @@ using jb_test_v = JarqueBeraTestVisitor<T, I>;
 // ----------------------------------------------------------------------------
 
 // Ljung-Box Test for Residual Autocorrelation
-//
-// Tests whether any of the first m autocorrelations of a time series are
-// non-zero. The null hypothesis H0 is that the data are independently
-// distributed (i.e. the residuals are white noise).
-//
-// The test statistic is:
-//
-//   Q(m) = n(n+2) * &Sigma;_{k=1}^{m}  &rho;&#770;<sup>2</sup>(k) / (n−k)
-//
-//   where
-//     n = sample size
-//     m = number of lags tested
-//     &rho;&#770;̂(k) = sample autocorrelation at lag k
-//
-// Under H0 the statistic Q(m) is asymptotically &Chi;<sup>2</sup>(m)
-// distributed when the series has no fitted parameters (raw residuals). When
-// the series is the residual of an ARIMA(p, d, q) model, the degrees of
-// freedom should be reduced to m − p − q.
-//
-// The p-value is the &Chi;<sup>2</sup>(dof) survival function, computed via
-// the regularized upper incomplete gamma function:
-//
-//   p = 1 − P(dof/2, Q/2) = &Gamma;(dof/2, Q/2) / &Gamma;(dof/2)
-//
-// A small p-value (conventionally < 0.05) gives evidence against H0,
-// i.e. the series has significant autocorrelation up to lag m.
-//
-// Individual per-lag Q statistics and autocorrelations are also available
-// so that callers can pinpoint which lags are driving any rejection.
-//
-// This visitor is the natural companion to ARIMAVisitor and
-// HWESForecastVisitor; run the forecast residuals through LjungBoxTestVisitor
-// to confirm that no predictable structure was left in the errors.
-//
-// References:
-//   Ljung, G.M. and Box, G.E.P. (1978). "On a measure of lack of fit in
-//   time series models", Biometrika 65(2): 297–303.
-//
-//   Box, G.E.P. and Pierce, D.A. (1970). "Distribution of residual
-//   autocorrelations in autoregressive-integrated moving average time
-//   series models", JASA 65(332): 1509–1526.
 //
 template<arithmetic T, typename I = unsigned long>
 struct  LjungBoxTestVisitor  {
@@ -13024,60 +12947,6 @@ using lb_test_v = LjungBoxTestVisitor<T, I>;
 // ----------------------------------------------------------------------------
 
 // Durbin-Watson Test for First-Order Serial Autocorrelation in Residuals
-//
-// Computes the Durbin-Watson d statistic on a single column of regression
-// residuals eₜ:
-//
-//    &Sigma;<sub>i=2<sup>n</sup></sub> (e<sub>i</sub> − e<sub<i - 1</sub>ᵢ₋₁)<sup>2</sup>
-//  d = ────────────────────--
-//         &Sigma;<sub>i=1<sup>n</sup></sub> e<sub>i<sup>2</sup></sub>
-//
-// The statistic ranges over [0, 4]:
-//   d ≈ 0: strong positive first-order autocorrelation
-//   d ≈ 2: no first-order autocorrelation (H₀)
-//   d ≈ 4: strong negative first-order autocorrelation
-//
-// Note that d ≈ 2(1 − &rho;&#x302;) where &rho;&#x302;̂ is the lag-1 sample
-// autocorrelation, so get_rho() gives &rho;&#x302;̂ without running a separate
-// AutoCorrVisitor.
-//
-// Classification (get_result_category()):
-//   The Durbin-Watson bounds test classifies d against critical values
-//   dL and dU that strictly depend on n, k (regressors), and &alpha;.  Because
-//   shipping the full Savin-White table inside a header is impractical,
-//   this visitor accepts user-supplied dL/dU through the constructor and
-//   falls back to the widely-used rule-of-thumb (dL=1.5, dU=2.5, α≈0.05,
-//   moderate n, k=1) when they are not provided.  For precise inference
-//   look up dL and dU from the Durbin-Watson table for your n, k, and &alpha;
-//   and pass them to the constructor.
-//
-// The relationship between d and the bounds is:
-//   d < dL -> positive_autocorr (reject H0)
-//   d > 4−dL -> negative_autocorr (reject H0)
-//   dU < d < 4−dU -> no_autocorr (fail to reject H0)
-//   otherwise -> inconclusive
-//
-// Usage pattern — regress, extract residuals, then test:
-//
-//   LinearFitVisitor<double> lf;
-//   df.single_act_visit<double, double>("x", "y", lf);
-//
-//   Build a residual column: &#375; = lf.get_result(), y is the original
-//   residuals[i] = y[i] - &#375;[i]
-//
-//   DurbinWatsonVisitor<double> dw;
-//   df.single_act_visit<double>("residuals", dw);
-//
-// References:
-//   Durbin, J. and Watson, G.S. (1950). "Testing for serial correlation in
-//   least squares regression. I", Biometrika 37(3–4): 409–428.
-//
-//   Durbin, J. and Watson, G.S. (1951). "Testing for serial correlation in
-//   least squares regression. II", Biometrika 38(1–2): 159–178.
-//
-//   Savin, N.E. and White, K.J. (1977). "The Durbin-Watson test for serial
-//   correlation with extreme sample sizes or many regressors", Econometrica
-//   45(8): 1989–1996.
 //
 template<arithmetic T, typename I = unsigned long>
 struct  DurbinWatsonVisitor  {

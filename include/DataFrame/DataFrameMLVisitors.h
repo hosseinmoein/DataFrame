@@ -7326,6 +7326,255 @@ template<std::size_t DIM, typename T, typename I = unsigned long,
          std::size_t A = 0>
 using krig_v = KrigingVisitor<DIM, T, I, A>;
 
+// ------------------------------------------------------------------------------
+
+// Silhouette Score — Cluster Validation Metric
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  SilhouetteScoreVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ { random_acc_cont<T> };
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using result_type = vec_t<double>;   // per-point silhouette scores
+    using distance_func =
+        std::function<double(const value_type &, const value_type &)>;
+
+private:
+
+    // Default distance: squared Euclidean for scalar, Euclidean for MD.
+    // Matches KMeansVisitor / DBSCANVisitor defaults.
+    //
+    inline static distance_func
+    default_dist_()  {
+
+        if constexpr (! is_md_)
+            return ([](const T &x, const T &y) -> double  {
+                        const double    d { static_cast<double>(x - y) };
+
+                        return (d * d);
+                    });
+        else
+            return ([](const T &x, const T &y) -> double  {
+                        double  sum { 0.0 };
+
+                        for (size_type i { 0 }; i < size_type(x.size()); ++i)  {
+                            const double    diff {
+                                static_cast<double>(x[i]) -
+                                static_cast<double>(y[i])
+                            };
+
+                            sum += diff * diff;
+                        }
+                        return (std::sqrt(sum));
+                    });
+    }
+
+    static constexpr long   NOISE_1 { -1L };   // DBSCAN unclassified sentinel
+    static constexpr long   NOISE_2 { -2L };   // DBSCAN noise sentinel
+
+public:
+
+    // Two-column operator: data column (T) and label column (long)
+    //
+    template<typename K, typename H1, typename H2>
+    inline void
+    operator()(const K  &idx_begin, const K  &idx_end,
+               const H1 &col_begin, const H1 &col_end,
+               const H2 &lbl_begin, const H2 &lbl_end)  {
+
+        const size_type col_s {
+            size_type(std::min({ std::distance(idx_begin, idx_end),
+                                 std::distance(col_begin, col_end),
+                                 std::distance(lbl_begin, lbl_end) }))
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 2)
+            throw DataFrameError(
+                "SilhouetteScoreVisitor: Need at least 2 data points");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        scores_.assign(col_s, 0);
+        mean_score_ = 0;
+
+        // 1. Collect labels and identify distinct non-noise cluster IDs
+        //
+        std::vector<long>   labels(col_s);
+
+        for (size_type i { 0 }; i < col_s; ++i)
+            labels[i] = static_cast<long>(*(lbl_begin + i));
+
+        // Sorted unique non-noise cluster IDs
+        //
+        std::vector<long>   cluster_ids;
+
+        cluster_ids.reserve(col_s / 4 + 2);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const long  lbl { labels[i] };
+
+            if (lbl != NOISE_1 && lbl != NOISE_2)
+                cluster_ids.push_back(lbl);
+        }
+        std::sort(cluster_ids.begin(), cluster_ids.end());
+        cluster_ids.erase(
+            std::unique(cluster_ids.begin(), cluster_ids.end()),
+            cluster_ids.end());
+
+        const size_type n_clusters { cluster_ids.size() };
+
+        // Fewer than 2 meaningful clusters → silhouette is undefined
+        //
+        if (n_clusters < 2) [[unlikely]]
+            return;
+
+        // Build cluster label → ordinal map for O(log k) lookup
+        //
+        std::vector<std::pair<long, size_type>> label_to_ord;
+
+        label_to_ord.reserve(n_clusters);
+        for (size_type c { 0 }; c < n_clusters; ++c)
+            label_to_ord.emplace_back(cluster_ids[c], c);
+
+        auto    label_ord =
+            [&label_to_ord = std::as_const(label_to_ord)]
+            (long lbl) -> size_type  {
+                auto it = std::lower_bound(
+                              label_to_ord.begin(), label_to_ord.end(), lbl,
+                              [](const auto &p, long v) { return p.first < v; });
+
+                return (it->second);
+            };
+
+        // Cluster sizes (non-noise points only)
+        //
+        std::vector<size_type>  cluster_sz(n_clusters, 0);
+
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const long  lbl { labels[i] };
+
+            if (lbl != NOISE_1 && lbl != NOISE_2)
+                cluster_sz[label_ord(lbl)] += 1;
+        }
+
+        // 2. For each non-noise point i:
+        //      For each cluster c:
+        //        accumulate sum of distances to every other point in c
+        //
+        //   Then:
+        //      a(i) = sum_same / (sz_same - 1)   [excluding self]
+        //      b(i) = min over other clusters of (sum_other / sz_other)
+
+        // per-point, per-cluster distance sums
+        //   dist_sums[i][c] = Σⱼ∈cluster_c dist(i, j)
+        //
+        std::vector<std::vector<double>>
+            dist_sums(col_s, std::vector<double>(n_clusters, 0.0));
+
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            if (labels[i] == NOISE_1 || labels[i] == NOISE_2) [[unlikely]]
+                continue;
+
+            const value_type   &vi { *(col_begin + i) };
+
+            for (size_type j { 0 }; j < col_s; ++j)  {
+                if (i == j) [[unlikely]] continue;
+                if (labels[j] == NOISE_1 || labels[j] == NOISE_2) [[unlikely]]
+                    continue;
+
+                const size_type c_j { label_ord(labels[j]) };
+
+                dist_sums[i][c_j] += dfunc_(vi, *(col_begin + j));
+            }
+        }
+
+        // 3. Compute s(i) for each non-noise point
+        //
+        double      score_sum { 0.0 };
+        size_type   scored_cnt { 0 };
+
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const long  lbl_i { labels[i] };
+
+            if (lbl_i == NOISE_1 || lbl_i == NOISE_2) [[unlikely]]
+                continue;
+
+            const size_type c_i { label_ord(lbl_i) };
+            const size_type sz_i { cluster_sz[c_i] };
+
+            // Singleton: a(i) undefined → s(i) = 0
+            //
+            if (sz_i < 2) [[unlikely]]  {
+                ++scored_cnt;
+                continue;
+            }
+
+            const double    a_i { dist_sums[i][c_i] / double(sz_i - 1) };
+
+            // b(i) = mean distance to the nearest other cluster
+            //
+            double  b_i { std::numeric_limits<double>::max() };
+
+            for (size_type c { 0 }; c < n_clusters; ++c)  {
+                if (c == c_i) [[unlikely]]  continue;
+                if (cluster_sz[c] == 0) [[unlikely]]  continue;
+
+                const double    mean_d {
+                    dist_sums[i][c] / double(cluster_sz[c])
+                };
+
+                if (mean_d < b_i)
+                    b_i = mean_d;
+            }
+
+            const double    denom { std::max(a_i, b_i) };
+            const double    s_i { (denom > 0.0) ? (b_i - a_i) / denom : 0.0 };
+
+            scores_[i]  = s_i;
+            score_sum  += s_i;
+            ++scored_cnt;
+        }
+
+        if (scored_cnt > 0)
+            mean_score_ = score_sum / double(scored_cnt);
+    }
+
+    inline void pre()  { scores_.clear(); mean_score_ = 0.0; }
+    inline void post()  {  }
+
+    // Per-point silhouette coefficients s<sub>i</sub> &isin; [−1, 1].
+    // Noise points in clusters with < 2 members have s<sub>i</sub> = 0.
+    // Vector length equals the input column length.
+    //
+    inline const result_type &get_result() const  { return (scores_); }
+
+    // Mean silhouette score over all non-noise, non-singleton points.
+    // Range [−1, 1]; higher is better.
+    //
+    inline double get_mean_score() const  { return (mean_score_); }
+
+    explicit
+    SilhouetteScoreVisitor(distance_func f = default_dist_())
+        : dfunc_(std::move(f))  {  }
+
+private:
+
+    distance_func   dfunc_;
+    result_type     scores_ {  };
+    double          mean_score_ { 0.0 };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using sil_score_v = SilhouetteScoreVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ------------------------------------------------------------------------------

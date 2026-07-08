@@ -4743,6 +4743,213 @@ static void test_SilhouetteScoreVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_DaviesBouldinIndexVisitor()  {
+
+    std::cout << "\nTesting DaviesBouldinIndexVisitor{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    constexpr std::size_t   col_s { 100 };
+
+    std::vector<unsigned long>  idx(col_s);
+
+    std::iota(idx.begin(), idx.end(), 0UL);
+
+    MyDataFrame df;
+
+    df.load_index(std::move(idx));
+
+    // Analytics
+    //
+    {
+        df.load_column("x1", std::vector<double>{ 0.0, 2.0, 10.0, 12.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl1", std::vector<long>{ 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        db_index_v<double>  db;
+
+        df.single_act_visit<double, long>("x1", "lbl1", db);
+
+        // DB index
+        //
+        assert(std::abs(db.get_result() - 0.02) < 1e-9);
+
+        assert(db.get_scatter().size() == 2);
+        assert(std::abs(db.get_scatter()[0] - 1.0) < 1e-9);
+        assert(std::abs(db.get_scatter()[1] - 1.0) < 1e-9);
+
+        assert(db.get_worst_ratio().size() == 2);
+        assert(std::abs(db.get_worst_ratio()[0] - 0.02) < 1e-9);
+        assert(std::abs(db.get_worst_ratio()[1] - 0.02) < 1e-9);
+
+        assert(db.get_centroids().size() == 2);
+        assert(std::abs(db.get_centroids()[0] - 1.0)  < 1e-9);
+        assert(std::abs(db.get_centroids()[1] - 11.0) < 1e-9);
+    }
+
+    // Well separated
+    //
+    {
+        df.load_column("x2", std::vector<double>{ 0.0, 0.1, 0.2,
+                                                  100.0, 100.1, 100.2,
+                                                  200.0, 200.1, 200.2 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl2", std::vector<long>{ 0, 0, 0, 1, 1, 1, 2, 2, 2 },
+                       nan_policy::dont_pad_with_nans);
+
+        db_index_v<double>  db;
+
+        df.single_act_visit<double, long>("x2", "lbl2", db);
+
+        // Three clusters very far apart, each tight -> DB close to 0
+        //
+        assert(std::abs(db.get_result() - 1.33333e-06) < 1e-9);
+
+        assert(db.get_scatter().size() == 3);
+        assert(std::abs(db.get_scatter()[0] - 0.00666667) < 1e-8);
+        assert(std::abs(db.get_scatter()[2] - 0.00666667) < 1e-8);
+
+        assert(db.get_worst_ratio().size() == 3);
+        assert(std::abs(db.get_worst_ratio()[0] - 1.33333e-06) < 1e-9);
+        assert(std::abs(db.get_worst_ratio()[2] - 1.33333e-06) < 1e-9);
+
+        assert(db.get_centroids().size() == 3);
+        assert(std::abs(db.get_centroids()[0] - 0.1)  < 1e-6);
+        assert(std::abs(db.get_centroids()[1] - 100.1) < 1e-6);
+        assert(std::abs(db.get_centroids()[2] - 200.1) < 1e-6);
+    }
+
+    // Poor separation
+    //
+    {
+        df.load_column("x3",
+                       std::vector<double>{ 0, 10, 20, 30, 1, 11, 21, 31 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl3", std::vector<long>{ 0, 0, 0, 0, 1, 1, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        db_index_v<double>  db;
+
+        df.single_act_visit<double, long>("x3", "lbl3", db);
+
+        // Centroids: u0=15, u1=16 -> very close, large scatter -> large DB
+        //
+        assert(std::abs(db.get_result() - 250.0) < 1e-6);
+
+        assert(db.get_scatter().size() == 2);
+        assert(std::abs(db.get_scatter()[0] - 125.0) < 1e-6);
+        assert(std::abs(db.get_scatter()[1] - 125.0) < 1e-6);
+
+        assert(db.get_worst_ratio().size() == 2);
+        assert(std::abs(db.get_worst_ratio()[0] - 250.0) < 1e-6);
+        assert(std::abs(db.get_worst_ratio()[1] - 250.0) < 1e-6);
+
+        assert(db.get_centroids().size() == 2);
+        assert(std::abs(db.get_centroids()[0] - 15.0)  < 1e-6);
+        assert(std::abs(db.get_centroids()[1] - 16.0) < 1e-6);
+    }
+
+    // Singleton
+    //
+    {
+        df.load_column("x4", std::vector<double>{ 5.0, 10.0, 12.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl4", std::vector<long>{ 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        db_index_v<double>  db;
+
+        df.single_act_visit<double, long>("x4", "lbl4", db);
+
+        assert(std::abs(db.get_result() - 0.0277778) < 1e-7);
+
+        assert(db.get_scatter().size() == 2);
+        assert(std::abs(db.get_scatter()[0] - 0.0) < 1e-9);
+        assert(std::abs(db.get_scatter()[1] - 1.0) < 1e-9);
+
+        assert(db.get_worst_ratio().size() == 2);
+        assert(std::abs(db.get_worst_ratio()[0] - 0.0277778) < 1e-7);
+        assert(std::abs(db.get_worst_ratio()[1] - 0.0277778) < 1e-7);
+
+        assert(db.get_centroids().size() == 2);
+        assert(std::abs(db.get_centroids()[0] - 5.0)  < 1e-6);
+        assert(std::abs(db.get_centroids()[1] - 11.0) < 1e-6);
+    }
+
+    // Noise points
+    //
+    {
+        df.load_column("x5_noise",
+                       std::vector<double>{ 5.0, 0.0, 2.0, 10.0, 12.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl5_noise", std::vector<long>{ -1, 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("x5_clean",
+                       std::vector<double>{ 0.0, 2.0, 10.0, 12.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl5_clean", std::vector<long>{ 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        db_index_v<double>  db_noise;
+        db_index_v<double>  db_clean;
+
+        df.single_act_visit<double, long>("x5_noise", "lbl5_noise", db_noise);
+        df.single_act_visit<double, long>("x5_clean", "lbl5_clean", db_clean);
+
+        assert(std::abs(db_noise.get_result() - db_clean.get_result()) < 1e-9);
+        assert(std::abs(db_noise.get_centroids()[0] -
+                        db_clean.get_centroids()[0]) < 1e-9);
+        assert(std::abs(db_noise.get_centroids()[1] -
+                        db_clean.get_centroids()[1]) < 1e-9);
+        assert(std::abs(db_noise.get_worst_ratio()[0] -
+                        db_clean.get_worst_ratio()[0]) < 1e-9);
+        assert(std::abs(db_noise.get_worst_ratio()[1] -
+                        db_clean.get_worst_ratio()[1]) < 1e-9);
+    }
+
+    // Custom distance
+    //
+    {
+        df.load_column("x6", std::vector<double>{ 0.0, 2.0, 10.0, 12.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl6", std::vector<long>{ 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        // Absolute difference: dist(x, y) = |x - y|
+        //
+        auto                                abs_dist =
+            [](const double &x, const double &y) -> double  {
+                return (std::abs(x - y));
+            };
+        DaviesBouldinIndexVisitor<double>   db_def;
+        DaviesBouldinIndexVisitor<double>   db_abs { abs_dist };
+
+        df.single_act_visit<double, long>("x6", "lbl6", db_def);
+        df.single_act_visit<double, long>("x6", "lbl6", db_abs);
+
+        assert(std::abs(db_def.get_result() - 0.02) < 1e-6);
+        assert(std::abs(db_abs.get_result() - 0.2) < 1e-6);
+
+        assert(std::abs(db_def.get_scatter()[0] - 1.0) < 1e-6);
+        assert(std::abs(db_def.get_scatter()[1] - 1.0) < 1e-6);
+        assert(std::abs(db_abs.get_scatter()[0] - 1.0) < 1e-6);
+        assert(std::abs(db_abs.get_scatter()[1] - 1.0) < 1e-6);
+
+        assert(std::abs(db_def.get_worst_ratio()[0] - 0.02) < 1e-6);
+        assert(std::abs(db_def.get_worst_ratio()[1] - 0.02) < 1e-6);
+        assert(std::abs(db_abs.get_worst_ratio()[0] - 0.2) < 1e-6);
+        assert(std::abs(db_abs.get_worst_ratio()[1] - 0.2) < 1e-6);
+
+        assert(std::abs(db_def.get_centroids()[0] - 1.0) < 1e-6);
+        assert(std::abs(db_def.get_centroids()[1] - 11.0) < 1e-6);
+        assert(std::abs(db_abs.get_centroids()[0] - 1.0) < 1e-6);
+        assert(std::abs(db_abs.get_centroids()[1] - 11.0) < 1e-6);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -4781,6 +4988,7 @@ int main(int, char *[])  {
     test_LjungBoxTestVisitor();
     test_DurbinWatsonVisitor();
     test_SilhouetteScoreVisitor();
+    test_DaviesBouldinIndexVisitor();
 
     return (0);
 }

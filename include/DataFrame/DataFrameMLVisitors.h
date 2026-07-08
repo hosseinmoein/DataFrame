@@ -7575,6 +7575,343 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using sil_score_v = SilhouetteScoreVisitor<T, I, A>;
 
+// ------------------------------------------------------------------------------
+
+// Davies-Bouldin Cluster Validity Index
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  DaviesBouldinIndexVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ { random_acc_cont<T> };
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    // Centroid type: double for scalar T, std::vector<double> for MD T
+    using centroid_t =
+        std::conditional_t<! is_md_, double, std::vector<double>>;
+
+    using result_type = double;
+    using distance_func =
+        std::function<double(const value_type &, const value_type &)>;
+
+private:
+
+    inline static distance_func
+    default_dist_()  {
+
+        if constexpr (! is_md_)
+            return ([](const T &x, const T &y) -> double  {
+                        const double    d {
+                            static_cast<double>(x) - static_cast<double>(y)
+                        };
+
+                        return (d * d);
+                    });
+        else
+            return ([](const T &x, const T &y) -> double  {
+                        double  sum { 0.0 };
+
+                        for (size_type i { 0 }; i < size_type(x.size()); ++i) {
+                            const double    diff {
+                                static_cast<double>(x[i]) -
+                                static_cast<double>(y[i])
+                            };
+
+                            sum += diff * diff;
+                        }
+                        return (std::sqrt(sum));
+                    });
+    }
+
+    // Distance between two centroid_t values.
+    // For scalar, centroid_t == double == T, so dfunc_ applies directly.
+    // For MD, dfunc_ takes const T& (e.g. vector<double>) and centroid_t is
+    // also vector<double>, so dfunc_ applies directly there too.
+    // This ensures the user-supplied distance function is used consistently
+    // for both intra-cluster scatter and inter-centroid separation.
+    //
+    inline double
+    centroid_dist_(const centroid_t &a, const centroid_t &b) const  {
+
+        if constexpr (! is_md_)
+            // centroid_t = double = T for scalar
+            //
+            return (dfunc_(static_cast<T>(a), static_cast<T>(b)));
+        else  {
+            // centroid_t = vector<double> = T for MD with double elements.
+            // For integral-element MD (rare), this reinterprets the double
+            // centroid as T — callers with non-double MD should supply an
+            // explicit distance function that accepts vector<double>.
+            //
+            double  sum { 0.0 };
+
+            for (size_type i { 0 }; i < size_type(a.size()); ++i)  {
+                const double diff { a[i] - b[i] };
+
+                sum += diff * diff;
+            }
+            return (std::sqrt(sum));
+        }
+    }
+
+    static constexpr long   NOISE_1 { -1L };
+    static constexpr long   NOISE_2 { -2L };
+    static constexpr double BIG_R { std::numeric_limits<double>::max() / 2.0 };
+
+public:
+
+    template<typename K, typename H1, typename H2>
+    inline void
+    operator()(const K  &idx_begin, const K  &idx_end,
+               const H1 &col_begin, const H1 &col_end,
+               const H2 &lbl_begin, const H2 &lbl_end)  {
+
+        const size_type col_s {
+            size_type(std::min({ std::distance(idx_begin, idx_end),
+                                 std::distance(col_begin, col_end),
+                                 std::distance(lbl_begin, lbl_end) }))
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 2)
+            throw DataFrameError(
+                "DaviesBouldinIndexVisitor: Need at least 2 data points");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        db_index_ = 0.0;
+        scatter_.clear();
+        worst_ratio_.clear();
+        centroids_.clear();
+
+        // 1. Collect labels; identify sorted unique non-noise cluster IDs
+        //
+        std::vector<long>   labels(col_s);
+
+        for (size_type i { 0 }; i < col_s; ++i)
+            labels[i] = static_cast<long>(*(lbl_begin + i));
+
+        std::vector<long>   cluster_ids;
+
+        cluster_ids.reserve(col_s / 4 + 2);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const long  lbl { labels[i] };
+
+            if (lbl != NOISE_1 && lbl != NOISE_2)
+                cluster_ids.push_back(lbl);
+        }
+        std::sort(cluster_ids.begin(), cluster_ids.end());
+        cluster_ids.erase(
+            std::unique(cluster_ids.begin(), cluster_ids.end()),
+            cluster_ids.end());
+
+        const size_type k { cluster_ids.size() };
+
+        if (k < 2) [[unlikely]]
+            return;  // DB undefined for fewer than 2 clusters
+
+        // label -> ordinal (binary-search on sorted cluster_ids)
+        //
+        auto label_ord =
+            [&cluster_ids = std::as_const(cluster_ids)]
+            (long lbl) -> size_type  {
+                return (size_type(
+                    std::lower_bound(cluster_ids.begin(),
+                                     cluster_ids.end(), lbl) -
+                    cluster_ids.begin()));
+            };
+
+        // 2. Compute centroids μi
+        //    Scalar: accumulate sum in double, divide by count
+        //    MD: accumulate element-wise sums in vector<double>
+        //
+        std::vector<size_type>  counts(k, 0);
+
+        if constexpr (! is_md_)  {
+            centroids_.assign(k, centroid_t(0.0));
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const long  lbl { labels[i] };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
+
+                const size_type c { label_ord(lbl) };
+
+                centroids_[c] += static_cast<double>(*(col_begin + i));
+                counts[c] += 1;
+            }
+            for (size_type c { 0 }; c < k; ++c)
+                if (counts[c] > 0)
+                    centroids_[c] /= double(counts[c]);
+        }
+        else  {
+            // Determine dimensionality from the first non-noise point
+            //
+            size_type   dim { 0 };
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                if (labels[i] == NOISE_1 || labels[i] == NOISE_2)
+                    continue;
+                dim = size_type((col_begin + i)->size());
+                break;
+            }
+
+            centroids_.assign(k, centroid_t(dim, 0.0));
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const long  lbl { labels[i] };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
+
+                const size_type     c { label_ord(lbl) };
+                const value_type    &pt { *(col_begin + i) };
+
+                for (size_type d { 0 }; d < dim; ++d)
+                    centroids_[c][d] += static_cast<double>(pt[d]);
+                counts[c] += 1;
+            }
+            for (size_type c { 0 }; c < k; ++c)
+                if (counts[c] > 0)
+                    for (auto &v : centroids_[c])
+                        v /= double(counts[c]);
+        }
+
+        // 3. Compute intra-cluster scatter s(i)
+        //    s(i) = mean dist(xj, μi) over all j in cluster i
+        //
+        //    We need dist(data_point, centroid).  For scalar T the centroid
+        //    is double; we need a double-to-T-compatible call. To avoid
+        //    template magic we define a separate centroid_dist_scalar_ lambda
+        //    that mirrors the default_dist_ but operates on double centroids.
+        //
+        scatter_.assign(k, 0.0);
+
+        if constexpr (! is_md_)  {
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const long  lbl { labels[i] };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
+
+                const size_type c { label_ord(lbl) };
+
+                // Use dfunc_ for consistency with centroid_dist_ and the
+                // user-supplied distance function. centroid_t = double = T.
+                //
+                scatter_[c] +=
+                    dfunc_(*(col_begin + i), static_cast<T>(centroids_[c]));
+            }
+        }
+        else  {
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const long  lbl { labels[i] };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
+
+                const size_type     c { label_ord(lbl) };
+                const value_type    &pt { *(col_begin + i) };
+                double              sq { 0 };
+
+                for (size_type d { 0 }; d < size_type(pt.size()); ++d)  {
+                    const double diff {
+                        static_cast<double>(pt[d]) - centroids_[c][d]
+                    };
+
+                    sq += diff * diff;
+                }
+                scatter_[c] += std::sqrt(sq);   // Euclidean, consistent
+            }
+        }
+
+        for (size_type c { 0 }; c < k; ++c)
+            if (counts[c] > 0)
+                scatter_[c] /= double(counts[c]);
+
+        // 4. For each cluster i compute Dᵢ = max_{j != i} R(i, j)
+        //    R(i, j) = (s(i) + s(j)) / d(μi, μj)
+        //
+        worst_ratio_.assign(k, 0);
+
+        for (size_type i { 0 }; i < k; ++i)  {
+            for (size_type j { 0 }; j < k; ++j)  {
+                if (i == j) [[unlikely]] continue;
+
+                const double    dist_ij {
+                    centroid_dist_(centroids_[i], centroids_[j])
+                };
+                double          R_ij;
+
+                if (dist_ij <= 0.0) [[unlikely]]
+                    R_ij = BIG_R;
+                else
+                    R_ij = (scatter_[i] + scatter_[j]) / dist_ij;
+
+                if (R_ij > worst_ratio_[i])
+                    worst_ratio_[i] = R_ij;
+            }
+        }
+
+        // 5. DB = mean of Dᵢ
+        //
+        double  sum { 0 };
+
+        for (const double d : worst_ratio_)
+            sum += d;
+        db_index_ = sum / double(k);
+    }
+
+    inline void pre()  {
+
+        db_index_ = 0.0;
+        scatter_.clear();
+        worst_ratio_.clear();
+        centroids_.clear();
+    }
+    inline void post() {  }
+
+    // The Davies-Bouldin index &isin; [0, &infin;). Lower is better.
+    //
+    inline result_type get_result() const  { return (db_index_); }
+
+    // Per-cluster intra-cluster scatter s(i) = mean dist(point, centroid).
+    // Size == number of non-noise clusters.
+    //
+    inline const vec_t<double> &get_scatter() const  { return (scatter_); }
+
+    // Per-cluster worst-case similarity ratio Dᵢ = max_{j != i} R(i, j).
+    // Size == number of non-noise clusters.
+    //
+    inline const vec_t<double> &
+    get_worst_ratio() const  { return (worst_ratio_); }
+
+    // Per-cluster centroids &mu;<sub>i</sub>.
+    // Type is double for scalar T, std::vector<double> for MD T.
+    // Size == number of non-noise clusters.
+    //
+    inline const vec_t<centroid_t> &
+    get_centroids() const  { return (centroids_); }
+
+    explicit
+    DaviesBouldinIndexVisitor(distance_func f = default_dist_())
+        : dfunc_(std::move(f))  {  }
+
+private:
+
+    distance_func       dfunc_;
+    result_type         db_index_ { 0.0 };
+    vec_t<double>       scatter_ {  };
+    vec_t<double>       worst_ratio_ {  };
+    vec_t<centroid_t>   centroids_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using db_index_v = DaviesBouldinIndexVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ------------------------------------------------------------------------------

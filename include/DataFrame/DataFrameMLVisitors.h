@@ -7406,20 +7406,15 @@ public:
         scores_.assign(col_s, 0);
         mean_score_ = 0;
 
-        // 1. Collect labels and identify distinct non-noise cluster IDs
+        // 1. Identify distinct non-noise cluster IDs
         //
-        std::vector<long>   labels(col_s);
-
-        for (size_type i { 0 }; i < col_s; ++i)
-            labels[i] = static_cast<long>(*(lbl_begin + i));
-
         // Sorted unique non-noise cluster IDs
         //
         std::vector<long>   cluster_ids;
 
         cluster_ids.reserve(col_s / 4 + 2);
         for (size_type i { 0 }; i < col_s; ++i)  {
-            const long  lbl { labels[i] };
+            const long  lbl { *(lbl_begin + i) };
 
             if (lbl != NOISE_1 && lbl != NOISE_2)
                 cluster_ids.push_back(lbl);
@@ -7459,7 +7454,7 @@ public:
         std::vector<size_type>  cluster_sz(n_clusters, 0);
 
         for (size_type i { 0 }; i < col_s; ++i)  {
-            const long  lbl { labels[i] };
+            const long  lbl { *(lbl_begin + i) };
 
             if (lbl != NOISE_1 && lbl != NOISE_2)
                 cluster_sz[label_ord(lbl)] += 1;
@@ -7480,17 +7475,22 @@ public:
             dist_sums(col_s, std::vector<double>(n_clusters, 0.0));
 
         for (size_type i { 0 }; i < col_s; ++i)  {
-            if (labels[i] == NOISE_1 || labels[i] == NOISE_2) [[unlikely]]
+            const long  lbl { *(lbl_begin + i) };
+
+            if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
                 continue;
 
             const value_type   &vi { *(col_begin + i) };
 
             for (size_type j { 0 }; j < col_s; ++j)  {
                 if (i == j) [[unlikely]] continue;
-                if (labels[j] == NOISE_1 || labels[j] == NOISE_2) [[unlikely]]
+
+                const long  lbl { *(lbl_begin + j) };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
                     continue;
 
-                const size_type c_j { label_ord(labels[j]) };
+                const size_type c_j { label_ord(lbl) };
 
                 dist_sums[i][c_j] += dfunc_(vi, *(col_begin + j));
             }
@@ -7502,7 +7502,7 @@ public:
         size_type   scored_cnt { 0 };
 
         for (size_type i { 0 }; i < col_s; ++i)  {
-            const long  lbl_i { labels[i] };
+            const long  lbl_i { *(lbl_begin + i) };
 
             if (lbl_i == NOISE_1 || lbl_i == NOISE_2) [[unlikely]]
                 continue;
@@ -7690,18 +7690,13 @@ public:
         worst_ratio_.clear();
         centroids_.clear();
 
-        // 1. Collect labels; identify sorted unique non-noise cluster IDs
+        // 1. Identify sorted unique non-noise cluster IDs
         //
-        std::vector<long>   labels(col_s);
-
-        for (size_type i { 0 }; i < col_s; ++i)
-            labels[i] = static_cast<long>(*(lbl_begin + i));
-
         std::vector<long>   cluster_ids;
 
         cluster_ids.reserve(col_s / 4 + 2);
         for (size_type i { 0 }; i < col_s; ++i)  {
-            const long  lbl { labels[i] };
+            const long  lbl { *(lbl_begin + i) };
 
             if (lbl != NOISE_1 && lbl != NOISE_2)
                 cluster_ids.push_back(lbl);
@@ -7737,7 +7732,7 @@ public:
             centroids_.assign(k, centroid_t(0.0));
 
             for (size_type i { 0 }; i < col_s; ++i)  {
-                const long  lbl { labels[i] };
+                const long  lbl { *(lbl_begin + i) };
 
                 if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
 
@@ -7756,7 +7751,9 @@ public:
             size_type   dim { 0 };
 
             for (size_type i { 0 }; i < col_s; ++i)  {
-                if (labels[i] == NOISE_1 || labels[i] == NOISE_2)
+                const long  lbl { *(lbl_begin + i) };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2)
                     continue;
                 dim = size_type((col_begin + i)->size());
                 break;
@@ -7765,7 +7762,7 @@ public:
             centroids_.assign(k, centroid_t(dim, 0.0));
 
             for (size_type i { 0 }; i < col_s; ++i)  {
-                const long  lbl { labels[i] };
+                const long  lbl { *(lbl_begin + i) };
 
                 if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
 
@@ -7794,7 +7791,7 @@ public:
 
         if constexpr (! is_md_)  {
             for (size_type i { 0 }; i < col_s; ++i)  {
-                const long  lbl { labels[i] };
+                const long  lbl { *(lbl_begin + i) };
 
                 if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
 
@@ -7809,7 +7806,7 @@ public:
         }
         else  {
             for (size_type i { 0 }; i < col_s; ++i)  {
-                const long  lbl { labels[i] };
+                const long  lbl { *(lbl_begin + i) };
 
                 if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
 

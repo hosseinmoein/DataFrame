@@ -4946,6 +4946,251 @@ static void test_DaviesBouldinIndexVisitor()  {
         assert(std::abs(db_abs.get_centroids()[0] - 1.0) < 1e-6);
         assert(std::abs(db_abs.get_centroids()[1] - 11.0) < 1e-6);
     }
+
+    // Multidimensional
+    //
+    {
+        using point_t = std::array<double, 2>;
+        using point_vec = std::vector<point_t>;
+
+        point_vec           pts = {
+            point_t{ 0.0, 0.0 }, point_t{ 1.0, 0.0 }, point_t{ 0.0, 1.0 },
+            point_t{ 10.0, 10.0 }, point_t{ 11.0, 10.0 }, point_t{ 10.0, 11.0 }
+        };
+        std::vector<long>   lbl = { 0, 0, 0, 1, 1, 1 };
+
+        df.load_column("x7", std::move(pts), nan_policy::dont_pad_with_nans);
+        df.load_column("lbl7", std::move(lbl), nan_policy::dont_pad_with_nans);
+
+        db_index_v<point_t> db;
+
+        df.single_act_visit<point_t, long>("x7", "lbl7", db);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_CalinskiHarabaszVisitor()  {
+
+    std::cout << "\nTesting CalinskiHarabaszVisitor{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    constexpr std::size_t   col_s { 100 };
+
+    std::vector<unsigned long>  idx(col_s);
+
+    std::iota(idx.begin(), idx.end(), 0UL);
+
+    MyDataFrame df;
+
+    df.load_index(std::move(idx));
+
+    // Analytics
+    //
+    {
+        df.load_column("x1", std::vector<double>{ 0.0, 2.0, 10.0, 12.0 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl1", std::vector<long>{ 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        ch_index_v<double>  ch;
+
+        df.single_act_visit<double, long>("x1", "lbl1", ch);
+
+        // CH = 50
+        //
+        assert(std::abs(ch.get_result() - 50.0) < 1e-9);
+
+        assert(std::abs(ch.get_bgss() - 100.0) < 1e-9);
+        assert(std::abs(ch.get_wgss() - 4.0) < 1e-9);
+
+        // Per-cluster WGSS: C0=2, C1=2
+        //
+        assert(ch.get_cluster_wgss().size() == 2);
+        assert(std::abs(ch.get_cluster_wgss()[0] - 2.0) < 1e-9);
+        assert(std::abs(ch.get_cluster_wgss()[1] - 2.0) < 1e-9);
+
+        assert(ch.get_centroids().size() == 2);
+        assert(std::abs(ch.get_centroids()[0] - 1.0)  < 1e-9);
+        assert(std::abs(ch.get_centroids()[1] - 11.0) < 1e-9);
+
+        assert(std::abs(ch.get_global_centroid() - 6.0) < 1e-9);
+    }
+
+    // Well separated
+    //
+    {
+        df.load_column("x2",
+                       std::vector<double>{ 0.0, 0.1, 0.2,
+                                            100.0, 100.1, 100.2,
+                                            200.0, 200.1, 200.2 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl2",
+                       std::vector<long>{ 0, 0, 0,  1, 1, 1,  2, 2, 2 },
+                       nan_policy::dont_pad_with_nans);
+
+        ch_index_v<double>  ch;
+
+        df.single_act_visit<double, long>("x2", "lbl2", ch);
+
+        // High BGSS relative to WGSS → very large CH
+        //
+        assert(std::abs(ch.get_result() - 3e+06) < 1e-6);
+
+        assert(std::abs(ch.get_bgss() - 60000.0) < 1e-5);
+        assert(std::abs(ch.get_wgss() - 0.06) < 1e-5);
+
+        assert(ch.get_cluster_wgss().size() == 3);
+        assert(std::abs(ch.get_cluster_wgss()[0] - 0.02) < 1e-6);
+        assert(std::abs(ch.get_cluster_wgss()[1] - 0.02) < 1e-6);
+        assert(std::abs(ch.get_cluster_wgss()[2] - 0.02) < 1e-6);
+
+        assert(ch.get_centroids().size() == 3);
+        assert(std::abs(ch.get_centroids()[0] - 0.1)  < 1e-6);
+        assert(std::abs(ch.get_centroids()[1] - 100.1) < 1e-6);
+        assert(std::abs(ch.get_centroids()[2] - 200.1) < 1e-6);
+
+        assert(std::abs(ch.get_global_centroid() - 100.1) < 1e-6);
+    }
+
+    // Poor separation
+    //
+    {
+        df.load_column("x3",
+                       std::vector<double>{ 0, 10, 20, 30, 1, 11, 21, 31 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lbl3", std::vector<long>{ 0, 0, 0, 0, 1, 1, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        ch_index_v<double>  ch;
+
+        df.single_act_visit<double, long>("x3", "lbl3", ch);
+
+        // BGSS tiny (centroids near each other), WGSS large -> small CH
+        //
+        assert(std::abs(ch.get_result() - 0.012) < 1e-6);
+
+        assert(std::abs(ch.get_bgss() - 2.0) < 1e-9);
+        assert(std::abs(ch.get_wgss() - 1000.0) < 1e-9);
+
+        assert(ch.get_cluster_wgss().size() == 2);
+        assert(std::abs(ch.get_cluster_wgss()[0] - 500.0) < 1e-6);
+        assert(std::abs(ch.get_cluster_wgss()[1] - 500.0) < 1e-6);
+
+        assert(ch.get_centroids().size() == 2);
+        assert(std::abs(ch.get_centroids()[0] - 15.0)  < 1e-6);
+        assert(std::abs(ch.get_centroids()[1] - 16.0) < 1e-6);
+
+        assert(std::abs(ch.get_global_centroid() - 15.5) < 1e-6);
+    }
+
+    // Monotonicity
+    //
+    {
+        // Same centroid positions, decreasing within-cluster spread
+        //
+        df.load_column("lose_x", std::vector<double>{ 0, 4, 20, 24 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("lose_lbl", std::vector<long>{ 0, 0,  1,  1 },
+                       nan_policy::dont_pad_with_nans);
+
+        df.load_column("tight_x", std::vector<double>{ 1, 3, 21, 23 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("tight_lbl", std::vector<long>{ 0, 0,  1,  1 },
+                       nan_policy::dont_pad_with_nans);
+
+        df.load_column("vtight_x", std::vector<double>{ 1.9, 2.1, 21.9, 22.1 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("vtight_lbl", std::vector<long>{ 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        ch_index_v<double>  ch_l, ch_t, ch_v;
+
+        df.single_act_visit<double, long>("lose_x", "lose_lbl", ch_l);
+        df.single_act_visit<double, long>("tight_x", "tight_lbl", ch_t);
+        df.single_act_visit<double, long>("vtight_x", "vtight_lbl", ch_v);
+
+        // Tighter clusters -> higher CH
+        //
+        assert(ch_l.get_result() < ch_t.get_result());
+        assert(ch_t.get_result() < ch_v.get_result());
+    }
+
+    // Separation monotonicity
+    //
+    {
+        // Same within-cluster spread, increasing inter-centroid gap
+        //
+        df.load_column("close_x", std::vector<double>{ 0, 1, 3, 4 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("close_lbl", std::vector<long>{ 0, 0,  1,  1 },
+                       nan_policy::dont_pad_with_nans);
+
+        df.load_column("far_x", std::vector<double>{ 0, 1, 10, 11 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("far_lbl", std::vector<long>{ 0, 0,  1,  1 },
+                       nan_policy::dont_pad_with_nans);
+
+        df.load_column("vfar_x", std::vector<double>{ 0, 1, 100, 101 },
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("vfar_lbl", std::vector<long>{ 0, 0, 1, 1 },
+                       nan_policy::dont_pad_with_nans);
+
+        ch_index_v<double>  ch_c, ch_f, ch_v;
+
+        df.single_act_visit<double, long>("close_x", "close_lbl", ch_c);
+        df.single_act_visit<double, long>("far_x", "far_lbl", ch_f);
+        df.single_act_visit<double, long>("vfar_x", "vfar_lbl", ch_v);
+
+        // More separation -> higher BGSS, same WGSS -> higher CH
+        //
+        assert(ch_c.get_result() < ch_f.get_result());
+        assert(ch_f.get_result() < ch_v.get_result());
+    }
+
+    // Multidimensional
+    //
+    {
+        using point_t = std::array<double, 2>;
+        using point_vec = std::vector<point_t>;
+
+        point_vec           pts = {
+            point_t{ 0.0, 0.0 }, point_t{ 1.0, 0.0 }, point_t{ 0.0, 1.0 },
+            point_t{ 10.0, 10.0 }, point_t{ 11.0, 10.0 }, point_t{ 10.0, 11.0 }
+        };
+        std::vector<long>   lbl = { 0, 0, 0, 1, 1, 1 };
+
+        df.load_column("x4", std::move(pts), nan_policy::dont_pad_with_nans);
+        df.load_column("lbl4", std::move(lbl), nan_policy::dont_pad_with_nans);
+
+        CalinskiHarabaszVisitor<point_t>    ch;
+
+        df.single_act_visit<point_t, long>("x4", "lbl4", ch);
+
+        const double    n { 6.0 }, k { 2.0 };
+        const double    bgss { ch.get_bgss() };
+        const double    wgss { ch.get_wgss() };
+
+        // Hand verify CH from components
+        //
+        const double    ch_from_parts { (bgss / (k - 1.0)) / (wgss / (n - k)) };
+
+        assert(std::abs(ch.get_result() - ch_from_parts) < 1e-9);
+
+        // BGSS and WGSS must both be positive
+        //
+        assert(bgss > 0.0);
+        assert(wgss > 0.0);
+
+        // Per-cluster WGSS must sum to total WGSS
+        //
+        double  sum_cluster { 0.0 };
+
+        for (const auto &w : ch.get_cluster_wgss())
+            sum_cluster += w;
+        assert(std::abs(sum_cluster - wgss) < 1e-9);
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -4989,6 +5234,7 @@ int main(int, char *[])  {
     test_DurbinWatsonVisitor();
     test_SilhouetteScoreVisitor();
     test_DaviesBouldinIndexVisitor();
+    test_CalinskiHarabaszVisitor();
 
     return (0);
 }

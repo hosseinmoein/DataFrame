@@ -7909,6 +7909,323 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using db_index_v = DaviesBouldinIndexVisitor<T, I, A>;
 
+// ------------------------------------------------------------------------------
+
+// Calinski-Harabasz Index (Variance Ratio Criterion)
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  CalinskiHarabaszVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    // Centroid type: double for scalar T, vector<double> for MD T
+    //
+    using centroid_t = T;
+
+
+    using result_type = double;
+    using distance_func =
+        std::function<double(const value_type &, const value_type &)>;
+
+private:
+
+    // Default: squared Euclidean for scalar (matches KMeans/DBSCAN/DB),
+    //          Euclidean for MD.
+    //
+    inline static distance_func
+    default_dist_()  {
+
+        if constexpr (! is_md_)
+            return ([](const T &x, const T &y) -> double  {
+                        const double    d { double(x) - double(y) };
+
+                        return (d * d);
+                    });
+        else
+            return ([](const T &x, const T &y) -> double  {
+                        double  sum { 0.0 };
+
+                        for (size_type i { 0 }; i < x.size(); ++i)  {
+                            const double    diff { double(x[i]) - double(y[i]) };
+
+                            sum += diff * diff;
+                        }
+                        return (std::sqrt(sum));
+                    });
+    }
+
+    // Distance between two centroid_t values — routes through dfunc_ for
+    // scalar so that custom distance functions apply to centroid comparisons
+    // (same fix applied in DaviesBouldinIndexVisitor).
+    //
+    inline double
+    centroid_dist_(const centroid_t &a, const centroid_t &b) const  {
+
+        if constexpr (! is_md_)
+            return (dfunc_(static_cast<T>(a), static_cast<T>(b)));
+        else  {
+            double  sum { 0.0 };
+
+            for (size_type i { 0 }; i < size_type(a.size()); ++i)  {
+                const double    diff { a[i] - b[i] };
+
+                sum += diff * diff;
+            }
+            return (std::sqrt(sum));
+        }
+    }
+
+    static constexpr long   NOISE_1 { -1L };
+    static constexpr long   NOISE_2 { -2L };
+
+public:
+
+    template<typename K, typename H1, typename H2>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H1 &col_begin, const H1 &col_end,
+               const H2 &lbl_begin, const H2 &lbl_end)  {
+
+        const size_type col_s {
+            size_type(std::min({ std::distance(idx_begin, idx_end),
+                                 std::distance(col_begin, col_end),
+                                 std::distance(lbl_begin, lbl_end) }))
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 2)
+            throw DataFrameError(
+                "CalinskiHarabaszVisitor: Need at least 2 data points");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        // 1. Sort unique non-noise cluster IDs
+        //
+        std::vector<long>   cluster_ids;
+
+        cluster_ids.reserve(col_s / 4 + 2);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const long  lbl { *(lbl_begin + i) };
+
+            if (lbl != NOISE_1 && lbl != NOISE_2)
+                cluster_ids.push_back(lbl);
+        }
+        std::sort(cluster_ids.begin(), cluster_ids.end());
+        cluster_ids.erase(std::unique(cluster_ids.begin(), cluster_ids.end()),
+                          cluster_ids.end());
+
+        const size_type k { cluster_ids.size() };
+
+        // CH requires at least 2 clusters and n > k
+        //
+        if (k < 2) [[unlikely]]  return;
+
+        auto                    label_ord =
+            [&cluster_ids = std::as_const(cluster_ids)]
+            (long lbl) -> size_type  {
+                return (size_type(std::lower_bound(cluster_ids.begin(),
+                                                   cluster_ids.end(), lbl) -
+                        cluster_ids.begin()));
+            };
+        std::vector<size_type>  counts(k, 0);
+
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const long  lbl { *(lbl_begin + i) };
+
+            if (lbl != NOISE_1 && lbl != NOISE_2)
+                counts[label_ord(lbl)] += 1;
+        }
+
+        // Count of non-noise points
+        //
+        size_type   clean_cnt { 0 };
+
+        for (const auto cnt : counts)  clean_cnt += cnt;
+
+        // CH undefined when clean_cnt == k (one point per cluster,
+        // WGSS = 0, df = 0)
+        //
+        if (clean_cnt <= k) [[unlikely]]
+            return;
+
+        // 2. Compute per-cluster centroids μᵢ and global centroid μ
+        //    Both accumulated in double regardless of T.
+        //
+        if constexpr (! is_md_)  {
+            centroids_.assign(k, centroid_t(0.0));
+            global_centroid_ = 0.0;
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const long  lbl { *(lbl_begin + i) };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
+                    continue;
+
+                const value_type    v { *(col_begin + i) };
+                const size_type     c { label_ord(lbl) };
+
+                centroids_[c] += v;
+                global_centroid_ += v;
+            }
+            for (size_type c { 0 }; c < k; ++c)
+                centroids_[c] /= double(counts[c]);
+            global_centroid_ /= double(clean_cnt);
+        }
+        else  {
+            // Determine dimension from first non-noise point
+            //
+            size_type   dim { 0 };
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const long  lbl { *(lbl_begin + i) };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2)  continue;
+                dim = size_type((col_begin + i)->size());
+                break;
+            }
+
+            if constexpr (! is_std_array_v<value_type>)  {
+                centroids_.resize(k, centroid_t(dim, 0.0));
+                global_centroid_.resize(dim, 0.0);
+            }
+            else  {
+                centroids_.resize(k);
+            }
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const long  lbl { *(lbl_begin + i) };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
+                    continue;
+
+                const size_type     c { label_ord(lbl) };
+                const value_type    &pt { *(col_begin + i) };
+
+                for (size_type d { 0 }; d < dim; ++d)  {
+                    const double    v { static_cast<double>(pt[d]) };
+
+                    centroids_[c][d] += v;
+                    global_centroid_[d] += v;
+                }
+            }
+            for (size_type c { 0 }; c < k; ++c)
+                for (auto &v : centroids_[c])
+                    v /= double(counts[c]);
+            for (auto &v : global_centroid_)
+                v /= double(clean_cnt);
+        }
+
+        // 3. BGSS = Σᵢ nᵢ · d²(μᵢ, μ)
+        //
+        bgss_ = 0.0;
+        for (size_type c { 0 }; c < k; ++c)
+            bgss_ += double(counts[c]) *
+                     centroid_dist_(centroids_[c], global_centroid_);
+
+        // 4. WGSS = Σᵢ Σⱼ∈Cᵢ d²(xⱼ, μᵢ)
+        //    Also accumulate per-cluster within-cluster dispersion.
+        //
+        cluster_wgss_.assign(k, 0.0);
+
+        if constexpr (! is_md_)  {
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const long  lbl { *(lbl_begin + i) };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
+                    continue;
+
+                const size_type c { label_ord(lbl) };
+
+                cluster_wgss_[c] +=
+                    dfunc_(*(col_begin + i), static_cast<T>(centroids_[c]));
+            }
+        }
+        else  {
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const long  lbl { *(lbl_begin + i) };
+
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
+                    continue;
+
+                const size_type     c  { label_ord(lbl) };
+                const value_type    &pt { *(col_begin + i) };
+                double              sq { 0.0 };
+
+                for (size_type d { 0 }; d < size_type(pt.size()); ++d)  {
+                    const double    diff { double(pt[d]) - centroids_[c][d] };
+
+                    sq += diff * diff;
+                }
+                cluster_wgss_[c] += std::sqrt(sq);
+            }
+        }
+
+        wgss_ = 0.0;
+        for (const double w : cluster_wgss_)
+            wgss_ += w;
+
+        // 5. CH = [BGSS / (k−1)] / [WGSS / (clean_cnt−k)]
+        //    Guard WGSS = 0 (all points exactly on centroids).
+        //
+        if (wgss_ <= 0.0) [[unlikely]]  {
+            ch_index_ = std::numeric_limits<double>::max();
+            return;
+        }
+
+        ch_index_ = (bgss_ / double(k - 1)) / (wgss_ / double(clean_cnt - k));
+    }
+
+    inline void pre()  {
+
+        ch_index_ = bgss_ = wgss_ = 0.0;
+        cluster_wgss_.clear();
+        centroids_.clear();
+        global_centroid_ = centroid_t { };
+    }
+    inline void post() {  }
+
+    // The Calinski-Harabasz index &isin; [0, &infin;). Higher is better.
+    //
+    inline result_type get_result() const  { return (ch_index_); }
+
+    inline double get_bgss() const  { return (bgss_); }
+    inline double get_wgss() const  { return (wgss_); }
+    inline const vec_t<double> &
+    get_cluster_wgss() const  { return (cluster_wgss_); }
+    inline const vec_t<centroid_t> &
+    get_centroids() const  { return (centroids_); }
+
+    // Global centroid μ of all non-noise points.
+    //
+    inline const centroid_t &
+    get_global_centroid() const  { return (global_centroid_); }
+
+    explicit
+    CalinskiHarabaszVisitor(distance_func f = default_dist_())
+        : dfunc_(std::move(f))  {  }
+
+private:
+
+    distance_func       dfunc_;
+    result_type         ch_index_ { 0.0 };
+    double              bgss_ { 0.0 };
+    double              wgss_ { 0.0 };
+    vec_t<double>       cluster_wgss_ {  };
+    vec_t<centroid_t>   centroids_ {  };
+    centroid_t          global_centroid_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ch_index_v = CalinskiHarabaszVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ------------------------------------------------------------------------------

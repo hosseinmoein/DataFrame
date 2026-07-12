@@ -1,0 +1,314 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <font size="+3">&#8592;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">nclude <span style="color:#808030; ">&lt;</span>DataFrame<span style="color:#808030; ">/</span>DataFrameMLVisitors<span style="color:#808030; ">.</span>h<span style="color:#808030; ">&gt;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  AnomalyDetectByIsoForestVisitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -----------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> I <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> A <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">using</span> and_isoforest_v <span style="color:#808030; ">=</span> AnomalyDetectByIsoForestVisitor<span style="color:#800080; ">&lt;</span>T<span style="color:#808030; ">,</span> I<span style="color:#808030; ">,</span> A<span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        Isolation Forest Anomaly Detection Visitor<BR>
+        Scores every point in the input column using an Isolation Forest, then flags as anomalous all points whose score exceeds threshold. Isolation Forest (Liu, Ting & Zhou 2008) isolates observations by recursively partitioning the data with random splits. Anomalies requirefewer splits to isolate than normal points, so they have shorter average path lengths across the ensemble of trees. The anomaly score is:<BR>
+
+        <PRE>
+s(x, n) = 2<sup>(−E[h(x)] / c(n))</sup>
+
+where
+  E[h(x)] = mean path length across all trees for point x
+  c(n) = expected path length for a random BST of n elements
+       = 2 * (ln(n − 1) + γ) − 2 * (n − 1) / n (Euler-Mascheroni: γ ≈ 0.5772)
+
+Score ∈ (0, 1]:
+  s -> 1: point is isolated very quickly → anomaly
+  s -> 0: point requires many splits -> normal
+  s = 0.5: point is indistinguishable from random noise
+        </PRE>
+
+        This visitor wraps the existing <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/IsoForest.html">IsoForest</a>. All forest construction, path-length calculation, and the c(n) normalization are delegated there.<BR><BR>
+
+        <PRE>
+References:
+  Liu, F.T., Ting, K.M. and Zhou, Z-H. (2008). "Isolation Forest",
+  IEEE ICDM 2008, pp. 413–422.
+
+  Liu, F.T., Ting, K.M. and Zhou, Z-H. (2012). "Isolation-based anomaly
+  detection", ACM TKDD 6(1): Article 3.
+        </PRE>
+
+        <B>get_results()</B> This returns the indices of detected anomalies in the input column.<BR>
+        <B>get_scores()</B> Per-point anomaly scores s(x) &isin; (0, 1]. Higher -> more anomalous. It is parallel to the input column.<BR>
+
+        <PRE>
+explicit
+AnomalyDetectByIsoForestVisitor(long num_trees = 100,
+                                long max_depth = 10,
+                                double threshold = 0.6,
+                                normalization_type norm_type = normalization_type::none);
+        </PRE>
+
+        <B>num_trees</B> Number of isolation trees. The original paper uses 100; 50–200 is typical. More trees -> lower variance of scores.<BR>
+        <B>max_depth</B> Maximum depth of each tree. The original paper recommends ceil(log₂(ψ)) where ψ is the subsample size, but passing the full column size works well in practice. Default: 10 (same as IsoTree's default).<BR>
+        <B>threshold</B> Points with score > threshold are flagged as anomalies. The canonical threshold from the paper is 0.6 (points scoring above 0.6 are considered anomalous with moderate confidence; > 0.7 is stronger). Default: 0.6.<BR>
+        <B>normalization_type</B> Optional pre-normalisation of the input column. normalization_type::none (default) skips normalisation.<BR>
+
+       </td>
+      <td width="30%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_AnomalyDetectByIsoForestVisitor<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing AnomalyDetectByIsoForestVisitor{ } ...</span><span style="color:#800000; ">"</span></span>
+<span class="line_wrapper">              <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> MyDataFrame <span style="color:#808030; ">=</span> StdDataFrame<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">constexpr</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>   col_s <span style="color:#800080; ">{</span> <span style="color:#008c00; ">500</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>  idx<span style="color:#808030; ">(</span>col_s<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>iota<span style="color:#808030; ">(</span>idx<span style="color:#808030; ">.</span>begin<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> idx<span style="color:#808030; ">.</span>end<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    MyDataFrame df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>load_index<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>idx<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Score range</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   p<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">auto</span>    x1 <span style="color:#808030; ">=</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#008c00; ">300</span><span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>x1<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> nan_policy<span style="color:#800080; ">::</span>dont_pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        and_isoforest_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>  iso <span style="color:#800080; ">{</span> <span style="color:#008c00; ">100</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.7</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> iso<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">300</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> s <span style="color:#800080; ">:</span> iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span>s <span style="color:#808030; ">&gt;</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span>s <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">=</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">4</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">56</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">2</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">208</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">3</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">270</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Obvious outlier</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   p<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span>mean <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span><span style="color:#666616; ">std</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">auto</span>    x2 <span style="color:#808030; ">=</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#008c00; ">200</span><span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        x2<span style="color:#808030; ">.</span>push_back<span style="color:#808030; ">(</span><span style="color:#008000; ">1000.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// index 200 — obvious outlier</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>x2<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> nan_policy<span style="color:#800080; ">::</span>dont_pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        and_isoforest_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>  iso <span style="color:#800080; ">{</span> <span style="color:#008c00; ">100</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.8</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> iso<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Outlier at index 200 must have the highest (or near-highest) score</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">double</span>  max_normal <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">200</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            max_normal <span style="color:#808030; ">=</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">max</span><span style="color:#808030; ">(</span>max_normal<span style="color:#808030; ">,</span> iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Outlier score significantly exceeds the max normal score</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">200</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">&gt;</span> max_normal <span style="color:#808030; ">*</span> <span style="color:#008000; ">1.2</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">200</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">&gt;</span> <span style="color:#008000; ">0.8</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Obvious outlier 2</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   p<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span>mean <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span><span style="color:#666616; ">std</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">auto</span>    x3 <span style="color:#808030; ">=</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#008c00; ">200</span><span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        x3<span style="color:#808030; ">.</span>push_back<span style="color:#808030; ">(</span><span style="color:#008000; ">100.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span>   <span style="color:#696969; ">// index 200 — obvious outlier</span></span>
+<span class="line_wrapper">        x3<span style="color:#808030; ">.</span>push_back<span style="color:#808030; ">(</span><span style="color:#808030; ">-</span><span style="color:#008000; ">100.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// index 201 — obvious outlier</span></span>
+<span class="line_wrapper">        x3<span style="color:#808030; ">.</span>push_back<span style="color:#808030; ">(</span><span style="color:#008000; ">200.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span>   <span style="color:#696969; ">// index 202 — obvious outlier</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x3</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>x3<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> nan_policy<span style="color:#800080; ">::</span>dont_pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        and_isoforest_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>  iso <span style="color:#800080; ">{</span> <span style="color:#008c00; ">100</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.7</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x3</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> iso<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">200</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">201</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">2</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">202</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Scores for outliers must be clearly higher than the median normal</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// score</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">200</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">&gt;</span> <span style="color:#008000; ">0.8</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">201</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">&gt;</span> <span style="color:#008000; ">0.8</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">202</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">&gt;</span> <span style="color:#008000; ">0.8</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// No false positives</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   p<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">auto</span>    x4 <span style="color:#808030; ">=</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#008c00; ">300</span><span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x4</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>x4<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> nan_policy<span style="color:#800080; ">::</span>dont_pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        and_isoforest_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>  iso <span style="color:#800080; ">{</span> <span style="color:#008c00; ">100</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">12</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.85</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">x4</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> iso<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Score monotone</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Run 5 separate forests, each with one outlier at increasing</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// distance. Scores should be non-decreasing as distance increases.</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   distances <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">20</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">50</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">100</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">500</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">double</span>                      prev_score <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        RandGenParams<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>       p<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span>seed <span style="color:#808030; ">=</span> <span style="color:#008c00; ">123</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span>mean <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        p<span style="color:#808030; ">.</span><span style="color:#666616; ">std</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> <span style="color:#800000; font-weight:bold; ">double</span> dist <span style="color:#800080; ">:</span> distances<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">auto</span>        x <span style="color:#808030; ">=</span> gen_normal_dist<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#008c00; ">150</span><span style="color:#808030; ">,</span> p<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span> col_name <span style="color:#808030; ">=</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>to_string<span style="color:#808030; ">(</span>i<span style="color:#808030; ">+</span><span style="color:#808030; ">+</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">+</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">x</span><span style="color:#800000; ">"</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">            x<span style="color:#808030; ">.</span>push_back<span style="color:#808030; ">(</span>dist<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// outlier at the end</span></span>
+<span class="line_wrapper">            df<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span>col_name<span style="color:#808030; ">.</span>c_str<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>x<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> nan_policy<span style="color:#800080; ">::</span>dont_pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">            and_isoforest_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>  iso <span style="color:#800080; ">{</span> <span style="color:#008c00; ">150</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.3</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">            df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>col_name<span style="color:#808030; ">.</span>c_str<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> iso<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span>    s <span style="color:#800080; ">{</span> iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>back<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">            <span style="color:#696969; ">// Allow tiny variance across runs</span></span>
+<span class="line_wrapper">            <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span>s <span style="color:#808030; ">&gt;</span><span style="color:#808030; ">=</span> <span style="color:#808030; ">(</span>prev_score <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.05</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            prev_score <span style="color:#808030; ">=</span> s<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Integer type</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">constexpr</span> <span style="color:#800000; font-weight:bold; ">int</span>       data_s <span style="color:#800080; ">{</span> <span style="color:#008c00; ">50</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">int</span><span style="color:#800080; ">&gt;</span>    i1<span style="color:#808030; ">(</span>data_s<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">int</span> i <span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> data_s<span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            i1<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span> i <span style="color:#808030; ">%</span> <span style="color:#008c00; ">10</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// values 0-9 cycling</span></span>
+<span class="line_wrapper">        i1<span style="color:#808030; ">[</span><span style="color:#008c00; ">25</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span> <span style="color:#008c00; ">999</span><span style="color:#800080; ">;</span>   <span style="color:#696969; ">// clear outlier</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_column<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">i1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>i1<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> nan_policy<span style="color:#800080; ">::</span>dont_pad_with_nans<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        and_isoforest_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">int</span><span style="color:#800080; ">&gt;</span>    iso <span style="color:#800080; ">{</span> <span style="color:#008c00; ">100</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">10</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">0.55</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">int</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">i1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> iso<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">25</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> data_s<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span> score <span style="color:#800080; ">:</span> iso<span style="color:#808030; ">.</span>get_scores<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">if</span> <span style="color:#808030; ">(</span>i<span style="color:#808030; ">+</span><span style="color:#808030; ">+</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">25</span><span style="color:#808030; ">)</span>  assert<span style="color:#808030; ">(</span>score <span style="color:#808030; ">&gt;</span> <span style="color:#008000; ">0.55</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">else</span>  assert<span style="color:#808030; ">(</span>score <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.55</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

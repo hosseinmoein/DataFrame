@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/Utils/CFTree.h>
+#include <DataFrame/Utils/IsolationTree.h>
 #include <DataFrame/Utils/KDTree.h>
 #include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Vectors/VectorPtrView.h>
@@ -8225,6 +8226,147 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using ch_index_v = CalinskiHarabaszVisitor<T, I, A>;
+
+// ------------------------------------------------------------------------------
+
+// Isolation Forest Anomaly Detection Visitor
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  AnomalyDetectByIsoForestVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+private:
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
+    using result_type = vec_t<size_type>;  // indices of anomalies
+    using scores_type = vec_t<double>;     // per-point scores ∈ (0,1]
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 8)
+            throw DataFrameError(
+                "AnomalyDetectByIsoForestVisitor: "
+                "Time-series is too short (need >= 8)");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        result_.clear();
+        scores_.assign(col_s, 0.0);
+
+        // Optional normalisation
+        //
+        NormalizeVisitor<T, I, A>   norm { nt_ };
+
+        if (nt_ > normalization_type::none)  {
+            norm.pre();
+            norm(idx_begin, idx_end, column_begin, column_end);
+            norm.post();
+        }
+
+        // Fit the Isolation Forest on the (optionally normalized) column
+        //
+        IsoForest<T>    forest { num_trees_, max_depth_ };
+
+        if (nt_ > normalization_type::none)  {
+            const auto  &nr { norm.get_result() };
+
+            forest.fit(nr.begin(), nr.end());
+        }
+        else
+            forest.fit(column_begin, column_begin + col_s);
+
+        // Score every point; flag anomalies above threshold_
+        //
+        const auto  data_size {
+            static_cast<typename IsoForest<T>::size_type>(col_s)
+        };
+
+        result_.reserve(col_s / 10 + 4);
+
+        if (nt_ > normalization_type::none)  {
+            const auto  &nr { norm.get_result() };
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const double    s { forest.outlier_score(nr[i], data_size) };
+
+                scores_[i] = s;
+                if (s > threshold_)  result_.push_back(i);
+            }
+        }
+        else  {
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const double    s {
+                    forest.outlier_score(*(column_begin + i), data_size)
+                };
+
+                scores_[i] = s;
+                if (s > threshold_)  result_.push_back(i);
+            }
+        }
+    }
+
+    DEFINE_PRE_POST
+
+    // This returns the indices of detected anomalies in the input column.
+    //
+    inline const result_type &get_result() const  { return (result_); }
+
+    // Per-point anomaly scores s(x) &isin; (0, 1].
+    // Higher -> more anomalous. It is parallel to the input column.
+    //
+    inline const scores_type &get_scores() const  { return (scores_); }
+
+    explicit
+    AnomalyDetectByIsoForestVisitor(long num_trees = 100,
+                                    long max_depth = 10,
+                                    double threshold = 0.6,
+                                    normalization_type norm_type =
+                                        normalization_type::none)
+        : num_trees_(num_trees),
+          max_depth_(max_depth),
+          threshold_(threshold),
+          nt_(norm_type)  {   }
+
+private:
+
+    // Number of isolation trees. The original paper uses 100; 50–200 is
+    // typical. More trees -> lower variance of scores.
+    //
+    const long                  num_trees_;
+
+    // Maximum depth of each tree. The original paper recommends ceil(log₂(ψ))
+    // where ψ is the subsample size, but passing the full column size works
+    // well in practice. Default: 10 (same as IsoTree's default).
+    //
+    const long                  max_depth_;
+
+    // Points with score > threshold are flagged as anomalies. The canonical
+    // threshold from the paper is 0.6 (points scoring above 0.6 are considered
+    // anomalous with moderate confidence; > 0.7 is stronger). Default: 0.6.
+    //
+    const double                threshold_;
+
+    // Optional pre-normalisation of the input column.
+    // normalization_type::none (default) skips normalisation.
+    //
+    const normalization_type    nt_;
+
+    result_type                 result_ { };
+    scores_type                 scores_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using and_isoforest_v = AnomalyDetectByIsoForestVisitor<T, I, A>;
 
 } // namespace hmdf
 

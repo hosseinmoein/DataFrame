@@ -94,7 +94,7 @@ public:
 
     using size_type = typename IsoNode<T>::size_type;
     using value_type = typename IsoNode<T>::value_type;
-    using tree_t = IsoTree<T>;
+    using forest_t = std::vector<IsoTree<T>>;
 
     IsoForest(size_type num_trees, size_type max_depth);
     IsoForest() = delete;
@@ -116,7 +116,7 @@ private:
 
     std::random_device  rd_ { };
     std::mt19937        gen_ { rd_() };
-    std::vector<tree_t> trees_;
+    forest_t            forest_;
 };
 
 } // namespace hmdf

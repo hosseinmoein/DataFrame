@@ -5195,6 +5195,196 @@ static void test_CalinskiHarabaszVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_AnomalyDetectByIsoForestVisitor()  {
+
+    std::cout << "\nTesting AnomalyDetectByIsoForestVisitor{ } ..."
+              << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    constexpr std::size_t   col_s { 500 };
+
+    std::vector<unsigned long>  idx(col_s);
+
+    std::iota(idx.begin(), idx.end(), 0UL);
+
+    MyDataFrame df;
+
+    df.load_index(std::move(idx));
+
+    // Score range
+    //
+    {
+        RandGenParams<double>   p;
+
+        p.seed = 123;
+
+        auto    x1 = gen_normal_dist<double>(300, p);
+
+        df.load_column("x1", std::move(x1), nan_policy::dont_pad_with_nans);
+
+        and_isoforest_v<double>  iso { 100, 10, 0.7 };
+
+        df.single_act_visit<double>("x1", iso);
+
+        assert(iso.get_scores().size() == 300);
+        for (const double s : iso.get_scores())  {
+            assert(s > 0.0);
+            assert(s <= 1.0);
+        }
+
+        assert(iso.get_result().size() == 4);
+        assert(iso.get_result()[0] == 56);
+        assert(iso.get_result()[1] == 123);
+        assert(iso.get_result()[2] == 208);
+        assert(iso.get_result()[3] == 270);
+    }
+
+    // Obvious outlier
+    //
+    {
+        RandGenParams<double>   p;
+
+        p.seed = 123;
+        p.mean = 0;
+        p.std = 1;
+
+        auto    x2 = gen_normal_dist<double>(200, p);
+
+        x2.push_back(1000.0);  // index 200 — obvious outlier
+        df.load_column("x2", std::move(x2), nan_policy::dont_pad_with_nans);
+
+        and_isoforest_v<double>  iso { 100, 10, 0.8 };
+
+        df.single_act_visit<double>("x2", iso);
+
+        // Outlier at index 200 must have the highest (or near-highest) score
+        //
+        double  max_normal { 0.0 };
+
+        for (std::size_t i { 0 }; i < 200; ++i)
+            max_normal = std::max(max_normal, iso.get_scores()[i]);
+
+        // Outlier score significantly exceeds the max normal score
+        //
+        assert(iso.get_scores()[200] > max_normal * 1.2);
+        assert(iso.get_scores()[200] > 0.8);
+
+    }
+
+    // Obvious outlier 2
+    //
+    {
+        RandGenParams<double>   p;
+
+        p.seed = 123;
+        p.mean = 0;
+        p.std = 1;
+
+        auto    x3 = gen_normal_dist<double>(200, p);
+
+        x3.push_back(100.0);   // index 200 — obvious outlier
+        x3.push_back(-100.0);  // index 201 — obvious outlier
+        x3.push_back(200.0);   // index 202 — obvious outlier
+        df.load_column("x3", std::move(x3), nan_policy::dont_pad_with_nans);
+
+        and_isoforest_v<double>  iso { 100, 10, 0.7 };
+
+        df.single_act_visit<double>("x3", iso);
+
+        assert(iso.get_result().size() == 3);
+        assert(iso.get_result()[0] == 200);
+        assert(iso.get_result()[1] == 201);
+        assert(iso.get_result()[2] == 202);
+
+        // Scores for outliers must be clearly higher than the median normal
+        // score
+        //
+        assert(iso.get_scores()[200] > 0.8);
+        assert(iso.get_scores()[201] > 0.8);
+        assert(iso.get_scores()[202] > 0.8);
+
+    }
+
+    // No false positives
+    //
+    {
+        RandGenParams<double>   p;
+
+        p.seed = 123;
+
+        auto    x4 = gen_normal_dist<double>(300, p);
+
+        df.load_column("x4", std::move(x4), nan_policy::dont_pad_with_nans);
+
+        and_isoforest_v<double>  iso { 100, 12, 0.85 };
+
+        df.single_act_visit<double>("x4", iso);
+
+        assert(iso.get_result().size() == 0);
+    }
+
+    // Score monotone
+    //
+    {
+        // Run 5 separate forests, each with one outlier at increasing
+        // distance. Scores should be non-decreasing as distance increases.
+        //
+        const std::vector<double>   distances = { 10, 20, 50, 100, 500 };
+        double                      prev_score { 0 };
+        RandGenParams<double>       p;
+
+        p.seed = 123;
+        p.mean = 0;
+        p.std = 1;
+        for (std::size_t i { 0 }; double dist : distances)  {
+            auto        x = gen_normal_dist<double>(150, p);
+            std::string col_name = std::to_string(i++) + "x";
+
+            x.push_back(dist);  // outlier at the end
+            df.load_column(col_name.c_str(), std::move(x),
+                           nan_policy::dont_pad_with_nans);
+
+            and_isoforest_v<double>  iso { 150, 10, 0.3 };
+
+            df.single_act_visit<double>(col_name.c_str(), iso);
+
+            const double    s { iso.get_scores().back() };
+
+            // Allow tiny variance across runs
+            //
+            assert(s >= (prev_score - 0.05));
+            prev_score = s;
+        }
+    }
+
+    // Integer type
+    //
+    {
+        constexpr int       data_s { 50 };
+        std::vector<int>    i1(data_s);
+
+        for (int i = 0; i < data_s; ++i)
+            i1[i] = i % 10;  // values 0-9 cycling
+        i1[25] = 999;   // clear outlier
+        df.load_column("i1", std::move(i1), nan_policy::dont_pad_with_nans);
+
+        and_isoforest_v<int>    iso { 100, 10, 0.55 };
+
+        df.single_act_visit<int>("i1", iso);
+
+        assert(iso.get_result().size() == 1);
+        assert(iso.get_result()[0] == 25);
+
+        assert(iso.get_scores().size() == data_s);
+        for (std::size_t i { 0 }; const double score : iso.get_scores())
+            if (i++ == 25)  assert(score > 0.55);
+            else  assert(score < 0.55);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -5235,6 +5425,7 @@ int main(int, char *[])  {
     test_SilhouetteScoreVisitor();
     test_DaviesBouldinIndexVisitor();
     test_CalinskiHarabaszVisitor();
+    test_AnomalyDetectByIsoForestVisitor();
 
     return (0);
 }

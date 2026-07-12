@@ -60,23 +60,76 @@ build_tree(std::vector<value_type> &data,
         iso_tree_.push_back(IsoNode<T> { });
     }
     else  {
-        std::uniform_int_distribution<size_type>    dis { left, right - 1 };
-        const value_type                            &anchor = data[dis(gen)];
-        const auto                                  citer =
-            std::partition(data.begin() + left, data.begin() + right,
-                           [&anchor = std::as_const(anchor)]
-                           (const value_type &v) -> bool {
-                               return (v < anchor);
-                           });
-        const size_type                             mid =
-            size_type(std::distance(data.begin(), citer));
-        const IsoNode<value_type>                   node {
-            anchor,
-            build_tree(data, gen, left, mid, depth + 1),
-            build_tree(data, gen, mid, right, depth + 1)
-        };
+        const auto  [min_it, max_it] =
+            std::minmax_element(data.begin() + left, data.begin() + right);
+        const value_type    min_val { *min_it };
+        const value_type    max_val { *max_it };
 
-        iso_tree_.push_back(std::move(node));
+        if (min_val == max_val) [[unlikely]]  {
+            // All elements identical — no valid split possible.  Treat as
+            // external node.  This also covers the duplicate-value case that
+            // made the original random-anchor approach degenerate (anchor =
+            // min → nothing goes left → right = full range → max_depth hit).
+            //
+            iso_tree_.push_back(IsoNode<T> { });
+        }
+        else  {
+            // The split point must be drawn uniformly from
+            // (min_val, max_val) — the VALUE range of the current partition —
+            // not from the data points themselves.
+            //
+            // Selecting a random data point as anchor is wrong because:
+            //   1. Choosing the minimum guarantees an empty left partition,
+            //      wasting the entire depth budget on non-splits.
+            //   2. Duplicate values pile up on one side, starving the other.
+            // Drawing a uniform real from (min, max) ensures both sides are
+            // always non-empty and splits are unbiased within the range.
+            //
+            value_type  split_val;
+
+            if constexpr (std::floating_point<value_type>)  {
+                std::uniform_real_distribution<value_type>  dis(min_val,
+                                                                max_val);
+
+                split_val = dis(gen);
+            }
+            else  {
+                // For integral T: pick a random integer in [min, max-1].
+                // Because the predicate is v < split_val, split_val = max_val
+                // would put everything on the left (all < max) and nothing on
+                // the right, so we exclude max_val.
+                //
+                using dist_t =
+                    std::uniform_int_distribution<
+                        std::conditional_t<std::integral<value_type>,
+                                           value_type, long>>;
+
+                dist_t  dis {
+                    static_cast<typename dist_t::result_type>(min_val),
+                    static_cast<typename dist_t::result_type>(max_val) - 1
+                };
+
+                split_val = static_cast<value_type>(dis(gen));
+            }
+
+            const auto                  citer {
+                std::partition(data.begin() + left, data.begin() + right,
+                               [&split_val = std::as_const(split_val)]
+                               (const value_type &v) -> bool {
+                                   return (v < split_val);
+                               })
+            };
+            const size_type             mid {
+                size_type(std::distance(data.begin(), citer))
+            };
+            const IsoNode<value_type>   node {
+                split_val,
+                build_tree(data, gen, left, mid, depth + 1),
+                build_tree(data, gen, mid, right, depth + 1)
+            };
+
+            iso_tree_.push_back(std::move(node));
+        }
     }
     return (iso_tree_.size() - 1);
 }
@@ -87,7 +140,7 @@ template<typename T>
 double IsoTree<T>::
 path_len(const value_type &value, size_type node, size_type depth) const  {
 
-    const IsoNode<value_type>   &node_val = iso_tree_[node];
+    const IsoNode<value_type>   &node_val { iso_tree_[node] };
 
     if (node_val.left >= 0 || node_val.right >= 0) [[likely]]  {
         if (value < node_val.split_value && node_val.left >= 0)
@@ -95,7 +148,7 @@ path_len(const value_type &value, size_type node, size_type depth) const  {
         else if (node_val.right >= 0)
             return (path_len(value, node_val.right, depth + 1));
     }
-    return (double(depth - 1));
+    return (double(depth));
 }
 
 // ----------------------------------------------------------------------------
@@ -113,7 +166,7 @@ inline double IsoForest<T>::calc_depth_(size_type size)  {
 
 template<typename T>
 IsoForest<T>::IsoForest(size_type num_trees, size_type max_depth)
-    : trees_(num_trees, IsoTree<T> { max_depth })  {   }
+    : forest_(num_trees, IsoTree<T> { max_depth })  { gen_.seed(123);   }
 
 // ----------------------------------------------------------------------------
 
@@ -124,7 +177,7 @@ fit(const I &begin, const I &end)  {
 
     std::vector<value_type> data_copy(begin, end);
 
-    for (auto &tree : trees_)  {
+    for (auto &tree : forest_)  {
         std::ranges::shuffle(data_copy.begin(), data_copy.end(), gen_);
         tree.build_tree(data_copy, gen_, 0, size_type(data_copy.size()), 0);
     }
@@ -138,13 +191,11 @@ outlier_score(const value_type &value, size_type data_size) const  {
 
     double  avg_path_len { 0 };
 
-    for (const auto &tree : trees_)  {
+    for (const auto &tree : forest_)
         avg_path_len += tree.path_len(value, tree.root_idx(), 0);
-    }
-    avg_path_len /= double(trees_.size());
+    avg_path_len /= double(forest_.size());
 
-    return (std::pow(2.0, avg_path_len / calc_depth_(data_size)));
-    // return (std::pow(2.0, -avg_path_len / calc_depth_(data_size)));
+    return (std::pow(2.0, -avg_path_len / calc_depth_(data_size)));
 }
 
 } // namespace hmdf

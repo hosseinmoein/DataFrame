@@ -1160,7 +1160,7 @@ struct  ExtremumVisitor  {
             ThreadGranularity::get_thread_level() > 2)  {
             auto    lbd =
                 [this] (const auto &begin, const auto &end) -> value_type  {
-                    value_type  extremum { *begin };
+                    value_type  extremum { value_type(*begin) };
 
                     if (! this->skip_nan_)  {
                         for (auto citer = begin + 1; citer < end; ++citer)  {

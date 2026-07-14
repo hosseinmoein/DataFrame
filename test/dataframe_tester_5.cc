@@ -5385,6 +5385,205 @@ static void test_AnomalyDetectByIsoForestVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_DivergenceVisitor()  {
+
+    std::cout << "\nTesting DivergenceVisitor{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    MyDataFrame                 df;
+    std::vector<unsigned long>  idx = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    };
+
+    df.load_index(std::move(idx));
+
+    // 1-D quadratic
+    //
+    {
+        std::vector<double> F = { 0.0, 1.0, 4.0, 9.0, 16.0 };
+        std::vector<double> c = { 0.0, 1.0, 2.0, 3.0,  4.0 };
+
+        df.load_column("F1", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c1", std::move(c), nan_policy::dont_pad_with_nans);
+
+        DivergenceVisitor<double>   div;
+
+        df.single_act_visit<double, double>("F1", "c1", div);
+
+        const auto  &r = div.get_result();
+
+        assert(r.size() == 5);
+        assert(std::abs(r[0] - 1.0) < 1e-9);  // forward FD
+        assert(std::abs(r[1] - 2.0) < 1e-9);  // central
+        assert(std::abs(r[2] - 4.0) < 1e-9);
+        assert(std::abs(r[3] - 6.0) < 1e-9);
+        assert(std::abs(r[4] - 7.0) < 1e-9);  // backward FD
+    }
+
+    // 1-D constant
+    //
+    {
+        std::vector<double> F(6, 5.0);
+        std::vector<double> c(6);
+
+        std::iota(c.begin(), c.end(), 0.0);
+        df.load_column("F2", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c2", std::move(c), nan_policy::dont_pad_with_nans);
+
+        DivergenceVisitor<double>   div;
+
+        df.single_act_visit<double, double>("F2", "c2", div);
+
+        assert(div.get_result().size() == 6);
+        for (const double v : div.get_result())
+            assert(std::abs(v) < 1e-12);
+    }
+
+    // 2-D linear
+    //
+    {
+        using A2 = std::array<double, 2>;
+
+        std::vector<A2> F = { {0, 0}, {1, 1}, {2, 2}, {3, 3} };
+        std::vector<A2> c = { {0, 0}, {1, 1}, {2, 2}, {3, 3} };
+
+        df.load_column("F3", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c3", std::move(c), nan_policy::dont_pad_with_nans);
+
+        DivergenceVisitor<A2>   div;
+
+        df.single_act_visit<A2, A2>("F3", "c3", div);
+
+        const auto &r = div.get_result();
+
+        assert(r.size() == 4);
+        for (const double v : r)
+            assert(std::abs(v - 2.0) < 1e-9);
+    }
+
+    // 2-D quadratic
+    //
+    {
+        using A2 = std::array<double, 2>;
+
+        std::vector<A2> F = { {0, 0}, {1, 1}, {4, 4}, {9, 9} };
+        std::vector<A2> c = { {0, 0}, {1, 1}, {2, 2}, {3, 3} };
+
+        df.load_column("F4", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c4", std::move(c), nan_policy::dont_pad_with_nans);
+
+        DivergenceVisitor<A2>   div;
+
+        df.single_act_visit<A2, A2>("F4", "c4", div);
+
+        const auto &r = div.get_result();
+
+        assert(r.size() == 4);
+        assert(std::abs(r[0] - 2.0) < 1e-9);
+        assert(std::abs(r[1] - 4.0) < 1e-9);
+        assert(std::abs(r[2] - 8.0) < 1e-9);
+        assert(std::abs(r[3] - 10.0) < 1e-9);
+    }
+
+    // 3-D identity
+    //
+    {
+        using A3 = std::array<double, 3>;
+
+        std::vector<A3> F, c;
+
+        for (double v { 0.0 }; v <= 4.0; v += 1.0)  {
+            F.push_back({ v, v, v });
+            c.push_back({ v, v, v });
+        }
+
+        df.load_column("F5", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c5", std::move(c), nan_policy::dont_pad_with_nans);
+
+        DivergenceVisitor<A3>   div;
+
+        df.single_act_visit<A3, A3>("F5", "c5", div);
+
+        const auto &r = div.get_result();
+
+        assert(r.size() == 5);
+        for (const double v : r)
+            assert(std::abs(v - 3.0) < 1e-9);
+    }
+
+    // 1-D non-uniform
+    //
+    {
+        std::vector<double> F = { 0.0, 1.0, 27.0, 216.0 };
+        std::vector<double> c = { 0.0, 1.0, 3.0, 6.0 };
+
+        df.load_column("F6", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c6", std::move(c), nan_policy::dont_pad_with_nans);
+
+        DivergenceVisitor<double>   div;
+
+        df.single_act_visit<double, double>("F6", "c6", div);
+
+        const auto  &r = div.get_result();
+
+        assert(r.size() == 4);
+        assert(std::abs(r[0] -  1.0) < 1e-9);
+        assert(std::abs(r[1] -  9.0) < 1e-9);
+        assert(std::abs(r[2] - 43.0) < 1e-9);
+        assert(std::abs(r[3] - 63.0) < 1e-9);
+    }
+
+    // 2-D solenoidal
+    //
+    {
+        using A2 = std::array<double, 2>;
+
+        std::vector<A2> F, c;
+
+        for (double v { 0.0 }; v <= 4.0; v += 1.0)  {
+            F.push_back({ -v,  v });  // F = (−y, x)
+            c.push_back({ v,  v });  // coord = (x, y) = (v, v) on diagonal
+        }
+
+        df.load_column("F7", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c7", std::move(c), nan_policy::dont_pad_with_nans);
+
+        DivergenceVisitor<A2>   div;
+
+        df.single_act_visit<A2, A2>("F7", "c7", div);
+
+        assert(div.get_result().size() == 5);
+        for (const double v : div.get_result())
+            assert(std::abs(v) < 1e-12);
+    }
+
+    // Integer type
+    //
+    {
+        std::vector<int>    F   = { 0, 1, 4, 9, -16 };  // x²
+        std::vector<int>    c   = { 0, 1, 2, 3, 4 };
+
+        df.load_column("F7", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c7", std::move(c), nan_policy::dont_pad_with_nans);
+
+        DivergenceVisitor<int>  div;
+
+        df.single_act_visit<int, int>("F7", "c7", div);
+
+        const auto  &r = div.get_result();
+
+        assert(r.size() == 5);
+        assert(r[0] == 1);
+        assert(r[1] == 2);
+        assert(r[2] == 4);
+        assert(r[3] == -10);
+        assert(r[4] == -25);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -5426,6 +5625,7 @@ int main(int, char *[])  {
     test_DaviesBouldinIndexVisitor();
     test_CalinskiHarabaszVisitor();
     test_AnomalyDetectByIsoForestVisitor();
+    test_DivergenceVisitor();
 
     return (0);
 }

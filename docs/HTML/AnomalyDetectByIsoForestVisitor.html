@@ -97,9 +97,9 @@ AnomalyDetectByIsoForestVisitor(long num_trees = 100,
         </PRE>
 
         <B>num_trees</B> Number of isolation trees. The original paper uses 100; 50–200 is typical. More trees -> lower variance of scores.<BR>
-        <B>max_depth</B> Maximum depth of each tree. The original paper recommends ceil(log₂(ψ)) where ψ is the subsample size, but passing the full column size works well in practice. Default: 10 (same as IsoTree's default).<BR>
+        <B>max_depth</B> Maximum depth of each tree. The original paper recommends ceil(log<sub>2</sub>(&Psi;)) where &Psi; is the subsample size, but passing the full column size works well in practice. Default: 10 (same as IsoTree's default).<BR>
         <B>threshold</B> Points with score > threshold are flagged as anomalies. The canonical threshold from the paper is 0.6 (points scoring above 0.6 are considered anomalous with moderate confidence; > 0.7 is stronger). Default: 0.6.<BR>
-        <B>normalization_type</B> Optional pre-normalisation of the input column. normalization_type::none (default) skips normalisation.<BR>
+        <B>normalization_type</B> Optional pre-normalisation of the input column. Default skips normalisation.<BR>
 
        </td>
       <td width="30%">

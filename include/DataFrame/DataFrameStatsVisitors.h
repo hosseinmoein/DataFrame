@@ -13059,6 +13059,186 @@ private:
 template<typename T, typename I = unsigned long>
 using dw_test_v = DurbinWatsonVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Divergence of a Vector Field (&nabla;.F)
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  DivergenceVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type = vec_t<double>;
+
+    // Two-column operator: field column (T) and coordinate column (T).
+    //
+    template<typename K, typename HF, typename HX>
+    inline void
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const HF &f_begin, const HF &f_end,
+               const HX &x_begin, const HX &x_end [[maybe_unused]])  {
+
+        const size_type col_s { size_type(std::distance(f_begin, f_end)) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type x_sz { size_type(std::distance(x_begin, x_end)) };
+
+        if (col_s != x_sz)
+            throw DataFrameError(
+                "DivergenceVisitor: Two columns Field and Coordinate must "
+                "have the same size.");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (col_s < 2) [[unlikely]]
+            return;   // single sample: derivative undefined -> 0
+
+        result_.resize(col_s, 0.0);
+        if constexpr (! is_md_)  {
+            // Scalar T: ordinary 1-D finite difference dF/dx
+            // Left boundary: forward difference
+            //
+            {
+                const double    df {
+                    static_cast<double>(*(f_begin + 1)) -
+                    static_cast<double>(*(f_begin))
+                };
+                const double    dx {
+                    static_cast<double>(*(x_begin + 1)) -
+                    static_cast<double>(*(x_begin))
+                };
+
+                result_[0] = (dx != 0.0) ? (df / dx) : 0.0;
+            }
+
+            // Interior: central differences
+            //
+            for (size_type i { 1 }; i < (col_s - 1); ++i)  {
+                const double    df {
+                    static_cast<double>(*(f_begin + (i + 1))) -
+                    static_cast<double>(*(f_begin + (i - 1)))
+                };
+                const double    dx {
+                    static_cast<double>(*(x_begin + (i + 1))) -
+                    static_cast<double>(*(x_begin + (i - 1)))
+                };
+
+                result_[i] = (dx != 0.0) ? (df / dx) : 0.0;
+            }
+
+            // Right boundary: backward difference
+            //
+            {
+                const size_type last { col_s - 1 };
+                const double    df {
+                    static_cast<double>(*(f_begin + last)) -
+                    static_cast<double>(*(f_begin + (last - 1)))
+                };
+                const double    dx {
+                    static_cast<double>(*(x_begin + last)) -
+                    static_cast<double>(*(x_begin + (last - 1)))
+                };
+
+                result_[last] = (dx != 0.0) ? (df / dx) : 0.0;
+            }
+        }
+        else  {
+            // Container T: N-D field.
+            // Element k of the container is the k-th component.
+            // Accumulate dFk/dxk for every k into result_[i].
+            //
+            const size_type dim { size_type((f_begin)->size()) };
+
+            for (size_type k { 0 }; k < dim; ++k)  {
+                // Left boundary
+                //
+                {
+                    const double    fk0 {
+                        static_cast<double>((*(f_begin))[k])
+                    };
+                    const double    fk1 {
+                        static_cast<double>((*(f_begin + 1))[k])
+                    };
+                    const double    xk0 {
+                        static_cast<double>((*(x_begin))[k])
+                    };
+                    const double    xk1 {
+                        static_cast<double>((*(x_begin + 1))[k])
+                    };
+                    const double    dx { xk1 - xk0 };
+
+                    result_[0] += (dx != 0.0) ? ((fk1 - fk0) / dx) : 0.0;
+                }
+
+                // Interior
+                //
+                for (size_type i { 1 }; i < col_s - 1; ++i)  {
+                    const double    fkp {
+                        static_cast<double>((*(f_begin + (i + 1)))[k])
+                    };
+                    const double    fkm {
+                        static_cast<double>((*(f_begin + (i - 1)))[k])
+                    };
+                    const double    xkp {
+                        static_cast<double>((*(x_begin + (i + 1)))[k])
+                    };
+                    const double    xkm {
+                        static_cast<double>((*(x_begin + (i - 1)))[k])
+                    };
+                    const double    dx { xkp - xkm };
+
+                    result_[i] += (dx != 0.0) ? ((fkp - fkm) / dx) : 0.0;
+                }
+
+                // Right boundary
+                //
+                {
+                    const size_type last { col_s - 1 };
+                    const double    fkL {
+                        static_cast<double>((*(f_begin + last))[k])
+                    };
+                    const double    fkLm {
+                        static_cast<double>((*(f_begin + (last - 1)))[k])
+                    };
+                    const double    xkL {
+                        static_cast<double>((*(x_begin + last))[k])
+                    };
+                    const double    xkLm {
+                        static_cast<double>((*(x_begin + (last - 1)))[k])
+                    };
+                    const double    dx { xkL - xkLm };
+
+                    result_[last] += (dx != 0.0) ? ((fkL - fkLm) / dx) : 0.0;
+                }
+            }
+        }
+    }
+
+    inline void pre()  { result_.clear(); }
+    inline void post()  {  }
+
+    // Per-row divergence. Length equals the input column length.
+    //
+    DEFINE_RESULT
+
+    DivergenceVisitor() = default;
+
+private:
+
+    result_type result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using div_v = DivergenceVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -1,0 +1,32 @@
+name: Ubuntu-build
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install C++23 Capable Compiler (GCC 15)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-15 cmake
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_CXX_STANDARD=23 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON .
+
+      - name: Build Project
+        run: cmake --build build --config Release .
+
+      - name: Run Tests
+        run: ctest --test-dir build --output-on-failure
+

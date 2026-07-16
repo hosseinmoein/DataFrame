@@ -13085,14 +13085,14 @@ public:
     inline void
     operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
                const HF &f_begin, const HF &f_end,
-               const HX &x_begin, const HX &x_end [[maybe_unused]])  {
+               const HX &c_begin, const HX &c_end [[maybe_unused]])  {
 
         const size_type col_s { size_type(std::distance(f_begin, f_end)) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        const size_type x_sz { size_type(std::distance(x_begin, x_end)) };
+        const size_type c_sz { size_type(std::distance(c_begin, c_end)) };
 
-        if (col_s != x_sz)
+        if (col_s != c_sz)
             throw DataFrameError(
                 "DivergenceVisitor: Two columns Field and Coordinate must "
                 "have the same size.");
@@ -13102,8 +13102,10 @@ public:
             return;   // single sample: derivative undefined -> 0
 
         result_.resize(col_s, 0.0);
+
+        // Scalar T: ordinary 1-D finite difference dF/dx
+        //
         if constexpr (! is_md_)  {
-            // Scalar T: ordinary 1-D finite difference dF/dx
             // Left boundary: forward difference
             //
             {
@@ -13112,8 +13114,8 @@ public:
                     static_cast<double>(*(f_begin))
                 };
                 const double    dx {
-                    static_cast<double>(*(x_begin + 1)) -
-                    static_cast<double>(*(x_begin))
+                    static_cast<double>(*(c_begin + 1)) -
+                    static_cast<double>(*(c_begin))
                 };
 
                 result_[0] = (dx != 0.0) ? (df / dx) : 0.0;
@@ -13127,8 +13129,8 @@ public:
                     static_cast<double>(*(f_begin + (i - 1)))
                 };
                 const double    dx {
-                    static_cast<double>(*(x_begin + (i + 1))) -
-                    static_cast<double>(*(x_begin + (i - 1)))
+                    static_cast<double>(*(c_begin + (i + 1))) -
+                    static_cast<double>(*(c_begin + (i - 1)))
                 };
 
                 result_[i] = (dx != 0.0) ? (df / dx) : 0.0;
@@ -13143,18 +13145,19 @@ public:
                     static_cast<double>(*(f_begin + (last - 1)))
                 };
                 const double    dx {
-                    static_cast<double>(*(x_begin + last)) -
-                    static_cast<double>(*(x_begin + (last - 1)))
+                    static_cast<double>(*(c_begin + last)) -
+                    static_cast<double>(*(c_begin + (last - 1)))
                 };
 
                 result_[last] = (dx != 0.0) ? (df / dx) : 0.0;
             }
         }
+
+        // Container T: N-D field.
+        // Element k of the container is the k-th component.
+        // Accumulate dFk/dxk for every k into result_[i].
+        //
         else  {
-            // Container T: N-D field.
-            // Element k of the container is the k-th component.
-            // Accumulate dFk/dxk for every k into result_[i].
-            //
             const size_type dim { size_type((f_begin)->size()) };
 
             for (size_type k { 0 }; k < dim; ++k)  {
@@ -13168,10 +13171,10 @@ public:
                         static_cast<double>((*(f_begin + 1))[k])
                     };
                     const double    xk0 {
-                        static_cast<double>((*(x_begin))[k])
+                        static_cast<double>((*(c_begin))[k])
                     };
                     const double    xk1 {
-                        static_cast<double>((*(x_begin + 1))[k])
+                        static_cast<double>((*(c_begin + 1))[k])
                     };
                     const double    dx { xk1 - xk0 };
 
@@ -13188,10 +13191,10 @@ public:
                         static_cast<double>((*(f_begin + (i - 1)))[k])
                     };
                     const double    xkp {
-                        static_cast<double>((*(x_begin + (i + 1)))[k])
+                        static_cast<double>((*(c_begin + (i + 1)))[k])
                     };
                     const double    xkm {
-                        static_cast<double>((*(x_begin + (i - 1)))[k])
+                        static_cast<double>((*(c_begin + (i - 1)))[k])
                     };
                     const double    dx { xkp - xkm };
 
@@ -13209,10 +13212,10 @@ public:
                         static_cast<double>((*(f_begin + (last - 1)))[k])
                     };
                     const double    xkL {
-                        static_cast<double>((*(x_begin + last))[k])
+                        static_cast<double>((*(c_begin + last))[k])
                     };
                     const double    xkLm {
-                        static_cast<double>((*(x_begin + (last - 1)))[k])
+                        static_cast<double>((*(c_begin + (last - 1)))[k])
                     };
                     const double    dx { xkL - xkLm };
 
@@ -13238,6 +13241,246 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using div_v = DivergenceVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+// Gradient of a Scalar Field  (&nabla;&phi;)
+//
+// Computes the gradient of a scalar field φ sampled at discrete, possibly non-uniformly-spaced points. The gradient is the vector of all first partial derivatives of φ with respect to each spatial coordinate:
+//
+//   &nabla;&phi; = (&part;&phi;/&part;x<sub>1</sub>, &part;&phi;/&part;x<sub>2</sub>, ..., &part;&phi;/&part;xₙ)
+//
+// For 1-D fields this reduces to the ordinary derivative dφ/dx (same numerical result as DivergenceVisitor<double>). For N > 1 each component &part;&phi;/&part;x is approximated by central finite differences at interior rows and by one-sided differences at the two boundary rows:
+//
+//   Interior (1 <= i <= n − 2):
+//     &part;&phi;/&part;x |<sub>i</sub> = (&phi;[i + 1] − &phi;[i − 1]) / (x[i + 1] − x[i − 1])
+//
+//   Left boundary (i = 0):
+//     &part;&phi;&part;x |<sub>0</sub> = (&phi;[1] − &phi;[0]) / (x[1] − x[0])
+//
+//   Right boundary (i = n − 1):
+//     &part;&phi;/&part;x |<sub>-1</sub> = (&phi;[n − 1] − &phi;[n − 2]) / (x[n − 1] − x[n − 2])
+//
+// Note that the same &phi; numerator is shared across all k at each row i, but each component uses its own coordinate denominator. Coincident coordinates (x[i + 1] = x[i − 1]) produce a 0 contribution for that component rather than a NaN.
+//
+// The result has one entry per sample row parallel to the input columns. For scalar T the entry is a double (the 1-D derivative). For container T the entry is a T (e.g. std::array<double,2>) holding all N components.
+//
+// INTERFACE
+// The visitor is a 2-column operator (single_act_visit<FIELD_T, T>) where FIELD_T is the scalar field type (usually double or any arithmetic type) and T is the coordinate/gradient type:
+//
+// Scalar 1-D -> use DivergenceVisitor<double> or GradientVisitor<double>:
+//   df.single_act_visit<double, double>("phi", "x", grad);
+//   result per row: double   (= d&phi;/dx)
+//
+// N-D field  -> T is a fixed-size container e.g. std::array<double,N>:
+//   result per row: std::array<double, 3> (= {&part;&phi;/&part;x<sub>1</sub>&part;&phi;/&part;x<sub>2</sub>,&part;&phi;/&part;x<sub>3</sub>})
+//
+// Note the asymmetry with DivergenceVisitor: the scalar field column always has an arithmetic type (the field values &phi;[i]), while the coordinate column has type T. For scalar T both columns are the same arithmetic type.
+//
+// RELATIONSHIP TO DivergenceVisitor
+//   &nabla;.(&nabla;&phi;) = &nabla;<sup>2</sup>&phi; (the Laplacian): apply GradientVisitor then feed the component columns through DivergenceVisitor to obtain the Laplacian.
+//
+// Template parameters:
+//   T — coordinate type: double for 1-D; std::array<double, N> for N-D. Also determines the per-row result element type.
+//   I — index type (default unsigned long)
+//   A — allocator alignment (default 0)
+//
+// References:
+//   Strikwerda, J.C. (2004). "Finite Difference Schemes and Partial
+//   Differential Equations", SIAM, 2nd ed., §1.1.
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  GradientVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    // Per-row result element:
+    //   scalar T -> double (the single derivative)
+    //   container T -> T (the full gradient vector)
+    //
+    using grad_elem_t = std::conditional_t<! is_md_, double, T>;
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type = vec_t<grad_elem_t>;
+
+    // Two-column operator:
+    //   column 1 — scalar field &phi; (arithmetic type, not T for the MD case)
+    //   column 2 — spatial coordinates (type T)
+    //
+    // For scalar T both columns have the same element type.
+    // For container T column 1 has element type double, column 2 has type T.
+    //
+    template<typename K, typename HF, typename HC>
+    inline void
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const HF &f_begin, const HF &f_end,
+               const HC &c_begin, const HC &c_end [[maybe_unused]])  {
+
+        const size_type col_s { size_type(std::distance(f_begin, f_end)) };
+
+        if constexpr (! is_md_)
+            result_.assign(col_s, grad_elem_t(0));
+        else
+            result_.assign(col_s, grad_elem_t { });  // zero-init array/vector
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type c_sz { size_type(std::distance(c_begin, c_end)) };
+
+        if (col_s != c_sz)
+            throw DataFrameError(
+                "GradientVisitor: Two columns Field and Coordinate must "
+                "have the same size.");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (col_s < 2) [[unlikely]]
+            return;   // single sample: derivative undefined -> 0
+
+        // Scalar T: 1-D finite difference d&phi;/dx
+        //
+        if constexpr (! is_md_)  {
+            // Left boundary: forward difference
+            //
+            {
+                const double    dphi {
+                    static_cast<double>(*(f_begin + 1)) -
+                    static_cast<double>(*(f_begin))
+                };
+                const double    dx {
+                    static_cast<double>(*(c_begin + 1)) -
+                    static_cast<double>(*(c_begin))
+                };
+
+                result_[0] = (dx != 0.0) ? (dphi / dx) : 0.0;
+            }
+
+            // Interior: central differences
+            //
+            for (size_type i { 1 }; i < col_s - 1; ++i)  {
+                const double    dphi {
+                    static_cast<double>(*(f_begin + (i + 1))) -
+                    static_cast<double>(*(f_begin + (i - 1)))
+                };
+                const double    dx {
+                    static_cast<double>(*(c_begin + (i + 1))) -
+                    static_cast<double>(*(c_begin + (i - 1)))
+                };
+
+                result_[i] = (dx != 0.0) ? (dphi / dx) : 0.0;
+            }
+
+            // Right boundary: backward difference
+            //
+            {
+                const size_type last { col_s - 1 };
+                const double    dphi {
+                    static_cast<double>(*(f_begin + last)) -
+                    static_cast<double>(*(f_begin + (last - 1)))
+                };
+                const double    dx {
+                    static_cast<double>(*(c_begin + last)) -
+                    static_cast<double>(*(c_begin + (last - 1)))
+                };
+
+                result_[last] = (dx != 0.0) ? (dphi / dx) : 0.0;
+            }
+        }
+
+        // Container T: N-D field.
+        // The scalar field differences are the same for all k at row i;
+        // only the coordinate denominators differ by component.
+        //
+        else  {
+            const size_type dim { size_type((c_begin)->size()) };
+
+            // Left boundary: forward difference
+            //
+            {
+                const double    dphi {
+                    static_cast<double>(*(f_begin + 1)) -
+                    static_cast<double>(*(f_begin))
+                };
+
+                for (size_type k { 0 }; k < dim; ++k)  {
+                    const double    dx {
+                        static_cast<double>((*(c_begin + 1))[k]) -
+                        static_cast<double>((*(c_begin))[k])
+                    };
+
+                    result_[0][k] =
+                        static_cast<typename T::value_type>(
+                            (dx != 0.0) ? (dphi / dx) : 0.0);
+                }
+            }
+
+            // Interior: central differences
+            //
+            for (size_type i { 1 }; i < col_s - 1; ++i)  {
+                const double    dphi {
+                    static_cast<double>(*(f_begin + (i + 1))) -
+                    static_cast<double>(*(f_begin + (i - 1)))
+                };
+
+                for (size_type k { 0 }; k < dim; ++k)  {
+                    const double    dx {
+                        static_cast<double>((*(c_begin + (i + 1)))[k]) -
+                        static_cast<double>((*(c_begin + (i - 1)))[k])
+                    };
+
+                    result_[i][k] =
+                        static_cast<typename T::value_type>(
+                            (dx != 0.0) ? (dphi / dx) : 0.0);
+                }
+            }
+
+            // Right boundary: backward difference
+            //
+            {
+                const size_type last { col_s - 1 };
+                const double    dphi {
+                    static_cast<double>(*(f_begin + last)) -
+                    static_cast<double>(*(f_begin + (last - 1)))
+                };
+
+                for (size_type k { 0 }; k < dim; ++k)  {
+                    const double    dx {
+                        static_cast<double>((*(c_begin + last))[k]) -
+                        static_cast<double>((*(c_begin + (last - 1)))[k])
+                    };
+
+                    result_[last][k] =
+                        static_cast<typename T::value_type>(
+                            (dx != 0.0) ? (dphi / dx) : 0.0);
+                }
+            }
+        }
+    }
+
+    inline void pre()  { result_.clear(); }
+    inline void post()  {  }
+
+    // Per-row gradient &nabla;&phi;.
+    //   Scalar T -> vec_t<double>: result_[i] = d&phi;/dx at row i
+    //   Container T -> vec_t<T>: result_[i][k] = &part;&phi;/&part;x at row i
+    //
+    DEFINE_RESULT
+
+    GradientVisitor() = default;
+
+private:
+
+    result_type     result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using grad_v = GradientVisitor<T, I, A>;
 
 } // namespace hmdf
 

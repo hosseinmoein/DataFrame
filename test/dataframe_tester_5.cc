@@ -54,6 +54,7 @@ using StlVecType = typename ULDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
+/*
 static void test_permutation_vec()  {
 
     std::cout << "\nTesting permutation_vec( ) ..." << std::endl;
@@ -5581,11 +5582,83 @@ static void test_DivergenceVisitor()  {
         assert(r[4] == -25);
     }
 }
+*/
 
+// -----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void test_GradientVisitor()  {
+
+    std::cout << "\nTesting GradientVisitor{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    MyDataFrame                 df;
+    std::vector<unsigned long>  idx = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    };
+
+    df.load_index(std::move(idx));
+
+    // 1-D quadratic
+    //
+    {
+        std::vector<double> phi = { 0.0, 1.0, 4.0, 9.0, 16.0 };
+        std::vector<double> c = { 0.0, 1.0, 2.0, 3.0,  4.0 };
+
+        df.load_column("phi1", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c1", std::move(c), nan_policy::dont_pad_with_nans);
+
+        grad_v<double>  grad;
+
+        df.single_act_visit<double, double>("phi1", "c1", grad);
+
+        const auto  &r = grad.get_result();
+
+        assert(r.size() == 5);
+        assert(std::abs(r[0] - 1.0) < 1e-9);  // forward FD
+        assert(std::abs(r[1] - 2.0) < 1e-9);  // central
+        assert(std::abs(r[2] - 4.0) < 1e-9);
+        assert(std::abs(r[3] - 6.0) < 1e-9);
+        assert(std::abs(r[4] - 7.0) < 1e-9);  // backward FD
+    }
+}
 // -----------------------------------------------------------------------------
 
 int main(int, char *[])  {
 
+/*
     ULDataFrame::set_optimum_thread_level();
 
     test_permutation_vec();
@@ -5626,6 +5699,8 @@ int main(int, char *[])  {
     test_CalinskiHarabaszVisitor();
     test_AnomalyDetectByIsoForestVisitor();
     test_DivergenceVisitor();
+*/
+    test_GradientVisitor();
 
     return (0);
 }

@@ -24,11 +24,11 @@ jobs:
 
       - name: Configure CMake with C++23
         run: |
-          cmake -B build -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_CXX_STANDARD=23 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release .
+          cmake -B build -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_CXX_STANDARD=23 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release
 
       - name: Build Project
         run: |
-          cmake --build build --config Release .
+          cmake --build build --config Release
 
       - name: Run Tests
         run: ctest --test-dir build --output-on-failure

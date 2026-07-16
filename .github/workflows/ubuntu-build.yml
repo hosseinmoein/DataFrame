@@ -15,17 +15,20 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      # Fix: Add the toolchain PPA so apt can find and fully register g++-15
       - name: Install C++23 Capable Compiler (GCC 15)
         run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update
           sudo apt-get install -y g++-15 cmake
 
-      - name: Configure CMake
+      - name: Configure CMake with C++23
         run: |
-          cmake -B build -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_CXX_STANDARD=23 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON .
+          cmake -B build -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_CXX_STANDARD=23 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release .
 
       - name: Build Project
-        run: cmake --build build --config Release .
+        run: |
+          cmake --build build --config Release .
 
       - name: Run Tests
         run: ctest --test-dir build --output-on-failure

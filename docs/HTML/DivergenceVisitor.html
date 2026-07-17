@@ -79,14 +79,9 @@ Right boundary (i = n−1): ∂F / ∂xₖ|<sub<-1</sub> = (F[n − 1] − F[n �
           column 2 (T) — spatial coordinates<BR><BR>
 
         For a scalar 1-D field T is a plain arithmetic type (e.g. double):<BR>
-          DivergenceVisitor<double> div;<BR>
-          df.single_act_visit<double, double>("F", "x", div);<BR>
           result: dF/dx per row<BR><BR>
 
         For an N-D vector field T is a fixed-size container (std::array<double, N> or std::vector<double>), where element k is the k-th field component and k-th spatial coordinate respectively:<BR>
-          using Vec3 = std::array<double, 3>;<BR>
-          DivergenceVisitor<Vec3> div;<BR>
-          df.single_act_visit<Vec3, Vec3>("field", "coord", div);<BR>
           result: (dF1/dx1 + dF2/dx2 + dF3/dx3) per row<BR><BR>
 
         This 2-column design works with all existing single_act_visit overloads and is consistent with the random_acc_cont / is_md_ convention used throughout the library (KMeansVisitor, DBSCANVisitor, etc.).<BR><BR>

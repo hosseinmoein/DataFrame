@@ -13246,49 +13246,6 @@ using div_v = DivergenceVisitor<T, I, A>;
 
 // Gradient of a Scalar Field  (&nabla;&phi;)
 //
-// Computes the gradient of a scalar field φ sampled at discrete, possibly non-uniformly-spaced points. The gradient is the vector of all first partial derivatives of φ with respect to each spatial coordinate:
-//
-//   &nabla;&phi; = (&part;&phi;/&part;x<sub>1</sub>, &part;&phi;/&part;x<sub>2</sub>, ..., &part;&phi;/&part;xₙ)
-//
-// For 1-D fields this reduces to the ordinary derivative dφ/dx (same numerical result as DivergenceVisitor<double>). For N > 1 each component &part;&phi;/&part;x is approximated by central finite differences at interior rows and by one-sided differences at the two boundary rows:
-//
-//   Interior (1 <= i <= n − 2):
-//     &part;&phi;/&part;x |<sub>i</sub> = (&phi;[i + 1] − &phi;[i − 1]) / (x[i + 1] − x[i − 1])
-//
-//   Left boundary (i = 0):
-//     &part;&phi;&part;x |<sub>0</sub> = (&phi;[1] − &phi;[0]) / (x[1] − x[0])
-//
-//   Right boundary (i = n − 1):
-//     &part;&phi;/&part;x |<sub>-1</sub> = (&phi;[n − 1] − &phi;[n − 2]) / (x[n − 1] − x[n − 2])
-//
-// Note that the same &phi; numerator is shared across all k at each row i, but each component uses its own coordinate denominator. Coincident coordinates (x[i + 1] = x[i − 1]) produce a 0 contribution for that component rather than a NaN.
-//
-// The result has one entry per sample row parallel to the input columns. For scalar T the entry is a double (the 1-D derivative). For container T the entry is a T (e.g. std::array<double,2>) holding all N components.
-//
-// INTERFACE
-// The visitor is a 2-column operator (single_act_visit<FIELD_T, T>) where FIELD_T is the scalar field type (usually double or any arithmetic type) and T is the coordinate/gradient type:
-//
-// Scalar 1-D -> use DivergenceVisitor<double> or GradientVisitor<double>:
-//   df.single_act_visit<double, double>("phi", "x", grad);
-//   result per row: double   (= d&phi;/dx)
-//
-// N-D field  -> T is a fixed-size container e.g. std::array<double,N>:
-//   result per row: std::array<double, 3> (= {&part;&phi;/&part;x<sub>1</sub>&part;&phi;/&part;x<sub>2</sub>,&part;&phi;/&part;x<sub>3</sub>})
-//
-// Note the asymmetry with DivergenceVisitor: the scalar field column always has an arithmetic type (the field values &phi;[i]), while the coordinate column has type T. For scalar T both columns are the same arithmetic type.
-//
-// RELATIONSHIP TO DivergenceVisitor
-//   &nabla;.(&nabla;&phi;) = &nabla;<sup>2</sup>&phi; (the Laplacian): apply GradientVisitor then feed the component columns through DivergenceVisitor to obtain the Laplacian.
-//
-// Template parameters:
-//   T — coordinate type: double for 1-D; std::array<double, N> for N-D. Also determines the per-row result element type.
-//   I — index type (default unsigned long)
-//   A — allocator alignment (default 0)
-//
-// References:
-//   Strikwerda, J.C. (2004). "Finite Difference Schemes and Partial
-//   Differential Equations", SIAM, 2nd ed., §1.1.
-//
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  GradientVisitor  {
 

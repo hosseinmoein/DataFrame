@@ -54,7 +54,6 @@ using StlVecType = typename ULDataFrame::template StlVecType<T>;
 
 // ----------------------------------------------------------------------------
 
-/*
 static void test_permutation_vec()  {
 
     std::cout << "\nTesting permutation_vec( ) ..." << std::endl;
@@ -5582,41 +5581,8 @@ static void test_DivergenceVisitor()  {
         assert(r[4] == -25);
     }
 }
-*/
 
 // -----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 static void test_GradientVisitor()  {
 
@@ -5626,7 +5592,8 @@ static void test_GradientVisitor()  {
 
     MyDataFrame                 df;
     std::vector<unsigned long>  idx = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22
     };
 
     df.load_index(std::move(idx));
@@ -5653,12 +5620,231 @@ static void test_GradientVisitor()  {
         assert(std::abs(r[3] - 6.0) < 1e-9);
         assert(std::abs(r[4] - 7.0) < 1e-9);  // backward FD
     }
+
+    // 2-D symmetric components
+    //
+    {
+        using A2 = std::array<double, 2>;
+
+        std::vector<double> phi = { 4.0, 5.0, 8.0, 13.0, 20.0 };
+        std::vector<A2>     c;
+
+        for (double v { 0 }; v <= 4.0; v += 1.0)
+            c.push_back({ v, 1.0 });   // x2 = 1 fixed
+
+        df.load_column("phi2", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c2", std::move(c), nan_policy::dont_pad_with_nans);
+
+        grad_v<A2>  grad;
+
+        df.single_act_visit<double, A2>("phi2", "c2", grad);
+
+        const auto  &r = grad.get_result();
+
+        assert(r.size() == 5);
+
+        // dphi/dx1 at interior rows: same as 1-D x^2 derivative
+        //
+        assert(std::abs(r[1][0] - 2.0) < 1e-9);
+        assert(std::abs(r[2][0] - 4.0) < 1e-9);
+        assert(std::abs(r[3][0] - 6.0) < 1e-9);
+
+        // dphi/dx2: x₂ is constant (all 0) -> denominator = 0 -> 0
+        //
+        for (std::size_t i = 0; i < 5; ++i)
+            assert(std::abs(r[i][1]) < 1e-12);
+
+        // key distinction: components are wildly different (quadratic vs 0)
+        // — impossible for DivergenceVisitor which collapses to a scalar
+        //
+        assert(r[2][0] != r[2][1]);
+    }
+
+    // 2-D symmetric components - only x2 changes
+    //
+    {
+        using A2 = std::array<double, 2>;
+
+        std::vector<double> phi = { 4.0, 5.0, 8.0, 13.0, 20.0 };
+        std::vector<A2>     c;
+
+        for (double v { 0 }; v <= 4.0; v += 1.0)
+            c.push_back({ 2.0,v });   // x1 = 2 fixed
+
+        df.load_column("phi3", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c3", std::move(c), nan_policy::dont_pad_with_nans);
+
+        grad_v<A2>  grad;
+
+        df.single_act_visit<double, A2>("phi3", "c3", grad);
+
+        const auto  &r = grad.get_result();
+
+        // dphi/dx1: x1 = 2 constant -> denominator = 0 -> 0
+        //
+        assert(r.size() == 5);
+        for (std::size_t i = 0; i < 5; ++i)
+            assert(std::abs(r[i][0]) < 1e-12);
+
+        assert(std::abs(r[1][1] - 2.0) < 1e-9);
+        assert(std::abs(r[2][1] - 4.0) < 1e-9);
+        assert(std::abs(r[3][1] - 6.0) < 1e-9);
+    }
+
+    // Gradient direction
+    //
+    {
+        std::vector<double> phi = { 0.0, -1.0, -4.0, -9.0, -16.0 };
+        std::vector<double> c = { 0.0, 1.0, 2.0, 3.0, 4.0 };
+
+        df.load_column("phi4", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c4", std::move(c), nan_policy::dont_pad_with_nans);
+
+        grad_v<double>  grad;
+
+        df.single_act_visit<double, double>("phi4", "c4", grad);
+
+        const auto  &r = grad.get_result();
+
+        assert(r.size() == 5);
+        assert(std::abs(r[0] - (-1.0)) < 1e-9);
+        assert(std::abs(r[1] - (-2.0)) < 1e-9);
+        assert(std::abs(r[2] - (-4.0)) < 1e-9);
+        assert(std::abs(r[3] - (-6.0)) < 1e-9);
+        assert(std::abs(r[4] - (-7.0)) < 1e-9);
+    }
+
+    // 3-D three different components
+    //
+    {
+        using A3 = std::array<double, 3>;
+
+        std::vector<double> phi = { 0.0, 1.0, 4.0, 9.0, 16.0 };  // phi = x₁^2
+        std::vector<A3>     c;
+
+        for (double v { 0 }; v <= 4.0; v += 1.0)
+            c.push_back({ v, 2.0 * v, 3.0 * v });
+
+        df.load_column("phi5", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c5", std::move(c), nan_policy::dont_pad_with_nans);
+
+        grad_v<A3>  grad;
+
+        df.single_act_visit<double, A3>("phi5", "c5", grad);
+
+        const auto  &r = grad.get_result();
+
+        // Central FD at i = 2: dphi = phi[3] − phi[1] = 9−1 = 8
+        //   dx1 = 3−1 = 2  ->  component 0 = 8/2 = 4.0
+        //   dx2 = 6−2 = 4  ->  component 1 = 8/4 = 2.0
+        //   dx3 = 9−3 = 6  ->  component 2 = 8/6 ≈ 1.333
+        //
+        assert(std::abs(r[2][0] - 4.0) < 1e-9);
+        assert(std::abs(r[2][1] - 2.0) < 1e-9);
+        assert(std::abs(r[2][2] - 8.0/6.0) < 1e-9);
+
+        // All three components are different — key test
+        //
+        assert(r[2][0] != r[2][1]);
+        assert(r[2][1] != r[2][2]);
+        assert(r[2][0] != r[2][2]);
+
+        // Component 0 is always largest (denominator smallest)
+        //
+        assert(r[2][0] > r[2][1]);
+        assert(r[2][1] > r[2][2]);
+
+        // Central FD at i = 1: dphi = phi[2] − phi[0] = 4 − 0 = 4
+        //   dx₁ = 2 − 0 = 2 -> 4/2 = 2
+        //   dx₂ = 4 − 0 = 4 -> 4/4 = 1
+        //   dx₃ = 6 − 0 = 6 -> 4/6 ≈ 0.667
+        //
+        assert(std::abs(r[1][0] - 2.0) < 1e-9);
+        assert(std::abs(r[1][1] - 1.0) < 1e-9);
+        assert(std::abs(r[1][2] - 4.0/6.0) < 1e-9);
+    }
+
+    // 1-D sinusoidal
+    //
+    {
+        const std::size_t   n { 21 };
+        const double        h { 0.1 };
+        std::vector<double> phi(n), c(n);
+
+        for (std::size_t i { 0 }; i < n; ++i)  {
+            c[i] = i * h;
+            phi[i] = std::sin(c[i]);
+        }
+
+        df.load_column("phi6", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c6", std::move(c), nan_policy::dont_pad_with_nans);
+
+        grad_v<double>  grad;
+
+        df.single_act_visit<double, double>("phi6", "c6", grad);
+
+        const auto  &r = grad.get_result();
+
+        assert(r.size() == 21);
+
+        // The error is bounded by h^2/6 ≈ 0.00167; use 0.002 for headroom.
+        //
+        for (std::size_t i { 1 }; i + 1 < n; ++i)  {
+            const double    xi { i * h };
+            const double    analytic { std::cos(xi) };
+
+            assert(std::abs(r[i] - analytic) < 0.002);
+        }
+
+        // Boundary rows use one-sided FD → O(h) error, looser tolerance
+        //
+        assert(std::abs(r[0] - std::cos(0.0)) < 0.01);
+        assert(std::abs(r[n - 1] - std::cos((n - 1) * h)) < 0.06);
+
+        // Gradient is monotonically decreasing over [0, π/2] (cos decreasing)
+        //
+        for (std::size_t i { 2 }; i + 1 < n; ++i)
+            assert(r[i] < r[i - 1] + 0.01);  // allow tiny rounding
+
+    }
+
+    // 3-D nonlinear
+    //
+    {
+        using A3 = std::array<double, 3>;
+
+        std::vector<double> phi = { 0.0, 1.0, 2.0, 3.0, 4.0 };
+        std::vector<A3>     c;
+
+        for (double v { 0 }; v <= 4.0; v += 1.0)
+            c.push_back({ v, v * v, v * v * v });
+
+        df.load_column("phi7", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c7", std::move(c), nan_policy::dont_pad_with_nans);
+
+        grad_v<A3>  grad;
+
+        df.single_act_visit<double, A3>("phi7", "c7", grad);
+
+        const auto  &r = grad.get_result();
+
+        // At i = 2: dphi = 2, dx1 = 2, dx2 = 8, dx3 = 26
+        //
+        assert(std::abs(r[2][0] - 1.0) < 1e-9);
+        assert(std::abs(r[2][1] - 0.25) < 1e-9);
+        assert(std::abs(r[2][2] - 2.0/26.0) < 1e-9);
+
+        // Component magnitudes span more than an order of magnitude
+        //
+        assert(r[2][0] > r[2][1] * 3.0);
+        assert(r[2][1] > r[2][2] * 3.0);
+    }
 }
+
 // -----------------------------------------------------------------------------
 
 int main(int, char *[])  {
 
-/*
     ULDataFrame::set_optimum_thread_level();
 
     test_permutation_vec();
@@ -5699,7 +5885,6 @@ int main(int, char *[])  {
     test_CalinskiHarabaszVisitor();
     test_AnomalyDetectByIsoForestVisitor();
     test_DivergenceVisitor();
-*/
     test_GradientVisitor();
 
     return (0);

@@ -5843,6 +5843,255 @@ static void test_GradientVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_JacobianVisitor()  {
+
+    std::cout << "\nTesting JacobianVisitor{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    MyDataFrame                 df;
+    std::vector<unsigned long>  idx = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22
+    };
+
+    df.load_index(std::move(idx));
+
+    // 2x2 independent axes
+    //
+    {
+        using A2 = std::array<double, 2>;
+
+        std::vector<A2> F, C;
+
+        for (double v { 0.0 }; v <= 4.0; v += 1.0)  {
+            F.push_back({ v * v, 1.0 }); // F1 = x1^2, F2 = const
+            C.push_back({ v, 1.0 });     // x1 varies, x2 constant
+        }
+        df.load_column("f1", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c1", std::move(C), nan_policy::dont_pad_with_nans);
+
+        JacobianVisitor<A2> jac;
+
+        df.single_act_visit<A2, A2>("f1", "c1", jac);
+
+        const auto  &r { jac.get_result() };
+
+        assert(r.size() == 5);
+
+        // Interior rows i=1,2,3
+        // J[0][0] = 2*x1
+        //
+        assert(std::abs(r[0](0, 0) - 1.0) < 1e-9);
+        assert(std::abs(r[1](0, 0) - 2.0) < 1e-9);
+        assert(std::abs(r[2](0, 0) - 4.0) < 1e-9);
+        assert(std::abs(r[3](0, 0) - 6.0) < 1e-9);
+        assert(std::abs(r[4](0, 0) - 7.0) < 1e-9);
+
+        // J[0][1] = 0 (x2 constant across all rows -> denom 0)
+        //
+        for (std::size_t i { 0 }; i < 5; ++i)
+            assert(std::abs(r[i](0, 1)) < 1e-12);
+
+        // J[1][*] = 0 (F2 constant -> numerator 0 everywhere)
+        //
+        for (std::size_t i { 0 }; i < 5; ++i)  {
+            assert(std::abs(r[i](1, 0)) < 1e-12);
+            assert(std::abs(r[i](1, 1)) < 1e-12);
+        }
+
+        const auto  &t { jac.get_trace() };
+
+        assert(t.size() == 5);
+        assert(std::abs(t[0] - 1.0) < 1e-9);
+        assert(std::abs(t[1] - 2.0) < 1e-9);
+        assert(std::abs(t[2] - 4.0) < 1e-9);
+        assert(std::abs(t[3] - 6.0) < 1e-9);
+        assert(std::abs(t[4] - 7.0) < 1e-9);
+    }
+
+    // Rectangular 2x3
+    //
+    {
+        using A2 = std::array<double, 2>;
+        using A3 = std::array<double, 3>;
+
+        std::vector<A2> F;
+        std::vector<A3> C;
+
+        for (double v { 0.0 }; v <= 4.0; v += 1.0)  {
+            F.push_back({ v * v, v });
+            C.push_back({ v, 2.0 * v, 3.0 * v });
+        }
+        df.load_column("f2", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c2", std::move(C), nan_policy::dont_pad_with_nans);
+
+        JacobianVisitor<A2, A3> jac;
+
+        df.single_act_visit<A2, A3>("f2", "c2", jac);
+
+        const auto  &r { jac.get_result() };
+
+        assert(r.size() == 5);
+        assert(r[2].rows() == 2);  // m = 2 field rows
+        assert(r[2].cols() == 3);  // n = 3 coord columns
+
+        assert(std::abs(r[2](0, 0) - 4.0) < 1e-9);
+        assert(std::abs(r[2](0, 1) - 2.0) < 1e-9);
+        assert(std::abs(r[2](0, 2) - 8.0/6.0) < 1e-9);
+
+        assert(std::abs(r[2](1, 0) - 1.0) < 1e-9);
+        assert(std::abs(r[2](1, 1) - 0.5) < 1e-9);
+        assert(std::abs(r[2](1, 2) - 2.0/6.0) < 1e-9);
+
+        const auto  &t { jac.get_trace() };
+
+        assert(t.size() == 5);
+        assert(std::abs(t[0] - 1.5) < 1e-6);
+        assert(std::abs(t[1] - 2.5) < 1e-6);
+        assert(std::abs(t[2] - 4.5) < 1e-6);
+        assert(std::abs(t[3] - 6.5) < 1e-6);
+        assert(std::abs(t[4] - 7.5) < 1e-6);
+    }
+
+    // Trace matches Divergence
+    //
+    {
+        using A2 = std::array<double, 2>;
+
+        std::vector<A2> F, C;
+
+        // F = (x1^2, x2^3), coord = (x1, x2) with independent nonlinear paths
+        //
+        for (double v { 0.0 }; v <= 4.0; v += 1.0)  {
+            F.push_back({ v * v, v * v * v });
+            C.push_back({ v, v + 0.5 });
+        }
+        df.load_column("f3", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c3", std::move(C), nan_policy::dont_pad_with_nans);
+
+        JacobianVisitor<A2>     jac;
+        DivergenceVisitor<A2>   div;
+
+        df.single_act_visit<A2, A2>("f3", "c3", jac);
+        df.single_act_visit<A2, A2>("f3", "c3", div);
+
+        const auto  &j_trace { jac.get_trace() };
+        const auto  &d_result { div.get_result() };
+
+        assert(j_trace.size() == d_result.size());
+        for (std::size_t i { 0 }; i < j_trace.size(); ++i)
+            assert(std::abs(j_trace[i] - d_result[i]) < 1e-9);
+    }
+
+    // M1 matches Gradient
+    //
+    {
+        using A1 = std::array<double, 1>;
+        using A2 = std::array<double, 2>;
+
+        std::vector<A1>     F;
+        std::vector<A2>     C;
+        std::vector<double> phi =
+            { 0.0, 1.0, 4.0, 9.0, 16.0 };  // scalar phi=x1^2
+
+        for (double v { 0.0 }; v <= 4.0; v += 1.0)  {
+            F.push_back({ v * v });
+            C.push_back({ v, 2.0 * v });
+        }
+        df.load_column("f4", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c4", std::move(C), nan_policy::dont_pad_with_nans);
+        df.load_column("phi", std::move(phi), nan_policy::dont_pad_with_nans);
+
+        JacobianVisitor<A1, A2> jac;
+        GradientVisitor<A2>     grad;
+
+        df.single_act_visit<A1, A2>("f4", "c4", jac);
+        df.single_act_visit<double, A2>("phi", "c4", grad);
+
+        const auto  &j_result { jac.get_result() };
+        const auto  &g_result { grad.get_result() };
+
+        assert(j_result.size() == g_result.size());
+        for (std::size_t i { 0 }; i < j_result.size(); ++i)  {
+            assert(j_result[i].rows() == 1);  // single field row
+            assert(j_result[i].cols() == 2);   // 2 coordinate columns
+            assert(std::abs(j_result[i](0, 0) - g_result[i][0]) < 1e-9);
+            assert(std::abs(j_result[i](0, 1) - g_result[i][1]) < 1e-9);
+        }
+    }
+
+    // 3x3 indentity Jacobian
+    //
+    {
+        using A3 = std::array<double, 3>;
+
+        std::vector<A3> F, C;
+
+        for (double v { 0.0 }; v <= 4.0; v += 1.0)  {
+            F.push_back({ v, v, v });
+            C.push_back({ v, v, v });
+        }
+        df.load_column("f5", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c5", std::move(C), nan_policy::dont_pad_with_nans);
+
+        JacobianVisitor<A3> jac;
+
+        df.single_act_visit<A3, A3>("f5", "c5", jac);
+
+        const auto  &r { jac.get_result() };
+
+        // With F=X=(v,v,v), the numerator and denominator are identical for
+        // every (p,q) pair, so EVERY entry J[p][q] = 1.0 at interior rows
+        // (both dF and dX are the same for all p,q since F and X track
+        // exactly).
+        //
+        for (std::size_t i { 1 }; i + 1 < 5; ++i)
+            for (std::size_t p { 0 }; p < 3; ++p)
+                for (std::size_t q { 0 }; q < 3; ++q)
+                    assert(std::abs(r[i](p, q) - 1.0) < 1e-9);
+
+        // Trace at interior rows = 3 (sum of 3 diagonal 1's)
+        //
+        const auto  &tr { jac.get_trace() };
+
+        for (std::size_t i { 1 }; (i + 1) < 5; ++i)
+            assert(std::abs(tr[i] - 3.0) < 1e-9);
+    }
+
+    // Trace rectangular
+    //
+    {
+        using A2 = std::array<double, 2>;
+        using A3 = std::array<double, 3>;
+
+        std::vector<A2> F;
+        std::vector<A3> C;
+
+        for (double v { 0.0 }; v <= 4.0; v += 1.0)  {
+            F.push_back({ v * v, v });
+            C.push_back({ v, 2.0 * v, 3.0 * v });
+        }
+        df.load_column("f6", std::move(F), nan_policy::dont_pad_with_nans);
+        df.load_column("c6", std::move(C), nan_policy::dont_pad_with_nans);
+
+        JacobianVisitor<A2, A3> jac;
+
+        df.single_act_visit<A2, A3>("f6", "c6", jac);
+
+        const auto  &r { jac.get_result() };
+        const auto  &tr { jac.get_trace() };
+
+        // At i=2: J(0, 0)=4.0, J(1, 1)=0.5 (from test_rectangular_2x3)
+        // trace = J(0, 0) + J(1, 1) = 4.5  (min(2,3)=2 diagonal entries only)
+        //
+        assert(std::abs(tr[2] - (r[2](0, 0) + r[2](1, 1))) < 1e-12);
+        assert(std::abs(tr[2] - 4.5) < 1e-9);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -5886,6 +6135,7 @@ int main(int, char *[])  {
     test_AnomalyDetectByIsoForestVisitor();
     test_DivergenceVisitor();
     test_GradientVisitor();
+    test_JacobianVisitor();
 
     return (0);
 }

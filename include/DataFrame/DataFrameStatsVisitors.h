@@ -13439,6 +13439,139 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using grad_v = GradientVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+// Jacobian Matrix of a Vector Field (J = &part;F/&part;x<sup>g</sup>)
+//
+template<random_acc_cont FT, random_acc_cont XT = FT,
+         typename I = unsigned long, std::size_t A = 0>
+struct  JacobianVisitor  {
+
+private:
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+public:
+
+    using value_type = FT;
+    using index_type = I;
+    using size_type = std::size_t;
+
+    // Full m×n Jacobian
+    //
+    using matrix_t = Matrix<double, matrix_orient::row_major>;
+    using result_type = vec_t<matrix_t>;
+
+    // Two-column operator: field column (FT) and coordinate column (XT).
+    //
+    template<typename K, typename HF, typename HX>
+    inline void
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const HF &f_begin, const HF &f_end,
+               const HX &c_begin, const HX &c_end [[maybe_unused]])  {
+
+        const size_type col_s { size_type(std::distance(f_begin, f_end)) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type c_sz { size_type(std::distance(c_begin, c_end)) };
+
+        if (col_s != c_sz)
+            throw DataFrameError(
+                "JacobianVisitor: Two columns Field and Coordinate must "
+                "have the same size.");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (col_s < 2) [[unlikely]]
+            return;
+
+        const size_type f_dim { size_type((f_begin)->size()) };
+        const size_type c_dim { size_type((c_begin)->size()) };
+
+        // Every row starts as an m×n zero matrix. If n < 2 the derivative
+        // is undefined and rows stay zero-filled.
+        //
+        result_.resize(col_s, matrix_t(f_dim, c_dim, 0));
+
+        // Fills result_[i] using neighbour rows lo, hi (lo < hi).
+        // dF[p] and dX[q] are each computed ONCE per row and then combined
+        // via an outer division — the field and coordinate differences
+        // both reference the same (lo, hi) pair, mirroring the shared-
+        // numerator trick in GradientVisitor and shared-row trick in
+        // DivergenceVisitor.
+        //
+        auto    fill_row =
+            [this, f_dim, c_dim,
+             &f_begin = std::as_const(f_begin),
+             &c_begin = std::as_const(c_begin)]
+            (size_type i, size_type lo, size_type hi)  {
+                std::vector<double> dF(f_dim);
+                std::vector<double> dX(c_dim);
+
+                for (size_type p { 0 }; p < f_dim; ++p)
+                    dF[p] = static_cast<double>((*(f_begin + hi))[p]) -
+                            static_cast<double>((*(f_begin + lo))[p]);
+
+                for (size_type q { 0 }; q < c_dim; ++q)
+                    dX[q] = static_cast<double>((*(c_begin + hi))[q]) -
+                            static_cast<double>((*(c_begin + lo))[q]);
+
+                for (long p { 0 }; p < long(f_dim); ++p)
+                    for (long q { 0 }; q < long(c_dim); ++q)
+                        result_[i](p, q) = dX[q] != 0 ? dF[p] / dX[q] : 0.0;
+            };
+
+        fill_row(0, 0, 1);  // Left boundary: forward FD
+        for (size_type i { 1 }; i < col_s - 1; ++i)
+            fill_row(i, i - 1, i + 1);  // Interior: central FD
+
+        // Right boundary: backward FD
+        //
+        fill_row(col_s - 1, col_s - 2, col_s - 1);
+    }
+
+    inline void pre()  { result_.clear(); }
+    inline void post()  {  }
+
+    // Per-row Jacobian matrix.
+    // result[i](p, q) = &part;F/&part;x<sup>g</sup> at row i.
+    // Dimensions: m rows (field components) × n columns (coordinates).
+    //
+    DEFINE_RESULT
+
+    // Trace of the Jacobian per row:
+    // &Sigma; J[k][k] for k = 0 ... min(m, n) − 1.
+    // Equals the divergence &nabla;&middot;F when field component k is
+    // naturally paired with coordinate k (the standard convention used by
+    // DivergenceVisitor).
+    //
+    inline vec_t<double>
+    get_trace() const  {
+
+        vec_t<double>   tr(result_.size());
+
+        for (size_type i { 0 }; const auto &mat : result_)  {
+            const long  k_max { std::min(mat.rows(), mat.cols()) };
+            double      sum { 0 };
+
+            for (long k { 0 }; k < k_max; ++k)
+                sum += mat(k, k);
+            tr[i++] = sum;
+        }
+        return (tr);
+    }
+
+    JacobianVisitor() = default;
+
+private:
+
+    result_type result_ { };
+};
+
+template<typename FT, typename XT = FT, typename I = unsigned long,
+         std::size_t A = 0>
+using jacobian_v = JacobianVisitor<FT, XT, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

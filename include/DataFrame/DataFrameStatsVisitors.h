@@ -13572,6 +13572,150 @@ template<typename FT, typename XT = FT, typename I = unsigned long,
          std::size_t A = 0>
 using jacobian_v = JacobianVisitor<FT, XT, I, A>;
 
+// ----------------------------------------------------------------------------
+
+// Laplacian of a Scalar Field  (&nabla;<sup>2</sup>&phi;)
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  LaplacianVisitor  {
+
+private:
+
+    static constexpr bool   is_md_ = random_acc_cont<T>;
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    // Three-point quadratic-curvature second-derivative formula.
+    // h1 = x1-x0, h2 = x2-x1 (spacings between consecutive samples).
+    // Degenerate spacing (h1 or h2 == 0, or h1+h2 == 0) contributes 0.
+    //
+    static inline double
+    second_deriv_(double f0, double f1, double f2, double h1, double h2)  {
+
+        if (h1 == 0.0 || h2 == 0.0) [[unlikely]]
+            return (0.0);
+
+        const double    hsum { h1 + h2 };
+
+        if (hsum == 0.0) [[unlikely]]
+            return (0.0);
+        return (2.0 * (f0 / (h1 * hsum) - f1 / (h1 * h2)  + f2 / (h2 * hsum)));
+    }
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type = vec_t<double>;
+
+    // Two-column operator:
+    //   column 1 — scalar field &phi; (arithmetic type)
+    //   column 2 — spatial coordinates (type T)
+    //
+    template<typename K, typename HF, typename HC>
+    inline void
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const HF &f_begin, const HF &f_end,
+               const HC &c_begin, const HC &c_end [[maybe_unused]])  {
+
+        const size_type col_s { size_type(std::distance(f_begin, f_end)) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type c_sz { size_type(std::distance(c_begin, c_end)) };
+
+        if (col_s != c_sz)
+            throw DataFrameError(
+                "LaplacianVisitor: Two columns Field and Coordinate must "
+                "have the same size.");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (col_s < 3) [[unlikely]]
+            return;  // second derivative undefined with < 3 samples
+
+        result_.resize(col_s, 0);
+        if constexpr (! is_md_)  {
+            // Scalar T: ordinary 1-D second derivative d^2phi/dx^2
+            //
+            auto    fill_row =
+                [this,
+                 f_begin = std::as_const(f_begin),
+                 c_begin = std::as_const(c_begin)]
+                (size_type i, size_type i0, size_type i1, size_type i2)  {
+                    const double    f0 { double(*(f_begin + i0)) };
+                    const double    f1 { double(*(f_begin + i1)) };
+                    const double    f2 { double(*(f_begin + i2)) };
+                    const double    x0 { double(*(c_begin + i0)) };
+                    const double    x1 { double(*(c_begin + i1)) };
+                    const double    x2 { double(*(c_begin + i2)) };
+
+                    result_[i] = second_deriv_(f0, f1, f2, x1 - x0, x2 - x1);
+                };
+
+            fill_row(0, 0, 1, 2);  // left boundary
+            for (size_type i { 1 }; i < col_s - 1; ++i)
+                fill_row(i, i - 1, i, i + 1);  // interior
+
+            // right boundary
+            //
+            fill_row(col_s - 1, col_s - 3, col_s - 2, col_s - 1);
+        }
+        else  {
+            // Container T: N-D field.
+            // The field-value triple (f0,f1,f2) is the SAME for every
+            // dimension k at a given row; only the per-k coordinate
+            // spacings h1,h2 differ. Sum the per-dimension curvatures.
+            //
+            const size_type dim { size_type((c_begin)->size()) };
+
+            auto    fill_row =
+                [this, dim,
+                 f_begin = std::as_const(f_begin),
+                 c_begin = std::as_const(c_begin)]
+                (size_type i, size_type i0, size_type i1, size_type i2)  {
+                    const double    f0 { double(*(f_begin + i0)) };
+                    const double    f1 { double(*(f_begin + i1)) };
+                    const double    f2 { double(*(f_begin + i2)) };
+                    double          sum { 0.0 };
+
+                    for (size_type k { 0 }; k < dim; ++k)  {
+                        const double    x0 { double((*(c_begin + i0))[k]) };
+                        const double    x1 { double((*(c_begin + i1))[k]) };
+                        const double    x2 { double((*(c_begin + i2))[k]) };
+
+                        sum += second_deriv_(f0, f1, f2, x1 - x0, x2 - x1);
+                    }
+                    result_[i] = sum;
+                };
+
+            fill_row(0, 0, 1, 2);  // Left boundary
+            for (size_type i { 1 }; i < col_s - 1; ++i)
+                fill_row(i, i - 1, i, i + 1);  // Interior
+
+            // Right boundary
+            //
+            fill_row(col_s - 1, col_s - 3, col_s - 2, col_s - 1);
+        }
+    }
+
+    inline void pre()  { result_.clear(); }
+    inline void post()  {  }
+
+    // Per-row Laplacian &nabla;<sup>2</sup>&phi;.
+    // Always a scalar, regardless of T.
+    //
+    DEFINE_RESULT
+
+    LaplacianVisitor() = default;
+
+private:
+
+    result_type result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using laplacian_v = LaplacianVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

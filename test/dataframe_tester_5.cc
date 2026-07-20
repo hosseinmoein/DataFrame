@@ -6092,6 +6092,216 @@ static void test_JacobianVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_LaplacianVisitor()  {
+
+    std::cout << "\nTesting LaplacianVisitor{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    MyDataFrame                 df;
+    std::vector<unsigned long>  idx = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22
+    };
+
+    df.load_index(std::move(idx));
+
+    // 1-D quadratic exact everywhere
+    //
+    {
+        std::vector<double> phi = { 0.0, 1.0, 4.0, 9.0, 16.0 };
+        std::vector<double> c = { 0.0, 1.0, 2.0, 3.0,  4.0 };
+
+        df.load_column("phi1", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c1", std::move(c), nan_policy::dont_pad_with_nans);
+
+        LaplacianVisitor<double>    lap;
+
+        df.single_act_visit<double, double>("phi1", "c1", lap);
+
+        const auto  &r { lap.get_result() };
+
+        // Every row, including the two boundaries, equals exactly 2.0
+        //
+        assert(r.size() == 5);
+        for (const double v : r)
+            assert(std::abs(v - 2.0) < 1e-9);
+    }
+
+    // 1-D cubic
+    //
+    {
+        std::vector<double> phi = { 0.0, 1.0, 8.0, 27.0, 64.0 };  // x^3
+        std::vector<double> c = { 0.0, 1.0, 2.0,  3.0,  4.0 };
+
+        df.load_column("phi2", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c2", std::move(c), nan_policy::dont_pad_with_nans);
+
+        LaplacianVisitor<double>    lap;
+
+        df.single_act_visit<double, double>("phi2", "c2", lap);
+
+        const auto  &r { lap.get_result() };
+
+        assert(r.size() == 5);
+
+        // Central FD for x^3 on a uniform grid gives exactly 6x at interior
+        // rows (well-known identity: central second difference of a cubic on a
+        // uniform grid has zero truncation error because the cubic term's
+        // contribution to the 3-point formula cancels exactly)
+        //
+        assert(std::abs(r[1] - 6.0) < 1e-9);   // 6*1
+        assert(std::abs(r[2] - 12.0) < 1e-9);  // 6*2
+        assert(std::abs(r[3] - 18.0) < 1e-9);  // 6*3
+
+        // Boundary rows use the (0,1,2) / (2,3,4) trios and give the same
+        // constant-quadratic-fit value as the neighbouring central estimate
+        // at the corresponding trio (since a cubic isn't exactly quadratic,
+        // this need not equal 6x exactly at the boundary index itself).
+        //
+        assert(std::isfinite(r[0]));  // 6
+        assert(std::isfinite(r[4]));  // 18
+    }
+
+    // 1-D sinusoidal
+    //
+    {
+        const std::size_t   n = 21;
+        const double        h = 0.1;
+        std::vector<double> phi(n);
+        std::vector<double> c(n);
+
+        for (std::size_t i = 0; i < n; ++i)  {
+            c[i] = i * h;
+            phi[i] = std::sin(c[i]);
+        }
+
+        df.load_column("phi3", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c3", std::move(c), nan_policy::dont_pad_with_nans);
+
+        LaplacianVisitor<double>    lap;
+
+        df.single_act_visit<double, double>("phi3", "c3", lap);
+
+        const auto  &r { lap.get_result() };
+
+        assert(r.size() == n);
+
+        // Central 3-point 2nd-derivative truncation error ~ h^2/12 * |phi''''|
+        // For sin, |phi''''| <= 1, h=0.1 -> error bound ~ 0.1^2/12 ≈ 0.00083
+        //
+        for (std::size_t i = 1; i + 1 < n; ++i)  {
+            const double    ci { i * h };
+            const double    analytic { -std::sin(ci) };
+
+            assert(std::abs(r[i] - analytic) < 0.002);
+        }
+    }
+
+    // 3-D linear
+    //
+    {
+        using A3 = std::array<double, 3>;
+
+        std::vector<double> phi;
+        std::vector<A3>     c;
+
+        for (double v = 0.0; v <= 4.0; v += 1.0)  {
+            phi.push_back(v * v);
+            c.push_back({ v, 2.0 * v, 3.0 * v });
+        }
+
+        df.load_column("phi4", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c4", std::move(c), nan_policy::dont_pad_with_nans);
+
+        LaplacianVisitor<A3>    lap;
+
+        df.single_act_visit<double, A3>("phi4", "c4", lap);
+
+        const auto      &r { lap.get_result() };
+        const double    expected { 2.0 + 2.0 / 4.0 + 2.0 / 9.0 };
+
+        // This should be exactly at every row (including boundaries) since phi
+        // is exactly quadratic in the row parameter.
+        //
+        assert(r.size() == 5);
+        for (const double v : r)
+            assert(std::abs(v - expected) < 1e-9);
+    }
+
+    // 2-D isolate quadratic axis
+    //
+    {
+        using A2 = std::array<double, 2>;
+
+        std::vector<double> phi = { 4.0, 5.0, 8.0, 13.0, 20.0 };  // x1^2+4
+        std::vector<A2>     c;
+
+        for (double v = 0.0; v <= 4.0; v += 1.0)
+            c.push_back({ v, 1.0 });  // x2 fixed
+
+        df.load_column("phi4", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c4", std::move(c), nan_policy::dont_pad_with_nans);
+
+        LaplacianVisitor<A2>    lap;
+
+        df.single_act_visit<double, A2>("phi4", "c4", lap);
+
+        const auto  &r { lap.get_result() };
+
+        // The only nonzero contribution is from x1 (curvature 2); x2's
+        // constant-spacing contribution is 0 via the h1==0 / h2==0 guard.
+        //
+        assert(r.size() == 5);
+        for (const double v : r)
+            assert(std::abs(v - 2.0) < 1e-9);
+    }
+
+    // Laplacian beats chained gradient divergence
+    //
+    {
+        std::vector<double> phi = { 0.0, 1.0, 4.0, 9.0, 16.0 };
+        std::vector<double> c = { 0.0, 1.0, 2.0, 3.0,  4.0 };
+
+        df.load_column("phi5", std::move(phi), nan_policy::dont_pad_with_nans);
+        df.load_column("c5", std::move(c), nan_policy::dont_pad_with_nans);
+
+        LaplacianVisitor<double>    lap;
+        GradientVisitor<double>     grad;
+        DivergenceVisitor<double>   div;
+
+        df.single_act_visit<double, double>("phi5", "c5", lap);
+        df.single_act_visit<double, double>("phi5", "c5", grad);
+
+        const auto  &lr { lap.get_result() };
+        const auto  &gr { grad.get_result() };
+
+        df.load_column("dphidx", gr, nan_policy::dont_pad_with_nans);
+        df.single_act_visit<double, double>("dphidx", "c5", div);
+
+        const auto  &dr { div.get_result() };
+
+        // Chained Gradient -> Divergence (the old two-pass approach)
+        //
+        for (const double v : lr)
+            assert(std::abs(v - 2.0) < 1e-9);  // exact everywhere
+
+        // The chained approach is not exact at i=1 and i=3 (boundary bias
+        // compounds), unlike LaplacianVisitor
+        //
+        assert(std::abs(dr[1] - 1.5) < 1e-9);  // biased, not 2.0
+        assert(std::abs(dr[3] - 1.5) < 1e-9);  // biased, not 2.0
+        assert(std::abs(dr[2] - 2.0) < 1e-9);  // only the centre matches
+
+        // LaplacianVisitor at those same rows is exact
+        //
+        assert(std::abs(lr[1] - 2.0) < 1e-9);
+        assert(std::abs(lr[3] - 2.0) < 1e-9);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -6136,6 +6346,7 @@ int main(int, char *[])  {
     test_DivergenceVisitor();
     test_GradientVisitor();
     test_JacobianVisitor();
+    test_LaplacianVisitor();
 
     return (0);
 }

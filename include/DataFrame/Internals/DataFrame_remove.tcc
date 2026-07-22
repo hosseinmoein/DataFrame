@@ -637,6 +637,36 @@ remove_data_by_iqr(const char *col_name, T high_fence, T low_fence)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T, typename ... Ts>
+void DataFrame<I, H>::
+remove_data_by_isof(const char *col_name,
+                    long num_trees,
+                    long max_depth,
+                    double threshold,
+					normalization_type ntype)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
+                  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  "Only a StdDataFrame or a PtrView can call "
+                  "remove_data_by_isof()");
+
+    using isof_t =
+        AnomalyDetectByIsoForestVisitor<T, I, std::size_t(H::align_value)>;
+
+    ColumnVecType<T>    &vec = get_column<T>(col_name);
+    isof_t              isof { num_trees, max_depth, threshold, ntype };
+
+    isof.pre();
+    isof(indices_.begin(), indices_.end(), vec.begin(), vec.end());
+    isof.post();
+
+    remove_data_by_sel_common_<Ts ...>(isof.get_result());
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<arithmetic T, typename ... Ts>
 void DataFrame<I, H>::
 remove_data_by_zscore(const char *col_name, T threshold)  {

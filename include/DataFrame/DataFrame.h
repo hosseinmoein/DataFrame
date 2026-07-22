@@ -1063,6 +1063,40 @@ public:  // Load/append/remove interfaces
                        T high_fence = T(1.5),
                        T low_fence = T(1.5));
 
+    // This uses Isolation Forest to detect and remove outliers in the named
+    // column and all rows corresponding to those outliers in the DataFrame.
+    //
+    // T:
+    //   Type of the named column.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_name:
+    //   Name of the given column
+    // num_trees:
+    //   Number of isolation trees. The original paper uses 100; 50–200 is
+    //   typical. More trees -> lower variance of scores.
+    // max_depth:
+    //   Maximum depth of each tree. The original paper recommends
+    //   ceil(log2(Ψ)) where Ψ is the subsample size, but passing the full
+    //   column size works well in practice. Default: 10 (same as IsoTree's
+    //   default).
+    // threshold:
+    //   Points with score > threshold are flagged as anomalies. The canonical
+    //   threshold from the paper is 0.6 (points scoring above 0.6 are
+    //   considered anomalous with moderate confidence; > 0.7 is stronger).
+    //   Default: 0.6.
+    // ntype:
+    //   Normalization type to be applied as the first step
+    //
+    template<typename T, typename ... Ts>
+    void
+    remove_data_by_isof(const char *col_name,
+                        long num_trees = 100,
+                        long max_depth = 10,
+                        double threshold = 0.6,
+                        normalization_type ntype = normalization_type::none);
+
     // This uses z-score to detect and remove outliers in the named column and
     // all rows corresponding to those outliers in the DataFrame.
     //

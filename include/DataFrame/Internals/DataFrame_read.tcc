@@ -998,27 +998,6 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only, char delim)  {
 
 // ----------------------------------------------------------------------------
 
-struct _col_data_spec_  {
-
-    std::any    col_vec { };
-    file_dtypes type_spec { 0 };
-    String64    col_name { };
-    int         col_idx { -1 };
-
-    template<typename V>
-    _col_data_spec_(V cv,
-                    file_dtypes ts,
-                    const char *cn,
-                    std::size_t rs,
-                    int ci = -1)
-        : col_vec(cv), type_spec(ts), col_name(cn), col_idx(ci)  {
-
-        std::any_cast<V &>(col_vec).reserve(rs);
-    }
-};
-
-// --------------------------------------
-
 template<typename I, typename H>
 template<typename S>
 void DataFrame<I, H>::

@@ -251,7 +251,7 @@ DataFrame<I, H>::load_index(IndexVecType &&idx)  {
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call load_index()");
 
-    indices_ = idx;
+    indices_ = std::move(idx);
     return (indices_.size());
 }
 

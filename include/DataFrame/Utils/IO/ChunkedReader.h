@@ -167,7 +167,7 @@ private:
 // ----------------------------------------------------------------------------
 
 #ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
-#  include <DataFrame/Utils/ChunkedReader.tcc>
+#  include <DataFrame/Utils/IO/ChunkedReader.tcc>
 #endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 
 // ----------------------------------------------------------------------------

@@ -6414,32 +6414,31 @@ static void test_read_chunked_data()  {
 
     std::filesystem::path   file_name { "./chunked_reader_test.csv2" };
 
-    df.write<double, int, std::string>(file_name.c_str(), io_format::csv2);
+    df.write<double, int, std::string>
+        (file_name.string().c_str(), io_format::csv2);
 
     // Baseline: read the whole thing back in one shot
     //
     MyDataFrame whole;
 
-    whole.read(file_name.c_str(), io_format::csv2);
+    whole.read(file_name.string().c_str(), io_format::csv2);
     assert(whole.get_index().size() == n);
 
     //  Now read it back via ChunkedReader, in chunks
     //
-    std::ifstream   stream(file_name.c_str());
+    std::ifstream   stream(file_name.string().c_str());
 
     assert(stream.is_open());
 
     ChunkedReader<std::ifstream, MyDataFrame>   reader(stream, io_format::csv2);
-
-    MyDataFrame         chunk;
-    std::size_t         total_rows_seen { 0 };
-    std::size_t         chunk_count { 0 };
-    const std::size_t   chunk_size { 777 };  // Not a nice divisor
-
-    std::vector<unsigned long>  reassembled_idx;
-    std::vector<double>         reassembled_a;
-    std::vector<int>            reassembled_b;
-    std::vector<std::string>    reassembled_c;
+    MyDataFrame                                 chunk;
+    std::size_t                                 total_rows_seen { 0 };
+    std::size_t                                 chunk_count { 0 };
+    const std::size_t                           chunk_size { 777 };
+    std::vector<unsigned long>                  reassembled_idx;
+    std::vector<double>                         reassembled_a;
+    std::vector<int>                            reassembled_b;
+    std::vector<std::string>                    reassembled_c;
 
     while (reader.next_chunk(chunk, chunk_size))  {
         chunk_count += 1;
@@ -6494,12 +6493,15 @@ static void test_read_chunked_data()  {
     //  entirely via tiny chunks and checking chunk_count > 1
     //
     {
-        std::ifstream                               stream2(file_name.c_str());
-        ChunkedReader<std::ifstream, MyDataFrame>
-            reader2(stream2, io_format::csv2);
-        MyDataFrame                                  small_chunk;
-        std::size_t                                  small_chunk_count { 0 };
-        std::size_t                                  small_total { 0 };
+        std::ifstream                               stream2 {
+            file_name.string().c_str()
+        };
+        ChunkedReader<std::ifstream, MyDataFrame>   reader2 {
+            stream2, io_format::csv2
+        };
+        MyDataFrame                                 small_chunk;
+        std::size_t                                 small_chunk_count { 0 };
+        std::size_t                                 small_total { 0 };
 
         while (reader2.next_chunk(small_chunk, 10))  {
             small_chunk_count += 1;
@@ -6515,9 +6517,12 @@ static void test_read_chunked_data()  {
         bool    threw { false };
 
         try  {
-            std::ifstream   stream3(file_name.c_str());
-            ChunkedReader<std::ifstream, MyDataFrame>
-                reader3(stream3, io_format::csv);
+            std::ifstream                               stream3 {
+                file_name.string().c_str()
+            };
+            ChunkedReader<std::ifstream, MyDataFrame>   reader3 {
+                stream3, io_format::csv
+            };
         }
         catch (const NotImplemented &)  { threw = true; }
         assert(threw);
@@ -6529,14 +6534,16 @@ static void test_read_chunked_data()  {
     std::filesystem::path   bin_file_name { "./chunked_reader_test.hmdf" };
 
     df.write<double, int, std::string>
-        (bin_file_name.c_str(), io_format::binary);
+        (bin_file_name.string().c_str(), io_format::binary);
 
     MyDataFrame whole_bin;
 
-    whole_bin.read(bin_file_name.c_str(), io_format::binary);
+    whole_bin.read(bin_file_name.string().c_str(), io_format::binary);
     assert(whole_bin.get_index().size() == n);
 
-    std::ifstream   bin_stream(bin_file_name.c_str(), std::ios::binary);
+    std::ifstream   bin_stream {
+        bin_file_name.string().c_str(), std::ios::binary
+    };
 
     assert(bin_stream.is_open());
 
@@ -6546,11 +6553,10 @@ static void test_read_chunked_data()  {
     MyDataFrame                                 bin_chunk;
     std::size_t                                 bin_total_rows_seen { 0 };
     std::size_t                                 bin_chunk_count { 0 };
-
-    std::vector<unsigned long>  bin_reassembled_idx;
-    std::vector<double>         bin_reassembled_a;
-    std::vector<int>            bin_reassembled_b;
-    std::vector<std::string>    bin_reassembled_c;
+    std::vector<unsigned long>                  bin_reassembled_idx;
+    std::vector<double>                         bin_reassembled_a;
+    std::vector<int>                            bin_reassembled_b;
+    std::vector<std::string>                    bin_reassembled_c;
 
     while (bin_reader.next_chunk(bin_chunk, chunk_size))  {
         bin_chunk_count += 1;
@@ -6587,8 +6593,8 @@ static void test_read_chunked_data()  {
     // Tiny-chunk-size sanity check for binary too.
     //
     {
-        std::ifstream                              bin_stream2 {
-            bin_file_name.c_str(), std::ios::binary
+        std::ifstream                               bin_stream2 {
+            bin_file_name.string().c_str(), std::ios::binary
         };
         ChunkedReader<std::ifstream, MyDataFrame>   bin_reader2 {
             bin_stream2, io_format::binary
@@ -6608,7 +6614,9 @@ static void test_read_chunked_data()  {
     // A starting_row offset applied on the very first binary chunk too.
     //
     {
-        std::ifstream  bin_stream3 { bin_file_name.c_str(), std::ios::binary };
+        std::ifstream  bin_stream3 {
+            bin_file_name.string().c_str(), std::ios::binary
+        };
         ReadParams     p;
 
         p.starting_row = 100;

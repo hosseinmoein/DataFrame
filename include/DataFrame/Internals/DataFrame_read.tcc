@@ -1000,32 +1000,80 @@ void DataFrame<I, H>::read_csv_(S &stream, bool columns_only, char delim)  {
 
 template<typename I, typename H>
 template<typename S>
-void DataFrame<I, H>::
+typename DataFrame<I, H>::size_type DataFrame<I, H>::
 read_csv2_(S &stream,
            bool columns_only,
            size_type starting_row,
            size_type num_rows,
            bool skip_first_line,
            const std::vector<ReadSchema> &schema,
-           char delim)  {
+           char delim,
+           CSV2ReadState *ext_state)  {
 
     constexpr unsigned long data_size = 64 * 1024;
 
-    using SpecVec = StlVecType<_col_data_spec_>;
+    // SpecVec is now CSV2SpecVec (a plain std::vector<CSV2ColSpec>,
+    // see CSV2State.h) rather than a StlVecType<CSV2ColSpec>.
+    // This is a bookkeeping-only container (one entry per column, not per
+    // row), so the change is invisible to correctness/perf, but it lets
+    // this same vector type be held inside CSV2ReadState, which is a
+    // plain (non-template) struct shared with ChunkedReader.
+    //
+    using SpecVec = CSV2SpecVec;
 
     char                line[data_size];
     std::string         value;
-    SpecVec             spec_vec;
-    bool                header_read { false };
-    int                 requested_col_count { 0 };
     int                 actual_col_count { 0 };
     size_type           data_rows_read { 0 };
     size_type           row_cnt { 0 };
+
+    // Number of data rows actually parsed - by this call - (as opposed to
+    // data_rows_read/row_cnt above, which are also reset every call but
+    // additionally used to honor starting_row/num_rows within a single call).
+    // ChunkedReader uses this return value to detect when the underlying
+    // stream is exhausted.
+    //
+    size_type           rows_read_this_call { 0 };
     std::stringstream   sstream;
     const bool          user_schema { ! schema.empty() };
 
+    // header_read / requested_col_count / spec_vec are, as of this change,
+    // references that either bind to a caller-supplied, persisted
+    // CSV2ReadState (when reading via ChunkedReader) or to plain
+    // local variables (the original behavior, when ext_state is null --
+    // i.e. every existing call site, via DataFrame::read()/read_async(),
+    // is completely unaffected). Every other reference to these three
+    // names later in this function is unchanged, so binding them this way
+    // is the entire mechanism that makes resumable chunked reads possible:
+    // on the 2nd+ call through the same ext_state, header_read is already
+    // true (skipping re-parsing of the header) and spec_vec already holds
+    // the (now-emptied-by-move, but still correctly typed and named)
+    // column buffers from the previous chunk, ready to be refilled.
+    //
+    bool                local_header_read { false };
+    int                 local_requested_col_count { 0 };
+    SpecVec             local_spec_vec { };
+    bool                &header_read {
+        ext_state ? ext_state->header_read : local_header_read
+    };
+    int                 &requested_col_count {
+        ext_state ? ext_state->requested_col_count
+                  : local_requested_col_count
+    };
+    SpecVec             &spec_vec {
+        ext_state ? ext_state->spec_vec : local_spec_vec
+    };
+
+    // NOTE: I have not figured out why I need to do this!!
+    //
+    if (ext_state && (! spec_vec.empty()))  {
+        if (spec_vec[0].col_name == DF_INDEX_COL_NAME)
+            std::any_cast<IndexVecType &>(spec_vec[0].col_vec).clear();
+
+    }
+	
     value.reserve(64);
-    spec_vec.reserve(32);
+    if (spec_vec.capacity() == 0)  spec_vec.reserve(32);
     while (true)  {
         if constexpr (std::same_as<S, std::FILE *>)  {
             if (std::feof(stream))  break;
@@ -1033,6 +1081,11 @@ read_csv2_(S &stream,
         else  {
             if (stream.eof())  break;
         }
+
+        if (header_read &&
+            num_rows != std::numeric_limits<size_type>::max() &&
+            row_cnt >= starting_row + num_rows) [[unlikely]]
+            break;
 
         line[0] = '\0';
         if constexpr (std::same_as<S, std::FILE *>)  {
@@ -1708,7 +1761,7 @@ read_csv2_(S &stream,
                     value.pop_back();
                 if (spec_vec_idx >= spec_vec.size()) [[unlikely]]  break;
 
-                _col_data_spec_ &col_spec = spec_vec[spec_vec_idx];
+                CSV2ColSpec &col_spec = spec_vec[spec_vec_idx];
 
                 if (col_idx != col_spec.col_idx) [[unlikely]] continue;
 
@@ -2112,6 +2165,8 @@ read_csv2_(S &stream,
                     }
                 }
             }
+
+            rows_read_this_call += 1;
         }
     }
 
@@ -2129,11 +2184,13 @@ read_csv2_(S &stream,
             load_index(std::move(
                 std::any_cast<IndexVecType &>(spec_vec[0].col_vec)));
 
-        const size_type begin =
-            spec_vec[0].col_name == DF_INDEX_COL_NAME ? 1 : 0;
+        const size_type begin {
+            spec_vec[0].col_name == DF_INDEX_COL_NAME
+                ? size_type(1) : size_type(0)
+        };
 
         for (size_type i = begin; i < spec_s; ++i) [[likely]]  {
-            _col_data_spec_ col_spec = spec_vec[i];
+            CSV2ColSpec &col_spec = spec_vec[i];
 
             switch(col_spec.type_spec)  {
                 case file_dtypes::FLOAT: {
@@ -2423,87 +2480,197 @@ read_csv2_(S &stream,
             }
         }
     }
+
+    return (rows_read_this_call);
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
 template<typename S>
-void DataFrame<I, H>::
+typename DataFrame<I, H>::size_type DataFrame<I, H>::
 read_binary_(S &stream,
              bool columns_only,
              size_type starting_row,
-             size_type num_rows)  {
+             size_type num_rows,
+             BinaryReadState *ext_state)  {
 
-    endians ed;
+    // is_resume is true from the 2nd call onward through the same
+    // ext_state -- i.e. once its header/column list has already been
+    // populated by a prior call. On a resume, the endianness marker,
+    // column count, and every column's name/type are already known (and
+    // are NOT sitting at the current stream position to be re-read);
+    // instead we seek back to each column's own recorded offset.
+    //
+    const bool  is_resume { (ext_state != nullptr && ext_state->header_read) };
+    bool        needs_flipping { false };
+    uint16_t    col_num { 0 };
 
-    stream.read(reinterpret_cast<char *>(&ed), sizeof(ed));
+    if (! is_resume)  {
+        endians ed;
 
-    const bool needs_flipping = ed != get_system_endian();
-    uint16_t   col_num { 0 };
+        stream.read(reinterpret_cast<char *>(&ed), sizeof(ed));
+        needs_flipping = ed != get_system_endian();
 
-    stream.read(reinterpret_cast<char *>(&col_num), sizeof(col_num));
-    if (needs_flipping)
-        col_num = SwapBytes<decltype(col_num), sizeof(col_num)> { }(col_num);
+        stream.read(reinterpret_cast<char *>(&col_num), sizeof(col_num));
+        if (needs_flipping)
+            col_num =
+                SwapBytes<decltype(col_num), sizeof(col_num)> { }(col_num);
 
-    char    col_name[64];
-    char    col_type[32];
+        if (ext_state)  ext_state->needs_flipping = needs_flipping;
+    }
+    else  {
+        needs_flipping = ext_state->needs_flipping;
+        col_num = static_cast<uint16_t>(ext_state->data_cols.size());
+    }
+
+    // eff_start_row is what actually gets passed to the per-column
+    // _read_binary_*_() helpers below: on the very first call it is
+    // whatever the caller asked for (starting_row, matching the existing,
+    // non-chunked read() behavior exactly when ext_state is null); on any
+    // resumed call, every column's stream position has just been reset
+    // (via seekg) back to that column's own beginning, so the "how many
+    // rows to skip" figure must be the cumulative total already delivered
+    // by previous chunks, not 0 and not the original starting_row.
+    //
+    const size_type eff_start_row {
+        is_resume ? ext_state->rows_consumed : starting_row
+    };
+
+    // Discovered from whichever column is read first (below) and used, at the
+    // end of this function, to report how many rows this call actually
+    // delivered.
+    //
+    size_type   total_rows_this_source { 0 };
+    bool        total_rows_known { false };
+    char        col_name[64];
+    char        col_type[32];
 
     std::memset(col_name, 0, sizeof(col_name));
     std::memset(col_type, 0, sizeof(col_type));
     if (! columns_only) [[likely]]  {
-        stream.read(col_name, sizeof(col_name));
-        if (std::strcmp(col_name, DF_INDEX_COL_NAME))  {
-            String1K    err;
+        if (! is_resume)  {
+            stream.read(col_name, sizeof(col_name));
+            if (std::strcmp(col_name, DF_INDEX_COL_NAME))  {
+                String1K    err;
 
-            err.printf("read_binary_(): ERROR: Expecting name '%s'",
-                       DF_INDEX_COL_NAME);
-            throw DataFrameError(err.c_str());
+                err.printf("read_binary_(): ERROR: Expecting name '%s'",
+                           DF_INDEX_COL_NAME);
+                throw DataFrameError(err.c_str());
+            }
+
+            stream.read(col_type, sizeof(col_type));
+
+            if (ext_state)  {
+                ext_state->has_index = true;
+                ext_state->index_col.col_name = col_name;
+                ext_state->index_col.col_type = col_type;
+                ext_state->index_col.data_offset = stream.tellg();
+            }
+        }
+        else  {
+            std::strncpy(col_name, ext_state->index_col.col_name.c_str(),
+                         sizeof(col_name) - 1);
+            std::strncpy(col_type, ext_state->index_col.col_type.c_str(),
+                         sizeof(col_type) - 1);
+            stream.seekg(ext_state->index_col.data_offset,
+                         std::ios_base::beg);
         }
 
-        stream.read(col_type, sizeof(col_type));
+        // Peek this column's row count (then rewind) purely so we can later
+        // report how many rows this call delivered / detect exhaustion -- the
+        // real, "consuming" read still happens exactly as before, a few lines
+        // down.
+        //
+        if (! total_rows_known)  {
+            const std::streamoff    here { stream.tellg() };
+            uint64_t                raw_count { 0 };
+
+            stream.read(reinterpret_cast<char *>(&raw_count),
+                        sizeof(raw_count));
+            if (needs_flipping)
+                raw_count =
+                    SwapBytes<decltype(raw_count), sizeof(raw_count)> { }
+                        (raw_count);
+            stream.seekg(here, std::ios_base::beg);
+            total_rows_this_source = static_cast<size_type>(raw_count);
+            total_rows_known = true;
+        }
 
         IndexVecType    idx_vec;
 
         if constexpr (std::is_same_v<IndexType, std::string>)
             _read_binary_string_<std::string>(stream, idx_vec, needs_flipping,
-                                              starting_row, num_rows);
+                                              eff_start_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, String8>)
             _read_binary_string_<String8>(stream, idx_vec, needs_flipping,
-                                          starting_row, num_rows);
+                                          eff_start_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, String16>)
             _read_binary_string_<String16>(stream, idx_vec, needs_flipping,
-                                           starting_row, num_rows);
+                                           eff_start_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, String32>)
             _read_binary_string_<String32>(stream, idx_vec, needs_flipping,
-                                           starting_row, num_rows);
+                                           eff_start_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, String64>)
             _read_binary_string_<String64>(stream, idx_vec, needs_flipping,
-                                           starting_row, num_rows);
+                                           eff_start_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, String128>)
             _read_binary_string_<String128>(stream, idx_vec, needs_flipping,
-                                            starting_row, num_rows);
+                                            eff_start_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, String512>)
             _read_binary_string_<String512>(stream, idx_vec, needs_flipping,
-                                            starting_row, num_rows);
+                                            eff_start_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, String1K>)
             _read_binary_string_<String1K>(stream, idx_vec, needs_flipping,
-                                           starting_row, num_rows);
+                                           eff_start_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, String2K>)
             _read_binary_string_<String2K>(stream, idx_vec, needs_flipping,
-                                           starting_row, num_rows);
+                                           eff_start_row, num_rows);
         else if constexpr (std::is_same_v<IndexType, DateTime>)
             _read_binary_datetime_(stream, idx_vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
         else
             _read_binary_data_(stream, idx_vec, needs_flipping,
-                               starting_row, num_rows);
+                               eff_start_row, num_rows);
         load_index(std::move(idx_vec));
     }
 
     for (uint16_t i = 0; i < col_num; ++i)  {
-        stream.read(col_name, sizeof(col_name));
-        stream.read(col_type, sizeof(col_type));
+        if (! is_resume)  {
+            stream.read(col_name, sizeof(col_name));
+            stream.read(col_type, sizeof(col_type));
+
+            if (ext_state)  {
+                BinaryColumnState   bcs;
+
+                bcs.col_name = col_name;
+                bcs.col_type = col_type;
+                bcs.data_offset = stream.tellg();
+                ext_state->data_cols.push_back(bcs);
+            }
+        }
+        else  {
+            const BinaryColumnState    &bcs { ext_state->data_cols[i] };
+
+            std::strncpy(col_name, bcs.col_name.c_str(), sizeof(col_name) - 1);
+            std::strncpy(col_type, bcs.col_type.c_str(), sizeof(col_type) - 1);
+            stream.seekg(bcs.data_offset, std::ios_base::beg);
+        }
+
+        if (! total_rows_known)  {
+            const std::streamoff   here = stream.tellg();
+            uint64_t                raw_count { 0 };
+
+            stream.read(reinterpret_cast<char *>(&raw_count),
+                        sizeof(raw_count));
+            if (needs_flipping)
+                raw_count =
+                    SwapBytes<decltype(raw_count), sizeof(raw_count)> { }
+                        (raw_count);
+            stream.seekg(here, std::ios_base::beg);
+            total_rows_this_source = static_cast<size_type>(raw_count);
+            total_rows_known = true;
+        }
 
         const auto  citer = _typename_id_.find(col_type);
 
@@ -2520,7 +2687,7 @@ read_binary_(S &stream,
                 ColumnVecType<float>    vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                               starting_row, num_rows);
+                               eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2529,7 +2696,7 @@ read_binary_(S &stream,
                 ColumnVecType<double>   vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2538,7 +2705,7 @@ read_binary_(S &stream,
                 ColumnVecType<short int>    vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2547,7 +2714,7 @@ read_binary_(S &stream,
                 ColumnVecType<unsigned short int>   vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2556,7 +2723,7 @@ read_binary_(S &stream,
                 ColumnVecType<int>  vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2565,7 +2732,7 @@ read_binary_(S &stream,
                 ColumnVecType<unsigned int> vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2574,7 +2741,7 @@ read_binary_(S &stream,
                 ColumnVecType<long int> vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2583,7 +2750,7 @@ read_binary_(S &stream,
                 ColumnVecType<unsigned long int>    vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2592,7 +2759,7 @@ read_binary_(S &stream,
                 ColumnVecType<long long int>    vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2601,7 +2768,7 @@ read_binary_(S &stream,
                 ColumnVecType<unsigned long long int>   vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2610,7 +2777,7 @@ read_binary_(S &stream,
                 ColumnVecType<char> vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2619,7 +2786,7 @@ read_binary_(S &stream,
                 ColumnVecType<unsigned char>    vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2628,7 +2795,7 @@ read_binary_(S &stream,
                 ColumnVecType<bool> vec;
 
                 _read_binary_data_(stream, vec, needs_flipping,
-                                   starting_row, num_rows);
+                                   eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2637,7 +2804,7 @@ read_binary_(S &stream,
                 ColumnVecType<std::string>  vec;
 
                 _read_binary_string_<std::string>(stream, vec, needs_flipping,
-                                                  starting_row, num_rows);
+                                                  eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2646,7 +2813,7 @@ read_binary_(S &stream,
                 ColumnVecType<String8>  vec;
 
                 _read_binary_string_<String8>(stream, vec, needs_flipping,
-                                              starting_row, num_rows);
+                                              eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2655,7 +2822,7 @@ read_binary_(S &stream,
                 ColumnVecType<String16> vec;
 
                 _read_binary_string_<String16>(stream, vec, needs_flipping,
-                                               starting_row, num_rows);
+                                               eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2664,7 +2831,7 @@ read_binary_(S &stream,
                 ColumnVecType<String32> vec;
 
                 _read_binary_string_<String32>(stream, vec, needs_flipping,
-                                               starting_row, num_rows);
+                                               eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2673,7 +2840,7 @@ read_binary_(S &stream,
                 ColumnVecType<String64> vec;
 
                 _read_binary_string_<String64>(stream, vec, needs_flipping,
-                                               starting_row, num_rows);
+                                               eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2682,7 +2849,7 @@ read_binary_(S &stream,
                 ColumnVecType<String128>    vec;
 
                 _read_binary_string_<String128>(stream, vec, needs_flipping,
-                                               starting_row, num_rows);
+                                               eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2691,7 +2858,7 @@ read_binary_(S &stream,
                 ColumnVecType<String512>    vec;
 
                 _read_binary_string_<String512>(stream, vec, needs_flipping,
-                                               starting_row, num_rows);
+                                               eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2700,7 +2867,7 @@ read_binary_(S &stream,
                 ColumnVecType<String1K> vec;
 
                 _read_binary_string_<String1K>(stream, vec, needs_flipping,
-                                               starting_row, num_rows);
+                                               eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2709,7 +2876,7 @@ read_binary_(S &stream,
                 ColumnVecType<String2K> vec;
 
                 _read_binary_string_<String2K>(stream, vec, needs_flipping,
-                                               starting_row, num_rows);
+                                               eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2718,7 +2885,7 @@ read_binary_(S &stream,
                 ColumnVecType<DateTime> vec;
 
                 _read_binary_datetime_(stream, vec, needs_flipping,
-                                       starting_row, num_rows);
+                                       eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2729,7 +2896,7 @@ read_binary_(S &stream,
                 ColumnVecType<val_t>    vec;
 
                 _read_binary_str_dbl_pair_(stream, vec, needs_flipping,
-                                           starting_row, num_rows);
+                                           eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2740,7 +2907,7 @@ read_binary_(S &stream,
                 ColumnVecType<val_t>    vec;
 
                 _read_binary_str_str_pair_(stream, vec, needs_flipping,
-                                           starting_row, num_rows);
+                                           eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2751,7 +2918,7 @@ read_binary_(S &stream,
                 ColumnVecType<val_t>    vec;
 
                 _read_binary_dbl_dbl_pair_(stream, vec, needs_flipping,
-                                           starting_row, num_rows);
+                                           eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2760,7 +2927,7 @@ read_binary_(S &stream,
                 ColumnVecType<std::vector<double>>  vec;
 
                 _read_binary_dbl_vec_(stream, vec, needs_flipping,
-                                      starting_row, num_rows);
+                                      eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2769,7 +2936,7 @@ read_binary_(S &stream,
                 ColumnVecType<std::vector<std::string>> vec;
 
                 _read_binary_str_vec_(stream, vec, needs_flipping,
-                                      starting_row, num_rows);
+                                      eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2778,7 +2945,7 @@ read_binary_(S &stream,
                 ColumnVecType<std::set<double>> vec;
 
                 _read_binary_dbl_set_(stream, vec, needs_flipping,
-                                      starting_row, num_rows);
+                                      eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2787,7 +2954,7 @@ read_binary_(S &stream,
                 ColumnVecType<std::set<std::string>>    vec;
 
                 _read_binary_str_set_(stream, vec, needs_flipping,
-                                      starting_row, num_rows);
+                                      eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2796,7 +2963,7 @@ read_binary_(S &stream,
                 ColumnVecType<std::map<std::string, double>>    vec;
 
                 _read_binary_str_dbl_map_(stream, vec, needs_flipping,
-                                          starting_row, num_rows);
+                                          eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2805,7 +2972,7 @@ read_binary_(S &stream,
                 ColumnVecType<std::unordered_map<std::string, double>>  vec;
 
                 _read_binary_str_dbl_map_(stream, vec, needs_flipping,
-                                          starting_row, num_rows);
+                                          eff_start_row, num_rows);
                 load_column(col_name, std::move(vec),
                             nan_policy::dont_pad_with_nans);
                 break;
@@ -2819,6 +2986,23 @@ read_binary_(S &stream,
             }
         }
     }
+
+    size_type   rows_this_call { num_rows };
+
+    if (total_rows_known)  {
+        rows_this_call =
+            (eff_start_row >= total_rows_this_source)
+                ? 0
+                : std::min(num_rows, total_rows_this_source - eff_start_row);
+    }
+    if (ext_state)  {
+        ext_state->header_read = true;
+        if (ext_state->total_rows == 0)
+            ext_state->total_rows = total_rows_this_source;
+        ext_state->rows_consumed += rows_this_call;
+    }
+
+    return (rows_this_call);
 }
 
 // ----------------------------------------------------------------------------

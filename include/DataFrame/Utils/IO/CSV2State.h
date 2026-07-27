@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // (starting_row, num_rows) windowing, which re-opens/re-scans the source from
 // the // beginning on every call.
 //
-// _col_data_spec_ itself is unchanged from its previous, function-local
+// CSV2ColSpec itself is unchanged from its previous, function-local
 // definition inside DataFrame_read.tcc; it is only relocated here so both
 // DataFrame_read.tcc and ChunkedReader.h can share the same type.
 
@@ -59,7 +59,7 @@ namespace hmdf
 // stream: its eventual C++ type (behind std::any), its declared type-tag,
 // its name, and its ordinal position in the file.
 //
-struct  _col_data_spec_  {
+struct  CSV2ColSpec  {
 
     std::any    col_vec { };
     file_dtypes type_spec { 0 };
@@ -67,11 +67,11 @@ struct  _col_data_spec_  {
     int         col_idx { -1 };
 
     template<typename V>
-    _col_data_spec_(V cv,
-                    file_dtypes ts,
-                    const char *cn,
-                    std::size_t rs,
-                    int ci = -1)
+    CSV2ColSpec(V cv,
+                file_dtypes ts,
+                const char *cn,
+                std::size_t rs,
+                int ci = -1)
         : col_vec(cv), type_spec(ts), col_name(cn), col_idx(ci)  {
 
         std::any_cast<V &>(col_vec).reserve(rs);
@@ -83,14 +83,14 @@ struct  _col_data_spec_  {
 // Note this deliberately uses a plain std::vector (not DataFrame's
 // alignment-aware StlVecType alias) to hold the column-spec descriptors
 // themselves. That alias only matters for the actual per-column numeric
-// data buffers stashed inside each _col_data_spec_'s std::any (those are
+// data buffers stashed inside each CSV2ColSpec's std::any (those are
 // still built with the DataFrame's own StlVecType<T>). The outer
 // vector-of-specs is just per-file bookkeeping (one entry per column, not per
 // row), so using a plain std::vector here costs nothing and lets CSV2ReadState
 // stay a simple, non-template type that any DataFrame<I, H> instantiation can
 // hand a pointer to.
 //
-using CSV2SpecVec = std::vector<_col_data_spec_>;
+using CSV2SpecVec = std::vector<CSV2ColSpec>;
 
 // Bundles the pieces of DataFrame::read_csv2_()'s parsing state that need
 // to survive between one chunk-read call and the next:

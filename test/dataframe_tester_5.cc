@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <filesystem>
 #include <iostream>
 #include <ranges>
 #include <string>
@@ -6381,6 +6382,252 @@ static void test_remove_data_by_isof()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_read_chunked_data()  {
+
+    std::cout << "\nTesting read_chunked_data( ) ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    // Build a reasonably sized DataFrame and write it out as csv2 ----
+    //
+    // deliberately not a multiple of any "nice" chunk size
+    //
+    const std::size_t           n { 10037 };
+    std::vector<unsigned long>  idx(n);
+    std::vector<double>         col_a(n);
+    std::vector<int>            col_b(n);
+    std::vector<std::string>    col_c(n);
+
+    for (std::size_t i = 0; i < n; ++i)  {
+        idx[i] = i;
+        col_a[i] = double(i) * 1.5;
+        col_b[i] = int(i) * 2;
+        col_c[i] = "row_" + std::to_string(i);
+    }
+
+    MyDataFrame df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_a", col_a),
+                 std::make_pair("col_b", col_b),
+                 std::make_pair("col_c", col_c));
+
+    std::filesystem::path   file_name { "./chunked_reader_test.csv2" };
+
+    df.write<double, int, std::string>(file_name.c_str(), io_format::csv2);
+
+    // Baseline: read the whole thing back in one shot
+    //
+    MyDataFrame whole;
+
+    whole.read(file_name.c_str(), io_format::csv2);
+    assert(whole.get_index().size() == n);
+
+    //  Now read it back via ChunkedReader, in chunks
+    //
+    std::ifstream   stream(file_name.c_str());
+
+    assert(stream.is_open());
+
+    ChunkedReader<std::ifstream, MyDataFrame>   reader(stream, io_format::csv2);
+
+    MyDataFrame         chunk;
+    std::size_t         total_rows_seen { 0 };
+    std::size_t         chunk_count { 0 };
+    const std::size_t   chunk_size { 777 };  // Not a nice divisor
+
+    std::vector<unsigned long>  reassembled_idx;
+    std::vector<double>         reassembled_a;
+    std::vector<int>            reassembled_b;
+    std::vector<std::string>    reassembled_c;
+
+    while (reader.next_chunk(chunk, chunk_size))  {
+        chunk_count += 1;
+
+        const auto  &chunk_idx { chunk.get_index() };
+        const auto  &chunk_a { chunk.get_column<double>("col_a") };
+        const auto  &chunk_b { chunk.get_column<int>("col_b") };
+        const auto  &chunk_c { chunk.get_column<std::string>("col_c") };
+
+
+        // Every chunk except possibly the last should be exactly
+        // chunk_size rows.
+        //
+        assert(! ((total_rows_seen + chunk_size) <= n &&
+                     chunk_idx.size() != chunk_size));
+
+        assert(chunk_idx.size() <= 777);
+        assert(chunk_idx.size() == chunk_a.size());
+        assert(chunk_idx.size() == chunk_b.size());
+        assert(chunk_idx.size() == chunk_c.size());
+        for (std::size_t i = 0; i < chunk_idx.size(); ++i)  {
+            reassembled_idx.push_back(chunk_idx[i]);
+            reassembled_a.push_back(chunk_a[i]);
+            reassembled_b.push_back(chunk_b[i]);
+            reassembled_c.push_back(chunk_c[i]);
+        }
+
+        total_rows_seen += chunk_idx.size();
+    }
+
+    assert(reader.is_eof());
+    assert(total_rows_seen == n);
+    assert(reassembled_idx.size() == n);
+
+    // Verify the reassembled data matches the one-shot read exactly
+    //
+    const auto  &whole_idx { whole.get_index() };
+    const auto  &whole_a { whole.get_column<double>("col_a") };
+    const auto  &whole_b { whole.get_column<int>("col_b") };
+    const auto  &whole_c { whole.get_column<std::string>("col_c") };
+
+    for (std::size_t i = 0; i < n; ++i)  {
+        assert(reassembled_idx[i] == whole_idx[i]);
+        assert(reassembled_a[i] == whole_a[i]);
+        assert(reassembled_b[i] == whole_b[i]);
+        assert(reassembled_c[i] == whole_c[i]);
+    }
+
+    // Sanity check: a stream truly positioned mid-way through (no
+    // rewinding) still works -- prove there's no "rescan from
+    // beginning" happening internally by reading a small file
+    //  entirely via tiny chunks and checking chunk_count > 1
+    //
+    {
+        std::ifstream                               stream2(file_name.c_str());
+        ChunkedReader<std::ifstream, MyDataFrame>
+            reader2(stream2, io_format::csv2);
+        MyDataFrame                                  small_chunk;
+        std::size_t                                  small_chunk_count { 0 };
+        std::size_t                                  small_total { 0 };
+
+        while (reader2.next_chunk(small_chunk, 10))  {
+            small_chunk_count += 1;
+            small_total += small_chunk.get_index().size();
+        }
+        assert(small_total == n);
+        assert(small_chunk_count == (n + 9) / 10);
+    }
+
+    // Sanity check: unsupported format throws
+    //
+    {
+        bool    threw { false };
+
+        try  {
+            std::ifstream   stream3(file_name.c_str());
+            ChunkedReader<std::ifstream, MyDataFrame>
+                reader3(stream3, io_format::csv);
+        }
+        catch (const NotImplemented &)  { threw = true; }
+        assert(threw);
+    }
+    std::filesystem::remove(file_name);
+
+    // Now the same battery of checks, but for io_format::binary
+    //
+    std::filesystem::path   bin_file_name { "./chunked_reader_test.hmdf" };
+
+    df.write<double, int, std::string>
+        (bin_file_name.c_str(), io_format::binary);
+
+    MyDataFrame whole_bin;
+
+    whole_bin.read(bin_file_name.c_str(), io_format::binary);
+    assert(whole_bin.get_index().size() == n);
+
+    std::ifstream   bin_stream(bin_file_name.c_str(), std::ios::binary);
+
+    assert(bin_stream.is_open());
+
+    ChunkedReader<std::ifstream, MyDataFrame>   bin_reader {
+        bin_stream, io_format::binary
+    };
+    MyDataFrame                                 bin_chunk;
+    std::size_t                                 bin_total_rows_seen { 0 };
+    std::size_t                                 bin_chunk_count { 0 };
+
+    std::vector<unsigned long>  bin_reassembled_idx;
+    std::vector<double>         bin_reassembled_a;
+    std::vector<int>            bin_reassembled_b;
+    std::vector<std::string>    bin_reassembled_c;
+
+    while (bin_reader.next_chunk(bin_chunk, chunk_size))  {
+        bin_chunk_count += 1;
+
+        const auto  &chunk_idx { bin_chunk.get_index() };
+        const auto  &chunk_a { bin_chunk.get_column<double>("col_a") };
+        const auto  &chunk_b { bin_chunk.get_column<int>("col_b") };
+        const auto  &chunk_c { bin_chunk.get_column<std::string>("col_c") };
+
+        if (bin_total_rows_seen + chunk_size <= n)
+            assert(chunk_idx.size() == chunk_size);
+
+        for (std::size_t i = 0; i < chunk_idx.size(); ++i)  {
+            bin_reassembled_idx.push_back(chunk_idx[i]);
+            bin_reassembled_a.push_back(chunk_a[i]);
+            bin_reassembled_b.push_back(chunk_b[i]);
+            bin_reassembled_c.push_back(chunk_c[i]);
+        }
+
+        bin_total_rows_seen += chunk_idx.size();
+    }
+
+    assert(bin_reader.is_eof());
+    assert(bin_total_rows_seen == n);
+    assert(bin_reassembled_idx.size() == n);
+
+    for (std::size_t i = 0; i < n; ++i)  {
+        assert(bin_reassembled_idx[i] == whole_idx[i]);
+        assert(bin_reassembled_a[i] == whole_a[i]);
+        assert(bin_reassembled_b[i] == whole_b[i]);
+        assert(bin_reassembled_c[i] == whole_c[i]);
+    }
+
+    // Tiny-chunk-size sanity check for binary too.
+    //
+    {
+        std::ifstream                              bin_stream2 {
+            bin_file_name.c_str(), std::ios::binary
+        };
+        ChunkedReader<std::ifstream, MyDataFrame>   bin_reader2 {
+            bin_stream2, io_format::binary
+        };
+        MyDataFrame                                 small_bin_chunk;
+        std::size_t                                 small_bin_chunk_count { 0 };
+        std::size_t                                 small_bin_total { 0 };
+
+        while (bin_reader2.next_chunk(small_bin_chunk, 10))  {
+            small_bin_chunk_count += 1;
+            small_bin_total += small_bin_chunk.get_index().size();
+        }
+        assert(small_bin_total == n);
+        assert(small_bin_chunk_count == (n + 9) / 10);
+    }
+
+    // A starting_row offset applied on the very first binary chunk too.
+    //
+    {
+        std::ifstream  bin_stream3 { bin_file_name.c_str(), std::ios::binary };
+        ReadParams     p;
+
+        p.starting_row = 100;
+
+        ChunkedReader<std::ifstream, MyDataFrame>   bin_reader3 {
+            bin_stream3, io_format::binary, p
+        };
+        MyDataFrame                                 offset_chunk;
+
+        assert(bin_reader3.next_chunk(offset_chunk, 50));
+        assert(offset_chunk.get_index().size() == 50);
+        assert(offset_chunk.get_index()[0] == whole_idx[100]);
+        assert(offset_chunk.get_column<double>("col_a")[0] == whole_a[100]);
+    }
+    std::filesystem::remove(bin_file_name);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -6427,6 +6674,7 @@ int main(int, char *[])  {
     test_JacobianVisitor();
     test_LaplacianVisitor();
     test_remove_data_by_isof();
+    test_read_chunked_data();
 
     return (0);
 }

@@ -7187,6 +7187,9 @@ private:
     template<typename ALT_I, typename ALT_H>
     friend class DataFrame;
 
+    template<typename S, typename DF>
+    friend class ChunkedReader;
+
     // Maps column names to their vector index
     //
     using ColNameDict =

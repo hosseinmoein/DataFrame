@@ -6527,7 +6527,8 @@ static void test_read_chunked_data()  {
         catch (const NotImplemented &)  { threw = true; }
         assert(threw);
     }
-    std::filesystem::remove(file_name);
+    // std::filesystem::remove(file_name);
+    std::remove(file_name.string().c_str());
 
     // Now the same battery of checks, but for io_format::binary
     //
@@ -6631,7 +6632,8 @@ static void test_read_chunked_data()  {
         assert(offset_chunk.get_index()[0] == whole_idx[100]);
         assert(offset_chunk.get_column<double>("col_a")[0] == whole_a[100]);
     }
-    std::filesystem::remove(bin_file_name);
+    // std::filesystem::remove(bin_file_name);
+    std::remove(bin_file_name.string().c_str());
 }
 
 // -----------------------------------------------------------------------------

@@ -1,0 +1,110 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>C++ Matrix Documentation (C++ DataFrame)</title>
+
+  <meta charset="UTF-8">
+  <meta name="description" content="Matrix is an efficient and flat-memory implementation of matrix. It implements many numerical analysis and algorithms. It is used internally by DataFrame library to implement few of its algorithms. Also, some of DataFrame analysis results are in Matrix format. A structurally symmetric matrix requires almost half the memory size of a normal matrix.">
+  <meta name="keywords" content="CPP, C++, Matrix, data-science, machine-learning, AI, statistical-analysis, data-analysis, numerical-analysis, linear-algebra">
+  <meta name="author" content="Hossein Moein">
+
+  <!-- OpenGraph for social sharing -->
+  <meta property="og:title" content="High performance matrix library in C++">
+  <meta property="og:description" content="Fast C++ Matrix library for numerical computation.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hosseinmoein.github.io/DataFrame/">
+  <meta property="og:image" content="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg">
+
+  <link rel="icon" type="image/jpeg" href="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg">
+  <link rel="canonical" href="https://hosseinmoein.github.io/DataFrame/docs/HTML/Matrix.html">
+
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <font size="+3">&#8592;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Public Member Functions</th>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">enum</span> <span style="color:#800000; font-weight:bold; ">class</span>  matrix_orient <span style="color:#800080; ">:</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">char</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    column_major <span style="color:#808030; ">=</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#696969; ">// Data is laid out col by col</span></span>
+<span class="line_wrapper">    row_major <span style="color:#808030; ">=</span> <span style="color:#008c00; ">2</span><span style="color:#808030; ">,</span>    <span style="color:#696969; ">// Data is laid out row by row</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -----------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         matrix_orient MO <span style="color:#808030; ">=</span> matrix_orient<span style="color:#800080; ">::</span>column_major<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">         IS_SYM <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">false</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">class</span>   Matrix<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        <I>Matrix</I> is an efficient and flat-memory implementation of matrix. It implements many numerical analysis and algorithms. It is used internally by <I>DataFrame</I> library to implement few of its algorithms. Also, some of <I>DataFrame</I> analysis results are in <I>Matrix</I> format.<BR>
+        A structurally symmetric matrix (IS_SYM is true) requires almost half the memory size of a normal matrix.
+        <BR><BR>
+        <B>T</B>: Matrix data type<BR>
+        <B>MO</B>: Matrix memory orientation<BR>
+        <B>IS_SYM</B>: Is matrix <I>structurally</I> symmetric<BR>
+      </td>
+
+      <td width="20%">
+        <a href="https://github.com/hosseinmoein/DataFrame/blob/master/include//DataFrame/Utils/Matrix.h">Matrix Header File</a><BR><BR>
+      </td>
+    </tr>
+
+  </table>
+
+  <BR><BR>
+  <a href="https://github.com/hosseinmoein/DataFrame/blob/master/test//matrix_tester.cc">Matrix Test File</a><BR><BR>
+  <BR>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

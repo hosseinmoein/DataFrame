@@ -6638,6 +6638,244 @@ static void test_read_chunked_data()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_streamed_write()  {
+
+    std::cout << "\nTesting streamed_write( ) ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    auto    make_slice =
+        [](const MyDataFrame &src,
+           std::size_t begin,
+           std::size_t count) -> MyDataFrame  {
+
+            MyDataFrame out;
+            const auto  &src_idx { src.get_index() };
+            const auto  &src_a { src.get_column<double>("col_a") };
+            const auto  &src_b { src.get_column<int>("col_b") };
+            const auto  &src_c { src.get_column<std::string>("col_c") };
+
+            std::vector<unsigned long>  idx;
+            std::vector<double>         a;
+            std::vector<int>            b;
+            std::vector<std::string>    c;
+
+            for (std::size_t i { begin };
+                 i < (begin + count) && i < src_idx.size(); ++i) {
+                idx.push_back(src_idx[i]);
+                a.push_back(src_a[i]);
+                b.push_back(src_b[i]);
+                c.push_back(src_c[i]);
+            }
+            out.load_data(std::move(idx),
+                          std::make_pair("col_a", a),
+                          std::make_pair("col_b", b),
+                          std::make_pair("col_c", c));
+            return (out);
+        };
+
+    const std::size_t           n { 10037 };  // not a multiple of chunk_size
+    std::vector<unsigned long>  idx(n);
+    std::vector<double>         col_a(n);
+    std::vector<int>            col_b(n);
+    std::vector<std::string>    col_c(n);
+
+    for (std::size_t i { 0 }; i < n; ++i)  {
+        idx[i] = i;
+        col_a[i] = double(i) * 1.5;
+        col_b[i] = int(i) * 2;
+        col_c[i] = "row_" + std::to_string(i);
+    }
+
+    MyDataFrame source;
+
+    source.load_data(std::move(idx),
+                     std::make_pair("col_a", col_a),
+                     std::make_pair("col_b", col_b),
+                     std::make_pair("col_c", col_c));
+
+    const char          *out_file { "./stream_writer_test.csv2" };
+    const std::size_t   chunk_size = 777;
+
+    // Write the whole thing via StreamWriter, in chunks
+    //
+    {
+        std::ofstream   ostream { out_file };
+
+        assert(ostream.is_open());
+
+        StreamWriter<std::ofstream, MyDataFrame>    writer {
+            ostream, io_format::csv2
+        };
+        std::size_t                                 written { 0 };
+
+        while (written < n)  {
+            const std::size_t   this_chunk {
+                std::min(chunk_size, n - written)
+            };
+            const MyDataFrame   slice {
+                make_slice(source, written, this_chunk)
+            };
+            const bool          wrote {
+                writer.write_chunk<double, int, std::string>(slice)
+            };
+
+            assert(wrote);
+            written += this_chunk;
+        }
+        writer.close();
+    }
+
+    // Baseline: what a single-shot write() would have produced
+    //
+    const char  *baseline_file { "./stream_writer_baseline.csv2" };
+
+    source.write<double, int, std::string>(baseline_file, io_format::csv2);
+
+    // Read both back whole and compare
+    //
+    MyDataFrame via_streamwriter;
+    MyDataFrame via_baseline;
+
+    via_streamwriter.read(out_file, io_format::csv2);
+    via_baseline.read(baseline_file, io_format::csv2);
+
+    assert(via_streamwriter.get_index().size() == n);
+    assert(via_baseline.get_index().size() == n);
+
+    const auto  &sw_idx { via_streamwriter.get_index() };
+    const auto  &sw_a { via_streamwriter.get_column<double>("col_a") };
+    const auto  &sw_b { via_streamwriter.get_column<int>("col_b") };
+    const auto  &sw_c { via_streamwriter.get_column<std::string>("col_c") };
+    const auto  &bl_idx { via_baseline.get_index() };
+    const auto  &bl_a { via_baseline.get_column<double>("col_a") };
+    const auto  &bl_b { via_baseline.get_column<int>("col_b") };
+    const auto  &bl_c { via_baseline.get_column<std::string>("col_c") };
+
+    for (std::size_t i { 0 }; i < n; ++i)  {
+        assert(sw_idx[i] == bl_idx[i]);
+        assert(sw_a[i] == bl_a[i]);
+        assert(sw_b[i] == bl_b[i]);
+        assert(sw_c[i] == bl_c[i]);
+    }
+
+    // Also read the StreamWriter's output back via ChunkedReader
+    //
+    {
+        std::ifstream                               stream { out_file };
+        ChunkedReader<std::ifstream, MyDataFrame>   reader {
+            stream, io_format::csv2
+        };
+        MyDataFrame                                 chunk;
+        std::size_t                                 total_rows_seen { 0 };
+        std::size_t                                 chunk_count { 0 };
+
+        while (reader.next_chunk(chunk, chunk_size))  {
+            chunk_count += 1;
+
+            const auto  &c_idx { chunk.get_index() };
+            const auto  &c_a { chunk.get_column<double>("col_a") };
+            const auto  &c_b { chunk.get_column<int>("col_b") };
+            const auto  &c_c { chunk.get_column<std::string>("col_c") };
+
+            for (std::size_t i { 0 }; i < c_idx.size(); ++i)  {
+                const std::size_t   gi { total_rows_seen + i };
+
+                assert(c_idx[i] == bl_idx[gi]);
+                assert(c_a[i] == bl_a[gi]);
+                assert(c_b[i] == bl_b[gi]);
+                assert(c_c[i] == bl_c[gi]);
+            }
+            total_rows_seen += c_idx.size();
+        }
+        assert(reader.is_eof());
+        assert(total_rows_seen == n);
+    }
+
+    // Sanity: file size independent of chunk size used to write it
+    //
+    {
+        const char                                  *out_file2 {
+            "./stream_writer_test_2.csv2"
+        };
+        std::ofstream                               ostream2 { out_file2 };
+        StreamWriter<std::ofstream, MyDataFrame>    writer2 {
+            ostream2, io_format::csv2
+        };
+        std::size_t                                 written { 0 };
+
+        while (written < n)  {
+            const std::size_t   this_chunk {
+                std::min(size_t(37), n - written)
+            };
+            const MyDataFrame   slice {
+                make_slice(source, written, this_chunk)
+            };
+
+            writer2.write_chunk<double, int, std::string>(slice);
+            written += this_chunk;
+        }
+        writer2.close();
+
+        MyDataFrame via_tiny;
+
+        via_tiny.read(out_file2, io_format::csv2);
+        assert(via_tiny.get_index().size() == n);
+
+        const auto  &t_idx { via_tiny.get_index() };
+
+        for (std::size_t i { 0 }; i < n; ++i)  assert(t_idx[i] == bl_idx[i]);
+        std::remove(out_file2);
+    }
+
+    // Sanity: unsupported format throws
+    //
+    {
+        bool        threw { false };
+        const char  *out_file3 { "./stream_writer_unused.csv2" };
+
+        try  {
+            std::ofstream                               ostream3 { out_file3 };
+            StreamWriter<std::ofstream, MyDataFrame>    writer3 {
+                ostream3, io_format::binary
+            };
+        }
+        catch (const NotImplemented &)  { threw = true; }
+        assert(threw);
+        std::remove(out_file3);
+    }
+
+    // Sanity: writing after close() throws
+    //
+    {
+        const char                                  *out_file4 {
+            "./stream_writer_closed_test.csv2"
+        };
+        std::ofstream                               ostream4 { out_file4 };
+        StreamWriter<std::ofstream, MyDataFrame>    writer4 {
+            ostream4, io_format::csv2
+        };
+        const MyDataFrame                           slice {
+            make_slice(source, 0, 10)
+        };
+
+        writer4.write_chunk<double, int, std::string>(slice);
+        writer4.close();
+
+        bool    threw { false };
+
+        try  { writer4.write_chunk<double, int, std::string>(slice); }
+        catch (const DataFrameError &)  { threw = true; }
+        assert(threw);
+        std::remove(out_file4);
+    }
+
+    std::remove(baseline_file);
+    std::remove(out_file);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -6685,6 +6923,7 @@ int main(int, char *[])  {
     test_LaplacianVisitor();
     test_remove_data_by_isof();
     test_read_chunked_data();
+    test_streamed_write();
 
     return (0);
 }

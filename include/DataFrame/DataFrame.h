@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/IO/ChunkedReader.h>
+#include <DataFrame/Utils/IO/StreamWriter.h>
 #include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>

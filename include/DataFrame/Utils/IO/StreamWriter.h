@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ----------------------------------------------------------------------------
 
-// StreamWriter is the write-side counterpart to ChunkedReader: it lets a
+// StreamWriter is the write-side counterpart to ChunkedReader. It lets a
 // caller build up an output incrementally, one chunk (a small DataFrame
 // sharing the same schema every time) at a time, instead of needing the
 // entire result in memory before calling DataFrame::write() once. This is

@@ -6876,6 +6876,187 @@ static void test_streamed_write()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_StreamAppender()  {
+
+    std::cout << "\nTesting StreamAppender{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    // push_row(): basic correctness
+    //
+    {
+        MyDataFrame                     df;
+        StreamAppender<unsigned long>   appender { df };
+
+        for (unsigned long i { 0 }; i < 500; ++i)  {
+            appender.push_row(i,
+                              std::make_pair("price", double(i) * 1.5),
+                              std::make_pair("size", int(i)));
+        }
+
+        assert(appender.size() == 500);
+        assert(df.get_index().size() == 500);
+
+        const auto  &price { df.get_column<double>("price") };
+        const auto  &size { df.get_column<int>("size") };
+
+        for (unsigned long i { 0 }; i < 500; ++i)  {
+            assert(price[i] == double(i) * 1.5);
+            assert(size[i] == int(i));
+        }
+    }
+
+    // push_chunk(): basic correctness
+    //
+    {
+        MyDataFrame                     df;
+        StreamAppender<unsigned long>   appender { df };
+
+        for (unsigned long batch { 0 }; batch < 10; ++batch)  {
+            std::vector<unsigned long>  idx;
+            std::vector<double>         price;
+
+            for (unsigned long i { 0 }; i < 50; ++i)  {
+                const unsigned long gi { batch * 50 + i };
+
+                idx.push_back(gi);
+                price.push_back(double(gi) * 2.0);
+            }
+
+            MyDataFrame chunk;
+
+            chunk.load_data(std::move(idx), std::make_pair("price", price));
+            appender.push_chunk<MyDataFrame, double>(chunk);
+        }
+
+        assert(appender.size() == 500);
+
+        const auto  &price { df.get_column<double>("price") };
+
+        for (unsigned long i { 0 }; i < 500; ++i)
+            assert(price[i] == double(i) * 2.0);
+    }
+
+    // Sliding window: eviction keeps roughly the last window_size
+    //
+    {
+        MyDataFrame                     df;
+        const long                      window { 100 };
+        StreamAppender<unsigned long>   appender { df, window };
+
+        for (unsigned long i { 0 }; i < 1000; ++i)
+            appender.push_row(i, std::make_pair("v", double(i)));
+
+        const auto  final_size { appender.size() };
+
+        // With eviction_margin defaulting to 0, size should settle at
+        // exactly window_size after the final push.
+        //
+        assert(final_size == window);
+
+        const auto  &idx { df.get_index() };
+        const auto  &v_col { df.get_column<double>("v") };
+
+        // The surviving rows should be the most recent ones, in order.
+        //
+        assert(idx.front() == 1000 - window);
+        assert(idx.back() == 999);
+        for (std::size_t i { 0 }; i < idx.size(); ++i)
+            assert(v_col[i] == double(idx[i]));
+    }
+
+    // Sliding window with an eviction margin: bounded but not exact
+    //
+    {
+        MyDataFrame                     df;
+        const long                      window { 100 };
+        const long                      margin { 20 };
+        StreamAppender<unsigned long>   appender { df, window, margin };
+
+        for (unsigned long i { 0 }; i < 1000; ++i)
+            appender.push_row(i, std::make_pair("v", double(i)));
+
+        const auto  final_size { appender.size() };
+
+        // Should never exceed window + margin, and should be at least
+        // window (since we only trim back down to window, not below).
+        //
+        assert(long(final_size) >= window);
+        assert(long(final_size) <= window + margin);
+    }
+
+    // with_lock(): read access, including a visitor
+    //
+    {
+        MyDataFrame                     df;
+        StreamAppender<unsigned long>   appender { df };
+
+        for (unsigned long i { 1 }; i <= 10; ++i)
+            appender.push_row(i, std::make_pair("v", double(i)));
+
+        const double    sum {
+            appender.with_lock([](MyDataFrame &d) -> double  {
+                double      total { 0.0 };
+                const auto  &v_col { d.get_column<double>("v")};
+
+                for (const auto &x : v_col)  total += x;
+                return (total);
+            })
+        };
+
+        assert(sum == 55.0);  // 1 + 2 + ... + 10
+    }
+
+    // Real concurrency: one thread pushes while another reads
+    //
+    {
+        MyDataFrame                     df;
+        StreamAppender<unsigned long>   appender { df, 5000L };
+        std::atomic<bool>               stop { false };
+        std::atomic<std::size_t>        reads_done { 0 };
+        std::atomic<bool>               saw_inconsistency { false };
+
+        // That is how you set the lock
+        //
+        SpinLock    lock;
+
+        MyDataFrame::set_lock(&lock);
+
+        std::thread writer([&]()  {
+            for (unsigned long i { 0 }; i < 20000; ++i)
+                appender.push_row(i, std::make_pair("v", double(i)));
+            stop = true;
+        });
+        std::thread reader([&]()  {
+            while (! stop.load())  {
+                appender.with_lock([&](MyDataFrame &d) -> void  {
+                    const auto  &idx { d.get_index() };
+                    const auto  &v_col { d.get_column<double>("v") };
+
+                    // Whatever we see, it must be internally consistent:
+                    // same length, and v_col[i] == double(idx[i]) for every
+                    // row actually present right now.
+                    //
+                    if (idx.size() != v_col.size())
+                        saw_inconsistency = true;
+                    for (std::size_t i { 0 }; i < idx.size(); ++i)
+                        if (v_col[i] != double(idx[i]))
+                            saw_inconsistency = true;
+                });
+                reads_done.fetch_add(1);
+            }
+        });
+
+        writer.join();
+        reader.join();
+
+        assert(! saw_inconsistency.load());
+        assert(appender.size() > 0);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -6924,6 +7105,7 @@ int main(int, char *[])  {
     test_remove_data_by_isof();
     test_read_chunked_data();
     test_streamed_write();
+    test_StreamAppender();
 
     return (0);
 }

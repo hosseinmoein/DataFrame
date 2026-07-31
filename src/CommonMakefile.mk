@@ -89,6 +89,8 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/ChunkedReader.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/StreamWriter.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/StreamWriter.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/StreamAppender.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/StreamAppender.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IsolationTree.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IsolationTree.tcc
 

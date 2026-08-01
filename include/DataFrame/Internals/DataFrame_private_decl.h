@@ -65,22 +65,44 @@ template<typename S>
 void read_json_(S &file, bool columns_only);
 
 template<typename S>
-void read_binary_(S &file,
-                  bool columns_only,
-                  size_type starting_row,
-                  size_type num_rows);
+size_type read_binary_(S &file,
+                       bool columns_only,
+                       size_type starting_row,
+                       size_type num_rows,
+                       BinaryReadState *ext_state = nullptr);
 
 template<typename S>
 void read_csv_(S &file, bool columns_only, char delim);
 
+// - Return type changed void -> size_type: the number of data rows parsed
+//   by this particular call, used by ChunkedReader to detect an
+//   exhausted stream. Existing callers (DataFrame::read()/read_async())
+//   simply discard the return value, so they are unaffected.
+// - New, optional trailing parameter ext_state: when non-null, parser
+//   state (has the header been read yet? what are the column specs?) is
+//   read from / written back to *ext_state instead of being local to this
+//   one call, which is what allows a sequence of calls sharing the same
+//   ext_state to resume exactly where the previous call left off, rather
+//   than re-parsing the header and re-scanning already-consumed rows each
+//   time. Defaults to nullptr, so every existing call site is unaffected.
+//
 template<typename S>
-void read_csv2_(S &stream,
-                bool columns_only,
-                size_type starting_row,
-                size_type num_rows,
-                bool skip_first_line,
-                const std::vector<ReadSchema> &schema,
-                char delim);
+size_type read_csv2_(S &stream,
+                     bool columns_only,
+                     size_type starting_row,
+                     size_type num_rows,
+                     bool skip_first_line,
+                     const std::vector<ReadSchema> &schema,
+                     char delim,
+                     CSV2ReadState *ext_state = nullptr);
+
+// Grants ChunkedReader (defined in the separate header
+// <DataFrame/Utils/IO/ChunkedReader.h>) access to the read_csv2_() overload
+// above, so it can drive resumable chunked reads without read_csv2_()
+// otherwise needing to be part of DataFrame's public API surface.
+//
+template<typename FS, typename FDF>
+friend class DataFrameChunkedReader;
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>

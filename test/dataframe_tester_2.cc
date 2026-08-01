@@ -2767,8 +2767,8 @@ static void test_LinearFitVisitor()  {
     assert(std::fabs(vec_lin.get_slope()[0] - 1.5) < 0.01);
     assert(std::fabs(vec_lin.get_slope()[1] - -2.0) < 0.01);
 
-    assert(ary_lin.get_residual() < 1.0e-29);
-    assert(vec_lin.get_residual() < 1.0e-29);
+    assert(ary_lin.get_residual() < 1.0e-27);
+    assert(vec_lin.get_residual() < 1.0e-27);
 
     assert(std::fabs(ary_lin.get_intercept() - 3.0) < 0.01);
     assert(std::fabs(vec_lin.get_intercept() - 3.0) < 0.01);

@@ -162,33 +162,35 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
         }
     }
     else if (iof == io_format::csv2)  {
-        if (! params.columns_only) [[likely]]  {
-            if constexpr (std::same_as<IndexType, DateTime>)  {
-                _write_csv_df_header_<S, IndexType>(
-                    o,
-                    DF_INDEX_COL_NAME,
-                    end_row - start_row,
-                    _dtformat_str_.at(params.dt_format));
+        if (params.write_header)  {
+            if (! params.columns_only) [[likely]]  {
+                if constexpr (std::same_as<IndexType, DateTime>)  {
+                    _write_csv_df_header_<S, IndexType>(
+                        o,
+                        DF_INDEX_COL_NAME,
+                        end_row - start_row,
+                        _dtformat_str_.at(params.dt_format));
+                }
+                else  {
+                    _write_csv_df_header_<S, IndexType>(o,
+                                                        DF_INDEX_COL_NAME,
+                                                        end_row - start_row);
+                }
+                need_pre_comma = true;
             }
-            else  {
-                _write_csv_df_header_<S, IndexType>(o,
-                                                    DF_INDEX_COL_NAME,
-                                                    end_row - start_row);
+
+            const SpinGuard guard_1(lock_);
+
+            for (const auto &[name, idx] : column_list_) [[likely]]  {
+                if (need_pre_comma)  o << params.delim;
+                else  need_pre_comma = true;
+                print_csv2_header_functor_<S, Ts ...>   functor(
+                    name.c_str(), o, end_row - start_row, params.dt_format);
+
+                data_[idx].change(functor);
             }
-            need_pre_comma = true;
+            o << '\n';
         }
-
-        const SpinGuard guard_1(lock_);
-
-        for (const auto &[name, idx] : column_list_) [[likely]]  {
-            if (need_pre_comma)  o << params.delim;
-            else  need_pre_comma = true;
-            print_csv2_header_functor_<S, Ts ...>   functor(
-                name.c_str(), o, end_row - start_row, params.dt_format);
-
-            data_[idx].change(functor);
-        }
-        o << '\n';
 
         need_pre_comma = false;
 

@@ -1049,6 +1049,13 @@ struct  WriteParams  {
     // (separating) character.
     //
     char            delim { ',' };
+
+    // This only applies to csv2 format. If false, the header/column-list
+    // line is not written -- only the data rows are. This is what lets
+    // StreamWriter write a csv2 header once and then append many chunks of
+    // data rows via repeated write() calls.
+    //
+    bool            write_header { true };
 };
 
 // ----------------------------------------------------------------------------

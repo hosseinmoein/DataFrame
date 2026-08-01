@@ -33,6 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Utils/FixedSizeString.h>
+#include <DataFrame/Utils/IO/ChunkedReader.h>
+#include <DataFrame/Utils/IO/StreamAppender.h>
+#include <DataFrame/Utils/IO/StreamWriter.h>
 #include <DataFrame/Utils/Matrix.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
@@ -7185,6 +7188,9 @@ private:
     //
     template<typename ALT_I, typename ALT_H>
     friend class DataFrame;
+
+    template<typename S, typename DF>
+    friend class ChunkedReader;
 
     // Maps column names to their vector index
     //

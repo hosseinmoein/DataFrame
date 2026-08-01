@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <filesystem>
 #include <iostream>
 #include <ranges>
 #include <string>
@@ -6381,6 +6382,681 @@ static void test_remove_data_by_isof()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_read_chunked_data()  {
+
+    std::cout << "\nTesting read_chunked_data( ) ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    // Build a reasonably sized DataFrame and write it out as csv2 ----
+    //
+    // deliberately not a multiple of any "nice" chunk size
+    //
+    const std::size_t           n { 10037 };
+    std::vector<unsigned long>  idx(n);
+    std::vector<double>         col_a(n);
+    std::vector<int>            col_b(n);
+    std::vector<std::string>    col_c(n);
+
+    for (std::size_t i = 0; i < n; ++i)  {
+        idx[i] = i;
+        col_a[i] = double(i) * 1.5;
+        col_b[i] = int(i) * 2;
+        col_c[i] = "row_" + std::to_string(i);
+    }
+
+    MyDataFrame df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_a", col_a),
+                 std::make_pair("col_b", col_b),
+                 std::make_pair("col_c", col_c));
+
+    std::filesystem::path   file_name { "./chunked_reader_test.csv2" };
+
+    df.write<double, int, std::string>
+        (file_name.string().c_str(), io_format::csv2);
+
+    // Baseline: read the whole thing back in one shot
+    //
+    MyDataFrame whole;
+
+    whole.read(file_name.string().c_str(), io_format::csv2);
+    assert(whole.get_index().size() == n);
+
+    //  Now read it back via ChunkedReader, in chunks
+    //
+    std::ifstream   stream(file_name.string().c_str());
+
+    assert(stream.is_open());
+
+    ChunkedReader<std::ifstream, MyDataFrame>   reader(stream, io_format::csv2);
+    MyDataFrame                                 chunk;
+    std::size_t                                 total_rows_seen { 0 };
+    std::size_t                                 chunk_count { 0 };
+    const std::size_t                           chunk_size { 777 };
+    std::vector<unsigned long>                  reassembled_idx;
+    std::vector<double>                         reassembled_a;
+    std::vector<int>                            reassembled_b;
+    std::vector<std::string>                    reassembled_c;
+
+    while (reader.next_chunk(chunk, chunk_size))  {
+        chunk_count += 1;
+
+        const auto  &chunk_idx { chunk.get_index() };
+        const auto  &chunk_a { chunk.get_column<double>("col_a") };
+        const auto  &chunk_b { chunk.get_column<int>("col_b") };
+        const auto  &chunk_c { chunk.get_column<std::string>("col_c") };
+
+
+        // Every chunk except possibly the last should be exactly
+        // chunk_size rows.
+        //
+        assert(! ((total_rows_seen + chunk_size) <= n &&
+                     chunk_idx.size() != chunk_size));
+
+        assert(chunk_idx.size() <= 777);
+        assert(chunk_idx.size() == chunk_a.size());
+        assert(chunk_idx.size() == chunk_b.size());
+        assert(chunk_idx.size() == chunk_c.size());
+        for (std::size_t i = 0; i < chunk_idx.size(); ++i)  {
+            reassembled_idx.push_back(chunk_idx[i]);
+            reassembled_a.push_back(chunk_a[i]);
+            reassembled_b.push_back(chunk_b[i]);
+            reassembled_c.push_back(chunk_c[i]);
+        }
+
+        total_rows_seen += chunk_idx.size();
+    }
+
+    assert(reader.is_eof());
+    assert(total_rows_seen == n);
+    assert(reassembled_idx.size() == n);
+
+    // Verify the reassembled data matches the one-shot read exactly
+    //
+    const auto  &whole_idx { whole.get_index() };
+    const auto  &whole_a { whole.get_column<double>("col_a") };
+    const auto  &whole_b { whole.get_column<int>("col_b") };
+    const auto  &whole_c { whole.get_column<std::string>("col_c") };
+
+    for (std::size_t i = 0; i < n; ++i)  {
+        assert(reassembled_idx[i] == whole_idx[i]);
+        assert(reassembled_a[i] == whole_a[i]);
+        assert(reassembled_b[i] == whole_b[i]);
+        assert(reassembled_c[i] == whole_c[i]);
+    }
+
+    // Sanity check: a stream truly positioned mid-way through (no
+    // rewinding) still works -- prove there's no "rescan from
+    // beginning" happening internally by reading a small file
+    //  entirely via tiny chunks and checking chunk_count > 1
+    //
+    {
+        std::ifstream                               stream2 {
+            file_name.string().c_str()
+        };
+        ChunkedReader<std::ifstream, MyDataFrame>   reader2 {
+            stream2, io_format::csv2
+        };
+        MyDataFrame                                 small_chunk;
+        std::size_t                                 small_chunk_count { 0 };
+        std::size_t                                 small_total { 0 };
+
+        while (reader2.next_chunk(small_chunk, 10))  {
+            small_chunk_count += 1;
+            small_total += small_chunk.get_index().size();
+        }
+        assert(small_total == n);
+        assert(small_chunk_count == (n + 9) / 10);
+    }
+
+    // Sanity check: unsupported format throws
+    //
+    {
+        bool    threw { false };
+
+        try  {
+            std::ifstream                               stream3 {
+                file_name.string().c_str()
+            };
+            ChunkedReader<std::ifstream, MyDataFrame>   reader3 {
+                stream3, io_format::csv
+            };
+        }
+        catch (const NotImplemented &)  { threw = true; }
+        assert(threw);
+    }
+    // std::filesystem::remove(file_name);
+    std::remove(file_name.string().c_str());
+
+    // Now the same battery of checks, but for io_format::binary
+    //
+    std::filesystem::path   bin_file_name { "./chunked_reader_test.hmdf" };
+
+    df.write<double, int, std::string>
+        (bin_file_name.string().c_str(), io_format::binary);
+
+    MyDataFrame whole_bin;
+
+    whole_bin.read(bin_file_name.string().c_str(), io_format::binary);
+    assert(whole_bin.get_index().size() == n);
+
+    std::ifstream   bin_stream {
+        bin_file_name.string().c_str(), std::ios::binary
+    };
+
+    assert(bin_stream.is_open());
+
+    ChunkedReader<std::ifstream, MyDataFrame>   bin_reader {
+        bin_stream, io_format::binary
+    };
+    MyDataFrame                                 bin_chunk;
+    std::size_t                                 bin_total_rows_seen { 0 };
+    std::size_t                                 bin_chunk_count { 0 };
+    std::vector<unsigned long>                  bin_reassembled_idx;
+    std::vector<double>                         bin_reassembled_a;
+    std::vector<int>                            bin_reassembled_b;
+    std::vector<std::string>                    bin_reassembled_c;
+
+    while (bin_reader.next_chunk(bin_chunk, chunk_size))  {
+        bin_chunk_count += 1;
+
+        const auto  &chunk_idx { bin_chunk.get_index() };
+        const auto  &chunk_a { bin_chunk.get_column<double>("col_a") };
+        const auto  &chunk_b { bin_chunk.get_column<int>("col_b") };
+        const auto  &chunk_c { bin_chunk.get_column<std::string>("col_c") };
+
+        if (bin_total_rows_seen + chunk_size <= n)
+            assert(chunk_idx.size() == chunk_size);
+
+        for (std::size_t i = 0; i < chunk_idx.size(); ++i)  {
+            bin_reassembled_idx.push_back(chunk_idx[i]);
+            bin_reassembled_a.push_back(chunk_a[i]);
+            bin_reassembled_b.push_back(chunk_b[i]);
+            bin_reassembled_c.push_back(chunk_c[i]);
+        }
+
+        bin_total_rows_seen += chunk_idx.size();
+    }
+
+    assert(bin_reader.is_eof());
+    assert(bin_total_rows_seen == n);
+    assert(bin_reassembled_idx.size() == n);
+
+    for (std::size_t i = 0; i < n; ++i)  {
+        assert(bin_reassembled_idx[i] == whole_idx[i]);
+        assert(bin_reassembled_a[i] == whole_a[i]);
+        assert(bin_reassembled_b[i] == whole_b[i]);
+        assert(bin_reassembled_c[i] == whole_c[i]);
+    }
+
+    // Tiny-chunk-size sanity check for binary too.
+    //
+    {
+        std::ifstream                               bin_stream2 {
+            bin_file_name.string().c_str(), std::ios::binary
+        };
+        ChunkedReader<std::ifstream, MyDataFrame>   bin_reader2 {
+            bin_stream2, io_format::binary
+        };
+        MyDataFrame                                 small_bin_chunk;
+        std::size_t                                 small_bin_chunk_count { 0 };
+        std::size_t                                 small_bin_total { 0 };
+
+        while (bin_reader2.next_chunk(small_bin_chunk, 10))  {
+            small_bin_chunk_count += 1;
+            small_bin_total += small_bin_chunk.get_index().size();
+        }
+        assert(small_bin_total == n);
+        assert(small_bin_chunk_count == (n + 9) / 10);
+    }
+
+    // A starting_row offset applied on the very first binary chunk too.
+    //
+    {
+        std::ifstream  bin_stream3 {
+            bin_file_name.string().c_str(), std::ios::binary
+        };
+        ReadParams     p;
+
+        p.starting_row = 100;
+
+        ChunkedReader<std::ifstream, MyDataFrame>   bin_reader3 {
+            bin_stream3, io_format::binary, p
+        };
+        MyDataFrame                                 offset_chunk;
+
+        assert(bin_reader3.next_chunk(offset_chunk, 50));
+        assert(offset_chunk.get_index().size() == 50);
+        assert(offset_chunk.get_index()[0] == whole_idx[100]);
+        assert(offset_chunk.get_column<double>("col_a")[0] == whole_a[100]);
+    }
+    // std::filesystem::remove(bin_file_name);
+    std::remove(bin_file_name.string().c_str());
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_streamed_write()  {
+
+    std::cout << "\nTesting streamed_write( ) ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    auto    make_slice =
+        [](const MyDataFrame &src,
+           std::size_t begin,
+           std::size_t count) -> MyDataFrame  {
+
+            MyDataFrame out;
+            const auto  &src_idx { src.get_index() };
+            const auto  &src_a { src.get_column<double>("col_a") };
+            const auto  &src_b { src.get_column<int>("col_b") };
+            const auto  &src_c { src.get_column<std::string>("col_c") };
+
+            std::vector<unsigned long>  idx;
+            std::vector<double>         a;
+            std::vector<int>            b;
+            std::vector<std::string>    c;
+
+            for (std::size_t i { begin };
+                 i < (begin + count) && i < src_idx.size(); ++i) {
+                idx.push_back(src_idx[i]);
+                a.push_back(src_a[i]);
+                b.push_back(src_b[i]);
+                c.push_back(src_c[i]);
+            }
+            out.load_data(std::move(idx),
+                          std::make_pair("col_a", a),
+                          std::make_pair("col_b", b),
+                          std::make_pair("col_c", c));
+            return (out);
+        };
+
+    const std::size_t           n { 10037 };  // not a multiple of chunk_size
+    std::vector<unsigned long>  idx(n);
+    std::vector<double>         col_a(n);
+    std::vector<int>            col_b(n);
+    std::vector<std::string>    col_c(n);
+
+    for (std::size_t i { 0 }; i < n; ++i)  {
+        idx[i] = i;
+        col_a[i] = double(i) * 1.5;
+        col_b[i] = int(i) * 2;
+        col_c[i] = "row_" + std::to_string(i);
+    }
+
+    MyDataFrame source;
+
+    source.load_data(std::move(idx),
+                     std::make_pair("col_a", col_a),
+                     std::make_pair("col_b", col_b),
+                     std::make_pair("col_c", col_c));
+
+    const char          *out_file { "./stream_writer_test.csv2" };
+    const std::size_t   chunk_size = 777;
+
+    // Write the whole thing via StreamWriter, in chunks
+    //
+    {
+        std::ofstream   ostream { out_file };
+
+        assert(ostream.is_open());
+
+        StreamWriter<std::ofstream, MyDataFrame>    writer {
+            ostream, io_format::csv2
+        };
+        std::size_t                                 written { 0 };
+
+        while (written < n)  {
+            const std::size_t   this_chunk {
+                std::min(chunk_size, n - written)
+            };
+            const MyDataFrame   slice {
+                make_slice(source, written, this_chunk)
+            };
+            const bool          wrote {
+                writer.write_chunk<double, int, std::string>(slice)
+            };
+
+            assert(wrote);
+            written += this_chunk;
+        }
+        writer.close();
+    }
+
+    // Baseline: what a single-shot write() would have produced
+    //
+    const char  *baseline_file { "./stream_writer_baseline.csv2" };
+
+    source.write<double, int, std::string>(baseline_file, io_format::csv2);
+
+    // Read both back whole and compare
+    //
+    MyDataFrame via_streamwriter;
+    MyDataFrame via_baseline;
+
+    via_streamwriter.read(out_file, io_format::csv2);
+    via_baseline.read(baseline_file, io_format::csv2);
+
+    assert(via_streamwriter.get_index().size() == n);
+    assert(via_baseline.get_index().size() == n);
+
+    const auto  &sw_idx { via_streamwriter.get_index() };
+    const auto  &sw_a { via_streamwriter.get_column<double>("col_a") };
+    const auto  &sw_b { via_streamwriter.get_column<int>("col_b") };
+    const auto  &sw_c { via_streamwriter.get_column<std::string>("col_c") };
+    const auto  &bl_idx { via_baseline.get_index() };
+    const auto  &bl_a { via_baseline.get_column<double>("col_a") };
+    const auto  &bl_b { via_baseline.get_column<int>("col_b") };
+    const auto  &bl_c { via_baseline.get_column<std::string>("col_c") };
+
+    for (std::size_t i { 0 }; i < n; ++i)  {
+        assert(sw_idx[i] == bl_idx[i]);
+        assert(sw_a[i] == bl_a[i]);
+        assert(sw_b[i] == bl_b[i]);
+        assert(sw_c[i] == bl_c[i]);
+    }
+
+    // Also read the StreamWriter's output back via ChunkedReader
+    //
+    {
+        std::ifstream                               stream { out_file };
+        ChunkedReader<std::ifstream, MyDataFrame>   reader {
+            stream, io_format::csv2
+        };
+        MyDataFrame                                 chunk;
+        std::size_t                                 total_rows_seen { 0 };
+        std::size_t                                 chunk_count { 0 };
+
+        while (reader.next_chunk(chunk, chunk_size))  {
+            chunk_count += 1;
+
+            const auto  &c_idx { chunk.get_index() };
+            const auto  &c_a { chunk.get_column<double>("col_a") };
+            const auto  &c_b { chunk.get_column<int>("col_b") };
+            const auto  &c_c { chunk.get_column<std::string>("col_c") };
+
+            for (std::size_t i { 0 }; i < c_idx.size(); ++i)  {
+                const std::size_t   gi { total_rows_seen + i };
+
+                assert(c_idx[i] == bl_idx[gi]);
+                assert(c_a[i] == bl_a[gi]);
+                assert(c_b[i] == bl_b[gi]);
+                assert(c_c[i] == bl_c[gi]);
+            }
+            total_rows_seen += c_idx.size();
+        }
+        assert(reader.is_eof());
+        assert(total_rows_seen == n);
+    }
+
+    // Sanity: file size independent of chunk size used to write it
+    //
+    {
+        const char                                  *out_file2 {
+            "./stream_writer_test_2.csv2"
+        };
+        std::ofstream                               ostream2 { out_file2 };
+        StreamWriter<std::ofstream, MyDataFrame>    writer2 {
+            ostream2, io_format::csv2
+        };
+        std::size_t                                 written { 0 };
+
+        while (written < n)  {
+            const std::size_t   this_chunk {
+                std::min(size_t(37), n - written)
+            };
+            const MyDataFrame   slice {
+                make_slice(source, written, this_chunk)
+            };
+
+            writer2.write_chunk<double, int, std::string>(slice);
+            written += this_chunk;
+        }
+        writer2.close();
+
+        MyDataFrame via_tiny;
+
+        via_tiny.read(out_file2, io_format::csv2);
+        assert(via_tiny.get_index().size() == n);
+
+        const auto  &t_idx { via_tiny.get_index() };
+
+        for (std::size_t i { 0 }; i < n; ++i)  assert(t_idx[i] == bl_idx[i]);
+        std::remove(out_file2);
+    }
+
+    // Sanity: unsupported format throws
+    //
+    {
+        bool        threw { false };
+        const char  *out_file3 { "./stream_writer_unused.csv2" };
+
+        try  {
+            std::ofstream                               ostream3 { out_file3 };
+            StreamWriter<std::ofstream, MyDataFrame>    writer3 {
+                ostream3, io_format::binary
+            };
+        }
+        catch (const NotImplemented &)  { threw = true; }
+        assert(threw);
+        std::remove(out_file3);
+    }
+
+    // Sanity: writing after close() throws
+    //
+    {
+        const char                                  *out_file4 {
+            "./stream_writer_closed_test.csv2"
+        };
+        std::ofstream                               ostream4 { out_file4 };
+        StreamWriter<std::ofstream, MyDataFrame>    writer4 {
+            ostream4, io_format::csv2
+        };
+        const MyDataFrame                           slice {
+            make_slice(source, 0, 10)
+        };
+
+        writer4.write_chunk<double, int, std::string>(slice);
+        writer4.close();
+
+        bool    threw { false };
+
+        try  { writer4.write_chunk<double, int, std::string>(slice); }
+        catch (const DataFrameError &)  { threw = true; }
+        assert(threw);
+        std::remove(out_file4);
+    }
+
+    std::remove(baseline_file);
+    std::remove(out_file);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_StreamAppender()  {
+
+    std::cout << "\nTesting StreamAppender{ } ..." << std::endl;
+
+    using MyDataFrame = StdDataFrame<unsigned long>;
+
+    // push_row(): basic correctness
+    //
+    {
+        MyDataFrame                     df;
+        StreamAppender<unsigned long>   appender { df };
+
+        for (unsigned long i { 0 }; i < 500; ++i)  {
+            appender.push_row(i,
+                              std::make_pair("price", double(i) * 1.5),
+                              std::make_pair("size", int(i)));
+        }
+
+        assert(appender.size() == 500);
+        assert(df.get_index().size() == 500);
+
+        const auto  &price { df.get_column<double>("price") };
+        const auto  &size { df.get_column<int>("size") };
+
+        for (unsigned long i { 0 }; i < 500; ++i)  {
+            assert(price[i] == double(i) * 1.5);
+            assert(size[i] == int(i));
+        }
+    }
+
+    // push_chunk(): basic correctness
+    //
+    {
+        MyDataFrame                     df;
+        StreamAppender<unsigned long>   appender { df };
+
+        for (unsigned long batch { 0 }; batch < 10; ++batch)  {
+            std::vector<unsigned long>  idx;
+            std::vector<double>         price;
+
+            for (unsigned long i { 0 }; i < 50; ++i)  {
+                const unsigned long gi { batch * 50 + i };
+
+                idx.push_back(gi);
+                price.push_back(double(gi) * 2.0);
+            }
+
+            MyDataFrame chunk;
+
+            chunk.load_data(std::move(idx), std::make_pair("price", price));
+            appender.push_chunk<MyDataFrame, double>(chunk);
+        }
+
+        assert(appender.size() == 500);
+
+        const auto  &price { df.get_column<double>("price") };
+
+        for (unsigned long i { 0 }; i < 500; ++i)
+            assert(price[i] == double(i) * 2.0);
+    }
+
+    // Sliding window: eviction keeps roughly the last window_size
+    //
+    {
+        MyDataFrame                     df;
+        const long                      window { 100 };
+        StreamAppender<unsigned long>   appender { df, window };
+
+        for (unsigned long i { 0 }; i < 1000; ++i)
+            appender.push_row(i, std::make_pair("v", double(i)));
+
+        const auto  final_size { appender.size() };
+
+        // With eviction_margin defaulting to 0, size should settle at
+        // exactly window_size after the final push.
+        //
+        assert(final_size == window);
+
+        const auto  &idx { df.get_index() };
+        const auto  &v_col { df.get_column<double>("v") };
+
+        // The surviving rows should be the most recent ones, in order.
+        //
+        assert(idx.front() == 1000 - window);
+        assert(idx.back() == 999);
+        for (std::size_t i { 0 }; i < idx.size(); ++i)
+            assert(v_col[i] == double(idx[i]));
+    }
+
+    // Sliding window with an eviction margin: bounded but not exact
+    //
+    {
+        MyDataFrame                     df;
+        const long                      window { 100 };
+        const long                      margin { 20 };
+        StreamAppender<unsigned long>   appender { df, window, margin };
+
+        for (unsigned long i { 0 }; i < 1000; ++i)
+            appender.push_row(i, std::make_pair("v", double(i)));
+
+        const auto  final_size { appender.size() };
+
+        // Should never exceed window + margin, and should be at least
+        // window (since we only trim back down to window, not below).
+        //
+        assert(long(final_size) >= window);
+        assert(long(final_size) <= window + margin);
+    }
+
+    // with_lock(): read access, including a visitor
+    //
+    {
+        MyDataFrame                     df;
+        StreamAppender<unsigned long>   appender { df };
+
+        for (unsigned long i { 1 }; i <= 10; ++i)
+            appender.push_row(i, std::make_pair("v", double(i)));
+
+        const double    sum {
+            appender.with_lock([](MyDataFrame &d) -> double  {
+                double      total { 0.0 };
+                const auto  &v_col { d.get_column<double>("v")};
+
+                for (const auto &x : v_col)  total += x;
+                return (total);
+            })
+        };
+
+        assert(sum == 55.0);  // 1 + 2 + ... + 10
+    }
+
+    // Real concurrency: one thread pushes while another reads
+    //
+    {
+        MyDataFrame                     df;
+        StreamAppender<unsigned long>   appender { df, 5000L };
+        std::atomic<bool>               stop { false };
+        std::atomic<std::size_t>        reads_done { 0 };
+        std::atomic<bool>               saw_inconsistency { false };
+
+        // That is how you set the lock
+        //
+        SpinLock    lock;
+
+        MyDataFrame::set_lock(&lock);
+
+        std::thread writer([&]()  {
+            for (unsigned long i { 0 }; i < 20000; ++i)
+                appender.push_row(i, std::make_pair("v", double(i)));
+            stop = true;
+        });
+        std::thread reader([&]()  {
+            while (! stop.load())  {
+                appender.with_lock([&](MyDataFrame &d) -> void  {
+                    const auto  &idx { d.get_index() };
+                    const auto  &v_col { d.get_column<double>("v") };
+
+                    // Whatever we see, it must be internally consistent:
+                    // same length, and v_col[i] == double(idx[i]) for every
+                    // row actually present right now.
+                    //
+                    if (idx.size() != v_col.size())
+                        saw_inconsistency = true;
+                    for (std::size_t i { 0 }; i < idx.size(); ++i)
+                        if (v_col[i] != double(idx[i]))
+                            saw_inconsistency = true;
+                });
+                reads_done.fetch_add(1);
+            }
+        });
+
+        writer.join();
+        reader.join();
+
+        assert(! saw_inconsistency.load());
+        assert(appender.size() > 0);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -6427,6 +7103,9 @@ int main(int, char *[])  {
     test_JacobianVisitor();
     test_LaplacianVisitor();
     test_remove_data_by_isof();
+    test_read_chunked_data();
+    test_streamed_write();
+    test_StreamAppender();
 
     return (0);
 }

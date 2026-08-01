@@ -83,6 +83,14 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Endianness.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Matrix.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Matrix.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/BinaryState.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/CSV2State.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/ChunkedReader.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/ChunkedReader.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/StreamWriter.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/StreamWriter.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/StreamAppender.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IO/StreamAppender.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IsolationTree.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/IsolationTree.tcc
 

@@ -1,0 +1,263 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+body {
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke);
+}
+</style>
+</head>
+
+<body style="font-family: Georgia, serif">
+  <font size="+3">&#8592;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html">Back to Documentations</a><BR><BR>
+  
+  <table border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Public Member Functions</th>
+    </tr>
+
+    <tr bgcolor="Azure">
+      <td>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#696969; ">// The template arguments are similar to DataFrame itself</span></span>
+<span class="line_wrapper"><span style="color:#696969; ">//</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> I<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">typename</span> H <span style="color:#808030; ">=</span> HeteroVector<span style="color:#808030; ">&lt;</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">&gt;</span><span style="color:#800080; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">class</span>   StreamAppender<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
+      </td>
+      <td>
+        This is not a DataFrame memeber function. StreamAppender is the live feed counterpart to <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/ChunkedReader.html">ChunkedReader</a> and <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/StreamWriter.html">StreamWriter</a>. Those two both assume a bounded source or destination -- something with a definite end (a file, or however many chunks an ETL job produces). StreamAppender is for the opposite case: a source that never ends (a market-data handler, a socket, a queue) that you want to keep feeding into a DataFrame while other code (on the same or another thread) queries it.<BR><BR>
+
+        It's a thin, locking wrapper around a DataFrame you already own -- it does not read from or write to any external stream itself. Once you start feeding a DataFrame through a StreamAppender, every subsequent access to that DataFrame (pushing new rows, and reading/visiting it) should go through this StreamAppender (<I>push_row() / push_chunk() / with_lock()</I>) rather than touching the underlying DataFrame directly.<BR><BR>
+
+        StreamAppender also accounts for multithreading and uses the spin-lock in your target DataFrame.<BR>
+      </td>
+
+      <td width="20%">
+        <a href="https://github.com/hosseinmoein/DataFrame/blob/master/include//DataFrame/Utils/IO/StreamAppender.h">StreamAppender Header File</a><BR><BR>
+
+        <B>S</B>: A stream type<BR>
+        <B>DF</B>: A DataFrame type<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_StreamAppender<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing StreamAppender{ } ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> MyDataFrame <span style="color:#808030; ">=</span> StdDataFrame<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// push_row(): basic correctness</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        MyDataFrame                     df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        StreamAppender<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>   appender <span style="color:#800080; ">{</span> df <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">500</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">            appender<span style="color:#808030; ">.</span>push_row<span style="color:#808030; ">(</span>i<span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                              <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">price</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span>i<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#008000; ">1.5</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                              <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">size</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">int</span><span style="color:#808030; ">(</span>i<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>appender<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">500</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>df<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">500</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>price <span style="color:#800080; ">{</span> df<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">price</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>size <span style="color:#800080; ">{</span> df<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">int</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">size</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">500</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span>price<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span>i<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#008000; ">1.5</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span>size<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">int</span><span style="color:#808030; ">(</span>i<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// push_chunk(): basic correctness</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        MyDataFrame                     df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        StreamAppender<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>   appender <span style="color:#800080; ">{</span> df <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> batch <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> batch <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">10</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>batch<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">            <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>  idx<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">vector</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>         price<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">50</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> gi <span style="color:#800080; ">{</span> batch <span style="color:#808030; ">*</span> <span style="color:#008c00; ">50</span> <span style="color:#808030; ">+</span> i <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">                idx<span style="color:#808030; ">.</span>push_back<span style="color:#808030; ">(</span>gi<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                price<span style="color:#808030; ">.</span>push_back<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span>gi<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#008000; ">2.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">            MyDataFrame chunk<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">            chunk<span style="color:#808030; ">.</span>load_data<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>idx<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">price</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> price<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            appender<span style="color:#808030; ">.</span>push_chunk<span style="color:#800080; ">&lt;</span>MyDataFrame<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span>chunk<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>appender<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">500</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>price <span style="color:#800080; ">{</span> df<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">price</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">500</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span>price<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span>i<span style="color:#808030; ">)</span> <span style="color:#808030; ">*</span> <span style="color:#008000; ">2.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Sliding window: eviction keeps roughly the last window_size</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        MyDataFrame                     df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">long</span>                      window <span style="color:#800080; ">{</span> <span style="color:#008c00; ">100</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        StreamAppender<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>   appender <span style="color:#800080; ">{</span> df<span style="color:#808030; ">,</span> window <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">1000</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            appender<span style="color:#808030; ">.</span>push_row<span style="color:#808030; ">(</span>i<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">v</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span>i<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  final_size <span style="color:#800080; ">{</span> appender<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// With eviction_margin defaulting to 0, size should settle at</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// exactly window_size after the final push.</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>final_size <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> window<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>idx <span style="color:#800080; ">{</span> df<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>v_col <span style="color:#800080; ">{</span> df<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">v</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// The surviving rows should be the most recent ones, in order.</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>idx<span style="color:#808030; ">.</span>front<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">1000</span> <span style="color:#808030; ">-</span> window<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>idx<span style="color:#808030; ">.</span>back<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">999</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> idx<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            assert<span style="color:#808030; ">(</span>v_col<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span>idx<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Sliding window with an eviction margin: bounded but not exact</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        MyDataFrame                     df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">long</span>                      window <span style="color:#800080; ">{</span> <span style="color:#008c00; ">100</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">long</span>                      margin <span style="color:#800080; ">{</span> <span style="color:#008c00; ">20</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        StreamAppender<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>   appender <span style="color:#800080; ">{</span> df<span style="color:#808030; ">,</span> window<span style="color:#808030; ">,</span> margin <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">1000</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            appender<span style="color:#808030; ">.</span>push_row<span style="color:#808030; ">(</span>i<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">v</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span>i<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  final_size <span style="color:#800080; ">{</span> appender<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Should never exceed window + margin, and should be at least</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// window (since we only trim back down to window, not below).</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">(</span>final_size<span style="color:#808030; ">)</span> <span style="color:#808030; ">&gt;</span><span style="color:#808030; ">=</span> window<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">long</span><span style="color:#808030; ">(</span>final_size<span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">=</span> window <span style="color:#808030; ">+</span> margin<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// with_lock(): read access, including a visitor</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        MyDataFrame                     df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        StreamAppender<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>   appender <span style="color:#800080; ">{</span> df <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">1</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">10</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">            appender<span style="color:#808030; ">.</span>push_row<span style="color:#808030; ">(</span>i<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">v</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span>i<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span>    sum <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">            appender<span style="color:#808030; ">.</span>with_lock<span style="color:#808030; ">(</span><span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span>MyDataFrame <span style="color:#808030; ">&amp;</span>d<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">double</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                <span style="color:#800000; font-weight:bold; ">double</span>      total <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>v_col <span style="color:#800080; ">{</span> d<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">v</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">                <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span> <span style="color:#808030; ">&amp;</span>x <span style="color:#800080; ">:</span> v_col<span style="color:#808030; ">)</span>  total <span style="color:#808030; ">+</span><span style="color:#808030; ">=</span> x<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span>total<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>sum <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008000; ">55.0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span>  <span style="color:#696969; ">// 1 + 2 + ... + 10</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#696969; ">// Real concurrency: one thread pushes while another reads</span></span>
+<span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        MyDataFrame                     df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        StreamAppender<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>   appender <span style="color:#800080; ">{</span> df<span style="color:#808030; ">,</span> <span style="color:#008c00; ">5000</span><span style="color:#006600; ">L</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">atomic</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">bool</span><span style="color:#800080; ">&gt;</span>               stop <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">false</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">atomic</span><span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span><span style="color:#800080; ">&gt;</span>        reads_done <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">atomic</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">bool</span><span style="color:#800080; ">&gt;</span>               saw_inconsistency <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">false</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// That is how you set the lock</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        SpinLock    lock<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        MyDataFrame<span style="color:#800080; ">::</span>set_lock<span style="color:#808030; ">(</span><span style="color:#808030; ">&amp;</span>lock<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>thread writer<span style="color:#808030; ">(</span><span style="color:#808030; ">[</span><span style="color:#808030; ">&amp;</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> <span style="color:#008c00; ">20000</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">                appender<span style="color:#808030; ">.</span>push_row<span style="color:#808030; ">(</span>i<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">v</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span>i<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            stop <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>thread reader<span style="color:#808030; ">(</span><span style="color:#808030; ">[</span><span style="color:#808030; ">&amp;</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">while</span> <span style="color:#808030; ">(</span><span style="color:#808030; ">!</span> stop<span style="color:#808030; ">.</span>load<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                appender<span style="color:#808030; ">.</span>with_lock<span style="color:#808030; ">(</span><span style="color:#808030; ">[</span><span style="color:#808030; ">&amp;</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span>MyDataFrame <span style="color:#808030; ">&amp;</span>d<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">void</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>idx <span style="color:#800080; ">{</span> d<span style="color:#808030; ">.</span>get_index<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>  <span style="color:#808030; ">&amp;</span>v_col <span style="color:#800080; ">{</span> d<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">v</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">                    <span style="color:#696969; ">// Whatever we see, it must be internally consistent:</span></span>
+<span class="line_wrapper">                    <span style="color:#696969; ">// same length, and v_col[i] == double(idx[i]) for every</span></span>
+<span class="line_wrapper">                    <span style="color:#696969; ">// row actually present right now.</span></span>
+<span class="line_wrapper">                    <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">if</span> <span style="color:#808030; ">(</span>idx<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">!</span><span style="color:#808030; ">=</span> v_col<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">                        saw_inconsistency <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                    <span style="color:#800000; font-weight:bold; ">for</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span> i <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span> i <span style="color:#808030; ">&lt;</span> idx<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span> <span style="color:#808030; ">+</span><span style="color:#808030; ">+</span>i<span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">                        <span style="color:#800000; font-weight:bold; ">if</span> <span style="color:#808030; ">(</span>v_col<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span> <span style="color:#808030; ">!</span><span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span>idx<span style="color:#808030; ">[</span>i<span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span></span>
+<span class="line_wrapper">                            saw_inconsistency <span style="color:#808030; ">=</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">                reads_done<span style="color:#808030; ">.</span>fetch_add<span style="color:#808030; ">(</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">            <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">}</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        writer<span style="color:#808030; ">.</span>join<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        reader<span style="color:#808030; ">.</span>join<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#808030; ">!</span> saw_inconsistency<span style="color:#808030; ">.</span>load<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>appender<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&gt;</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <BR><img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

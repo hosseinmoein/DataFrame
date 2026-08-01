@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ----------------------------------------------------------------------------
 
-// StreamAppender is the "live feed" counterpart to ChunkedReader and
+// StreamAppender is the live feed counterpart to ChunkedReader and
 // StreamWriter. Those two both assume a bounded source or destination --
 // something with a definite end (a file, or however many chunks an ETL job
 // produces). StreamAppender is for the opposite case: a source that never

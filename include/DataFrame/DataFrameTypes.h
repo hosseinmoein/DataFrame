@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <complex>
 #include <limits>
 #include <memory>
+#include <random>
 #include <stdexcept>
 #include <tuple>
 #include <utility>

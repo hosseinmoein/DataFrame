@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrameTypes.h>
 
+#include <iostream>
 #include <bit>
 #include <climits>
 #include <cstdint>
@@ -71,8 +72,9 @@ struct  SwapBytes<T, 2>  {
 
     inline T operator()(T value) const  {
 
-        return (((value >> 8) & 0xff) |
-                ((value & 0xff) << 8));
+        // return (((value >> 8) & 0xff) |
+        //         ((value & 0xff) << 8));
+        return (std::byteswap(value));
     }
 };
 
@@ -81,23 +83,11 @@ struct  SwapBytes<T, 4>  {
 
     inline T operator()(T value) const  {
 
-        return (((value & 0xff000000) >> 24) |
-                ((value & 0x00ff0000) >> 8)  |
-                ((value & 0x0000ff00) << 8)  |
-                ((value & 0x000000ff) << 24));
-    }
-};
-
-template<>
-struct  SwapBytes<float, 4>  {
-
-    inline float operator()(float value) const  {
-
-        const uint32_t  layout =
-            SwapBytes<uint32_t, sizeof(uint32_t)>{ }(*((uint32_t *) &value));
-
-        return (*((float *) &layout));
-
+        // return (((value & 0xff000000) >> 24) |
+        //         ((value & 0x00ff0000) >> 8)  |
+        //         ((value & 0x0000ff00) << 8)  |
+        //         ((value & 0x000000ff) << 24));
+        return (std::byteswap(value));
     }
 };
 
@@ -106,14 +96,25 @@ struct  SwapBytes<T, 8>  {
 
     inline T operator()(T value) const  {
 
-        return (((value & 0xff00000000000000ULL) >> 56) |
-                ((value & 0x00ff000000000000ULL) >> 40) |
-                ((value & 0x0000ff0000000000ULL) >> 24) |
-                ((value & 0x000000ff00000000ULL) >> 8)  |
-                ((value & 0x00000000ff000000ULL) << 8)  |
-                ((value & 0x0000000000ff0000ULL) << 24) |
-                ((value & 0x000000000000ff00ULL) << 40) |
-                ((value & 0x00000000000000ffULL) << 56));
+        // return (((value & 0xff00000000000000ULL) >> 56) |
+        //         ((value & 0x00ff000000000000ULL) >> 40) |
+        //         ((value & 0x0000ff0000000000ULL) >> 24) |
+        //         ((value & 0x000000ff00000000ULL) >> 8)  |
+        //         ((value & 0x00000000ff000000ULL) << 8)  |
+        //         ((value & 0x0000000000ff0000ULL) << 24) |
+        //         ((value & 0x000000000000ff00ULL) << 40) |
+        //         ((value & 0x00000000000000ffULL) << 56));
+        return (std::byteswap(value));
+    }
+};
+
+template<>
+struct  SwapBytes<float, 4>  {
+
+    inline float operator()(float value) const  {
+
+        return (std::bit_cast<float>(
+            std::byteswap(std::bit_cast<uint32_t>(value))));
     }
 };
 
@@ -122,36 +123,9 @@ struct  SwapBytes<double, 8>  {
 
     inline double operator()(double value) const  {
 
-        const uint64_t  layout =
-            SwapBytes<uint64_t, sizeof(uint64_t)>{ }(*((uint64_t *) &value));
+        return (std::bit_cast<double>(
+            std::byteswap(std::bit_cast<uint64_t>(value))));
 
-        return (*((double *) &layout));
-
-    }
-};
-
-/*
-template<typename T>
-struct  SwapBytes<T, 16>  {
-
-    inline T operator()(T value) const  {
-
-        return (((value & 0xff000000000000000000000000000000ULL) >> 120) |
-                ((value & 0x00ff0000000000000000000000000000ULL) >> 104) |
-                ((value & 0x0000ff00000000000000000000000000ULL) >> 88)  |
-                ((value & 0x000000ff000000000000000000000000ULL) >> 72)  |
-                ((value & 0x00000000ff0000000000000000000000ULL) >> 56)  |
-                ((value & 0x0000000000ff00000000000000000000ULL) >> 40)  |
-                ((value & 0x000000000000ff000000000000000000ULL) >> 24)  |
-                ((value & 0x00000000000000ff0000000000000000ULL) >> 8)   |
-                ((value & 0x0000000000000000ff00000000000000ULL) << 8)   |
-                ((value & 0x000000000000000000ff000000000000ULL) << 24)  |
-                ((value & 0x00000000000000000000ff0000000000ULL) << 40)  |
-                ((value & 0x0000000000000000000000ff00000000ULL) << 56)  |
-                ((value & 0x000000000000000000000000ff000000ULL) << 72)  |
-                ((value & 0x00000000000000000000000000ff0000ULL) << 88)  |
-                ((value & 0x0000000000000000000000000000ff00ULL) << 104) |
-                ((value & 0x000000000000000000000000000000ffULL) << 120));
     }
 };
 
@@ -160,14 +134,12 @@ struct  SwapBytes<long double, 16>  {
 
     inline long double operator()(long double value) const  {
 
-        const uint128_t layout =
-            SwapBytes<uint128_t, sizeof(uint128_t)>{ }(*((uint128_t *) &value));
+        auto    ptr { reinterpret_cast<unsigned char *>(&value) };
 
-        return (*((long double *) &layout));
-
+        std::reverse(ptr, ptr + sizeof(long double));
+        return (value);
     }
 };
-*/
 
 // ----------------------------------------------------------------------------
 

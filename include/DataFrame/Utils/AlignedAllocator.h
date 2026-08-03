@@ -32,14 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <memory>
 #include <new>
-#include <algorithm>
-#include <cassert>
-#include <cstdlib>
-#include <iostream>
-#include <map>
-#include <random>
-#include <string>
-#include <vector>
 
 // ----------------------------------------------------------------------------
 
@@ -166,14 +158,15 @@ public:
     }
 
     inline constexpr void
-    deallocate(pointer ptr, [[maybe_unused]] size_type n_items) const  {
+    deallocate(pointer ptr, size_type n_items) const  {
 
         // According to the C++20 the delete operator must be called with the
         // same alignment argument as the new expression.
         // The size argument can be omitted but if present must also be equal
         // to the one used in new
         //
-        ::operator delete[](ptr, AlignedAllocator::align_value);
+        ::operator delete[](ptr, n_items * sizeof(value_type),
+                         AlignedAllocator::align_value);
     }
 };
 

@@ -44,6 +44,10 @@ SharedQueue<T>::push(const value_type &element) noexcept  {
     const bool          was_empty { queue_.empty() };
 
     queue_.push (element);
+
+    // For some reason that I cannot figure out, notify_one() doesn't work.
+    // I am not sure if this is a MacOS specific!
+    //
     if (was_empty)  cvx_.notify_all();
 }
 
@@ -56,8 +60,8 @@ SharedQueue<T>::pop_front(bool wait_on_front) noexcept  {
     optional_ret                    ret { };
     std::unique_lock<std::mutex>    ul { mutex_ };
 
-    if (queue_.empty() && wait_on_front)
-        cvx_.wait_for(ul, 2s);
+    if (wait_on_front)
+        cvx_.wait_for(ul, 2s, [this]() -> bool { return (! queue_.empty()); });
 
     if (! queue_.empty())  {
         ret = queue_.front();

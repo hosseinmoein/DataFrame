@@ -193,11 +193,11 @@ CFTree<T>::insert(const feature_type &point)  {
 
     // Find closest entry
     //
-    size_type       closest_idx { -1 };
-    value_type      min_dist { std::numeric_limits<value_type>::max() };
+    size_type       closest_idx { 0 };
+    value_type      min_dist { dist_func_(point, entries_[0].centroid()) };
     const size_type sz { size_type(entries_.size()) };
 
-    for (size_type i { 0 }; i < sz; ++i)  {
+    for (size_type i { 1 }; i < sz; ++i)  {
         const feature_type  centroid { entries_[i].centroid() };
         const value_type    dist { dist_func_(point, centroid) };
 

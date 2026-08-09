@@ -32,25 +32,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Threads/SharedQueue.h>
 
 #include <atomic>
+#include <chrono>
 #include <concepts>
 #include <condition_variable>
+#include <cstdlib>
 #include <functional>
 #include <future>
 #include <iterator>
 #include <list>
+#include <memory>
 #include <mutex>
 #include <new>
 #include <ranges>
+#include <stdexcept>
 #include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <chrono>
-#include <cstdlib>
-#include <functional>
-#include <memory>
-#include <stdexcept>
-#include <type_traits>
 
 // ----------------------------------------------------------------------------
 
@@ -64,16 +62,17 @@ public:
     using size_type = long;
     using thread_type = std::thread;
 
-    inline static constexpr size_type   MUL_THR_THHOLD = size_type(250'000);
+    inline static constexpr size_type   MUL_THR_THHOLD { size_type(250'000) };
 #ifdef __cpp_lib_hardware_interference_size
-    inline static constexpr size_type   CLINE_SIZE =
-        size_type(std::hardware_destructive_interference_size);
+    inline static constexpr size_type   CLINE_SIZE {
+        size_type(std::hardware_destructive_interference_size)
+    };
 #else
-    inline static constexpr size_type   CLINE_SIZE = size_type(64);
+    inline static constexpr size_type   CLINE_SIZE { size_type(64) };
 #endif // __cpp_lib_hardware_interference_size
 
     ThreadPool(const ThreadPool &) = delete;
-    ThreadPool &operator = (const ThreadPool &) = delete;
+    ThreadPool &operator =(const ThreadPool &) = delete;
 
     explicit
     ThreadPool(size_type thr_num = std::thread::hardware_concurrency());
@@ -123,9 +122,9 @@ public:
     parallel_loop2(I1 begin1, I1 end1, I2 begin2, I2 end2,
                    F &&routine, As && ... args);
 
-    template<std::random_access_iterator I, long TH = 5000L>
+    template<std::random_access_iterator I, size_type TH = 5000L>
     void parallel_sort(const I begin, const I end);
-    template<std::random_access_iterator I, typename P, long TH = 5000L>
+    template<std::random_access_iterator I, typename P, size_type TH = 5000L>
     void parallel_sort(const I begin, const I end, P compare);
 
     // If the pool is not shutdown and there is a pending task, run the one

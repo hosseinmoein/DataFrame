@@ -203,6 +203,7 @@ _stringfy_(const V &vec,
         std::transform(std::begin(vec) + start_row, std::begin(vec) + end_row,
                        std::back_inserter(result),
                        [&ss](const auto &val) -> std::string  {
+                           ss.str("");
                            ss.clear();
                            ss.seekp(0);
                            ss << val;

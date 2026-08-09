@@ -58,7 +58,7 @@ ThreadPool::cline_aligned_blocks_(size_type data_size,
 inline ThreadPool::ThreadPool(size_type thr_num)  {
 
     threads_.reserve(thr_num * 2);
-    for (size_type i = 0; i < thr_num; ++i)  {
+    for (size_type i { 0 }; i < thr_num; ++i)  {
         local_queues_.push_back(LocalQueueType { });
         threads_.emplace_back(&ThreadPool::thread_routine_, this, i);
     }
@@ -101,7 +101,7 @@ ThreadPool::add_thread(size_type thr_num)  {
             throw std::runtime_error(err);
         }
 
-        for (size_type i = 0; i < shutys; ++i)  {
+        for (size_type i { 0 }; i < shutys; ++i)  {
             const WorkUnit  work_unit { WORK_TYPE::_terminate_ };
 
             global_queue_.push(work_unit);
@@ -111,7 +111,7 @@ ThreadPool::add_thread(size_type thr_num)  {
         const guard_type    guard { state_ };
         const size_type     local_size { size_type(threads_.size()) };
 
-        for (size_type i = 0; i < thr_num; ++i)  {
+        for (size_type i { 0 }; i < thr_num; ++i)  {
             local_queues_.push_back(LocalQueueType { });
             threads_.emplace_back(&ThreadPool::thread_routine_,
                                   this, local_size + i);
@@ -187,17 +187,20 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
     else
         n = std::distance(begin, end);
 
-    constexpr size_type     cline_divisor { CLINE_SIZE / long(sizeof(T)) };
+    constexpr size_type     cline_divisor { CLINE_SIZE / size_type(sizeof(T)) };
     const size_type         cap_thrs { capacity_threads() };
+    const size_type         effective_splits {
+        std::max(cap_thrs - 1, size_type(1))
+    };
     const auto              blocks {
-        cline_aligned_blocks_(n, cap_thrs - 1, cline_divisor)
+        cline_aligned_blocks_(n, effective_splits, cline_divisor)
     };
     std::vector<future_t>   ret;
 
     ret.reserve(blocks.first > 0 ? cap_thrs : size_type(1));
     if (blocks.first > 0)  {
         if (backward)  {
-            for (size_type i = n; i >= 0; i -= blocks.first)  {
+            for (size_type i { n }; i >= 0; i -= blocks.first)  {
                 size_type   block_end { i - blocks.first };
 
                 if (size_type((end + i) - (end + block_end + 1)) <
@@ -212,7 +215,7 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
             }
         }
         else  {
-            for (size_type i = 0; i < n; i += blocks.first)  {
+            for (size_type i { 0 }; i < n; i += blocks.first)  {
                 size_type block_end { i + blocks.first };
 
                 if (block_end > n)  break;
@@ -265,16 +268,19 @@ ThreadPool::parallel_loop2(I1 begin1, I1 end1, I2 begin2, I2 end2,
     else
         n = std::min(std::distance(begin1, end1), std::distance(begin2, end2));
 
-    constexpr size_type     cline_divisor { CLINE_SIZE / long(sizeof(T)) };
+    constexpr size_type     cline_divisor { CLINE_SIZE / size_type(sizeof(T)) };
     const size_type         cap_thrs { capacity_threads() };
+    const size_type         effective_splits {
+        std::max(cap_thrs - 1, size_type(1))
+    };
     const auto              blocks {
-        cline_aligned_blocks_(n, cap_thrs - 1, cline_divisor)
+        cline_aligned_blocks_(n, effective_splits, cline_divisor)
     };
     std::vector<future_t>   ret;
 
     ret.reserve(blocks.first > 0 ? cap_thrs : size_type(1));
     if (blocks.first > 0)  {
-        for (size_type i = 0; i < n; i += blocks.first)  {
+        for (size_type i { 0 }; i < n; i += blocks.first)  {
             size_type block_end { i + blocks.first };
 
             if (block_end > n)  break;
@@ -306,7 +312,7 @@ ThreadPool::parallel_sort(const I begin, const I end)  {
 
     using value_type = typename std::iterator_traits<I>::value_type;
 
-    auto    compare = std::less<value_type>{ };
+    auto    compare { std::less<value_type>{ } };
 
     parallel_sort<I, decltype(compare), TH>(begin, end, std::move(compare));
 }
@@ -340,32 +346,35 @@ ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
 
     // Pivot selection (median‑of‑three)
     //
-    auto        mid = begin + (data_size / 2);
-    auto        pivot_it = _median_of_three_(begin, mid, end - 1, compare);
-    const auto  pivot = *pivot_it;
+    auto        mid { begin + (data_size / 2) };
+    auto        pivot_it { _median_of_three_(begin, mid, end - 1, compare) };
+    const auto  pivot { *pivot_it };
 
     std::iter_swap(pivot_it, end - 1);  // Move pivot to end ‑ 1
 
-    auto    cut =
+    auto    cut {
         std::ranges::partition(begin, end - 1,
                                [&pivot, &compare](const auto &x) -> bool {
                                    return (compare(x, pivot));
-                               });
+                               })
+    };
 
     std::iter_swap(cut.begin(), end - 1);  // Restore pivot
 
-    auto    lf = dispatch(false,
+    auto    lf { dispatch(false,
                           &ThreadPool::parallel_sort<I, P, TH>,
                           this,
                           begin,
                           cut.begin(),
-                          compare);
-    auto    rf = dispatch(false,
+                          compare)
+    };
+    auto    rf { dispatch(false,
                           &ThreadPool::parallel_sort<I, P, TH>,
                           this,
                           cut.begin() + 1,
                           end,
-                          compare);
+                          compare)
+    };
 
     while (lf.wait_for(std::chrono::seconds(0)) == std::future_status::timeout)
         run_task();
@@ -417,7 +426,7 @@ ThreadPool::shutdown() noexcept  {
                                                std::memory_order_relaxed))  {
         const size_type capacity { capacity_threads() + 10 };
 
-        for (size_type i = 0; i < capacity; ++i)  {
+        for (size_type i { 0 }; i < capacity; ++i)  {
             const WorkUnit  work_unit { WORK_TYPE::_terminate_ };
 
             global_queue_.push(work_unit);
@@ -455,10 +464,10 @@ ThreadPool::get_one_local_task_() noexcept  {
 inline bool
 ThreadPool::run_task() noexcept  {
 
-    WorkUnit    work_unit = get_one_local_task_();
+    WorkUnit    work_unit { get_one_local_task_() };
 
     if (work_unit.work_type == WORK_TYPE::_undefined_)  {
-        const auto  opt_ret = global_queue_.pop_front(false); // Don't wait
+        const auto  opt_ret { global_queue_.pop_front(false) }; // Don't wait
 
         if (opt_ret.has_value())
             work_unit = opt_ret.value();
@@ -480,7 +489,7 @@ ThreadPool::thread_routine_(size_type local_q_idx) noexcept  {
     if (is_shutdown())
         return (false);
 
-    auto    iter = local_queues_.begin();
+    auto    iter { local_queues_.begin() };
 
     std::advance(iter, local_q_idx);
     local_queue_ = &(*iter);
@@ -490,10 +499,11 @@ ThreadPool::thread_routine_(size_type local_q_idx) noexcept  {
 
         size_type   counter { 0 };
 
-        while (++counter < 80)  run_task();
+        while (++counter < 80)
+            if (! run_task())  break;
 
         WorkUnit    work_unit { };
-        const auto  opt_ret = global_queue_.pop_front(true); // Wait
+        const auto  opt_ret { global_queue_.pop_front(true) }; // Wait
 
         if (opt_ret.has_value())
             work_unit = opt_ret.value();

@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <functional>
 #include <iterator>
+#include <memory_resource>
 #include <new>
 #include <set>
 #include <type_traits>
@@ -51,8 +52,9 @@ struct  StackStorage  {
     using value_type = T;
     using size_type = std::size_t;
 
-    inline static constexpr size_type   memory_size =
-        MAX_SIZE * sizeof(value_type);
+    inline static constexpr size_type   memory_size {
+        MAX_SIZE * sizeof(value_type)
+    };
 
     // Main allocation space
     //
@@ -90,23 +92,23 @@ struct  BestFitBlock  {
     // Hash function
     //
     inline size_type
-    operator() (const BestFitBlock &mb) const  {
+    operator()(const BestFitBlock &mb) const  {
 
         return (std::hash<value_type>{ }(mb.address));
     }
 
     inline friend bool
-    operator < (const BestFitBlock &lhs, const BestFitBlock &rhs)  {
+    operator <(const BestFitBlock &lhs, const BestFitBlock &rhs)  {
 
         return (lhs.size < rhs.size);
     }
     inline friend bool
-    operator > (const BestFitBlock &lhs, const BestFitBlock &rhs)  {
+    operator >(const BestFitBlock &lhs, const BestFitBlock &rhs)  {
 
         return (lhs.size > rhs.size);
     }
     inline friend bool
-    operator == (const BestFitBlock &lhs, const BestFitBlock &rhs)  {
+    operator ==(const BestFitBlock &lhs, const BestFitBlock &rhs)  {
 
         return (lhs.address == rhs.address);
     }
@@ -130,33 +132,53 @@ struct  BestFitAlgo : public S  {
             std::make_pair(Base::buffer_ + Base::memory_size,
                            Base::memory_size));
     }
+
+    // A copy/move can't sensibly carry over this object's outstanding
+    // allocations. The new object's buffer_ is a distinct block of memory
+    // at a distinct address (see StackStorage's own copy/move ctors), so any
+    // pointers recorded in the bookkeeping below would still reference the
+    // *source* object's memory rather than the copy's own. Any pointer this
+    // allocator has already handed out to a caller remains valid only as
+    // long as the original object stays alive at its original address.
+    // That's a usage constraint (don't relocate a container built on this
+    // allocator once it holds live allocations), not something a copy/move
+    // ctor can paper over. So both constructors just delegate to the default
+    // one: the new instance starts as its own fresh, empty arena, which is
+    // the only state that's ever actually valid for it.
+    //
+    BestFitAlgo(const BestFitAlgo &) : BestFitAlgo()  {  }
+    BestFitAlgo(BestFitAlgo &&) : BestFitAlgo()  {  }
+
     ~BestFitAlgo() = default;
 
     // Like malloc
     //
     [[nodiscard]] pointer
-    get_space (size_type requested_size)  {
+    get_space(size_type requested_size)  {
 
-        auto    free_iter =
-            free_blocks_start_.lower_bound({ nullptr, requested_size });
+        auto    free_iter {
+            free_blocks_start_.lower_bound({ nullptr, requested_size })
+        };
 
         if (free_iter != free_blocks_start_.end())  {
-            auto    found_end = free_iter->get_end();
+            auto    found_end { free_iter->get_end() };
 
             if (free_iter->size > requested_size)  {
-                auto        remaining = free_iter->size - requested_size;
-                auto        new_address = free_iter->address + requested_size;
-                const auto  insert_ret =
-                    free_blocks_start_.insert({ new_address, remaining });
+                auto        remaining { free_iter->size - requested_size };
+                auto        new_address { free_iter->address + requested_size };
+                const auto  insert_ret {
+                    free_blocks_start_.insert({ new_address, remaining })
+                };
 
                 free_blocks_assist_.insert(
                     std::make_pair(new_address, insert_ret));
                 free_blocks_end_[found_end] = remaining;
             }
-            else  // Exact size match
+            else  {  // Exact size match
                 free_blocks_end_.erase(found_end);
+            }
 
-            auto    ret = free_iter->address;
+            auto    ret { free_iter->address };
 
             free_blocks_assist_.erase(free_iter->address);
             free_blocks_start_.erase(free_iter);
@@ -169,118 +191,124 @@ struct  BestFitAlgo : public S  {
     // Like free
     //
     void
-    put_space (pointer to_be_freed, size_type)  {
+    put_space(pointer to_be_freed, size_type)  {
 
-        auto    used_iter = used_blocks_.find({ to_be_freed, 0 });
+        auto    used_iter { used_blocks_.find({ to_be_freed, 0 }) };
 
         if (used_iter != used_blocks_.end())  {
-            const pointer   tail_ptr = to_be_freed + used_iter->size;
-            bool            found_tail = false;
-            const auto      tail_block = free_blocks_assist_.find(tail_ptr);
+            pointer merge_start { used_iter->address };
+            pointer merge_end { used_iter->address + used_iter->size };
 
-            // Try to find a free block that starts where to_be_freed block
-            // ends. If there is such a free block,  join it with to_be_freed
-            // block
+            // Left neighbor: a free block ending exactly where we start
             //
-            if (tail_block != free_blocks_assist_.end())  {
-                const size_type     new_len =
-                    used_iter->size + tail_block->second->size;
-                const BestFitBlock  to_insert { to_be_freed, new_len };
-
-                free_blocks_start_.erase(tail_block->second);
-                free_blocks_assist_.erase(tail_block);
-
-                const auto  insert_ret = free_blocks_start_.insert(to_insert);
-
-                free_blocks_assist_.insert(
-                    std::make_pair(to_be_freed, insert_ret));
-                free_blocks_end_[to_insert.get_end()] = new_len;
-                found_tail = true;
-            }
-
-            // Try to find a free block that ends where to_be_freed block
-            // starts. If there is such a free block,  join it with to_be_freed
-            // block
-            //
-            const auto  end_iter = free_blocks_end_.find(to_be_freed);
-            bool        found_head = false;
+            const auto  end_iter { free_blocks_end_.find(merge_start) };
 
             if (end_iter != free_blocks_end_.end())  {
-                const pointer   head_ptr = end_iter->first - end_iter->second;
-                const auto      head_block =
-                    free_blocks_assist_.find(head_ptr);
+                const pointer   head_ptr { end_iter->first - end_iter->second };
+                const auto      head_block {
+                    free_blocks_assist_.find(head_ptr)
+                };
 
                 if (head_block != free_blocks_assist_.end())  {
-                    const size_type new_len =
-                        used_iter->size + head_block->second->size;
-                    const auto      new_head = head_block->second->address;
-                    const auto      new_end =
-                        end_iter->first + used_iter->size;
-
+                    merge_start = head_block->second->address;
                     free_blocks_start_.erase(head_block->second);
                     free_blocks_assist_.erase(head_block);
-
-                    const auto  insert_ret =
-                        free_blocks_start_.insert({ new_head, new_len });
-
-                    free_blocks_assist_.insert(
-                        std::make_pair(new_head, insert_ret));
                     free_blocks_end_.erase(end_iter);
-                    free_blocks_end_[new_end] = new_len;
-                    found_head = true;
                 }
             }
 
-            // If we could not join with any other adjacent free blocks,
-            // process it as a stand alone
+            // Right neighbor: a free block starting exactly where we end
             //
-            if (! (found_tail || found_head))  {
-                const pointer   end_address =
-                    used_iter->address + used_iter->size;
-                const auto      insert_ret =
-                    free_blocks_start_.insert(
-                        { used_iter->address, used_iter->size });
+            const auto  tail_block { free_blocks_assist_.find(merge_end) };
 
-                free_blocks_assist_.insert(
-                    std::make_pair(used_iter->address, insert_ret));
-                free_blocks_end_[end_address] = used_iter->size;
+            if (tail_block != free_blocks_assist_.end())  {
+                merge_end = tail_block->second->get_end();
+                free_blocks_end_.erase(tail_block->second->get_end());
+                free_blocks_start_.erase(tail_block->second);
+                free_blocks_assist_.erase(tail_block);
             }
 
-            // Finally remove the block from used blocks map
-            //
+            const size_type     merged_size {
+                static_cast<size_type>(merge_end - merge_start)
+            };
+            const BestFitBlock  to_insert { merge_start, merged_size };
+            const auto          insert_ret {
+                free_blocks_start_.insert(to_insert)
+            };
+
+            free_blocks_assist_.insert(std::make_pair(merge_start, insert_ret));
+            free_blocks_end_[merge_end] = merged_size;
             used_blocks_.erase(used_iter);
         }
-        // else  // This is undefined behavior in delete operator
-        //     throw std::invalid_argument("BestFitAlgo::put_space()");
     }
 
 private:
 
     // It is based on size, so it must be multi-set
     //
-    using blk_set = std::multiset<BestFitBlock>;
-    using blk_uoset = std::unordered_set<BestFitBlock, BestFitBlock>;
-    using blk_uomap = std::unordered_map<pointer, std::size_t>;
-    using blk_assist = std::unordered_map<pointer, blk_set::const_iterator>;
+    using blk_set = std::pmr::multiset<BestFitBlock>;
+    using blk_uoset = std::pmr::unordered_set<BestFitBlock, BestFitBlock>;
+    using blk_uomap = std::pmr::unordered_map<pointer, std::size_t>;
+    using blk_assist =
+        std::pmr::unordered_map<pointer, blk_set::const_iterator>;
+
+    // The whole point of a stack allocator is to avoid touching the heap.
+    // So, the bookkeeping used to manage that stack arena shouldn't quietly
+    // heap-allocate a tree/hash-table node on every insert either. The four
+    // containers below draw from a fixed, inline byte pool instead of the
+    // default heap-backed allocator.
+    //
+    // Sizing: at most memory_size / sizeof(value_type) (== MAX_SIZE) blocks
+    // can exist simultaneously (the smallest possible allocation unit), and
+    // a block is a "free" or used record in only one place at a time, so
+    // 2 * MAX_SIZE bounds the worst-case total live-node count across all
+    // four containers. node_budget_ is a per-node byte estimate with real
+    // headroom over what libstdc++'s tree/hash nodes actually cost.
+    //
+    inline static constexpr std::size_t node_budget_ { 128 };
+    inline static constexpr std::size_t pool_bytes_ {
+        (Base::memory_size / sizeof(typename Base::value_type) + 1) *
+        2 * node_budget_
+    };
+
+    // Cap how large a single chunk request the pool resource is allowed to
+    // make -- left at its default, unsynchronized_pool_resource asks its
+    // upstream for chunks sized independently of how much we actually need,
+    // which can exceed pool_bytes_ in one shot for small MAX_SIZE and defeat
+    // the whole point. Capping max_blocks_per_chunk keeps each chunk request
+    // modest and proportional to node_budget_ instead.
+    //
+    inline static std::pmr::pool_options    pool_opts_ {
+        /* max_blocks_per_chunk = */ 64,
+        /* largest_required_pool_block = */ node_budget_ };
+
+    alignas(std::max_align_t)
+    std::byte                               pool_buffer_[pool_bytes_];
+    std::pmr::monotonic_buffer_resource     upstream_resource_ {
+        pool_buffer_, pool_bytes_, std::pmr::new_delete_resource()
+    };
+    std::pmr::unsynchronized_pool_resource  pool_resource_ {
+        pool_opts_, &upstream_resource_
+    };
 
     // Set of free blocks, keyed by size of the block. There could be multiple
     // blocks with the same size.
     //
-    blk_set     free_blocks_start_ { };
+    blk_set     free_blocks_start_ { &pool_resource_ };
 
     // Map of free blocks to size, keyed by the pointer to the end of the block.
     //
-    blk_uomap   free_blocks_end_ { };
+    blk_uomap   free_blocks_end_ { &pool_resource_ };
 
     // Hash set of used blocks, keyed by the pointer to the beginning of
     // the block.
     //
-    blk_uoset   used_blocks_ { };
+    blk_uoset   used_blocks_ { &pool_resource_ };
 
     // Map of free blocks to iterators of free_blocks_start_, keyed pointers
     // to the beginning of free blocks
     //
-    blk_assist  free_blocks_assist_ { };
+    blk_assist  free_blocks_assist_ { &pool_resource_ };
 };
 
 // ----------------------------------------------------------------------------
@@ -294,7 +322,7 @@ struct  FirstFitStack : public StackStorage<T, MAX_SIZE>  {
 
     inline static constexpr unsigned char   FREE_ { 0 };
     inline static constexpr unsigned char   USED_ { 1 };
-    inline static constexpr std::size_t     memory_size = MAX_SIZE;
+    inline static constexpr std::size_t     memory_size { MAX_SIZE };
 
     // The bitmap to indicate which slots are in use.
     //
@@ -334,13 +362,13 @@ struct  FirstFitAlgo : public S  {
     // Like malloc
     //
     [[nodiscard]] pointer
-    get_space (size_type requested_size)  {
+    get_space(size_type requested_size)  {
 
         // Pointers to the "in use" bitmap.
         //
-        unsigned char           *first_ptr = Base::first_free_ptr_;
-        unsigned char *const    end_ptr = &(Base::in_use_[Base::memory_size]);
-        const size_type         n_items = requested_size / sizeof(value_type);
+        unsigned char           *first_ptr { Base::first_free_ptr_ };
+        unsigned char *const    end_ptr { &(Base::in_use_[Base::memory_size]) };
+        const size_type         n_items { requested_size / sizeof(value_type) };
 
         // Find first fit allocation algorithm, starting from the first
         // free slot.
@@ -365,8 +393,9 @@ struct  FirstFitAlgo : public S  {
 
         // Return the memory allocation.
         //
-        const size_type offset =
-            std::distance(Base::in_use_, first_ptr) * sizeof(value_type);
+        const size_type offset {
+            std::distance(Base::in_use_, first_ptr) * sizeof(value_type)
+        };
 
         return (&(Base::buffer_[offset]));
     }
@@ -374,13 +403,14 @@ struct  FirstFitAlgo : public S  {
     // Like free
     //
     void
-    put_space (pointer to_be_freed, size_type space_size)  {
+    put_space(pointer to_be_freed, size_type space_size)  {
 
         // Find the start of the range.
         //
-        const size_type index =  // Find the start of the range.
-            std::distance(Base::buffer_, to_be_freed) / sizeof(value_type);
-        unsigned char   *first_ptr = &(Base::in_use_[index]);
+        const size_type index {  // Find the start of the range.
+            std::distance(Base::buffer_, to_be_freed) / sizeof(value_type)
+        };
+        unsigned char   *first_ptr { &(Base::in_use_[index]) };
 
         // Mark the range as free.
         //
@@ -418,7 +448,13 @@ public:
     using propagate_on_container_copy_assignment = std::false_type;
     using propagate_on_container_move_assignment = std::false_type;
     using propagate_on_container_swap = std::false_type;
-    using is_always_equal = std::true_type;
+
+    // This allocator is genuinely stateful. Each instance owns its own
+    // space plus its own free/used-block bookkeeping, so memory allocated
+    // through one instance is meaningless to a different instance's
+    // deallocate(). Instances are not universally interchangeable.
+    //
+    using is_always_equal = std::false_type;
 
     // This is only necessary because allocator has a second, third and fourth
     // template arguments that will make the default std::allocator_traits
@@ -448,12 +484,21 @@ public:
     FixedSizeAllocator(const FixedSizeAllocator<U, MAX_SIZE, STORAGE, ALGO> &) {
     }
 
-    // Always return true for stateless allocators.
+    // Two instances are only equal (i.e. interchangeable for
+    // allocate/deallocate purposes) if they are literally the same object.
+    // Each instance owns its own distinct arena, so no two distinct
+    // instances ever manage the same memory.
     //
     [[nodiscard]] inline bool
-    operator == (const FixedSizeAllocator &) const  { return (true); }
+    operator ==(const FixedSizeAllocator &that) const noexcept  {
+
+        return (this == &that);
+    }
     [[nodiscard]] inline bool
-    operator != (const FixedSizeAllocator &) const  { return (false); }
+    operator !=(const FixedSizeAllocator &that) const noexcept  {
+
+        return (this != &that);
+    }
 
 public:
 
@@ -485,7 +530,7 @@ public:
         if (n_items == 0)  return (nullptr);
         if (n_items > max_size())  throw std::bad_array_new_length();
 
-        auto    memory_ptr = this->get_space(n_items * sizeof(value_type));
+        auto    memory_ptr { this->get_space(n_items * sizeof(value_type)) };
 
         return (reinterpret_cast<pointer>(memory_ptr));
     }

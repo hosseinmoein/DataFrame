@@ -127,7 +127,7 @@ k_nearest_dists(const point_t &target, size_type k) const {
             // Check if we need to explore far side
             //
             if (far_idx != NULL_IDX &&
-                (pq.size() < k || diff * diff < pq.top().first))
+                (pq.size() < k || std::abs(diff) < pq.top().first))
                 stack.push(SearchState { state.node_idx, state.depth, true });
 
             if (near_idx != NULL_IDX)
@@ -141,7 +141,7 @@ k_nearest_dists(const point_t &target, size_type k) const {
             };
 
             if (far_idx != NULL_IDX &&
-                (pq.size() < k || diff * diff < pq.top().first))
+                (pq.size() < k || std::abs(diff) < pq.top().first))
                 stack.push(SearchState { far_idx, state.depth + 1 });
         }
     }
@@ -295,7 +295,7 @@ nearest_(const point_t &target) const  {
 
             // Push current state back to check far side later
             //
-            if ((far_idx != NULL_IDX) && ((diff * diff) < best_dist))
+            if ((far_idx != NULL_IDX) && (std::abs(diff) < best_dist))
                 stack.push(SearchState { state.node_idx, state.depth, true });
 
             // Push near side to explore first
@@ -310,7 +310,7 @@ nearest_(const point_t &target) const  {
                 (diff < 0) ? node.right : node.left
             };
 
-            if ((far_idx != NULL_IDX) && ((diff * diff) < best_dist))
+            if ((far_idx != NULL_IDX) && (std::abs(diff) < best_dist))
                 stack.push(SearchState { far_idx, state.depth + 1 });
         }
     }
@@ -364,7 +364,7 @@ k_nearest_(const point_t &target, size_type k) const  {
             // Check if we need to explore far side
             //
             if (far_idx != NULL_IDX &&
-                (pq.size() < k || diff * diff < pq.top().first))
+                (pq.size() < k || std::abs(diff) < pq.top().first))
                 stack.push(SearchState { state.node_idx, state.depth, true });
 
             if (near_idx != NULL_IDX)
@@ -378,7 +378,7 @@ k_nearest_(const point_t &target, size_type k) const  {
             };
 
             if (far_idx != NULL_IDX &&
-                (pq.size() < k || diff * diff < pq.top().first))
+                (pq.size() < k || std::abs(diff) < pq.top().first))
                 stack.push(SearchState { far_idx, state.depth + 1 });
         }
     }

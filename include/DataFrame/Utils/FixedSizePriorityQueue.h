@@ -63,10 +63,14 @@ public:
             std::push_heap(array_.begin(), data_end_, cmp_);
         }
         else  {
-            std::sort_heap(array_.begin(), array_.end(), cmp_);
-            if (cmp_(array_.front(), item))
-                array_[0] = std::move(item);
-            std::make_heap(array_.begin(), array_.end(), cmp_);
+            auto const  min_iter {
+                std::min_element(array_.begin(), array_.end(), cmp_)
+            };
+
+            if (cmp_(*min_iter, item))  {
+                *min_iter = std::move(item);
+                std::make_heap(array_.begin(), array_.end(), cmp_);
+            }
         }
     }
 

@@ -56,7 +56,7 @@ Matrix(size_type rows, size_type cols, const_reference def_v)
     if constexpr (IS_SYM)  {
         if (cols != rows)
             throw DataFrameError("Matrix::Matrix(): "
-                                 "Symmetric matrix must be squared");
+                                 "Symmetric matrix must be square");
     }
 #endif // HMDF_SANITY_EXCEPTIONS
 }
@@ -66,24 +66,24 @@ Matrix(size_type rows, size_type cols, const_reference def_v)
 template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename M2>
 Matrix<T, MO, IS_SYM> &
-Matrix<T, MO, IS_SYM>::operator = (const M2 &lhs)  {
+Matrix<T, MO, IS_SYM>::operator =(const M2 &lhs)  {
 
     rows_ = lhs.rows();
     cols_ = lhs.cols();
 
-    const auto  msize = rows_ * cols_;
+    const auto  msize { rows_ * cols_ };
 
     if (msize != size_type(matrix_.size()))
         matrix_.resize(msize);
 
     if constexpr (MO == matrix_orient::column_major)  {
-        for (size_type c = 0; c < cols_; ++c)
-            for (size_type r = 0; r < rows_; ++r)
+        for (size_type c { 0 }; c < cols_; ++c)
+            for (size_type r { 0 }; r < rows_; ++r)
                 at(r, c) = lhs(r, c);
     }
     else  {
-        for (size_type r = 0; r < rows_; ++r)
-            for (size_type c = 0; c < cols_; ++c)
+        for (size_type r { 0 }; r < rows_; ++r)
+            for (size_type c { 0 }; c < cols_; ++c)
                 at(r, c) = lhs(r, c);
     }
 
@@ -130,7 +130,7 @@ Matrix<T, MO, IS_SYM>::reserve(size_type rows, size_type cols)  {
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (cols != rows)
             throw DataFrameError("Matrix::reserve(): "
-                                 "Symmetric matrix must be squared");
+                                 "Symmetric matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
         matrix_.reserve((cols * (cols + 1L)) / 2L);
     }
@@ -161,7 +161,7 @@ resize(size_type rows, size_type cols, const_reference def_v) {
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (cols != rows)
             throw DataFrameError("Matrix::resize(): "
-                                 "Symmetric matrix must be squared");
+                                 "Symmetric matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
         matrix_.resize((cols * (cols + 1L)) / 2L, def_v);
     }
@@ -179,11 +179,11 @@ Matrix<T, MO, IS_SYM>::at(size_type row, size_type col)  {
 
     if constexpr (IS_SYM)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            if (row > col)  std::swap (row, col);
+            if (row > col)  std::swap(row, col);
             return (matrix_[(row * cols_) + col - ((row * (row + 1)) >> 1)]);
         }
         else  {
-            if (col > row)  std::swap (row, col);
+            if (col > row)  std::swap(row, col);
             return (matrix_[(col * rows_) + row - ((col * (col + 1)) >> 1)]);
         }
     }
@@ -203,11 +203,11 @@ Matrix<T, MO, IS_SYM>::at(size_type row, size_type col) const  {
 
     if constexpr (IS_SYM)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            if (row > col)  std::swap (row, col);
+            if (row > col)  std::swap(row, col);
             return (matrix_[(row * cols_) + col - ((row * (row + 1)) >> 1)]);
         }
         else  {
-            if (col > row)  std::swap (row, col);
+            if (col > row)  std::swap(row, col);
             return (matrix_[(col * rows_) + row - ((col * (col + 1)) >> 1)]);
         }
     }
@@ -237,8 +237,8 @@ Matrix<T, MO, IS_SYM>::is_symmetric() const noexcept  {
     if constexpr (IS_SYM)  return (true);
     if (! is_square())  return (false);
 
-    for (size_type r = 1; r < rows(); ++r)
-        for (size_type c = 0; c < r; ++c)
+    for (size_type r { 1 }; r < rows(); ++r)
+        for (size_type c { 0 }; c < r; ++c)
             if (at(r, c) != at(c, r))
                 return (false);
 
@@ -249,7 +249,7 @@ Matrix<T, MO, IS_SYM>::is_symmetric() const noexcept  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM>::reference
-Matrix<T, MO, IS_SYM>::operator() (size_type row, size_type col)  {
+Matrix<T, MO, IS_SYM>::operator()(size_type row, size_type col)  {
 
     return (at(row, col));
 }
@@ -258,7 +258,7 @@ Matrix<T, MO, IS_SYM>::operator() (size_type row, size_type col)  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM>::const_reference
-Matrix<T, MO, IS_SYM>::operator() (size_type row, size_type col) const  {
+Matrix<T, MO, IS_SYM>::operator()(size_type row, size_type col) const  {
 
     return (at(row, col));
 }
@@ -267,7 +267,7 @@ Matrix<T, MO, IS_SYM>::operator() (size_type row, size_type col) const  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM>::reference
-Matrix<T, MO, IS_SYM>::operator[] (size_type row, size_type col)  {
+Matrix<T, MO, IS_SYM>::operator[](size_type row, size_type col)  {
 
     return (at(row, col));
 }
@@ -276,7 +276,7 @@ Matrix<T, MO, IS_SYM>::operator[] (size_type row, size_type col)  {
 
 template<typename T,  matrix_orient MO, bool IS_SYM>
 Matrix<T, MO, IS_SYM>::const_reference
-Matrix<T, MO, IS_SYM>::operator[] (size_type row, size_type col) const  {
+Matrix<T, MO, IS_SYM>::operator[](size_type row, size_type col) const  {
 
     return (at(row, col));
 }
@@ -296,25 +296,25 @@ Matrix<T, MO, IS_SYM>::corner(size_type nrows, size_type ncols) const  {
 
     if constexpr (IS_SYM)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            for (size_type c = 0; c < ncols; ++c)
-                for (size_type r = c + 1; r < nrows; ++r)
+            for (size_type c { 0 }; c < ncols; ++c)
+                for (size_type r { c + 1 }; r < nrows; ++r)
                     result(r, c) = at(r, c);
         }
         else  {
-            for (size_type r = 0; r < nrows; ++r)
-                for (size_type c = r + 1; c < ncols; ++c)
+            for (size_type r { 0 }; r < nrows; ++r)
+                for (size_type c { r + 1 }; c < ncols; ++c)
                     result(r, c) = at(r, c);
         }
     }
     else  {
         if constexpr (MO == matrix_orient::column_major)  {
-            for (size_type c = 0; c < ncols; ++c)
-                for (size_type r = 0; r < nrows; ++r)
+            for (size_type c { 0 }; c < ncols; ++c)
+                for (size_type r { 0 }; r < nrows; ++r)
                     result(r, c) = at(r, c);
         }
         else  {
-            for (size_type r = 0; r < nrows; ++r)
-                for (size_type c = 0; c < ncols; ++c)
+            for (size_type r { 0 }; r < nrows; ++r)
+                for (size_type c { 0 }; c < ncols; ++c)
                     result(r, c) = at(r, c);
         }
     }
@@ -329,7 +329,7 @@ template<typename I>
 void
 Matrix<T, MO, IS_SYM>::set_column(I col_data, size_type col)  {
 
-    for (size_type r = 0; r < rows(); ++r)
+    for (size_type r { 0 }; r < rows(); ++r)
         at(r, col) = *col_data++;
 }
 
@@ -340,7 +340,7 @@ template<typename I>
 void
 Matrix<T, MO, IS_SYM>::set_row(I row_data, size_type row)  {
 
-    for (size_type c = 0; c < cols(); ++c)
+    for (size_type c { 0 }; c < cols(); ++c)
         at(row, c) = *row_data++;
 }
 
@@ -357,7 +357,7 @@ Matrix<T, MO, IS_SYM>::get_column_vec(size_type col) const noexcept  {
     }
     else  {
         result.resize(rows());
-        for (size_type r = 0; r < rows(); ++r)
+        for (size_type r { 0 }; r < rows(); ++r)
             result[r] = at(r, col);
     }
 
@@ -377,7 +377,7 @@ Matrix<T, MO, IS_SYM>::get_row_vec(size_type row) const noexcept  {
     }
     else  {
         result.resize(cols());
-        for (size_type c = 0; c < cols(); ++c)
+        for (size_type c { 0 }; c < cols(); ++c)
             result[c] = at(row, c);
     }
 
@@ -392,7 +392,7 @@ Matrix<T, MO, IS_SYM>::get_column_mat(size_type col) const noexcept  {
 
     Matrix<T, MO>   result { rows(), 1 };
 
-    for (size_type r = 0; r < rows(); ++r)
+    for (size_type r { 0 }; r < rows(); ++r)
         result(r, 0) = at(r, col);
 
     return (result);
@@ -406,7 +406,7 @@ Matrix<T, MO, IS_SYM>::get_row_mat(size_type row) const noexcept  {
 
     Matrix<T, MO>   result { 1, cols() };
 
-    for (size_type c = 0; c < cols(); ++c)
+    for (size_type c { 0 }; c < cols(); ++c)
         result(0, c) = at(row, c);
 
     return (result);
@@ -428,25 +428,25 @@ Matrix<T, MO, IS_SYM>::transpose() const noexcept  {
 
     if constexpr (IS_SYM)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            for (size_type c = 0; c < cols(); ++c)
-                for (size_type r = c; r < rows(); ++r)
+            for (size_type c { 0 }; c < cols(); ++c)
+                for (size_type r { c }; r < rows(); ++r)
                     result[r, c] = at(r, c);
         }
         else  {
-            for (size_type r = 0; r < rows(); ++r)
-                for (size_type c = r; c < cols(); ++c)
+            for (size_type r { 0 }; r < rows(); ++r)
+                for (size_type c { r }; c < cols(); ++c)
                     result[r, c] = at(r, c);
         }
     }
     else  {
         if constexpr (MO == matrix_orient::column_major)  {
-            for (size_type c = 0; c < cols(); ++c)
-                for (size_type r = 0; r < rows(); ++r)
+            for (size_type c { 0 }; c < cols(); ++c)
+                for (size_type r { 0 }; r < rows(); ++r)
                     result[c, r] = at(r, c);
         }
         else  {
-            for (size_type r = 0; r < rows(); ++r)
-                for (size_type c = 0; c < cols(); ++c)
+            for (size_type r { 0 }; r < rows(); ++r)
+                for (size_type c { 0 }; c < cols(); ++c)
                     result[c, r] = at(r, c);
         }
     }
@@ -466,15 +466,42 @@ Matrix<T, MO, IS_SYM>::transpose2() const noexcept  {
         result = *this;
     }
     else  {
+        // Blocked/tiled transpose: whichever side of at()/result[] isn't
+        // naturally sequential for this orientation gets a stride equal to
+        // a full row/column, which is a cache miss on nearly every element
+        // for any matrix bigger than cache. Processing in small blocks
+        // means both the source and destination sub-regions for a whole
+        // block stay cache-resident while it's processed, so the cost of
+        // that stride is paid roughly once per block instead of once per
+        // element.
+        //
+        constexpr size_type block_size { 32 };
+
         if constexpr (MO == matrix_orient::column_major)  {
-            for (size_type c = 0; c < cols(); ++c)
-                for (size_type r = 0; r < rows(); ++r)
-                    result[c, r] = at(r, c);
+            for (size_type cb { 0 }; cb < cols(); cb += block_size)  {
+                const size_type c_end { std::min(cb + block_size, cols()) };
+
+                for (size_type rb { 0 }; rb < rows(); rb += block_size)  {
+                    const size_type r_end { std::min(rb + block_size, rows()) };
+
+                    for (size_type c { cb }; c < c_end; ++c)
+                        for (size_type r { rb }; r < r_end; ++r)
+                            result[c, r] = at(r, c);
+                }
+            }
         }
         else  {
-            for (size_type r = 0; r < rows(); ++r)
-                for (size_type c = 0; c < cols(); ++c)
-                    result[c, r] = at(r, c);
+            for (size_type rb { 0 }; rb < rows(); rb += block_size)  {
+                const size_type r_end { std::min(rb + block_size, rows()) };
+
+                for (size_type cb { 0 }; cb < cols(); cb += block_size)  {
+                    const size_type c_end { std::min(cb + block_size, cols()) };
+
+                    for (size_type r { rb }; r < r_end; ++r)
+                        for (size_type c { cb }; c < c_end; ++c)
+                            result[c, r] = at(r, c);
+                }
+            }
         }
     }
 
@@ -508,7 +535,7 @@ ppivot_(size_type pivot_row,
     size_type   max_row { pivot_row };
     value_type  max_value { value_type(std::abs(at(pivot_row, pivot_row))) };
 
-    for (size_type r = pivot_row + 1; r < self_rows; ++r)  {
+    for (size_type r { pivot_row + 1 }; r < self_rows; ++r)  {
         const value_type    tmp { value_type(std::abs(at(r, pivot_row))) };
 
         if (tmp > max_value && tmp != value_type(0))  {
@@ -521,7 +548,7 @@ ppivot_(size_type pivot_row,
         return (NOPOS_);
 
     if (max_row != pivot_row)  {
-        for (size_type c = 0; c < self_cols; ++c)
+        for (size_type c { 0 }; c < self_cols; ++c)
             std::swap(at(pivot_row, c), at(max_row, c));
         return (max_row);
     }
@@ -537,41 +564,41 @@ Matrix<T, MO, IS_SYM>::inverse() const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (rows() != cols())
-        throw NotFeasible("Matrix::inverse(): Matrix must be squared");
+        throw NotFeasible("Matrix::inverse(): Matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const size_type self_rows = rows();
-    const size_type self_cols = cols();
+    const size_type self_rows { rows() };
+    const size_type self_cols { cols() };
     Matrix          aux_mat { *this };
     Matrix          result { self_rows, self_cols, 0 };
 
     // First make identity matrix
     //
-    for (size_type d = 0; d < self_cols; ++d)
+    for (size_type d { 0 }; d < self_cols; ++d)
         result.at(d, d) = value_type(1);
 
-    for (size_type r = 0; r < self_rows; ++r)  {
-        const size_type idx = aux_mat.ppivot_(r, self_rows, self_cols);
+    for (size_type r { 0 }; r < self_rows; ++r)  {
+        const size_type idx { aux_mat.ppivot_(r, self_rows, self_cols) };
 
         if (idx == NOPOS_)
             throw NotFeasible("Matrix::inverse(): Singular matrix");
 
         if (idx != 0)
-            for (size_type c = 0; c < self_cols; ++c)
+            for (size_type c { 0 }; c < self_cols; ++c)
                 std::swap(result.at(r, c), result.at(idx, c));
 
-        const value_type    diag = aux_mat.at(r, r);
+        const value_type    diag { aux_mat.at(r, r) };
 
-        for (size_type c = 0; c < self_cols; ++c)  {
+        for (size_type c { 0 }; c < self_cols; ++c)  {
             aux_mat.at(r, c) /= diag;
             result.at(r, c) /= diag;
         }
 
-        for (size_type r2 = 0; r2 < self_rows; ++r2)  {
+        for (size_type r2 { 0 }; r2 < self_rows; ++r2)  {
             if (r2 != r)  {
-                const value_type    off_diag = aux_mat.at(r2, r);
+                const value_type    off_diag { aux_mat.at(r2, r) };
 
-                for (size_type c = 0; c < self_cols; ++c)  {
+                for (size_type c { 0 }; c < self_cols; ++c)  {
                     aux_mat.at(r2, c) -= off_diag * aux_mat.at(r, c);
                     result.at(r2, c) -= off_diag * result.at(r, c);
                 }
@@ -588,13 +615,14 @@ template<typename T,  matrix_orient MO, bool IS_SYM>
 inline Matrix<T, MO, IS_SYM> &
 Matrix<T, MO, IS_SYM>::self_scale(value_type factor) noexcept  {
 
-    const size_type msize = matrix_.size();
-    const long      thread_level =
-        (msize >= 500L) ? ThreadGranularity::get_thread_level() : 0;
+    const size_type msize { size_type(matrix_.size()) };
+    const long      thread_level {
+        (msize >= 500L) ? ThreadGranularity::get_thread_level() : 0
+    };
     auto            lbd =
         [factor, this]
         (auto begin, auto end) -> void  {
-            for (size_type i = begin; i < end; ++i)
+            for (size_type i { begin }; i < end; ++i)
                 matrix_[i] *= factor;
         };
 
@@ -618,7 +646,7 @@ template<typename T,  matrix_orient MO, bool IS_SYM>
 inline Matrix<T, MO, IS_SYM>
 Matrix<T, MO, IS_SYM>::scale(value_type factor) const noexcept  {
 
-    Matrix  result = *this;
+    Matrix  result { *this };
 
     result.self_scale(factor);
     return (result);
@@ -642,7 +670,7 @@ apply(std::function<value_type (const value_type &)> &&fn) const  {
 
     using func_t = std::function<value_type (const value_type &)>;
 
-    Matrix  result = *this;
+    Matrix  result { *this };
 
     result.self_apply(std::forward<func_t>(fn));
     return (result);
@@ -655,19 +683,19 @@ inline Matrix<T, MO, IS_SYM> &
 Matrix<T, MO, IS_SYM>::rref(size_type &rank) noexcept  {
 
     rank = 0;
-    for (size_type r = 0; r < rows(); ++r)  {
+    for (size_type r { 0 }; r < rows(); ++r)  {
         if (r >= cols() || ppivot_(r, rows(), cols()) == NOPOS_)
             break;
 
-        const value_type    diag = at(r, r);
+        const value_type    diag { at(r, r) };
 
-        for (size_type c = r; c < cols(); ++c)
+        for (size_type c { r }; c < cols(); ++c)
             at(r, c) /= diag;
 
-        for (size_type rr = r + 1; rr < rows(); ++rr)  {
-            const value_type    below_diag = at(rr, r);
+        for (size_type rr { r + 1 }; rr < rows(); ++rr)  {
+            const value_type    below_diag { at(rr, r) };
 
-            for (size_type c = r; c < cols(); ++c)
+            for (size_type c { r }; c < cols(); ++c)
                 at(rr, c) -= below_diag * at(r, c);
         }
         rank += 1;
@@ -697,18 +725,18 @@ Matrix<T, MO, IS_SYM>::norm() const noexcept  {
 
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = c + 1; r < rows(); ++r)  {
-                        const auto  val = at(r, c);
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { c + 1 }; r < rows(); ++r)  {
+                        const auto  val { at(r, c) };
 
                         result += val * val;
                     }
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = r + 1; c < cols(); ++c)  {
-                        const auto  val = at(r, c);
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { r + 1 }; c < cols(); ++c)  {
+                        const auto  val { at(r, c) };
 
                         result += val * val;
                     }
@@ -716,26 +744,26 @@ Matrix<T, MO, IS_SYM>::norm() const noexcept  {
             }
 
             result *= T(2);
-            for (size_type c = begin; c < end; ++c)  {
-                const auto  val = at(c, c);
+            for (size_type c { begin }; c < end; ++c)  {
+                const auto  val { at(c, c) };
 
                 result += val * val;
             }
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = 0; r < rows(); ++r)  {
-                        const auto  val = at(r, c);
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { 0 }; r < rows(); ++r)  {
+                        const auto  val { at(r, c) };
 
                         result += val * val;
                     }
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = 0; c < cols(); ++c)  {
-                        const auto  val = at(r, c);
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { 0 }; c < cols(); ++c)  {
+                        const auto  val { at(r, c) };
 
                         result += val * val;
                     }
@@ -744,23 +772,26 @@ Matrix<T, MO, IS_SYM>::norm() const noexcept  {
         }
         return (result);
     };
-    const long  thread_level =
+    const long  thread_level {
         (cols() >= 500L || rows() >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
     value_type  result { 0 };
 
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  result += fut.get();
         }
         else  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, rows(), std::move(lbd));
+                    0L, rows(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  result += fut.get();
         }
@@ -786,51 +817,54 @@ Matrix<T, MO, IS_SYM>::mean() const noexcept  {
 
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)
-                    for (size_type r = c + 1; r < rows(); ++r)
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { c + 1 }; r < rows(); ++r)
                         result += at(r, c);
             }
             else  {
-                for (size_type r = begin; r < end; ++r)
-                    for (size_type c = r + 1; c < cols(); ++c)
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { r + 1 }; c < cols(); ++c)
                         result += at(r, c);
             }
 
             result *= T(2);
-            for (size_type c = begin; c < end; ++c)
+            for (size_type c { begin }; c < end; ++c)
                 result += at(c, c);
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)
-                    for (size_type r = 0; r < rows(); ++r)
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { 0 }; r < rows(); ++r)
                         result += at(r, c);
             }
             else  {
-                for (size_type r = begin; r < end; ++r)
-                    for (size_type c = 0; c < cols(); ++c)
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { 0 }; c < cols(); ++c)
                         result += at(r, c);
             }
         }
         return (result);
     };
-    const long  thread_level =
+    const long  thread_level {
         (cols() >= 500L || rows() >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
     value_type  result { 0 };
 
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  result += fut.get();
         }
         else  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, rows(), std::move(lbd));
+                    0L, rows(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  result += fut.get();
         }
@@ -853,15 +887,15 @@ Matrix<T, MO, IS_SYM>::degree_matrix() const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (rows() != cols())
-        throw NotFeasible("Matrix::degree_matrix(): Matrix must be squared");
+        throw NotFeasible("Matrix::degree_matrix(): Matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix  result { cols(), cols(), T(0) };
 
-    for (size_type r = 0; r < rows(); ++r)  {
+    for (size_type r { 0 }; r < rows(); ++r)  {
         value_type  connections { 0 };
 
-        for (size_type c = 0; c < cols(); ++c)
+        for (size_type c { 0 }; c < cols(); ++c)
             connections += at(r, c);
         result[r, r] = connections;
     }
@@ -887,12 +921,12 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
 
     Matrix<T, matrix_orient::row_major> ortho { 1, e_vecs.cols() };
 
-    for (size_type c = 1; c <= e_vecs.cols() - 2; ++c)  {
+    for (size_type c { 1 }; c <= e_vecs.cols() - 2; ++c)  {
         value_type  scale { 0 };
 
         // Scale column.
         //
-        for (size_type r = c; r <= e_vecs.rows() - 1; ++r)
+        for (size_type r { c }; r <= e_vecs.rows() - 1; ++r)
             scale += std::abs(hess_form[r, c - 1]);
 
         if (scale != T(0))  {
@@ -900,15 +934,16 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
 
             // Compute Householder transformation.
             //
-            for (size_type cc = e_vecs.cols() - 1; cc >= c; --cc)  {
-                const auto  val = hess_form[cc, c - 1] / scale;
+            for (size_type cc ={ e_vecs.cols() - 1 }; cc >= c; --cc)  {
+                const auto  val { hess_form[cc, c - 1] / scale };
 
                 ortho[0, cc] = val;
                 h += val * val;
             }
 
-            const value_type    g =
-                ortho[0, c] > T(0) ? -std::sqrt(h) : std::sqrt(h);
+            const value_type    g {
+                ortho[0, c] > T(0) ? -std::sqrt(h) : std::sqrt(h)
+            };
 
             h -= ortho[0, c] * g;
             ortho[0, c] -= g;
@@ -916,25 +951,25 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
             // Apply Householder similarity transformation
             // H = (I - u * u' / h) * H * (I - u * u') / h)
             //
-            for (size_type cc = c; cc < e_vecs.cols(); ++cc)  {
+            for (size_type cc { c }; cc < e_vecs.cols(); ++cc)  {
                 value_type  f { 0 };
 
-                for (size_type r = e_vecs.rows() - 1; r >= c; --r)
+                for (size_type r { e_vecs.rows() - 1 }; r >= c; --r)
                     f += ortho[0, r] * hess_form[r, cc];
                 f /= h;
 
-                for (size_type r = c; r <= e_vecs.rows() - 1; ++r)
+                for (size_type r { c }; r <= e_vecs.rows() - 1; ++r)
                     hess_form[r, cc] -= f * ortho[0, r];
             }
 
-            for (size_type r = 0; r <= e_vecs.rows() - 1; ++r)  {
+            for (size_type r { 0 }; r <= e_vecs.rows() - 1; ++r)  {
                 value_type  f { 0 };
 
-                for (size_type cc = e_vecs.cols() - 1; cc >= c; --cc)
+                for (size_type cc { e_vecs.cols() - 1 }; cc >= c; --cc)
                     f += ortho[0, cc] * hess_form[r, cc];
                 f /= h;
 
-                for (size_type cc = c; cc <= e_vecs.cols() - 1; ++cc)
+                for (size_type cc { c }; cc <= e_vecs.cols() - 1; ++cc)
                     hess_form[r, cc] -= f * ortho[0, cc];
             }
 
@@ -945,25 +980,25 @@ red_to_hessenberg_(MA1 &e_vecs, MA2 &hess_form) noexcept  {
 
     // Accumulate transformations (Algol's ortran).
     //
-    for (size_type r = 0; r < e_vecs.rows(); ++r)
-        for (size_type c = 0; c < e_vecs.cols(); ++c)
+    for (size_type r { 0 }; r < e_vecs.rows(); ++r)
+        for (size_type c { 0 }; c < e_vecs.cols(); ++c)
             e_vecs[r, c] = r == c ? T(1) : T(0);
 
-    for (size_type c = e_vecs.cols() - 2; c >= 1; --c)
+    for (size_type c { e_vecs.cols() - 2 }; c >= 1; --c)
         if (hess_form[c, c - 1] != T(0))  {
-            for (size_type r = c + 1; r <= e_vecs.rows() - 1; ++r)
+            for (size_type r { c + 1 }; r <= e_vecs.rows() - 1; ++r)
                 ortho[0, r] = hess_form[r, c - 1];
 
-            for (size_type cc = c; cc <= e_vecs.cols() - 1; ++cc)  {
+            for (size_type cc { c }; cc <= e_vecs.cols() - 1; ++cc)  {
                 value_type  g { 0 };
 
-                for (size_type r = c; r <= e_vecs.rows() - 1; ++r)
+                for (size_type r { c }; r <= e_vecs.rows() - 1; ++r)
                     g += ortho[0, r] * e_vecs[r, cc];
 
                 // Double division avoids possible underflow
                 //
                 g = (g / ortho[0, c]) / hess_form[c, c - 1];
-                for (size_type r = c; r <= e_vecs.rows() - 1; ++r)
+                for (size_type r { c }; r <= e_vecs.rows() - 1; ++r)
                     e_vecs[r, cc] += g * ortho[0, r];
             }
         }
@@ -985,8 +1020,8 @@ hessenberg_to_schur_(MA1 &e_vecs,
     //
     value_type  norm { 0 };
 
-    for (size_type r = 0; r < e_vecs.rows(); ++r)
-        for (size_type c = r; c < e_vecs.cols(); ++c)
+    for (size_type r { 0 }; r < e_vecs.rows(); ++r)
+        for (size_type c { r }; c < e_vecs.cols(); ++c)
             norm += std::abs(hess_form(r, c));
 
     size_type   iter { 0 };
@@ -1059,7 +1094,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
                 // Row modification
                 //
-                for (size_type c = n - 1; c < e_vecs.cols (); ++c)  {
+                for (size_type c { n - 1 }; c < e_vecs.cols (); ++c)  {
                     const value_type    &cref { hess_form(n - 1, c) };
 
                     hess_form(n - 1, c) = q * cref + p * hess_form(n, c);
@@ -1068,7 +1103,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
                 // Column modification
                 //
-                for (size_type r = 0; r <= n; ++r)  {
+                for (size_type r { 0 }; r <= n; ++r)  {
                     const value_type    &cref { hess_form(r, n - 1) };
 
                     hess_form(r, n - 1) = q * cref + p * hess_form(r, n);
@@ -1077,7 +1112,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
                 // Accumulate transformations
                 //
-                for (size_type r = 0; r <= e_vecs.rows() - 1; ++r)  {
+                for (size_type r { 0 }; r <= e_vecs.rows() - 1; ++r)  {
                     const value_type    &cref { e_vecs(r, n - 1) };
 
                     e_vecs(r, n - 1) = q * cref + p * e_vecs(r, n);
@@ -1110,7 +1145,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
             //
             if (iter == 10)  {
                 exshift += x;
-                for (size_type r = 0; r <= n; ++r)
+                for (size_type r { 0 }; r <= n; ++r)
                     hess_form(r, r) -= x;
 
                 s = std::abs(hess_form(n, n - 1)) +
@@ -1129,7 +1164,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
                     s = y < x ? -std::sqrt(s) : std::sqrt(s);
                     s = x - w / ((y - x) / T(2) + s);
 
-                    for (size_type r = 0; r <= n; ++r)
+                    for (size_type r { 0 }; r <= n; ++r)
                         hess_form(r, r) -= s;
 
                     exshift += s;
@@ -1172,7 +1207,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
                 m -= 1;
             }
 
-            for (size_type r = m + 2; r <= n; ++r)  {
+            for (size_type r { m + 2 }; r <= n; ++r)  {
                 hess_form (r, r - 2) = 0;
 
                 if (r > m + 2)
@@ -1181,7 +1216,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
             // Double QR step involving rows l to n and columns m to n
             //
-            for (size_type k = m; k <= n - 1; ++k)  {
+            for (size_type k { m }; k <= n - 1; ++k)  {
                 const bool  notlast { k != n - 1 };
 
                 if (k != m)  {
@@ -1218,7 +1253,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
                     // Row modification
                     //
-                    for (size_type c = k; c < e_vecs.cols(); ++c)  {
+                    for (size_type c { k }; c < e_vecs.cols(); ++c)  {
                         p = hess_form(k, c) + q * hess_form(k + 1, c);
 
                         if (notlast)  {
@@ -1232,7 +1267,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
                     // Column modification
                     //
-                    for (size_type r = 0;
+                    for (size_type r { 0 };
                          r <= std::min(n, k + 3); ++r)  {
                         p = x * hess_form(r, k) + y * hess_form(r, k + 1);
 
@@ -1247,7 +1282,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
                     // Accumulate transformations
                     //
-                    for (size_type r = 0; r <= e_vecs.rows () - 1; ++r)  {
+                    for (size_type r { 0 }; r <= e_vecs.rows () - 1; ++r)  {
                         p = x * e_vecs(r, k) + y * e_vecs(r, k + 1);
 
                         if (notlast)  {
@@ -1268,7 +1303,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
     // Backsubstitute to find vectors of upper triangular form
     //
-    for (size_type c = e_vecs.cols() - 1; c >= 0; --c)  {
+    for (size_type c { e_vecs.cols() - 1 }; c >= 0; --c)  {
         p = e_vals(0, c);
         q = imagi(0, c);
 
@@ -1277,11 +1312,11 @@ hessenberg_to_schur_(MA1 &e_vecs,
 
             hess_form(c, c) = 1;
 
-            for (size_type r = c - 1; r >= 0; --r)  {
+            for (size_type r { c - 1 }; r >= 0; --r)  {
                 const value_type    ww { hess_form(r, r) - p };
 
                 oo = 0;
-                for (size_type cc = l; cc <= c; ++cc)
+                for (size_type cc { l }; cc <= c; ++cc)
                     oo += hess_form(r, cc) * hess_form(cc, c);
 
                 if (imagi(0, r) < T(0))  {
@@ -1315,7 +1350,7 @@ hessenberg_to_schur_(MA1 &e_vecs,
                     const value_type    t { std::abs(hess_form(r, c)) };
 
                     if ((value_type(EPSILON_) * t * t) > T(1))
-                        for (size_type rr = r; rr <= c; ++rr)
+                        for (size_type rr { r }; rr <= c; ++rr)
                             hess_form(rr, c) /= t;
                 }
             }
@@ -1347,11 +1382,11 @@ hessenberg_to_schur_(MA1 &e_vecs,
             hess_form(c, c - 1) = 0;
             hess_form(c, c) = 1;
 
-            for (size_type r = c - 2; r >= 0; --r)  {
+            for (size_type r { c - 2 }; r >= 0; --r)  {
                 value_type  ra { 0 };
                 value_type  sa { 0 };
 
-                for (size_type cc = l; cc <= c; ++cc)  {
+                for (size_type cc { l }; cc <= c; ++cc)  {
                     ra += hess_form(r, cc) * hess_form(cc, c - 1);
                     sa += hess_form(r, cc) * hess_form(cc, c);
                 }
@@ -1375,11 +1410,13 @@ hessenberg_to_schur_(MA1 &e_vecs,
                         const value_type    &xx { hess_form(r, r + 1) };
                         const value_type    &yy { hess_form(r + 1, r) };
                         const value_type    vi {
-                            (e_vals (0, r) - p) * T(2.0) * q };
+                            (e_vals (0, r) - p) * T(2.0) * q
+                        };
                         value_type          vr {
                             (e_vals (0, r) - p) * (e_vals (0, r) - p) +
                             imagi (0, r) * imagi (0, r) -
-                            q * q };
+                            q * q
+                        };
 
                         if (vr == T(0) && vi == T(0))
                             vr = value_type(EPSILON_) *
@@ -1424,10 +1461,11 @@ hessenberg_to_schur_(MA1 &e_vecs,
                    //
                     const value_type    t {
                         std::max(std::abs(hess_form (r, c - 1)),
-                                 std::abs(hess_form (r, c))) };
+                                 std::abs(hess_form (r, c)))
+                    };
 
                     if (value_type(EPSILON_) * t * t > 1)
-                        for (size_type rr = r; rr <= c; ++rr)  {
+                        for (size_type rr { r }; rr <= c; ++rr)  {
                             hess_form(rr, c - 1) /= t;
                             hess_form(rr, c) /= t;
                         }
@@ -1439,10 +1477,10 @@ hessenberg_to_schur_(MA1 &e_vecs,
     // Back transformation to get eigenvectors of original matrix
     //
     for (size_type c { e_vecs.cols() - 1 }; c >= 0; --c)
-        for (size_type r = 0; r <= e_vecs.rows() - 1; ++r)  {
+        for (size_type r { 0 }; r <= e_vecs.rows() - 1; ++r)  {
             z = 0;
 
-            for (size_type k = 0; k <= std::min(c, e_vecs.cols() - 1); ++k)
+            for (size_type k { 0 }; k <= std::min(c, e_vecs.cols() - 1); ++k)
                 z += e_vecs(r, k) * hess_form(k, c);
 
             e_vecs(r, c) = z;
@@ -1487,19 +1525,19 @@ template<typename MA1, typename MA2, typename MA3>
 void Matrix<T, MO, IS_SYM>::
 tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
-    for (size_type r = e_vecs.rows() - 1; r > 0; --r)  {
+    for (size_type r { e_vecs.rows() - 1 }; r > 0; --r)  {
         // Scale to avoid under/overflow.
         //
         value_type  scale { 0 };
 
-        for (size_type c = 0; c < r; ++c)
+        for (size_type c { 0 }; c < r; ++c)
             scale += std::abs(e_vals(0, c));
 
         value_type  h { 0 };
 
         if (scale == T(0))  {
             imagi(0, r) = e_vals(0, r - 1);
-            for (size_type c = 0; c < r; ++c)  {
+            for (size_type c { 0 }; c < r; ++c)  {
                 e_vals(0, c) = e_vecs(r - 1, c);
                 e_vecs(r, c) = 0;
                 e_vecs(c, r) = 0;
@@ -1508,7 +1546,7 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
         else  {
             // Generate Householder vector.
             //
-            for (size_type c = 0; c < r; ++c)  {
+            for (size_type c { 0 }; c < r; ++c)  {
                 e_vals(0, c) /= scale;
                 h += e_vals(0, c) * e_vals(0, c);
             }
@@ -1520,18 +1558,18 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
             h -= f * g;
             e_vals(0, r - 1) = f - g;
 
-            for (size_type c = 0; c < r; ++c)
+            for (size_type c { 0 }; c < r; ++c)
                 imagi (0, c) = 0;
 
             // Apply similarity transformation to remaining columns.
             //
-            for (size_type c = 0; c < r; ++c)  {
+            for (size_type c { 0 }; c < r; ++c)  {
                 const value_type    &ff { e_vals(0, c) };
 
                 e_vecs(c, r) = ff;
                 g = imagi(0, c) + e_vecs(c, c) * ff;
 
-                for (size_type cc = c + 1; cc <= r - 1; ++cc)  {
+                for (size_type cc { c + 1 }; cc <= r - 1; ++cc)  {
                     g += e_vecs(cc, c) * e_vals(0, cc);
                     imagi(0, cc) += e_vecs(cc, c) * ff;
                 }
@@ -1540,18 +1578,18 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
             value_type  ff { 0 };
 
-            for (size_type c = 0; c < r; ++c)  {
+            for (size_type c { 0 }; c < r; ++c)  {
                 imagi(0, c) /= h;
                 ff += imagi(0, c) * e_vals(0, c);
             }
 
             const value_type    hh { ff / (h + h) };
 
-            for (size_type c = 0; c < r; ++c)
+            for (size_type c { 0 }; c < r; ++c)
                 imagi(0, c) -= hh * e_vals(0, c);
 
-            for (size_type c = 0; c < r; ++c)  {
-                for (size_type cc = c; cc <= r - 1; ++cc)
+            for (size_type c { 0 }; c < r; ++c)  {
+                for (size_type cc { c }; cc <= r - 1; ++cc)
                     e_vecs(cc, c) -= e_vals(0, c) * imagi(0, cc) +
                                      imagi(0, c) * e_vals(0, cc);
 
@@ -1565,31 +1603,31 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
     // Accumulate transformations.
     //
-    for (size_type r = 0; r < e_vecs.rows() - 1; ++r)  {
+    for (size_type r { 0 }; r < e_vecs.rows() - 1; ++r)  {
         e_vecs(e_vecs.rows() - 1, r) = e_vecs(r, r);
         e_vecs(r, r) = 1;
 
-        const value_type    &h = e_vals(0, r + 1);
+        const value_type    &h { e_vals(0, r + 1) };
 
         if (h != T(0))  {
-            for (size_type c = 0; c <= r; ++c)
+            for (size_type c { 0 }; c <= r; ++c)
                 e_vals(0, c) = e_vecs(c, r + 1) / h;
 
-            for (size_type c = 0; c <= r; ++c)  {
+            for (size_type c { 0 }; c <= r; ++c)  {
                 value_type  g { 0 };
 
-                for (size_type rr = 0; rr <= r; ++rr)
+                for (size_type rr { 0 }; rr <= r; ++rr)
                     g += e_vecs(rr, r + 1) * e_vecs(rr, c);
 
-                for (size_type rr = 0; rr <= r; ++rr)
+                for (size_type rr { 0 }; rr <= r; ++rr)
                     e_vecs(rr, c) -= g * e_vals(0, rr);
             }
         }
-        for (size_type rr = 0; rr <= r; ++rr)
+        for (size_type rr { 0 }; rr <= r; ++rr)
             e_vecs(rr, r + 1) = 0;
     }
 
-    for (size_type c = 0; c < e_vecs.cols(); ++c)  {
+    for (size_type c { 0 }; c < e_vecs.cols(); ++c)  {
         e_vals(0, c) = e_vecs(e_vecs.rows() - 1, c);
         e_vecs(e_vecs.rows() - 1, c) = 0;
     }
@@ -1606,18 +1644,17 @@ template<typename MA1, typename MA2, typename MA3>
 void Matrix<T, MO, IS_SYM>::
 diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
-    for (size_type c = 1; c < e_vecs.cols(); ++c)
+    for (size_type c { 1 }; c < e_vecs.cols(); ++c)
         imagi(0, c - 1) = imagi(0, c);
     imagi(0, e_vecs.cols() - 1) = 0;
 
     value_type  f { 0 };
     value_type  tst1 { 0 };
 
-    for (size_type c = 0; c < e_vecs.cols(); ++c)  {
+    for (size_type c { 0 }; c < e_vecs.cols(); ++c)  {
         // Find small subdiagonal element
         //
-        tst1 =
-            std::max(tst1, std::abs(e_vals(0, c)) + std::abs(imagi(0, c)));
+        tst1 = std::max(tst1, std::abs(e_vals(0, c)) + std::abs(imagi(0, c)));
 
         size_type   m { c };
 
@@ -1635,13 +1672,11 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
                // Compute implicit shift
                //
                 value_type  g { e_vals (0, c) };
-                value_type  p { (e_vals(0, c + 1) - g) /
-                                (T(2) * imagi(0, c)) };
+                value_type  p { (e_vals(0, c + 1) - g) / (T(2) * imagi(0, c)) };
 
                 // Euclidean distance func
                 //
-                value_type  dis =
-                    { p < T(0) ? -hypot(p, T(1)) : hypot(p, T(1)) };
+                value_type  dis { p < T(0) ? -hypot(p, T(1)) : hypot(p, T(1)) };
 
                 e_vals(0, c) = imagi(0, c) / (p + dis);
                 e_vals(0, c + 1) = imagi(0, c) * (p + dis);
@@ -1649,7 +1684,7 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
                 const value_type    dl1 { e_vals(0, c + 1) };
                 value_type          h { g - e_vals(0, c) };
 
-                for (size_type cc = c + 2; cc < e_vecs.cols(); ++cc)
+                for (size_type cc { c + 2 }; cc < e_vecs.cols(); ++cc)
                     e_vals(0, cc) -= h;
 
                 f += h;
@@ -1665,7 +1700,7 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
                 value_type  s { 0 };
                 value_type  s2 { 0 };
 
-                for (size_type cc = m - 1; cc >= c; --cc)  {
+                for (size_type cc { m - 1 }; cc >= c; --cc)  {
                     c3 = c2;
                     c2 = cunit;
                     s2 = s;
@@ -1681,7 +1716,7 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
                     // Accumulate transformation.
                     //
-                    for (size_type r = 0; r < e_vecs.rows (); ++r)  {
+                    for (size_type r { 0 }; r < e_vecs.rows (); ++r)  {
                         h = e_vecs(r, cc + 1);
                         e_vecs(r, cc + 1) = s * e_vecs(r, cc) + cunit * h;
                         e_vecs(r, cc) = cunit * e_vecs(r, cc) - s * h;
@@ -1713,7 +1748,7 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square() || cols() < 2)
-        throw NotFeasible("Matrix::eigen_space(): Matrix must be squared");
+        throw NotFeasible("Matrix::eigen_space(): Matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     MA1     tmp_evals { 1, cols() };
@@ -1721,11 +1756,11 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
     Matrix  imagi { 1, cols() }; // Imaginary part
 
     if (is_symmetric())  {
-        for (size_type r = 0; r < rows(); ++r)
-            for (size_type c = 0; c < cols(); ++c)
+        for (size_type r { 0 }; r < rows(); ++r)
+            for (size_type c { 0 }; c < cols(); ++c)
                 tmp_evecs(r, c) = at(r, c);
 
-        for (size_type c = 0; c < cols(); ++c)
+        for (size_type c { 0 }; c < cols(); ++c)
             tmp_evals(0, c) = at(rows() - 1, c);
 
         tridiagonalize_(tmp_evecs, tmp_evals, imagi);
@@ -1734,8 +1769,8 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
     else  {
         Matrix  hess_form { rows(), cols() };
 
-        for (size_type r = 0; r < rows(); ++r)
-            for (size_type c = 0; c < cols(); ++c)
+        for (size_type r { 0 }; r < rows(); ++r)
+            for (size_type c { 0 }; c < cols(); ++c)
                 hess_form(r, c) = at(r, c);
 
         red_to_hessenberg_(tmp_evecs, hess_form);
@@ -1743,12 +1778,12 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
     }
 
     if (sort_values)  {
-        for (size_type c = 0; c < cols() - 1; ++c)  {
+        for (size_type c { 0 }; c < cols() - 1; ++c)  {
             size_type   min_col { c };
             value_type  abs_min_val { std::abs(tmp_evals(0, c)) };
             value_type  min_val { tmp_evals(0, c) };
 
-            for (size_type cc = c + 1; cc < cols(); ++cc)
+            for (size_type cc { c + 1 }; cc < cols(); ++cc)
                 if (std::abs(tmp_evals(0, cc)) < abs_min_val)  {
                     min_col = cc;
                     abs_min_val = std::abs(tmp_evals(0, cc));
@@ -1758,7 +1793,7 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
             if (min_col != c)  {
                 tmp_evals(0, min_col) = tmp_evals(0, c);
                 tmp_evals(0, c) = min_val;
-                for (size_type r = 0; r < rows(); ++r)  {
+                for (size_type r { 0 }; r < rows(); ++r)  {
                     min_val = tmp_evecs(r, c);
                     tmp_evecs(r, c) = tmp_evecs(r, min_col);
                     tmp_evecs(r, min_col) = min_val;
@@ -1778,7 +1813,7 @@ template<typename T,  matrix_orient MO, bool IS_SYM>
 typename Matrix<T, MO, IS_SYM>::scalar_ma_t Matrix<T, MO, IS_SYM>::
 covariance(bool is_unbiased) const  {
 
-    const data_t   denom = data_t(is_unbiased ? rows() - 1 : rows());
+    const data_t   denom { data_t(is_unbiased ? rows() - 1 : rows()) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (denom <= data_t(0) || cols() < 2)
@@ -1790,11 +1825,11 @@ covariance(bool is_unbiased) const  {
     if constexpr (! IS_MD)  {
         auto        lbd =
             [&result, this, denom](auto begin, auto end) -> void  {
-                for (size_type cr = begin; cr < end; ++cr)  {
+                for (size_type cr { begin }; cr < end; ++cr)  {
                     value_type  mean;
 
                     zero_out_(mean);
-                    for (size_type r = 0; r < rows(); ++r)
+                    for (size_type r { 0 }; r < rows(); ++r)
                         mean += at(r, cr);
                     mean /= data_t(rows());
 
@@ -1886,7 +1921,7 @@ covariance(bool is_unbiased) const  {
                                     xr_cr[di] - mean_cr[di]
                                 };
 
-                                for (size_type dj = 0; dj < dim; ++dj)
+                                for (size_type dj { 0 }; dj < dim; ++dj)
                                     outer[di * dim + dj] +=
                                         delta_cr * (xr_c[dj] - mean_c[dj]);
                             }
@@ -1895,8 +1930,8 @@ covariance(bool is_unbiased) const  {
                         // Write the accumulated block and its symmetric
                         // counterpart into the result matrix.
                         //
-                        for (size_type di = 0; di < dim; ++di)
-                            for (size_type dj = 0; dj < dim; ++dj)  {
+                        for (size_type di { 0 }; di < dim; ++di)
+                            for (size_type dj { 0 }; dj < dim; ++dj)  {
                                 const data_t    val {
                                     outer[di * dim + dj] / denom
                                 };
@@ -1907,17 +1942,19 @@ covariance(bool is_unbiased) const  {
                     }
                 }
             };
-        const long  thread_level =
+        const long  thread_level {
             (cols() >= 20L || rows() >= 100'000L)
-                ? ThreadGranularity::get_thread_level() : 0;
+                ? ThreadGranularity::get_thread_level() : 0
+        };
 
         const size_type result_dim { cols() * dim };
 
         result.resize(result_dim, result_dim, data_t(0));
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -1941,51 +1978,52 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
         throw NotFeasible("Matrix::svd(): Matrix is too small");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    Matrix                  self_tmp = *this;
-    MA1                     u_tmp(rows(), min_dem);
+    Matrix                  self_tmp { *this };
+    MA1                     u_tmp { rows(), min_dem };
     std::vector<value_type> s_tmp(std::min(rows() + 1, cols()));
-    MA3                     v_tmp(cols(), cols());
-    Matrix                  imagi(1, cols()); // Imaginary part
+    MA3                     v_tmp { cols(), cols() };
+    Matrix                  imagi { 1, cols() }; // Imaginary part
     std::vector<value_type> sandbox(rows());
     const size_type         min_col_cnt { std::min(rows() - 1, cols()) };
     const size_type         max_row_cnt {
-        std::max(0L, std::min(cols() - 2, rows())) };
+        std::max(0L, std::min(cols() - 2, rows()))
+    };
 
     // Reduce A to bidiagonal form, storing the diagonal elements
     // in s and the super-diagonal elements in e.
     //
-    for (size_type c = 0; c < std::max(min_col_cnt, max_row_cnt); ++c)  {
+    for (size_type c { 0 }; c < std::max(min_col_cnt, max_row_cnt); ++c)  {
         if (c < min_col_cnt)  {
            // Compute the transformation for the k-th column and
            // place the k-th diagonal in S (0, c).
            // Compute 2-norm of k-th column without under / overflow.
            //
             s_tmp[c] = 0;
-            for (size_type r = c; r < rows(); ++r)
+            for (size_type r { c }; r < rows(); ++r)
                 s_tmp[c] = hypot(s_tmp[c], self_tmp(r, c));
 
             if (s_tmp[c] != T(0))  {
                 if (self_tmp(c, c) < T(0))
                     s_tmp[c] = -s_tmp[c];
 
-                for (size_type r = c; r < rows(); ++r)
+                for (size_type r { c }; r < rows(); ++r)
                     self_tmp(r, c) /= s_tmp[c];
 
                 self_tmp(c, c) += 1;
             }
             s_tmp[c] = -s_tmp[c];
         }
-        for (size_type cc = c + 1; cc < cols(); ++cc)  {
+        for (size_type cc { c + 1 }; cc < cols(); ++cc)  {
             if (c < min_col_cnt && s_tmp[c] != T(0))  {
                 // Apply the transformation.
                 //
                 value_type  t { 0 };
 
-                for (size_type r = c; r < rows(); ++r)
+                for (size_type r { c }; r < rows(); ++r)
                     t += self_tmp(r, c) * self_tmp(r, cc);
 
                 t /= -self_tmp(c, c);
-                for (size_type r = c; r < rows(); ++r)
+                for (size_type r { c }; r < rows(); ++r)
                     self_tmp(r, cc) += t * self_tmp(r, c);
 
             }
@@ -1999,7 +2037,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
             // Place the transformation in U for subsequent back
             // multiplication.
             //
-            for (size_type r = c; r < rows(); ++r)
+            for (size_type r { c }; r < rows(); ++r)
                 u_tmp(r, c) = self_tmp(r, c);
 
         if (c < max_row_cnt)  {
@@ -2009,14 +2047,14 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
             // Compute 2-norm without under / overflow.
             //
             imagi(0, c) = 0;
-            for (size_type cc = c + 1; cc < cols(); ++cc)
+            for (size_type cc { c + 1 }; cc < cols(); ++cc)
                 imagi(0, c) = hypot(imagi(0, c), imagi(0, cc));
 
             if (imagi(0, c) != T(0))  {
                 if (imagi(0, c + 1) < T(0))
                     imagi(0, c) = -imagi(0, c);
 
-                for (size_type cc = c + 1; cc < cols(); ++cc)
+                for (size_type cc { c + 1 }; cc < cols(); ++cc)
                     imagi(0, cc) /= imagi(0, c);
 
                 imagi(0, c + 1) += T(1);
@@ -2027,17 +2065,17 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
                 // Apply the transformation.
                 //
-                for (size_type r = c + 1; r < rows(); ++r)
+                for (size_type r { c + 1 }; r < rows(); ++r)
                     sandbox[r] = 0;
 
-                for (size_type cc = c + 1; cc < cols(); ++cc)
-                    for (size_type r = c + 1; r < rows(); ++r)
+                for (size_type cc { c + 1 }; cc < cols(); ++cc)
+                    for (size_type r { c + 1 }; r < rows(); ++r)
                         sandbox[r] += imagi(0, cc) * self_tmp(r, cc);
 
-                for (size_type cc = c + 1; cc < cols(); ++cc)  {
+                for (size_type cc { c + 1 }; cc < cols(); ++cc)  {
                     const value_type    t { -imagi(0, cc) / imagi(0, c + 1) };
 
-                    for (size_type r = c + 1; r < rows(); ++r)
+                    for (size_type r { c + 1 }; r < rows(); ++r)
                         self_tmp(r, cc) += t * sandbox[r];
                 }
             }
@@ -2045,7 +2083,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
             // Place the transformation in V for subsequent
             // back multiplication.
             //
-            for (size_type cc = c + 1; cc < cols(); ++cc)
+            for (size_type cc { c + 1 }; cc < cols(); ++cc)
                 v_tmp(cc, c) = imagi(0, cc);
         }
     }
@@ -2065,52 +2103,52 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
     imagi(0, p - 1) = 0;
 
-    for (size_type c = min_col_cnt; c < min_dem; ++c)  {
-        for (size_type r = 0; r < rows(); ++r)
+    for (size_type c { min_col_cnt }; c < min_dem; ++c)  {
+        for (size_type r { 0 }; r < rows(); ++r)
             u_tmp(r, c) = 0;
         u_tmp(c, c) = 1;
     }
 
-    for (size_type c = min_col_cnt - 1; c >= 0; --c)  {
+    for (size_type c { min_col_cnt - 1 }; c >= 0; --c)  {
         if (s_tmp[c] != T(0))  {
-            for (size_type cc = c + 1; cc < min_dem; ++cc)  {
+            for (size_type cc { c + 1 }; cc < min_dem; ++cc)  {
                 value_type  t { 0 };
 
-                for (size_type r = c; r < rows(); ++r)
+                for (size_type r { c }; r < rows(); ++r)
                     t += u_tmp(r, c) * u_tmp(r, cc);
 
                 t /= -u_tmp(c, c);
-                for (size_type r = c; r < rows(); ++r)
+                for (size_type r { c }; r < rows(); ++r)
                     u_tmp(r, cc) += t * u_tmp(r, c);
             }
-            for (size_type r = c; r < rows(); ++r )
+            for (size_type r { c }; r < rows(); ++r )
                 u_tmp(r, c) = -u_tmp(r, c);
 
             u_tmp(c, c) += T(1);
-            for (size_type r = 0; r < c - 1; ++r)
+            for (size_type r { 0 }; r < c - 1; ++r)
                 u_tmp(r, c) = 0;
         }
         else  {
-            for (size_type r = 0; r < rows(); ++r)
+            for (size_type r { 0 }; r < rows(); ++r)
                 u_tmp(r, c) = 0;
             u_tmp(c, c) = 1;
         }
     }
 
-    for (size_type c = cols() - 1; c >= 0; --c)  {
+    for (size_type c { cols() - 1 }; c >= 0; --c)  {
         if ((c < max_row_cnt) && (imagi(0, c) != T(0)))
-            for (size_type cc = c + 1; cc < min_dem; ++cc)  {
+            for (size_type cc { c + 1 }; cc < min_dem; ++cc)  {
                 value_type  t { 0 };
 
-                for (size_type r = c + 1; r < cols(); ++r)
+                for (size_type r { c + 1 }; r < cols(); ++r)
                     t += v_tmp(r, c) * v_tmp(r, cc);
 
                 t /= -v_tmp(c + 1, c);
-                for (size_type r = c + 1; r < cols(); ++r)
+                for (size_type r { c + 1 }; r < cols(); ++r)
                     v_tmp(r, cc) += t * v_tmp(r, c);
             }
 
-        for (size_type r = 0; r < cols(); ++r)
+        for (size_type r { 0 }; r < cols(); ++r)
             v_tmp(r, c) = 0;
         v_tmp(c, c) = 1;
     }
@@ -2158,7 +2196,8 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
                 const value_type    t {
                     ks != p ? std::abs(imagi(0, ks)) : T(0) +
-                    ks != c + T(1) ? std::abs(imagi(0, ks - 1)) : T(0) };
+                    ks != c + T(1) ? std::abs(imagi(0, ks - 1)) : T(0)
+                };
 
                 if (std::abs(s_tmp[ks]) <= (value_type(EPSILON_) * t))  {
                     s_tmp[ks] = 0;
@@ -2186,7 +2225,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                 value_type  f { imagi(0, p - 2) };
 
                 imagi(0, p - 2) = 0;
-                for (size_type cc = p - 2; cc >= c; --cc)  {
+                for (size_type cc { p - 2 }; cc >= c; --cc)  {
                     value_type  t { hypot(s_tmp[cc], f) };
                     value_type  cs { s_tmp[cc] / t };
                     value_type  sn { f / t };
@@ -2197,7 +2236,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                         imagi(0, cc - 1) *= cs;
                     }
 
-                    for (size_type r = 0; r < cols(); ++r)  {
+                    for (size_type r { 0 }; r < cols(); ++r)  {
                         t = cs * v_tmp(r, cc) + sn * v_tmp(r, p - 1);
                         v_tmp(r, p - 1) =
                             -sn * v_tmp(r, cc) + cs * v_tmp(r, p - 1);
@@ -2214,7 +2253,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                 value_type  f { imagi(0, c - 1) };
 
                 imagi(0, c - 1) = T(0.0);
-                for (size_type cc = c; cc < p; ++cc)  {
+                for (size_type cc { c }; cc < p; ++cc)  {
                     value_type  t { hypot(s_tmp[cc], f) };
                     value_type  cs { s_tmp[cc] / t };
                     value_type  sn { f / t };
@@ -2223,7 +2262,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                     f = -sn * imagi(0, cc);
                     imagi(0, cc) *= cs;
 
-                    for (size_type r = 0; r < rows(); ++r)  {
+                    for (size_type r { 0 }; r < rows(); ++r)  {
                         t = cs * u_tmp(r, cc) + sn * u_tmp(r, c - 1);
                         u_tmp(r, c - 1) =
                             -sn * u_tmp(r, cc) + cs * u_tmp(r, c - 1);
@@ -2255,7 +2294,8 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                 const value_type    sk { s_tmp[c] / scale };
                 const value_type    ek { imagi(0, c) / scale };
                 const value_type    b {
-                    ((spm1 + sp) * (spm1 - sp) + epm1 * epm1) / T(2) };
+                    ((spm1 + sp) * (spm1 - sp) + epm1 * epm1) / T(2)
+                };
                 const value_type    dd { (sp * epm1) * (sp * epm1) };
                 value_type          shift { 0 };
 
@@ -2271,7 +2311,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
                 // Chase zeros.
                 //
-                for (size_type cc = c; cc < p - 1; ++cc)  {
+                for (size_type cc { c }; cc < p - 1; ++cc)  {
                     value_type  t { hypot(f, g) };
                     value_type  cs { f / t };
                     value_type  sn { g / t };
@@ -2284,7 +2324,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                     g = sn * s_tmp[cc + 1];
                     s_tmp[cc + 1] *= cs;
 
-                    for (size_type r = 0; r < cols(); ++r)  {
+                    for (size_type r { 0 }; r < cols(); ++r)  {
                         t = cs * v_tmp(r, cc) + sn * v_tmp(r, cc + 1);
                         v_tmp(r, cc + 1) =
                             -sn * v_tmp(r, cc) + cs * v_tmp(r, cc + 1);
@@ -2301,7 +2341,7 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                     imagi(0, cc + 1) = cs * imagi(0, cc + 1);
 
                     if (cc < rows() - 1)
-                        for (size_type r = 0; r < rows(); ++r)  {
+                        for (size_type r { 0 }; r < rows(); ++r)  {
                             t = cs * u_tmp(r, cc) + sn * u_tmp(r, cc + 1);
                             u_tmp(r, cc + 1) =
                                 -sn * u_tmp(r, cc) + cs * u_tmp(r, cc + 1);
@@ -2317,12 +2357,12 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
             //
             case 4:
             {
-               // Make the singular values positive.
-               //
+                // Make the singular values positive.
+                //
                 if (s_tmp[c] <= T(0))  {
                     s_tmp[c] = s_tmp [c] < T(0) ? -s_tmp[c] : T(0);
 
-                    for (size_type r = 0; r <= pp; ++r)
+                    for (size_type r { 0 }; r <= pp; ++r)
                         v_tmp(r, c) = -v_tmp(r, c);
                 }
 
@@ -2338,14 +2378,14 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
                     s_tmp[c + 1] = t;
 
                     if (c < cols() - 1)
-                        for (size_type r = 0; r < cols(); ++r) {
+                        for (size_type r { 0 }; r < cols(); ++r) {
                             t = v_tmp(r, c + 1);
                             v_tmp(r, c + 1) = v_tmp(r, c);
                             v_tmp(r, c) = t;
                         }
 
                     if (c < rows() - 1)
-                        for (size_type r = 0; r < rows(); ++r)  {
+                        for (size_type r { 0 }; r < rows(); ++r)  {
                             t = u_tmp(r, c + 1);
                             u_tmp(r, c + 1) = u_tmp(r, c);
                             u_tmp(r, c) = t;
@@ -2364,10 +2404,10 @@ svd(MA1 &U, MA2 &S, MA3 &V, bool full_size) const  {
 
     S.resize(s_tmp.size(), full_size ? s_tmp.size() : 1, T(0));
     if (full_size)
-        for (size_type i = 0; i < size_type(s_tmp.size()); ++i)
+        for (size_type i { 0 }; i < size_type(s_tmp.size()); ++i)
             S(i, i) = s_tmp[i];
     else
-        for (size_type i = 0; i < size_type(s_tmp.size()); ++i)
+        for (size_type i { 0 }; i < size_type(s_tmp.size()); ++i)
             S(i, 0) = s_tmp[i];
 
     V.swap(v_tmp);
@@ -2436,7 +2476,7 @@ ldlt(std::vector<T> &D, MA &L) const  {
         throw NotFeasible("Matrix::ldlt(): Matrix must be symmetric");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    std::vector<value_type> d_tmp (rows(), 0);
+    std::vector<value_type> d_tmp(rows(), 0);
     MA                      l_tmp { rows(), cols(), 0 };
 
     // Initialize L as identity
@@ -2480,7 +2520,7 @@ template<typename MA>
 Matrix<T, MO, IS_SYM> Matrix<T, MO, IS_SYM>::
 solve(const MA &rhs) const  {
 
-    constexpr bool  is_vec = is_std_vector_v<MA>;
+    constexpr bool  is_vec { is_std_vector_v<MA> };
 
     size_type   rhs_size;
 
@@ -2489,14 +2529,14 @@ solve(const MA &rhs) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square() || cols() != rhs_size)
-        throw NotFeasible("Matrix::solve(): Matrix must be squared and "
+        throw NotFeasible("Matrix::solve(): Matrix must be square and "
                           "compatible with rhs");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix<T, MO>   tmp { rows(), cols() + 1L };
 
-    for (size_type r = 0; r < rows(); ++r)  {
-        for (size_type c = 0; c < cols(); ++c)
+    for (size_type r { 0 }; r < rows(); ++r)  {
+        for (size_type c { 0 }; c < cols(); ++c)
             tmp(r, c) = at(r, c);
         if constexpr (is_vec)
             tmp(r, cols()) = rhs[r];
@@ -2513,9 +2553,9 @@ solve(const MA &rhs) const  {
 
     Matrix<T, MO>   sol { rhs_size, 1L };
 
-    for (size_type r = rows() - 1; r >= 0; --r)  {
+    for (size_type r { rows() - 1 }; r >= 0; --r)  {
         sol(r, 0) = tmp(r, cols());
-        for (size_type c = r + 1; c < cols(); ++c)
+        for (size_type c { r + 1 }; c < cols(); ++c)
             sol(r, 0) -= tmp(r, c) * sol(c, 0);
     }
 
@@ -2530,13 +2570,13 @@ solve() const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (rows() != (cols() - 1))
-        throw NotFeasible("Matrix::solve(): Matrix must be squared and "
+        throw NotFeasible("Matrix::solve(): Matrix must be square and "
                           "and last column is the rhs");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix  tmp { rows(), cols() };
-    for (size_type r = 0; r < rows(); ++r)  {
-        for (size_type c = 0; c < cols() - 1; ++c)
+    for (size_type r { 0 }; r < rows(); ++r)  {
+        for (size_type c { 0 }; c < cols() - 1; ++c)
             tmp(r, c) = at(r, c);
         tmp(r, cols() - 1) = at(r, cols() - 1);
     }
@@ -2550,9 +2590,9 @@ solve() const  {
 
     Matrix  sol { rows(), 1 };
 
-    for (size_type r = rows() - 1; r >= 0; --r)  {
+    for (size_type r { rows() - 1 }; r >= 0; --r)  {
         sol(r, 0) = tmp(r, cols() - 1);
-        for (size_type c = r + 1; c < cols() - 1; ++c)
+        for (size_type c { r + 1 }; c < cols() - 1; ++c)
             sol(r, 0) -= tmp(r, c) * sol(c, 0);
     }
 
@@ -2567,20 +2607,20 @@ Matrix<T, MO, IS_SYM>::determinant() const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square())
-        throw NotFeasible("Matrix::determinant(): Matrix must be squared");
+        throw NotFeasible("Matrix::determinant(): Matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const size_type sz = rows();
+    const size_type sz { rows() };
     value_type      result { 1 };
 
     if (sz == 2)  {
         result = at(0, 0) * at(1, 1) - at(0, 1) * at(1, 0);
     }
     else if (sz < 8)  {  // Cofacter way
-        Matrix  tmp = *this;
+        Matrix  tmp { *this };
 
-        for (size_type r = 0; r < sz; ++r)  {
-            const size_type indx = tmp.ppivot_(r, sz, sz);
+        for (size_type r { 0 }; r < sz; ++r)  {
+            const size_type indx { tmp.ppivot_(r, sz, sz) };
 
             if (indx == NOPOS_)
                 return (value_type(0));
@@ -2588,13 +2628,13 @@ Matrix<T, MO, IS_SYM>::determinant() const  {
             if (indx != 0)
                 result = -result;
 
-            const value_type    diag = tmp (r, r);
+            const value_type    diag { tmp (r, r) };
 
             result *= diag;
-            for (size_type rr = r + 1; rr < sz; ++rr)  {
-                const value_type    piv = tmp (rr, r) / diag;
+            for (size_type rr { r + 1 }; rr < sz; ++rr)  {
+                const value_type    piv { tmp (rr, r) / diag };
 
-                for (size_type c = r + 1; c < sz; ++c)
+                for (size_type c { r + 1 }; c < sz; ++c)
                     tmp (rr, c) -= piv * tmp (r, c);
             }
         }
@@ -2604,7 +2644,7 @@ Matrix<T, MO, IS_SYM>::determinant() const  {
         Matrix<T, matrix_orient::column_major>  U { sz, sz, 0 };
 
         lud(L, U);
-        for (size_type r = 0; r < sz; ++r)
+        for (size_type r { 0 }; r < sz; ++r)
             result *= U(r, r);
     }
 
@@ -2620,13 +2660,13 @@ get_minor (MA &mmatrix, size_type drow, size_type dcol) const noexcept  {
 
     mmatrix.resize(rows() - 1, cols() - 1, 0);
 
-    size_type   mrow = 0;
+    size_type   mrow { 0 };
 
-    for (size_type r = 0; r < rows(); ++r)  {
+    for (size_type r { 0 }; r < rows(); ++r)  {
         if (r != drow)  {
-            size_type   mcol = 0;
+            size_type   mcol { 0 };
 
-            for (size_type c = 0; c < cols(); ++c)  {
+            for (size_type c { 0 }; c < cols(); ++c)  {
                 if (c != dcol)
                     mmatrix(mrow, mcol++) = at(r, c);
             }
@@ -2646,7 +2686,7 @@ Matrix<T, MO, IS_SYM>::cofactor (size_type row, size_type column) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square())
-        throw NotFeasible("Matrix::cofactor(): Matrix must be squared");
+        throw NotFeasible("Matrix::cofactor(): Matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix<T, matrix_orient::row_major, IS_SYM> tmp;
@@ -2663,28 +2703,45 @@ inline MA &Matrix<T, MO, IS_SYM>::adjoint (MA &that) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square())
-        throw NotFeasible("Matrix::adjoint(): Matrix must be squared");
+        throw NotFeasible("Matrix::adjoint(): Matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     that.resize(rows(), cols());
 
-    auto        lbd =
+    auto        row_lbd =
         [&that, this](auto begin, auto end) -> void  {
-            for (size_type r = begin; r < end; ++r)
-                for (size_type c = begin; c < end; ++c)
+            for (size_type r { begin }; r < end; ++r)
+                for (size_type c { 0 }; c < cols(); ++c)
                     that(c, r) = cofactor(r, c);
         };
-    const long  thread_level =
-        (cols() >= 10L) ? ThreadGranularity::get_thread_level() : 0;
+    auto        col_lbd =
+        [&that, this](auto begin, auto end) -> void  {
+            for (size_type c { begin }; c < end; ++c)
+                for (size_type r { 0 }; r < cols(); ++r)
+                    that(c, r) = cofactor(r, c);
+        };
+    const long  thread_level {
+        (cols() >= 20L) ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
-        auto    futures =
-            ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                0L, cols(), std::move(lbd));
+        std::vector<std::future<void>>  futures;
+
+        if constexpr (MO == matrix_orient::column_major)
+            futures =
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(col_lbd));
+        else
+            futures =
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    0L, cols(), std::move(row_lbd));
 
         for (auto &fut : futures)  fut.get();
     }
-    else  lbd(0L, cols());
+    else  {
+        if constexpr (MO == matrix_orient::column_major)  col_lbd(0L, cols());
+        else  row_lbd(0L, cols());
+    }
 
     return (that);
 }
@@ -2694,14 +2751,14 @@ inline MA &Matrix<T, MO, IS_SYM>::adjoint (MA &that) const  {
 template<typename T,  matrix_orient MO, bool IS_SYM>
 void Matrix<T, MO, IS_SYM>::center() noexcept  {
 
-    for (size_type c = 0; c < cols(); ++c)  {
+    for (size_type c { 0 }; c < cols(); ++c)  {
         value_type  mean { 0 };
 
-        for (size_type r = 0; r < rows(); ++r)
+        for (size_type r { 0 }; r < rows(); ++r)
             mean += at(r, c);
         mean /= value_type(rows());
 
-        for (size_type r = 0; r < rows(); ++r)
+        for (size_type r { 0 }; r < rows(); ++r)
             at(r, c) -= mean;
     }
 
@@ -2716,13 +2773,13 @@ void Matrix<T, MO, IS_SYM>::get_centered(MA &cmatrix) const noexcept  {
 
     cmatrix.resize(rows(), cols(), 0);
     if constexpr (MO == matrix_orient::column_major)  {
-        for (size_type c = 0; c < cols(); ++c)
-            for (size_type r = 0; r < rows(); ++r)
+        for (size_type c { 0 }; c < cols(); ++c)
+            for (size_type r { 0 }; r < rows(); ++r)
                 cmatrix(r, c) = at(r, c);
     }
     else  {
-        for (size_type r = 0; r < rows(); ++r)
-            for (size_type c = 0; c < cols(); ++c)
+        for (size_type r { 0 }; r < rows(); ++r)
+            for (size_type c { 0 }; c < cols(); ++c)
                 cmatrix(r, c) = at(r, c);
     }
     cmatrix.center();
@@ -2739,18 +2796,18 @@ Matrix<T, MO, IS_SYM>::ew_square() noexcept  {
     auto        lbd = [this](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = c + 1; r < rows(); ++r)  {
-                        auto  &val = at(r, c);
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { c + 1 }; r < rows(); ++r)  {
+                        auto  &val { at(r, c) };
 
                         val *= val;
                     }
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = r + 1; c < cols(); ++c)  {
-                        auto  &val = at(r, c);
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { r + 1 }; c < cols(); ++c)  {
+                        auto  &val { at(r, c) };
 
                         val *= val;
                     }
@@ -2759,18 +2816,18 @@ Matrix<T, MO, IS_SYM>::ew_square() noexcept  {
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = 0; r < rows(); ++r)  {
-                        auto  &val = at(r, c);
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { 0 }; r < rows(); ++r)  {
+                        auto  &val { at(r, c) };
 
                         val *= val;
                     }
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = 0; c < cols(); ++c)  {
-                        auto  &val = at(r, c);
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { 0 }; c < cols(); ++c)  {
+                        auto  &val { at(r, c) };
 
                         val *= val;
                     }
@@ -2778,22 +2835,25 @@ Matrix<T, MO, IS_SYM>::ew_square() noexcept  {
             }
         }
     };
-    const long  thread_level =
+    const long  thread_level {
         (cols() >= 500L || rows() >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, rows(), std::move(lbd));
+                    0L, rows(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2817,18 +2877,18 @@ Matrix<T, MO, IS_SYM>::ew_cube() noexcept  {
     auto        lbd = [this](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = c + 1; r < rows(); ++r)  {
-                        auto  &val = at(r, c);
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { c + 1 }; r < rows(); ++r)  {
+                        auto  &val { at(r, c) };
 
                         val *= val * val;
                     }
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = r + 1; c < cols(); ++c)  {
-                        auto  &val = at(r, c);
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { r + 1 }; c < cols(); ++c)  {
+                        auto  &val { at(r, c) };
 
                         val *= val * val;
                     }
@@ -2837,18 +2897,18 @@ Matrix<T, MO, IS_SYM>::ew_cube() noexcept  {
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = 0; r < rows(); ++r)  {
-                        auto  &val = at(r, c);
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { 0 }; r < rows(); ++r)  {
+                        auto  &val { at(r, c) };
 
                         val *= val * val;
                     }
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = 0; c < cols(); ++c)  {
-                        auto  &val = at(r, c);
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { 0 }; c < cols(); ++c)  {
+                        auto  &val { at(r, c) };
 
                         val *= val * val;
                     }
@@ -2856,22 +2916,25 @@ Matrix<T, MO, IS_SYM>::ew_cube() noexcept  {
             }
         }
     };
-    const long  thread_level =
+    const long  thread_level {
         (cols() >= 500L || rows() >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, rows(), std::move(lbd));
+                    0L, rows(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2895,18 +2958,18 @@ Matrix<T, MO, IS_SYM>::ew_sqrt() noexcept  {
     auto        lbd = [this](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = c + 1; r < rows(); ++r)  {
-                        auto  &val = at(r, c);
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { c + 1 }; r < rows(); ++r)  {
+                        auto  &val { at(r, c) };
 
                         val = std::sqrt(val);
                     }
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = r + 1; c < cols(); ++c)  {
-                        auto  &val = at(r, c);
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { r + 1 }; c < cols(); ++c)  {
+                        auto  &val { at(r, c) };
 
                         val = std::sqrt(val);
                     }
@@ -2915,18 +2978,18 @@ Matrix<T, MO, IS_SYM>::ew_sqrt() noexcept  {
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = 0; r < rows(); ++r)  {
-                        auto  &val = at(r, c);
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { 0 }; r < rows(); ++r)  {
+                        auto  &val { at(r, c) };
 
                         val = std::sqrt(val);
                     }
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = 0; c < cols(); ++c)  {
-                        auto  &val = at(r, c);
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { 0 }; c < cols(); ++c)  {
+                        auto  &val { at(r, c) };
 
                         val = std::sqrt(val);
                     }
@@ -2934,22 +2997,25 @@ Matrix<T, MO, IS_SYM>::ew_sqrt() noexcept  {
             }
         }
     };
-    const long  thread_level =
+    const long  thread_level {
         (cols() >= 500L || rows() >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, rows(), std::move(lbd));
+                    0L, rows(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2973,18 +3039,18 @@ Matrix<T, MO, IS_SYM>::ew_tanh() noexcept  {
     auto        lbd = [this](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = c + 1; r < rows(); ++r)  {
-                        auto  &val = at(r, c);
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { c + 1 }; r < rows(); ++r)  {
+                        auto  &val { at(r, c) };
 
                         val = std::tanh(val);
                     }
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = r + 1; c < cols(); ++c)  {
-                        auto  &val = at(r, c);
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { r + 1 }; c < cols(); ++c)  {
+                        auto  &val { at(r, c) };
 
                         val = std::tanh(val);
                     }
@@ -2993,18 +3059,18 @@ Matrix<T, MO, IS_SYM>::ew_tanh() noexcept  {
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = 0; r < rows(); ++r)  {
-                        auto  &val = at(r, c);
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { 0 }; r < rows(); ++r)  {
+                        auto  &val { at(r, c) };
 
                         val = std::tanh(val);
                     }
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = 0; c < cols(); ++c)  {
-                        auto  &val = at(r, c);
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { 0 }; c < cols(); ++c)  {
+                        auto  &val { at(r, c) };
 
                         val = std::tanh(val);
                     }
@@ -3012,22 +3078,25 @@ Matrix<T, MO, IS_SYM>::ew_tanh() noexcept  {
             }
         }
     };
-    const long  thread_level =
+    const long  thread_level {
         (cols() >= 500L || rows() >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, rows(), std::move(lbd));
+                    0L, rows(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3051,8 +3120,8 @@ Matrix<T, MO, IS_SYM>::ew_inverse() noexcept  {
     auto        lbd = [this](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = c + 1; r < rows(); ++r)  {
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { c + 1 }; r < rows(); ++r)  {
                         auto  &val = at(r, c);
 
                         val = T(1) / val;
@@ -3060,8 +3129,8 @@ Matrix<T, MO, IS_SYM>::ew_inverse() noexcept  {
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = r + 1; c < cols(); ++c)  {
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { r + 1 }; c < cols(); ++c)  {
                         auto  &val = at(r, c);
 
                         val = T(1) / val;
@@ -3071,8 +3140,8 @@ Matrix<T, MO, IS_SYM>::ew_inverse() noexcept  {
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)  {
-                    for (size_type r = 0; r < rows(); ++r)  {
+                for (size_type c { begin }; c < end; ++c)  {
+                    for (size_type r { 0 }; r < rows(); ++r)  {
                         auto  &val = at(r, c);
 
                         val = T(1) / val;
@@ -3080,8 +3149,8 @@ Matrix<T, MO, IS_SYM>::ew_inverse() noexcept  {
                 }
             }
             else  {
-                for (size_type r = begin; r < end; ++r)  {
-                    for (size_type c = 0; c < cols(); ++c)  {
+                for (size_type r { begin }; r < end; ++r)  {
+                    for (size_type c { 0 }; c < cols(); ++c)  {
                         auto  &val = at(r, c);
 
                         val = T(1) / val;
@@ -3129,45 +3198,48 @@ Matrix<T, MO, IS_SYM>::ew_add(value_type val) noexcept  {
     auto        lbd = [this, val](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)
-                    for (size_type r = c + 1; r < rows(); ++r)
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { c + 1 }; r < rows(); ++r)
                         at(r, c) += val;
             }
             else  {
-                for (size_type r = begin; r < end; ++r)
-                    for (size_type c = r + 1; c < cols(); ++c)
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { r + 1 }; c < cols(); ++c)
                         at(r, c) += val;
             }
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)
-                    for (size_type r = 0; r < rows(); ++r)
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { 0 }; r < rows(); ++r)
                         at(r, c) += val;
             }
             else  {
-                for (size_type r = begin; r < end; ++r)
-                    for (size_type c = 0; c < cols(); ++c)
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { 0 }; c < cols(); ++c)
                         at(r, c) += val;
             }
         }
     };
-    const long  thread_level =
+    const long  thread_level {
         (cols() >= 500L || rows() >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, rows(), std::move(lbd));
+                    0L, rows(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3191,45 +3263,48 @@ Matrix<T, MO, IS_SYM>::ew_minus(value_type val) noexcept  {
     auto        lbd = [this, val](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)
-                    for (size_type r = c + 1; r < rows(); ++r)
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { c + 1 }; r < rows(); ++r)
                         at(r, c) -= val;
             }
             else  {
-                for (size_type r = begin; r < end; ++r)
-                    for (size_type c = r + 1; c < cols(); ++c)
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { r + 1 }; c < cols(); ++c)
                         at(r, c) -= val;
             }
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)
-                    for (size_type r = 0; r < rows(); ++r)
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { 0 }; r < rows(); ++r)
                         at(r, c) -= val;
             }
             else  {
-                for (size_type r = begin; r < end; ++r)
-                    for (size_type c = 0; c < cols(); ++c)
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { 0 }; c < cols(); ++c)
                         at(r, c) -= val;
             }
         }
     };
-    const long  thread_level =
+    const long  thread_level {
         (cols() >= 500L || rows() >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, rows(), std::move(lbd));
+                    0L, rows(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3253,45 +3328,48 @@ Matrix<T, MO, IS_SYM>::ew_multiply(value_type val) noexcept  {
     auto        lbd = [this, val](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)
-                    for (size_type r = c + 1; r < rows(); ++r)
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { c + 1 }; r < rows(); ++r)
                         at(r, c) *= val;
             }
             else  {
-                for (size_type r = begin; r < end; ++r)
-                    for (size_type c = r + 1; c < cols(); ++c)
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { r + 1 }; c < cols(); ++c)
                         at(r, c) *= val;
             }
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)
-                    for (size_type r = 0; r < rows(); ++r)
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { 0 }; r < rows(); ++r)
                         at(r, c) *= val;
             }
             else  {
-                for (size_type r = begin; r < end; ++r)
-                    for (size_type c = 0; c < cols(); ++c)
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { 0 }; c < cols(); ++c)
                         at(r, c) *= val;
             }
         }
     };
-    const long  thread_level =
+    const long  thread_level {
         (cols() >= 500L || rows() >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, rows(), std::move(lbd));
+                    0L, rows(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3315,45 +3393,48 @@ Matrix<T, MO, IS_SYM>::ew_divide(value_type val) noexcept  {
     auto        lbd = [this, val](auto begin, auto end) -> void  {
         if constexpr (IS_SYM)  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)
-                    for (size_type r = c + 1; r < rows(); ++r)
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { c + 1 }; r < rows(); ++r)
                         at(r, c) /= val;
             }
             else  {
-                for (size_type r = begin; r < end; ++r)
-                    for (size_type c = r + 1; c < cols(); ++c)
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { r + 1 }; c < cols(); ++c)
                         at(r, c) /= val;
             }
         }
         else  {
             if constexpr (MO == matrix_orient::column_major)  {
-                for (size_type c = begin; c < end; ++c)
-                    for (size_type r = 0; r < rows(); ++r)
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { 0 }; r < rows(); ++r)
                         at(r, c) /= val;
             }
             else  {
-                for (size_type r = begin; r < end; ++r)
-                    for (size_type c = 0; c < cols(); ++c)
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { 0 }; c < cols(); ++c)
                         at(r, c) /= val;
             }
         }
     };
-    const long  thread_level =
+    const long  thread_level {
         (cols() >= 500L || rows() >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         if constexpr (MO == matrix_orient::column_major)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(lbd));
+                    0L, cols(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, rows(), std::move(lbd));
+                    0L, rows(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3502,9 +3583,9 @@ Matrix<T, MO, IS_SYM> &Matrix<T, MO, IS_SYM>::sqrt() noexcept  {
 
     // Make it diagonal
     //
-    Matrix  daig_vals(eigenvals.cols(), eigenvals.cols(), 0);
+    Matrix  daig_vals { eigenvals.cols(), eigenvals.cols(), 0 };
 
-    for (size_type i = 0; i < daig_vals.cols(); ++i)
+    for (size_type i { 0 }; i < daig_vals.cols(); ++i)
         daig_vals(i, i) = eigenvals(0, i);
 
     const auto  result { eigenvecs * daig_vals * eigenvecs.transpose() };
@@ -3540,9 +3621,9 @@ Matrix<T, MO, IS_SYM>::whiten(bool do_center) noexcept  {
 
     // Make it diagonal
     //
-    Matrix  daig_vals(eigenvals.cols(), eigenvals.cols(), 0);
+    Matrix  daig_vals { eigenvals.cols(), eigenvals.cols(), 0 };
 
-    for (size_type i = 0; i < daig_vals.cols(); ++i)
+    for (size_type i { 0 }; i < daig_vals.cols(); ++i)
         daig_vals(i, i) = eigenvals(0, i);
 
     *this = *this * eigenvecs * daig_vals;
@@ -3598,28 +3679,28 @@ operator != (const Matrix<T, MO1, IS_SYM1> &lhs,
     if (lhs.rows() == rhs.rows() && lhs.cols() == rhs.cols())  {
         if constexpr (IS_SYM1 && IS_SYM2)  {
             if constexpr (MO1 == matrix_orient::column_major)  {
-                for (long c = 0; c < lhs.cols(); ++c)
-                    for (long r = c; r < lhs.rows(); ++r)
+                for (long c { 0 }; c < lhs.cols(); ++c)
+                    for (long r { c }; r < lhs.rows(); ++r)
                         if (lhs(r, c) != rhs(r, c))
                             return (true);
             }
             else  {
-                for (long r = 0; r < lhs.rows(); ++r)
-                    for (long c = r; c < lhs.cols(); ++c)
+                for (long r { 0 }; r < lhs.rows(); ++r)
+                    for (long c { r }; c < lhs.cols(); ++c)
                         if (lhs(r, c) != rhs(r, c))
                             return (true);
             }
         }
         else  {
             if constexpr (MO1 == matrix_orient::column_major)  {
-                for (long c = 0; c < lhs.cols(); ++c)
-                    for (long r = 0; r < lhs.rows(); ++r)
+                for (long c { 0 }; c < lhs.cols(); ++c)
+                    for (long r { 0 }; r < lhs.rows(); ++r)
                         if (lhs(r, c) != rhs(r, c))
                             return (true);
             }
             else  {
-                for (long r = 0; r < lhs.rows(); ++r)
-                    for (long c = 0; c < lhs.cols(); ++c)
+                for (long r { 0 }; r < lhs.rows(); ++r)
+                    for (long c { 0 }; c < lhs.cols(); ++c)
                         if (lhs(r, c) != rhs(r, c))
                             return (true);
             }
@@ -3660,21 +3741,21 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
                                   Matrix<T, MO1, true>,
                                   Matrix<T, MO1, false>>::type;
 
-    const long  lhs_rows = lhs.rows();
-    const long  lhs_cols = lhs.cols();
+    const long  lhs_rows { lhs.rows() };
+    const long  lhs_cols { lhs.cols() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
         throw NotFeasible("Incompatible matrix + matrix operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     result_t        result;
 
     if constexpr (IS_SYM1 && (! IS_SYM2))  {
         result.resize(lhs.rows(), lhs.cols());
-        for (long r = 0; r < lhs.rows(); ++r)
-            for (long c = 0; c < lhs.cols(); ++c)
+        for (long r { 0 }; r < lhs.rows(); ++r)
+            for (long c { 0 }; c < lhs.cols(); ++c)
                 result(r, c) = lhs(r, c);
     }
     else  {
@@ -3689,7 +3770,7 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result.matrix_[i + j] += rhs.matrix_[i + j];
             }
 
@@ -3702,13 +3783,13 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
         [lhs_rows, &result, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
             if constexpr (IS_SYM1 && IS_SYM2)  {
-                for (long c = begin; c < end; ++c)
-                    for (long r = c; r < lhs_rows; ++r)
+                for (long c { begin }; c < end; ++c)
+                    for (long r { c }; r < lhs_rows; ++r)
                         result(r, c) += rhs(r, c);
             }
             else  {
-                for (long c = begin; c < end; ++c)
-                    for (long r = 0; r < lhs_rows; ++r)
+                for (long c { begin }; c < end; ++c)
+                    for (long r { 0 }; r < lhs_rows; ++r)
                         result(r, c) += rhs(r, c);
             }
         };
@@ -3716,13 +3797,13 @@ operator + (const Matrix<T, MO1, IS_SYM1> &lhs,
         [lhs_cols, &result, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
             if constexpr (IS_SYM1 && IS_SYM2)  {
-                for (long r = begin; r < end; ++r)
+                for (long r { begin }; r < end; ++r)
                     for (long c = r; c < lhs_cols; ++c)
                         result(r, c) += rhs(r, c);
             }
             else  {
-                for (long r = begin; r < end; ++r)
-                    for (long c = 0; c < lhs_cols; ++c)
+                for (long r { begin }; r < end; ++r)
+                    for (long c { 0 }; c < lhs_cols; ++c)
                         result(r, c) += rhs(r, c);
             }
         };
@@ -3772,21 +3853,21 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
                                   Matrix<T, MO1, true>,
                                   Matrix<T, MO1, false>>::type;
 
-    const long  lhs_rows = lhs.rows();
-    const long  lhs_cols = lhs.cols();
+    const long  lhs_rows { lhs.rows() };
+    const long  lhs_cols { lhs.cols() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
         throw NotFeasible("Incompatible matrix - matrix operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     result_t        result;
 
     if constexpr (IS_SYM1 && (! IS_SYM2))  {
         result.resize(lhs.rows(), lhs.cols());
-        for (long r = 0; r < lhs.rows(); ++r)
-            for (long c = 0; c < lhs.cols(); ++c)
+        for (long r { 0 }; r < lhs.rows(); ++r)
+            for (long c { 0 }; c < lhs.cols(); ++c)
                 result(r, c) = lhs(r, c);
     }
     else  {
@@ -3801,7 +3882,7 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result.matrix_[i + j] -= rhs.matrix_[i + j];
             }
 
@@ -3814,13 +3895,13 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
         [lhs_rows, &result, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
             if constexpr (IS_SYM1 && IS_SYM2)  {
-                for (long c = begin; c < end; ++c)
-                    for (long r = c; r < lhs_rows; ++r)
+                for (long c { begin }; c < end; ++c)
+                    for (long r { c }; r < lhs_rows; ++r)
                         result(r, c) -= rhs(r, c);
             }
             else  {
-                for (long c = begin; c < end; ++c)
-                    for (long r = 0; r < lhs_rows; ++r)
+                for (long c { begin }; c < end; ++c)
+                    for (long r { 0 }; r < lhs_rows; ++r)
                         result(r, c) -= rhs(r, c);
             }
         };
@@ -3828,19 +3909,20 @@ operator - (const Matrix<T, MO1, IS_SYM1> &lhs,
         [lhs_cols, &result, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
             if constexpr (IS_SYM1 && IS_SYM2)  {
-                for (long r = begin; r < end; ++r)
-                    for (long c = r; c < lhs_cols; ++c)
+                for (long r { begin }; r < end; ++r)
+                    for (long c { r }; c < lhs_cols; ++c)
                         result(r, c) -= rhs(r, c);
             }
             else  {
-                for (long r = begin; r < end; ++r)
-                    for (long c = 0; c < lhs_cols; ++c)
+                for (long r { begin }; r < end; ++r)
+                    for (long c { 0 }; c < lhs_cols; ++c)
                         result(r, c) -= rhs(r, c);
             }
         };
-    const long  thread_level =
+    const long  thread_level {
         (lhs_cols >= 2000L || lhs_rows >= 2000L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -3882,8 +3964,8 @@ operator += (Matrix<T, MO1, IS_SYM1> &lhs,
                   ((! IS_SYM1) && (! IS_SYM2)),
                   "Incompatible matrix += matrix operation");
 
-    const long  lhs_rows = lhs.rows();
-    const long  lhs_cols = lhs.cols();
+    const long  lhs_rows { lhs.rows() };
+    const long  lhs_cols { lhs.cols() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
@@ -3894,13 +3976,13 @@ operator += (Matrix<T, MO1, IS_SYM1> &lhs,
         [lhs_rows, &lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
             if constexpr (IS_SYM1 && IS_SYM2)  {
-                for (long c = begin; c < end; ++c)
-                    for (long r = c; r < lhs_rows; ++r)
+                for (long c { begin }; c < end; ++c)
+                    for (long r { c }; r < lhs_rows; ++r)
                         lhs(r, c) += rhs(r, c);
             }
             else  {
-                for (long c = begin; c < end; ++c)
-                    for (long r = 0; r < lhs_rows; ++r)
+                for (long c { begin }; c < end; ++c)
+                    for (long r { 0 }; r < lhs_rows; ++r)
                         lhs(r, c) += rhs(r, c);
             }
         };
@@ -3908,19 +3990,20 @@ operator += (Matrix<T, MO1, IS_SYM1> &lhs,
         [lhs_cols, &lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
             if constexpr (IS_SYM1 && IS_SYM2)  {
-                for (long r = begin; r < end; ++r)
-                    for (long c = r; c < lhs_cols; ++c)
+                for (long r { begin }; r < end; ++r)
+                    for (long c { r }; c < lhs_cols; ++c)
                         lhs(r, c) += rhs(r, c);
             }
             else  {
-                for (long r = begin; r < end; ++r)
-                    for (long c = 0; c < lhs_cols; ++c)
+                for (long r { begin }; r < end; ++r)
+                    for (long c { 0 }; c < lhs_cols; ++c)
                         lhs(r, c) += rhs(r, c);
             }
         };
-    const long  thread_level =
+    const long  thread_level {
         (lhs_cols >= 2000L || lhs_rows >= 2000L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -3957,8 +4040,8 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
                   ((! IS_SYM1) && (! IS_SYM2)),
                   "Incompatible matrix -= matrix operation");
 
-    const long  lhs_rows = lhs.rows();
-    const long  lhs_cols = lhs.cols();
+    const long  lhs_rows { lhs.rows() };
+    const long  lhs_cols { lhs.cols() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (lhs_rows != rhs.rows() || lhs_cols != rhs.cols())
@@ -3969,13 +4052,13 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
         [lhs_rows, &lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
             if constexpr (IS_SYM1 && IS_SYM2)  {
-                for (long c = begin; c < end; ++c)
-                    for (long r = c; r < lhs_rows; ++r)
+                for (long c { begin }; c < end; ++c)
+                    for (long r { c }; r < lhs_rows; ++r)
                         lhs(r, c) -= rhs(r, c);
             }
             else  {
-                for (long c = begin; c < end; ++c)
-                    for (long r = 0; r < lhs_rows; ++r)
+                for (long c { begin }; c < end; ++c)
+                    for (long r { 0 }; r < lhs_rows; ++r)
                         lhs(r, c) -= rhs(r, c);
             }
         };
@@ -3983,19 +4066,20 @@ operator -= (Matrix<T, MO1, IS_SYM1> &lhs,
         [lhs_cols, &lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
             if constexpr (IS_SYM1 && IS_SYM2)  {
-                for (long r = begin; r < end; ++r)
-                    for (long c = r; c < lhs_cols; ++c)
+                for (long r { begin }; r < end; ++r)
+                    for (long c { r }; c < lhs_cols; ++c)
                         lhs(r, c) -= rhs(r, c);
             }
             else  {
-                for (long r = begin; r < end; ++r)
-                    for (long c = 0; c < lhs_cols; ++c)
+                for (long r { begin }; r < end; ++r)
+                    for (long c { 0 }; c < lhs_cols; ++c)
                         lhs(r, c) -= rhs(r, c);
             }
         };
-    const long  thread_level =
+    const long  thread_level {
         (lhs_cols >= 2000L || lhs_rows >= 2000L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4036,19 +4120,20 @@ operator * (const std::vector<T> &lhs,
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix<T, MO, false>    result { lhs_rows, rhs_cols, 0 };
-    const long              thread_level =
+    const long              thread_level {
         (lhs_cols >= 400L || rhs_cols >= 400L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     auto    col_lbd =
         [lhs_rows, lhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long c = begin; c < end; ++c)  {
-                for (long r = 0; r < lhs_rows; ++r)  {
+            for (long c { begin }; c < end; ++c)  {
+                for (long r { 0 }; r < lhs_rows; ++r)  {
                     T   sum { 0 };
 
-                    for (long k = 0; k < lhs_cols; ++k)
+                    for (long k { 0 }; k < lhs_cols; ++k)
                         sum += lhs[k] * rhs(k, c);
                     result(r, c) = sum;
                 }
@@ -4058,11 +4143,11 @@ operator * (const std::vector<T> &lhs,
         [lhs_cols, rhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; ++r)  {
-                for (long c = 0; c < rhs_cols; ++c)  {
+            for (long r { begin }; r < end; ++r)  {
+                for (long c { 0 }; c < rhs_cols; ++c)  {
                     T   sum { 0 };
 
-                    for (long k = 0; k < lhs_cols; ++k)
+                    for (long k { 0 }; k < lhs_cols; ++k)
                         sum += lhs[k] * rhs(k, c);
                     result(r, c) = sum;
                 }
@@ -4109,16 +4194,17 @@ operator * (const Matrix<T, MO, IS_SYM> &lhs,
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix<T, MO, false>    result { lhs_rows, rhs_cols, 0 };
-    const long              thread_level =
+    const long              thread_level {
         (lhs_cols >= 400L || rhs_rows >= 400L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     auto    col_lbd =
         [lhs_rows, lhs_cols, rhs_rows, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long c = begin; c < end; ++c)  {
-                for (long r = 0; r < lhs_rows; ++r)  {
+            for (long c { begin }; c < end; ++c)  {
+                for (long r { 0 }; r < lhs_rows; ++r)  {
                     T   sum { 0 };
 
                     for (long k = 0; k < rhs_rows; ++k)
@@ -4131,8 +4217,8 @@ operator * (const Matrix<T, MO, IS_SYM> &lhs,
         [lhs_cols, rhs_cols, rhs_rows, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; ++r)  {
-                for (long c = 0; c < rhs_cols; ++c)  {
+            for (long r { begin }; r < end; ++r)  {
+                for (long c { 0 }; c < rhs_cols; ++c)  {
                     T   sum { 0 };
 
                     for (long k = 0; k < rhs_rows; ++k)
@@ -4184,32 +4270,36 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix<T, MO1, false>   result { lhs_rows, rhs_cols, 0 };
-    const long              thread_level =
+    const long              thread_level {
         (lhs_cols >= 600L || rhs_cols >= 600L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     auto    col_lbd =
         [lhs_rows, lhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long rc = begin; rc < end; rc += HMDF_MAT_BLOCK) {
-                for (long lc = 0; lc < lhs_cols; lc += HMDF_MAT_BLOCK) {
-                    for (long r = 0; r < lhs_rows; r += HMDF_MAT_BLOCK) {
-                        const long  r_max =
-                            std::min(r + HMDF_MAT_BLOCK, lhs_rows);
-                        const long  rc_max =
-                            std::min(rc + HMDF_MAT_BLOCK, end);
-                        const long  lc_max =
-                            std::min(lc + HMDF_MAT_BLOCK, lhs_cols);
+            for (long rc { begin }; rc < end; rc += HMDF_MAT_BLOCK) {
+                for (long lc { 0 }; lc < lhs_cols; lc += HMDF_MAT_BLOCK) {
+                    for (long r { 0 }; r < lhs_rows; r += HMDF_MAT_BLOCK) {
+                        const long  r_max {
+                            std::min(r + HMDF_MAT_BLOCK, lhs_rows)
+                        };
+                        const long  rc_max {
+                            std::min(rc + HMDF_MAT_BLOCK, end)
+                        };
+                        const long  lc_max {
+                            std::min(lc + HMDF_MAT_BLOCK, lhs_cols)
+                        };
 
-                        for (long rr = rc; rr < rc_max; ++rr) {
-                            for (long cc = lc; cc < lc_max; ++cc) {
-                                const T val = rhs(cc, rr);
+                        for (long rr { rc }; rr < rc_max; ++rr) {
+                            for (long cc { lc }; cc < lc_max; ++cc) {
+                                const T val { rhs(cc, rr) };
 
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                                for (long i = r; i < r_max; ++i)
+                                for (long i { r }; i < r_max; ++i)
                                     result(i, rr) += lhs(i, cc) * val;
                             }
                         }
@@ -4221,23 +4311,25 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
         [lhs_cols, rhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; r += HMDF_MAT_BLOCK) {
-                for (long c = 0; c < rhs_cols; c += HMDF_MAT_BLOCK) {
-                    for (long k = 0; k < lhs_cols; k += HMDF_MAT_BLOCK) {
-                        const long  r_max = std::min(r + HMDF_MAT_BLOCK, end);
-                        const long  c_max =
-                            std::min(c + HMDF_MAT_BLOCK, rhs_cols);
-                        const long  k_max =
-                            std::min(k + HMDF_MAT_BLOCK, lhs_cols);
+            for (long r { begin }; r < end; r += HMDF_MAT_BLOCK) {
+                for (long c { 0 }; c < rhs_cols; c += HMDF_MAT_BLOCK) {
+                    for (long k { 0 }; k < lhs_cols; k += HMDF_MAT_BLOCK) {
+                        const long  r_max { std::min(r + HMDF_MAT_BLOCK, end) };
+                        const long  c_max {
+                            std::min(c + HMDF_MAT_BLOCK, rhs_cols)
+                        };
+                        const long  k_max {
+                            std::min(k + HMDF_MAT_BLOCK, lhs_cols)
+                        };
 
-                        for (long rr = r; rr < r_max; ++rr) {
-                            for (long kk = k; kk < k_max; ++kk) {
-                                const T val = lhs(rr, kk);
+                        for (long rr { r }; rr < r_max; ++rr) {
+                            for (long kk { k }; kk < k_max; ++kk) {
+                                const T val { lhs(rr, kk) };
 
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                                for (long j = c; j < c_max; ++j)
+                                for (long j { c }; j < c_max; ++j)
                                     result(rr, j) += val * rhs(kk, j);
                             }
                         }
@@ -4285,22 +4377,23 @@ hadamard(const Matrix<T, MO1, IS_SYM1> &lhs,
 #endif // HMDF_SANITY_EXCEPTIONS
 
     Matrix<T, MO1, false>   result { rows, cols, 0 };
-    const long              thread_level =
+    const long              thread_level {
         (cols >= 500L || rows >= 500L)
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     auto    col_lbd =
         [rows, &result, &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long c = begin; c < end; ++c)
-                for (long r = 0; r < rows; ++r)
+            for (long c { begin }; c < end; ++c)
+                for (long r { 0 }; r < rows; ++r)
                     result(r, c) = lhs(r, c) * rhs(r, c);
         };
     auto    row_lbd =
         [cols, &result, &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
-            for (long r = begin; r < end; ++r)
-                for (long c = 0; c < cols; ++c)
+            for (long r { begin }; r < end; ++r)
+                for (long c { 0 }; c < cols; ++c)
                     result(r, c) = lhs(r, c) * rhs(r, c);
         };
 
@@ -4335,17 +4428,17 @@ operator + (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 
     using result_t = std::vector<T, A1>;
 
-    const long  lhs_size = lhs.size();
+    const long  lhs_size { long(lhs.size()) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    const long  rhs_size = rhs.size();
+    const long  rhs_size { long(rhs.size()) };
 
     if (lhs_size != rhs_size)
         throw NotFeasible("Incompatible vector + vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -4354,7 +4447,7 @@ operator + (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] += rhs[i + j];
             }
 
@@ -4363,9 +4456,10 @@ operator + (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
             for (; i < end; ++i)
                 result[i] += rhs[i];
         };
-    const long      thread_level =
+    const long      thread_level {
         lhs_size >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4391,17 +4485,17 @@ operator - (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 
     using result_t = std::vector<T, A1>;
 
-    const long  lhs_size = lhs.size();
+    const long  lhs_size { long(lhs.size()) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    const long  rhs_size = rhs.size();
+    const long  rhs_size { long(rhs.size()) };
 
     if (lhs_size != rhs_size)
         throw NotFeasible("Incompatible vector - vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -4410,7 +4504,7 @@ operator - (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] -= rhs[i + j];
             }
 
@@ -4419,9 +4513,10 @@ operator - (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
             for (; i < end; ++i)
                 result[i] -= rhs[i];
         };
-    const long      thread_level =
+    const long      thread_level {
         lhs_size >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4447,17 +4542,17 @@ operator * (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 
     using result_t = std::vector<T, A1>;
 
-    const long  lhs_size = lhs.size();
+    const long  lhs_size { long(lhs.size()) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    const long  rhs_size = rhs.size();
+    const long  rhs_size { long(rhs.size()) };
 
     if (lhs_size != rhs_size)
         throw NotFeasible("Incompatible vector * vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -4466,7 +4561,7 @@ operator * (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] *= rhs[i + j];
             }
 
@@ -4475,9 +4570,10 @@ operator * (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
             for (; i < end; ++i)
                 result[i] *= rhs[i];
         };
-    const long      thread_level =
+    const long      thread_level {
         lhs_size >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4503,17 +4599,17 @@ operator / (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 
     using result_t = std::vector<T, A1>;
 
-    const long  lhs_size = lhs.size();
+    const long  lhs_size { long(lhs.size()) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    const long  rhs_size = rhs.size();
+    const long  rhs_size { long(rhs.size()) };
 
     if (lhs_size != rhs_size)
         throw NotFeasible("Incompatible vector / vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -4522,7 +4618,7 @@ operator / (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] /= rhs[i + j];
             }
 
@@ -4531,9 +4627,10 @@ operator / (const std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
             for (; i < end; ++i)
                 result[i] /= rhs[i];
         };
-    const long      thread_level =
+    const long      thread_level {
         lhs_size >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4560,14 +4657,14 @@ operator + (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
     using result_t = std::vector<T, A>;
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    const long  lhs_size = lhs.size();
+    const long  lhs_size { long(lhs.size()) };
 
     if (N != lhs_size)
         throw NotFeasible("Incompatible vector + array operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -4576,7 +4673,7 @@ operator + (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] += rhs[i + j];
             }
 
@@ -4585,9 +4682,10 @@ operator + (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
             for (; i < end; ++i)
                 result[i] += rhs[i];
         };
-    const long      thread_level =
+    const long      thread_level {
         N >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4614,14 +4712,14 @@ operator - (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
     using result_t = std::vector<T, A>;
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    const long  lhs_size = lhs.size();
+    const long  lhs_size { long(lhs.size()) };
 
     if (N != lhs_size)
         throw NotFeasible("Incompatible vector - array operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -4630,7 +4728,7 @@ operator - (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] -= rhs[i + j];
             }
 
@@ -4639,9 +4737,10 @@ operator - (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
             for (; i < end; ++i)
                 result[i] -= rhs[i];
         };
-    const long      thread_level =
+    const long      thread_level {
         N >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4668,14 +4767,14 @@ operator * (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
     using result_t = std::vector<T, A>;
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    const long  lhs_size = lhs.size();
+    const long  lhs_size { long(lhs.size()) };
 
     if (N != lhs_size)
         throw NotFeasible("Incompatible vector * array operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -4684,7 +4783,7 @@ operator * (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] *= rhs[i + j];
             }
 
@@ -4693,9 +4792,10 @@ operator * (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
             for (; i < end; ++i)
                 result[i] *= rhs[i];
         };
-    const long      thread_level =
+    const long      thread_level {
         N >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4722,14 +4822,14 @@ operator / (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
     using result_t = std::vector<T, A>;
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    const long  lhs_size = lhs.size();
+    const long  lhs_size { long(lhs.size()) };
 
     if (N != lhs_size)
         throw NotFeasible("Incompatible vector / array operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -4738,7 +4838,7 @@ operator / (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] /= rhs[i + j];
             }
 
@@ -4747,9 +4847,10 @@ operator / (const std::vector<T, A> &lhs, const std::array<T, N> &rhs)  {
             for (; i < end; ++i)
                 result[i] /= rhs[i];
         };
-    const long      thread_level =
+    const long      thread_level {
         N >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4776,14 +4877,14 @@ operator + (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
     using result_t = std::array<T, N>;
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    const long  rhs_size = rhs.size();
+    const long  rhs_size { long(rhs.size()) };
 
     if (N != rhs_size)
         throw NotFeasible("Incompatible array + vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -4792,7 +4893,7 @@ operator + (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] += rhs[i + j];
             }
 
@@ -4801,9 +4902,10 @@ operator + (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
             for (; i < end; ++i)
                 result[i] += rhs[i];
         };
-    const long      thread_level =
+    const long      thread_level {
         N >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4830,14 +4932,14 @@ operator - (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
     using result_t = std::array<T, N>;
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    const long  rhs_size = rhs.size();
+    const long  rhs_size { long(rhs.size()) };
 
     if (N != rhs_size)
         throw NotFeasible("Incompatible array - vector operation");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -4846,7 +4948,7 @@ operator - (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] -= rhs[i + j];
             }
 
@@ -4855,9 +4957,10 @@ operator - (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
             for (; i < end; ++i)
                 result[i] -= rhs[i];
         };
-    const long      thread_level =
+    const long      thread_level {
         N >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -4900,7 +5003,7 @@ operator * (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] *= rhs[i + j];
             }
 
@@ -4954,7 +5057,7 @@ operator / (const std::array<T, N> &lhs, const std::vector<T, A> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] /= rhs[i + j];
             }
 
@@ -5008,7 +5111,7 @@ operator += (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] += rhs[i + j];
             }
 
@@ -5062,7 +5165,7 @@ operator -= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] -= rhs[i + j];
             }
 
@@ -5116,7 +5219,7 @@ operator *= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] *= rhs[i + j];
             }
 
@@ -5170,7 +5273,7 @@ operator /= (std::vector<T, A1> &lhs, const std::vector<T, A2> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] /= rhs[i + j];
             }
 
@@ -5219,7 +5322,7 @@ operator + (const std::vector<T, A> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] += rhs;
             }
 
@@ -5267,7 +5370,7 @@ operator - (const std::vector<T, A> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] -= rhs;
             }
 
@@ -5315,7 +5418,7 @@ operator * (const std::vector<T, A> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] *= rhs;
             }
 
@@ -5363,7 +5466,7 @@ operator / (const std::vector<T, A> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] /= rhs;
             }
 
@@ -5407,9 +5510,9 @@ operator - (T lhs, const std::vector<T, A> &rhs)  {
 
     using result_t = std::vector<T, A>;
 
-    const long      rhs_size = rhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = rhs;
+    const long      rhs_size { long(rhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { rhs };
     auto            lbd =
         [&result, lhs](auto begin, auto end) -> void  {
             long    i { begin };
@@ -5418,7 +5521,7 @@ operator - (T lhs, const std::vector<T, A> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)  {
+                for (long j { 0 }; j < block_s; ++j)  {
                     auto    &val { result[i + j] };
 
                     val = lhs - val;
@@ -5433,14 +5536,16 @@ operator - (T lhs, const std::vector<T, A> &rhs)  {
                 val = lhs - val;
             }
         };
-    const long      thread_level =
+    const long      thread_level {
         rhs_size >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
-        auto    futures =
+        auto    futures {
             ThreadGranularity::thr_pool_.parallel_loop<T>(
-                  0L, rhs_size, std::move(lbd));
+                  0L, rhs_size, std::move(lbd))
+        };
 
         for (auto &fut : futures)  fut.get();
     }
@@ -5467,9 +5572,9 @@ operator / (T lhs, const std::vector<T, A> &rhs)  {
 
     using result_t = std::vector<T, A>;
 
-    const long      rhs_size = rhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = rhs;
+    const long      rhs_size { long(rhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { rhs };
     auto            lbd =
         [&result, lhs](auto begin, auto end) -> void  {
             long    i { begin };
@@ -5478,7 +5583,7 @@ operator / (T lhs, const std::vector<T, A> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)  {
+                for (long j { 0 }; j < block_s; ++j)  {
                     auto    &val { result[i + j] };
 
                     val = lhs / val;
@@ -5493,14 +5598,16 @@ operator / (T lhs, const std::vector<T, A> &rhs)  {
                 val = lhs / val;
             }
         };
-    const long      thread_level =
+    const long      thread_level {
         rhs_size >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
-        auto    futures =
+        auto    futures {
             ThreadGranularity::thr_pool_.parallel_loop<T>(
-                  0L, rhs_size, std::move(lbd));
+                  0L, rhs_size, std::move(lbd))
+        };
 
         for (auto &fut : futures)  fut.get();
     }
@@ -5518,8 +5625,8 @@ static inline
 std::vector<T, A> &
 operator += (std::vector<T, A> &lhs, T rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -5529,7 +5636,7 @@ operator += (std::vector<T, A> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] += rhs;
             }
 
@@ -5538,9 +5645,10 @@ operator += (std::vector<T, A> &lhs, T rhs)  {
             for (; i < end; ++i)
                 lhs[i] += rhs;
         };
-    const long      thread_level =
+    const long      thread_level {
         lhs_size >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -5564,8 +5672,8 @@ static inline
 std::vector<T, A> &
 operator -= (std::vector<T, A> &lhs, T rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -5575,7 +5683,7 @@ operator -= (std::vector<T, A> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] -= rhs;
             }
 
@@ -5584,9 +5692,10 @@ operator -= (std::vector<T, A> &lhs, T rhs)  {
             for (; i < end; ++i)
                 lhs[i] -= rhs;
         };
-    const long      thread_level =
+    const long      thread_level {
         lhs_size >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -5610,8 +5719,8 @@ static inline
 std::vector<T, A> &
 operator *= (std::vector<T, A> &lhs, T rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -5621,7 +5730,7 @@ operator *= (std::vector<T, A> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] *= rhs;
             }
 
@@ -5630,9 +5739,10 @@ operator *= (std::vector<T, A> &lhs, T rhs)  {
             for (; i < end; ++i)
                 lhs[i] *= rhs;
         };
-    const long      thread_level =
+    const long      thread_level {
         lhs_size >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -5656,8 +5766,8 @@ static inline
 std::vector<T, A> &
 operator /= (std::vector<T, A> &lhs, T rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -5667,7 +5777,7 @@ operator /= (std::vector<T, A> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] /= rhs;
             }
 
@@ -5676,9 +5786,10 @@ operator /= (std::vector<T, A> &lhs, T rhs)  {
             for (; i < end; ++i)
                 lhs[i] /= rhs;
         };
-    const long      thread_level =
+    const long      thread_level {
         lhs_size >= ThreadPool::MUL_THR_THHOLD
-            ? ThreadGranularity::get_thread_level() : 0;
+            ? ThreadGranularity::get_thread_level() : 0
+    };
 
     if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
@@ -5704,9 +5815,9 @@ operator + (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 
     using result_t = std::array<T, N>;
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -5715,7 +5826,7 @@ operator + (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] += rhs[i + j];
             }
 
@@ -5738,9 +5849,9 @@ operator - (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 
     using result_t = std::array<T, N>;
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -5749,7 +5860,7 @@ operator - (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] -= rhs[i + j];
             }
 
@@ -5772,9 +5883,9 @@ operator * (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 
     using result_t = std::array<T, N>;
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -5783,7 +5894,7 @@ operator * (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] *= rhs[i + j];
             }
 
@@ -5806,9 +5917,9 @@ operator / (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 
     using result_t = std::array<T, N>;
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -5817,7 +5928,7 @@ operator / (const std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] /= rhs[i + j];
             }
 
@@ -5838,8 +5949,8 @@ static inline
 std::array<T, N> &
 operator += (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -5849,7 +5960,7 @@ operator += (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] += rhs[i + j];
             }
 
@@ -5870,8 +5981,8 @@ static inline
 std::array<T, N> &
 operator -= (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -5881,7 +5992,7 @@ operator -= (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] -= rhs[i + j];
             }
 
@@ -5902,8 +6013,8 @@ static inline
 std::array<T, N> &
 operator *= (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -5913,7 +6024,7 @@ operator *= (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] *= rhs[i + j];
             }
 
@@ -5934,8 +6045,8 @@ static inline
 std::array<T, N> &
 operator /= (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -5945,7 +6056,7 @@ operator /= (std::array<T, N> &lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] /= rhs[i + j];
             }
 
@@ -5966,12 +6077,11 @@ static inline
 std::array<T, N>
 operator + (const std::array<T, N> &lhs, T rhs)  {
 
-
     using result_t = std::array<T, N>;
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -5980,7 +6090,7 @@ operator + (const std::array<T, N> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] += rhs;
             }
 
@@ -6001,12 +6111,11 @@ static inline
 std::array<T, N>
 operator - (const std::array<T, N> &lhs, T rhs)  {
 
-
     using result_t = std::array<T, N>;
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -6015,7 +6124,7 @@ operator - (const std::array<T, N> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] -= rhs;
             }
 
@@ -6036,12 +6145,11 @@ static inline
 std::array<T, N>
 operator * (const std::array<T, N> &lhs, T rhs)  {
 
-
     using result_t = std::array<T, N>;
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -6050,7 +6158,7 @@ operator * (const std::array<T, N> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] *= rhs;
             }
 
@@ -6071,12 +6179,11 @@ static inline
 std::array<T, N>
 operator / (const std::array<T, N> &lhs, T rhs)  {
 
-
     using result_t = std::array<T, N>;
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = lhs;
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { lhs };
     auto            lbd =
         [&result, &rhs = std::as_const(rhs)](auto begin, auto end) -> void  {
             long    i { begin };
@@ -6085,7 +6192,7 @@ operator / (const std::array<T, N> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     result[i + j] /= rhs;
             }
 
@@ -6115,9 +6222,9 @@ operator - (T lhs, const std::array<T, N> &rhs)  {
 
     using result_t = std::array<T, N>;
 
-    const long      rhs_size = rhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = rhs;
+    const long      rhs_size { long(rhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { rhs };
     auto            lbd =
         [&result, lhs](auto begin, auto end) -> void  {
             long    i { begin };
@@ -6126,7 +6233,7 @@ operator - (T lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)  {
+                for (long j { 0 }; j < block_s; ++j)  {
                     auto    &val { result[i + j] };
 
                     val = lhs - val;
@@ -6162,9 +6269,9 @@ operator / (T lhs, const std::array<T, N> &rhs)  {
 
     using result_t = std::array<T, N>;
 
-    const long      rhs_size = rhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
-    result_t        result = rhs;
+    const long      rhs_size { long(rhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
+    result_t        result { rhs };
     auto            lbd =
         [&result, lhs](auto begin, auto end) -> void  {
             long    i { begin };
@@ -6173,7 +6280,7 @@ operator / (T lhs, const std::array<T, N> &rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)  {
+                for (long j { 0 }; j < block_s; ++j)  {
                     auto    &val { result[i + j] };
 
                     val = lhs / val;
@@ -6200,8 +6307,8 @@ static inline
 std::array<T, N> &
 operator += (std::array<T, N> &lhs, T rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -6211,7 +6318,7 @@ operator += (std::array<T, N> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] += rhs;
             }
 
@@ -6232,8 +6339,8 @@ static inline
 std::array<T, N> &
 operator -= (std::array<T, N> &lhs, T rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -6243,7 +6350,7 @@ operator -= (std::array<T, N> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] -= rhs;
             }
 
@@ -6264,8 +6371,8 @@ static inline
 std::array<T, N> &
 operator *= (std::array<T, N> &lhs, T rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -6275,7 +6382,7 @@ operator *= (std::array<T, N> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] *= rhs;
             }
 
@@ -6296,8 +6403,8 @@ static inline
 std::array<T, N> &
 operator /= (std::array<T, N> &lhs, T rhs)  {
 
-    const long      lhs_size = lhs.size();
-    constexpr long  block_s = HMDF_MAT_BLOCK / sizeof(T);
+    const long      lhs_size { long(lhs.size()) };
+    constexpr long  block_s { HMDF_MAT_BLOCK / sizeof(T) };
     auto            lbd =
         [&lhs = lhs, &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -6307,7 +6414,7 @@ operator /= (std::array<T, N> &lhs, T rhs)  {
 #pragma GCC ivdep
 #pragma clang loop vectorize(enable)
 #pragma omp simd
-                for (long j = 0; j < block_s; ++j)
+                for (long j { 0 }; j < block_s; ++j)
                     lhs[i + j] /= rhs;
             }
 

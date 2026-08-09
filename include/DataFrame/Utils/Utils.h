@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -51,9 +52,7 @@ in_tuple_helper(const std::tuple<Ts ...> &tu,
                 F func,
                 std::index_sequence<Is ...>)  {
 
-    using expander = int[];
-
-    (void) expander { 0, (func(std::get<Is>(tu)), 0) ... };
+    (func(std::get<Is>(tu)), ...);
 }
 
 // ----------------------------------------------------------------------------
@@ -62,9 +61,7 @@ template<typename ... Ts, typename F, std::size_t ... Is>
 inline void
 in_tuple_helper(std::tuple<Ts ...> &tu, F func, std::index_sequence<Is ...>)  {
 
-    using expander = int[];
-
-    (void) expander { 0, (func(std::get<Is>(tu)), 0) ... };
+    (func(std::get<Is>(tu)), ...);
 }
 
 // ----------------------------------------------------------------------------
@@ -146,24 +143,6 @@ using projection_type_list = make_tuple_types_unique<std::tuple<Args...>>;
 
 // ----------------------------------------------------------------------------
 
-template<typename F, typename H, typename ... T>
-inline void unpacker(F func, H &head, T& ... tail);
-
-template<typename F, typename H>
-inline void head_exec(F func, H &head)  { func(head); }
-
-template<typename F>
-inline void unpacker(F)  {   }
-
-template<typename F, typename H, typename ... T>
-inline void unpacker(F func, H &head, T& ... tail)  {
-
-    head_exec(func, head);
-    unpacker(func, tail ...);
-}
-
-// ----------------------------------------------------------------------------
-
 template<typename T>
 inline bool
 is_nan__(const T &)  { return (false); }
@@ -211,7 +190,7 @@ template<typename T>
 inline constexpr bool
 is_nan(const T &val)  {
 
-    if (std::numeric_limits<T>::has_quiet_NaN)
+    if constexpr (std::numeric_limits<T>::has_quiet_NaN)
         return (is_nan__(val));
     return (get_nan<T>() == val);
 }
@@ -283,26 +262,26 @@ template<typename V>
 [[nodiscard]] inline bool
 is_monotonic_increasing(const V &column)  {
 
-    const std::size_t   col_s { column.size() };
-
-    for (std::size_t i = 1; i < col_s; ++i)
-        if (column[i] < column[i - 1])
-            return (false);
-    return (true);
+    return (std::is_sorted(column.begin(), column.end()));
 }
 
 // ----------------------------------------------------------------------------
 
+// std::sort requires a strict weak ordering comparison, which means the
+// comparison function must return false for equal elements (using <). If you
+// use <=, sorting algorithms cannot properly handle equivalent elements,
+// leading to broken internal logic, infinite loops, or memory corruption.
+//
 template<typename V>
 [[nodiscard]] inline bool
 is_strictly_monotonic_increasing(const V &column)  {
 
-    const std::size_t   col_s { column.size() };
+    using value_t = typename V::value_type;
 
-    for (std::size_t i = 1; i < col_s; ++i)
-        if (column[i] <= column[i - 1])
-            return (false);
-    return (true);
+    return (std::adjacent_find(column.begin(), column.end(), 
+                               [](const value_t &prev, const value_t &next) {
+                                   return (next <= prev);
+                               }) == column.end());
 }
 
 // ----------------------------------------------------------------------------
@@ -311,26 +290,30 @@ template<typename V>
 [[nodiscard]] inline bool
 is_monotonic_decreasing(const V &column)  {
 
-    const std::size_t   col_s { column.size() };
+    using value_t = typename V::value_type;
 
-    for (std::size_t i = 1; i < col_s; ++i)
-        if (column[i] > column[i - 1])
-            return (false);
-    return (true);
+    return (std::is_sorted(column.begin(),
+                           column.end(),
+                           std::greater<value_t>()));
 }
 
 // ----------------------------------------------------------------------------
 
+// std::sort requires a strict weak ordering comparison, which means the
+// comparison function must return false for equal elements (using <). If you
+// use <=, sorting algorithms cannot properly handle equivalent elements,
+// leading to broken internal logic, infinite loops, or memory corruption.
+//
 template<typename V>
 [[nodiscard]] inline bool
 is_strictly_monotonic_decreasing(const V &column)  {
 
-    const std::size_t   col_s { column.size() };
+    using value_t = typename V::value_type;
 
-    for (std::size_t i = 1; i < col_s; ++i)
-        if (column[i] >= column[i - 1])
-            return (false);
-    return (true);
+    return (std::adjacent_find(column.begin(), column.end(), 
+                               [](const value_t &prev, const value_t &next) {
+                                   return (next >= prev);
+                               }) == column.end());
 }
 
 // ----------------------------------------------------------------------------
@@ -341,14 +324,12 @@ shift_right(V &vec, std::size_t n)  {
 
     using value_type = typename V::value_type;
 
-    const auto  vec_rend { vec.rend() };
+    const std::size_t vec_s { vec.size() };
+    const std::size_t fill_n { std::min(n, vec_s) };
 
-    for (auto riter = vec.rbegin(); riter != vec_rend; ++riter)  {
-        if (std::size_t(std::distance(riter, vec_rend)) > n)
-            *riter = std::move(*(riter + n));
-        else
-            *riter = std::move(get_nan<value_type>());
-    }
+    std::shift_right(vec.begin(), vec.end(),
+                     static_cast<typename V::difference_type>(n));
+    std::fill_n(vec.begin(), fill_n, get_nan<value_type>());
 }
 
 // ----------------------------------------------------------------------------
@@ -359,14 +340,12 @@ shift_left(V &vec, std::size_t n)  {
 
     using value_type = typename V::value_type;
 
-    const auto  vec_end  { vec.end() };
+    const std::size_t vec_s { vec.size() };
+    const std::size_t fill_n { std::min(n, vec_s) };
 
-    for (auto iter = vec.begin(); iter != vec_end; ++iter)  {
-        if (std::size_t(std::distance(iter, vec_end)) > n)
-            *iter = std::move(*(iter + n));
-        else
-            *iter = std::move(get_nan<value_type>());
-    }
+    std::shift_left(vec.begin(), vec.end(),
+                    static_cast<typename V::difference_type>(n));
+    std::fill_n(vec.end() - fill_n, fill_n, get_nan<value_type>());
 }
 
 // ----------------------------------------------------------------------------

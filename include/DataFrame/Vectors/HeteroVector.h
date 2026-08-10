@@ -246,11 +246,10 @@ private:
             std::pair<const HeteroVector *const, vec_t<T>>, A>::type>
         vectors_ {  };
 
-    std::vector<std::function<void(HeteroVector &)>>    clear_functions_;
-    std::vector<std::function<void(const HeteroVector &,
-                                   HeteroVector &)>>    copy_functions_;
-    std::vector<std::function<void(HeteroVector &,
-                                   HeteroVector &)>>    move_functions_;
+    std::vector<void(*)(HeteroVector &)>                    clear_functions_;
+    std::vector<void(*)(const HeteroVector &,
+                        HeteroVector &)>                    copy_functions_;
+    std::vector<void(*)(HeteroVector &, HeteroVector &)>    move_functions_;
 
     // Visitor stuff
     //

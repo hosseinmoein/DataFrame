@@ -183,13 +183,17 @@ public:
         vector_.insert(vector_.begin() + pos, tmp_vec.begin(), tmp_vec.end());
     }
 
+    template<typename F>
     inline void
-    sort(std::function<bool(const value_type *, const value_type *)> comp =
+    sort(F &&comp =
              [](const value_type *l, const value_type *r) -> bool {
                  return *l < *r;
-             })  {
+             }) requires
+    std::invocable<F, const value_type *, const value_type *> &&
+    std::same_as<std::invoke_result_t
+                     <F, const value_type *, const value_type *>, bool>  {
 
-        std::sort(vector_.begin(), vector_.end(), comp);
+        std::sort(vector_.begin(), vector_.end(), std::forward<F>(comp));
     }
 
 public:
@@ -708,13 +712,17 @@ public:
         vector_.insert(vector_.begin() + pos, tmp_vec.begin(), tmp_vec.end());
     }
 
+    template<typename F>
     inline void
-    sort(std::function<bool(const value_type *, const value_type *)> comp =
+    sort(F &&comp =
              [](const value_type *l, const value_type *r) -> bool {
                  return *l < *r;
-             })  {
+             }) requires
+    std::invocable<F, const value_type *, const value_type *> &&
+    std::same_as<std::invoke_result_t
+                     <F, const value_type *, const value_type *>, bool>  {
 
-        std::sort(vector_.begin(), vector_.end(), comp);
+        std::sort(vector_.begin(), vector_.end(), std::forward<F>(comp));
     }
 
 public:

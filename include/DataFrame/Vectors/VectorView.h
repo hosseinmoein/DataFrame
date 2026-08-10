@@ -537,7 +537,7 @@ public:
     [[nodiscard]] inline const_reference
     operator [] (size_type i) const noexcept  { return (*(begin_ptr_ + i)); }
     [[nodiscard]] inline const_reference
-    ront() const noexcept  { return (*begin_ptr_); }
+    front() const noexcept  { return (*begin_ptr_); }
     [[nodiscard]] inline const_reference
     back() const noexcept  { return (*(end_ptr_ - 1)); }
 

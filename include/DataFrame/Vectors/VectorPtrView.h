@@ -187,7 +187,7 @@ public:
     inline void
     sort(F &&comp =
              [](const value_type *l, const value_type *r) -> bool {
-                 return *l < *r;
+                 return (*l < *r);
              }) requires
     std::invocable<F, const value_type *, const value_type *> &&
     std::same_as<std::invoke_result_t
@@ -716,7 +716,7 @@ public:
     inline void
     sort(F &&comp =
              [](const value_type *l, const value_type *r) -> bool {
-                 return *l < *r;
+                 return (*l < *r);
              }) requires
     std::invocable<F, const value_type *, const value_type *> &&
     std::same_as<std::invoke_result_t

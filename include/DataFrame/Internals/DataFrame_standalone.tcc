@@ -1171,20 +1171,24 @@ _get_token_from_file_ (std::istream &file,
                        std::string &value,
                        char alt_delim = '\0') {
 
-    char    c;
+    std::streambuf  *rdbuf { file.rdbuf() };
+    int             ch;
 
     value.clear();
-    while (file.get(c)) [[likely]]
+    while ((ch = rdbuf->sbumpc()) != std::char_traits<char>::eof())  {
+        const char  c { static_cast<char>(ch) };
+
         if (c == delim)  {
             break;
         }
         else if (c == alt_delim)  {
-            file.unget();
+            rdbuf->sungetc();
             break;
         }
         else  {
             value += c;
         }
+    }
 }
 
 // ----------------------------------------------------------------------------

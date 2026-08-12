@@ -41,9 +41,15 @@ HeteroConstPtrView<A>::HeteroConstPtrView(const T *begin_ptr, const T *end_ptr)
     : clear_function_([](HeteroConstPtrView &hv) { views_<T>.erase(&hv); }),
       copy_function_([](const HeteroConstPtrView &from,
                         HeteroConstPtrView &to)  {
-              views_<T>[&to] = views_<T>[&from]; }),
+          views_<T>[&to] = views_<T>[&from]; }),
       move_function_([](HeteroConstPtrView &from, HeteroConstPtrView &to)  {
-              views_<T>[&to] = std::move(views_<T>[&from]); })  {
+          auto  iter = views_<T>.find(&from);
+
+          if (iter != views_<T>.end()) {
+              views_<T>[&to] = std::move(iter->second);
+              views_<T>.erase(iter);
+          }
+      })  {
 
     views_<T>.emplace(this, VectorConstPtrView<T, A>(begin_ptr, end_ptr));
 }
@@ -60,7 +66,12 @@ void HeteroConstPtrView<A>::set_begin_end_special(const T *bp, const T *ep_1)  {
                           views_<T>[&to] = views_<T>[&from];
                       };
     move_function_ = [](HeteroConstPtrView &from, HeteroConstPtrView &to)  {
-                         views_<T>[&to] = std::move(views_<T>[&from]);
+                         auto  iter = views_<T>.find(&from);
+
+                         if (iter != views_<T>.end()) {
+                             views_<T>[&to] = std::move(iter->second);
+                             views_<T>.erase(iter);
+                         }
                      };
 
     VectorConstPtrView<T, A>    vv;
@@ -81,7 +92,12 @@ void HeteroConstPtrView<A>::set_empty_vec()  {
                           views_<T>[&to] = views_<T>[&from];
                       };
     move_function_ = [](HeteroConstPtrView &from, HeteroConstPtrView &to)  {
-                         views_<T>[&to] = std::move(views_<T>[&from]);
+                         auto  iter = views_<T>.find(&from);
+
+                         if (iter != views_<T>.end()) {
+                             views_<T>[&to] = std::move(iter->second);
+                             views_<T>.erase(iter);
+                         }
                      };
 
     VectorConstPtrView<T, A>    vv;
@@ -99,7 +115,13 @@ HeteroConstPtrView<A>::HeteroConstPtrView(VectorConstPtrView<T, A> &vec)
                         HeteroConstPtrView &to)  {
               views_<T>[&to] = views_<T>[&from]; }),
       move_function_([](HeteroConstPtrView &from, HeteroConstPtrView &to)  {
-              views_<T>[&to] = std::move(views_<T>[&from]); })  {
+          auto  iter = views_<T>.find(&from);
+
+          if (iter != views_<T>.end()) {
+              views_<T>[&to] = std::move(iter->second);
+              views_<T>.erase(iter);
+          }
+    })  {
 
     views_<T>.emplace(this, vec);
 }
@@ -114,7 +136,13 @@ HeteroConstPtrView<A>::HeteroConstPtrView(VectorConstPtrView<T, A> &&vec)
                         HeteroConstPtrView &to)  {
               views_<T>[&to] = views_<T>[&from]; }),
       move_function_([](HeteroConstPtrView &from, HeteroConstPtrView &to)  {
-              views_<T>[&to] = std::move(views_<T>[&from]); })  {
+          auto  iter = views_<T>.find(&from);
+
+          if (iter != views_<T>.end()) {
+              views_<T>[&to] = std::move(iter->second);
+              views_<T>.erase(iter);
+          }
+      })  {
 
     views_<T>.emplace(this, std::move(vec));
 }

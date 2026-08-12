@@ -43,9 +43,15 @@ template<typename T>
 HeteroView<A>::HeteroView(T *begin_ptr, T *end_ptr)
     : clear_function_([](HeteroView &hv) { views_<T>.erase(&hv); }),
       copy_function_([](const HeteroView &from, HeteroView &to)  {
-              views_<T>[&to] = views_<T>[&from]; }),
+          views_<T>[&to] = views_<T>[&from]; }),
       move_function_([](HeteroView &from, HeteroView &to)  {
-              views_<T>[&to] = std::move(views_<T>[&from]); })  {
+          auto  iter = views_<T>.find(&from);
+
+          if (iter != views_<T>.end()) {
+              views_<T>[&to] = std::move(iter->second);
+              views_<T>.erase(iter);
+          }
+      })  {
 
     views_<T>.emplace(this, VectorView<T, A>(begin_ptr, end_ptr));
 }
@@ -61,7 +67,12 @@ void HeteroView<A>::set_begin_end_special(T *bp, T *ep_1)  {
                           views_<T>[&to] = views_<T>[&from];
                       };
     move_function_ = [](HeteroView &from, HeteroView &to)  {
-                         views_<T>[&to] = std::move(views_<T>[&from]);
+                         auto  iter = views_<T>.find(&from);
+
+                         if (iter != views_<T>.end()) {
+                             views_<T>[&to] = std::move(iter->second);
+                             views_<T>.erase(iter);
+                         }
                      };
 
     VectorView<T, A>    vv;
@@ -81,7 +92,12 @@ void HeteroView<A>::set_empty_vec()  {
                           views_<T>[&to] = views_<T>[&from];
                       };
     move_function_ = [](HeteroView &from, HeteroView &to)  {
-                         views_<T>[&to] = std::move(views_<T>[&from]);
+                         auto  iter = views_<T>.find(&from);
+
+                         if (iter != views_<T>.end()) {
+                             views_<T>[&to] = std::move(iter->second);
+                             views_<T>.erase(iter);
+                         }
                      };
 
     VectorView<T, A>    vv;

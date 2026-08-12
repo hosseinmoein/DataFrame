@@ -45,10 +45,15 @@ DataFrame<I, H>::create_column (const char *name, bool do_lock)  {
     if (! ::strcmp(name, DF_INDEX_COL_NAME)) [[unlikely]]
         throw DataFrameError ("DataFrame::create_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
-    if (column_tb_.find(name) != column_tb_.end()) [[unlikely]]
-       return (get_column<T>(name));
 
-    const SpinGuard guard(do_lock ? lock_ : nullptr);
+    const SpinGuard guard { do_lock ? lock_ : nullptr };
+	const auto      iter { column_tb_.find(name) };
+	
+    if (iter != column_tb_.end()) [[unlikely]]  {
+        DataVec  &hv { data_[iter->second] };
+
+        return (hv.template get_vector<T>());
+    }
 
     if (column_list_.empty()) [[unlikely]]  {
         column_list_.reserve(32);
@@ -58,10 +63,9 @@ DataFrame<I, H>::create_column (const char *name, bool do_lock)  {
     column_tb_.emplace (name, data_.size() - 1);
     column_list_.emplace_back (name, data_.size() - 1);
 
-    DataVec &hv = data_.back();
-    auto    &data_vec = hv.template get_vector<T>();
+    DataVec &hv { data_.back() };
 
-    return (data_vec);
+    return (hv.template get_vector<T>());
 }
 
 // ----------------------------------------------------------------------------
@@ -134,7 +138,7 @@ void DataFrame<I, H>::swap(DataFrame &other)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
+void DataFrame<I, H>::rename_column(const char *from, const char *to)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call rename_column()");
@@ -144,7 +148,7 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
         throw DataFrameError ("DataFrame::rename_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
 
-    const auto  from_iter = column_tb_.find (from);
+    const auto  from_iter { column_tb_.find (from) };
 
     if (from_iter == column_tb_.end())  {
         char buffer [512];
@@ -152,24 +156,25 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
         snprintf (buffer, sizeof(buffer) - 1,
                   "DataFrame::rename_column(): ERROR: Cannot find column '%s'",
                   from);
-        throw ColNotFound (buffer);
+        throw ColNotFound(buffer);
     }
     if (column_tb_.find (to) != column_tb_.end())  {
         char buffer [512];
 
-        snprintf (buffer, sizeof(buffer) - 1,
-                  "DataFrame::rename_column(): "
-                  "ERROR: Column '%s' already exists",
-                  to);
+        snprintf(buffer, sizeof(buffer) - 1,
+                 "DataFrame::rename_column(): "
+                 "ERROR: Column '%s' already exists",
+                 to);
         throw DataFrameError (buffer);
     }
 
-    column_tb_.emplace (to, from_iter->second);
-    column_list_.emplace_back (to, from_iter->second);
-    column_tb_.erase (from);
-    for (size_type i = 0; i < column_list_.size(); ++i)  {
-        if (column_list_[i].first == from)  {
-            column_list_.erase(column_list_.begin() + i);
+    const size_type idx { from_iter->second };
+
+    column_tb_.erase(from);
+    column_tb_.emplace(to, idx);
+    for (auto &[name, list_idx] : column_list_) {
+        if (list_idx == idx) {
+            name = to;
             break;
         }
     }
@@ -407,9 +412,9 @@ load_result_as_column(V &visitor,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call load_result_as_column()");
 
-    const size_type idx_s = indices_.size();
-    auto            &new_col = visitor.get_result();
-    const size_type data_s = new_col.size();
+    const size_type idx_s { indices_.size() };
+    auto            &new_col { visitor.get_result() };
+    const size_type data_s { new_col.size() };
 
     if (data_s > idx_s) [[unlikely]]  {
         char buffer [512];
@@ -427,28 +432,26 @@ load_result_as_column(V &visitor,
 
     using new_type = typename V::result_type::value_type;
 
-    size_type   ret_cnt = data_s;
+    size_type   ret_cnt { data_s };
 
     if (padding == nan_policy::pad_with_nans && data_s < idx_s)  {
-        for (size_type i = 0; i < idx_s - data_s; ++i)  {
+        new_col.reserve(idx_s);
+        for (size_type i { 0 }; i < idx_s - data_s; ++i)  {
             new_col.push_back (std::move(get_nan<new_type>()));
             ret_cnt += 1;
         }
     }
 
-    const auto              iter = column_tb_.find (new_col_name);
-    StlVecType<new_type>    *vec_ptr = nullptr;
+    const auto              iter { column_tb_.find (new_col_name) };
+    StlVecType<new_type>    *vec_ptr { nullptr };
+    const SpinGuard         guard { lock_ };
 
-    {
-        const SpinGuard guard(lock_);
+    if (iter == column_tb_.end())
+        vec_ptr = &(create_column<new_type>(new_col_name, false));
+    else  {
+        DataVec &hv { data_[iter->second] };
 
-        if (iter == column_tb_.end())
-            vec_ptr = &(create_column<new_type>(new_col_name, false));
-        else  {
-            DataVec &hv = data_[iter->second];
-
-            vec_ptr = &(hv.template get_vector<new_type>());
-        }
+        vec_ptr = &(hv.template get_vector<new_type>());
     }
 
     *vec_ptr = std::move(new_col);
@@ -667,28 +670,31 @@ load_align_column(
 
     const size_type idx_s { indices_.size() };
     const size_type data_s { column.size() };
+    StlVecType<T>   new_col;
 
-    StlVecType<T>   new_col(idx_s, null_value);
-    size_type       idx_idx { 0 };
+    if (idx_s != 0 && data_s != 0)  {
+        size_type   idx_idx { 0 };
 
-    if (start_from_beginning)  {
-        new_col[0] = std::move(column[0]);
-        idx_idx = 1;
-    }
+        new_col.resize(idx_s, null_value);
+        if (start_from_beginning)  {
+            new_col[0] = std::move(column[0]);
+            idx_idx = 1;
+        }
 
-    size_type   idx_ref_idx { 0 };
-    size_type   data_idx { idx_idx };
+        size_type   idx_ref_idx { 0 };
+        size_type   data_idx { idx_idx };
 
-    for ( ; data_idx < data_s && idx_idx < idx_s; ++idx_idx)  {
-        const size_type idx_diff {
-            diff_func(indices_[idx_ref_idx], indices_[idx_idx])
-        };
+        for ( ; data_idx < data_s && idx_idx < idx_s; ++idx_idx)  {
+            const size_type idx_diff {
+                diff_func(indices_[idx_ref_idx], indices_[idx_idx])
+            };
 
-        if (idx_diff < interval)  continue;
-        new_col[idx_idx + (idx_diff > interval ? -1 : 0)] =
-            std::move(column[data_idx]);
-        idx_ref_idx = idx_idx + (idx_diff > interval ? -1 : 0);
-        data_idx += 1;
+            if (idx_diff < interval)  continue;
+            new_col[idx_idx + (idx_diff > interval ? -1 : 0)] =
+                std::move(column[data_idx]);
+            idx_ref_idx = idx_idx + (idx_diff > interval ? -1 : 0);
+            data_idx += 1;
+        }
     }
 
     return (load_column<T>(name, std::move(new_col)));
@@ -806,6 +812,7 @@ append_column (const char *name,
 
     s = vec.size();
     if (padding == nan_policy::pad_with_nans && s < idx_s)  {
+        vec.reserve(idx_s);
         for (size_type i = 0; i < idx_s - s; ++i)  {
             vec.push_back (std::move(get_nan<value_t>()));
             ret_cnt += 1;
@@ -847,6 +854,7 @@ append_column (const char *name, const T &val, nan_policy padding)  {
 
     s = vec.size();
     if (padding == nan_policy::pad_with_nans && s < idx_s)  {
+        vec.reserve(idx_s);
         for (size_type i = 0; i < idx_s - s; ++i)  {
             vec.push_back (std::move(get_nan<T>()));
             ret_cnt += 1;

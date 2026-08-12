@@ -131,9 +131,14 @@ public:
 
     VectorView &operator= (std::vector<T> &rhs)  {
 
-        VectorView  vw(&*(rhs.begin()), &(rhs.back()) + 1);
-
-        swap(vw);
+        if (rhs.empty()) {
+            begin_ptr_ = nullptr;
+            end_ptr_ = nullptr;
+        }
+        else {
+            begin_ptr_ = rhs.data();
+            end_ptr_ = rhs.data() + rhs.size();
+        }
         return (*this);
     }
 
@@ -555,9 +560,14 @@ public:
 
     VectorConstView &operator= (const std::vector<T> &rhs)  {
 
-        VectorConstView  vw(&*(rhs.begin()), &(rhs.back()) + 1);
-
-        swap(vw);
+        if (rhs.empty()) {
+            begin_ptr_ = nullptr;
+            end_ptr_ = nullptr;
+        }
+        else {
+            begin_ptr_ = rhs.data();
+            end_ptr_ = rhs.data() + rhs.size();
+        }
         return (*this);
     }
 

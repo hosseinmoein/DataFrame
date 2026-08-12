@@ -58,7 +58,12 @@ get_vector()  {
 
         move_functions_.emplace_back (
             [](HeteroVector &from, HeteroVector &to)  {
-                vectors_<T>[&to] = std::move(vectors_<T>[&from]);
+                auto  iter = vectors_<T>.find(&from);
+
+                if (iter != vectors_<T>.end()) {
+                    vectors_<T>[&to] = std::move(iter->second);
+                    vectors_<T>.erase(iter);
+                }
             });
 
         iter = vectors_<T>.emplace (
@@ -375,10 +380,10 @@ HeteroVector<A>::HeteroVector ()  {
 
 // ----------------------------------------------------------------------------
 
-template<std::size_t A>
-HeteroVector<A>::HeteroVector (const HeteroVector &that)  { *this = that; }
-template<std::size_t A>
-HeteroVector<A>::HeteroVector (HeteroVector &&that)  { *this = that; }
+template<std::size_t A> HeteroVector<A>::
+HeteroVector (const HeteroVector &that)  { *this = that; }
+template<std::size_t A> HeteroVector<A>::
+HeteroVector (HeteroVector &&that)  { *this = std::move(that); }
 
 // ----------------------------------------------------------------------------
 

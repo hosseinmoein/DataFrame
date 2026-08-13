@@ -980,6 +980,239 @@ join_helper_common_(
 
 // ----------------------------------------------------------------------------
 
+//
+// Optimized join helpers.
+//
+// The existing JoinSortingPair representation stores:
+//
+//     pointer-to-key + original-index
+//
+// That is convenient for the original implementation, but unnecessarily
+// expensive when the keys are already sorted. These helpers operate directly
+// on the original vectors and return the same IndexIdxVector consumed by the
+// existing result-building machinery.
+//
+// NONE means "no corresponding row".
+//
+
+template<typename LHS_V, typename RHS_V>
+static IndexIdxVector
+get_inner_index_idx_vector_sorted_(const LHS_V &lhs, const RHS_V &rhs)  {
+
+    using value_t = typename LHS_V::value_type;
+
+    const size_type lhs_s { lhs.size() };
+    const size_type rhs_s { rhs.size() };
+
+    IndexIdxVector result;
+
+    // The minimum is only a lower bound because duplicate keys can produce
+    // a Cartesian product.
+    //
+    result.reserve(std::min(lhs_s, rhs_s));
+
+    size_type   li { 0 };
+    size_type   ri { 0 };
+
+    while (li < lhs_s && ri < rhs_s) [[likely]]  {
+        if (lhs[li] < rhs[ri])  {
+            ++li;
+            continue;
+        }
+        if (rhs[ri] < lhs[li])  {
+            ++ri;
+            continue;
+        }
+
+        // Equal key.  We need the Cartesian product of the equal-key
+        // runs on both sides.
+        //
+        const value_t   &key { lhs[li] };
+        const size_type lhs_begin { li };
+        const size_type rhs_begin { ri };
+
+        while (li < lhs_s && lhs[li] == key)  ++li;
+        while (ri < rhs_s && rhs[ri] == key)  ++ri;
+
+        for (size_type l { lhs_begin }; l < li; ++l)
+            for (size_type r { rhs_begin }; r < ri; ++r)
+                result.emplace_back(l, r);
+    }
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename LHS_V, typename RHS_V>
+static IndexIdxVector
+get_left_index_idx_vector_sorted_(const LHS_V &lhs, const RHS_V &rhs)  {
+
+    using value_t = typename LHS_V::value_type;
+
+    constexpr size_type NONE { std::numeric_limits<size_type>::max() };
+
+    const size_type lhs_s { lhs.size() };
+    const size_type rhs_s { rhs.size() };
+    IndexIdxVector  result;
+
+    result.reserve(lhs_s);
+
+    size_type   li { 0 };
+    size_type   ri { 0 };
+
+    while (li < lhs_s) [[likely]]  {
+        if (ri >= rhs_s) {
+            result.emplace_back(li++, NONE);
+            continue;
+        }
+        if (lhs[li] < rhs[ri])  {
+            result.emplace_back(li++, NONE);
+            continue;
+        }
+        if (rhs[ri] < lhs[li])  {
+            ++ri;
+            continue;
+        }
+
+        // Equal key.
+        //
+        const value_t   &key { lhs[li] };
+        const size_type lhs_begin { li };
+        const size_type rhs_begin { ri };
+
+        while (li < lhs_s && lhs[li] == key)  ++li;
+        while (ri < rhs_s && rhs[ri] == key)  ++ri;
+
+        for (size_type l { lhs_begin }; l < li; ++l)
+            for (size_type r { rhs_begin }; r < ri; ++r)
+                result.emplace_back(l, r);
+    }
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename LHS_V, typename RHS_V>
+static IndexIdxVector
+get_right_index_idx_vector_sorted_(const LHS_V &lhs, const RHS_V &rhs)  {
+
+    using value_t = typename LHS_V::value_type;
+
+    constexpr size_type NONE { std::numeric_limits<size_type>::max() };
+
+    const size_type lhs_s { lhs.size() };
+    const size_type rhs_s { rhs.size() };
+    IndexIdxVector  result;
+
+    result.reserve(rhs_s);
+
+    size_type   li { 0 };
+    size_type   ri { 0 };
+
+    while (ri < rhs_s) [[likely]]  {
+        if (li >= lhs_s)  {
+            result.emplace_back(NONE, ri++);
+            continue;
+        }
+        if (lhs[li] < rhs[ri])  {
+            ++li;
+            continue;
+        }
+        if (rhs[ri] < lhs[li]) { 
+            result.emplace_back(NONE, ri++);
+            continue;
+        }
+
+        // Equal key.
+        //
+        const value_t   &key { rhs[ri] };
+        const size_type lhs_begin { li };
+        const size_type rhs_begin { ri };
+
+        while (li < lhs_s && lhs[li] == key)  ++li;
+        while (ri < rhs_s && rhs[ri] == key)  ++ri;
+
+        for (size_type r { rhs_begin }; r < ri; ++r)
+            for (size_type l { lhs_begin }; l < li; ++l)
+                result.emplace_back(l, r);
+    }
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename LHS_V, typename RHS_V>
+static IndexIdxVector
+get_left_right_index_idx_vector_sorted_(const LHS_V &lhs, const RHS_V &rhs)  {
+
+    using value_t = typename LHS_V::value_type;
+
+    constexpr size_type NONE { std::numeric_limits<size_type>::max() };
+
+    const size_type lhs_s { lhs.size() };
+    const size_type rhs_s { rhs.size() };
+    IndexIdxVector  result;
+
+    result.reserve(lhs_s + rhs_s);
+
+    size_type li { 0 };
+    size_type ri { 0 };
+
+    while (li < lhs_s || ri < rhs_s) [[likely]]  {
+        if (li >= lhs_s)  {
+            result.emplace_back(NONE, ri++);
+            continue;
+        }
+        if (ri >= rhs_s)  {
+            result.emplace_back(li++, NONE);
+            continue;
+        }
+        if (lhs[li] < rhs[ri])  {
+            result.emplace_back(li++, NONE);
+            continue;
+        }
+        if (rhs[ri] < lhs[li])  {
+            result.emplace_back(NONE, ri++);
+            continue;
+        }
+
+        // Equal key.
+        //
+        const value_t   &key { rhs[ri] };
+        const size_type lhs_begin { li };
+        const size_type rhs_begin { ri };
+
+        while (li < lhs_s && lhs[li] == key)  ++li;
+        while (ri < rhs_s && rhs[ri] == key)  ++ri;
+
+        for (size_type l { lhs_begin }; l < li; ++l)
+            for (size_type r { rhs_begin }; r < ri; ++r)
+                result.emplace_back(l, r);
+    }
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+// Build a permutation containing [0, 1, ..., n).
+//
+// This is only used for unsorted joins. It is considerably smaller than the
+// old JoinSortingPair<T>:
+//
+//     old: pointer + size_type
+//     new:  size_type
+//
+static StlVecType<size_type>
+make_identity_permutation_(size_type n)  {
+
+    StlVecType<size_type>   result(n);
+
+    std::iota(result.begin(), result.end(), size_type(0));
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename MAP, typename ... Ts>
 static
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>>

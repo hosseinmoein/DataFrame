@@ -738,14 +738,18 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
     else
         gb_vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
 
-    StlVecType<std::size_t> sort_v(gb_vec->size(), 0);
+    const bool              already_sorted { std::ranges::is_sorted(*gb_vec) };
+    StlVecType<std::size_t> sort_v;
 
-    std::iota(sort_v.begin(), sort_v.end(), 0);
-    std::ranges::sort(sort_v,
-                      [&gb_vec = std::as_const(*gb_vec)]
-                      (std::size_t i, std::size_t j) -> bool  {
-                          return (gb_vec[i] < gb_vec[j]);
-                      });
+    if (! already_sorted)  {
+        sort_v.resize(gb_vec->size(), 0);
+        std::iota(sort_v.begin(), sort_v.end(), 0);
+        std::ranges::sort(sort_v,
+                          [&gb_vec = std::as_const(*gb_vec)]
+                          (std::size_t i, std::size_t j) -> bool  {
+                              return (gb_vec[i] < gb_vec[j]);
+                          });
+    }
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
@@ -767,7 +771,7 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
                                   col_name);
         };
 
-    const SpinGuard guard(lock_);
+    const SpinGuard guard { lock_ };
 
     for_each_in_tuple (args_tuple, func);
     return (result);
@@ -785,7 +789,7 @@ groupby2(const char *col_name1,
 
     const ColumnVecType<T1> *gb_vec1 { nullptr };
     const ColumnVecType<T2> *gb_vec2 { nullptr };
-    const SpinGuard         guard (lock_);
+    const SpinGuard         guard { lock_ };
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
         gb_vec1 = (const ColumnVecType<T1> *) &(get_index());
@@ -804,18 +808,24 @@ groupby2(const char *col_name1,
             (const ColumnVecType<T2> *) &(get_column<T2>(col_name2, false));
     }
 
-    StlVecType<std::size_t> sort_v(
-        std::min(gb_vec1->size(), gb_vec2->size()), 0);
+    // Zip vectors into a range of pairs
+    //
+    const auto              zipped { std::views::zip(*gb_vec1, *gb_vec2) };
+    const bool              already_sorted { std::ranges::is_sorted(zipped) };
+    StlVecType<std::size_t> sort_v;
 
-    std::iota(sort_v.begin(), sort_v.end(), 0);
-    std::ranges::sort(sort_v,
-                      [&gb_vec1 = std::as_const(*gb_vec1),
-                       &gb_vec2 = std::as_const(*gb_vec2)]
-                      (std::size_t i, std::size_t j) -> bool  {
-                          if (gb_vec1[i] != gb_vec1[j])
-                              return (gb_vec1[i] < gb_vec1[j]);
-                          return (gb_vec2[i] < gb_vec2[j]);
-                      });
+    if (! already_sorted)  {
+        sort_v.resize(std::min(gb_vec1->size(), gb_vec2->size()), 0);
+        std::iota(sort_v.begin(), sort_v.end(), 0);
+        std::ranges::sort(sort_v,
+                          [&gb_vec1 = std::as_const(*gb_vec1),
+                           &gb_vec2 = std::as_const(*gb_vec2)]
+                          (std::size_t i, std::size_t j) -> bool  {
+                              if (gb_vec1[i] != gb_vec1[j])
+                                  return (gb_vec1[i] < gb_vec1[j]);
+                              return (gb_vec2[i] < gb_vec2[j]);
+                          });
+    }
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
@@ -860,7 +870,7 @@ groupby3(const char *col_name1,
     const ColumnVecType<T1> *gb_vec1 { nullptr };
     const ColumnVecType<T2> *gb_vec2 { nullptr };
     const ColumnVecType<T3> *gb_vec3 { nullptr };
-    const SpinGuard         guard (lock_);
+    const SpinGuard         guard { lock_ };
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
         gb_vec1 = (const ColumnVecType<T1> *) &(get_index());
@@ -893,21 +903,30 @@ groupby3(const char *col_name1,
             (const ColumnVecType<T3> *) &(get_column<T3>(col_name3, false));
     }
 
-    StlVecType<std::size_t> sort_v(
-        std::min({ gb_vec1->size(), gb_vec2->size(), gb_vec3->size() }), 0);
+    const auto              zipped {
+        std::views::zip(*gb_vec1, *gb_vec2, *gb_vec3)
+    };
+    const bool              already_sorted { std::ranges::is_sorted(zipped) };
+    StlVecType<std::size_t> sort_v;
 
-    std::iota(sort_v.begin(), sort_v.end(), 0);
-    std::ranges::sort(sort_v,
-                      [&gb_vec1 = std::as_const(*gb_vec1),
-                       &gb_vec2 = std::as_const(*gb_vec2),
-                       &gb_vec3 = std::as_const(*gb_vec3)]
-                      (std::size_t i, std::size_t j) -> bool  {
-                          if (gb_vec1[i] != gb_vec1[j])
-                              return (gb_vec1[i] < gb_vec1[j]);
-                          if (gb_vec2[i] != gb_vec2[j])
-                              return (gb_vec2[i] < gb_vec2[j]);
-                          return (gb_vec3[i] < gb_vec3[j]);
-                      });
+    if (! already_sorted)  {
+        sort_v.resize(std::min({ gb_vec1->size(),
+                                 gb_vec2->size(),
+                                 gb_vec3->size() }),
+                      0);
+        std::iota(sort_v.begin(), sort_v.end(), 0);
+        std::ranges::sort(sort_v,
+                          [&gb_vec1 = std::as_const(*gb_vec1),
+                           &gb_vec2 = std::as_const(*gb_vec2),
+                           &gb_vec3 = std::as_const(*gb_vec3)]
+                          (std::size_t i, std::size_t j) -> bool  {
+                              if (gb_vec1[i] != gb_vec1[j])
+                                  return (gb_vec1[i] < gb_vec1[j]);
+                              if (gb_vec2[i] != gb_vec2[j])
+                                  return (gb_vec2[i] < gb_vec2[j]);
+                              return (gb_vec3[i] < gb_vec3[j]);
+                          });
+    }
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 

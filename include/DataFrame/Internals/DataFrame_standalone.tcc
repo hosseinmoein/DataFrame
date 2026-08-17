@@ -832,41 +832,45 @@ _load_groupby_data_3_(
     const char *col_name2,
     const char *col_name3) {
 
-    std::size_t         marker = 0;
-    auto                &dst_idx = dest.get_index();
-    const std::size_t   vec_size =
-        std::min({ input_col1.size(), input_col2.size(), input_col3.size() });
-    const auto          &src_idx = source.get_index();
+    std::size_t         marker { 0 };
+    auto                &dst_idx { dest.get_index() };
+    const std::size_t   vec_size {
+        std::min({ input_col1.size(), input_col2.size(), input_col3.size() })
+    };
+    const auto          &src_idx { source.get_index() };
 
     if (dst_idx.empty())  {
         using ColValueType1 = typename V1::value_type;
         using ColValueType2 = typename V2::value_type;
         using ColValueType3 = typename V3::value_type;
 
-        auto    *col_vec1 =
+        auto    *col_vec1 {
             ::strcmp(col_name1, DF_INDEX_COL_NAME)
                 ? &(dest.template create_column<ColValueType1>(col_name1))
-                : nullptr;
-        auto    *col_vec2 =
+                : nullptr
+        };
+        auto    *col_vec2 {
             ::strcmp(col_name2, DF_INDEX_COL_NAME)
                 ? &(dest.template create_column<ColValueType2>(col_name2))
-                : nullptr;
-        auto    *col_vec3 =
+                : nullptr
+        };
+        auto    *col_vec3 {
             ::strcmp(col_name3, DF_INDEX_COL_NAME)
                 ? &(dest.template create_column<ColValueType3>(col_name3))
-                : nullptr;
+                : nullptr
+        };
 
         dst_idx.reserve(vec_size / 2 + 1);
         if (col_vec1) col_vec1->reserve(vec_size / 2 + 1);
         if (col_vec2) col_vec2->reserve(vec_size / 2 + 1);
         if (col_vec3) col_vec3->reserve(vec_size / 2 + 1);
         if (sort_v.empty())  { // The input vector was already sorted
-            for (std::size_t i = 0; i < vec_size; ++i)  {
+            for (std::size_t i { 0 }; i < vec_size; ++i)  {
                 if (input_col1[i] != input_col1[marker] ||
                     input_col2[i] != input_col2[marker] ||
                     input_col3[i] != input_col3[marker])  {
                     idx_visitor.pre();
-                    for (std::size_t j = marker; j < i; ++j)
+                    for (std::size_t j { marker }; j < i; ++j)
                         idx_visitor(src_idx[j], src_idx[j]);
                     idx_visitor.post();
                     dst_idx.push_back(idx_visitor.get_result());
@@ -884,7 +888,7 @@ _load_groupby_data_3_(
                 if (vec_size == 1)
                     idx_visitor(src_idx[0], src_idx[0]);
                 else
-                    for (std::size_t j = marker; j < vec_size; ++j)
+                    for (std::size_t j { marker }; j < vec_size; ++j)
                         idx_visitor(src_idx[j], src_idx[j]);
                 idx_visitor.post();
                 dst_idx.push_back(idx_visitor.get_result());
@@ -897,12 +901,12 @@ _load_groupby_data_3_(
             }
         }
         else  {
-            for (std::size_t i = 0; i < vec_size; ++i)  {
+            for (std::size_t i { 0 }; i < vec_size; ++i)  {
                 if (input_col1[sort_v[i]] != input_col1[sort_v[marker]] ||
                     input_col2[sort_v[i]] != input_col2[sort_v[marker]] ||
                     input_col3[sort_v[i]] != input_col3[sort_v[marker]])  {
                     idx_visitor.pre();
-                    for (std::size_t j = marker; j < i; ++j)
+                    for (std::size_t j { marker }; j < i; ++j)
                         idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
                     idx_visitor.post();
                     dst_idx.push_back(idx_visitor.get_result());
@@ -920,7 +924,7 @@ _load_groupby_data_3_(
                 if (vec_size == 1)
                     idx_visitor(src_idx[sort_v[0]], src_idx[sort_v[0]]);
                 else
-                    for (std::size_t j = marker; j < vec_size; ++j)
+                    for (std::size_t j { marker }; j < vec_size; ++j)
                         idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
                 idx_visitor.post();
                 dst_idx.push_back(idx_visitor.get_result());
@@ -936,22 +940,24 @@ _load_groupby_data_3_(
 
     using ValueType = typename std::tuple_element<2, T>::type::value_type;
 
-    const auto          &src_vec =
-        source.template get_column<ValueType>(std::get<0>(triple));
-    const std::size_t   max_count =
-        std::min(vec_size, std::size_t(src_vec.size()));
-    auto                &dst_vec = _create_column_from_triple_(dest, triple);
-    auto                &visitor = std::get<2>(triple);
+    const auto          &src_vec {
+        source.template get_column<ValueType>(std::get<0>(triple))
+    };
+    const std::size_t   max_count {
+        std::min(vec_size, std::size_t(src_vec.size()))
+    };
+    auto                &dst_vec { _create_column_from_triple_(dest, triple) };
+    auto                &visitor { std::get<2>(triple) };
 
     dst_vec.reserve(max_count / 2 + 1);
     marker = 0;
     if (sort_v.empty())  { // The input vector was already sorted
-        for (std::size_t i = 0; i < max_count; ++i) [[likely]]  {
+        for (std::size_t i { 0 }; i < max_count; ++i) [[likely]]  {
             if (input_col1[i] != input_col1[marker] ||
                 input_col2[i] != input_col2[marker] ||
                 input_col3[i] != input_col3[marker])  {
                 visitor.pre();
-                for (std::size_t j = marker; j < i; ++j)
+                for (std::size_t j { marker }; j < i; ++j)
                     visitor(src_idx[j], src_vec[j]);
                 visitor.post();
                 dst_vec.push_back(visitor.get_result());
@@ -963,19 +969,19 @@ _load_groupby_data_3_(
             if (max_count == 1)
                 visitor(src_idx[0], src_vec[0]);
             else
-                for (std::size_t j = marker; j < max_count; ++j)
+                for (std::size_t j { marker }; j < max_count; ++j)
                     visitor(src_idx[j], src_vec[j]);
             visitor.post();
             dst_vec.push_back(visitor.get_result());
         }
     }
     else  {
-        for (std::size_t i = 0; i < max_count; ++i) [[likely]]  {
+        for (std::size_t i { 0 }; i < max_count; ++i) [[likely]]  {
             if (input_col1[sort_v[i]] != input_col1[sort_v[marker]] ||
                 input_col2[sort_v[i]] != input_col2[sort_v[marker]] ||
                 input_col3[sort_v[i]] != input_col3[sort_v[marker]])  {
                 visitor.pre();
-                for (std::size_t j = marker; j < i; ++j)
+                for (std::size_t j { marker }; j < i; ++j)
                     visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
                 visitor.post();
                 dst_vec.push_back(visitor.get_result());
@@ -987,7 +993,7 @@ _load_groupby_data_3_(
             if (max_count == 1)
                 visitor(src_idx[sort_v[0]], src_vec[sort_v[0]]);
             else
-                for (std::size_t j = marker; j < max_count; ++j)
+                for (std::size_t j { marker }; j < max_count; ++j)
                     visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
             visitor.post();
             dst_vec.push_back(visitor.get_result());
@@ -1013,7 +1019,7 @@ _resample_core_(DV &dst_vec,
     dst_vec.reserve(src_s / 5);
     if (tf == time_frequency::secondly)  {
         visitor.pre();
-        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+        for (std::size_t i { 0 }; i < src_s; ++i) [[likely]]  {
             if (src_idx[i].diff_seconds(src_idx[marker]) >= int_d) {
                 visitor.post();
                 dst_vec.push_back(visitor.get_result());
@@ -1025,7 +1031,7 @@ _resample_core_(DV &dst_vec,
     }
     else if (tf == time_frequency::minutely)  {
         visitor.pre();
-        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+        for (std::size_t i { 0 }; i < src_s; ++i) [[likely]]  {
             if (src_idx[i].diff_minutes(src_idx[marker]) >= int_d) {
                 visitor.post();
                 dst_vec.push_back(visitor.get_result());
@@ -1037,7 +1043,7 @@ _resample_core_(DV &dst_vec,
     }
     else if (tf == time_frequency::hourly)  {
         visitor.pre();
-        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+        for (std::size_t i { 0 }; i < src_s; ++i) [[likely]]  {
             if (src_idx[i].diff_hours(src_idx[marker]) >= int_d) {
                 visitor.post();
                 dst_vec.push_back(visitor.get_result());
@@ -1049,7 +1055,7 @@ _resample_core_(DV &dst_vec,
     }
     else if (tf == time_frequency::daily)  {
         visitor.pre();
-        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+        for (std::size_t i { 0 }; i < src_s; ++i) [[likely]]  {
             if (src_idx[i].diff_days(src_idx[marker]) >= int_d) {
                 visitor.post();
                 dst_vec.push_back(visitor.get_result());
@@ -1063,7 +1069,7 @@ _resample_core_(DV &dst_vec,
         std::size_t count { 0 };
 
         visitor.pre();
-        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+        for (std::size_t i { 0 }; i < src_s; ++i) [[likely]]  {
             if (i > 0 &&
                 (src_idx[i].dweek() <= src_idx[marker].dweek() ||
                  (src_idx[i].dyear() - src_idx[marker].dyear()) >= 7))  {
@@ -1084,7 +1090,7 @@ _resample_core_(DV &dst_vec,
         std::size_t count { 0 };
 
         visitor.pre();
-        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+        for (std::size_t i { 0 }; i < src_s; ++i) [[likely]]  {
             if (src_idx[i].month() != src_idx[marker].month())  {
                 count += 1;
                 marker = i;
@@ -1103,7 +1109,7 @@ _resample_core_(DV &dst_vec,
         std::size_t count { 0 };
 
         visitor.pre();
-        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+        for (std::size_t i { 0 }; i < src_s; ++i) [[likely]]  {
             if (src_idx[i].year() != src_idx[marker].year())  {
                 count += 1;
                 marker = i;
@@ -1137,15 +1143,17 @@ _load_resample_data_(const DF &source,
 
     using ValueType = typename std::tuple_element<2, T>::type::value_type;
 
-    const auto          &src_idx = source.get_index();
-    const auto          &src_vec =
-        source.template get_column<ValueType>(std::get<0>(triple));
-    auto                &dst_vec = _create_column_from_triple_(dest, triple);
-    const std::size_t   src_s = std::min(src_vec.size(), src_idx.size());
-    auto                &visitor = std::get<2>(triple);
-    const auto          thread_level =
+    const auto          &src_idx { source.get_index() };
+    const auto          &src_vec {
+        source.template get_column<ValueType>(std::get<0>(triple))
+    };
+    auto                &dst_vec { _create_column_from_triple_(dest, triple) };
+    const std::size_t   src_s { std::min(src_vec.size(), src_idx.size()) };
+    auto                &visitor { std::get<2>(triple) };
+    const auto          thread_level {
         (src_idx.size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+            ? 0L : ThreadGranularity::get_thread_level()
+    };
 
     if (thread_level > 3)  {
         futures.emplace_back(
@@ -1193,7 +1201,7 @@ _bucketize_core_(DV &dst_vec,
         std::size_t marker { 0 };
 
         visitor.pre();
-        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
+        for (std::size_t i { 0 }; i < src_s; ++i) [[likely]]  {
             if (src_idx[i] - src_idx[marker] >= src_type(value))  {
                 visitor.post();
                 dst_vec.push_back(visitor.get_result());
@@ -1206,9 +1214,9 @@ _bucketize_core_(DV &dst_vec,
     else if (bt == bucket_type::by_count)  {
         if (src_s < src_type(value))  return;
 
-        for (std::size_t i = 0; (i + value) < src_s; i += value) [[likely]]  {
+        for (std::size_t i { 0 }; (i + value) < src_s; i += value) [[likely]] {
             visitor.pre();
-            for (std::size_t j = 0;
+            for (std::size_t j { 0 };
                  (j < std::size_t(value)) && ((i + j) < src_s); ++j)
                 visitor(src_idx[i + j], src_vec[i + j]);
             visitor.post();
@@ -1230,15 +1238,17 @@ _load_bucket_data_(const DF &source,
 
     using ValueType = typename std::tuple_element<2, T>::type::value_type;
 
-    const auto          &src_idx = source.get_index();
-    const auto          &src_vec =
-        source.template get_column<ValueType>(std::get<0>(triple));
-    auto                &dst_vec = _create_column_from_triple_(dest, triple);
-    const std::size_t   src_s = std::min(src_vec.size(), src_idx.size());
-    auto                &visitor = std::get<2>(triple);
-    const auto          thread_level =
+    const auto          &src_idx { source.get_index() };
+    const auto          &src_vec {
+        source.template get_column<ValueType>(std::get<0>(triple))
+    };
+    auto                &dst_vec { _create_column_from_triple_(dest, triple) };
+    const std::size_t   src_s { std::min(src_vec.size(), src_idx.size()) };
+    auto                &visitor { std::get<2>(triple) };
+    const auto          thread_level {
         (src_idx.size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+            ? 0L : ThreadGranularity::get_thread_level()
+    };
 
     if (thread_level > 3)  {
         futures.emplace_back(
@@ -3320,7 +3330,7 @@ _shape_based_dist_(const V &x, const V &y) {
                              "x and y vectors must be of the same length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const auto  cc = _kshape_cross_corr_(x, y);
+    const auto  cc { _kshape_cross_corr_(x, y) };
 
     // Find maximum cross-correlation
     //
@@ -3360,7 +3370,7 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
     using data_t = typename KShapeParams<typename V::value_type>::data_t;
 
     const long              col_s { static_cast<long>(cluster[0]->size()) };
-    auto                    centroid = *(cluster[0]);
+    auto                    centroid { *(cluster[0]) };
     const std::vector<long> fake_index;
     NT                      norm_v2 { norm_v };
 
@@ -3369,12 +3379,13 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
            centroid.begin(), centroid.end());
     norm_v.post();
 
-    auto    zero_elem = [](value_type &elem) -> void  {
-        if constexpr (random_acc_cont<value_type>)
-            std::fill(elem.begin(), elem.end(), data_t { 0 });
-        else
-            elem = data_t(0);
-    };
+    auto    zero_elem =
+        [](value_type &elem) -> void  {
+            if constexpr (random_acc_cont<value_type>)
+                std::fill(elem.begin(), elem.end(), data_t { 0 });
+            else
+                elem = data_t(0);
+        };
 
     // Iterative refinement
     //

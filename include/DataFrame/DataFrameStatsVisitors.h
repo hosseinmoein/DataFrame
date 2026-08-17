@@ -615,7 +615,7 @@ public:
             }
         }
 
-        result_ = result_ + val;
+        result_ += val;
     }
     template <typename K, typename H>
     inline void
@@ -955,6 +955,7 @@ template<arithmetic T, typename I = unsigned long>
 struct  HarmonicMeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
+    using size_type = std::size_t;
 
     inline void operator() (const I &idx, const T &val)  {
 
@@ -963,7 +964,51 @@ struct  HarmonicMeanVisitor : public MeanBase<T, I>  {
         BaseClass::_cnt += 1;
         BaseClass::_sum(idx, T(1) / val);
     }
-    PASS_DATA_ONE_BY_ONE
+
+    template <typename K, typename H>
+    inline void
+    operator() (K /*idx_begin*/, K /*idx_end*/,
+                H column_begin, H column_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
+        auto            lbd =
+            [this] (const auto &begin, const auto &end) -> T  {
+                T   sum { 0 };
+
+                if (! BaseClass::_skip_nan)
+                    for (auto citer { begin }; citer < end; ++citer)
+                        sum += T(1) / *citer;
+                else
+                    for (auto citer { begin }; citer < end; ++citer)
+                        if (! is_nan__(*citer))
+                            sum += T(1) / *citer;
+                return (sum);
+            };
+        T               sum_sq { 0 };
+
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<T>(
+                    column_begin, column_end, std::move(lbd))
+            };
+
+            for (auto &fut : futures)  sum_sq += fut.get();
+        }
+        else
+            sum_sq = lbd(column_begin, column_end);
+
+        // _sum exposes T& via get_result()
+        //
+        BaseClass::_sum.get_result() = sum_sq;
+        BaseClass::_cnt =
+            BaseClass::_skip_nan
+                ? std::count_if(column_begin, column_end,
+                                [](const T &v) { return (! is_nan__(v)); })
+                : col_s;
+    }
 
     inline void post ()  {
 
@@ -980,6 +1025,7 @@ template<arithmetic T, typename I = unsigned long>
 struct  QuadraticMeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
+    using size_type = std::size_t;
 
     inline void operator() (const I &idx, const T &val)  {
 
@@ -988,7 +1034,51 @@ struct  QuadraticMeanVisitor : public MeanBase<T, I>  {
         BaseClass::_cnt += 1;
         BaseClass::_sum(idx, val * val);
     }
-    PASS_DATA_ONE_BY_ONE
+
+    template <typename K, typename H>
+    inline void
+    operator() (K /*idx_begin*/, K /*idx_end*/,
+                H column_begin, H column_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
+        auto            lbd =
+            [this] (const auto &begin, const auto &end) -> T  {
+                T   sum { 0 };
+
+                if (! BaseClass::_skip_nan)
+                    for (auto citer { begin }; citer < end; ++citer)
+                        sum += *citer * *citer;
+                else
+                    for (auto citer { begin }; citer < end; ++citer)
+                        if (! is_nan__(*citer))
+                            sum += *citer * *citer;
+                return (sum);
+            };
+        T               sum_sq { 0 };
+
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<T>(
+                    column_begin, column_end, std::move(lbd))
+            };
+
+            for (auto &fut : futures)  sum_sq += fut.get();
+        }
+        else
+            sum_sq = lbd(column_begin, column_end);
+
+        // _sum exposes T& via get_result()
+        //
+        BaseClass::_sum.get_result() = sum_sq;
+        BaseClass::_cnt =
+            BaseClass::_skip_nan
+                ? std::count_if(column_begin, column_end,
+                                [](const T &v) { return (! is_nan__(v)); })
+                : col_s;
+    }
 
     inline void post()  {
 
@@ -1142,7 +1232,7 @@ struct  ExtremumVisitor  {
         size_type    index { 0 };
 
         for (; index < col_s; ++index, ++counter_)  {
-            const auto  &val = *(column_begin + index);
+            const auto  &val { *(column_begin + index) };
 
             if (! skip_nan_ || ! is_nan__(val)) [[likely]]  {
                 pos_ = counter_;
@@ -1163,13 +1253,13 @@ struct  ExtremumVisitor  {
                     value_type  extremum { value_type(*begin) };
 
                     if (! this->skip_nan_)  {
-                        for (auto citer = begin + 1; citer < end; ++citer)  {
+                        for (auto citer { begin + 1 }; citer < end; ++citer)  {
                             if (this->cmp_(extremum, *citer))
                                 extremum = *citer;
                         }
                     }
                     else  {
-                        for (auto citer = begin + 1; citer < end; ++citer)  {
+                        for (auto citer { begin + 1 }; citer < end; ++citer)  {
                             if (this->cmp_(extremum, *citer) &&
                                 ! is_nan__(*citer))
                                 extremum = *citer;
@@ -1178,14 +1268,15 @@ struct  ExtremumVisitor  {
 
                     return (extremum);
                 };
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    column_begin + index, column_end, std::move(lbd));
+                    column_begin + index, column_end, std::move(lbd))
+            };
 
             if (! futures.empty())  {
                 extremum_ = futures[0].get();
-                for (size_type i = 1; i < futures.size(); ++i)  {
-                    const auto  val = std::move(futures[i].get());
+                for (size_type i { 1 }; i < futures.size(); ++i)  {
+                    const auto  val { std::move(futures[i].get()) };
 
                     if (cmp_(extremum_, val))
                         extremum_ = val;
@@ -1195,7 +1286,7 @@ struct  ExtremumVisitor  {
         else  {
             if (! skip_nan_)  {
                 for (; index < col_s; ++index, ++counter_)  {
-                    const auto  &val = *(column_begin + index);
+                    const auto  &val { *(column_begin + index) };
 
                     if (cmp_(extremum_, val))  {
                         extremum_ = val;
@@ -1206,7 +1297,7 @@ struct  ExtremumVisitor  {
             }
             else  {
                 for (; index < col_s; ++index, ++counter_)  {
-                    const auto  &val = *(column_begin + index);
+                    const auto  &val { *(column_begin + index) };
 
                     if (cmp_(extremum_, val) && ! is_nan__(val))  {
                         extremum_ = val;
@@ -1613,13 +1704,14 @@ public:
             if (std::distance(column_begin1, column_end1) >=
                     ThreadPool::MUL_THR_THHOLD &&
                 ThreadGranularity::get_thread_level() > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop2<T>(
                         column_begin1,
                         column_end1,
                         column_begin2,
                         column_end2,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
 
                 for (auto &fut : futures)  {
                     const auto  &result = fut.get();
@@ -1636,50 +1728,95 @@ public:
                 inter_result_ = lbd(column_begin1, column_end1, column_begin2);
             }
         }
-        else  {
+        else  {  // Multidimensional input columns
             const long  dim1 { long(column_begin1->size()) };
             const long  dim2 { long(column_begin2->size()) };
 
-            // Compute means
-            //
-            mean1_.resize(dim1, 0);
-            mean2_.resize(dim2, 0);
-            for (long k { 0 }; k < long(col_s); ++k) {
-                const auto  &val1 { *(column_begin1 + k) };
-                const auto  &val2 { *(column_begin2 + k) };
+            mean1_.assign(dim1, 0);
+            mean2_.assign(dim2, 0);
 
-#ifdef HMDF_SANITY_EXCEPTIONS
-                if (long(val1.size()) != dim1 || long(val2.size()) != dim2)
-                    throw DataFrameError("CovVisitor: Inconsistent dimensions");
-#endif // HMDF_SANITY_EXCEPTIONS
+            auto    mean_lbd =
+                [dim1, dim2]
+                (const auto &begin1, const auto &end1, const auto &begin2)
+                    -> std::pair<std::vector<data_t>, std::vector<data_t>>  {
+                    std::vector<data_t> m1(dim1, 0), m2(dim2, 0);
 
-                for (long i { 0 }; i < dim1; ++i)
-                    mean1_[i] += val1[i];
-                for (long i { 0 }; i < dim2; ++i)
-                    mean2_[i] += val2[i];
+                    for (auto c1 { begin1 }, c2 { begin2 };
+                         c1 < end1; ++c1, ++c2)  {
+                        for (long i { 0 }; i < dim1; ++i)  m1[i] += (*c1)[i];
+                        for (long i { 0 }; i < dim2; ++i)  m2[i] += (*c2)[i];
+                    }
+                    return { std::move(m1), std::move(m2) };
+                };
+
+            if (long(col_s) >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    futures {
+                    ThreadGranularity::thr_pool_.parallel_loop2<
+                        std::pair<std::vector<data_t>, std::vector<data_t>>>(
+                        column_begin1, column_end1,
+                        column_begin2, column_end2, std::move(mean_lbd))
+                };
+
+                for (auto &fut : futures)  {
+                    auto    [m1, m2] = fut.get();
+
+                    for (long i { 0 }; i < dim1; ++i)  mean1_[i] += m1[i];
+                    for (long i { 0 }; i < dim2; ++i)  mean2_[i] += m2[i];
+                }
             }
+            else  {
+                auto    [m1, m2] =
+                    mean_lbd(column_begin1, column_end1, column_begin2);
 
+                mean1_ = std::move(m1);
+                mean2_ = std::move(m2);
+            }
             mean1_ /= static_cast<data_t>(col_s);
             mean2_ /= static_cast<data_t>(col_s);
 
-            // Allocate result and accumulate cross outer products
-            //
             result_.resize(dim1, dim2, 0);
-            for (long k { 0 }; k < long(col_s); ++k) {
-                for (long i { 0 }; i < dim1; ++i) {
-                    const data_t    dx {
-                        (*(column_begin1 + k))[i] - mean1_[i]
+
+            auto    cov_lbd =
+                [this, dim1, dim2]
+                (const auto &begin1, const auto &end1, const auto &begin2)
+                    -> Matrix<data_t, matrix_orient::row_major>  {
+                    Matrix<data_t, matrix_orient::row_major>   partial {
+                        dim1, dim2, 0
                     };
 
-                    for (long j { 0 }; j < dim2; ++j) {
-                        const data_t    dy {
-                            (*(column_begin2 + k))[j] - mean2_[j]
-                        };
+                    for (auto c1 { begin1 }, c2 { begin2 };
+                         c1 < end1; ++c1, ++c2)  {
+                        for (long i { 0 }; i < dim1; ++i)  {
+                            const data_t    dx { (*c1)[i] - this->mean1_[i] };
 
-                        result_(i, j) += dx * dy;
+                            for (long j { 0 }; j < dim2; ++j)
+                                partial(i, j) +=
+                                    dx * ((*c2)[j] - this->mean2_[j]);
+                        }
                     }
+                    return (partial);
+                };
+
+            if (long(col_s) >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    futures {
+                    ThreadGranularity::thr_pool_.parallel_loop2<
+                        Matrix<data_t, matrix_orient::row_major>>(
+                        column_begin1, column_end1,
+                        column_begin2, column_end2, std::move(cov_lbd))
+                };
+
+                for (auto &fut : futures)  {
+                    const auto  &partial { fut.get() };
+
+                    for (long i { 0 }; i < dim1; ++i)
+                        for (long j { 0 }; j < dim2; ++j)
+                            result_(i, j) += partial(i, j);
                 }
             }
+            else
+                result_ = cov_lbd(column_begin1, column_end1, column_begin2);
 
             const data_t    norm {
                 data_t(1) / static_cast<data_t>(col_s - b_)
@@ -1868,8 +2005,10 @@ public:
 
             // Accumulated centered outer products
             //
-            const long  dim { long(column_begin->size()) };
-            result_type m2 { dim, dim, 0 };
+            const long          dim { long(column_begin->size()) };
+            result_type         m2 { dim, dim, 0 };
+            std::vector<data_t> delta(dim);  // delta = x - mean
+            std::vector<data_t> delta2(dim); // delta2 = x - new_mean
 
             // Running mean
             //
@@ -1884,11 +2023,7 @@ public:
                                          "Inconsistent dimensions");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-                count_ += 1;;
-
-                // delta = x - mean
-                //
-                std::vector<data_t> delta(dim);
+                count_ += 1;
 
                 for (long i { 0 }; i < dim; ++i)
                     delta[i] = point[i] - mean_[i];
@@ -1897,10 +2032,6 @@ public:
                 //
                 for (long i { 0 }; i < dim; ++i)
                     mean_[i] += delta[i] / data_t(count_);
-
-                // delta2 = x - new_mean
-                //
-                std::vector<data_t> delta2(dim);
 
                 for (long i { 0 }; i < dim; ++i)
                     delta2[i] = point[i] - mean_[i];
@@ -2045,24 +2176,24 @@ public:
                     "BetaVisitor: Need at least 3 " "observations");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-            // Σ_XY  (d1 × d2)
+            // Σ_XY (d1 × d2)
             //
             cov_.pre();
             cov_(idx_begin, idx_end,
                  data_begin, data_end, benchmark_begin, benchmark_end);
             cov_.post();
 
-            const auto  sigma_xy = std::move(cov_.get_result());
+            const auto  sigma_xy { std::move(cov_.get_result()) };
 
-            // Σ_Y  (d2 × d2)
+            // Σ_Y (d2 × d2)
             //
             VarVisitor<value_type, index_type>  var_;
 
             var_.pre();
-            var_ (idx_begin, idx_end, benchmark_begin, benchmark_end);
+            var_(idx_begin, idx_end, benchmark_begin, benchmark_end);
             var_.post();
 
-            const auto  sigma_y = std::move(var_.get_result());
+            const auto  sigma_y { std::move(var_.get_result()) };
 
             // Solve Σ_Y * B^T = Σ_XY^T
             //
@@ -2091,7 +2222,7 @@ public:
         if constexpr (std::is_arithmetic_v<value_type>)  {
             cov_.post();
 
-            const value_type    v = cov_.get_var2();
+            const value_type    v { cov_.get_var2() };
 
             result_ = v != 0.0
                           ? cov_.get_result() / v
@@ -2106,7 +2237,8 @@ public:
     get_benchmark_mean() const  { return (cov_.get_mean2()); }
 
     explicit
-    BetaVisitor(bool biased = false, bool skip_nan = false,
+    BetaVisitor(bool biased = false,
+                bool skip_nan = false,
                 bool stable_algo = false)
         : cov_(biased, skip_nan, stable_algo)  {   }
 
@@ -2141,20 +2273,20 @@ public:
                                     T,
                                     std::vector<data_t>>;
 
+    inline void
+    operator()(const index_type &idx, const value_type &val)  {
 
-    inline void operator()(const index_type &idx, const value_type &val)  {
-
-        var_ (idx, val);
+        var_(idx, val);
     }
     template <typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &column_begin, const H &column_end) {
 
-        var_ (idx_begin, idx_end, column_begin, column_end);
+        var_(idx_begin, idx_end, column_begin, column_end);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         var_.pre();
         if constexpr (std::is_arithmetic_v<value_type>)
@@ -2162,7 +2294,7 @@ public:
         else
             result_.clear();
     }
-    inline void post ()  {
+    inline void post()  {
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
             var_.post();
@@ -2176,14 +2308,16 @@ public:
                 result_[i] = std::sqrt(var(i, i));
         }
     }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
     inline size_type get_count() const  { return (var_.get_count()); }
     inline const mean_t &get_mean() const  { return (var_.get_mean()); }
     data_t get_b() const  { return (var_.get_b()); }
 
-    explicit StdVisitor (bool biased = false, bool skip_nan = false,
-                         bool stable_algo = false)
+    explicit
+    StdVisitor(bool biased = false,
+               bool skip_nan = false,
+               bool stable_algo = false)
         : var_ (biased, skip_nan, stable_algo)  {   }
 
 private:
@@ -2241,8 +2375,9 @@ public:
 
             // Calculate covariance of dimensions
             //
-            mean_t      means (dim, 0);
-            mean_t      delta (dim, 0);
+            mean_t  means (dim, 0);
+            mean_t  delta (dim, 0);
+            mean_t  delta2(dim, 0);
 
             result_.resize(dim, dim, 0);
             for (long j { 0 }; j < col_s; ++j)  {
@@ -2257,8 +2392,6 @@ public:
                 //
                 for (long i { 0 }; i < dim; ++i)
                     means[i] += delta[i] * inv_n;
-
-                mean_t  delta2(dim, 0);
 
                 for (long i { 0 }; i < dim; ++i)
                     delta2[i] = point[i] - means[i];
@@ -2385,13 +2518,14 @@ public:
             matrix_t    m2_x { dim, dim, 0 };
             matrix_t    m2_y { dim, dim, 0 };
             matrix_t    m2_xy { dim, dim, 0 };
+            mean_t      dx2(dim, 0);
+            mean_t      dy2(dim, 0);
+            mean_t      dx(dim, 0);
+            mean_t      dy(dim, 0);
 
             for (long j { 0 }; j < col_s; ++j)  {
                 const auto  &val_x { *(column_begin1 + j) };
                 const auto  &val_y { *(column_begin2 + j) };
-
-                mean_t  dx(dim, 0);
-                mean_t  dy(dim, 0);
 
                 for (long i { 0 }; i < dim; ++i)  {
                     dx[i] = val_x[i] - mean_x[i];
@@ -2403,9 +2537,6 @@ public:
                 mean_x += dx * inv_n;
                 mean_y += dy * inv_n;
 
-                mean_t  dx2(dim, 0);
-                mean_t  dy2(dim, 0);
-
                 for (long i { 0 }; i < dim; ++i)  {
                     dx2[i] = val_x[i] - mean_x[i];
                     dy2[i] = val_y[i] - mean_y[i];
@@ -2415,7 +2546,7 @@ public:
                     for (long k { 0 }; k < dim; ++k)  {
                         m2_x(i, k) += dx[i] * dx2[k];
                         m2_y(i, k) += dy[i] * dy2[k];
-                        m2_x(i, k) += dx[i] * dy2[k];
+                        m2_xy(i, k) += dx[i] * dy2[k];
                     }
                 }
             }

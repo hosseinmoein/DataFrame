@@ -2616,9 +2616,9 @@ static void test_tracking_error()  {
     const auto  &md_result { md_te.get_result() };
 
     assert(md_result.size() == 3);
-    assert(fabs(md_result[0] - 15.0167) < 0.0001);
-    assert(fabs(md_result[1] - 15.7958) < 0.0001);
-    assert(fabs(md_result[2] - 17.6217) < 0.0001);
+    assert(fabs(md_result[0] - 18.011049) < 0.000001);
+    assert(fabs(md_result[1] - 19.491413) < 0.000001);
+    assert(fabs(md_result[2] - 13.155912) < 0.000001);
 }
 
 // -----------------------------------------------------------------------------

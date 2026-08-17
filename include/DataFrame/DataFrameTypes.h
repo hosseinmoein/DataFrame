@@ -907,13 +907,25 @@ enum class  detect_method : unsigned char  {
 
 // -------------------------------------
 
+template<typename T>
+struct  DefaultAbsDist  {
+
+    inline double
+	operator()(const T &x, const T &y) const noexcept  {
+
+        return (std::fabs(x - y));
+    }
+};
+
+// -------------------------------------
+
 // Parameters to member function detect_and_fill()
 //
-template<typename T>
+template<typename T, typename F = DefaultAbsDist<T>>
 struct  DetectAndChangeParams  {
 
     using value_type = T;
-    using distance_func = std::function<double(const T &x, const T &y)>;
+    using distance_func = F;
 
     // Parameter specific to Z-Score, FFT and LOF
     //
@@ -935,10 +947,7 @@ struct  DetectAndChangeParams  {
     // Parameter specific to LOF
     //
     std::size_t         k { 0 };
-    distance_func       dist_fun =
-        [](const value_type &x, const value_type &y) -> double  {
-            return (std::fabs(x - y));
-        };
+    distance_func       dist_fun  { };
 
     // Parameters specific to Hampel filter
     //
@@ -1510,7 +1519,7 @@ using scalar_t = typename _scalar_type_<T>::type;
 
 // ----------------------------------------------------------------------------
 
-inline static const std::vector<std::string>   describe_index_col  {
+inline const std::vector<std::string>   describe_index_col  {
     "COUNT", "MISSING", "MEAN", "STD", "MIN", "MAX", "25%", "50%", "75%"
 };
 

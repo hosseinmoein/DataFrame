@@ -401,15 +401,15 @@ detect_and_change(const StlVecType<const char *> &col_names,
                   fill_policy f_policy,
                   DetectAndChangeParams<T> params)  {
 
-    const size_type                 count = col_names.size();
+    const size_type                 count { col_names.size() };
     // const auto                      thread_level =
     //     (indices_.size() < ThreadPool::MUL_THR_THHOLD)
     //         ? 0L : get_thread_level();
     // StlVecType<std::future<void>>   futures;
 
     for (size_type col = 0; col < count; ++col)  {
-        ColumnVecType<T>        &vec = get_column<T>(col_names[col]);
-        StlVecType<size_type>   rows {  };;
+        ColumnVecType<T>        &vec { get_column<T>(col_names[col]) };
+        StlVecType<size_type>   rows;
 
         if (vec.empty()) [[unlikely]]  continue;
 
@@ -439,7 +439,7 @@ detect_and_change(const StlVecType<const char *> &col_names,
             using lofv_t = and_lof_v<T, I, std::size_t(H::align_value)>;
 
             lofv_t  lof { params.k, params.threshold,
-                          params.norm_type, std::move(params.dist_fun) };
+                          params.norm_type, params.dist_fun };
 
             lof.pre();
             lof(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -480,8 +480,8 @@ detect_and_change(const StlVecType<const char *> &col_names,
 
         if constexpr (supports_arithmetic<IndexType>::value)  {
             if (f_policy == fill_policy::linear_interpolate)  {
-                for (size_type i = 0; i < row_s; ++i)  {
-                    const auto  row_idx { rows.at(i) };
+                for (size_type i { 0 }; i < row_s; ++i)  {
+                    const auto  row_idx { rows[i] };
 
                     if ((row_idx < (col_s - 1)) && (row_idx > 0))  {
                         const auto  &x1 { indices_[row_idx - 1] };
@@ -498,8 +498,8 @@ detect_and_change(const StlVecType<const char *> &col_names,
             }
         }
         if (f_policy == fill_policy::fill_forward)  {
-            for (size_type i = 0; i < row_s; ++i)  {
-                const auto  row_idx { rows.at(i) };
+            for (size_type i { 0 }; i < row_s; ++i)  {
+                const auto  row_idx { rows[i] };
 
                 if (row_idx > 0)
                     vec[row_idx] = vec[row_idx - 1];
@@ -507,8 +507,8 @@ detect_and_change(const StlVecType<const char *> &col_names,
             processed = true;
         }
         else if (f_policy == fill_policy::fill_backward)  {
-            for (size_type i = 0; i < row_s; ++i)  {
-                const auto  row_idx { rows.at(i) };
+            for (size_type i { 0 }; i < row_s; ++i)  {
+                const auto  row_idx { rows[i] };
 
                 if (row_idx < (col_s - 1))
                     vec[row_idx] = vec[row_idx + 1];
@@ -516,8 +516,8 @@ detect_and_change(const StlVecType<const char *> &col_names,
             processed = true;
         }
         else if (f_policy == fill_policy::mid_point)  {
-            for (size_type i = 0; i < row_s; ++i)  {
-                const auto  row_idx { rows.at(i) };
+            for (size_type i { 0 }; i < row_s; ++i)  {
+                const auto  row_idx { rows[i] };
 
                 if ((row_idx < (col_s - 1)) && (row_idx > 0))
                     vec[row_idx] =
@@ -545,17 +545,19 @@ drop_missing(drop_policy policy, size_type threshold)  {
                   "Only a StdDataFrame can call drop_missing()");
 
     DropRowMap                      missing_row_map;
-    const size_type                 num_cols = data_.size();
-    const auto                      thread_level =
+    const size_type                 num_cols { data_.size() };
+    const auto                      thread_level {
         (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : get_thread_level();
+            ? 0L : get_thread_level()
+    };
     std::vector<std::future<void>>  futures;
 
     if (thread_level > 2)  futures.reserve(num_cols + 1);
 
-    map_missing_rows_functor_<Ts ...>   functor (
-        indices_.size(), missing_row_map);
-    const SpinGuard                     guard(lock_);
+    map_missing_rows_functor_<Ts ...>   functor {
+        indices_.size(), missing_row_map
+    };
+    const SpinGuard                     guard { lock_ };
 
     for (size_type idx = 0; idx < num_cols; ++idx)
         data_[idx].change(functor);
@@ -577,12 +579,9 @@ drop_missing(drop_policy policy, size_type threshold)  {
                            threshold,
                            num_cols);
 
-    drop_missing_rows_functor_<Ts ...>  functor2 (missing_row_map,
-                                                  policy,
-                                                  threshold,
-                                                  data_.size(),
-                                                  thread_level,
-                                                  futures);
+    drop_missing_rows_functor_<Ts ...>  functor2 {
+        missing_row_map, policy, threshold, data_.size(), thread_level, futures
+    };
 
     for (size_type idx = 0; idx < num_cols; ++idx)
         data_[idx].change(functor2);
@@ -1851,20 +1850,21 @@ DataFrame<I, H>::peaks(const char *col_name, size_type n) const  {
     else
         vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
 
-    const size_type col_s = vec->size();
+    const size_type col_s { vec->size() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if ((col_s <= (2 * n + 1)) || n < 1)
         throw DataFrameError("peaks: column size must be >= 2n+1 and n > 0");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    res_t       result (col_s, char{ 0 });
-    const auto  thread_level =
-        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    res_t       result(col_s, char{ 0 });
+    const auto  thread_level {
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
     auto        lbd1 =
         [&result, vec](size_type begin, size_type end) -> void  {
-            for (auto idx = begin; idx < end; ++idx)  {
-                const auto  &val = (*vec)[idx];
+            for (auto idx { begin }; idx < end; ++idx)  {
+                const auto  &val { (*vec)[idx] };
 
                 if (val > (*vec)[idx + 1] && val > (*vec)[idx - 1])
                     result[idx] = char{ 1 };
@@ -1872,8 +1872,8 @@ DataFrame<I, H>::peaks(const char *col_name, size_type n) const  {
         };
     auto        lbd2 =
         [&result, vec](size_type begin, size_type end) -> void  {
-            for (auto idx = begin; idx < end; ++idx)  {
-                const auto  &val = (*vec)[idx];
+            for (auto idx { begin }; idx < end; ++idx)  {
+                const auto  &val { (*vec)[idx] };
 
                 if (val > (*vec)[idx + 1] &&
                     val > (*vec)[idx + 2] &&
@@ -1884,11 +1884,11 @@ DataFrame<I, H>::peaks(const char *col_name, size_type n) const  {
         };
     auto        lbdn =
         [&result, vec, n](size_type begin, size_type end) -> void  {
-            for (auto idx = begin; idx < end; ++idx)  {
-                const auto  &val = (*vec)[idx];
+            for (auto idx { begin }; idx < end; ++idx)  {
+                const auto  &val { (*vec)[idx] };
                 char        c { 1 };
 
-                for (size_type j = 1; j <= n; ++j)  {
+                for (size_type j { 1 }; j <= n; ++j)  {
                     if (val <= (*vec)[idx + j] || val <= (*vec)[idx - j])  {
                         c = 0;
                         break;
@@ -1902,24 +1902,21 @@ DataFrame<I, H>::peaks(const char *col_name, size_type n) const  {
         std::vector<std::future<void>>  futures;
 
         if (n == 1)
-            futures = thr_pool_.parallel_loop<char>(
-                n, col_s - n, std::move(lbd1));
+            futures =
+                thr_pool_.parallel_loop<char>(n, col_s - n, std::move(lbd1));
         else if (n == 2)
-            futures = thr_pool_.parallel_loop<char>(
-                n, col_s - n, std::move(lbd2));
+            futures =
+                thr_pool_.parallel_loop<char>(n, col_s - n, std::move(lbd2));
         else
-            futures = thr_pool_.parallel_loop<char>(
-                n, col_s - n, std::move(lbdn));
+            futures =
+                thr_pool_.parallel_loop<char>(n, col_s - n, std::move(lbdn));
 
         for (auto &fut : futures)  fut.get();
     }
     else  {
-        if (n == 1)
-            lbd1(n, col_s - n);
-        else if (n == 2)
-            lbd2(n, col_s - n);
-        else
-            lbdn(n, col_s - n);
+        if (n == 1)  lbd1(n, col_s - n);
+        else if (n == 2)  lbd2(n, col_s - n);
+        else  lbdn(n, col_s - n);
     }
 
     return(result);
@@ -1943,20 +1940,21 @@ DataFrame<I, H>::valleys(const char *col_name, size_type n) const  {
     else
         vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
 
-    const size_type col_s = vec->size();
+    const size_type col_s { vec->size() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if ((col_s <= (2 * n + 1)) || n < 1)
         throw DataFrameError("valleys: column size must be >= 2n+1 and n > 0");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    res_t       result (col_s, char{ 0 });
-    const auto  thread_level =
-        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    res_t       result(col_s, char{ 0 });
+    const auto  thread_level {
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
     auto        lbd1 =
         [&result, vec](size_type begin, size_type end) -> void  {
-            for (auto idx = begin; idx < end; ++idx)  {
-                const auto  &val = (*vec)[idx];
+            for (auto idx { begin }; idx < end; ++idx)  {
+                const auto  &val { (*vec)[idx] };
 
                 if (val < (*vec)[idx + 1] && val < (*vec)[idx - 1])
                     result[idx] = char{ 1 };
@@ -1964,8 +1962,8 @@ DataFrame<I, H>::valleys(const char *col_name, size_type n) const  {
         };
     auto        lbd2 =
         [&result, vec](size_type begin, size_type end) -> void  {
-            for (auto idx = begin; idx < end; ++idx)  {
-                const auto  &val = (*vec)[idx];
+            for (auto idx { begin }; idx < end; ++idx)  {
+                const auto  &val { (*vec)[idx] };
 
                 if (val < (*vec)[idx + 1] &&
                     val < (*vec)[idx + 2] &&
@@ -1976,11 +1974,11 @@ DataFrame<I, H>::valleys(const char *col_name, size_type n) const  {
         };
     auto        lbdn =
         [&result, vec, n](size_type begin, size_type end) -> void  {
-            for (auto idx = begin; idx < end; ++idx)  {
-                const auto  &val = (*vec)[idx];
+            for (auto idx { begin }; idx < end; ++idx)  {
+                const auto  &val { (*vec)[idx] };
                 char        c { 1 };
 
-                for (size_type j = 1; j <= n; ++j)  {
+                for (size_type j { 1 }; j <= n; ++j)  {
                     if (val >= (*vec)[idx + j] || val >= (*vec)[idx - j])  {
                         c = 0;
                         break;
@@ -1994,24 +1992,21 @@ DataFrame<I, H>::valleys(const char *col_name, size_type n) const  {
         std::vector<std::future<void>>  futures;
 
         if (n == 1)
-            futures = thr_pool_.parallel_loop<char>(
-                n, col_s - n, std::move(lbd1));
+            futures =
+                thr_pool_.parallel_loop<char>(n, col_s - n, std::move(lbd1));
         else if (n == 2)
-            futures = thr_pool_.parallel_loop<char>(
-                n, col_s - n, std::move(lbd2));
+            futures =
+                thr_pool_.parallel_loop<char>(n, col_s - n, std::move(lbd2));
         else
-            futures = thr_pool_.parallel_loop<char>(
-                n, col_s - n, std::move(lbdn));
+            futures =
+                thr_pool_.parallel_loop<char>(n, col_s - n, std::move(lbdn));
 
         for (auto &fut : futures)  fut.get();
     }
     else  {
-        if (n == 1)
-            lbd1(n, col_s - n);
-        else if (n == 2)
-            lbd2(n, col_s - n);
-        else
-            lbdn(n, col_s - n);
+        if (n == 1)  lbd1(n, col_s - n);
+        else if (n == 2)  lbd2(n, col_s - n);
+        else  lbdn(n, col_s - n);
     }
 
     return(result);
@@ -2030,27 +2025,28 @@ bucketize(bucket_type bt,
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
     res_t           result;
-    auto            &dst_idx = result.get_index();
-    const auto      &src_idx = get_index();
-    const size_type idx_s = src_idx.size();
+    auto            &dst_idx { result.get_index() };
+    const auto      &src_idx { get_index() };
+    const size_type idx_s { src_idx.size() };
 
     _bucketize_core_(dst_idx, src_idx, src_idx, value, idx_visitor, idx_s, bt);
 
     std::vector<std::future<void>>  futures;
-    const auto                      thread_level =
+    const auto                      thread_level {
         (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : get_thread_level();
+            ? 0L : get_thread_level()
+    };
 
     if (thread_level > 2)  futures.reserve(column_list_.size());
 
-    auto    args_tuple = std::tuple<Ts ...>(args ...);
+    auto    args_tuple { std::tuple<Ts ...>(args ...) };
     auto    func =
         [this, &result, &value = std::as_const(value), &futures, bt]
         (auto &triple) mutable -> void {
             _load_bucket_data_(*this, result, value, bt, triple, futures);
         };
 
-    const SpinGuard guard(lock_);
+    const SpinGuard guard { lock_ };
 
     for_each_in_tuple (args_tuple, func);
     for (auto &fut : futures)  fut.get();
@@ -2171,34 +2167,36 @@ resample_async(time_frequency tf,
 
 template<typename I, typename H>
 template<typename T>
-void
-DataFrame<I, H>::make_stationary(const char *col_name,
-                                 stationary_method method,
-                                 const StationaryParams params)  {
+void DataFrame<I, H>::
+make_stationary(const char *col_name,
+                stationary_method method,
+                const StationaryParams params)  {
 
-    ColumnVecType<T>    &vec = get_column<T>(col_name);
-    const size_type     col_s = vec.size();
+    ColumnVecType<T>    &vec { get_column<T>(col_name) };
+    const size_type     col_s { vec.size() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (col_s < 3)
         throw DataFrameError("make_stationary: Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const auto  thread_level =
-        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    const auto  thread_level {
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
 
     if (method == stationary_method::differencing)  {
         ColumnVecType<T>    result(col_s);
-        auto                lbd = [&result, &vec = std::as_const(vec)]
-                                  (auto begin, auto end) -> void  {
-            for (auto i = begin; i < end; ++i)
-                result[i] = vec[i] - vec[i - 1];
-        };
+        auto                lbd =
+            [&result, &vec = std::as_const(vec)]
+            (auto begin, auto end) -> void  {
+                for (auto i { begin }; i < end; ++i)
+                    result[i] = vec[i] - vec[i - 1];
+            };
 
         if (thread_level > 2)  {
-            auto    futures =
-                thr_pool_.parallel_loop<T>(
-                    size_type(1), col_s, std::move(lbd));
+            auto    futures {
+                thr_pool_.parallel_loop<T>(size_type(1), col_s, std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2207,39 +2205,43 @@ DataFrame<I, H>::make_stationary(const char *col_name,
         vec[0] = vec[1];
     }
     else if (method == stationary_method::log_trans)  {
-        auto    lbd = [](auto begin, auto end) -> void  {
-            for (auto citer = begin; citer < end; ++citer)
-                *citer = std::log(*citer);
-        };
+        auto    lbd =
+            [](auto begin, auto end) -> void  {
+                for (auto citer { begin }; citer < end; ++citer)
+                    *citer = std::log(*citer);
+            };
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 thr_pool_.parallel_loop<T>(
-                    vec.begin(), vec.end(), std::move(lbd));
+                    vec.begin(), vec.end(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  lbd(vec.begin(), vec.end());
     }
     else if (method == stationary_method::sqrt_trans)  {
-        auto    lbd = [](auto begin, auto end) -> void  {
-            for (auto citer = begin; citer < end; ++citer)
-                *citer = std::sqrt(*citer);
-        };
+        auto    lbd =
+            [](auto begin, auto end) -> void  {
+                for (auto citer { begin }; citer < end; ++citer)
+                    *citer = std::sqrt(*citer);
+            };
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 thr_pool_.parallel_loop<T>(
-                    vec.begin(), vec.end(), std::move(lbd));
+                    vec.begin(), vec.end(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  lbd(vec.begin(), vec.end());
     }
     else if (method == stationary_method::boxcox_trans)  {
-        bcox_v<T, I, align_value>   boxcox { params.bc_type,
-                                             params.lambda,
-                                             params.is_all_positive };
+        bcox_v<T, I, align_value>   boxcox {
+            params.bc_type, params.lambda, params.is_all_positive
+        };
 
         boxcox.pre();
         boxcox(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -2247,10 +2249,10 @@ DataFrame<I, H>::make_stationary(const char *col_name,
         vec = std::move(boxcox.get_result());
     }
     else if (method == stationary_method::decomposition)  {
-        decom_v<T, I, align_value>  decom { params.season_period,
-                                            params.dcom_fraction,
-                                            params.dcom_delta,
-                                            params.dcom_type };
+        decom_v<T, I, align_value>  decom {
+            params.season_period, params.dcom_fraction,
+            params.dcom_delta, params.dcom_type
+        };
 
         decom.pre();
         decom(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -2258,9 +2260,9 @@ DataFrame<I, H>::make_stationary(const char *col_name,
         vec = std::move(decom.get_residual());
     }
     else if (method == stationary_method::smoothing)  {
-        ewm_v<T, I, align_value>    ewm { params.decay_spec,
-                                          params.decay_alpha,
-                                          params.finite_adjust };
+        ewm_v<T, I, align_value>    ewm {
+            params.decay_spec, params.decay_alpha, params.finite_adjust
+        };
 
         ewm.pre();
         ewm(indices_.begin(), indices_.end(), vec.begin(), vec.end());

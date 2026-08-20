@@ -2646,13 +2646,13 @@ public:
             });
 
         result_type         result(col_s);
-        const value_type    *prev_value = &*(column_begin + rank_vec[0]);
+        const value_type    *prev_value { &*(column_begin + rank_vec[0]) };
 
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            value_type  avg_val = static_cast<value_type>(i);
-            value_type  first_val = static_cast<value_type>(i);
-            value_type  last_val = static_cast<value_type>(i);
-            size_type   j = i + 1;
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            value_type  avg_val { static_cast<value_type>(i) };
+            value_type  first_val { static_cast<value_type>(i) };
+            value_type  last_val { static_cast<value_type>(i) };
+            size_type   j { i + 1 };
 
             for ( ; j < col_s && *prev_value == *(column_begin + rank_vec[j]);
                  ++j)  {
@@ -2662,30 +2662,22 @@ public:
             avg_val /= value_type(j - i);
 
             switch(policy_)  {
-                case rank_policy::average:
-                {
-                    for (; i < col_s && i < j; ++i)
-                        result[rank_vec[i]] = avg_val;
-                    break;
-                }
-                case rank_policy::first:
-                {
-                    for (; i < col_s && i < j; ++i)
-                        result[rank_vec[i]] = first_val;
-                    break;
-                }
-                case rank_policy::last:
-                {
-                    for (; i < col_s && i < j; ++i)
-                        result[rank_vec[i]] = last_val;
-                    break;
-                }
-                case rank_policy::actual:
-                {
-                    for (; i < col_s && i < j; ++i)
-                        result[rank_vec[i]] = static_cast<value_type>(i);
-                    break;
-                }
+            case rank_policy::average:
+                for (; i < col_s && i < j; ++i)
+                    result[rank_vec[i]] = avg_val;
+                break;
+            case rank_policy::first:
+                for (; i < col_s && i < j; ++i)
+                    result[rank_vec[i]] = first_val;
+                break;
+            case rank_policy::last:
+                for (; i < col_s && i < j; ++i)
+                    result[rank_vec[i]] = last_val;
+                break;
+            case rank_policy::actual:
+                for (; i < col_s && i < j; ++i)
+                    result[rank_vec[i]] = static_cast<value_type>(i);
+                break;
             }
             if (i < col_s)
                 prev_value = &*(column_begin + rank_vec[i]);
@@ -3105,7 +3097,8 @@ public:
                     value_type  man_dist { 0 };
                     auto        iter2 { begin2 };
 
-                    for (auto iter1 { begin1 }; iter1 < end1; ++iter1, ++iter2) {
+                    for (auto iter1 { begin1 };
+                         iter1 < end1; ++iter1, ++iter2) {
                         const auto  val1 { *iter1 };
                         const auto  val2 { *iter2 };
 
@@ -3127,16 +3120,17 @@ public:
 
             if (col_s >= ThreadPool::MUL_THR_THHOLD &&
                 ThreadGranularity::get_thread_level() > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop2<T>(
                         column_begin1,
                         column_end1,
                         column_begin2,
                         column_end2,
-                        std::move(lbd));
+                        std::move(lbd))
+				};
 
                 for (auto &fut : futures)  {
-                    const auto  ret = fut.get();
+                    const auto  ret { fut.get() };
 
                     result_ += std::get<0>(ret);
                     mag1_ += std::get<1>(ret);
@@ -3146,7 +3140,9 @@ public:
                 }
             }
             else  {
-                const auto  ret = lbd(column_begin1, column_end1, column_begin2);
+                const auto  ret {
+                    lbd(column_begin1, column_end1, column_begin2)
+				};
 
                 result_ = std::get<0>(ret);
                 mag1_ = std::get<1>(ret);
@@ -3166,38 +3162,6 @@ public:
                         "DotProdVisitor: Inconsistent data dimensions");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-            // Flattened dot product
-            //
-            auto    lbd =
-                []
-                (const auto &begin1, const auto &end1,
-                 const auto &begin2) -> data_t  {
-                    data_t  result { 0 };
-                    auto    iter2 { begin2 };
-
-                    for (auto iter1 { begin1 }; iter1 < end1; ++iter1, ++iter2)
-                        for (size_type i { 0 }; i < iter1->size(); ++i)
-                            result += (*iter1)[i] * (*iter2)[i];
-                    return (result);
-                };
-
-            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-                ThreadGranularity::get_thread_level() > 2)  {
-                auto    futures =
-                    ThreadGranularity::thr_pool_.parallel_loop2<T>(
-                        column_begin1,
-                        column_end1,
-                        column_begin2,
-                        column_end2,
-                        std::move(lbd));
-
-                for (auto &fut : futures)
-                    result_ += fut.get();
-            }
-            else  {
-                result_ = lbd(column_begin1, column_end1, column_begin2);
-            }
-
             // Component-wise dot product, magnitudes, and distances
             // euc_dist_ and man_dist_ accumulate per-row then are summed;
             // sqrt is taken per-row here so post() must not apply it again.
@@ -3214,8 +3178,8 @@ public:
                 const auto  &ary2   { *(column_begin2 + n) };
 
                 for (size_type d { 0 }; d < dim; ++d)  {
-                    const auto  val1 = ary1[d];
-                    const auto  val2 = ary2[d];
+                    const auto  val1 { ary1[d] };
+                    const auto  val2 { ary2[d] };
 
                     comp_result_[d] += val1 * val2;
                     mag1 += val1 * val1;
@@ -3231,6 +3195,10 @@ public:
                 euc_dist_ += std::sqrt(euc);
                 man_dist_ += man;
             }
+            result_ = std::accumulate(comp_result_.begin(),
+                                      comp_result_.end(),
+                                      data_t(0));
+
         }
     }
 
@@ -3395,31 +3363,35 @@ struct  NExtremumSubArrayVisitor  {
                     typename allocator_declare<SubArrayInfo, A>::type>;
     using compare_type = C;
 
-    inline void operator() (const index_type &idx, const value_type &val)  {
+    // NOTE: kept for interface completeness / any one-element-at-a-time
+    // caller. The real algorithm needs random access to the whole column
+    // (see compute_top_n_() below), so it only buffers here -- the actual
+    // computation runs once in post().
+    //
+    inline void operator()(const index_type &, const value_type &val)  {
 
-        const value_type    prev_sum = extremum_sub_array_.get_result();
-
-        extremum_sub_array_(idx, val);
-        if (cmp_(prev_sum, extremum_sub_array_.get_result()))
-            q_.push(SubArrayInfo { extremum_sub_array_.get_result(),
-                                   extremum_sub_array_.get_begin_idx(),
-                                   extremum_sub_array_.get_end_idx() });
+        buffer_.push_back(val);
     }
-    PASS_DATA_ONE_BY_ONE
 
-    inline void pre ()  {
+    template <typename K, typename H>
+    inline void
+    operator()(K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end)  {
 
-        extremum_sub_array_.pre();
-        q_.clear();
+        compute_top_n_(column_begin, column_end);
+    }
+
+    inline void pre()  {
+
+        buffer_.clear();
         result_.clear();
     }
-    inline void post ()  {
+    inline void post()  {
 
-        extremum_sub_array_.post();
-        result_ = std::move(q_.data());
+        if (! buffer_.empty())
+            compute_top_n_(buffer_.begin(), buffer_.end());
     }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
 
     explicit NExtremumSubArrayVisitor(
         value_type min_to_consider = -std::numeric_limits<value_type>::max(),
@@ -3428,12 +3400,104 @@ struct  NExtremumSubArrayVisitor  {
 
 private:
 
-    ExtremumSubArrayVisitor<T, I, C>                       extremum_sub_array_;
-    FixedSizePriorityQueue<
-        SubArrayInfo, N,
-        typename template_switch<SubArrayInfo, C>::type>   q_ {  };
-    result_type                                            result_ {  };
-    compare_type                                           cmp_ {  };
+    ExtremumSubArrayVisitor<T, I, C>   extremum_sub_array_;
+    std::vector<value_type>            buffer_ {  };
+    result_type                        result_ {  };
+    compare_type                       cmp_ {  };
+
+    // Finds the true top (at most) N disjoint sub-arrays by repeatedly
+    // taking the single best remaining sub-array (via the Kadane's scan
+    // in ExtremumSubArrayVisitor above) and recursing into the two
+    // sub-ranges left after excluding it. This guarantees every returned
+    // sub-array is genuinely non-dominated and none overlap -- unlike a
+    // single Kadane's pass, which can only report the sequence of
+    // running-best records it happened to set, silently missing real
+    // candidates that simply never beat an earlier, unrelated record.
+    // Complexity: O(n) for the first scan, plus up to two rescans (each
+    // O(remaining range)) and one O(log N) heap operation per result
+    // produced -- i.e. O(n + kN log N) with k bounded by the remaining
+    // range size at each step.
+    //
+    template <typename Iter>
+    inline void compute_top_n_(Iter col_begin, Iter col_end)  {
+
+        const size_type n {
+            static_cast<size_type>(std::distance(col_begin, col_end))
+        };
+
+        result_.clear();
+        if (n == 0 || N == 0)  return;
+
+        struct  Candidate  {
+            SubArrayInfo    info {  };
+            size_type       search_lo { 0 };
+            size_type       search_hi { 0 };
+        };
+        struct  CandComp  {
+            compare_type    sum_cmp_ {  };
+
+            inline bool
+            operator()(const Candidate &lhs, const Candidate &rhs) const  {
+
+                return (sum_cmp_(lhs.info.sum, rhs.info.sum));
+            }
+        };
+
+        // Best sub-array within [lo, hi) of the column, via the same
+        // Kadane's scan and value filter as ExtremumSubArrayVisitor.
+        // Returns false if nothing in [lo, hi) passes the filter.
+        //
+        auto    find_best =
+            [this, col_begin]
+            (size_type lo, size_type hi, Candidate &out) -> bool  {
+                extremum_sub_array_.pre();
+                for (size_type i { lo }; i < hi; ++i)
+                    extremum_sub_array_(index_type { }, *(col_begin + i));
+
+                const size_type rel_end { extremum_sub_array_.get_end_idx() };
+
+                if (rel_end == 0)  return (false);
+
+                out.info.sum = extremum_sub_array_.get_result();
+                out.info.begin_index =
+                    lo + extremum_sub_array_.get_begin_idx();
+                out.info.end_index = lo + rel_end;
+                out.search_lo = lo;
+                out.search_hi = hi;
+                return (true);
+            };
+
+        std::priority_queue<Candidate,
+                            std::vector<Candidate>,
+                            CandComp>   heap;
+        Candidate                       first;
+
+        if (find_best(0, n, first))
+            heap.push(std::move(first));
+
+        while (! heap.empty() && result_.size() < N)  {
+            const Candidate top { heap.top() };
+
+            heap.pop();
+            result_.push_back(top.info);
+
+            Candidate   left {  };
+            Candidate   right {  };
+
+            if (top.info.begin_index > top.search_lo &&
+                find_best(top.search_lo, top.info.begin_index, left))
+                heap.push(std::move(left));
+            if (top.info.end_index < top.search_hi &&
+                find_best(top.info.end_index, top.search_hi, right))
+                heap.push(std::move(right));
+        }
+
+        std::sort(result_.begin(), result_.end(),
+                  [this]
+                  (const SubArrayInfo &lhs, const SubArrayInfo &rhs) -> bool {
+                      return (cmp_(lhs.sum, rhs.sum));
+                  });
+    }
 };
 
 template<std::size_t N, typename T, typename I = unsigned long,
@@ -3476,10 +3540,12 @@ public:
                                  "column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
+        if (roll_count_ == 0)  return;
+
         result_.reserve(col_s);
-        for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i) [[likely]]
+        for (size_type i { 0 }; i < roll_count_ - 1 && i < col_s; ++i)
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
             if (i + roll_count_ <= col_s)  {
                 visitor_.pre();
                 visitor_(idx_begin + i, idx_begin + (i + roll_count_),
@@ -3538,7 +3604,9 @@ public:
                                  "column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        for (size_type i = 0; i < col_s; i += period_) [[likely]]
+        if (period_ == 0)  return;
+
+        for (size_type i { 0 }; i < col_s; i += period_) [[likely]]
             visitor_(idx_begin[i], column_begin[i]);
     }
 
@@ -3577,8 +3645,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -3588,18 +3656,20 @@ public:
                                  "column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
+        if (init_roll_count_ == 0)  return;
+
         result_.reserve(col_s);
 
         std::size_t rc = init_roll_count_;
 
-        for (std::size_t i = 0; i < rc - 1 && i < col_s; ++i) [[likely]]
+        for (std::size_t i { 0 }; i < rc - 1 && i < col_s; ++i) [[likely]]
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
-        for (std::size_t i = 0; i < col_s;
+        for (std::size_t i { 0 }; i < col_s;
              ++i, rc += increment_count_) [[likely]]  {
-            std::size_t r = 0;
+            std::size_t r { 0 };
 
             visitor_.pre();
-            for (std::size_t j = i; r < rc && j < col_s; ++j, ++r) [[likely]]
+            for (std::size_t j { i }; r < rc && j < col_s; ++j, ++r) [[likely]]
                 visitor_(*(idx_begin + j), *(column_begin + j));
             visitor_.post();
             if (r == rc)
@@ -3608,8 +3678,8 @@ public:
         }
     }
 
-    inline void pre ()  { visitor_.pre(); result_.clear(); }
-    inline void post ()  { visitor_.post(); }
+    inline void pre()  { visitor_.pre(); result_.clear(); }
+    inline void post()  { visitor_.post(); }
     DEFINE_RESULT
 
     ExpandingRollAdopter(F &&functor,

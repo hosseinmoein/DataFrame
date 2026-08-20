@@ -3333,53 +3333,66 @@ static void test_NExtremumSubArrayVisitor()  {
 
     NExtremumSubArrayVisitor<5, double> msa_v;
 
-    df.visit<double>("dbl_col1", msa_v);
-    assert((msa_v.get_result()[0].sum == 21));
+    df.single_act_visit<double>("dbl_col1", msa_v);
+    assert(msa_v.get_result().size() == 1);
+    assert((msa_v.get_result()[0].sum == 55));
     assert((msa_v.get_result()[0].begin_index == 0));
-    assert((msa_v.get_result()[0].end_index == 6));
-    assert((msa_v.get_result()[1].sum == 28));
-    assert((msa_v.get_result()[1].begin_index == 0));
-    assert((msa_v.get_result()[1].end_index == 7));
-    assert((msa_v.get_result()[2].sum == 36));
-    assert((msa_v.get_result()[2].begin_index == 0));
-    assert((msa_v.get_result()[2].end_index == 8));
-    assert((msa_v.get_result()[3].sum == 45));
-    assert((msa_v.get_result()[3].begin_index == 0));
-    assert((msa_v.get_result()[3].end_index == 9));
-    assert((msa_v.get_result()[4].sum == 55));
-    assert((msa_v.get_result()[4].begin_index == 0));
-    assert((msa_v.get_result()[4].end_index == 10));
+    assert((msa_v.get_result()[0].end_index == 10));
 
     NExtremumSubArrayVisitor<4, double> msa_v2;
 
-    df.visit<double>("dbl_col2", msa_v2);
-    assert((msa_v2.get_result()[0].sum == 1));
-    assert((msa_v2.get_result()[0].begin_index == 1));
-    assert((msa_v2.get_result()[0].end_index == 2));
-    assert((msa_v2.get_result()[1].sum == 4));
-    assert((msa_v2.get_result()[1].begin_index == 3));
-    assert((msa_v2.get_result()[1].end_index == 4));
+    df.single_act_visit<double>("dbl_col2", msa_v2);
+    assert(msa_v2.get_result().size() == 4);
+    assert((msa_v2.get_result()[0].sum == -3));
+    assert((msa_v2.get_result()[0].begin_index == 0));
+    assert((msa_v2.get_result()[0].end_index == 1));
+    assert((msa_v2.get_result()[1].sum == 1));
+    assert((msa_v2.get_result()[1].begin_index == 1));
+    assert((msa_v2.get_result()[1].end_index == 2));
     assert((msa_v2.get_result()[2].sum == 5));
-    assert((msa_v2.get_result()[2].begin_index == 3));
-    assert((msa_v2.get_result()[2].end_index == 6));
+    assert((msa_v2.get_result()[2].begin_index == 8));
+    assert((msa_v2.get_result()[2].end_index == 9));
     assert((msa_v2.get_result()[3].sum == 6));
     assert((msa_v2.get_result()[3].begin_index == 3));
     assert((msa_v2.get_result()[3].end_index == 7));
 
     NMinSubArrayVisitor<5, double>   msa_v3;
 
-    df.visit<double>("dbl_col1", msa_v3);
-    assert((msa_v3.get_result()[0].sum == 1));
-    assert((msa_v3.get_result()[0].begin_index == 0));
-    assert((msa_v3.get_result()[0].end_index == 1));
+    df.single_act_visit<double>("dbl_col1", msa_v3);
+    assert(msa_v3.get_result().size() == 5);
+    assert((msa_v3.get_result()[0].sum == 5));
+    assert((msa_v3.get_result()[0].begin_index == 4));
+    assert((msa_v3.get_result()[0].end_index == 5));
+    assert((msa_v3.get_result()[1].sum == 4));
+    assert((msa_v3.get_result()[1].begin_index == 3));
+    assert((msa_v3.get_result()[1].end_index == 4));
+    assert((msa_v3.get_result()[2].sum == 3));
+    assert((msa_v3.get_result()[2].begin_index == 2));
+    assert((msa_v3.get_result()[2].end_index == 3));
+    assert((msa_v3.get_result()[3].sum == 2));
+    assert((msa_v3.get_result()[3].begin_index == 1));
+    assert((msa_v3.get_result()[3].end_index == 2));
+    assert((msa_v3.get_result()[4].sum == 1));
+    assert((msa_v3.get_result()[4].begin_index == 0));
+    assert((msa_v3.get_result()[4].end_index == 1));
 
-    df.visit<double>("dbl_col2", msa_v3);
-    assert((msa_v3.get_result()[0].sum == -3));
-    assert((msa_v3.get_result()[0].begin_index == 0));
-    assert((msa_v3.get_result()[0].end_index == 1));
-    assert((msa_v3.get_result()[1].sum == -10));
-    assert((msa_v3.get_result()[1].begin_index == 0));
-    assert((msa_v3.get_result()[1].end_index == 3));
+    df.single_act_visit<double>("dbl_col2", msa_v3);
+    assert(msa_v3.get_result().size() == 5);
+    assert((msa_v3.get_result()[0].sum == 2));
+    assert((msa_v3.get_result()[0].begin_index == 5));
+    assert((msa_v3.get_result()[0].end_index == 6));
+    assert((msa_v3.get_result()[1].sum == 1));
+    assert((msa_v3.get_result()[1].begin_index == 6));
+    assert((msa_v3.get_result()[1].end_index == 7));
+    assert((msa_v3.get_result()[2].sum == -1));
+    assert((msa_v3.get_result()[2].begin_index == 4));
+    assert((msa_v3.get_result()[2].end_index == 5));
+    assert((msa_v3.get_result()[3].sum == -5));
+    assert((msa_v3.get_result()[3].begin_index == 7));
+    assert((msa_v3.get_result()[3].end_index == 8));
+    assert((msa_v3.get_result()[4].sum == -10));
+    assert((msa_v3.get_result()[4].begin_index == 0));
+    assert((msa_v3.get_result()[4].end_index == 3));
 }
 
 // -----------------------------------------------------------------------------

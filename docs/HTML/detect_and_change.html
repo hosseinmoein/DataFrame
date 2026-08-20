@@ -44,11 +44,18 @@ body {
     </tr>
     <tr bgcolor="Azure">
       <td>
-<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">template</span><span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">typename</span> T<span style="color:#800080; ">&gt;</span></span>
+<pre class="code_syntax" style="color:#000000;background:#ffffff00;"><span class="line_wrapper">template<span style="color:#808030; ">&lt;</span>typename T<span style="color:#808030; ">&gt;</span></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  DefaultAbsDist  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">inline</span> <span style="color:#800000; font-weight:bold; ">double</span></span>
+<span class="line_wrapper">    operator<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">)</span> <span style="color:#800000; font-weight:bold; ">const</span> noexcept <span style="color:#800080; ">{</span> <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span>std<span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span> <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">template<span style="color:#808030; ">&lt;</span>typename T<span style="color:#808030; ">,</span> typename F <span style="color:#808030; ">=</span> DefaultAbsDist<span style="color:#808030; ">&lt;</span>T<span style="color:#808030; ">&gt;</span><span style="color:#808030; ">&gt;</span></span>
 <span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">struct</span>  DetectAndChangeParams  <span style="color:#800080; ">{</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> value_type <span style="color:#808030; ">=</span> T<span style="color:#800080; ">;</span></span>
-<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> distance_func <span style="color:#808030; ">=</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>function<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> T <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">)</span><span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> distance_func <span style="color:#808030; ">=</span> F<span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Parameter specific to Z-Score, FFT and LOF</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
@@ -56,11 +63,11 @@ body {
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Parameter specific to FFT and LOF</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
-<span class="line_wrapper">    <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/NormalizeVisitor.html">normalization_type</a>  norm_type <span style="color:#800080; ">{</span> normalization_type<span style="color:#800080; ">::</span>none <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    normalization_type  norm_type <span style="color:#800080; ">{</span> normalization_type<span style="color:#800080; ">::</span>none <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Parameter specific to FFT</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
-<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>         freq_num <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    std<span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>         freq_num <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Parameters specific to IQR</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
@@ -69,16 +76,13 @@ body {
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Parameter specific to LOF</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
-<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>         k <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper">    distance_func       dist_fun <span style="color:#808030; ">=</span></span>
-<span class="line_wrapper">        <span style="color:#808030; ">[</span><span style="color:#808030; ">]</span><span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> value_type <span style="color:#808030; ">&amp;</span>x<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">const</span> value_type <span style="color:#808030; ">&amp;</span>y<span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span><span style="color:#808030; ">&gt;</span> <span style="color:#800000; font-weight:bold; ">double</span>  <span style="color:#800080; ">{</span></span>
-<span class="line_wrapper">            <span style="color:#800000; font-weight:bold; ">return</span> <span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>x <span style="color:#808030; ">-</span> y<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper">        <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    std<span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>         k <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    distance_func       dist_fun  <span style="color:#800080; ">{</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    <span style="color:#696969; ">// Parameters specific to Hampel filter</span></span>
 <span class="line_wrapper">    <span style="color:#696969; ">//</span></span>
-<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>         window_size <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
-<span class="line_wrapper">    <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/HampelFilterVisitor.html">hampel_type</a>         htype <span style="color:#800080; ">{</span> hampel_type<span style="color:#800080; ">::</span>median <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    std<span style="color:#800080; ">::</span><span style="color:#603000; ">size_t</span>         window_size <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    hampel_type         htype <span style="color:#800080; ">{</span> hampel_type<span style="color:#800080; ">::</span>median <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    value_type          num_stdev <span style="color:#800080; ">{</span> <span style="color:#008000; ">3.0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"><span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"></span></pre>

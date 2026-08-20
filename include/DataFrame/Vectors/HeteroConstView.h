@@ -141,18 +141,15 @@ private:
                       VectorConstView<T, A>>, A>::type>
         views_ {  };
 
-    std::function<void(HeteroConstView &)>
-        clear_function_ {
-            [](HeteroConstView &) { return; }
-        };
-    std::function<void(const HeteroConstView &, HeteroConstView &)>
-        copy_function_ {
-            [](const HeteroConstView &, HeteroConstView &)  { return; }
-        };
-    std::function<void(HeteroConstView &, HeteroConstView &)>
-        move_function_  {
-            [](HeteroConstView &, HeteroConstView &)  { return; }
-        };
+    void(*clear_function_)(HeteroConstView &) {
+        [](HeteroConstView &) -> void { return; }
+    };
+    void(*copy_function_)(const HeteroConstView &, HeteroConstView &) {
+        [](const HeteroConstView &, HeteroConstView &) -> void  { return; }
+    };
+    void(*move_function_)(HeteroConstView &, HeteroConstView &) {
+        [](HeteroConstView &, HeteroConstView &) -> void  { return; }
+    };
 
     // Visitor stuff
     //

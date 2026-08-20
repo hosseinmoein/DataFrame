@@ -43,9 +43,15 @@ template<typename T>
 HeteroConstView<A>::HeteroConstView(const T *begin_ptr, const T *end_ptr)
     : clear_function_([](HeteroConstView &hv) { views_<T>.erase(&hv); }),
       copy_function_([](const HeteroConstView &from, HeteroConstView &to)  {
-              views_<T>[&to] = views_<T>[&from]; }),
+          views_<T>[&to] = views_<T>[&from]; }),
       move_function_([](HeteroConstView &from, HeteroConstView &to)  {
-              views_<T>[&to] = std::move(views_<T>[&from]); })  {
+          auto  iter = views_<T>.find(&from);
+
+          if (iter != views_<T>.end()) {
+              views_<T>[&to] = std::move(iter->second);
+              views_<T>.erase(iter);
+          }
+      })  {
 
     views_<T>.emplace(this, VectorConstView<T, A>(begin_ptr, end_ptr));
 }
@@ -61,7 +67,12 @@ void HeteroConstView<A>::set_begin_end_special(const T *bp, const T *ep_1)  {
                           views_<T>[&to] = views_<T>[&from];
                       };
     move_function_ = [](HeteroConstView &from, HeteroConstView &to)  {
-                         views_<T>[&to] = std::move(views_<T>[&from]);
+                         auto  iter = views_<T>.find(&from);
+
+                         if (iter != views_<T>.end()) {
+                             views_<T>[&to] = std::move(iter->second);
+                             views_<T>.erase(iter);
+                         }
                      };
 
     VectorConstView<T, A>   vcv;
@@ -81,7 +92,12 @@ void HeteroConstView<A>::set_empty_vec()  {
                           views_<T>[&to] = views_<T>[&from];
                       };
     move_function_ = [](HeteroConstView &from, HeteroConstView &to)  {
-                         views_<T>[&to] = std::move(views_<T>[&from]);
+                         auto  iter = views_<T>.find(&from);
+
+                         if (iter != views_<T>.end()) {
+                             views_<T>[&to] = std::move(iter->second);
+                             views_<T>.erase(iter);
+                         }
                      };
 
     VectorConstView<T, A>   vcv;

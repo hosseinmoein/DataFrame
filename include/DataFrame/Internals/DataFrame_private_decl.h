@@ -302,16 +302,16 @@ load_column_(const char *name,
 
     using value_t = decltype(ITR::begin);
 
-    const auto          iter = column_tb_.find (name);
-    StlVecType<value_t> *vec_ptr = nullptr;
+    const auto          iter { column_tb_.find (name) };
+    StlVecType<value_t> *vec_ptr { nullptr };
 
     {
-        const SpinGuard guard (do_lock ? lock_ : nullptr);
+        const SpinGuard guard { do_lock ? lock_ : nullptr };
 
         if (iter == column_tb_.end()) [[likely]]
             vec_ptr = &(create_column<value_t>(name, false));
         else  {
-            DataVec &hv = data_[iter->second];
+            DataVec &hv { data_[iter->second] };
 
             vec_ptr = &(hv.template get_vector<value_t>());
         }
@@ -320,17 +320,16 @@ load_column_(const char *name,
     vec_ptr->clear();
     vec_ptr->insert (vec_ptr->end(), range.begin, range.end);
 
-    size_type       ret_cnt = std::distance(range.begin, range.end);
-    const size_type idx_s = indices_.size();
-    const size_type s = vec_ptr->size();
+    size_type       ret_cnt { std::distance(range.begin, range.end) };
+    const size_type idx_s { indices_.size() };
+    const size_type s { vec_ptr->size() };
 
     if (padding == nan_policy::pad_with_nans && s < idx_s)  {
-        for (size_type i = 0; i < idx_s - s; ++i)  {
+        for (size_type i { 0 }; i < idx_s - s; ++i)  {
             vec_ptr->push_back (std::move(get_nan<value_t>()));
             ret_cnt += 1;
         }
     }
-
     return (ret_cnt);
 }
 
@@ -491,26 +490,39 @@ template<typename T,
 static void
 fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
 
-    const size_type vec_size = vec.size();
+    const size_type vec_size { vec.size() };
 
     if (vec_size < 3) [[unlikely]]  return;
 
-    int count = 0;
-    T   last_value = vec[0];
+    int         count { 0 };
+    T           last_value { vec[0] };
 
-    for (size_type i = 1; i < vec_size - 1; ++i)  {
+    // next_known tracks the index of the next non-NaN value at or after
+    // i + 1. It only ever moves forward across the ENTIRE loop (never
+    // resets backward), so the total work spent advancing it is O(n) for
+    // the whole function -- not O(gap length) re-spent on every element
+    // inside a gap, which is what the original forward rescan from i + 1
+    // on every iteration cost. Same fill values, same semantics, just
+    // without redoing the search.
+    //
+    size_type   next_known { 1 };
+
+    for (size_type i { 1 }; i < (vec_size - 1); ++i)  {
         if (limit >= 0 && count >= limit)  break;
 
-        if (! is_nan<T>(vec[i]))
+        if (! is_nan<T>(vec[i]))  {
             last_value = vec[i];
+            if (next_known <= i)  next_known = i + 1;
+        }
         else if (! is_nan<T>(last_value))  {
-            for (size_type j = i + 1; j < vec_size; ++j)  {
-                if (! is_nan<T>(vec[j]))  {
-                    vec[i] = (last_value + vec[j]) / T(2);
-                    last_value = vec[i];
-                    count += 1;
-                    break;
-                }
+            if (next_known <= i)  next_known = i + 1;
+            while (next_known < vec_size && is_nan<T>(vec[next_known]))
+                ++next_known;
+
+            if (next_known < vec_size)  {
+                vec[i] = (last_value + vec[next_known]) / T(2);
+                last_value = vec[i];
+                count += 1;
             }
         }
     }
@@ -541,9 +553,9 @@ fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
     if (vec_size == 0)  return;
 
     int count = 0;
-    T   last_value = vec[vec_size - 1];
+    T   last_value { vec[vec_size - 1] };
 
-    for (long i = vec_size - 1; i >= 0; --i)  {
+    for (long i { vec_size - 1 }; i >= 0; --i)  {
         if (limit >= 0 && count >= limit)  break;
         if (! is_nan<T>(vec[i]))  last_value = vec[i];
         if (is_nan<T>(vec[i]) && ! is_nan<T>(last_value))  {
@@ -565,35 +577,43 @@ fill_missing_linter_(ColumnVecType<T> &vec,
                      const IndexVecType &index,
                      int limit)  {
 
-    const long  vec_size = static_cast<long>(vec.size());
+    const long  vec_size { static_cast<long>(vec.size()) };
 
     if (vec_size < 3)  return;
 
-    int             count = 0;
-    const T         *y1 = &(vec[0]);
-    const T         *y2 = &(vec[2]);
-    const IndexType *x = &(index[1]);
-    const IndexType *x1 = &(index[0]);
-    const IndexType *x2 = &(index[2]);
+    int             count { 0 };
+    const T         *y1 { &(vec[0]) };
+    const T         *y2 { &(vec[2]) };
+    const IndexType *x { &(index[1]) };
+    const IndexType *x1 { &(index[0]) };
+    const IndexType *x2 { &(index[2]) };
 
-    for (long i = 1; i < vec_size - 1; ++i)  {
+    // next_known tracks a lower bound on the index of the next non-NaN
+    // value at or after i + 1, and only ever advances forward across the
+    // WHOLE loop. The backward search for y1 is left exactly as it was --
+    // it's only reachable right after a gap starts (vec[i-1] is otherwise
+    // always already-known-good), so it never re-scans the same ground
+    // twice and isn't the source of the quadratic behavior. The forward
+    // search for y2 is what used to restart from i + 1 on every single
+    // element of a gap; that's now bounded to O(n) total for the column
+    // instead of O(gap length) re-paid per element inside one gap.
+    //
+    long            next_known { 2 };
+
+    for (long i { 1 }; i < vec_size - 1; ++i)  {
         if (limit >= 0 && count >= limit)  break;
         if (is_nan<T>(vec[i]))  {
             if (is_nan<T>(*y2))  {
-                bool    found = false;
+                if (next_known <= i)  next_known = i + 1;
+                while (next_known < vec_size && is_nan(vec[next_known]))
+                    ++next_known;
 
-                for (long j = i + 1; j < vec_size; ++j)  {
-                    if (! is_nan(vec[j]))  {
-                        y2 = &(vec[j]);
-                        x2 = &(index[j]);
-                        found = true;
-                        break;
-                    }
-                }
-                if (! found)  break;
+                if (next_known >= vec_size)  break;
+                y2 = &(vec[next_known]);
+                x2 = &(index[next_known]);
             }
             if (is_nan<T>(*y1))  {
-                for (long j = i - 1; j >= 0; --j)  {
+                for (long j { i - 1 }; j >= 0; --j)  {
                     if (! is_nan(vec[j]))  {
                         y1 = &(vec[j]);
                         x1 = &(index[j]);
@@ -601,10 +621,7 @@ fill_missing_linter_(ColumnVecType<T> &vec,
                     }
                 }
             }
-            vec[i] =
-                *y1 +
-                (static_cast<T>(*x - *x1) / static_cast<T>(*x2 - *x1)) *
-                (*y2 - *y1);
+            vec[i] = *y1 + (T(*x - *x1) / T(*x2 - *x1)) * (*y2 - *y1);
             count += 1;
         }
         if (i < (vec_size - 2))  {
@@ -613,6 +630,7 @@ fill_missing_linter_(ColumnVecType<T> &vec,
             x = &(index[i + 1]);
             x1 = &(index[i]);
             x2 = &(index[i + 2]);
+            if (next_known <= i + 1)  next_known = i + 2;
         }
     }
     return;
@@ -629,26 +647,25 @@ fill_missing_lagrange_(ColumnVecType<T> &vec,
                        const IndexVecType &index,
                        int limit)  {
 
-    const size_type vec_size = vec.size();
+    const size_type vec_size { vec.size() };
 
     if (vec_size < 3)  return;
 
     int count { 0 };
 
-    for (size_type k = 0; k < vec_size; ++k)  {
+    for (size_type k { 0 }; k < vec_size; ++k)  {
         if (limit >= 0 && count >= limit) [[unlikely]]  break;
 
         if (is_nan<T>(vec[k])) [[unlikely]]  {
-            const auto  x = index[k];
+            const auto  x { index[k] };
             T           y { 0 };
 
-            for (size_type i = 0; i < vec_size; ++i)  {
-                T   product { static_cast<T>(index[i]) };
+            for (size_type i { 0 }; i < vec_size; ++i)  {
+                T   product { T(index[i]) };
 
-                for (size_type j = 0; j < vec_size; ++j)
+                for (size_type j { 0 }; j < vec_size; ++j)
                     if (i != j && index[i] != index[j]) [[likely]]
-                        product *= static_cast<T>(x - index[j]) /
-                                   static_cast<T>(index[i] - index[j]);
+                        product *= T(x - index[j]) / T(index[i] - index[j]);
 
                 y += product;
             }
@@ -678,26 +695,27 @@ fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
 template<typename ... Ts>
 void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
 
-    const auto  thread_level =
+    const auto  thread_level {
         (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : get_thread_level();
-    SpinGuard   guard (lock_);
+            ? 0L : get_thread_level()
+    };
+    SpinGuard   guard { lock_ };
 
     if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), this]
             (const auto &begin, const auto &end) -> void  {
-                const sel_remove_functor_<Ts ...>   functor (col_indices);
+                const sel_remove_functor_<Ts ...>   functor { col_indices };
 
-                for (auto citer = begin; citer < end; ++citer)
+                for (auto citer { begin }; citer < end; ++citer)
                     this->data_[citer->second].change(functor);
             };
         auto    lbd_idx =
             [&col_indices = std::as_const(col_indices), this] () -> void  {
-                const size_type col_indices_s = col_indices.size();
-                size_type       del_count = 0;
+                const size_type col_indices_s { col_indices.size() };
+                size_type       del_count { 0 };
 
-                for (size_type i = 0; i < col_indices_s; ++i)  {
+                for (size_type i { 0 }; i < col_indices_s; ++i)  {
                     if constexpr (
                        std::is_base_of<HeteroVector<align_value>, H>::value)
                         this->indices_.erase(this->indices_.begin() +
@@ -706,26 +724,27 @@ void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
                         this->indices_.erase(col_indices[i] - del_count++);
                 }
             };
-            auto    futures =
-                thr_pool_.parallel_loop<double>(column_list_.begin(),
-                                                column_list_.end(),
-                                                std::move(lbd));
-            auto    future_idx = thr_pool_.dispatch(false, lbd_idx);
+        auto    futures {
+            thr_pool_.parallel_loop<double>(column_list_.begin(),
+                                            column_list_.end(),
+                                            std::move(lbd))
+        };
+        auto    future_idx { thr_pool_.dispatch(false, lbd_idx) };
 
-            for (auto &fut : futures)  fut.get();
-            future_idx.get();
+        for (auto &fut : futures)  fut.get();
+        future_idx.get();
     }
     else  {
-        const sel_remove_functor_<Ts ...>   functor (col_indices);
+        const sel_remove_functor_<Ts ...>   functor { col_indices };
 
         for (const auto &citer : column_list_)
             data_[citer.second].change(functor);
         guard.release();
 
-        const size_type col_indices_s = col_indices.size();
-        size_type       del_count = 0;
+        const size_type col_indices_s { col_indices.size() };
+        size_type       del_count { 0 };
 
-        for (size_type i = 0; i < col_indices_s; ++i)  {
+        for (size_type i { 0 }; i < col_indices_s; ++i)  {
             if constexpr (std::is_base_of<HeteroVector<align_value>, H>::value)
                 indices_.erase(indices_.begin() +
                                (col_indices[i] - del_count++));
@@ -961,6 +980,239 @@ join_helper_common_(
 
 // ----------------------------------------------------------------------------
 
+//
+// Optimized join helpers.
+//
+// The existing JoinSortingPair representation stores:
+//
+//     pointer-to-key + original-index
+//
+// That is convenient for the original implementation, but unnecessarily
+// expensive when the keys are already sorted. These helpers operate directly
+// on the original vectors and return the same IndexIdxVector consumed by the
+// existing result-building machinery.
+//
+// NONE means "no corresponding row".
+//
+
+template<typename LHS_V, typename RHS_V>
+static IndexIdxVector
+get_inner_index_idx_vector_sorted_(const LHS_V &lhs, const RHS_V &rhs)  {
+
+    using value_t = typename LHS_V::value_type;
+
+    const size_type lhs_s { lhs.size() };
+    const size_type rhs_s { rhs.size() };
+
+    IndexIdxVector result;
+
+    // The minimum is only a lower bound because duplicate keys can produce
+    // a Cartesian product.
+    //
+    result.reserve(std::min(lhs_s, rhs_s));
+
+    size_type   li { 0 };
+    size_type   ri { 0 };
+
+    while (li < lhs_s && ri < rhs_s) [[likely]]  {
+        if (lhs[li] < rhs[ri])  {
+            ++li;
+            continue;
+        }
+        if (rhs[ri] < lhs[li])  {
+            ++ri;
+            continue;
+        }
+
+        // Equal key.  We need the Cartesian product of the equal-key
+        // runs on both sides.
+        //
+        const value_t   &key { lhs[li] };
+        const size_type lhs_begin { li };
+        const size_type rhs_begin { ri };
+
+        while (li < lhs_s && lhs[li] == key)  ++li;
+        while (ri < rhs_s && rhs[ri] == key)  ++ri;
+
+        for (size_type l { lhs_begin }; l < li; ++l)
+            for (size_type r { rhs_begin }; r < ri; ++r)
+                result.emplace_back(l, r);
+    }
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename LHS_V, typename RHS_V>
+static IndexIdxVector
+get_left_index_idx_vector_sorted_(const LHS_V &lhs, const RHS_V &rhs)  {
+
+    using value_t = typename LHS_V::value_type;
+
+    constexpr size_type NONE { std::numeric_limits<size_type>::max() };
+
+    const size_type lhs_s { lhs.size() };
+    const size_type rhs_s { rhs.size() };
+    IndexIdxVector  result;
+
+    result.reserve(lhs_s);
+
+    size_type   li { 0 };
+    size_type   ri { 0 };
+
+    while (li < lhs_s) [[likely]]  {
+        if (ri >= rhs_s) {
+            result.emplace_back(li++, NONE);
+            continue;
+        }
+        if (lhs[li] < rhs[ri])  {
+            result.emplace_back(li++, NONE);
+            continue;
+        }
+        if (rhs[ri] < lhs[li])  {
+            ++ri;
+            continue;
+        }
+
+        // Equal key.
+        //
+        const value_t   &key { lhs[li] };
+        const size_type lhs_begin { li };
+        const size_type rhs_begin { ri };
+
+        while (li < lhs_s && lhs[li] == key)  ++li;
+        while (ri < rhs_s && rhs[ri] == key)  ++ri;
+
+        for (size_type l { lhs_begin }; l < li; ++l)
+            for (size_type r { rhs_begin }; r < ri; ++r)
+                result.emplace_back(l, r);
+    }
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename LHS_V, typename RHS_V>
+static IndexIdxVector
+get_right_index_idx_vector_sorted_(const LHS_V &lhs, const RHS_V &rhs)  {
+
+    using value_t = typename LHS_V::value_type;
+
+    constexpr size_type NONE { std::numeric_limits<size_type>::max() };
+
+    const size_type lhs_s { lhs.size() };
+    const size_type rhs_s { rhs.size() };
+    IndexIdxVector  result;
+
+    result.reserve(rhs_s);
+
+    size_type   li { 0 };
+    size_type   ri { 0 };
+
+    while (ri < rhs_s) [[likely]]  {
+        if (li >= lhs_s)  {
+            result.emplace_back(NONE, ri++);
+            continue;
+        }
+        if (lhs[li] < rhs[ri])  {
+            ++li;
+            continue;
+        }
+        if (rhs[ri] < lhs[li]) { 
+            result.emplace_back(NONE, ri++);
+            continue;
+        }
+
+        // Equal key.
+        //
+        const value_t   &key { rhs[ri] };
+        const size_type lhs_begin { li };
+        const size_type rhs_begin { ri };
+
+        while (li < lhs_s && lhs[li] == key)  ++li;
+        while (ri < rhs_s && rhs[ri] == key)  ++ri;
+
+        for (size_type r { rhs_begin }; r < ri; ++r)
+            for (size_type l { lhs_begin }; l < li; ++l)
+                result.emplace_back(l, r);
+    }
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename LHS_V, typename RHS_V>
+static IndexIdxVector
+get_left_right_index_idx_vector_sorted_(const LHS_V &lhs, const RHS_V &rhs)  {
+
+    using value_t = typename LHS_V::value_type;
+
+    constexpr size_type NONE { std::numeric_limits<size_type>::max() };
+
+    const size_type lhs_s { lhs.size() };
+    const size_type rhs_s { rhs.size() };
+    IndexIdxVector  result;
+
+    result.reserve(lhs_s + rhs_s);
+
+    size_type li { 0 };
+    size_type ri { 0 };
+
+    while (li < lhs_s || ri < rhs_s) [[likely]]  {
+        if (li >= lhs_s)  {
+            result.emplace_back(NONE, ri++);
+            continue;
+        }
+        if (ri >= rhs_s)  {
+            result.emplace_back(li++, NONE);
+            continue;
+        }
+        if (lhs[li] < rhs[ri])  {
+            result.emplace_back(li++, NONE);
+            continue;
+        }
+        if (rhs[ri] < lhs[li])  {
+            result.emplace_back(NONE, ri++);
+            continue;
+        }
+
+        // Equal key.
+        //
+        const value_t   &key { rhs[ri] };
+        const size_type lhs_begin { li };
+        const size_type rhs_begin { ri };
+
+        while (li < lhs_s && lhs[li] == key)  ++li;
+        while (ri < rhs_s && rhs[ri] == key)  ++ri;
+
+        for (size_type l { lhs_begin }; l < li; ++l)
+            for (size_type r { rhs_begin }; r < ri; ++r)
+                result.emplace_back(l, r);
+    }
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+// Build a permutation containing [0, 1, ..., n).
+//
+// This is only used for unsorted joins. It is considerably smaller than the
+// old JoinSortingPair<T>:
+//
+//     old: pointer + size_type
+//     new:  size_type
+//
+static StlVecType<size_type>
+make_identity_permutation_(size_type n)  {
+
+    StlVecType<size_type>   result(n);
+
+    std::iota(result.begin(), result.end(), size_type(0));
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename MAP, typename ... Ts>
 static
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
@@ -1099,12 +1351,12 @@ data_by_sel_common_(const StlVecType<size_type> &col_indices,
                 }
             };
 
-        auto    futuers =
+        auto    futures =
             thr_pool_.parallel_loop<double>(column_list_.begin(),
                                             column_list_.end(),
                                             std::move(lbd));
 
-        for (auto &fut : futuers)  fut.get();
+        for (auto &fut : futures)  fut.get();
     }
     else  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
@@ -1344,11 +1596,11 @@ replace_vector_vals_(V &data_vec,
         };
 
     if (thread_level > 2)  {
-        auto    futuers = thr_pool_.parallel_loop<T>(data_vec.begin(),
+        auto    futures = thr_pool_.parallel_loop<T>(data_vec.begin(),
                                                      data_vec.end(),
                                                      std::move(lbd));
 
-        for (auto &fut : futuers)  count += fut.get();
+        for (auto &fut : futures)  count += fut.get();
     }
     else  {
         if (limit < 0) [[likely]]  {
@@ -1380,14 +1632,17 @@ col_vector_push_back_func_(
     io_format file_type,
     char delim)  {
 
-    std::string value;
-    char        c = 0;
+    std::streambuf  *rdbuf { file.rdbuf() };
+    std::string     value;
+    int             ch;
+    char            c { 0 };
 
-    while (file.get(c)) [[likely]] {
+    while ((ch = rdbuf->sbumpc()) != std::char_traits<char>::eof())  {
+        c = static_cast<char>(ch);
         value.clear();
         if (file_type == io_format::csv && c == '\n')  break;
         else if (file_type == io_format::json && c == ']')  break;
-        file.unget();
+        rdbuf->sungetc();
         _get_token_from_file_(file, delim, value,
                               file_type == io_format::json ? ']' : '\0');
         vec.push_back(converter(value.c_str(), int(value.size())));
@@ -1404,15 +1659,18 @@ col_vector_push_back_func_(V &vec,
                            io_format file_type,
                            char delim)  {
 
-    std::string value;
-    char        c = 0;
+    std::streambuf  *rdbuf { file.rdbuf() };
+    std::string     value;
+    int             ch;
+    char            c { 0 };
 
     value.reserve(1024);
-    while (file.get(c)) [[likely]] {
+    while ((ch = rdbuf->sbumpc()) != std::char_traits<char>::eof())  {
+        c = static_cast<char>(ch);
         value.clear();
         if (file_type == io_format::csv && c == '\n')  break;
         else if (file_type == io_format::json && c == ']')  break;
-        file.unget();
+        rdbuf->sungetc();
         _get_token_from_file_(file, delim, value,
                               file_type == io_format::json ? ']' : '\0');
         vec.push_back(static_cast<T>(converter(value.c_str(), nullptr, 0)));
@@ -1428,13 +1686,16 @@ col_vector_push_back_cont_func_(V &vec,
                                 T (*converter)(const char *),
                                 char delim)  {
 
-    std::string value;
-    char        c = 0;
+    std::streambuf  *rdbuf { file.rdbuf() };
+    std::string     value;
+    int             ch;
+    char            c { 0 };
 
     value.reserve(2048);
-    while (file.get(c)) [[likely]] {
+    while ((ch = rdbuf->sbumpc()) != std::char_traits<char>::eof())  {
+        c = static_cast<char>(ch);
         if (c == '\n') [[unlikely]] break;
-        file.unget();
+        rdbuf->sungetc();
         value.clear();
         _get_token_from_file_(file, delim, value, '\0');
         vec.push_back(converter(value.c_str()));
@@ -1486,14 +1747,17 @@ struct  ColVectorPushBack_  {
                 io_format file_type,
                 char delim) const  {
 
-        std::string value;
-        char        c = 0;
+        std::streambuf  *rdbuf { file.rdbuf() };
+        std::string     value;
+        int             ch;
+        char            c { 0 };
 
         value.reserve(1024);
-        while (file.get(c)) [[likely]] {
+        while ((ch = rdbuf->sbumpc()) != std::char_traits<char>::eof())  {
+            c = static_cast<char>(ch);
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
-            file.unget();
+            rdbuf->sungetc();
             value.clear();
             _get_token_from_file_(file, delim, value,
                                   file_type == io_format::json ? ']' : '\0');
@@ -1514,14 +1778,17 @@ struct  ColVectorPushBack_<const char *, StlVecType<std::string>, Dummy>  {
                 io_format file_type,
                 char delim) const  {
 
-        std::string value;
-        char        c = 0;
+        std::streambuf  *rdbuf { file.rdbuf() };
+        std::string     value;
+        int             ch;
+        char            c { 0 };
 
         value.reserve(1024);
-        while (file.get(c)) [[likely]] {
+        while ((ch = rdbuf->sbumpc()) != std::char_traits<char>::eof())  {
+            c = static_cast<char>(ch);
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
-            file.unget();
+            rdbuf->sungetc();
             value.clear();
             _get_token_from_file_(file, delim, value,
                                   file_type == io_format::json ? ']' : '\0');
@@ -1548,14 +1815,17 @@ struct  ColVectorPushBack_<DateTime, StlVecType<DateTime>, Dummy>  {
                 io_format file_type,
                 char delim) const  {
 
-        std::string value;
-        char        c = 0;
+        std::streambuf  *rdbuf { file.rdbuf() };
+        std::string     value;
+        int             ch;
+        char            c { 0 };
 
         value.reserve(1024);
-        while (file.get(c)) [[likely]] {
+        while ((ch = rdbuf->sbumpc()) != std::char_traits<char>::eof())  {
+            c = static_cast<char>(ch);
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
-            file.unget();
+            rdbuf->sungetc();
             value.clear();
             _get_token_from_file_(file, delim, value,
                                   file_type == io_format::json ? ']' : '\0');
@@ -2181,10 +2451,10 @@ get_scaled_data_matrix_(std::vector<const char *> &&col_names,
             ? get_thread_level() : 0L;
 
     if (thread_level > 2)  {
-        auto    futuers =
+        auto    futures =
             thr_pool_.parallel_loop<T>(size_type(0), col_num, std::move(lbd));
 
-        for (auto &fut : futuers)  fut.get();
+        for (auto &fut : futures)  fut.get();
     }
     else  lbd(size_type(0), col_num);
 

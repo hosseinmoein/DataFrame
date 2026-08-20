@@ -90,7 +90,7 @@ int main (int, char *[])  {
 
     VectorPtrView<int>  vec_view3(int_vec2.begin(), int_vec2.end());
 
-    vec_view3.sort();
+    vec_view3.sort([](const int *l, const int *r) -> bool { return *l < *r; });
     counter = 0;
 #ifndef _MSC_VER
     for (VectorPtrView<int>::const_iterator citer = vec_view3.begin();

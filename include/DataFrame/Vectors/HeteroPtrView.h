@@ -156,18 +156,15 @@ private:
                       VectorPtrView<T, A>>, A>::type>
         views_ {  };
 
-    std::function<void(HeteroPtrView &)>
-        clear_function_ {
-            [](HeteroPtrView &) { return; }
-        };
-    std::function<void(const HeteroPtrView &, HeteroPtrView &)>
-        copy_function_ {
-            [](const HeteroPtrView &, HeteroPtrView &)  { return; }
-        };
-    std::function<void(HeteroPtrView &, HeteroPtrView &)>
-        move_function_  {
-            [](HeteroPtrView &, HeteroPtrView &)  { return; }
-        };
+    void(*clear_function_)(HeteroPtrView &) {
+        [](HeteroPtrView &) -> void  { return; }
+    };
+    void(*copy_function_)(const HeteroPtrView &, HeteroPtrView &) {
+        [](const HeteroPtrView &, HeteroPtrView &) -> void  { return; }
+    };
+    void(*move_function_)(HeteroPtrView &, HeteroPtrView &) {
+        [](HeteroPtrView &, HeteroPtrView &) -> void  { return; }
+    };
 
     // Visitor stuff
     //

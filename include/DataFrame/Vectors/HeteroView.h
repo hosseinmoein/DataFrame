@@ -176,14 +176,14 @@ private:
             std::pair<const HeteroView *const, VectorView<T, A>>, A>::type>
         views_ {  };
 
-    std::function<void(HeteroView &)>   clear_function_ {
-        [](HeteroView &) { return; }
+    void(*clear_function_)(HeteroView &)  {
+        [](HeteroView &) -> void { return; }
     };
-    std::function<void(const HeteroView &, HeteroView &)>   copy_function_ {
-        [](const HeteroView &, HeteroView &)  { return; }
+    void(*copy_function_)(const HeteroView &, HeteroView &)  {
+        [](const HeteroView &, HeteroView &) -> void  { return; }
     };
-    std::function<void(HeteroView &, HeteroView &)> move_function_  {
-        [](HeteroView &, HeteroView &)  { return; }
+    void(*move_function_)(HeteroView &, HeteroView &)  {
+        [](HeteroView &, HeteroView &) -> void  { return; }
     };
 
     // Visitor stuff

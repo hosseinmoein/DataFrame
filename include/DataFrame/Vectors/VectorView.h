@@ -131,9 +131,14 @@ public:
 
     VectorView &operator= (std::vector<T> &rhs)  {
 
-        VectorView  vw(&*(rhs.begin()), &(rhs.back()) + 1);
-
-        swap(vw);
+        if (rhs.empty()) {
+            begin_ptr_ = nullptr;
+            end_ptr_ = nullptr;
+        }
+        else {
+            begin_ptr_ = rhs.data();
+            end_ptr_ = rhs.data() + rhs.size();
+        }
         return (*this);
     }
 
@@ -537,7 +542,7 @@ public:
     [[nodiscard]] inline const_reference
     operator [] (size_type i) const noexcept  { return (*(begin_ptr_ + i)); }
     [[nodiscard]] inline const_reference
-    ront() const noexcept  { return (*begin_ptr_); }
+    front() const noexcept  { return (*begin_ptr_); }
     [[nodiscard]] inline const_reference
     back() const noexcept  { return (*(end_ptr_ - 1)); }
 
@@ -555,9 +560,14 @@ public:
 
     VectorConstView &operator= (const std::vector<T> &rhs)  {
 
-        VectorConstView  vw(&*(rhs.begin()), &(rhs.back()) + 1);
-
-        swap(vw);
+        if (rhs.empty()) {
+            begin_ptr_ = nullptr;
+            end_ptr_ = nullptr;
+        }
+        else {
+            begin_ptr_ = rhs.data();
+            end_ptr_ = rhs.data() + rhs.size();
+        }
         return (*this);
     }
 

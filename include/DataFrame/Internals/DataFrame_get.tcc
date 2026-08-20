@@ -113,14 +113,13 @@ template<typename T>
 typename DataFrame<I, H>::template ColumnVecType<T> &
 DataFrame<I, H>::get_column (const char *name, bool do_lock)  {
 
-    const auto  iter = column_tb_.find (name);
+    const SpinGuard guard { do_lock ? lock_ : nullptr };
+    const auto      iter { column_tb_.find (name) };
 
     if (iter != column_tb_.end()) [[likely]]  {
-        const SpinGuard guard (do_lock ? lock_ : nullptr);
-        DataVec         &hv = data_[iter->second];
-        auto            &data_vec = hv.template get_vector<T>();
+        DataVec &hv { data_[iter->second] };
 
-        return (data_vec);
+        return (hv.template get_vector<T>());
     }
 
     char buffer [512];

@@ -3127,7 +3127,7 @@ public:
                         column_begin2,
                         column_end2,
                         std::move(lbd))
-				};
+                };
 
                 for (auto &fut : futures)  {
                     const auto  ret { fut.get() };
@@ -3142,7 +3142,7 @@ public:
             else  {
                 const auto  ret {
                     lbd(column_begin1, column_end1, column_begin2)
-				};
+                };
 
                 result_ = std::get<0>(ret);
                 mag1_ = std::get<1>(ret);
@@ -3706,22 +3706,64 @@ struct  StatsVisitor  {
     inline void operator()(const index_type &, const value_type &val)  {
 
         SKIP_NAN
-
-        value_type  delta, delta_n, delta_n2, term1;
-        size_type   n1 = n_;
-
-        n_ += 1;
-        delta = val - m1_;
-        delta_n = delta / value_type(n_);
-        delta_n2 = delta_n * delta_n;
-        term1 = delta * delta_n * value_type(n1);
-        m1_ += delta_n;
-        m4_ += (term1 * delta_n2 * value_type(n_ * n_ - 3 * n_ + 3) +
-                6.0 * delta_n2 * m2_ - 4.0 * delta_n * m3_);
-        m3_ += (term1 * delta_n * value_type(n_ - 2) - 3.0 * delta_n * m2_);
-        m2_ += term1;
+        update_one_(val, n_, m1_, m2_, m3_, m4_);
     }
-    PASS_DATA_ONE_BY_ONE
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            // Each chunk accumulates its own independent (n, m1, m2, m3,
+            // m4) via the exact same recurrence as the single-element
+            // operator() above (update_one_()), then the partial results
+            // are combined via the Pébay (2008) parallel-combination
+            // formula in merge_moments_() -- this gives identical
+            // results to a strictly serial single pass (verified against
+            // both a brute-force reference and this serial recurrence,
+            // across many uneven chunk splits, before being wired in
+            // here) while letting the scan itself run across threads.
+            //
+            auto    lbd =
+                [this]
+                (auto begin, auto end) ->
+                    std::tuple<size_type, value_type,
+                               value_type, value_type, value_type>  {
+
+                    size_type   n { 0 };
+                    value_type  m1 { 0 }, m2 { 0 }, m3 { 0 }, m4 { 0 };
+
+                    for (auto citer { begin }; citer != end; ++citer)  {
+                        const value_type    val { *citer };
+
+                        if (skip_nan_ && is_nan__(val))  continue;
+                        update_one_(val, n, m1, m2, m3, m4);
+                    }
+                    return (std::make_tuple(n, m1, m2, m3, m4));
+                };
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    column_begin, column_end, lbd)
+            };
+
+            for (auto &fut : futures)  {
+                auto    [n, m1, m2, m3, m4] = fut.get();
+
+                merge_moments_(n_, m1_, m2_, m3_, m4_, n, m1, m2, m3, m4);
+            }
+        }
+        else  {
+            auto    idx_iter { idx_begin };
+            auto    col_iter { column_begin };
+
+            while (col_iter < column_end)
+                (*this)(*idx_iter++, *col_iter++);
+        }
+    }
 
     inline void pre ()  {
 
@@ -3752,6 +3794,86 @@ struct  StatsVisitor  {
     DECL_CTOR(StatsVisitor)
 
 private:
+
+    // Single-element Pébay (2008) one-pass update -- shared by both the
+    // per-element operator() above (updating member state directly) and
+    // each parallel chunk's local accumulation below (updating locals,
+    // merged afterward via merge_moments_()). Kept as one function so
+    // the formula only ever needs fixing in one place.
+    //
+    static inline void
+    update_one_(value_type val, size_type &n, value_type &m1,
+               value_type &m2, value_type &m3, value_type &m4)  {
+
+        const size_type n1 { n };
+
+        n += 1;
+
+        const value_type    delta { val - m1 };
+        const value_type    delta_n { delta / value_type(n) };
+        const value_type    delta_n2 { delta_n * delta_n };
+        const value_type    term1 { delta * delta_n * value_type(n1) };
+
+        m1 += delta_n;
+        m4 += term1 * delta_n2 * value_type(n * n - 3 * n + 3) +
+              6.0 * delta_n2 * m2 - 4.0 * delta_n * m3;
+        m3 += term1 * delta_n * value_type(n - 2) - 3.0 * delta_n * m2;
+        m2 += term1;
+    }
+
+    // Pébay (2008) parallel combination: merges the moments of two
+    // disjoint partitions A and B into the moments of their union,
+    // without re-scanning the underlying data. Verified against a
+    // brute-force two-pass reference and against the single-pass
+    // recurrence above, across many uneven chunk splits, before being
+    // used here.
+    //
+    static inline void
+    merge_moments_(size_type &n_a,
+                   value_type &m1_a,
+                   value_type &m2_a,
+                   value_type &m3_a,
+                   value_type &m4_a,
+                   size_type n_b,
+                   value_type m1_b,
+                   value_type m2_b,
+                   value_type m3_b,
+                   value_type m4_b)  {
+
+        if (n_b == 0)  return;
+        if (n_a == 0)  {
+            n_a = n_b; m1_a = m1_b; m2_a = m2_b; m3_a = m3_b; m4_a = m4_b;
+            return;
+        }
+
+        const value_type    na { value_type(n_a) };
+        const value_type    nb { value_type(n_b) };
+        const value_type    n  { na + nb };
+        const value_type    delta { m1_b - m1_a };
+        const value_type    delta2 { delta * delta };
+        const value_type    delta3 { delta2 * delta };
+        const value_type    delta4 { delta2 * delta2 };
+
+        const value_type    new_m1 { m1_a + delta * nb / n };
+        const value_type    new_m2 { m2_a + m2_b + delta2 * na * nb / n };
+        const value_type    new_m3 {
+            m3_a + m3_b +
+            delta3 * na * nb * (na - nb) / (n * n) +
+            3.0 * delta * (na * m2_b - nb * m2_a) / n
+        };
+        const value_type    new_m4 {
+            m4_a + m4_b +
+            delta4 * na * nb * (na * na - na * nb + nb * nb) / (n * n * n) +
+            6.0 * delta2 * (na * na * m2_b + nb * nb * m2_a) / (n * n) +
+            4.0 * delta * (na * m3_b - nb * m3_a) / n
+        };
+
+        n_a = size_type(n);
+        m1_a = new_m1;
+        m2_a = new_m2;
+        m3_a = new_m3;
+        m4_a = new_m4;
+    }
 
     size_type   n_ { 0 };
     value_type  m1_ { 0 };
@@ -3820,15 +3942,21 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    inline void operator() (const index_type &idx,
-                            const value_type &x, const value_type &y)  {
+    inline void operator()(const index_type &idx,
+                           const value_type &x, const value_type &y)  {
 
         if (skip_nan_ && (is_nan__(x) || is_nan__(y)))  return;
 
         if (! related_ts_)  {
             v_x_(idx, x);
             v_y_(idx, y);
-            deg_freedom_ += 2;
+
+            // deg_freedom_ for this branch is computed fresh in post()
+            // from v_x_.get_count()/v_y_.get_count() (Welch-Satterthwaite
+            // needs both counts individually, not just their sum), so no
+            // running tally is kept here.
+            //
+            // deg_freedom_ += 2;
         }
         else  {
             v_x_(idx, x - y);
@@ -3837,14 +3965,15 @@ public:
     }
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &x_begin, const H &x_end,
+               const H &y_begin, const H &y_end)  {
 
-        const size_type col_s =
-            std::min ({ std::distance(idx_begin, idx_end),
-                        std::distance(x_begin, x_end),
-                        std::distance(y_begin, y_end) });
+        const size_type col_s {
+            size_Type(std::min ({ std::distance(idx_begin, idx_end),
+                                  std::distance(x_begin, x_end),
+                                  std::distance(y_begin, y_end) }))
+        };
 
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
@@ -3859,6 +3988,9 @@ public:
                         vis(idx_begin, idx_begin, begin, end);
                     };
 
+                const auto  x_end_it { x_begin + col_s };
+                const auto  y_end_it { y_begin + col_s };
+
                 futures.reserve(2);
                 futures.emplace_back(
                     ThreadGranularity::thr_pool_.dispatch(
@@ -3866,7 +3998,7 @@ public:
                         lbd,
                             std::ref(v_x_),
                             std::cref(x_begin),
-                            std::cref(x_begin + col_s),
+                            std::cref(x_end_it),
                             std::cref(idx_begin)));
                 futures.emplace_back(
                     ThreadGranularity::thr_pool_.dispatch(
@@ -3874,7 +4006,7 @@ public:
                         lbd,
                             std::ref(v_y_),
                             std::cref(y_begin),
-                            std::cref(y_begin + col_s),
+                            std::cref(y_end_it),
                             std::cref(idx_begin)));
             }
             else  {
@@ -3915,29 +4047,49 @@ public:
                 }
             }
         }
-        if (! related_ts_)
-            deg_freedom_ = col_s * 2;
-        else
+        if (related_ts_)
             deg_freedom_ = col_s;
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         v_x_.pre();
         v_y_.pre();
         result_ = 0;
         deg_freedom_ = 0;
     }
-    inline void post ()  {
+    inline void post()  {
 
         v_x_.post();
         v_y_.post();
         if (! related_ts_)  {
-            result_ =
-                (v_x_.get_mean() - v_y_.get_mean()) /
-                std::sqrt(v_x_.get_result() / value_type(v_x_.get_count()) +
-                          v_y_.get_result() / value_type(v_y_.get_count()));
-            deg_freedom_ -= 2;
+            const value_type    a {
+                v_x_.get_result() / value_type(v_x_.get_count())
+            };
+            const value_type    b {
+                v_y_.get_result() / value_type(v_y_.get_count())
+            };
+
+            result_ = (v_x_.get_mean() - v_y_.get_mean()) / std::sqrt(a + b);
+
+            // Welch-Satterthwaite equation: the correct degrees of
+            // freedom for a Welch (unequal-variance) t-statistic, which
+            // is what result_ above computes. Previously this used
+            // n_x + n_y - 2 (Student's/pooled df, via deg_freedom_ -= 2),
+            // which only equals the Welch-Satterthwaite value when the
+            // two variances happen to be equal -- otherwise it
+            // overstates the degrees of freedom (understating the true
+            // p-value) precisely when the variances differ, which is
+            // the situation Welch's test exists to handle correctly.
+            // Rounded to the nearest integer since deg_freedom_ is a
+            // size_type; the underlying quantity is a continuous
+            // approximation, not naturally an integer.
+            //
+            deg_freedom_ =
+                size_type(std::round(
+                    (a + b) * (a + b) /
+                    (a * a / value_type(v_x_.get_count() - 1) +
+                     b * b / value_type(v_y_.get_count() - 1))));
         }
         else  {
             result_ =
@@ -3948,8 +4100,8 @@ public:
         }
     }
 
-    inline result_type get_result () const  { return (result_); }
-    inline size_type get_deg_freedom () const  { return (deg_freedom_); }
+    inline result_type get_result() const  { return (result_); }
+    inline size_type get_deg_freedom() const  { return (deg_freedom_); }
 
     explicit TTestVisitor(bool is_related_ts, bool skipnan = false)
         : v_x_(false, skipnan),

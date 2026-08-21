@@ -3843,7 +3843,7 @@ static void test_TTestVisitor()  {
 
     df.visit<double, double>("x_data", "y_data", tt_v);
     assert(fabs(tt_v.get_result() - -15.3585) < 0.0001);
-    assert(tt_v.get_deg_freedom() == 40);
+    assert(tt_v.get_deg_freedom() == 20);
 
     df.visit<double, double>("x_data", "z_data", tt_v);
     assert(fabs(tt_v.get_result() - 0.0421697) < 0.000001);

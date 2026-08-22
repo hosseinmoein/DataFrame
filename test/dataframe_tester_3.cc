@@ -80,8 +80,8 @@ static void test_groupby_edge()  {
                    nan_policy::dont_pad_with_nans);
 
     FactorizeVisitor<double, unsigned long, 256>
-        fact([] (const double &f) -> bool {
-            return (f > 11106.0 && f < 30000.0);
+        fact([] (const double &f) -> char {
+            return (char(f > 11106.0 && f < 30000.0));
         });
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2",

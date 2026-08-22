@@ -4196,7 +4196,7 @@ struct  CumCountVisitor  {
 
         result.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            if (! is_nan__(*(column_begin + i))) [[unlikely]]
+            if (! is_nan__(*(column_begin + i))) [[likely]]
                 running_cnt += 1;
             result.push_back(running_cnt);
         }
@@ -4273,20 +4273,35 @@ struct  CumExtremumVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
         if (col_s == 0)  return;
 
-        value_type  running_extremum = *column_begin;
+        value_type  running_extremum;
+        size_type   i { 0 };
         result_type result;
+
 
         result.reserve(col_s);
         if (! skip_nan_)  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    &value = *(column_begin + i);
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const value_type    &value { *(column_begin + i) };
+
+                if (! is_nan__(value)) [[likely]]  {
+                    running_extremum = value;
+                    break;
+                }
+                else  result.push_back(value);
+            }
+        }
+        else  running_extremum = *column_begin;
+
+        if (! skip_nan_)  {
+            for (; i < col_s; ++i) [[likely]]  {
+                const value_type    &value { *(column_begin + i) };
 
                 if (cmp_(running_extremum, value))
                     running_extremum = value;
@@ -4294,16 +4309,15 @@ struct  CumExtremumVisitor  {
             }
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    &value = *(column_begin + i);
+            for (; i < col_s; ++i) [[likely]]  {
+                const value_type    &value { *(column_begin + i) };
 
                 if (! is_nan__(value)) [[likely]]  {
                     if (cmp_(running_extremum, value))
                         running_extremum = value;
                     result.push_back(running_extremum);
                 }
-                else
-                    result.push_back(value);
+                else  result.push_back(value);
             }
         }
         result_.swap(result);
@@ -4405,16 +4419,16 @@ private:
 
 // ----------------------------------------------------------------------------
 
-// It factorizes the given column into a vector of Booleans based on the
-// result of the given function.
+// It factorizes the given column into a vector of Booleans (actual char type)
+// based on the result of the given function.
 //
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  FactorizeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
     using result_type =
-        std::vector<bool, typename allocator_declare<bool, A>::type>;
-    using factor_func = std::function<bool(const value_type &val)>;
+        std::vector<char, typename allocator_declare<char, A>::type>;
+    using factor_func = std::function<char(const value_type &val)>;
 
     template <typename K, typename H>
     inline void
@@ -4435,7 +4449,7 @@ struct  FactorizeVisitor  {
                         result[begin] = this->ffunc_(*(column_begin + begin));
                 };
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<bool>(
+                ThreadGranularity::thr_pool_.parallel_loop<char>(
                     size_type(0), col_s, std::move(lbd));
 
             for (auto &fut : futures)  fut.get();

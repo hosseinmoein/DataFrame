@@ -443,20 +443,21 @@ static void test_FactorizeVisitor()  {
                    nan_policy::dont_pad_with_nans);
 
     FactorizeVisitor<double, unsigned long, 64>
-        fact([] (const double &f) -> bool {
-            return (f > 106.0 && f < 114.0);
+        fact([] (const double &f) -> char {
+            return (char(f > 106.0 && f < 114.0));
         });
+
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2", fact).get_result());
-    assert(df.get_column<bool>("bool_col").size() == 15);
-    assert(df.get_column<bool>("bool_col")[0] == false);
-    assert(df.get_column<bool>("bool_col")[4] == false);
-    assert(df.get_column<bool>("bool_col")[6] == true);
-    assert(df.get_column<bool>("bool_col")[7] == true);
-    assert(df.get_column<bool>("bool_col")[8] == false);
-    assert(df.get_column<bool>("bool_col")[9] == true);
-    assert(df.get_column<bool>("bool_col")[11] == true);
-    assert(df.get_column<bool>("bool_col")[13] == false);
+    assert(df.get_column<char>("bool_col").size() == 15);
+    assert(df.get_column<char>("bool_col")[0] == false);
+    assert(df.get_column<char>("bool_col")[4] == false);
+    assert(df.get_column<char>("bool_col")[6] == true);
+    assert(df.get_column<char>("bool_col")[7] == true);
+    assert(df.get_column<char>("bool_col")[8] == false);
+    assert(df.get_column<char>("bool_col")[9] == true);
+    assert(df.get_column<char>("bool_col")[11] == true);
+    assert(df.get_column<char>("bool_col")[13] == false);
 }
 
 // -----------------------------------------------------------------------------

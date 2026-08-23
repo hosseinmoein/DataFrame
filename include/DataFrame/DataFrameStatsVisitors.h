@@ -4642,32 +4642,52 @@ public:
             throw DataFrameError("PartialAutoCorrVisitor: Maximum lag is 375");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        if constexpr (! std::is_arithmetic_v<value_type>)  {
 #ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (! std::is_arithmetic_v<value_type>)  {
             const size_type dim { column_begin->size() };
 
             for (size_type i { 1 }; i < col_s; ++i)
                 if ((column_begin + i)->size() != dim)
                     throw DataFrameError("PartialAutoCorrVisitor: "
                                          "Inconsistent data dimensions");
-#endif // HMDF_SANITY_EXCEPTIONS
         }
+#endif // HMDF_SANITY_EXCEPTIONS
 
-        result_type result (max_lag_);
-        matrix_t    x;
-        matrix_t    y;
+        result_type         result(max_lag_);
+        matrix_t            x;
+        matrix_t            y;
+        data_t              mean { 0 };
+        std::vector<data_t> dim_mean;
 
+        // The regression below must operate on the demeaned series -- a
+        // regression with no intercept term implicitly assumes a
+        // zero-mean process, which real data essentially never
+        // satisfies. Without this, PACF is not invariant to adding a
+        // constant to the whole series, which it must be by definition.
+        //
         if constexpr (std::is_arithmetic_v<value_type>)  {
             result[0] = 1;
+            for (size_type i { 0 }; i < col_s; ++i)
+                mean += data_t(*(column_begin + i));
+            mean /= data_t(col_s);
         }
         else  {
             const size_type dim { column_begin->size() };
-
-            matrix_t    identity { long(dim), long(dim), 0 };
+            matrix_t        identity { long(dim), long(dim), 0 };
 
             for (long i { 0 }; i < identity.rows(); ++i)
                 identity(i, i) = 1;
             result[0] = std::move(identity);
+
+            dim_mean.resize(dim, data_t(0));
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &obs { *(column_begin + i) };
+
+                for (size_type d { 0 }; d < dim; ++d)
+                    dim_mean[d] += data_t(obs[d]);
+            }
+            for (size_type d { 0 }; d < dim; ++d)
+                dim_mean[d] /= data_t(col_s);
         }
         for (size_type k { 1 }; k < max_lag_; ++k)  {
             x.clear();
@@ -4679,10 +4699,9 @@ public:
                 x.resize(rows, k);
                 y.resize(rows, 1);
                 for (size_type i { 0 }; i < rows; ++i)  {
-                    y(i, 0) = *(column_begin + (i + k));
-                    for (size_type j = 0; j < k; ++j)  {
-                        x(i, j) = *(column_begin + (i + j));
-                    }
+                    y(i, 0) = data_t(*(column_begin + (i + k))) - mean;
+                    for (size_type j { 0 }; j < k; ++j)
+                        x(i, j) = *(column_begin + (i + j)) - mean;
                 }
             }
             else  {
@@ -4691,22 +4710,23 @@ public:
                 x.resize(col_s - k, k * dim, 0);
                 y.resize(col_s - k, dim, 0);
 
-                // y row i  : the dim components of observation (i + k)
+                // y row i: the dim components of observation (i + k),
+                //          demeaned per dimension
                 //
                 for (size_type i { 0 }; i < rows; ++i)  {
                     const auto  &obs_y { *(column_begin + (i + k)) };
 
                     for (size_type d { 0 }; d < dim; ++d)
-                        y(i, d) = obs_y[d];
+                        y(i, d) = data_t(obs_y[d]) - dim_mean[d];
 
-                    // x row i  : lagged observations
-                    // block j  : columns [j * dim ... j * dim + dim - 1]
+                    // x row i: lagged observations, demeaned per dimension
+                    // block j: columns [j * dim ... j * dim + dim - 1]
                     //
                     for (size_type j { 0 }; j < k; ++j)  {
                         const auto  &obs_x { *(column_begin + (i + j)) };
 
                         for (size_type d { 0 }; d < dim; ++d)
-                            x(i, j * dim + d) = obs_x[d];
+                            x(i, j * dim + d) = obs_x[d] - dim_mean[d];
                     }
                 }
             }
@@ -4779,8 +4799,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -4788,18 +4808,16 @@ public:
         if (col_s <= lag_)
             throw DataFrameError(
                 "FixedAutoCorrVisitor: column size must be > lag");
-#endif // HMDF_SANITY_EXCEPTIONS
 
         if constexpr (! std::is_arithmetic_v<value_type>)  {
-#ifdef HMDF_SANITY_EXCEPTIONS
             const size_type dim { column_begin->size() };
 
             for (size_type i { 1 }; i < col_s; ++i)
                 if ((column_begin + i)->size() != dim)
                     throw DataFrameError(
                         "AutoCorrVisitor: Inconsistent data dimensions");
-#endif // HMDF_SANITY_EXCEPTIONS
         }
+#endif // HMDF_SANITY_EXCEPTIONS
 
         CorrVisitor<value_type, index_type> corr {  };
         result_type                         result;
@@ -4808,10 +4826,10 @@ public:
             const size_type calc_size { col_s / lag_ };
 
             result.reserve(calc_size);
-            for (size_type i = 0; i < calc_size; ++i)  {
-                auto    far_end = i * lag_ + 2 * lag_;
-                auto    near_end = i * lag_ + lag_;
-                auto    begin = i * lag_;
+            for (size_type i { 0 }; i < calc_size; ++i)  {
+                auto    far_end { i * lag_ + 2 * lag_ };
+                auto    near_end { i * lag_ + lag_ };
+                auto    begin { i * lag_ };
 
                 if (far_end >= col_s)
                     far_end -= far_end % col_s;
@@ -4839,10 +4857,10 @@ public:
             const size_type calc_size { col_s - lag_ };
 
             result.reserve(calc_size);
-            for (size_type i = 0; i < calc_size; ++i)  {
-                auto    far_end = i + 2 * lag_;
-                auto    near_end = i + lag_;
-                auto    begin = i;
+            for (size_type i { 0 }; i < calc_size; ++i)  {
+                auto    far_end { i + 2 * lag_ };
+                auto    near_end { i + lag_ };
+                auto    begin { i };
 
                 if (far_end > col_s)
                     far_end -= far_end % col_s;
@@ -4871,7 +4889,7 @@ public:
     DEFINE_PRE_POST
     DEFINE_RESULT
 
-    FixedAutoCorrVisitor (size_type lag_period, roll_policy rp)
+    FixedAutoCorrVisitor(size_type lag_period, roll_policy rp)
         : lag_(lag_period), policy_(rp)  {   }
 
 private:

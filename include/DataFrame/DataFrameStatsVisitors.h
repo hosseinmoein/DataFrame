@@ -4918,8 +4918,8 @@ struct  ExponentiallyWeightedMeanVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -4929,12 +4929,12 @@ struct  ExponentiallyWeightedMeanVisitor  {
                                  "column size must be > 3");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        result_type         result (col_s, 0);
-        const value_type    decay_comp = T(1) - decay_;
-        size_type           starting = 0;
+        result_type         result(col_s, 0);
+        const value_type    decay_comp { T(1) - decay_ };
+        size_type           starting { 0 };
 
         for (; starting < col_s; ++starting)  {
-            const value_type    val = *(column_begin + starting);
+            const value_type    val { *(column_begin + starting) };
 
             if (! is_nan__(val))  {
                 result[starting] = val;
@@ -4943,14 +4943,14 @@ struct  ExponentiallyWeightedMeanVisitor  {
         }
 
         if (! finite_adjust_)  {
-            for (size_type i = starting + 1; i < col_s; ++i) [[likely]]
+            for (size_type i { starting + 1 }; i < col_s; ++i) [[likely]]
                 result[i] = decay_ * *(column_begin + i) +
                             decay_comp * result[i - 1];
         }
         else  {  // Adjust for the fact that this is not an infinite data set
-            value_type  denominator = 1;
-            value_type  decay_comp_prod = 1;
-            value_type  numerator = result[0];
+            value_type  denominator { 1 };
+            value_type  decay_comp_prod { 1 };
+            value_type  numerator { result[0] };
 
             std::transform(column_begin + (starting + 1), column_end,
                            result.begin() + (starting + 1),
@@ -5003,8 +5003,8 @@ struct  ExponentiallyWeightedVarVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -5016,69 +5016,50 @@ struct  ExponentiallyWeightedVarVisitor  {
 
         result_type         ewmvar;
         result_type         ewmstd;
-        const value_type    decay_comp = T(1) - decay_;
-        size_type           starting = 0;
+        const value_type    decay_comp { T(1) - decay_ };
 
-        ewmvar.reserve(col_s);
-        ewmstd.reserve(col_s);
-        for (; starting < col_s; ++starting)  {
-            if (is_nan__(*(column_begin + starting)))  {
-                ewmvar.push_back(std::numeric_limits<T>::quiet_NaN());
-                ewmstd.push_back(std::numeric_limits<T>::quiet_NaN());
-            }
-            else  break;
-        }
+        ewmvar.resize(col_s);
+        ewmstd.resize(col_s);
 
-        ewmvar.push_back(std::numeric_limits<T>::quiet_NaN());
-        ewmstd.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
-            value_type  sum_weights = 0;
-            value_type  sum_sq_weights = 0;
-            value_type  sum_weighted_input = 0;
+        // sum_1/sum_2/sum_x/sum_xx are the running (sum of weights, sum
+        // of squared weights, weighted sum of inputs, weighted sum of
+        // squared inputs), each updated in O(1) per step instead of an
+        // O(i) inner loop.
+        //
+        value_type  sum_1 { 0 };
+        value_type  sum_2 { 0 };
+        value_type  sum_x { 0 };
+        value_type  sum_xx { 0 };
 
-            for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = std::pow(decay_comp, j);
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    x { *(column_begin + i) };
 
-                sum_weights += weight;
-                sum_weighted_input += weight * *(column_begin + (i - j));
-                sum_sq_weights += weight * weight;
-            }
+            sum_1 = value_type(1) + decay_comp * sum_1;
+            sum_2 = value_type(1) + decay_comp * decay_comp * sum_2;
+            sum_x = x + decay_comp * sum_x;
+            sum_xx = x * x + decay_comp * sum_xx;
 
-            // Calculate exponential moving average
-            //
-            const value_type    ewma = sum_weighted_input / sum_weights;
-            value_type          factor_sum = 0;
+            const value_type    ewma { sum_x / sum_1 };
+            const value_type    factor_sum { sum_xx - ewma * ewma * sum_1 };
+            const value_type    sum_1_sq { sum_1 * sum_1 };
+            const value_type    bias { sum_1_sq / (sum_1_sq - sum_2) };
+            const value_type    var { bias * factor_sum / sum_1 };
 
-            for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    input = *(column_begin + (i - j));
-
-                factor_sum +=
-                    std::pow(decay_comp, j) * (input - ewma) * (input - ewma);
-            }
-
-            // Calculate exponential moving variance and standard deviation
-            // with bias
-            //
-            const value_type    sum_weights_sq = sum_weights * sum_weights;
-            const value_type    bias =
-                    sum_weights_sq / (sum_weights_sq - sum_sq_weights);
-            const value_type    var = bias * factor_sum / sum_weights;
-
-            ewmvar.push_back(var);
-            ewmstd.push_back(std::sqrt(var));
+            ewmvar[i] = var;
+            ewmstd[i] = std::sqrt(var);
         }
 
         ewmvar_.swap(ewmvar);
         ewmstd_.swap(ewmstd);
     }
 
-    inline const result_type &get_result () const  { return (ewmvar_); }
-    inline result_type &get_result ()  { return (ewmvar_); }
-    inline const result_type &get_std () const  { return (ewmstd_); }
-    inline result_type &get_std ()  { return (ewmstd_); }
+    inline const result_type &get_result() const  { return (ewmvar_); }
+    inline result_type &get_result()  { return (ewmvar_); }
+    inline const result_type &get_std() const  { return (ewmstd_); }
+    inline result_type &get_std()  { return (ewmstd_); }
 
-    inline void pre ()  { ewmvar_.clear(); ewmstd_.clear(); }
-    inline void post ()  {  }
+    inline void pre()  { ewmvar_.clear(); ewmstd_.clear(); }
+    inline void post()  {  }
 
     ExponentiallyWeightedVarVisitor(exponential_decay_spec eds, value_type val)
         : decay_(eds == exponential_decay_spec::center_of_gravity
@@ -5108,11 +5089,11 @@ struct  ExponentiallyWeightedCovVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &, const K &,
+               const H &x_begin, const H &x_end,
+               const H &y_begin, const H &y_end)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(y_begin, y_end)) || col_s <= 3)
@@ -5121,52 +5102,39 @@ struct  ExponentiallyWeightedCovVisitor  {
 #endif // HMDF_SANITY_EXCEPTIONS
 
         result_type         ewmcov;
-        const value_type    decay_comp = T(1) - decay_;
-        size_type           starting = 0;
+        const value_type    decay_comp { T(1) - decay_ };
 
         ewmcov.reserve(col_s);
-        for (; starting < col_s; ++starting)
-            if (is_nan__(*(x_begin + starting)) ||
-                is_nan__(*(y_begin + starting)))
-                ewmcov.push_back(std::numeric_limits<T>::quiet_NaN());
-            else  break;
 
-        ewmcov.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
-            value_type  sum_weights = 0;
-            value_type  sum_sq_weights = 0;
-            value_type  sum_weighted_inputx = 0;
-            value_type  sum_weighted_inputy = 0;
+        // ExponentiallyWeightedVarVisitor, generalized to two series.
+        // sum_1/sum_2/sum_x/sum_y/sum_xy are the running (sum of weights,
+        // sum of squared weights, weighted sum of x, weighted sum of y,
+        // weighted sum of x*y), each updated in O(1) per step instead
+        // of an O(i) inner loop. Expanding Sum(w^j*(x-ewmax)*(y-ewmay))
+        // algebraically gives sum_xy - sum_x*sum_y/sum_1, the same trick
+        // (avoiding needing the means before summing cross deviations) as the
+        // variance case's sum_xx - ewma^2*sum_1.
+        //
+        value_type  sum_1 { 0 };
+        value_type  sum_2 { 0 };
+        value_type  sum_x { 0 };
+        value_type  sum_y { 0 };
+        value_type  sum_xy { 0 };
 
-            for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = std::pow(decay_comp, j);
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    x { *(x_begin + i) };
+            const value_type    y { *(y_begin + i) };
 
-                sum_weights += weight;
-                sum_weighted_inputx += weight * *(x_begin + (i - j));
-                sum_weighted_inputy += weight * *(y_begin + (i - j));
-                sum_sq_weights += weight * weight;
-            }
+            sum_1 = value_type(1) + decay_comp * sum_1;
+            sum_2 = value_type(1) + decay_comp * decay_comp * sum_2;
+            sum_x = x + decay_comp * sum_x;
+            sum_y = y + decay_comp * sum_y;
+            sum_xy = x * y + decay_comp * sum_xy;
 
-            // Calculate exponential moving average
-            //
-            const value_type    ewmax = sum_weighted_inputx / sum_weights;
-            const value_type    ewmay = sum_weighted_inputy / sum_weights;
-            value_type          factor_sum = 0;
-
-            for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = std::pow(decay_comp, j);
-                const value_type    inputx = *(x_begin + (i - j));
-                const value_type    inputy = *(y_begin + (i - j));
-
-                factor_sum += weight * (inputx - ewmax) * (inputy - ewmay);
-            }
-
-            // Calculate exponential moving covariance with bias
-            //
-            const value_type    sum_weights_sq = sum_weights * sum_weights;
-            const value_type    bias =
-                    sum_weights_sq / (sum_weights_sq - sum_sq_weights);
-            const value_type    cov = bias * factor_sum / sum_weights;
+            const value_type    factor_sum { sum_xy - (sum_x * sum_y) / sum_1 };
+            const value_type    sum_1_sq { sum_1 * sum_1 };
+            const value_type    bias { sum_1_sq / (sum_1_sq - sum_2) };
+            const value_type    cov { bias * factor_sum / sum_1 };
 
             ewmcov.push_back(cov);
         }
@@ -5174,11 +5142,11 @@ struct  ExponentiallyWeightedCovVisitor  {
         ewmcov_.swap(ewmcov);
     }
 
-    inline const result_type &get_result () const  { return (ewmcov_); }
-    inline result_type &get_result ()  { return (ewmcov_); }
+    inline const result_type &get_result() const  { return (ewmcov_); }
+    inline result_type &get_result()  { return (ewmcov_); }
 
-    inline void pre ()  { ewmcov_.clear(); }
-    inline void post ()  {  }
+    inline void pre()  { ewmcov_.clear(); }
+    inline void post()  {  }
 
     ExponentiallyWeightedCovVisitor(exponential_decay_spec eds,
                                     value_type value)
@@ -5208,9 +5176,9 @@ struct  ExponentiallyWeightedCorrVisitor  {
 
     template <bidirectional_iterator K, bidirectional_iterator H>
     inline void
-    operator() (const K &, const K &,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &, const K &,
+               const H &x_begin, const H &x_end,
+               const H &y_begin, const H &y_end)  {
 
         const size_type col_s = std::distance(x_begin, x_end);
 
@@ -5280,11 +5248,11 @@ struct  ExponentiallyWeightedCorrVisitor  {
         ewmcorr_.swap(ewmcorr);
     }
 
-    inline const result_type &get_result () const  { return (ewmcorr_); }
-    inline result_type &get_result ()  { return (ewmcorr_); }
+    inline const result_type &get_result() const  { return (ewmcorr_); }
+    inline result_type &get_result()  { return (ewmcorr_); }
 
-    inline void pre ()  { ewmcorr_.clear(); }
-    inline void post ()  {  }
+    inline void pre()  { ewmcorr_.clear(); }
+    inline void post()  {  }
 
     ExponentiallyWeightedCorrVisitor(exponential_decay_spec eds,
                                      value_type value)
@@ -5601,11 +5569,13 @@ struct  KthValueVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &values_begin, const H &values_end)  {
+    operator()(const K &, const K &,
+               const H &values_begin, const H &values_end)  {
 
         vec_type        aux;
-        const size_type col_s = std::distance(values_begin, values_end);
+        const size_type col_s {
+            size_type(std::distance(values_begin, values_end))
+        };
 
         if (skip_nan_)  {
             aux.reserve(col_s);
@@ -5617,15 +5587,23 @@ struct  KthValueVisitor  {
             aux.insert(aux.begin(), values_begin, values_end);
         compute_size_ = aux.size();
 
-        const size_type kth =
-            std::round(double(kth_element_ * compute_size_) / double(col_s));
+        if (compute_size_ != 0) {
+            const size_type kth {
+                size_type(std::round(double(kth_element_ * compute_size_) /
+                                     double(col_s)))
+            };
+            const auto      nth {
+                aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
+            };
 
-        result_ = find_kth_element_(aux, 0, compute_size_ - 1, kth);
+            std::nth_element(aux.begin(), nth, aux.end());
+            result_ = *nth;
+        }
     }
 
-    inline void pre ()  { result_ = value_type(); }
-    inline void post ()  {   }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = value_type(); }
+    inline void post()  {   }
+    inline result_type get_result() const  { return (result_); }
     inline size_type get_compute_size() const  { return (compute_size_); }
 
     explicit KthValueVisitor (size_type ke, bool skipnan = false)
@@ -5637,43 +5615,6 @@ private:
     size_type       compute_size_ { 0 };
     const size_type kth_element_;
     const bool      skip_nan_;
-
-    template<typename V>
-    inline static size_type
-    parttition_(V &vec, size_type begin, size_type end)  {
-
-        const value_type x = vec[end];
-        size_type        i = begin;
-
-        for (size_type j = begin; j < end; ++j) [[likely]]  {
-            if (vec[j] <= x)  {
-                std::swap(vec[i], vec[j]);
-                i += 1;
-            }
-        }
-
-        std::swap(vec[i], vec[end]);
-        return (i);
-    }
-
-    template<typename V>
-    inline static value_type
-    find_kth_element_(V &vec, size_type begin, size_type end, size_type k)  {
-
-#ifdef HMDF_SANITY_EXCEPTIONS
-        if (k == 0 || k > (end - begin + 1))
-            throw DataFrameError("KthValueVisitor: k must be > 0 and "
-                                 "< data size");
-#endif // HMDF_SANITY_EXCEPTIONS
-
-        const size_type pos = parttition_(vec, begin, end);
-
-        if (pos - begin == k - 1)
-            return (vec[pos]);
-        if (pos - begin > k - 1)
-            return (find_kth_element_(vec, begin, pos - 1, k));
-        return (find_kth_element_(vec, pos + 1, end, k - pos + begin - 1));
-    }
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

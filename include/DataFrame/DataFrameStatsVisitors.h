@@ -655,7 +655,7 @@ public:
                             sum[d] += (*citer)[d];
                 }
                 else  {
-                    if (! this->skip_nan_)  {
+                    if (! skip_nan_)  {
                         for (auto citer = begin; citer < end; ++citer)
                             sum += *citer;
                     }
@@ -781,7 +781,7 @@ public:
         }
         else  {
             for (auto citer = column_begin; citer < column_end; ++citer)
-                if (! is_nan__(*citer))
+                if (! is_nan__(*citer)) [[likely]]
                     BaseClass::_cnt += 1;
         }
     }
@@ -1401,19 +1401,19 @@ struct  NExtremumVisitor  {
             (*this)(*idx_begin++, *column_begin++);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         counter_ = 0;
         result_.clear();
         for (; ! p_queue_.empty(); p_queue_.pop()) ;
     }
-    inline void post ()  {
+    inline void post()  {
 
         for (; ! p_queue_.empty(); p_queue_.pop())
             result_.push_back(p_queue_.top());
     }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
 
     inline void sort_by_index_val()  {
 
@@ -5374,8 +5374,8 @@ struct  LinregMovingMeanVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -5385,41 +5385,104 @@ struct  LinregMovingMeanVisitor  {
                                  "roll period < column size - 1");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const value_type    sum_x =
-            0.5 * T(roll_period_) * T(roll_period_ + 1);
-        const value_type    sum_x2 =
-            sum_x * (2.0 * T(roll_period_) + 1.0) / 3.0;
-        const value_type    divisor = T(roll_period_) * sum_x2 - sum_x * sum_x;
-        result_type         result (col_s,
-                                    std::numeric_limits<T>::quiet_NaN());
-        const auto          thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const value_type    sum_x {
+            0.5 * T(roll_period_) * T(roll_period_ + 1)
+        };
+        const value_type    sum_x2 {
+            sum_x * (2.0 * T(roll_period_) + 1.0) / 3.0
+        };
+        const value_type    divisor {
+            T(roll_period_) * sum_x2 - sum_x * sum_x
+        };
+        result_type         result(col_s, std::numeric_limits<T>::quiet_NaN());
+        const auto          thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+        bool                any_nan { false };
 
-        if (thread_level > 2)  {
-            auto    lbd =
-                [&column_begin, &result, sum_x, sum_x2, divisor, this]
-                (auto begin, auto end) mutable -> void  {
-                    for (size_type i = begin; i < end; ++i) [[likely]]
-                        result[i] =
-                            linreg_(column_begin + (i - this->roll_period_),
-                                    column_begin + i,
-                                    sum_x, sum_x2, divisor,
-                                    this->type_, this->roll_period_);
+        for (size_type i { 0 }; (i < col_s) && (! any_nan); ++i)
+            if (is_nan__(*(column_begin + i)))  any_nan = true;
+
+        if (! any_nan)  {
+            auto    fill_range =
+                [&column_begin = std::as_const(column_begin),
+                 &result, sum_x, sum_x2, divisor, this]
+                (size_type begin, size_type end) mutable -> void  {
+                    if (begin >= end)  return;
+
+                    value_type  sum_y { 0 };
+                    value_type  sum_xy { 0 };
+
+                    for (size_type j { 0 }; j < roll_period_; ++j) [[likely]]  {
+                        const value_type    v {
+                            *(column_begin + (begin - roll_period_ + j))
+                        };
+
+                        sum_y += v;
+                        sum_xy += v * T(j + 1);
+                    }
+                    result[begin] =
+                        linreg_from_sums_(sum_y, sum_xy, sum_x, sum_x2,
+                                          divisor, type_, T(roll_period_));
+
+                    for (size_type i { begin + 1 }; i < end; ++i) [[likely]]  {
+                        const value_type    leaving  {
+                            *(column_begin + (i - roll_period_ - 1))
+                        };
+                        const value_type    entering {
+                            *(column_begin + (i - 1))
+                        };
+
+                        sum_xy = sum_xy - sum_y + T(roll_period_) * entering;
+                        sum_y  = sum_y - leaving + entering;
+
+                         result[i] =
+                            linreg_from_sums_(sum_y, sum_xy, sum_x, sum_x2,
+                                              divisor, type_, T(roll_period_));
+                    }
+                 };
+
+            if (thread_level > 2)  {
+                auto    futures {
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        roll_period_, col_s, fill_range)
                 };
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    roll_period_, col_s, std::move(lbd));
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            for (size_type i = roll_period_; i < col_s; ++i) [[likely]]
-                result[i] = linreg_(column_begin + (i - roll_period_),
-                                    column_begin + i,
-                                    sum_x, sum_x2, divisor,
-                                    type_, roll_period_);
-        }
-        result_.swap(result);
+                for (auto &fut : futures)  fut.get();
+            }
+            else
+                fill_range(roll_period_, col_s);
+         }
+         else  {
+            if (thread_level > 2)  {
+                auto    lbd =
+                    [&column_begin = std::as_const(column_begin),
+                     &result, sum_x, sum_x2, divisor, this]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i { begin }; i < end; ++i) [[likely]]
+                            result[i] =
+                                linreg_(column_begin + (i - roll_period_),
+                                        column_begin + i,
+                                        sum_x, sum_x2, divisor,
+                                        type_, roll_period_);
+                    };
+                auto    futures {
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        roll_period_, col_s, std::move(lbd))
+                };
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                for (size_type i { roll_period_ }; i < col_s; ++i) [[likely]]
+                    result[i] = linreg_(column_begin + (i - roll_period_),
+                                        column_begin + i,
+                                        sum_x, sum_x2, divisor,
+                                        type_, roll_period_);
+            }
+         }
+         result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -5433,13 +5496,55 @@ struct  LinregMovingMeanVisitor  {
 
 private:
 
+    // Shared tail logic: turns (sum_y, sum_xy) for a roll_period_-wide
+    // window into whichever quantity `lmm_type` asks for. Used by both the
+    // O(1) incremental path and linreg_() below, so the two paths can never
+    // silently diverge on this part of the math.
+    //
+    inline static value_type
+    linreg_from_sums_(value_type sum_y, value_type sum_xy,
+                      value_type sum_x, value_type sum_x2,
+                      value_type divisor,
+                      linreg_moving_mean_type lmm_type,
+                      value_type roll_period) {
+
+        const value_type    slope {
+            (roll_period * sum_xy - sum_x * sum_y) / divisor
+        };
+
+        if (lmm_type == linreg_moving_mean_type::slope)  return (slope);
+
+        if (lmm_type == linreg_moving_mean_type::theta ||
+            lmm_type == linreg_moving_mean_type::degree)  {
+            const value_type    theta { std::atan(slope) };
+
+            return (lmm_type == linreg_moving_mean_type::theta
+                        ? theta : theta * (180.0 / std::numbers::pi));
+        }
+
+        const value_type    intercept {
+            (sum_y * sum_x2 - sum_x * sum_xy) / divisor
+        };
+
+        if (lmm_type == linreg_moving_mean_type::intercept)
+            return (intercept);
+
+        return (lmm_type == linreg_moving_mean_type::forecast
+                    ? slope * roll_period + intercept
+                    : slope * (roll_period - T(1)) + intercept);
+    }
+
     template <typename H>
     inline static value_type
     linreg_(const H &column_begin, const H &column_end,
-            value_type sum_x, value_type sum_x2, value_type divisor,
-            linreg_moving_mean_type lmm_type, value_type roll_period)  {
+            value_type sum_x, value_type sum_x2,
+            value_type divisor,
+            linreg_moving_mean_type lmm_type,
+            value_type roll_period)  {
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
         value_type      sum_y { 0 };
         value_type      sum_xy { 0 };
 
@@ -5451,56 +5556,37 @@ private:
                     value_type  sum_y { 0 };
                     value_type  sum_xy { 0 };
 
-                    for (size_type i = begin; i < end; ++i) [[likely]]  {
-                        const value_type    val = *(column_begin + i);
+                    for (size_type i { begin }; i < end; ++i) [[likely]]  {
+                        const value_type    val { *(column_begin + i) };
 
                         sum_y += val;
                         sum_xy += val * T(i + 1);
                     }
                     return (std::make_pair(sum_y, sum_xy));
                 };
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0), col_s, std::move(lbd));
+                    size_type(0), col_s, std::move(lbd))
+            };
 
             for (auto &fut : futures)  {
-                const auto &val = fut.get();
+                const auto  &val { fut.get() };
 
                 sum_y += val.first;
                 sum_xy += val.second;
             }
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    val = *(column_begin + i);
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    val { *(column_begin + i) };
 
                 sum_y += val;
                 sum_xy += val * T(i + 1);
             }
         }
 
-        const value_type    slope =
-            (roll_period * sum_xy - sum_x * sum_y) / divisor;
-
-        if (lmm_type == linreg_moving_mean_type::slope)  return (slope);
-
-        if (lmm_type == linreg_moving_mean_type::theta ||
-            lmm_type == linreg_moving_mean_type::degree)  {
-            const value_type    theta = std::atan(slope);
-
-            return (lmm_type == linreg_moving_mean_type::theta
-                        ? theta : theta * (180.0 / std::numbers::pi));
-        }
-
-        const value_type    intercept =
-            (sum_y * sum_x2 - sum_x * sum_xy) / divisor;
-
-        if (lmm_type == linreg_moving_mean_type::intercept)
-            return (intercept);
-
-        return (lmm_type == linreg_moving_mean_type::forecast
-                    ? slope * roll_period + intercept
-                : slope * (roll_period - T(1)) + intercept);
+        return (linreg_from_sums_(sum_y, sum_xy, sum_x, sum_x2, divisor,
+                                  lmm_type, roll_period));
     }
 
     const size_type                 roll_period_;
@@ -5520,8 +5606,8 @@ struct  SymmTriangleMovingMeanVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -5537,19 +5623,93 @@ struct  SymmTriangleMovingMeanVisitor  {
             if (! is_nan__(*(column_begin + starting)))
                 break;
 
-        const auto  triangle =
-            gen_sym_triangle<value_type>(roll_period_, 1, true);
-        result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i { starting + roll_period_ };
-             i < col_s; ++i) [[likely]]  {
-            value_type  sum { 0 };
-            size_type   tri_idx { 0 };
+        // Not enough valid data past the lead-in to fill even one window --
+        // leave `result` as all-NaN rather than let either path below index
+        // past `column_end`.
+        //
+        if (starting + roll_period_ >= col_s)  {
+            result_.swap(result);
+            return;
+        }
 
-            for (size_type j = { i - roll_period_ }; j < i;
-                 ++j, ++tri_idx)
-                sum += *(column_begin + j) * triangle[tri_idx];
-            result[i] = sum;
+        // A NaN anywhere, under an O(1) sliding-window update, would stay
+        // inside the running sums forever once it enters them (same reason
+        // as LinregMovingMeanVisitor's fast path) -- so that path below only
+        // runs when the column is entirely NaN-free from `starting` on;
+        // otherwise this falls back to the original per-window recompute
+        // against the triangle weights directly, keeping the NaN
+        // contamination radius identical to before.
+        //
+        bool    any_nan { false };
+
+        for (size_type i = starting; i < col_s && ! any_nan; ++i)
+            if (is_nan__(*(column_begin + i)))  any_nan = true;
+
+        if (any_nan)  {
+            const auto  triangle {
+                gen_sym_triangle<value_type>(roll_period_, 1, true)
+            };
+
+            for (size_type i { starting + roll_period_ }; i < col_s; ++i)  {
+                value_type  sum { 0 };
+                size_type   tri_idx { 0 };
+
+                for (size_type j = { i - roll_period_ }; j < i; ++j, ++tri_idx)
+                    sum += *(column_begin + j) * triangle[tri_idx];
+                result[i] = sum;
+            }
+        }
+        else  {
+            // The symmetric triangular kernel of width p is the
+            // convolution of two rectangular (box) kernels of widths a and
+            // b, with a + b - 1 == p (a == b when p is odd, b == a + 1
+            // when p is even) -- gen_sym_triangle's own ramp-up-then-mirror
+            // construction is exactly that. That means the
+            // triangle-weighted moving sum is just a size-b moving sum OF
+            // a size-a moving sum -- both plain box sums, each O(1) per
+            // step -- instead of recomputing the full triangle-weighted
+            // window from scratch at every position. `ring` holds the last
+            // b box-sum values so the outer sum knows which one is leaving
+            // as it slides.
+            //
+            const size_type    a { (roll_period_ + 1) / 2 };
+            const size_type    b { roll_period_ + 1 - a };
+            const value_type   norm { T(a) * T(b) };
+            const size_type    i0 { starting + roll_period_ };
+            size_type          t { i0 - roll_period_ };
+            value_type         box_a { 0 };
+
+            for (size_type k { 0 }; k < a; ++k)
+                box_a += *(column_begin + (t + k));
+
+            std::vector<value_type> ring(b);
+            size_type               ring_pos { 0 };
+            value_type              tri_sum { 0 };
+
+            ring[ring_pos++ % b] = box_a;
+            tri_sum += box_a;
+            for (size_type step { 1 }; step < b; ++step)  {
+                box_a = box_a - *(column_begin + t) + *(column_begin + (t + a));
+                t += 1;
+                ring[ring_pos % b] = box_a;
+                ring_pos += 1;
+                tri_sum += box_a;
+            }
+            result[i0] = tri_sum / norm;
+
+            for (size_type i { i0 + 1 }; i < col_s; ++i) [[likely]]  {
+                box_a = box_a - *(column_begin + t) + *(column_begin + (t + a));
+                t += 1;
+
+                const value_type    oldest { ring[ring_pos % b] };
+
+                ring[ring_pos % b] = box_a;
+                ring_pos += 1;
+                tri_sum = tri_sum - oldest + box_a;
+                result[i] = tri_sum / norm;
+            }
         }
         result_.swap(result);
     }
@@ -5618,7 +5778,7 @@ struct  KthValueVisitor  {
     inline result_type get_result() const  { return (result_); }
     inline size_type get_compute_size() const  { return (compute_size_); }
 
-    explicit KthValueVisitor (size_type ke, bool skipnan = false)
+    explicit KthValueVisitor(size_type ke, bool skipnan = false)
         : kth_element_(ke), skip_nan_(skipnan)  {   }
 
 private:
@@ -5631,6 +5791,93 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using kthv_v = KthValueVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  NKthValueVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    using vec_type = std::vector<T, typename allocator_declare<T, A>::type>;
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &, const K &,
+               const H &values_begin, const H &values_end)  {
+
+        vec_type        aux;
+        const size_type col_s {
+            size_type(std::distance(values_begin, values_end))
+        };
+
+        if (skip_nan_)  {
+            aux.reserve(col_s);
+            std::copy_if(values_begin, values_end,
+                         std::back_inserter(aux),
+                         [](T x) -> bool { return (! is_nan__(x)); });
+        }
+        else
+            aux.insert(aux.begin(), values_begin, values_end);
+        compute_size_ = aux.size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        for (const size_type kth : kth_elements_)
+            if (kth > compute_size_)
+                throw DataFrameError("NKthValueVisitor: One of the kth values "
+                                     "is greater than input column length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (compute_size_ != 0) {
+            const bool  sort_it {
+                kth_elements_.size() >=
+                    size_type(std::round(
+                        std::log2(double(compute_size_)) *
+                        double(compute_size_)))
+            };
+
+            result_.resize(kth_elements_.size());
+            if (sort_it)  {
+                std::sort(aux.begin(), aux.end());
+                for (size_type i { 0 }; const size_type k : kth_elements_)
+                    result_[i++] = aux[k - 1];
+            }
+            else  {
+                for (size_type i { 0 }; const size_type k : kth_elements_)  {
+                    const size_type kth {
+                        size_type(std::round(
+                            double(k * compute_size_) / double(col_s)))
+                    };
+                    const auto      nth {
+                        aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
+                    };
+
+                    std::nth_element(aux.begin(), nth, aux.end());
+                    result_[i++] = *nth;
+                }
+            }
+        }
+    }
+
+    inline void pre()  { result_.clear(); }
+    inline void post()  {   }
+    inline result_type get_result() const  { return (result_); }
+    inline size_type get_compute_size() const  { return (compute_size_); }
+
+    explicit NKthValueVisitor(std::vector<size_type> &&ke,
+                              bool skipnan = false)
+        : kth_elements_(ke), skip_nan_(skipnan)  {   }
+
+private:
+
+    result_type                     result_ {  };
+    size_type                       compute_size_ { 0 };
+    const std::vector<size_type>    kth_elements_;
+    const bool                      skip_nan_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using nkthv_v = NKthValueVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
@@ -5680,7 +5927,9 @@ public:
             aux.begin() + static_cast<std::ptrdiff_t>(kth1 - 1)
         };
 
-        if (cs & 0x01) {  // Odd
+        // Odd
+        //
+        if (cs & 0x01)  {
             std::nth_element(aux.begin(), nth1, aux.end());
             result_ = *nth1;
             return;
@@ -11260,28 +11509,26 @@ private:
         std::vector<value_type> detrended_data;
 
         if (params_.adf_with_trend)  {
-            std::vector<data_t> times(col_s);
-
-            for (size_type i { 0 }; i < col_s; ++i)
-                times[i] = data_t(i + 1);
-
-            const data_t        sum_t {
-                std::accumulate(times.begin(), times.end(), data_t(0))
-            };
-            value_type          sum_y { *column_begin };
+            const data_t    n { data_t(col_s) };
+            const data_t    sum_t { (n * (n + data_t(1))) / data_t(2) };
+            value_type      sum_y { *column_begin };
 
             for (size_type i { 1 }; i < col_s; ++i)
                 sum_y += *(column_begin + i);
 
-            data_t              sum_t2 { 0 };
-            value_type          sum_ty;
+            const data_t    sum_t2 {
+                n * (n + data_t(1)) * (data_t(2) * n + data_t(1)) / data_t(6)
+            };
+            value_type      sum_ty;
 
             if constexpr (is_md_ && ! is_ary_)
                 sum_ty.resize(column_begin->size(), 0);
             else if constexpr (! is_md_)  sum_ty = 0;
             for (size_type i { 0 }; i < col_s; i++) {
-                sum_ty += times[i] * *(column_begin + i);
-                sum_t2 += times[i] * times[i];
+                const data_t    t { data_t(i + 1) };
+
+                sum_ty += t * *(column_begin + i);
+
             }
 
             const value_type    slope {
@@ -11295,9 +11542,12 @@ private:
             // Detrend the data
             //
             detrended_data.resize(col_s);
-            for (size_type i { 0 }; i < col_s; i++)
+            for (size_type i { 0 }; i < col_s; i++)  {
+                const data_t t { data_t(i + 1) };
+
                 detrended_data[i] =
-                    *(column_begin + i) - (intercept + slope * times[i]);
+                    *(column_begin + i) - (intercept + slope * t);
+            }
         }
 
         VarVisitor<T, I>    var { true };

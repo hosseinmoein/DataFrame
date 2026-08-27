@@ -2715,6 +2715,9 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     <LI><I><font color="darkred" face="Arial" size="+1">How do I start using the C++ DataFrame?</font></I><BR>
     First, you need to have a thorough knowledge of the domain of the problem you are trying to solve. It could be statistical, or financial analysis, or data pipeline preparation for ML analysis, or direct ML analysis, or some other scientific data analysis. Second, you need an above average knowledge of modern C++ language. Start with reading the full documentation and following the <a href="https://github.com/hosseinmoein/DataFrame/blob/master/examples/hello_world.cc"><I>hello_world</I></a> program.  Build your first application on back of the <a href="https://github.com/hosseinmoein/DataFrame/blob/master/examples/hello_world.cc"><I>hello_world</I></a>, having read the documentation.</LI>
 
+    <LI><I><font color="darkred" face="Arial" size="+1">What column types are supported in C++ DataFrame?</font></I><BR>
+    All types; both built-in and user defined. Some interfaces may put a conceptual (i.e. C++23 concepts) limit on the column type. For example,  <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/pivot_table.html"> pivot_table()</a> function requires the column type to be hash-able.</LI>
+
     <LI><I><font color="darkred" face="Arial" size="+1">Why did you use the visitor pattern for analytical algorithms?</font></I><BR>
     <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#5">This is why</a></LI>
 
@@ -2745,7 +2748,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 	Yes. In analysis where multidimensional data makes mathematical sense, it&apos;s supported. The support is seamless. That means the same objects/interface can be used with scalar or multidimensional data without any change. The library figures out what kind of input was passed.</LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">Does DataFrame support parallel processing?</font></I><BR>
-	Yes. Read the README page and the library principals and <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#3">multithreading section</a>.</LI>
+	Yes. Read the README page (i.e. library principals) and <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#3">multithreading section</a>.</LI>
 	
     <LI><I><font color="darkred" face="Arial" size="+1">Is there a one-to-one correspondence between C++ DataFrame functions and those of Pandas? If so, how can I easily figure that out?</font></I><BR>
 	There is no one-to-one correspondence. C++ DataFrame has a far greater set of functionalities than Pandas. The best way to find them is through the documentation.</LI>
@@ -2756,14 +2759,14 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     <LI><I><font color="darkred" face="Arial" size="+1">What is the purpose of the index column in DataFrame?</font></I><BR>
 	<a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#1">Read the Overview in this document</a></LI>
 
-    <LI><I><font color="darkred" face="Arial" size="+1">Can I share data between C++ DataFrame and other languages such as Python/Pandas application?</font></I><BR>
+    <LI><I><font color="darkred" face="Arial" size="+1">Can I share data between C++ DataFrame and other languages such as Python/Pandas applications?</font></I><BR>
 	Yes. C++ DataFrame can read/write fron/to CSV files very similar but not identical to Pandas CSV files. See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/read.html">read</a> documentation. Also, if you have your data in a database (e.g.  PostgreSQL) or in a data file (e.g. Parquet), you can write a simple layer that reads the data from the source and loads it into the C++ DataFrame. See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/load_column.html">load_column</a> or  <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/load_data.html">load_data</a>. Similarly, you can write the data from C++ DataFrame to those mediums.</LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">Is DataFrame library header-only?</font></I><BR>
 	No. <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#9">Follow Build Instructions</a></LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">I have problems compiling the library and my application!</font></I><BR>
-	First read the <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#9">Build Instructions</a>. If you still have a problem, scan the <I>issues</I> and <I>discussions</I> section in the repo.</LI>
+	First read the <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#9">Build Instructions</a>. If you still have a problem, scan the <I>issues</I> and <I>discussions</I> sections in the repo.</LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">Sometimes DataFrame visitors have such long names that clutter my code!</font></I><BR>
 	Visitors with long names always have aliases with much shorter names. See documentation and use the aliases.</LI>

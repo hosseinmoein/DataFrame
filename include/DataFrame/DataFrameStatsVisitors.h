@@ -5761,8 +5761,10 @@ struct  KthValueVisitor  {
 
         if (compute_size_ != 0) {
             const size_type kth {
-                size_type(std::round(double(kth_element_ * compute_size_) /
-                                     double(col_s)))
+                std::clamp(
+                    size_type(std::round(double(kth_element_ * compute_size_) /
+                                         double(col_s))),
+                    size_type(1), compute_size_)
             };
             const auto      nth {
                 aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
@@ -5839,14 +5841,24 @@ struct  NKthValueVisitor  {
             result_.resize(kth_elements_.size());
             if (sort_it)  {
                 std::sort(aux.begin(), aux.end());
-                for (size_type i { 0 }; const size_type k : kth_elements_)
-                    result_[i++] = aux[k - 1];
+                for (size_type i { 0 }; const size_type k : kth_elements_)  {
+                    const size_type kth {
+                        std::clamp(
+                            size_type(std::round(
+                                double(k * compute_size_) / double(col_s))),
+                            size_type(1), compute_size_)
+                    };
+
+                    result_[i++] = aux[kth - 1];
+                }
             }
             else  {
                 for (size_type i { 0 }; const size_type k : kth_elements_)  {
                     const size_type kth {
-                        size_type(std::round(
-                            double(k * compute_size_) / double(col_s)))
+                        std::clamp(
+                            size_type(std::round(
+                                double(k * compute_size_) / double(col_s))),
+                            size_type(1), compute_size_)
                     };
                     const auto      nth {
                         aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
@@ -5894,8 +5906,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const H &column_begin, const H &column_end)  {
 
         const size_type col_s {
             size_type(std::distance(column_begin, column_end))
@@ -5910,7 +5922,7 @@ public:
                              return (! is_nan__(v));
                          });
         }
-        else {
+        else  {
             aux.insert(aux.end(), column_begin, column_end);
         }
 
@@ -5938,8 +5950,8 @@ public:
         // Even
         //
         const size_type kth2 {
-            size_type(std::round(double((cs < col_s ? half + 2 : half) * cs) /
-                                 double(col_s)))
+            size_type(std::round(
+                double((cs < col_s ? half + 2 : half) * cs) / double(col_s)))
         };
         auto            nth2 {
             aux.begin() + static_cast<std::ptrdiff_t>(kth2 - 1)
@@ -5960,7 +5972,7 @@ public:
             // The lower order statistic is entirely in the
             // partition preceding nth_high.
             //
-            std::nth_element( aux.begin(), nth_low, nth_high);
+            std::nth_element(aux.begin(), nth_low, nth_high);
 
             const value_type    low { *nth_low };
             const value_type    high { *nth_high };
@@ -5998,12 +6010,18 @@ using med_v = MedianVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  QuantileVisitor  {
 
+private:
+
+    using vec_type = std::vector<T, typename allocator_declare<T, A>::type>;
+
+public:
+
     DEFINE_VISIT_BASIC_TYPES_2
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
@@ -6013,68 +6031,131 @@ struct  QuantileVisitor  {
                                  "column size > 0");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const double    vec_len_frac = qt_ * col_s;
-        const size_type int_idx =
-            static_cast<size_type>(std::round(vec_len_frac));
-        const bool      need_two =
-            ! (col_s & 0x01) || double(int_idx) < vec_len_frac;
+        vec_type    aux;
+
+        if (skip_nan_)  {
+            aux.reserve(col_s);
+            std::copy_if(column_begin, column_end,
+                         std::back_inserter(aux),
+                         [](const value_type &v) -> bool {
+                             return (! is_nan__(v));
+                         });
+        }
+        else
+            aux.insert(aux.end(), column_begin, column_end);
+
+        const size_type cs { aux.size() };
+
+        if (cs == 0)  return;
+
+        const double    vec_len_frac { qt_ * col_s };
+        const size_type int_idx {
+            static_cast<size_type>(std::round(vec_len_frac))
+        };
+        const bool      need_two {
+            ! (col_s & 0x01) || double(int_idx) < vec_len_frac
+        };
+
+        // Rescales a rank against the original column size to one against
+        // `cs` (the post-filter size) -- when skip_nan_ is false, cs ==
+        // col_s always, so this is a no-op and reproduces the original
+        // behavior exactly. Clamped to [1, cs] for the same reason
+        // KthValueVisitor's own version is: an extreme rank/cs/col_s
+        // combination can otherwise round to 0, and since the result feeds
+        // an unsigned subtraction, that would underflow into an
+        // out-of-bounds offset.
+        //
+        const auto  rescaled_kth =
+            [cs, col_s](size_type raw_idx) -> size_type  {
+                return (std::clamp(
+                    size_type(std::round(
+                        double(raw_idx * cs) / double(col_s))),
+                    size_type(1), cs));
+            };
 
         if (qt_ == 0.0 || qt_ == 1.0)  {
-            KthValueVisitor<T, I, A>   kth_value((qt_ == 0.0) ? 1 : col_s);
+            const size_type kth { rescaled_kth((qt_ == 0.0) ? 1 : col_s) };
+            const auto      nth {
+                aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
+            };
 
-            kth_value.pre();
-            kth_value(idx_begin, idx_end, column_begin, column_end);
-            kth_value.post();
-            result_ = kth_value.get_result();
+            std::nth_element(aux.begin(), nth, aux.end());
+            result_ = *nth;
         }
         else if (policy_ == quantile_policy::mid_point ||
                  policy_ == quantile_policy::linear)  {
-            KthValueVisitor<T, I, A>   kth_value1(int_idx);
+            const size_type kth1 { rescaled_kth(int_idx) };
+            const auto      nth1 {
+                aux.begin() + static_cast<std::ptrdiff_t>(kth1 - 1)
+            };
 
-            kth_value1.pre();
-            kth_value1(idx_begin, idx_end, column_begin, column_end);
-            kth_value1.post();
-            result_ = kth_value1.get_result();
             if (need_two && int_idx + 1 < col_s)  {
-                KthValueVisitor<T, I, A>   kth_value2(int_idx + 1);
+                const size_type kth2 { rescaled_kth(int_idx + 1) };
 
-                kth_value2.pre();
-                kth_value2(idx_begin, idx_end, column_begin, column_end);
-                kth_value2.post();
-                if (policy_ == quantile_policy::mid_point)
-                    result_ = (result_ + kth_value2.get_result()) / 2.0;
-                else // linear
-                    result_ = result_ + (kth_value2.get_result() - result_) *
-                              (1.0 - qt_);
+                if (kth2 == kth1)  {
+                    std::nth_element(aux.begin(), nth1, aux.end());
+                    result_ = *nth1;
+                }
+                else  {
+                    // Same one-aux, partition-high-then-low-within-it trick
+                    // as MedianVisitor, instead of two independent
+                    // KthValueVisitor calls each rebuilding a NaN-filtered
+                    // copy and running its own full-range nth_element.
+                    //
+                    const auto  nth2 {
+                        aux.begin() + static_cast<std::ptrdiff_t>(kth2 - 1)
+                    };
+                    const auto  nth_high { (kth1 > kth2) ? nth1 : nth2 };
+                    const auto  nth_low  { (kth1 > kth2) ? nth2 : nth1 };
+
+                    std::nth_element(aux.begin(), nth_high, aux.end());
+                    std::nth_element(aux.begin(), nth_low, nth_high);
+
+                    const value_type    v1 { *nth1 };
+                    const value_type    v2 { *nth2 };
+
+                    result_ = (policy_ == quantile_policy::mid_point)
+                                  ? (v1 + v2) / value_type(2)
+                                  : v1 + (v2 - v1) * value_type(1.0 - qt_);
+                }
+            }
+            else  {
+                std::nth_element(aux.begin(), nth1, aux.end());
+                result_ = *nth1;
             }
         }
         else if (policy_ == quantile_policy::lower_value ||
                  policy_ == quantile_policy::higher_value)  {
-            KthValueVisitor<T, I, A>   kth_value(
-                policy_ == quantile_policy::lower_value ? int_idx
-                : (int_idx + 1 < col_s && need_two ? int_idx + 1 : int_idx));
+            const size_type raw_idx {
+                policy_ == quantile_policy::lower_value
+                    ? int_idx
+                    : (int_idx + 1 < col_s && need_two ? int_idx + 1 : int_idx)
+            };
+            const size_type kth { rescaled_kth(raw_idx) };
+            const auto      nth {
+                aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
+            };
 
-            kth_value.pre();
-            kth_value(idx_begin, idx_end, column_begin, column_end);
-            kth_value.post();
-            result_ = kth_value.get_result();
+            std::nth_element(aux.begin(), nth, aux.end());
+            result_ = *nth;
         }
     }
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_ = value_type();
     }
-    inline void post ()  { OBO_PORT_POST }
-    inline result_type get_result () const  { return (result_); }
+    inline void post()  { OBO_PORT_POST }
+    inline result_type get_result() const  { return (result_); }
 
     explicit
-    QuantileVisitor (double quantile = 0.5,
-                     quantile_policy q_policy = quantile_policy::mid_point)
-        : qt_(quantile), policy_(q_policy)  {   }
+    QuantileVisitor(double quantile = 0.5,
+                    quantile_policy q_policy = quantile_policy::mid_point,
+                    bool skip_nan = false)
+        : qt_(quantile), policy_(q_policy), skip_nan_(skip_nan)  {   }
 
 private:
 
@@ -6083,6 +6164,7 @@ private:
     result_type             result_ {  };
     const double            qt_;
     const quantile_policy   policy_;
+    const bool              skip_nan_;
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

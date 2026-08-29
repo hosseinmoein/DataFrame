@@ -6179,7 +6179,7 @@ using qt_v = QuantileVisitor<T, I, A>;
 // Because of the information this has to return, it is not a cheap operation
 //
 template<std::size_t N,
-         typename T, typename I = unsigned long, std::size_t A = 0>
+         hashable_equal T, typename I = unsigned long, std::size_t A = 0>
 struct  ModeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
@@ -6271,9 +6271,8 @@ public:
             }
             else [[likely]]  {
                 auto    ret {
-                    val_map.emplace(std::pair<const value_type *, DataItem>(
-                                        &*(column_begin + i),
-                                        DataItem(*(column_begin + i))))
+                    val_map.try_emplace(&*(column_begin + i),
+                                        *(column_begin + i))
                 };
 
                 ret.first->second.indices.push_back(&*(idx_begin + i));
@@ -6299,7 +6298,7 @@ public:
                 return (lhs.repeat_count() > rhs.repeat_count());
             };
 
-        if (N < val_vec.size()) {
+        if (N < val_vec.size())  {
             const auto  nth {
                 val_vec.begin() + static_cast<std::ptrdiff_t>(N)
             };
@@ -6307,11 +6306,11 @@ public:
             std::nth_element(val_vec.begin(), nth, val_vec.end(), comp);
             std::sort(val_vec.begin(), nth, comp);
         }
-        else {
+        else  {
             std::sort(val_vec.begin(), val_vec.end(), comp);
         }
 
-        for (size_type i = 0; i < N && i < val_vec.size(); ++i)
+        for (size_type i { 0 }; i < N && i < val_vec.size(); ++i)
             result_[i] = val_vec[i];
     }
 
@@ -6321,7 +6320,7 @@ public:
 
         result_type x;
 
-        result_.swap (x);
+        result_.swap(x);
         OBO_PORT_PRE
     }
     inline void post()  { OBO_PORT_POST }
@@ -6373,7 +6372,7 @@ using mode_v = ModeVisitor<N, T, I, A>;
 // ----------------------------------------------------------------------------
 
 // This calculates 4 different form of Mean Absolute Deviation based on the
-// requested type input. Please the mad_type enum type
+// requested type input. Please see mad_type enum type
 //
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  MADVisitor  {
@@ -6394,27 +6393,27 @@ private:
 
         if (col_s == 0)  return;
 
-        MeanVisitor<T, I>   mean_visitor(skip_nan_);
+        MeanVisitor<T, I>   mean_visitor { skip_nan_ };
 
         mean_visitor.pre();
         mean_visitor(idx_begin, idx_end, column_begin, column_end);
         mean_visitor.post();
 
-        MeanVisitor<T, I>   mean_mean_visitor(skip_nan_);
-        const value_type    mean = mean_visitor.get_result();
-        const index_type    idx = index_type { };
+        MeanVisitor<T, I>   mean_mean_visitor { skip_nan_ };
+        const value_type    mean { mean_visitor.get_result() };
+        const index_type    idx { index_type { } };
 
         mean_mean_visitor.pre();
         if (! skip_nan_)  {
-            for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    &value = *(column_begin + i);
+            for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    &value { *(column_begin + i) };
 
                 mean_mean_visitor(idx, std::fabs(value - mean));
             }
         }
         else  {
-            for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    &value = *(column_begin + i);
+            for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    &value { *(column_begin + i) };
 
                 if (! is_nan__(value)) [[likely]]
                     mean_mean_visitor(idx, std::fabs(value - mean));
@@ -6432,7 +6431,7 @@ private:
                                      const H &column_begin,
                                      const H &column_end)  {
 
-        MedianVisitor<T, I, A> median_visitor;
+        MedianVisitor<T, I, A> median_visitor { skip_nan_ };
 
         median_visitor.pre();
         median_visitor(idx_begin, idx_end, column_begin, column_end);
@@ -6440,20 +6439,20 @@ private:
 
         GET_COL_SIZE2
 
-        MeanVisitor<T, I>   mean_median_visitor(skip_nan_);
-        const index_type    idx = index_type { };
+        MeanVisitor<T, I>   mean_median_visitor { skip_nan_ };
+        const index_type    idx { index_type { } };
 
         mean_median_visitor.pre();
         if (! skip_nan_)  {
-            for (std::size_t i = 0; i < col_s; ++i) [[likely]]
+            for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]
                 mean_median_visitor(
                     idx,
                     std::fabs(*(column_begin + i) -
                               median_visitor.get_result()));
         }
         else  {
-            for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    value = *(column_begin + i);
+            for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    value { *(column_begin + i) };
 
                 if (! is_nan__(value)) [[likely]]
                     mean_median_visitor(
@@ -6477,7 +6476,7 @@ private:
 
         GET_COL_SIZE2
 
-        MeanVisitor<T, I>   mean_visitor(skip_nan_);
+        MeanVisitor<T, I>   mean_visitor { skip_nan_ };
 
         mean_visitor.pre();
         mean_visitor(idx_begin, idx_end, column_begin, column_end);
@@ -6487,7 +6486,7 @@ private:
         vec_t                   mean_dists;
 
         mean_dists.resize(col_s);
-        for (std::size_t i = 0; i < col_s; ++i) [[likely]]
+        for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]
             mean_dists[i] =
                 std::fabs(*(column_begin + i) - mean_visitor.get_result());
         median_mean_visitor.pre();
@@ -6507,7 +6506,7 @@ private:
 
         using vec_t = std::vector<T, typename allocator_declare<T, A>::type>;
 
-        MedianVisitor<T, I, A> median_visitor;
+        MedianVisitor<T, I, A> median_visitor { skip_nan_ };
 
         median_visitor.pre();
         median_visitor(idx_begin, idx_end, column_begin, column_end);
@@ -6518,10 +6517,14 @@ private:
         MedianVisitor<T, I, A>  median_median_visitor;
         vec_t                   median_dists;
 
-        median_dists.resize(col_s);
-        for (std::size_t i = 0; i < col_s; ++i) [[likely]]
-            median_dists[i] =
-                std::fabs(*(column_begin + i) - median_visitor.get_result());
+        median_dists.reserve(col_s);
+        for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    value { *(column_begin + i) };
+
+            if (! skip_nan_ || ! is_nan__(value)) [[likely]]
+                median_dists.push_back(
+                    std::fabs(value - median_visitor.get_result()));
+        }
         median_median_visitor.pre();
         median_median_visitor(idx_begin, idx_end,
                               median_dists.begin(), median_dists.end());
@@ -6536,8 +6539,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         switch (mad_type_)  {
             case mad_type::mean_abs_dev_around_mean:
@@ -6563,16 +6566,16 @@ public:
 
     OBO_PORT_OPT
 
-    MADVisitor (mad_type mt, bool skip_nan = false)
+    MADVisitor(mad_type mt, bool skip_nan = false)
         : mad_type_(mt), skip_nan_(skip_nan)  {   }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_ = value_type();
     }
-    inline void post ()  { OBO_PORT_POST }
-    inline result_type get_result () const  { return (result_); }
+    inline void post()  { OBO_PORT_POST }
+    inline result_type get_result() const  { return (result_); }
 
 private:
 
@@ -6593,8 +6596,8 @@ struct  DiffVisitor  {
 
     template <bidirectional_iterator K, bidirectional_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -6604,11 +6607,12 @@ struct  DiffVisitor  {
                                  "periods < column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        bool                        there_is_zero = false;
+        bool                        there_is_zero { false };
         result_type                 result;
-        std::function<T(const T &)> cond =
+        std::function<T(const T &)> cond {
             abs_val_ ? [](const T &x) -> T { return (std::fabs(x)); }
-                     : [](const T &x) -> T { return (x); };
+                     : [](const T &x) -> T { return (x); }
+        };
         auto                        diff_func =
             [&cond](bool local_skip_nan_,
                     bool &there_is_zero,
@@ -6619,7 +6623,7 @@ struct  DiffVisitor  {
                 [[unlikely]]
                     return;
 
-                const value_type    val = cond(*i - *j);
+                const value_type    val { cond(*i - *j) };
 
                 result.push_back(val);
                 there_is_zero = val == 0;
@@ -6635,21 +6639,21 @@ struct  DiffVisitor  {
                         std::numeric_limits<value_type>::quiet_NaN());
             }
 
-            auto    i = column_begin + periods_;
+            auto    i { column_begin + periods_ };
 
-            for (auto j = column_begin; i < column_end; ++i, ++j) [[likely]]
+            for (auto j { column_begin }; i < column_end; ++i, ++j) [[likely]]
                 diff_func(skip_nan_, there_is_zero, i, j, result);
         }
         else  {
-            H   i = column_end - (1 + std::abs(periods_));
-            H   j = column_end - 1;
+            H   i { column_end - (1 + std::abs(periods_)) };
+            H   j { column_end - 1 };
 
             for ( ; i > column_begin; --i, --j)
                 diff_func(skip_nan_, there_is_zero, i, j, result);
 
             if (i == column_begin)  {
                 if (! (skip_nan_ && (is_nan__(*i) || is_nan__(*j))))  {
-                    const value_type    val = *i - *j;
+                    const value_type    val { *i - *j };
 
                     result.push_back(val);
                     if (val == 0)  there_is_zero = true;
@@ -6658,7 +6662,7 @@ struct  DiffVisitor  {
             std::reverse(result.begin(), result.end());
 
             if (! skip_nan_)
-                for (size_type local_i = 0;
+                for (size_type local_i { 0 };
                      local_i < static_cast<size_type>(std::abs(periods_)) &&
                      local_i < col_s;
                      ++local_i)
@@ -6724,22 +6728,23 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
-        StdVisitor<T, I>    svisit;
+        StdVisitor<T, I>    svisit { skip_nan_ };
 
         svisit.pre();
         svisit(idx_begin, idx_end, column_begin, column_end);
         svisit.post();
 
-        const auto  m = svisit.get_mean();
-        const auto  s = svisit.get_result();
+        const auto  m { svisit.get_mean() };
+        const auto  s { svisit.get_result() };
         result_type result(col_s);
-        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const auto  thread_level { (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level()
+        };
 
         if (thread_level > 2)  {
             auto    futures =
@@ -6783,14 +6788,14 @@ public:
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
             OBO_PORT_PRE
         }
         result_.clear();
     }
-    inline void post ()  {
+    inline void post()  {
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
             OBO_PORT_POST

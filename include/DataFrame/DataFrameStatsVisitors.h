@@ -8131,7 +8131,7 @@ private:
         // (3 digits) should scale by 10^3=1000, not 986*10=9860.
         //
         const value_type    scale {
-            std::pow(10, std::floor(std::log10(max_abs)) + 1)
+            value_type(std::pow(10, std::floor(std::log10(max_abs)) + 1))
         };
 
         result_.resize(col_s);

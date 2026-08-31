@@ -10390,7 +10390,7 @@ private:
         for ( ; size_type(k) < col_s; ++k) [[likely]]  {
             looped = true;
 
-            const data_t    xvalue { *(x_begin + k) };
+            const data_t    xvalue { data_t(*(x_begin + k)) };
 
             if (xvalue > cutoff)  break;
             if (xvalue == *(x_begin + last_fit_idx))  {
@@ -10423,7 +10423,7 @@ private:
         auxiliary_vec_.clear();
         auxiliary_vec_.reserve(curr_idx - last_fit_idx);
 
-        const data_t    last_fit_xval { *(x_begin + last_fit_idx) };
+        const data_t    last_fit_xval { data_t(*(x_begin + last_fit_idx)) };
 
         std::transform(x_begin + (last_fit_idx + 1), x_begin + curr_idx,
                        std::back_inserter(auxiliary_vec_),
@@ -10431,7 +10431,9 @@ private:
                            return (x - last_fit_xval);
                        });
 
-        const data_t    x_diff { *(x_begin + curr_idx) - last_fit_xval };
+        const data_t    x_diff {
+            data_t(*(x_begin + curr_idx) - last_fit_xval)
+        };
 
         for (auto val : auxiliary_vec_) [[likely]]  val /= x_diff;
 

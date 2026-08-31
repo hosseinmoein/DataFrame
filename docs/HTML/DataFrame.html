@@ -2733,7 +2733,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     <LI><I><font color="darkred" face="Arial" size="+1">Why is C++ DataFrame so much faster than Pandas and Polars?</font></I><BR>
 	  Because of a few reasons and depending on what functionality we are talking about:<BR>
       <UL>
-        <LI>Generally speaking, C++ is a statically typed language and inherits its close-to-the-metal characteristics from C.</LI>
+        <LI>Generally speaking, C++ is a compiled and statically typed language and inherits its close-to-the-metal characteristics from C.</LI>
         <LI>Some functionalities in C++ DataFrame are algorithmically faster than Pandas/Polars. For example, exponentially weighted variance in Pandas/Polars is calculated in O(n<sup>2</sup>). In C++ DataFrame that&apos;s in O(n).</LI>
         <LI>The same dataset in C++ might take smaller memory footprint than in Python, because of the way these two languages deal with data and memory. So, C++ DataFrame is much more scalable.</LI>
         <LI>C++ DataFrame employs multithreading and SIMD techniques for large datasets.</LI>
@@ -2745,7 +2745,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 	Not at all. Although DataFrame library uses metaprogramming extensively, you as a user don&apos;t need to know metaprogramming. You need to have an above average knowledge of modern C++ language.</LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">Does DataFrame support multidimensional data?</font></I><BR>
-	Yes. In analysis where multidimensional data makes mathematical sense, it&apos;s supported. The support is seamless. That means the same objects/interface can be used with scalar or multidimensional data without any change. The library figures out what kind of input was passed.</LI>
+	Yes. In analysis where multidimensional data makes mathematical sense, it&apos;s supported. The support is seamless. That means the same objects/interfaces can be used with scalar or multidimensional data without any change. The library figures out what kind of input was passed.</LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">Does DataFrame support parallel processing?</font></I><BR>
 	Yes. Read the README page (i.e. library principals) and <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#3">multithreading section</a>.</LI>
@@ -2754,13 +2754,13 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 	There is no one-to-one correspondence. C++ DataFrame has a far greater set of functionalities than Pandas. The best way to find them is through the documentation.</LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">How many columns can I have in a DataFrame and how big can they be?</font></I><BR>
-	There is no software limits on these. It depends on your hardware capacity.</LI>
+	There are no software limits on these. It depends on your hardware capacity.</LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">What is the purpose of the index column in DataFrame?</font></I><BR>
 	<a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#1">Read the Overview in this document</a></LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">Can I share data between C++ DataFrame and other languages such as Python/Pandas applications?</font></I><BR>
-	Yes. C++ DataFrame can read/write fron/to CSV files very similar but not identical to Pandas CSV files. See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/read.html">read</a> documentation. Also, if you have your data in a database (e.g.  PostgreSQL) or in a data file (e.g. Parquet), you can write a simple layer that reads the data from the source and loads it into the C++ DataFrame. See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/load_column.html">load_column</a> or  <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/load_data.html">load_data</a>. Similarly, you can write the data from C++ DataFrame to those mediums.</LI>
+	Yes with a caveat. C++ DataFrame can read/write fron/to CSV files very similar but not identical to Pandas CSV files. See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/read.html">read</a> documentation. Also, if you have your data in a database (e.g.  PostgreSQL) or in a data file (e.g. Parquet), you can write a simple layer that reads the data from the source and loads it into the C++ DataFrame. See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/load_column.html">load_column</a> or  <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/load_data.html">load_data</a>. Similarly, you can write the data from C++ DataFrame to those mediums.</LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">Is DataFrame library header-only?</font></I><BR>
 	No. <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#9">Follow Build Instructions</a></LI>

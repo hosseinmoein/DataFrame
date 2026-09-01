@@ -10435,7 +10435,7 @@ private:
             data_t(*(x_begin + curr_idx) - last_fit_xval)
         };
 
-        for (auto val : auxiliary_vec_) [[likely]]  val /= x_diff;
+        for (auto &val : auxiliary_vec_) [[likely]]  val /= x_diff;
 
         const data_t    last_fit_yval { *(y_fits_begin + last_fit_idx) };
         const data_t    curr_idx_yval { *(y_fits_begin + curr_idx) };
@@ -10560,7 +10560,7 @@ private:
         if (sum_weights <= 0 || non_zero_cnt == 1)
             reg_ok = false;
         else
-            for (size_type j = left_end; j < right_end; ++j)
+            for (size_type j { left_end }; j < right_end; ++j)
                 *(w_begin + j) /= sum_weights;
 
         return (reg_ok);
@@ -10970,8 +10970,8 @@ struct  DecomposeVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
-    static constexpr bool   is_ary_ = is_std_array_v<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
+    static constexpr bool   is_ary_ { is_std_array_v<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -11106,7 +11106,7 @@ public:
                                  "half of column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        vec_t<data_t>   xvals (col_s);
+        vec_t<data_t>   xvals(col_s);
 
         do_trend_(idx_begin, idx_end, y_begin, y_end, col_s, xvals);
 
@@ -11123,7 +11123,7 @@ public:
         auto    add_lbd =
             [dim, this, &detrended, &y_begin]
             (auto begin, auto end, auto) -> void {
-                for (size_type i = begin; i < end; ++i) [[likely]]  {
+                for (size_type i { begin }; i < end; ++i) [[likely]]  {
                     if constexpr (is_ary_)  {
                         const auto  &val { *(y_begin + i) - trend_[i] };
                         size_type   j { 0 };
@@ -11140,7 +11140,7 @@ public:
         auto    mul_lbd =
             [dim, this, &detrended, &y_begin]
             (auto begin, auto end, auto) -> void {
-                for (size_type i = begin; i < end; ++i) [[likely]]  {
+                for (size_type i { begin }; i < end; ++i) [[likely]]  {
                     if constexpr (is_ary_)  {
                         const auto  &val { *(y_begin + i) / trend_[i] };
                         size_type   j { 0 };

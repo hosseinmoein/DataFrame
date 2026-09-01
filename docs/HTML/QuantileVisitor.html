@@ -88,8 +88,10 @@ body {
         This functor class finds the quantile specified by quantile and q_policy. Please see quantile_policy for more explanation.<BR>
         <I>
         <PRE>
-    QuantileVisitor (T quantile,
-                     quantile_policy q_policy);
+    explicit
+    QuantileVisitor(double quantile = 0.5,
+                    quantile_policy q_policy = quantile_policy::mid_point,
+                    bool skip_nan = false)
         </PRE>
         </I>
       </td>

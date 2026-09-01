@@ -2443,20 +2443,20 @@ static void test_median()  {
 
     std::cout << "\nTesting Median ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    StlVecType<unsigned long>   idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    StlVecType<double>         d1 =
+    StlVecType<double>          d1 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    StlVecType<double>         d2 =
+    StlVecType<double>          d2 =
         { 1.0, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    StlVecType<int>           i1 =
+    StlVecType<int>             i1 =
         { 1, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    StlVecType<int>            i2 =
+    StlVecType<int>             i2 =
         { 1, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7, 5,
           9, 15, 14, 13, 12, 6, 4 };
     MyDataFrame                 df;
@@ -2508,6 +2508,19 @@ static void test_median()  {
     assert((testDF.single_act_visit<double>("c1", md).get_result() == 2.5));
     assert((testDF.single_act_visit<double>("c2", md).get_result() == 0.02));
     assert((testDF.single_act_visit<double>("c3", md).get_result() == 0.05));
+
+    NKthValueVisitor<double>    nkth_v { { 1, 5, 3, 2, 7 } };
+
+    df.single_act_visit<double>("dblcol_1", nkth_v);
+
+    const auto  &kth_result { nkth_v.get_result() };
+
+    assert(kth_result.size() == 5);
+    assert(kth_result[0] == 1.0);
+    assert(kth_result[1] == 5.0);
+    assert(kth_result[2] == 3.0);
+    assert(kth_result[3] == 2.0);
+    assert(kth_result[4] == 7.0);
 }
 
 // -----------------------------------------------------------------------------

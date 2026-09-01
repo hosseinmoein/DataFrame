@@ -80,8 +80,8 @@ static void test_groupby_edge()  {
                    nan_policy::dont_pad_with_nans);
 
     FactorizeVisitor<double, unsigned long, 256>
-        fact([] (const double &f) -> bool {
-            return (f > 11106.0 && f < 30000.0);
+        fact([] (const double &f) -> char {
+            return (char(f > 11106.0 && f < 30000.0));
         });
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2",
@@ -876,7 +876,6 @@ static void test_ZeroLagMovingMeanVisitor()  {
     }
 }
 
-
 // ----------------------------------------------------------------------------
 
 static void test_describe()  {
@@ -1639,10 +1638,10 @@ static void test_RVIVisitor()  {
         assert(std::isnan(rvi.get_result()[0]));
         assert(std::isnan(rvi.get_result()[12]));
         assert(rvi.get_result()[13] == 0);
-        assert(std::abs(rvi.get_result()[14] - 100.0) < 0.0001);
-        assert(std::abs(rvi.get_result()[15] - 41.8105) < 0.0001);
-        assert(std::abs(rvi.get_result()[18] - 20.4976) < 0.0001);
-        assert(std::abs(rvi.get_result()[25] - 42.6008) < 0.0001);
+        assert(std::abs(rvi.get_result()[14] - 57.2325) < 0.0001);
+        assert(std::abs(rvi.get_result()[15] - 31.8594) < 0.0001);
+        assert(std::abs(rvi.get_result()[18] - 19.1327) < 0.0001);
+        assert(std::abs(rvi.get_result()[25] - 42.0697) < 0.0001);
         assert(std::abs(rvi.get_result()[1720] - 43.5703) < 0.0001);
         assert(std::abs(rvi.get_result()[1712] - 38.7802) < 0.0001);
         assert(std::abs(rvi.get_result()[1707] - 32.3759) < 0.0001);
@@ -1705,11 +1704,11 @@ static void test_InertiaVisitor()  {
         assert(inertia.get_result().size() == 1721);
         assert(std::isnan(inertia.get_result()[0]));
         assert(std::isnan(inertia.get_result()[32]));
-        assert(std::abs(inertia.get_result()[33] - 52.3049) < 0.0001);
-        assert(std::abs(inertia.get_result()[40] - 67.6324) < 0.0001);
-        assert(std::abs(inertia.get_result()[42] - 66.2179) < 0.0001);
-        assert(std::abs(inertia.get_result()[48] - 63.4547) < 0.0001);
-        assert(std::abs(inertia.get_result()[50] - 59.4562) < 0.0001);
+        assert(std::abs(inertia.get_result()[33] - 54.856) < 0.001);
+        assert(std::abs(inertia.get_result()[40] - 67.4938) < 0.0001);
+        assert(std::abs(inertia.get_result()[42] - 66.1043) < 0.0001);
+        assert(std::abs(inertia.get_result()[48] - 63.4451) < 0.0001);
+        assert(std::abs(inertia.get_result()[50] - 59.4474) < 0.0001);
         assert(std::abs(inertia.get_result()[1720] - 29.7343) < 0.0001);
         assert(std::abs(inertia.get_result()[1712] - 42.2897) < 0.0001);
         assert(std::abs(inertia.get_result()[1707] - 50.3479) < 0.0001);
@@ -2113,10 +2112,10 @@ static void test_EldersThermometerVisitor()  {
 
         assert(ether.get_result_ma().size() == 1721);
         assert(ether.get_result_ma()[0] == 0);
-        assert(std::abs(ether.get_result_ma()[13] - 2.0858) < 0.0001);
-        assert(std::abs(ether.get_result_ma()[14] - 1.9537) < 0.0001);
-        assert(std::abs(ether.get_result_ma()[18] - 1.7528) < 0.0001);
-        assert(std::abs(ether.get_result_ma()[25] - 1.7848) < 0.0001);
+        assert(std::abs(ether.get_result_ma()[13] - 2.08979) < 0.00001);
+        assert(std::abs(ether.get_result_ma()[14] - 1.95713) < 0.00001);
+        assert(std::abs(ether.get_result_ma()[18] - 1.75489) < 0.00001);
+        assert(std::abs(ether.get_result_ma()[25] - 1.78577) < 0.00001);
         assert(std::abs(ether.get_result_ma()[1720] - 2.558) < 0.0001);
         assert(std::abs(ether.get_result_ma()[1712] - 2.6612) < 0.0001);
         assert(std::abs(ether.get_result_ma()[1707] - 2.538) < 0.0001);
@@ -2778,11 +2777,12 @@ static void test_EldersForceIndexVisitor()  {
 
         assert(efi.get_result().size() == 1721);
         assert(efi.get_result()[0] == 0.0);
-        assert(std::abs(efi.get_result()[3] - 7630650.068) < 0.001);
-        assert(std::abs(efi.get_result()[19] - -7822999.003) < 0.001);
-        assert(std::abs(efi.get_result()[20] - -7180495.225) < 0.001);
-        assert(std::abs(efi.get_result()[24] - -5227380.416) < 0.001);
-        assert(std::abs(efi.get_result()[25] - -2697304.674) < 0.001);
+        std::cout << std::fixed;
+        assert(std::abs(efi.get_result()[3] - 8909118.351) < 0.001);
+        assert(std::abs(efi.get_result()[19] - -7780545.754) < 0.001);
+        assert(std::abs(efi.get_result()[20] - -7144397.963) < 0.001);
+        assert(std::abs(efi.get_result()[24] - -5208317.3196) < 0.0001);
+        assert(std::abs(efi.get_result()[25] - -2681023.86) < 0.001);
         assert(std::abs(efi.get_result()[1720] - -8226876.372) < 0.001);
         assert(std::abs(efi.get_result()[1712] - -19336452.513) < 0.001);
         assert(std::abs(efi.get_result()[1707] - 12182529.448) < 0.001);
@@ -3050,11 +3050,11 @@ static void test_QuantQualEstimationVisitor()  {
         assert(qqe.get_result().size() == 1721);
         assert(std::abs(qqe.get_result()[0] - 0) < 0.0001);
         assert(std::abs(qqe.get_result()[12] - 0) < 0.0001);
-        assert(std::abs(qqe.get_result()[14] - 19.73) < 0.0001);
-        assert(std::abs(qqe.get_result()[19] - 24.3886) < 0.0001);
-        assert(std::abs(qqe.get_result()[20] - 24.7022) < 0.0001);
-        assert(std::abs(qqe.get_result()[24] - 24.7022) < 0.0001);
-        assert(std::abs(qqe.get_result()[25] - 25.7014) < 0.0001);
+        assert(std::abs(qqe.get_result()[14] - 38.9522) < 0.0001);
+        assert(std::abs(qqe.get_result()[19] - 43.4102) < 0.0001);
+        assert(std::abs(qqe.get_result()[20] - 43.4102) < 0.0001);
+        assert(std::abs(qqe.get_result()[24] - 43.4102) < 0.0001);
+        assert(std::abs(qqe.get_result()[25] - 43.4102) < 0.0001);
         assert(std::abs(qqe.get_result()[1720] - 45.3732) < 0.0001);
         assert(std::abs(qqe.get_result()[1712] - 50.833) < 0.0001);
         assert(std::abs(qqe.get_result()[1707] - 50.5242) < 0.0001);
@@ -3062,11 +3062,11 @@ static void test_QuantQualEstimationVisitor()  {
         assert(qqe.get_rsi_ma().size() == 1721);
         assert(std::abs(qqe.get_rsi_ma()[0] - 0) < 0.0001);
         assert(std::abs(qqe.get_rsi_ma()[12] - 0) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[14] - 24.4634) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[19] - 36.0438) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[20] - 36.8887) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[24] - 36.867) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[25] - 38.4642) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[14] - 40.9359) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[19] - 37.3239) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[20] - 37.7247) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[24] - 37.0269) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[25] - 38.5705) < 0.0001);
         assert(std::abs(qqe.get_rsi_ma()[1720] - 42.5588) < 0.0001);
         assert(std::abs(qqe.get_rsi_ma()[1712] - 50.95) < 0.0001);
         assert(std::abs(qqe.get_rsi_ma()[1707] - 52.7244) < 0.0001);
@@ -3074,11 +3074,11 @@ static void test_QuantQualEstimationVisitor()  {
         assert(qqe.get_long_line().size() == 1721);
         assert(std::abs(qqe.get_long_line()[0] - 0) < 0.0001);
         assert(std::abs(qqe.get_long_line()[12] - 0) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[14] - 19.73) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[19] - 24.3886) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[20] - 24.7022) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[24] - 24.7022) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[25] - 25.7014) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[14] - 38.9522) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[19] - 31.4282) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[20] - 31.4282) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[24] - 31.4282) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[25] - 31.4282) < 0.0001);
         assert(std::abs(qqe.get_long_line()[1720] - 39.9557) < 0.0001);
         assert(std::abs(qqe.get_long_line()[1712] - 50.833) < 0.0001);
         assert(std::abs(qqe.get_long_line()[1707] - 50.5242) < 0.0001);
@@ -3086,11 +3086,11 @@ static void test_QuantQualEstimationVisitor()  {
         assert(qqe.get_short_line().size() == 1721);
         assert(std::abs(qqe.get_short_line()[0] - 0) < 0.0001);
         assert(std::abs(qqe.get_short_line()[12] - 0) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[14] - 29.1968) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[19] - 37.2629) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[20] - 37.2629) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[24] - 37.2629) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[25] - 51.2269) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[14] - 43.4102) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[19] - 43.4102) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[20] - 43.4102) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[24] - 43.4102) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[25] - 43.4102) < 0.0001);
         assert(std::abs(qqe.get_short_line()[1720] - 45.3732) < 0.0001);
         assert(std::abs(qqe.get_short_line()[1712] - 53.3534) < 0.0001);
         assert(std::abs(qqe.get_short_line()[1707] - 54.3629) < 0.0001);

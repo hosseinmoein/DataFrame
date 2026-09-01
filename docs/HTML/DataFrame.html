@@ -352,6 +352,7 @@ table.hovertable td {
   <P><font size="+3">&#127922;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#7">Numeric Generators</a></P>
   <P><font size="+3">&#128450;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#8">Code Structure</a></P>
   <P><font size="+3">&#x1F6E0;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#9">Build Instructions</a></P>
+  <P><font size="+3">&#10067;</font> <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#10">FAQ</a></P>
   </div>
 
   <div class="right-container">
@@ -413,7 +414,7 @@ table.hovertable td {
   </UL>
   Template parameter <B>A</B> referrers to byte boundary alignment to be used in memory allocations. The default is system default boundaries for each type. See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's, especially under <I> Library-wide Types</I> section. Also, see <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#6"><I>Memory Alignment</I></a> section below<BR>
   Some of the methods in DataFrame return another DataFrame or one of the above views depending on what you asked for. DataFrame and view instances should be indistinguishable from the user's point of view.<BR>
-  See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#4"><I>Views</I></a> section below. Also, see <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's<BR>
+  See <a href8.	="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#4"><I>Views</I></a> section below. Also, see <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's<BR>
 
 <BR>
 
@@ -2539,7 +2540,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
   <H2 ID="4"><font color="blue">Views <font size="+4">&#128269;</font></font></H2>
   <P>
     Views have useful and practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified and vice versa. Conceptually, views are very similar to <I>std::span</I> or <I>std::mdspan</I> in C++. If the original DataFrame goes out of scope, access to all its views will be UB.<BR>
-	There are certain things you cannot do in views. For example, you cannot add or delete columns, extend the index column, ...<BR><BR>
+    There are certain things you cannot do in views. For example, you cannot add or delete columns, extend the index column, ...<BR><BR>
 
     In general there are two kinds of views
     <OL>
@@ -2577,7 +2578,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     See this document, <I>DataFrameStatsVisitors.h, DataFrameMLVisitors.h, DataFrameFinancialVisitors.h, DataFrameTransformVisitors.h</I>, and <I>test/dataframe_tester[_2].cc</I> for more examples and documentation.
   </P>
 
-  I have been asked many times, why I chose the visitor pattern for algorithms as opposed to having member functions.<BR>
+  <P ID="51">I have been asked many times, why I chose the visitor pattern for algorithms as opposed to having member functions.<BR>
   Because I wanted algorithms to be independent objects. To be more precise as to why:<BR>
   <UL>
     <LI>I wanted users to be able to incorporate their custom algorithms without touching or understanding the DataFrame codebase. If you follow a simple interface, you can write your custom visitor and use it in DataFrame</LI>
@@ -2586,6 +2587,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     <LI>Algorithms sometime have complex results. Sometimes the result is a single number. But sometimes the result of an algorithms could be a single or multiple vectors. That's not efficient to implement as a member function</LI>
     <LI>If I had implemented them as member functions, I would have had 100's of member functions in DataFrame</LI>
   </UL>
+  </P>
   <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/how_to_write_visitors.html">This is how you can implement your own visitor</a><BR>
 
 <BR><HR COLOR="Gray" SIZE="5">
@@ -2703,8 +2705,72 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 
     <BR>
     <font size="+1"><B>Running the test executables:</B></font><BR>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Almost all test programs in <I>test/</I>, <I>example/</I>, and <I> benchmarks/</I> directories need to open mocked datafiles that exist in <I>data/</I> directory. They also assume the datafiles are in the <I>current directory</I>. If you use CMake to build the project, it copies the datafiles into the execution directory. If you are running the tests by yourself, <I>data/</I> directory must be your current directory.<BR><BR>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Almost all test programs in <I>test/</I>, <I>example/</I>, and <I> benchmarks/</I> directories need to open mocked datafiles that exist in <I>data/</I> directory. They also assume the datafiles are in the <I>current directory</I>. If you use CMake to build the project, it copies the datafiles into the execution directory. If you are running the tests by yourself, <I>data/</I> directory must be your current directory.<BR>
 
+<BR><HR COLOR="Gray" SIZE="5">
+
+  <H2 ID="10"><font color="blue">FAQ <font size="+4">&#10067;</font></font></H2>
+
+  <OL>
+    <LI><I><font color="darkred" face="Arial" size="+1">How do I start using the C++ DataFrame?</font></I><BR>
+    First, you need to have a thorough knowledge of the domain of the problem you are trying to solve. It could be statistical, or financial analysis, or data pipeline preparation for ML analysis, or direct ML analysis, or some other scientific data analysis. Second, you need an above average knowledge of modern C++ language. Start with reading the full documentation and following the <a href="https://github.com/hosseinmoein/DataFrame/blob/master/examples/hello_world.cc"><I>hello_world</I></a> program.  Build your first application on back of the <a href="https://github.com/hosseinmoein/DataFrame/blob/master/examples/hello_world.cc"><I>hello_world</I></a>, having read the documentation.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">What column types are supported in C++ DataFrame?</font></I><BR>
+    All types; both built-in and user defined. Some interfaces may put a conceptual (i.e. C++23 concepts) limit on the column type. For example,  <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/pivot_table.html"> pivot_table()</a> function requires the column type to be hash-able.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">Why did you use the visitor pattern for analytical algorithms?</font></I><BR>
+    <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#5">This is why</a></LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">Why isn&apos;t there a custom column class type for DataFrame columns (similar to series in Pandas) instead of simple std::vector<...>?</font></I><BR>
+	I don&apos;t see any point in providing such a class. A C++ programmer can accomplish all the functionalities she needs using a reference to a std::vector. The additional series-like class adds no value.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">Why are some interfaces cluttered with template type specifications?</font></I><BR>
+	Because C++ is a statically typed language. It means all types must be known at compile time. This is an advantage that improves performance significantly. But it comes at the expense of more complex interfaces.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">How does C++ DataFrame achieve type heterogeneity?</font></I><BR>
+	By using extensive metaprogramming and maintaining a map of objects to specific vectors. The technique is relatively complex and a DataFrame user doesn&apos;t need to understand that in order to take full advantage of the library.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">Why is C++ DataFrame so much faster than Pandas and Polars?</font></I><BR>
+	  Because of a few reasons and depending on what functionality we are talking about:<BR>
+      <UL>
+        <LI>Generally speaking, C++ is a compiled and statically typed language and inherits its close-to-the-metal characteristics from C.</LI>
+        <LI>Some functionalities in C++ DataFrame are algorithmically faster than Pandas/Polars. For example, exponentially weighted variance in Pandas/Polars is calculated in O(n<sup>2</sup>). In C++ DataFrame that&apos;s in O(n).</LI>
+        <LI>The same dataset in C++ might take smaller memory footprint than in Python, because of the way these two languages deal with data and memory. So, C++ DataFrame is much more scalable.</LI>
+        <LI>C++ DataFrame employs multithreading and SIMD techniques for large datasets.</LI>
+        <LI>Some analytics are best calculated by matrix algebra. C++ DataFrame employs a dedicated and very efficient matrix object for this purpose. As far as I know, Pandas/Polars don&apos;t have this capability.</LI>
+      </UL>
+    </LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">Do I need to know C++ metaprogramming to use DataFrame library?</font></I><BR>
+	Not at all. Although DataFrame library uses metaprogramming extensively, you as a user don&apos;t need to know metaprogramming. You need to have an above average knowledge of modern C++ language.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">Does DataFrame support multidimensional data?</font></I><BR>
+	Yes. In analysis where multidimensional data makes mathematical sense, it&apos;s supported. The support is seamless. That means the same objects/interfaces can be used with scalar or multidimensional data without any change. The library figures out what kind of input was passed.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">Does DataFrame support parallel processing?</font></I><BR>
+	Yes. Read the README page (i.e. library principals) and <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#3">multithreading section</a>.</LI>
+	
+    <LI><I><font color="darkred" face="Arial" size="+1">Is there a one-to-one correspondence between C++ DataFrame functions and those of Pandas? If so, how can I easily figure that out?</font></I><BR>
+	There is no one-to-one correspondence. C++ DataFrame has a far greater set of functionalities than Pandas. The best way to find them is through the documentation.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">How many columns can I have in a DataFrame and how big can they be?</font></I><BR>
+	There are no software limits on these. It depends on your hardware capacity.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">What is the purpose of the index column in DataFrame?</font></I><BR>
+	<a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#1">Read the Overview in this document</a></LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">Can I share data between C++ DataFrame and other languages such as Python/Pandas applications?</font></I><BR>
+	Yes with a caveat. C++ DataFrame can read/write fron/to CSV files very similar but not identical to Pandas CSV files. See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/read.html">read</a> documentation. Also, if you have your data in a database (e.g.  PostgreSQL) or in a data file (e.g. Parquet), you can write a simple layer that reads the data from the source and loads it into the C++ DataFrame. See <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/load_column.html">load_column</a> or  <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/load_data.html">load_data</a>. Similarly, you can write the data from C++ DataFrame to those mediums.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">Is DataFrame library header-only?</font></I><BR>
+	No. <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#9">Follow Build Instructions</a></LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">I have problems compiling the library and my application!</font></I><BR>
+	First read the <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#9">Build Instructions</a>. If you still have a problem, scan the <I>issues</I> and <I>discussions</I> sections in the repo.</LI>
+
+    <LI><I><font color="darkred" face="Arial" size="+1">Sometimes DataFrame visitors have such long names that clutter my code!</font></I><BR>
+	Visitors with long names always have aliases with much shorter names. See documentation and use the aliases.</LI>
+  </OL>
 </div>
 </div>
 

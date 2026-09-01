@@ -455,22 +455,24 @@ template<typename T, std::size_t A>
 std::vector<T, typename allocator_declare<T, A>::type>
 gen_sym_triangle(std::size_t n, const T &start_val, bool normalize)  {
 
-    std::vector<T, typename allocator_declare<T, A>::type>   result;
-    const bool                                      is_even =
-        ! (n & std::size_t(0x01));
-    const std::size_t                               max_loop {
-        n / 2 + (is_even ? 0 : 1) };
-    T                                               sum { 0 };
+    std::vector<T, typename allocator_declare<T, A>::type>  result;
+    const bool                                              is_even {
+        ! (n & std::size_t(0x01))
+    };
+    const std::size_t                                       max_loop {
+        n / 2 + (is_even ? 0 : 1)
+    };
+    T                                                       sum { 0 };
 
     result.reserve(n);
-    for (std::size_t i = 0; i < max_loop; ++i)  {
-        const T val = start_val + i;
+    for (std::size_t i { 0 }; i < max_loop; ++i)  {
+        const T val { start_val + i };
 
         result.push_back(val);
         sum += val;
     }
-    for (long i = long(max_loop - (is_even ? 1 : 2)); i >= 0; --i)  {
-        const T &val = result[i];
+    for (long i { long(max_loop - (is_even ? 1 : 2)) }; i >= 0; --i)  {
+        const T &val { result[i] };
 
         result.push_back(val);
         sum += val;

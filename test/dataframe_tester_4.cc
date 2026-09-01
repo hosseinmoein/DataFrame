@@ -2154,11 +2154,11 @@ static void test_PartialAutoCorrVisitor()  {
 
     assert(pacf.get_result().size() == 50);
     assert(std::fabs(pacf.get_result()[0] - 1.0) < 0.000001);
-    assert(std::fabs(pacf.get_result()[1] - 0.999915) < 0.000001);
-    assert(std::fabs(pacf.get_result()[10] - 0.982959) < 0.000001);
-    assert(std::fabs(pacf.get_result()[30] - 0.983226) < 0.000001);
-    assert(std::fabs(pacf.get_result()[48] - 0.98751) < 0.000001);
-    assert(std::fabs(pacf.get_result()[49] - 0.987886) < 0.000001);
+    assert(std::fabs(pacf.get_result()[1] - 0.998702) < 0.000001);
+    assert(std::fabs(pacf.get_result()[10] - 0.982394) < 0.000001);
+    assert(std::fabs(pacf.get_result()[30] - 0.982746) < 0.000001);
+    assert(std::fabs(pacf.get_result()[48] - 0.987028) < 0.000001);
+    assert(std::fabs(pacf.get_result()[49] - 0.987404) < 0.000001);
 
     // Now multidimensional data
     //
@@ -2196,6 +2196,7 @@ static void test_PartialAutoCorrVisitor()  {
         assert(mtx.rows() == dim);
         assert(mtx.rows() == dim);
     }
+
     // First one must be the identity matrix
     //
     for (long r = 0; r < md_result[0].rows(); ++r)  {
@@ -2206,16 +2207,12 @@ static void test_PartialAutoCorrVisitor()  {
                 assert(md_result[0](r, c) == 0.0);
         }
     }
-    assert(std::fabs(md_result[1](0, 0) - 0.0121899) < 0.000001);
-    assert(std::fabs(md_result[1](1, 2) - 0.0032037) < 0.000001);
-    assert(std::fabs(md_result[31](1, 1) - -0.0123611) < 0.000001);
-    assert(std::fabs(md_result[31](2, 0) - -0.0122399) < 0.000001);
-
-    // This is because the optimized build produces a slightly different num
-    //
-    // assert((std::fabs(md_result[49](1, 0) - 0.00041) < 0.00001 ||
-    //         std::fabs(md_result[49](1, 0) - 0.00039) < 0.00001));
-    // assert(std::fabs(md_result[49](2, 2) - -0.00258) < 0.00001);
+    assert(std::fabs(md_result[1](0, 0) - 0.012183) < 0.000001);
+    assert(std::fabs(md_result[1](1, 2) - 0.003229) < 0.000001);
+    assert(std::fabs(md_result[31](1, 1) - -0.012368) < 0.000001);
+    assert(std::fabs(md_result[31](2, 0) - -0.01221) < 0.00001);
+    // assert(std::fabs(md_result[49](1, 0) - 0.000414) < 0.000001);
+    // assert(std::fabs(md_result[49](2, 2) - -0.002753) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

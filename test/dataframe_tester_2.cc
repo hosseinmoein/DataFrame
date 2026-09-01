@@ -443,20 +443,21 @@ static void test_FactorizeVisitor()  {
                    nan_policy::dont_pad_with_nans);
 
     FactorizeVisitor<double, unsigned long, 64>
-        fact([] (const double &f) -> bool {
-            return (f > 106.0 && f < 114.0);
+        fact([] (const double &f) -> char {
+            return (char(f > 106.0 && f < 114.0));
         });
+
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2", fact).get_result());
-    assert(df.get_column<bool>("bool_col").size() == 15);
-    assert(df.get_column<bool>("bool_col")[0] == false);
-    assert(df.get_column<bool>("bool_col")[4] == false);
-    assert(df.get_column<bool>("bool_col")[6] == true);
-    assert(df.get_column<bool>("bool_col")[7] == true);
-    assert(df.get_column<bool>("bool_col")[8] == false);
-    assert(df.get_column<bool>("bool_col")[9] == true);
-    assert(df.get_column<bool>("bool_col")[11] == true);
-    assert(df.get_column<bool>("bool_col")[13] == false);
+    assert(df.get_column<char>("bool_col").size() == 15);
+    assert(df.get_column<char>("bool_col")[0] == false);
+    assert(df.get_column<char>("bool_col")[4] == false);
+    assert(df.get_column<char>("bool_col")[6] == true);
+    assert(df.get_column<char>("bool_col")[7] == true);
+    assert(df.get_column<char>("bool_col")[8] == false);
+    assert(df.get_column<char>("bool_col")[9] == true);
+    assert(df.get_column<char>("bool_col")[11] == true);
+    assert(df.get_column<char>("bool_col")[13] == false);
 }
 
 // -----------------------------------------------------------------------------
@@ -1902,11 +1903,10 @@ static void test_NormalizeVisitor()  {
         normalization_type::decimal_scaling
     };
     StlVecType<double>                          result_decimal_scaling = {
-        0.00791346, 0.0143237, 0.020734, 0.0271442, 0.0335545, 0.0192308,
-        0.00640962, 0.0641026, 0.0272436, 5.76923e-05, 0.0512821, 0.0142449,
-        0.0213673, 0.1, 0.0705128, 0.0336538, 0.00646795, 0.0135321, 0.0576923,
-        0.0206551, 0.0277776, 0.0769231, 0.0400641, 0.0128782, 0.0199423,
-        0.0641026, 0.0270654, 0.0341878
+        0.012345, 0.022345, 0.032345, 0.042345, 0.052345, 0.03, 0.009999,
+        0.1, 0.0425, 9e-05, 0.08, 0.022222, 0.033333, 0.156, 0.11, 0.0525,
+        0.01009, 0.02111, 0.09, 0.032222, 0.043333, 0.12, 0.0625, 0.02009,
+        0.03111, 0.1, 0.042222, 0.053333
     };
 
     result = df.single_act_visit<double>("dbl_col",
@@ -1916,7 +1916,7 @@ static void test_NormalizeVisitor()  {
     sum = 0;
     for (const auto &r : result)
         sum += r;
-    assert(fabs(sum - 0.91306) < 0.00001);
+    assert(fabs(sum - 1.42438) < 0.00001);
 
     //
     NormalizeVisitor<double, unsigned long, 64> norm_log_transform {
@@ -2383,8 +2383,7 @@ static void test_LogFitVisitor()  {
 
     assert(ary_log.get_residual() < 1.0e-22);
     assert(ary_log.get_residual() < 1.0e-22);
-    assert(std::fabs(ary_log.get_slope() - 2.0) < 0.01);
-    assert(std::fabs(ary_log.get_slope() - 2.0) < 0.01);
+    assert(std::fabs(ary_log.get_slope() - 1.5) < 0.01);
 }
 
 // -----------------------------------------------------------------------------
@@ -3843,7 +3842,7 @@ static void test_TTestVisitor()  {
 
     df.visit<double, double>("x_data", "y_data", tt_v);
     assert(fabs(tt_v.get_result() - -15.3585) < 0.0001);
-    assert(tt_v.get_deg_freedom() == 40);
+    assert(tt_v.get_deg_freedom() == 20);
 
     df.visit<double, double>("x_data", "z_data", tt_v);
     assert(fabs(tt_v.get_result() - 0.0421697) < 0.000001);

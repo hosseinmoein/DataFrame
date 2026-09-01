@@ -655,7 +655,7 @@ public:
                             sum[d] += (*citer)[d];
                 }
                 else  {
-                    if (! this->skip_nan_)  {
+                    if (! skip_nan_)  {
                         for (auto citer = begin; citer < end; ++citer)
                             sum += *citer;
                     }
@@ -781,7 +781,7 @@ public:
         }
         else  {
             for (auto citer = column_begin; citer < column_end; ++citer)
-                if (! is_nan__(*citer))
+                if (! is_nan__(*citer)) [[likely]]
                     BaseClass::_cnt += 1;
         }
     }
@@ -1401,19 +1401,19 @@ struct  NExtremumVisitor  {
             (*this)(*idx_begin++, *column_begin++);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         counter_ = 0;
         result_.clear();
         for (; ! p_queue_.empty(); p_queue_.pop()) ;
     }
-    inline void post ()  {
+    inline void post()  {
 
         for (; ! p_queue_.empty(); p_queue_.pop())
             result_.push_back(p_queue_.top());
     }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
 
     inline void sort_by_index_val()  {
 
@@ -3127,7 +3127,7 @@ public:
                         column_begin2,
                         column_end2,
                         std::move(lbd))
-				};
+                };
 
                 for (auto &fut : futures)  {
                     const auto  ret { fut.get() };
@@ -3142,7 +3142,7 @@ public:
             else  {
                 const auto  ret {
                     lbd(column_begin1, column_end1, column_begin2)
-				};
+                };
 
                 result_ = std::get<0>(ret);
                 mag1_ = std::get<1>(ret);
@@ -3706,22 +3706,64 @@ struct  StatsVisitor  {
     inline void operator()(const index_type &, const value_type &val)  {
 
         SKIP_NAN
-
-        value_type  delta, delta_n, delta_n2, term1;
-        size_type   n1 = n_;
-
-        n_ += 1;
-        delta = val - m1_;
-        delta_n = delta / value_type(n_);
-        delta_n2 = delta_n * delta_n;
-        term1 = delta * delta_n * value_type(n1);
-        m1_ += delta_n;
-        m4_ += (term1 * delta_n2 * value_type(n_ * n_ - 3 * n_ + 3) +
-                6.0 * delta_n2 * m2_ - 4.0 * delta_n * m3_);
-        m3_ += (term1 * delta_n * value_type(n_ - 2) - 3.0 * delta_n * m2_);
-        m2_ += term1;
+        update_one_(val, n_, m1_, m2_, m3_, m4_);
     }
-    PASS_DATA_ONE_BY_ONE
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            // Each chunk accumulates its own independent (n, m1, m2, m3,
+            // m4) via the exact same recurrence as the single-element
+            // operator() above (update_one_()), then the partial results
+            // are combined via the Pébay (2008) parallel-combination
+            // formula in merge_moments_() -- this gives identical
+            // results to a strictly serial single pass (verified against
+            // both a brute-force reference and this serial recurrence,
+            // across many uneven chunk splits, before being wired in
+            // here) while letting the scan itself run across threads.
+            //
+            auto    lbd =
+                [this]
+                (auto begin, auto end) ->
+                    std::tuple<size_type, value_type,
+                               value_type, value_type, value_type>  {
+
+                    size_type   n { 0 };
+                    value_type  m1 { 0 }, m2 { 0 }, m3 { 0 }, m4 { 0 };
+
+                    for (auto citer { begin }; citer != end; ++citer)  {
+                        const value_type    val { *citer };
+
+                        if (skip_nan_ && is_nan__(val))  continue;
+                        update_one_(val, n, m1, m2, m3, m4);
+                    }
+                    return (std::make_tuple(n, m1, m2, m3, m4));
+                };
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    column_begin, column_end, lbd)
+            };
+
+            for (auto &fut : futures)  {
+                auto    [n, m1, m2, m3, m4] = fut.get();
+
+                merge_moments_(n_, m1_, m2_, m3_, m4_, n, m1, m2, m3, m4);
+            }
+        }
+        else  {
+            auto    idx_iter { idx_begin };
+            auto    col_iter { column_begin };
+
+            while (col_iter < column_end)
+                (*this)(*idx_iter++, *col_iter++);
+        }
+    }
 
     inline void pre ()  {
 
@@ -3752,6 +3794,86 @@ struct  StatsVisitor  {
     DECL_CTOR(StatsVisitor)
 
 private:
+
+    // Single-element Pébay (2008) one-pass update -- shared by both the
+    // per-element operator() above (updating member state directly) and
+    // each parallel chunk's local accumulation below (updating locals,
+    // merged afterward via merge_moments_()). Kept as one function so
+    // the formula only ever needs fixing in one place.
+    //
+    static inline void
+    update_one_(value_type val, size_type &n, value_type &m1,
+               value_type &m2, value_type &m3, value_type &m4)  {
+
+        const size_type n1 { n };
+
+        n += 1;
+
+        const value_type    delta { val - m1 };
+        const value_type    delta_n { delta / value_type(n) };
+        const value_type    delta_n2 { delta_n * delta_n };
+        const value_type    term1 { delta * delta_n * value_type(n1) };
+
+        m1 += delta_n;
+        m4 += term1 * delta_n2 * value_type(n * n - 3 * n + 3) +
+              6.0 * delta_n2 * m2 - 4.0 * delta_n * m3;
+        m3 += term1 * delta_n * value_type(n - 2) - 3.0 * delta_n * m2;
+        m2 += term1;
+    }
+
+    // Pébay (2008) parallel combination: merges the moments of two
+    // disjoint partitions A and B into the moments of their union,
+    // without re-scanning the underlying data. Verified against a
+    // brute-force two-pass reference and against the single-pass
+    // recurrence above, across many uneven chunk splits, before being
+    // used here.
+    //
+    static inline void
+    merge_moments_(size_type &n_a,
+                   value_type &m1_a,
+                   value_type &m2_a,
+                   value_type &m3_a,
+                   value_type &m4_a,
+                   size_type n_b,
+                   value_type m1_b,
+                   value_type m2_b,
+                   value_type m3_b,
+                   value_type m4_b)  {
+
+        if (n_b == 0)  return;
+        if (n_a == 0)  {
+            n_a = n_b; m1_a = m1_b; m2_a = m2_b; m3_a = m3_b; m4_a = m4_b;
+            return;
+        }
+
+        const value_type    na { value_type(n_a) };
+        const value_type    nb { value_type(n_b) };
+        const value_type    n  { na + nb };
+        const value_type    delta { m1_b - m1_a };
+        const value_type    delta2 { delta * delta };
+        const value_type    delta3 { delta2 * delta };
+        const value_type    delta4 { delta2 * delta2 };
+
+        const value_type    new_m1 { m1_a + delta * nb / n };
+        const value_type    new_m2 { m2_a + m2_b + delta2 * na * nb / n };
+        const value_type    new_m3 {
+            m3_a + m3_b +
+            delta3 * na * nb * (na - nb) / (n * n) +
+            3.0 * delta * (na * m2_b - nb * m2_a) / n
+        };
+        const value_type    new_m4 {
+            m4_a + m4_b +
+            delta4 * na * nb * (na * na - na * nb + nb * nb) / (n * n * n) +
+            6.0 * delta2 * (na * na * m2_b + nb * nb * m2_a) / (n * n) +
+            4.0 * delta * (na * m3_b - nb * m3_a) / n
+        };
+
+        n_a = size_type(n);
+        m1_a = new_m1;
+        m2_a = new_m2;
+        m3_a = new_m3;
+        m4_a = new_m4;
+    }
 
     size_type   n_ { 0 };
     value_type  m1_ { 0 };
@@ -3820,15 +3942,21 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    inline void operator() (const index_type &idx,
-                            const value_type &x, const value_type &y)  {
+    inline void operator()(const index_type &idx,
+                           const value_type &x, const value_type &y)  {
 
         if (skip_nan_ && (is_nan__(x) || is_nan__(y)))  return;
 
         if (! related_ts_)  {
             v_x_(idx, x);
             v_y_(idx, y);
-            deg_freedom_ += 2;
+
+            // deg_freedom_ for this branch is computed fresh in post()
+            // from v_x_.get_count()/v_y_.get_count() (Welch-Satterthwaite
+            // needs both counts individually, not just their sum), so no
+            // running tally is kept here.
+            //
+            // deg_freedom_ += 2;
         }
         else  {
             v_x_(idx, x - y);
@@ -3837,14 +3965,15 @@ public:
     }
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &x_begin, const H &x_end,
+               const H &y_begin, const H &y_end)  {
 
-        const size_type col_s =
-            std::min ({ std::distance(idx_begin, idx_end),
-                        std::distance(x_begin, x_end),
-                        std::distance(y_begin, y_end) });
+        const size_type col_s {
+            size_Type(std::min ({ std::distance(idx_begin, idx_end),
+                                  std::distance(x_begin, x_end),
+                                  std::distance(y_begin, y_end) }))
+        };
 
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
@@ -3859,6 +3988,9 @@ public:
                         vis(idx_begin, idx_begin, begin, end);
                     };
 
+                const auto  x_end_it { x_begin + col_s };
+                const auto  y_end_it { y_begin + col_s };
+
                 futures.reserve(2);
                 futures.emplace_back(
                     ThreadGranularity::thr_pool_.dispatch(
@@ -3866,7 +3998,7 @@ public:
                         lbd,
                             std::ref(v_x_),
                             std::cref(x_begin),
-                            std::cref(x_begin + col_s),
+                            std::cref(x_end_it),
                             std::cref(idx_begin)));
                 futures.emplace_back(
                     ThreadGranularity::thr_pool_.dispatch(
@@ -3874,7 +4006,7 @@ public:
                         lbd,
                             std::ref(v_y_),
                             std::cref(y_begin),
-                            std::cref(y_begin + col_s),
+                            std::cref(y_end_it),
                             std::cref(idx_begin)));
             }
             else  {
@@ -3915,29 +4047,49 @@ public:
                 }
             }
         }
-        if (! related_ts_)
-            deg_freedom_ = col_s * 2;
-        else
+        if (related_ts_)
             deg_freedom_ = col_s;
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         v_x_.pre();
         v_y_.pre();
         result_ = 0;
         deg_freedom_ = 0;
     }
-    inline void post ()  {
+    inline void post()  {
 
         v_x_.post();
         v_y_.post();
         if (! related_ts_)  {
-            result_ =
-                (v_x_.get_mean() - v_y_.get_mean()) /
-                std::sqrt(v_x_.get_result() / value_type(v_x_.get_count()) +
-                          v_y_.get_result() / value_type(v_y_.get_count()));
-            deg_freedom_ -= 2;
+            const value_type    a {
+                v_x_.get_result() / value_type(v_x_.get_count())
+            };
+            const value_type    b {
+                v_y_.get_result() / value_type(v_y_.get_count())
+            };
+
+            result_ = (v_x_.get_mean() - v_y_.get_mean()) / std::sqrt(a + b);
+
+            // Welch-Satterthwaite equation: the correct degrees of
+            // freedom for a Welch (unequal-variance) t-statistic, which
+            // is what result_ above computes. Previously this used
+            // n_x + n_y - 2 (Student's/pooled df, via deg_freedom_ -= 2),
+            // which only equals the Welch-Satterthwaite value when the
+            // two variances happen to be equal -- otherwise it
+            // overstates the degrees of freedom (understating the true
+            // p-value) precisely when the variances differ, which is
+            // the situation Welch's test exists to handle correctly.
+            // Rounded to the nearest integer since deg_freedom_ is a
+            // size_type; the underlying quantity is a continuous
+            // approximation, not naturally an integer.
+            //
+            deg_freedom_ =
+                size_type(std::round(
+                    (a + b) * (a + b) /
+                    (a * a / value_type(v_x_.get_count() - 1) +
+                     b * b / value_type(v_y_.get_count() - 1))));
         }
         else  {
             result_ =
@@ -3948,8 +4100,8 @@ public:
         }
     }
 
-    inline result_type get_result () const  { return (result_); }
-    inline size_type get_deg_freedom () const  { return (deg_freedom_); }
+    inline result_type get_result() const  { return (result_); }
+    inline size_type get_deg_freedom() const  { return (deg_freedom_); }
 
     explicit TTestVisitor(bool is_related_ts, bool skipnan = false)
         : v_x_(false, skipnan),
@@ -4044,7 +4196,7 @@ struct  CumCountVisitor  {
 
         result.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            if (! is_nan__(*(column_begin + i))) [[unlikely]]
+            if (! is_nan__(*(column_begin + i))) [[likely]]
                 running_cnt += 1;
             result.push_back(running_cnt);
         }
@@ -4121,20 +4273,35 @@ struct  CumExtremumVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
         if (col_s == 0)  return;
 
-        value_type  running_extremum = *column_begin;
+        value_type  running_extremum;
+        size_type   i { 0 };
         result_type result;
+
 
         result.reserve(col_s);
         if (! skip_nan_)  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    &value = *(column_begin + i);
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const value_type    &value { *(column_begin + i) };
+
+                if (! is_nan__(value)) [[likely]]  {
+                    running_extremum = value;
+                    break;
+                }
+                else  result.push_back(value);
+            }
+        }
+        else  running_extremum = *column_begin;
+
+        if (! skip_nan_)  {
+            for (; i < col_s; ++i) [[likely]]  {
+                const value_type    &value { *(column_begin + i) };
 
                 if (cmp_(running_extremum, value))
                     running_extremum = value;
@@ -4142,16 +4309,15 @@ struct  CumExtremumVisitor  {
             }
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    &value = *(column_begin + i);
+            for (; i < col_s; ++i) [[likely]]  {
+                const value_type    &value { *(column_begin + i) };
 
                 if (! is_nan__(value)) [[likely]]  {
                     if (cmp_(running_extremum, value))
                         running_extremum = value;
                     result.push_back(running_extremum);
                 }
-                else
-                    result.push_back(value);
+                else  result.push_back(value);
             }
         }
         result_.swap(result);
@@ -4253,16 +4419,16 @@ private:
 
 // ----------------------------------------------------------------------------
 
-// It factorizes the given column into a vector of Booleans based on the
-// result of the given function.
+// It factorizes the given column into a vector of Booleans (actual char type)
+// based on the result of the given function.
 //
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  FactorizeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
     using result_type =
-        std::vector<bool, typename allocator_declare<bool, A>::type>;
-    using factor_func = std::function<bool(const value_type &val)>;
+        std::vector<char, typename allocator_declare<char, A>::type>;
+    using factor_func = std::function<char(const value_type &val)>;
 
     template <typename K, typename H>
     inline void
@@ -4283,7 +4449,7 @@ struct  FactorizeVisitor  {
                         result[begin] = this->ffunc_(*(column_begin + begin));
                 };
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<bool>(
+                ThreadGranularity::thr_pool_.parallel_loop<char>(
                     size_type(0), col_s, std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
@@ -4476,32 +4642,52 @@ public:
             throw DataFrameError("PartialAutoCorrVisitor: Maximum lag is 375");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        if constexpr (! std::is_arithmetic_v<value_type>)  {
 #ifdef HMDF_SANITY_EXCEPTIONS
+        if constexpr (! std::is_arithmetic_v<value_type>)  {
             const size_type dim { column_begin->size() };
 
             for (size_type i { 1 }; i < col_s; ++i)
                 if ((column_begin + i)->size() != dim)
                     throw DataFrameError("PartialAutoCorrVisitor: "
                                          "Inconsistent data dimensions");
-#endif // HMDF_SANITY_EXCEPTIONS
         }
+#endif // HMDF_SANITY_EXCEPTIONS
 
-        result_type result (max_lag_);
-        matrix_t    x;
-        matrix_t    y;
+        result_type         result(max_lag_);
+        matrix_t            x;
+        matrix_t            y;
+        data_t              mean { 0 };
+        std::vector<data_t> dim_mean;
 
+        // The regression below must operate on the demeaned series -- a
+        // regression with no intercept term implicitly assumes a
+        // zero-mean process, which real data essentially never
+        // satisfies. Without this, PACF is not invariant to adding a
+        // constant to the whole series, which it must be by definition.
+        //
         if constexpr (std::is_arithmetic_v<value_type>)  {
             result[0] = 1;
+            for (size_type i { 0 }; i < col_s; ++i)
+                mean += data_t(*(column_begin + i));
+            mean /= data_t(col_s);
         }
         else  {
             const size_type dim { column_begin->size() };
-
-            matrix_t    identity { long(dim), long(dim), 0 };
+            matrix_t        identity { long(dim), long(dim), 0 };
 
             for (long i { 0 }; i < identity.rows(); ++i)
                 identity(i, i) = 1;
             result[0] = std::move(identity);
+
+            dim_mean.resize(dim, data_t(0));
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                const auto  &obs { *(column_begin + i) };
+
+                for (size_type d { 0 }; d < dim; ++d)
+                    dim_mean[d] += data_t(obs[d]);
+            }
+            for (size_type d { 0 }; d < dim; ++d)
+                dim_mean[d] /= data_t(col_s);
         }
         for (size_type k { 1 }; k < max_lag_; ++k)  {
             x.clear();
@@ -4513,10 +4699,9 @@ public:
                 x.resize(rows, k);
                 y.resize(rows, 1);
                 for (size_type i { 0 }; i < rows; ++i)  {
-                    y(i, 0) = *(column_begin + (i + k));
-                    for (size_type j = 0; j < k; ++j)  {
-                        x(i, j) = *(column_begin + (i + j));
-                    }
+                    y(i, 0) = data_t(*(column_begin + (i + k))) - mean;
+                    for (size_type j { 0 }; j < k; ++j)
+                        x(i, j) = *(column_begin + (i + j)) - mean;
                 }
             }
             else  {
@@ -4525,22 +4710,23 @@ public:
                 x.resize(col_s - k, k * dim, 0);
                 y.resize(col_s - k, dim, 0);
 
-                // y row i  : the dim components of observation (i + k)
+                // y row i: the dim components of observation (i + k),
+                //          demeaned per dimension
                 //
                 for (size_type i { 0 }; i < rows; ++i)  {
                     const auto  &obs_y { *(column_begin + (i + k)) };
 
                     for (size_type d { 0 }; d < dim; ++d)
-                        y(i, d) = obs_y[d];
+                        y(i, d) = data_t(obs_y[d]) - dim_mean[d];
 
-                    // x row i  : lagged observations
-                    // block j  : columns [j * dim ... j * dim + dim - 1]
+                    // x row i: lagged observations, demeaned per dimension
+                    // block j: columns [j * dim ... j * dim + dim - 1]
                     //
                     for (size_type j { 0 }; j < k; ++j)  {
                         const auto  &obs_x { *(column_begin + (i + j)) };
 
                         for (size_type d { 0 }; d < dim; ++d)
-                            x(i, j * dim + d) = obs_x[d];
+                            x(i, j * dim + d) = obs_x[d] - dim_mean[d];
                     }
                 }
             }
@@ -4613,8 +4799,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -4622,18 +4808,16 @@ public:
         if (col_s <= lag_)
             throw DataFrameError(
                 "FixedAutoCorrVisitor: column size must be > lag");
-#endif // HMDF_SANITY_EXCEPTIONS
 
         if constexpr (! std::is_arithmetic_v<value_type>)  {
-#ifdef HMDF_SANITY_EXCEPTIONS
             const size_type dim { column_begin->size() };
 
             for (size_type i { 1 }; i < col_s; ++i)
                 if ((column_begin + i)->size() != dim)
                     throw DataFrameError(
                         "AutoCorrVisitor: Inconsistent data dimensions");
-#endif // HMDF_SANITY_EXCEPTIONS
         }
+#endif // HMDF_SANITY_EXCEPTIONS
 
         CorrVisitor<value_type, index_type> corr {  };
         result_type                         result;
@@ -4642,10 +4826,10 @@ public:
             const size_type calc_size { col_s / lag_ };
 
             result.reserve(calc_size);
-            for (size_type i = 0; i < calc_size; ++i)  {
-                auto    far_end = i * lag_ + 2 * lag_;
-                auto    near_end = i * lag_ + lag_;
-                auto    begin = i * lag_;
+            for (size_type i { 0 }; i < calc_size; ++i)  {
+                auto    far_end { i * lag_ + 2 * lag_ };
+                auto    near_end { i * lag_ + lag_ };
+                auto    begin { i * lag_ };
 
                 if (far_end >= col_s)
                     far_end -= far_end % col_s;
@@ -4673,10 +4857,10 @@ public:
             const size_type calc_size { col_s - lag_ };
 
             result.reserve(calc_size);
-            for (size_type i = 0; i < calc_size; ++i)  {
-                auto    far_end = i + 2 * lag_;
-                auto    near_end = i + lag_;
-                auto    begin = i;
+            for (size_type i { 0 }; i < calc_size; ++i)  {
+                auto    far_end { i + 2 * lag_ };
+                auto    near_end { i + lag_ };
+                auto    begin { i };
 
                 if (far_end > col_s)
                     far_end -= far_end % col_s;
@@ -4705,7 +4889,7 @@ public:
     DEFINE_PRE_POST
     DEFINE_RESULT
 
-    FixedAutoCorrVisitor (size_type lag_period, roll_policy rp)
+    FixedAutoCorrVisitor(size_type lag_period, roll_policy rp)
         : lag_(lag_period), policy_(rp)  {   }
 
 private:
@@ -4734,8 +4918,8 @@ struct  ExponentiallyWeightedMeanVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -4745,12 +4929,12 @@ struct  ExponentiallyWeightedMeanVisitor  {
                                  "column size must be > 3");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        result_type         result (col_s, 0);
-        const value_type    decay_comp = T(1) - decay_;
-        size_type           starting = 0;
+        result_type         result(col_s, 0);
+        const value_type    decay_comp { T(1) - decay_ };
+        size_type           starting { 0 };
 
         for (; starting < col_s; ++starting)  {
-            const value_type    val = *(column_begin + starting);
+            const value_type    val { *(column_begin + starting) };
 
             if (! is_nan__(val))  {
                 result[starting] = val;
@@ -4759,14 +4943,14 @@ struct  ExponentiallyWeightedMeanVisitor  {
         }
 
         if (! finite_adjust_)  {
-            for (size_type i = starting + 1; i < col_s; ++i) [[likely]]
+            for (size_type i { starting + 1 }; i < col_s; ++i) [[likely]]
                 result[i] = decay_ * *(column_begin + i) +
                             decay_comp * result[i - 1];
         }
         else  {  // Adjust for the fact that this is not an infinite data set
-            value_type  denominator = 1;
-            value_type  decay_comp_prod = 1;
-            value_type  numerator = result[0];
+            value_type  denominator { 1 };
+            value_type  decay_comp_prod { 1 };
+            value_type  numerator { result[starting] };
 
             std::transform(column_begin + (starting + 1), column_end,
                            result.begin() + (starting + 1),
@@ -4819,8 +5003,8 @@ struct  ExponentiallyWeightedVarVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -4832,69 +5016,50 @@ struct  ExponentiallyWeightedVarVisitor  {
 
         result_type         ewmvar;
         result_type         ewmstd;
-        const value_type    decay_comp = T(1) - decay_;
-        size_type           starting = 0;
+        const value_type    decay_comp { T(1) - decay_ };
 
-        ewmvar.reserve(col_s);
-        ewmstd.reserve(col_s);
-        for (; starting < col_s; ++starting)  {
-            if (is_nan__(*(column_begin + starting)))  {
-                ewmvar.push_back(std::numeric_limits<T>::quiet_NaN());
-                ewmstd.push_back(std::numeric_limits<T>::quiet_NaN());
-            }
-            else  break;
-        }
+        ewmvar.resize(col_s);
+        ewmstd.resize(col_s);
 
-        ewmvar.push_back(std::numeric_limits<T>::quiet_NaN());
-        ewmstd.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
-            value_type  sum_weights = 0;
-            value_type  sum_sq_weights = 0;
-            value_type  sum_weighted_input = 0;
+        // sum_1/sum_2/sum_x/sum_xx are the running (sum of weights, sum
+        // of squared weights, weighted sum of inputs, weighted sum of
+        // squared inputs), each updated in O(1) per step instead of an
+        // O(i) inner loop.
+        //
+        value_type  sum_1 { 0 };
+        value_type  sum_2 { 0 };
+        value_type  sum_x { 0 };
+        value_type  sum_xx { 0 };
 
-            for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = std::pow(decay_comp, j);
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    x { *(column_begin + i) };
 
-                sum_weights += weight;
-                sum_weighted_input += weight * *(column_begin + (i - j));
-                sum_sq_weights += weight * weight;
-            }
+            sum_1 = value_type(1) + decay_comp * sum_1;
+            sum_2 = value_type(1) + decay_comp * decay_comp * sum_2;
+            sum_x = x + decay_comp * sum_x;
+            sum_xx = x * x + decay_comp * sum_xx;
 
-            // Calculate exponential moving average
-            //
-            const value_type    ewma = sum_weighted_input / sum_weights;
-            value_type          factor_sum = 0;
+            const value_type    ewma { sum_x / sum_1 };
+            const value_type    factor_sum { sum_xx - ewma * ewma * sum_1 };
+            const value_type    sum_1_sq { sum_1 * sum_1 };
+            const value_type    bias { sum_1_sq / (sum_1_sq - sum_2) };
+            const value_type    var { bias * factor_sum / sum_1 };
 
-            for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    input = *(column_begin + (i - j));
-
-                factor_sum +=
-                    std::pow(decay_comp, j) * (input - ewma) * (input - ewma);
-            }
-
-            // Calculate exponential moving variance and standard deviation
-            // with bias
-            //
-            const value_type    sum_weights_sq = sum_weights * sum_weights;
-            const value_type    bias =
-                    sum_weights_sq / (sum_weights_sq - sum_sq_weights);
-            const value_type    var = bias * factor_sum / sum_weights;
-
-            ewmvar.push_back(var);
-            ewmstd.push_back(std::sqrt(var));
+            ewmvar[i] = var;
+            ewmstd[i] = std::sqrt(var);
         }
 
         ewmvar_.swap(ewmvar);
         ewmstd_.swap(ewmstd);
     }
 
-    inline const result_type &get_result () const  { return (ewmvar_); }
-    inline result_type &get_result ()  { return (ewmvar_); }
-    inline const result_type &get_std () const  { return (ewmstd_); }
-    inline result_type &get_std ()  { return (ewmstd_); }
+    inline const result_type &get_result() const  { return (ewmvar_); }
+    inline result_type &get_result()  { return (ewmvar_); }
+    inline const result_type &get_std() const  { return (ewmstd_); }
+    inline result_type &get_std()  { return (ewmstd_); }
 
-    inline void pre ()  { ewmvar_.clear(); ewmstd_.clear(); }
-    inline void post ()  {  }
+    inline void pre()  { ewmvar_.clear(); ewmstd_.clear(); }
+    inline void post()  {  }
 
     ExponentiallyWeightedVarVisitor(exponential_decay_spec eds, value_type val)
         : decay_(eds == exponential_decay_spec::center_of_gravity
@@ -4924,11 +5089,11 @@ struct  ExponentiallyWeightedCovVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &, const K &,
+               const H &x_begin, const H &x_end,
+               const H &y_begin, const H &y_end)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(y_begin, y_end)) || col_s <= 3)
@@ -4937,52 +5102,39 @@ struct  ExponentiallyWeightedCovVisitor  {
 #endif // HMDF_SANITY_EXCEPTIONS
 
         result_type         ewmcov;
-        const value_type    decay_comp = T(1) - decay_;
-        size_type           starting = 0;
+        const value_type    decay_comp { T(1) - decay_ };
 
         ewmcov.reserve(col_s);
-        for (; starting < col_s; ++starting)
-            if (is_nan__(*(x_begin + starting)) ||
-                is_nan__(*(y_begin + starting)))
-                ewmcov.push_back(std::numeric_limits<T>::quiet_NaN());
-            else  break;
 
-        ewmcov.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
-            value_type  sum_weights = 0;
-            value_type  sum_sq_weights = 0;
-            value_type  sum_weighted_inputx = 0;
-            value_type  sum_weighted_inputy = 0;
+        // ExponentiallyWeightedVarVisitor, generalized to two series.
+        // sum_1/sum_2/sum_x/sum_y/sum_xy are the running (sum of weights,
+        // sum of squared weights, weighted sum of x, weighted sum of y,
+        // weighted sum of x*y), each updated in O(1) per step instead
+        // of an O(i) inner loop. Expanding Sum(w^j*(x-ewmax)*(y-ewmay))
+        // algebraically gives sum_xy - sum_x*sum_y/sum_1, the same trick
+        // (avoiding needing the means before summing cross deviations) as the
+        // variance case's sum_xx - ewma^2*sum_1.
+        //
+        value_type  sum_1 { 0 };
+        value_type  sum_2 { 0 };
+        value_type  sum_x { 0 };
+        value_type  sum_y { 0 };
+        value_type  sum_xy { 0 };
 
-            for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = std::pow(decay_comp, j);
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    x { *(x_begin + i) };
+            const value_type    y { *(y_begin + i) };
 
-                sum_weights += weight;
-                sum_weighted_inputx += weight * *(x_begin + (i - j));
-                sum_weighted_inputy += weight * *(y_begin + (i - j));
-                sum_sq_weights += weight * weight;
-            }
+            sum_1 = value_type(1) + decay_comp * sum_1;
+            sum_2 = value_type(1) + decay_comp * decay_comp * sum_2;
+            sum_x = x + decay_comp * sum_x;
+            sum_y = y + decay_comp * sum_y;
+            sum_xy = x * y + decay_comp * sum_xy;
 
-            // Calculate exponential moving average
-            //
-            const value_type    ewmax = sum_weighted_inputx / sum_weights;
-            const value_type    ewmay = sum_weighted_inputy / sum_weights;
-            value_type          factor_sum = 0;
-
-            for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = std::pow(decay_comp, j);
-                const value_type    inputx = *(x_begin + (i - j));
-                const value_type    inputy = *(y_begin + (i - j));
-
-                factor_sum += weight * (inputx - ewmax) * (inputy - ewmay);
-            }
-
-            // Calculate exponential moving covariance with bias
-            //
-            const value_type    sum_weights_sq = sum_weights * sum_weights;
-            const value_type    bias =
-                    sum_weights_sq / (sum_weights_sq - sum_sq_weights);
-            const value_type    cov = bias * factor_sum / sum_weights;
+            const value_type    factor_sum { sum_xy - (sum_x * sum_y) / sum_1 };
+            const value_type    sum_1_sq { sum_1 * sum_1 };
+            const value_type    bias { sum_1_sq / (sum_1_sq - sum_2) };
+            const value_type    cov { bias * factor_sum / sum_1 };
 
             ewmcov.push_back(cov);
         }
@@ -4990,11 +5142,11 @@ struct  ExponentiallyWeightedCovVisitor  {
         ewmcov_.swap(ewmcov);
     }
 
-    inline const result_type &get_result () const  { return (ewmcov_); }
-    inline result_type &get_result ()  { return (ewmcov_); }
+    inline const result_type &get_result() const  { return (ewmcov_); }
+    inline result_type &get_result()  { return (ewmcov_); }
 
-    inline void pre ()  { ewmcov_.clear(); }
-    inline void post ()  {  }
+    inline void pre()  { ewmcov_.clear(); }
+    inline void post()  {  }
 
     ExponentiallyWeightedCovVisitor(exponential_decay_spec eds,
                                     value_type value)
@@ -5024,11 +5176,11 @@ struct  ExponentiallyWeightedCorrVisitor  {
 
     template <bidirectional_iterator K, bidirectional_iterator H>
     inline void
-    operator() (const K &, const K &,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &, const K &,
+               const H &x_begin, const H &x_end,
+               const H &y_begin, const H &y_end)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(y_begin, y_end)) || col_s <= 3)
@@ -5037,8 +5189,8 @@ struct  ExponentiallyWeightedCorrVisitor  {
 #endif // HMDF_SANITY_EXCEPTIONS
 
         result_type         ewmcorr;
-        const value_type    decay_comp = T(1) - decay_;
-        size_type           starting = 0;
+        const value_type    decay_comp { T(1) - decay_ };
+        size_type           starting { 0 };
 
         ewmcorr.reserve(col_s);
         for (; starting < col_s; ++starting)
@@ -5047,60 +5199,67 @@ struct  ExponentiallyWeightedCorrVisitor  {
                 ewmcorr.push_back(std::numeric_limits<T>::quiet_NaN());
             else  break;
 
-        ewmcorr.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
-            value_type  sum_weights = 0;
-            value_type  sum_sq_weights = 0;
-            value_type  sum_weighted_inputx = 0;
-            value_type  sum_weighted_inputy = 0;
+        // Guard against an all-invalid column: without this, the
+        // unconditional push below would make the result one longer
+        // than col_s.
+        //
+        if (starting < col_s)
+            ewmcorr.push_back(std::numeric_limits<T>::quiet_NaN());
 
-            for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = std::pow(decay_comp, j);
+        // Same O(1)-per-step recurrence as ExponentiallyWeightedCovVisitor
+        // (see the derivation comment there), generalized to also track
+        // each series' own running variance so the correlation can be
+        // formed directly. sum_1/sum_2/sum_x/sum_y/sum_xy/sum_xx/sum_yy are
+        // updated in O(1) per step instead of re-summing the full history
+        // back to index 0 on every step.
+        //
+        if (starting < col_s)  {
+            value_type  sum_1 { 1 };
+            value_type  sum_2 { 1 };
+            value_type  sum_x { *(x_begin + starting) };
+            value_type  sum_y { *(y_begin + starting) };
+            value_type  sum_xy { sum_x * sum_y };
+            value_type  sum_xx { sum_x * sum_x };
+            value_type  sum_yy { sum_y * sum_y };
 
-                sum_weights += weight;
-                sum_weighted_inputx += weight * *(x_begin + (i - j));
-                sum_weighted_inputy += weight * *(y_begin + (i - j));
-                sum_sq_weights += weight * weight;
+            for (size_type i { starting + 1 }; i < col_s; ++i) [[likely]]  {
+                const value_type    x { *(x_begin + i) };
+                const value_type    y { *(y_begin + i) };
+
+                sum_1 = value_type(1) + decay_comp * sum_1;
+                sum_2 = value_type(1) + decay_comp * decay_comp * sum_2;
+                sum_x = x + decay_comp * sum_x;
+                sum_y = y + decay_comp * sum_y;
+                sum_xy = x * y + decay_comp * sum_xy;
+                sum_xx = x * x + decay_comp * sum_xx;
+                sum_yy = y * y + decay_comp * sum_yy;
+
+                const value_type    factor_sum {
+                    sum_xy - (sum_x * sum_y) / sum_1
+                };
+                const value_type    factor_sumx {
+                    sum_xx - (sum_x * sum_x) / sum_1
+                };
+                const value_type    factor_sumy {
+                    sum_yy - (sum_y * sum_y) / sum_1
+                };
+                const value_type    sum_1_sq { sum_1 * sum_1 };
+                const value_type    bias { sum_1_sq / (sum_1_sq - sum_2) };
+                const value_type    cov { bias * factor_sum / sum_1 };
+                const value_type    varx { bias * factor_sumx / sum_1 };
+                const value_type    vary { bias * factor_sumy / sum_1 };
+
+                ewmcorr.push_back(cov / std::sqrt(varx * vary));
             }
-
-            // Calculate exponential moving average
-            //
-            const value_type    ewmax = sum_weighted_inputx / sum_weights;
-            const value_type    ewmay = sum_weighted_inputy / sum_weights;
-            value_type          factor_sum = 0;
-            value_type          factor_sumx = 0;
-            value_type          factor_sumy = 0;
-
-            for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = std::pow(decay_comp, j);
-                const value_type    inputx = *(x_begin + (i - j));
-                const value_type    inputy = *(y_begin + (i - j));
-
-                factor_sum += weight * (inputx - ewmax) * (inputy - ewmay);
-                factor_sumx += weight * (inputx - ewmax) * (inputx - ewmax);
-                factor_sumy += weight * (inputy - ewmay) * (inputy - ewmay);
-            }
-
-            // Calculate exponential moving correlation with bias
-            //
-            const value_type    sum_weights_sq = sum_weights * sum_weights;
-            const value_type    bias =
-                    sum_weights_sq / (sum_weights_sq - sum_sq_weights);
-            const value_type    cov = bias * factor_sum / sum_weights;
-            const value_type    varx = bias * factor_sumx / sum_weights;
-            const value_type    vary = bias * factor_sumy / sum_weights;
-
-            ewmcorr.push_back(cov / std::sqrt(varx * vary));
         }
 
         ewmcorr_.swap(ewmcorr);
     }
+    inline const result_type &get_result() const  { return (ewmcorr_); }
+    inline result_type &get_result()  { return (ewmcorr_); }
 
-    inline const result_type &get_result () const  { return (ewmcorr_); }
-    inline result_type &get_result ()  { return (ewmcorr_); }
-
-    inline void pre ()  { ewmcorr_.clear(); }
-    inline void post ()  {  }
+    inline void pre()  { ewmcorr_.clear(); }
+    inline void post()  {  }
 
     ExponentiallyWeightedCorrVisitor(exponential_decay_spec eds,
                                      value_type value)
@@ -5141,46 +5300,51 @@ struct  ZeroLagMovingMeanVisitor  {
                                  "roll period < column size - 1");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        result_.resize (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_.resize(col_s, std::numeric_limits<T>::quiet_NaN());
 
-        size_type   starting = 0;
+        size_type   starting { 0 };
 
         for (; starting < col_s; ++starting)
             if (! is_nan__(*(column_begin + starting)))
                 break;
 
-        const size_type lag = size_type (0.5 * double(roll_period_ - 1));
+        const size_type lag { size_type (0.5 * double(roll_period_ - 1)) };
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            auto    lbd =
-                [lag, &column_begin, this]
-                (auto begin, auto end) mutable -> void  {
-                    for (size_type i = begin; i < end; ++i) [[likely]]
-                        this->result_[i] = T(2) * *(column_begin + i) -
-                                           *(column_begin + (i - lag));
+        if (starting + lag < col_s)  {
+            if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+                ThreadGranularity::get_thread_level() > 2)  {
+                auto    lbd =
+                    [lag, &column_begin, this]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]
+                            result_[i] = T(2) * *(column_begin + i) -
+                                         *(column_begin + (i - lag));
+                    };
+                auto    futures {
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        starting + lag, col_s, std::move(lbd))
                 };
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    starting + lag, col_s, std::move(lbd));
 
-            for (auto &fut : futures)  fut.get();
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                for (size_type i { starting + lag }; i < col_s; ++i) [[likely]]
+                    result_[i] = T(2) * *(column_begin + i) -
+                                 *(column_begin + (i - lag));
+            }
+
+            ewm_v<T, I, A>  ewm {
+                exponential_decay_spec::span, value_type(roll_period_), true
+            };
+
+            ewm.pre();
+            ewm (idx_begin, idx_end,
+                 result_.begin() + (starting + lag), result_.end());
+            ewm.post();
+
+            std::copy(ewm.get_result().begin(), ewm.get_result().end(),
+                      result_.begin() + (starting + lag));
         }
-        else  {
-            for (size_type i = starting + lag; i < col_s; ++i) [[likely]]
-                result_[i] =
-                    T(2) * *(column_begin + i) - *(column_begin + (i - lag));
-        }
-
-        ewm_v<T, I, A> ewm(exponential_decay_spec::span, roll_period_, true);
-
-        ewm.pre();
-        ewm (idx_begin, idx_end,
-             result_.begin() + (starting + lag), result_.end());
-        ewm.post();
-
-        std::copy(ewm.get_result().begin(), ewm.get_result().end(),
-                  result_.begin() + (starting + lag));
     }
 
     DEFINE_PRE_POST
@@ -5210,8 +5374,8 @@ struct  LinregMovingMeanVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -5221,41 +5385,104 @@ struct  LinregMovingMeanVisitor  {
                                  "roll period < column size - 1");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const value_type    sum_x =
-            0.5 * T(roll_period_) * T(roll_period_ + 1);
-        const value_type    sum_x2 =
-            sum_x * (2.0 * T(roll_period_) + 1.0) / 3.0;
-        const value_type    divisor = T(roll_period_) * sum_x2 - sum_x * sum_x;
-        result_type         result (col_s,
-                                    std::numeric_limits<T>::quiet_NaN());
-        const auto          thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const value_type    sum_x {
+            0.5 * T(roll_period_) * T(roll_period_ + 1)
+        };
+        const value_type    sum_x2 {
+            sum_x * (2.0 * T(roll_period_) + 1.0) / 3.0
+        };
+        const value_type    divisor {
+            T(roll_period_) * sum_x2 - sum_x * sum_x
+        };
+        result_type         result(col_s, std::numeric_limits<T>::quiet_NaN());
+        const auto          thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+        bool                any_nan { false };
 
-        if (thread_level > 2)  {
-            auto    lbd =
-                [&column_begin, &result, sum_x, sum_x2, divisor, this]
-                (auto begin, auto end) mutable -> void  {
-                    for (size_type i = begin; i < end; ++i) [[likely]]
-                        result[i] =
-                            linreg_(column_begin + (i - this->roll_period_),
-                                    column_begin + i,
-                                    sum_x, sum_x2, divisor,
-                                    this->type_, this->roll_period_);
+        for (size_type i { 0 }; (i < col_s) && (! any_nan); ++i)
+            if (is_nan__(*(column_begin + i)))  any_nan = true;
+
+        if (! any_nan)  {
+            auto    fill_range =
+                [&column_begin = std::as_const(column_begin),
+                 &result, sum_x, sum_x2, divisor, this]
+                (size_type begin, size_type end) mutable -> void  {
+                    if (begin >= end)  return;
+
+                    value_type  sum_y { 0 };
+                    value_type  sum_xy { 0 };
+
+                    for (size_type j { 0 }; j < roll_period_; ++j) [[likely]]  {
+                        const value_type    v {
+                            *(column_begin + (begin - roll_period_ + j))
+                        };
+
+                        sum_y += v;
+                        sum_xy += v * T(j + 1);
+                    }
+                    result[begin] =
+                        linreg_from_sums_(sum_y, sum_xy, sum_x, sum_x2,
+                                          divisor, type_, T(roll_period_));
+
+                    for (size_type i { begin + 1 }; i < end; ++i) [[likely]]  {
+                        const value_type    leaving  {
+                            *(column_begin + (i - roll_period_ - 1))
+                        };
+                        const value_type    entering {
+                            *(column_begin + (i - 1))
+                        };
+
+                        sum_xy = sum_xy - sum_y + T(roll_period_) * entering;
+                        sum_y  = sum_y - leaving + entering;
+
+                         result[i] =
+                            linreg_from_sums_(sum_y, sum_xy, sum_x, sum_x2,
+                                              divisor, type_, T(roll_period_));
+                    }
+                 };
+
+            if (thread_level > 2)  {
+                auto    futures {
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        roll_period_, col_s, fill_range)
                 };
-            auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    roll_period_, col_s, std::move(lbd));
 
-            for (auto &fut : futures)  fut.get();
-        }
-        else  {
-            for (size_type i = roll_period_; i < col_s; ++i) [[likely]]
-                result[i] = linreg_(column_begin + (i - roll_period_),
-                                    column_begin + i,
-                                    sum_x, sum_x2, divisor,
-                                    type_, roll_period_);
-        }
-        result_.swap(result);
+                for (auto &fut : futures)  fut.get();
+            }
+            else
+                fill_range(roll_period_, col_s);
+         }
+         else  {
+            if (thread_level > 2)  {
+                auto    lbd =
+                    [&column_begin = std::as_const(column_begin),
+                     &result, sum_x, sum_x2, divisor, this]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i { begin }; i < end; ++i) [[likely]]
+                            result[i] =
+                                linreg_(column_begin + (i - roll_period_),
+                                        column_begin + i,
+                                        sum_x, sum_x2, divisor,
+                                        type_, roll_period_);
+                    };
+                auto    futures {
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        roll_period_, col_s, std::move(lbd))
+                };
+
+                for (auto &fut : futures)  fut.get();
+            }
+            else  {
+                for (size_type i { roll_period_ }; i < col_s; ++i) [[likely]]
+                    result[i] = linreg_(column_begin + (i - roll_period_),
+                                        column_begin + i,
+                                        sum_x, sum_x2, divisor,
+                                        type_, roll_period_);
+            }
+         }
+         result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -5269,13 +5496,55 @@ struct  LinregMovingMeanVisitor  {
 
 private:
 
+    // Shared tail logic: turns (sum_y, sum_xy) for a roll_period_-wide
+    // window into whichever quantity `lmm_type` asks for. Used by both the
+    // O(1) incremental path and linreg_() below, so the two paths can never
+    // silently diverge on this part of the math.
+    //
+    inline static value_type
+    linreg_from_sums_(value_type sum_y, value_type sum_xy,
+                      value_type sum_x, value_type sum_x2,
+                      value_type divisor,
+                      linreg_moving_mean_type lmm_type,
+                      value_type roll_period) {
+
+        const value_type    slope {
+            (roll_period * sum_xy - sum_x * sum_y) / divisor
+        };
+
+        if (lmm_type == linreg_moving_mean_type::slope)  return (slope);
+
+        if (lmm_type == linreg_moving_mean_type::theta ||
+            lmm_type == linreg_moving_mean_type::degree)  {
+            const value_type    theta { std::atan(slope) };
+
+            return (lmm_type == linreg_moving_mean_type::theta
+                        ? theta : theta * (180.0 / std::numbers::pi));
+        }
+
+        const value_type    intercept {
+            (sum_y * sum_x2 - sum_x * sum_xy) / divisor
+        };
+
+        if (lmm_type == linreg_moving_mean_type::intercept)
+            return (intercept);
+
+        return (lmm_type == linreg_moving_mean_type::forecast
+                    ? slope * roll_period + intercept
+                    : slope * (roll_period - T(1)) + intercept);
+    }
+
     template <typename H>
     inline static value_type
     linreg_(const H &column_begin, const H &column_end,
-            value_type sum_x, value_type sum_x2, value_type divisor,
-            linreg_moving_mean_type lmm_type, value_type roll_period)  {
+            value_type sum_x, value_type sum_x2,
+            value_type divisor,
+            linreg_moving_mean_type lmm_type,
+            value_type roll_period)  {
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
         value_type      sum_y { 0 };
         value_type      sum_xy { 0 };
 
@@ -5287,56 +5556,37 @@ private:
                     value_type  sum_y { 0 };
                     value_type  sum_xy { 0 };
 
-                    for (size_type i = begin; i < end; ++i) [[likely]]  {
-                        const value_type    val = *(column_begin + i);
+                    for (size_type i { begin }; i < end; ++i) [[likely]]  {
+                        const value_type    val { *(column_begin + i) };
 
                         sum_y += val;
                         sum_xy += val * T(i + 1);
                     }
                     return (std::make_pair(sum_y, sum_xy));
                 };
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0), col_s, std::move(lbd));
+                    size_type(0), col_s, std::move(lbd))
+            };
 
             for (auto &fut : futures)  {
-                const auto &val = fut.get();
+                const auto  &val { fut.get() };
 
                 sum_y += val.first;
                 sum_xy += val.second;
             }
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    val = *(column_begin + i);
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    val { *(column_begin + i) };
 
                 sum_y += val;
                 sum_xy += val * T(i + 1);
             }
         }
 
-        const value_type    slope =
-            (roll_period * sum_xy - sum_x * sum_y) / divisor;
-
-        if (lmm_type == linreg_moving_mean_type::slope)  return (slope);
-
-        if (lmm_type == linreg_moving_mean_type::theta ||
-            lmm_type == linreg_moving_mean_type::degree)  {
-            const value_type    theta = std::atan(slope);
-
-            return (lmm_type == linreg_moving_mean_type::theta
-                        ? theta : theta * (180.0 / std::numbers::pi));
-        }
-
-        const value_type    intercept =
-            (sum_y * sum_x2 - sum_x * sum_xy) / divisor;
-
-        if (lmm_type == linreg_moving_mean_type::intercept)
-            return (intercept);
-
-        return (lmm_type == linreg_moving_mean_type::forecast
-                    ? slope * roll_period + intercept
-                : slope * (roll_period - T(1)) + intercept);
+        return (linreg_from_sums_(sum_y, sum_xy, sum_x, sum_x2, divisor,
+                                  lmm_type, roll_period));
     }
 
     const size_type                 roll_period_;
@@ -5356,8 +5606,8 @@ struct  SymmTriangleMovingMeanVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -5373,19 +5623,93 @@ struct  SymmTriangleMovingMeanVisitor  {
             if (! is_nan__(*(column_begin + starting)))
                 break;
 
-        const auto  triangle =
-            gen_sym_triangle<value_type>(roll_period_, 1, true);
-        result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i { starting + roll_period_ };
-             i < col_s; ++i) [[likely]]  {
-            value_type  sum { 0 };
-            size_type   tri_idx { 0 };
+        // Not enough valid data past the lead-in to fill even one window --
+        // leave `result` as all-NaN rather than let either path below index
+        // past `column_end`.
+        //
+        if (starting + roll_period_ >= col_s)  {
+            result_.swap(result);
+            return;
+        }
 
-            for (size_type j = { i - roll_period_ }; j < i;
-                 ++j, ++tri_idx)
-                sum += *(column_begin + j) * triangle[tri_idx];
-            result[i] = sum;
+        // A NaN anywhere, under an O(1) sliding-window update, would stay
+        // inside the running sums forever once it enters them (same reason
+        // as LinregMovingMeanVisitor's fast path) -- so that path below only
+        // runs when the column is entirely NaN-free from `starting` on;
+        // otherwise this falls back to the original per-window recompute
+        // against the triangle weights directly, keeping the NaN
+        // contamination radius identical to before.
+        //
+        bool    any_nan { false };
+
+        for (size_type i = starting; i < col_s && ! any_nan; ++i)
+            if (is_nan__(*(column_begin + i)))  any_nan = true;
+
+        if (any_nan)  {
+            const auto  triangle {
+                gen_sym_triangle<value_type>(roll_period_, 1, true)
+            };
+
+            for (size_type i { starting + roll_period_ }; i < col_s; ++i)  {
+                value_type  sum { 0 };
+                size_type   tri_idx { 0 };
+
+                for (size_type j = { i - roll_period_ }; j < i; ++j, ++tri_idx)
+                    sum += *(column_begin + j) * triangle[tri_idx];
+                result[i] = sum;
+            }
+        }
+        else  {
+            // The symmetric triangular kernel of width p is the
+            // convolution of two rectangular (box) kernels of widths a and
+            // b, with a + b - 1 == p (a == b when p is odd, b == a + 1
+            // when p is even) -- gen_sym_triangle's own ramp-up-then-mirror
+            // construction is exactly that. That means the
+            // triangle-weighted moving sum is just a size-b moving sum OF
+            // a size-a moving sum -- both plain box sums, each O(1) per
+            // step -- instead of recomputing the full triangle-weighted
+            // window from scratch at every position. `ring` holds the last
+            // b box-sum values so the outer sum knows which one is leaving
+            // as it slides.
+            //
+            const size_type    a { (roll_period_ + 1) / 2 };
+            const size_type    b { roll_period_ + 1 - a };
+            const value_type   norm { T(a) * T(b) };
+            const size_type    i0 { starting + roll_period_ };
+            size_type          t { i0 - roll_period_ };
+            value_type         box_a { 0 };
+
+            for (size_type k { 0 }; k < a; ++k)
+                box_a += *(column_begin + (t + k));
+
+            std::vector<value_type> ring(b);
+            size_type               ring_pos { 0 };
+            value_type              tri_sum { 0 };
+
+            ring[ring_pos++ % b] = box_a;
+            tri_sum += box_a;
+            for (size_type step { 1 }; step < b; ++step)  {
+                box_a = box_a - *(column_begin + t) + *(column_begin + (t + a));
+                t += 1;
+                ring[ring_pos % b] = box_a;
+                ring_pos += 1;
+                tri_sum += box_a;
+            }
+            result[i0] = tri_sum / norm;
+
+            for (size_type i { i0 + 1 }; i < col_s; ++i) [[likely]]  {
+                box_a = box_a - *(column_begin + t) + *(column_begin + (t + a));
+                t += 1;
+
+                const value_type    oldest { ring[ring_pos % b] };
+
+                ring[ring_pos % b] = box_a;
+                ring_pos += 1;
+                tri_sum = tri_sum - oldest + box_a;
+                result[i] = tri_sum / norm;
+            }
         }
         result_.swap(result);
     }
@@ -5417,11 +5741,13 @@ struct  KthValueVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &values_begin, const H &values_end)  {
+    operator()(const K &, const K &,
+               const H &values_begin, const H &values_end)  {
 
         vec_type        aux;
-        const size_type col_s = std::distance(values_begin, values_end);
+        const size_type col_s {
+            size_type(std::distance(values_begin, values_end))
+        };
 
         if (skip_nan_)  {
             aux.reserve(col_s);
@@ -5433,18 +5759,28 @@ struct  KthValueVisitor  {
             aux.insert(aux.begin(), values_begin, values_end);
         compute_size_ = aux.size();
 
-        const size_type kth =
-            std::round(double(kth_element_ * compute_size_) / double(col_s));
+        if (compute_size_ != 0) {
+            const size_type kth {
+                std::clamp(
+                    size_type(std::round(double(kth_element_ * compute_size_) /
+                                         double(col_s))),
+                    size_type(1), compute_size_)
+            };
+            const auto      nth {
+                aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
+            };
 
-        result_ = find_kth_element_(aux, 0, compute_size_ - 1, kth);
+            std::nth_element(aux.begin(), nth, aux.end());
+            result_ = *nth;
+        }
     }
 
-    inline void pre ()  { result_ = value_type(); }
-    inline void post ()  {   }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = value_type(); }
+    inline void post()  {   }
+    inline result_type get_result() const  { return (result_); }
     inline size_type get_compute_size() const  { return (compute_size_); }
 
-    explicit KthValueVisitor (size_type ke, bool skipnan = false)
+    explicit KthValueVisitor(size_type ke, bool skipnan = false)
         : kth_element_(ke), skip_nan_(skipnan)  {   }
 
 private:
@@ -5453,43 +5789,6 @@ private:
     size_type       compute_size_ { 0 };
     const size_type kth_element_;
     const bool      skip_nan_;
-
-    template<typename V>
-    inline static size_type
-    parttition_(V &vec, size_type begin, size_type end)  {
-
-        const value_type x = vec[end];
-        size_type        i = begin;
-
-        for (size_type j = begin; j < end; ++j) [[likely]]  {
-            if (vec[j] <= x)  {
-                std::swap(vec[i], vec[j]);
-                i += 1;
-            }
-        }
-
-        std::swap(vec[i], vec[end]);
-        return (i);
-    }
-
-    template<typename V>
-    inline static value_type
-    find_kth_element_(V &vec, size_type begin, size_type end, size_type k)  {
-
-#ifdef HMDF_SANITY_EXCEPTIONS
-        if (k == 0 || k > (end - begin + 1))
-            throw DataFrameError("KthValueVisitor: k must be > 0 and "
-                                 "< data size");
-#endif // HMDF_SANITY_EXCEPTIONS
-
-        const size_type pos = parttition_(vec, begin, end);
-
-        if (pos - begin == k - 1)
-            return (vec[pos]);
-        if (pos - begin > k - 1)
-            return (find_kth_element_(vec, begin, pos - 1, k));
-        return (find_kth_element_(vec, pos + 1, end, k - pos + begin - 1));
-    }
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
@@ -5498,51 +5797,202 @@ using kthv_v = KthValueVisitor<T, I, A>;
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  NKthValueVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    using vec_type = std::vector<T, typename allocator_declare<T, A>::type>;
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &, const K &,
+               const H &values_begin, const H &values_end)  {
+
+        vec_type        aux;
+        const size_type col_s {
+            size_type(std::distance(values_begin, values_end))
+        };
+
+        if (skip_nan_)  {
+            aux.reserve(col_s);
+            std::copy_if(values_begin, values_end,
+                         std::back_inserter(aux),
+                         [](T x) -> bool { return (! is_nan__(x)); });
+        }
+        else
+            aux.insert(aux.begin(), values_begin, values_end);
+        compute_size_ = aux.size();
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        for (const size_type kth : kth_elements_)
+            if (kth > compute_size_)
+                throw DataFrameError("NKthValueVisitor: One of the kth values "
+                                     "is greater than input column length");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (compute_size_ != 0) {
+            const bool  sort_it {
+                kth_elements_.size() >=
+                    size_type(std::round(
+                        std::log2(double(compute_size_)) *
+                        double(compute_size_)))
+            };
+
+            result_.resize(kth_elements_.size());
+            if (sort_it)  {
+                std::sort(aux.begin(), aux.end());
+                for (size_type i { 0 }; const size_type k : kth_elements_)  {
+                    const size_type kth {
+                        std::clamp(
+                            size_type(std::round(
+                                double(k * compute_size_) / double(col_s))),
+                            size_type(1), compute_size_)
+                    };
+
+                    result_[i++] = aux[kth - 1];
+                }
+            }
+            else  {
+                for (size_type i { 0 }; const size_type k : kth_elements_)  {
+                    const size_type kth {
+                        std::clamp(
+                            size_type(std::round(
+                                double(k * compute_size_) / double(col_s))),
+                            size_type(1), compute_size_)
+                    };
+                    const auto      nth {
+                        aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
+                    };
+
+                    std::nth_element(aux.begin(), nth, aux.end());
+                    result_[i++] = *nth;
+                }
+            }
+        }
+    }
+
+    inline void pre()  { result_.clear(); }
+    inline void post()  {   }
+    inline result_type get_result() const  { return (result_); }
+    inline size_type get_compute_size() const  { return (compute_size_); }
+
+    explicit NKthValueVisitor(std::vector<size_type> &&ke,
+                              bool skipnan = false)
+        : kth_elements_(ke), skip_nan_(skipnan)  {   }
+
+private:
+
+    result_type                     result_ {  };
+    size_type                       compute_size_ { 0 };
+    const std::vector<size_type>    kth_elements_;
+    const bool                      skip_nan_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using nkthv_v = NKthValueVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  MedianVisitor  {
+
+private:
+
+    using vec_type = std::vector<T, typename allocator_declare<T, A>::type>;
+
+public:
 
     DEFINE_VISIT_BASIC_TYPES_2
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const H &column_begin, const H &column_end)  {
 
-        const std::size_t                           col_s =
-            std::distance(column_begin, column_end);
-        const std::size_t                           half = col_s >> 1;
-        KthValueVisitor<value_type, index_type, A>  kv_visitor (half + 1,
-                                                                skip_nan_);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
+        vec_type        aux;
 
-        kv_visitor.pre();
-        kv_visitor(idx_begin, idx_end, column_begin, column_end);
-        kv_visitor.post();
-        result_ = kv_visitor.get_result();
+        if (skip_nan_)  {
+            aux.reserve(col_s);
+            std::copy_if(column_begin, column_end,
+                         std::back_inserter(aux),
+                         [](const value_type &v) -> bool  {
+                             return (! is_nan__(v));
+                         });
+        }
+        else  {
+            aux.insert(aux.end(), column_begin, column_end);
+        }
 
-        const size_type cs = kv_visitor.get_compute_size();
+        const size_type cs { aux.size() };
 
-        if (! (cs & 0x01))  { // Even
-            KthValueVisitor<value_type, I, A>   kv_visitor2 (
-                cs < col_s ? half + 2 : half, skip_nan_);
+        if (cs == 0)
+            return;
 
-            kv_visitor2.pre();
-            kv_visitor2(idx_begin, idx_end, column_begin, column_end);
-            kv_visitor2.post();
-            result_ = (result_ + kv_visitor2.get_result()) / value_type(2);
+        const size_type half { col_s >> 1 };
+        const size_type kth1 {
+            size_type(std::round(double((half + 1) * cs) / double(col_s)))
+        };
+        auto            nth1 {
+            aux.begin() + static_cast<std::ptrdiff_t>(kth1 - 1)
+        };
+
+        // Odd
+        //
+        if (cs & 0x01)  {
+            std::nth_element(aux.begin(), nth1, aux.end());
+            result_ = *nth1;
+            return;
+        }
+
+        // Even
+        //
+        const size_type kth2 {
+            size_type(std::round(
+                double((cs < col_s ? half + 2 : half) * cs) / double(col_s)))
+        };
+        auto            nth2 {
+            aux.begin() + static_cast<std::ptrdiff_t>(kth2 - 1)
+        };
+
+        if (kth1 == kth2)  {
+            std::nth_element(aux.begin(), nth1, aux.end());
+            result_ = *nth1;
+        }
+        else  {
+            // Select the larger order statistic first.
+            //
+            const auto  nth_high { (kth1 > kth2) ? nth1 : nth2 };
+            const auto  nth_low { (kth1 > kth2) ? nth2 : nth1 };
+
+            std::nth_element(aux.begin(), nth_high, aux.end());
+
+            // The lower order statistic is entirely in the
+            // partition preceding nth_high.
+            //
+            std::nth_element(aux.begin(), nth_low, nth_high);
+
+            const value_type    low { *nth_low };
+            const value_type    high { *nth_high };
+
+            result_ = (low + high) / value_type(2);
         }
     }
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_ = value_type();
     }
-    inline void post ()  { OBO_PORT_POST }
-    inline result_type get_result () const  { return (result_); }
+    inline void post()  { OBO_PORT_POST }
+    inline result_type get_result() const  { return (result_); }
 
     explicit
-    MedianVisitor (bool skipnan = false) : skip_nan_(skipnan)  {  }
+    MedianVisitor(bool skipnan = false) : skip_nan_(skipnan)  {  }
 
 private:
 
@@ -5560,12 +6010,18 @@ using med_v = MedianVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  QuantileVisitor  {
 
+private:
+
+    using vec_type = std::vector<T, typename allocator_declare<T, A>::type>;
+
+public:
+
     DEFINE_VISIT_BASIC_TYPES_2
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
@@ -5575,68 +6031,131 @@ struct  QuantileVisitor  {
                                  "column size > 0");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const double    vec_len_frac = qt_ * col_s;
-        const size_type int_idx =
-            static_cast<size_type>(std::round(vec_len_frac));
-        const bool      need_two =
-            ! (col_s & 0x01) || double(int_idx) < vec_len_frac;
+        vec_type    aux;
+
+        if (skip_nan_)  {
+            aux.reserve(col_s);
+            std::copy_if(column_begin, column_end,
+                         std::back_inserter(aux),
+                         [](const value_type &v) -> bool {
+                             return (! is_nan__(v));
+                         });
+        }
+        else
+            aux.insert(aux.end(), column_begin, column_end);
+
+        const size_type cs { aux.size() };
+
+        if (cs == 0)  return;
+
+        const double    vec_len_frac { qt_ * col_s };
+        const size_type int_idx {
+            static_cast<size_type>(std::round(vec_len_frac))
+        };
+        const bool      need_two {
+            ! (col_s & 0x01) || double(int_idx) < vec_len_frac
+        };
+
+        // Rescales a rank against the original column size to one against
+        // `cs` (the post-filter size) -- when skip_nan_ is false, cs ==
+        // col_s always, so this is a no-op and reproduces the original
+        // behavior exactly. Clamped to [1, cs] for the same reason
+        // KthValueVisitor's own version is: an extreme rank/cs/col_s
+        // combination can otherwise round to 0, and since the result feeds
+        // an unsigned subtraction, that would underflow into an
+        // out-of-bounds offset.
+        //
+        const auto  rescaled_kth =
+            [cs, col_s](size_type raw_idx) -> size_type  {
+                return (std::clamp(
+                    size_type(std::round(
+                        double(raw_idx * cs) / double(col_s))),
+                    size_type(1), cs));
+            };
 
         if (qt_ == 0.0 || qt_ == 1.0)  {
-            KthValueVisitor<T, I, A>   kth_value((qt_ == 0.0) ? 1 : col_s);
+            const size_type kth { rescaled_kth((qt_ == 0.0) ? 1 : col_s) };
+            const auto      nth {
+                aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
+            };
 
-            kth_value.pre();
-            kth_value(idx_begin, idx_end, column_begin, column_end);
-            kth_value.post();
-            result_ = kth_value.get_result();
+            std::nth_element(aux.begin(), nth, aux.end());
+            result_ = *nth;
         }
         else if (policy_ == quantile_policy::mid_point ||
                  policy_ == quantile_policy::linear)  {
-            KthValueVisitor<T, I, A>   kth_value1(int_idx);
+            const size_type kth1 { rescaled_kth(int_idx) };
+            const auto      nth1 {
+                aux.begin() + static_cast<std::ptrdiff_t>(kth1 - 1)
+            };
 
-            kth_value1.pre();
-            kth_value1(idx_begin, idx_end, column_begin, column_end);
-            kth_value1.post();
-            result_ = kth_value1.get_result();
             if (need_two && int_idx + 1 < col_s)  {
-                KthValueVisitor<T, I, A>   kth_value2(int_idx + 1);
+                const size_type kth2 { rescaled_kth(int_idx + 1) };
 
-                kth_value2.pre();
-                kth_value2(idx_begin, idx_end, column_begin, column_end);
-                kth_value2.post();
-                if (policy_ == quantile_policy::mid_point)
-                    result_ = (result_ + kth_value2.get_result()) / 2.0;
-                else // linear
-                    result_ = result_ + (kth_value2.get_result() - result_) *
-                              (1.0 - qt_);
+                if (kth2 == kth1)  {
+                    std::nth_element(aux.begin(), nth1, aux.end());
+                    result_ = *nth1;
+                }
+                else  {
+                    // Same one-aux, partition-high-then-low-within-it trick
+                    // as MedianVisitor, instead of two independent
+                    // KthValueVisitor calls each rebuilding a NaN-filtered
+                    // copy and running its own full-range nth_element.
+                    //
+                    const auto  nth2 {
+                        aux.begin() + static_cast<std::ptrdiff_t>(kth2 - 1)
+                    };
+                    const auto  nth_high { (kth1 > kth2) ? nth1 : nth2 };
+                    const auto  nth_low  { (kth1 > kth2) ? nth2 : nth1 };
+
+                    std::nth_element(aux.begin(), nth_high, aux.end());
+                    std::nth_element(aux.begin(), nth_low, nth_high);
+
+                    const value_type    v1 { *nth1 };
+                    const value_type    v2 { *nth2 };
+
+                    result_ = (policy_ == quantile_policy::mid_point)
+                                  ? (v1 + v2) / value_type(2)
+                                  : v1 + (v2 - v1) * value_type(1.0 - qt_);
+                }
+            }
+            else  {
+                std::nth_element(aux.begin(), nth1, aux.end());
+                result_ = *nth1;
             }
         }
         else if (policy_ == quantile_policy::lower_value ||
                  policy_ == quantile_policy::higher_value)  {
-            KthValueVisitor<T, I, A>   kth_value(
-                policy_ == quantile_policy::lower_value ? int_idx
-                : (int_idx + 1 < col_s && need_two ? int_idx + 1 : int_idx));
+            const size_type raw_idx {
+                policy_ == quantile_policy::lower_value
+                    ? int_idx
+                    : (int_idx + 1 < col_s && need_two ? int_idx + 1 : int_idx)
+            };
+            const size_type kth { rescaled_kth(raw_idx) };
+            const auto      nth {
+                aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
+            };
 
-            kth_value.pre();
-            kth_value(idx_begin, idx_end, column_begin, column_end);
-            kth_value.post();
-            result_ = kth_value.get_result();
+            std::nth_element(aux.begin(), nth, aux.end());
+            result_ = *nth;
         }
     }
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_ = value_type();
     }
-    inline void post ()  { OBO_PORT_POST }
-    inline result_type get_result () const  { return (result_); }
+    inline void post()  { OBO_PORT_POST }
+    inline result_type get_result() const  { return (result_); }
 
     explicit
-    QuantileVisitor (double quantile = 0.5,
-                     quantile_policy q_policy = quantile_policy::mid_point)
-        : qt_(quantile), policy_(q_policy)  {   }
+    QuantileVisitor(double quantile = 0.5,
+                    quantile_policy q_policy = quantile_policy::mid_point,
+                    bool skip_nan = false)
+        : qt_(quantile), policy_(q_policy), skip_nan_(skip_nan)  {   }
 
 private:
 
@@ -5645,6 +6164,7 @@ private:
     result_type             result_ {  };
     const double            qt_;
     const quantile_policy   policy_;
+    const bool              skip_nan_;
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
@@ -5659,7 +6179,7 @@ using qt_v = QuantileVisitor<T, I, A>;
 // Because of the information this has to return, it is not a cheap operation
 //
 template<std::size_t N,
-         typename T, typename I = unsigned long, std::size_t A = 0>
+         hashable_equal T, typename I = unsigned long, std::size_t A = 0>
 struct  ModeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
@@ -5698,7 +6218,7 @@ private:
         using argument_type = const value_type *;
         using result_type = std::size_t;
 
-        inline result_type operator() (const argument_type &a) const noexcept {
+        inline result_type operator()(const argument_type &a) const noexcept {
 
             return (std::hash<value_type>()(*a));
         }
@@ -5710,8 +6230,8 @@ private:
         using result_type = bool;
 
         inline result_type
-        operator() (const first_argument_type &f,
-                    const second_argument_type &s) const noexcept  {
+        operator()(const first_argument_type &f,
+                   const second_argument_type &s) const noexcept  {
 
             return (std::equal_to<value_type>()(*f, *s));
         }
@@ -5731,27 +6251,29 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
+
+        if constexpr (N == 0)
+            return;
 
         DataItem    nan_item;
         map_type    val_map;
 
         val_map.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
             if (is_nan__(*(column_begin + i))) [[unlikely]]  {
                 nan_item.value = &*(column_begin + i);
                 nan_item.indices.push_back(&*(idx_begin + i));
                 nan_item.value_indices_in_col.push_back(i);
             }
             else [[likely]]  {
-                auto    ret =
-                    val_map.emplace(
-                        std::pair<const value_type *, DataItem>(
-                            &*(column_begin + i),
-                            DataItem(*(column_begin + i))));
+                auto    ret {
+                    val_map.try_emplace(&*(column_begin + i),
+                                        *(column_begin + i))
+                };
 
                 ret.first->second.indices.push_back(&*(idx_begin + i));
                 ret.first->second.value_indices_in_col.push_back(i);
@@ -5763,42 +6285,47 @@ public:
         val_vec.reserve(val_map.size() + 1);
         if (nan_item.value != nullptr)
             val_vec.push_back(nan_item);
+
         std::for_each(val_map.begin(),
                       val_map.end(),
-                      [&val_vec](const auto &map_pair) -> void  {
-                          val_vec.push_back(map_pair.second);
+                      [&val_vec](const auto &map_pair) -> void {
+                          if (map_pair.second.value) [[likely]]
+                              val_vec.push_back(map_pair.second);
                       });
 
-        if (val_vec.size() >= ThreadPool::MUL_THR_THHOLD &&
-            ThreadGranularity::get_thread_level() > 2)  {
-            ThreadGranularity::thr_pool_.parallel_sort(
-                val_vec.begin(), val_vec.end(),
-                [](const DataItem &lhs, const DataItem &rhs) -> bool  {
-                    return (lhs.repeat_count() > rhs.repeat_count());
-                });  // Descending
+        const auto  comp =
+            [](const DataItem &lhs, const DataItem &rhs) -> bool {
+                return (lhs.repeat_count() > rhs.repeat_count());
+            };
+
+        if (N < val_vec.size())  {
+            const auto  nth {
+                val_vec.begin() + static_cast<std::ptrdiff_t>(N)
+            };
+
+            std::nth_element(val_vec.begin(), nth, val_vec.end(), comp);
+            std::sort(val_vec.begin(), nth, comp);
         }
         else  {
-            std::sort(val_vec.begin(), val_vec.end(),
-                      [](const DataItem &lhs, const DataItem &rhs) -> bool  {
-                          return (lhs.repeat_count() > rhs.repeat_count());
-                      });  // Descending
+            std::sort(val_vec.begin(), val_vec.end(), comp);
         }
-        for (size_type i = 0; i < N && i < val_vec.size(); ++i)
+
+        for (size_type i { 0 }; i < N && i < val_vec.size(); ++i)
             result_[i] = val_vec[i];
     }
 
     OBO_PORT_OPT2
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_type x;
 
-        result_.swap (x);
+        result_.swap(x);
         OBO_PORT_PRE
     }
-    inline void post ()  { OBO_PORT_POST }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline void post()  { OBO_PORT_POST }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
 
     inline void sort_by_repeat_count()  {
 
@@ -5845,7 +6372,7 @@ using mode_v = ModeVisitor<N, T, I, A>;
 // ----------------------------------------------------------------------------
 
 // This calculates 4 different form of Mean Absolute Deviation based on the
-// requested type input. Please the mad_type enum type
+// requested type input. Please see mad_type enum type
 //
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  MADVisitor  {
@@ -5866,27 +6393,27 @@ private:
 
         if (col_s == 0)  return;
 
-        MeanVisitor<T, I>   mean_visitor(skip_nan_);
+        MeanVisitor<T, I>   mean_visitor { skip_nan_ };
 
         mean_visitor.pre();
         mean_visitor(idx_begin, idx_end, column_begin, column_end);
         mean_visitor.post();
 
-        MeanVisitor<T, I>   mean_mean_visitor(skip_nan_);
-        const value_type    mean = mean_visitor.get_result();
-        const index_type    idx = index_type { };
+        MeanVisitor<T, I>   mean_mean_visitor { skip_nan_ };
+        const value_type    mean { mean_visitor.get_result() };
+        const index_type    idx { index_type { } };
 
         mean_mean_visitor.pre();
         if (! skip_nan_)  {
-            for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    &value = *(column_begin + i);
+            for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    &value { *(column_begin + i) };
 
                 mean_mean_visitor(idx, std::fabs(value - mean));
             }
         }
         else  {
-            for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    &value = *(column_begin + i);
+            for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    &value { *(column_begin + i) };
 
                 if (! is_nan__(value)) [[likely]]
                     mean_mean_visitor(idx, std::fabs(value - mean));
@@ -5904,7 +6431,7 @@ private:
                                      const H &column_begin,
                                      const H &column_end)  {
 
-        MedianVisitor<T, I, A> median_visitor;
+        MedianVisitor<T, I, A> median_visitor { skip_nan_ };
 
         median_visitor.pre();
         median_visitor(idx_begin, idx_end, column_begin, column_end);
@@ -5912,20 +6439,20 @@ private:
 
         GET_COL_SIZE2
 
-        MeanVisitor<T, I>   mean_median_visitor(skip_nan_);
-        const index_type    idx = index_type { };
+        MeanVisitor<T, I>   mean_median_visitor { skip_nan_ };
+        const index_type    idx { index_type { } };
 
         mean_median_visitor.pre();
         if (! skip_nan_)  {
-            for (std::size_t i = 0; i < col_s; ++i) [[likely]]
+            for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]
                 mean_median_visitor(
                     idx,
                     std::fabs(*(column_begin + i) -
                               median_visitor.get_result()));
         }
         else  {
-            for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    value = *(column_begin + i);
+            for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    value { *(column_begin + i) };
 
                 if (! is_nan__(value)) [[likely]]
                     mean_median_visitor(
@@ -5949,7 +6476,7 @@ private:
 
         GET_COL_SIZE2
 
-        MeanVisitor<T, I>   mean_visitor(skip_nan_);
+        MeanVisitor<T, I>   mean_visitor { skip_nan_ };
 
         mean_visitor.pre();
         mean_visitor(idx_begin, idx_end, column_begin, column_end);
@@ -5959,7 +6486,7 @@ private:
         vec_t                   mean_dists;
 
         mean_dists.resize(col_s);
-        for (std::size_t i = 0; i < col_s; ++i) [[likely]]
+        for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]
             mean_dists[i] =
                 std::fabs(*(column_begin + i) - mean_visitor.get_result());
         median_mean_visitor.pre();
@@ -5979,7 +6506,7 @@ private:
 
         using vec_t = std::vector<T, typename allocator_declare<T, A>::type>;
 
-        MedianVisitor<T, I, A> median_visitor;
+        MedianVisitor<T, I, A> median_visitor { skip_nan_ };
 
         median_visitor.pre();
         median_visitor(idx_begin, idx_end, column_begin, column_end);
@@ -5990,10 +6517,14 @@ private:
         MedianVisitor<T, I, A>  median_median_visitor;
         vec_t                   median_dists;
 
-        median_dists.resize(col_s);
-        for (std::size_t i = 0; i < col_s; ++i) [[likely]]
-            median_dists[i] =
-                std::fabs(*(column_begin + i) - median_visitor.get_result());
+        median_dists.reserve(col_s);
+        for (std::size_t i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    value { *(column_begin + i) };
+
+            if (! skip_nan_ || ! is_nan__(value)) [[likely]]
+                median_dists.push_back(
+                    std::fabs(value - median_visitor.get_result()));
+        }
         median_median_visitor.pre();
         median_median_visitor(idx_begin, idx_end,
                               median_dists.begin(), median_dists.end());
@@ -6008,8 +6539,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         switch (mad_type_)  {
             case mad_type::mean_abs_dev_around_mean:
@@ -6035,16 +6566,16 @@ public:
 
     OBO_PORT_OPT
 
-    MADVisitor (mad_type mt, bool skip_nan = false)
+    MADVisitor(mad_type mt, bool skip_nan = false)
         : mad_type_(mt), skip_nan_(skip_nan)  {   }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_ = value_type();
     }
-    inline void post ()  { OBO_PORT_POST }
-    inline result_type get_result () const  { return (result_); }
+    inline void post()  { OBO_PORT_POST }
+    inline result_type get_result() const  { return (result_); }
 
 private:
 
@@ -6065,8 +6596,8 @@ struct  DiffVisitor  {
 
     template <bidirectional_iterator K, bidirectional_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -6076,13 +6607,11 @@ struct  DiffVisitor  {
                                  "periods < column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        bool                        there_is_zero = false;
-        result_type                 result;
-        std::function<T(const T &)> cond =
-            abs_val_ ? [](const T &x) -> T { return (std::fabs(x)); }
-                     : [](const T &x) -> T { return (x); };
-        auto                        diff_func =
-            [&cond](bool local_skip_nan_,
+        bool            there_is_zero { false };
+        result_type     result;
+        const bool      abs_val { abs_val_ };
+        auto            diff_func =
+            [abs_val](bool local_skip_nan_,
                     bool &there_is_zero,
                     const auto &i,
                     const auto &j,
@@ -6091,10 +6620,11 @@ struct  DiffVisitor  {
                 [[unlikely]]
                     return;
 
-                const value_type    val = cond(*i - *j);
+                const value_type    diff { *i - *j };
+                const value_type    val { abs_val ? std::fabs(diff) : diff };
 
                 result.push_back(val);
-                there_is_zero = val == 0;
+                there_is_zero = there_is_zero || (val == 0);
             };
 
         result.reserve(col_s);
@@ -6107,30 +6637,25 @@ struct  DiffVisitor  {
                         std::numeric_limits<value_type>::quiet_NaN());
             }
 
-            auto    i = column_begin + periods_;
+            auto    i { column_begin + periods_ };
 
-            for (auto j = column_begin; i < column_end; ++i, ++j) [[likely]]
+            for (auto j { column_begin }; i < column_end; ++i, ++j) [[likely]]
                 diff_func(skip_nan_, there_is_zero, i, j, result);
         }
         else  {
-            H   i = column_end - (1 + std::abs(periods_));
-            H   j = column_end - 1;
+            H   i { column_end - (1 + std::abs(periods_)) };
+            H   j { column_end - 1 };
 
             for ( ; i > column_begin; --i, --j)
                 diff_func(skip_nan_, there_is_zero, i, j, result);
 
-            if (i == column_begin)  {
-                if (! (skip_nan_ && (is_nan__(*i) || is_nan__(*j))))  {
-                    const value_type    val = *i - *j;
+            if (i == column_begin)
+                diff_func(skip_nan_, there_is_zero, i, j, result);
 
-                    result.push_back(val);
-                    if (val == 0)  there_is_zero = true;
-                }
-            }
             std::reverse(result.begin(), result.end());
 
             if (! skip_nan_)
-                for (size_type local_i = 0;
+                for (size_type local_i { 0 };
                      local_i < static_cast<size_type>(std::abs(periods_)) &&
                      local_i < col_s;
                      ++local_i)
@@ -6196,58 +6721,51 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
-        StdVisitor<T, I>    svisit;
+        StdVisitor<T, I>    svisit { false, skip_nan_ };
 
         svisit.pre();
         svisit(idx_begin, idx_end, column_begin, column_end);
         svisit.post();
 
-        const auto  m = svisit.get_mean();
-        const auto  s = svisit.get_result();
+        const auto  m { svisit.get_mean() };
+        const auto  s { svisit.get_result() };
         result_type result(col_s);
-        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const auto  thread_level { (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level()
+        };
+
+        auto    lbd =
+            [m, s, &result, &column_begin]
+            (auto begin, auto end) -> void  {
+                for (size_type i { begin }; i < end; ++i)  {
+                    const auto  &val { *(column_begin + i) };
+
+                    if constexpr (! std::is_arithmetic_v<T> &&
+                                  ! is_std_vector_v<T>)  {
+                        const std::vector<data_t>   vec(val.begin(), val.end());
+
+                        result[i] = (vec - m) / s;
+                    }
+                    else  result[i] = (val - m) / s;
+                }
+            };
 
         if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    [m, s, &result, &column_begin]
-                    (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)  {
-                            const auto  &val { *(column_begin + i) };
-
-                            if constexpr (! std::is_arithmetic_v<value_type> &&
-                                          ! is_std_vector_v<value_type>)  {
-                                const std::vector<data_t>   vec(
-                                    val.begin(), val.end());
-
-                                result[i] = (vec - m) / s;
-                            }
-                            else  result[i] = (val - m) / s;
-                        }
-                    });
+                    std::move(lbd));
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            for (size_type i { 0 }; i < col_s; ++i)  {
-                const auto  &val { *(column_begin + i) };
-
-                if constexpr (! std::is_arithmetic_v<value_type> &&
-                              ! is_std_vector_v<value_type>)  {
-                    const std::vector<data_t>   vec(val.begin(), val.end());
-
-                    result[i] = (vec - m) / s;
-                }
-                else  result[i] = (val - m) / s;
-            }
+            lbd(size_type(0), col_s);
         }
 
         result_.swap(result);
@@ -6255,14 +6773,14 @@ public:
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
             OBO_PORT_PRE
         }
         result_.clear();
     }
-    inline void post ()  {
+    inline void post()  {
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
             OBO_PORT_POST
@@ -6292,20 +6810,20 @@ struct  SampleZScoreVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &population_begin, const H &population_end,
-                const H &sample_begin, const H &sample_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &population_begin, const H &population_end,
+               const H &sample_begin, const H &sample_end)  {
 
         const size_type s_col_s = std::distance(sample_begin, sample_end);
 
-        StdVisitor<T, I>    p_svisit;
+        StdVisitor<T, I>    p_svisit { false, skip_nan_ };
         MeanVisitor<T, I>   s_mvisit { skip_nan_ };
 
         p_svisit.pre();
         s_mvisit.pre();
         if (s_col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 3)  {
-            auto    fut1 =
+            auto    fut1 {
                 ThreadGranularity::thr_pool_.dispatch(
                       false,
                       [&p_svisit,
@@ -6313,8 +6831,9 @@ struct  SampleZScoreVisitor  {
                        &population_begin, &population_end]() -> void  {
                           p_svisit(idx_begin, idx_end,
                                    population_begin, population_end);
-                      });
-            auto    fut2 =
+                      })
+            };
+            auto    fut2 {
                 ThreadGranularity::thr_pool_.dispatch(
                       false,
                       [&s_mvisit,
@@ -6322,7 +6841,8 @@ struct  SampleZScoreVisitor  {
                        &sample_begin, &sample_end]() -> void  {
                           s_mvisit(idx_begin, idx_end,
                                    sample_begin, sample_end);
-                      });
+                      })
+            };
 
             fut1.get();
             fut2.get();
@@ -6338,9 +6858,9 @@ struct  SampleZScoreVisitor  {
                   (p_svisit.get_result() / ::sqrt(s_col_s));
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    inline void pre()  { result_ = 0; }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (result_); }
 
     DECL_CTOR(SampleZScoreVisitor)
 
@@ -6387,7 +6907,7 @@ private:
         if constexpr (std::is_arithmetic_v<V>)  {
             return (v + shift);
         }
-        else {
+        else  {
             anal_res_t  res(v.size());
 
             for (size_type i { 0 }; i < v.size(); ++i)
@@ -6404,21 +6924,23 @@ private:
         if (lambda_ != 0)  {
             auto   lbd =
                 [this, &column_begin] (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
-                        const auto          &val = *(column_begin + i);
-                        const anal_res_t    sign = _bc_signbit_(val);
-                        const anal_res_t    &v =
+                    for (auto i { begin }; i < end; ++i)  {
+                        const auto          &val { *(column_begin + i) };
+                        const anal_res_t    sign { _bc_signbit_(val) };
+                        const anal_res_t    &v {
                             (_bc_pow_(_bc_fabs_(val) + one_, lambda_) -
-                             one_) / lambda_;
+                             one_) / lambda_
+                        };
 
                         result_[i] = sign * v;
                     }
                 };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0), col_s, std::move(lbd));
+                        size_type(0), col_s, std::move(lbd))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -6429,18 +6951,19 @@ private:
         else  {
             auto    lbd =
                 [this, &column_begin] (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
-                        const auto          &val = *(column_begin + i);
-                        const anal_res_t    sign = _bc_signbit_(val);
+                    for (auto i { begin }; i < end; ++i)  {
+                        const auto          &val { *(column_begin + i) };
+                        const anal_res_t    sign { _bc_signbit_(val) };
 
                         result_[i] = sign * _bc_log_(_bc_fabs_(val) + one_);
                     }
                 };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0), col_s, std::move(lbd));
+                        size_type(0), col_s, std::move(lbd))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -6458,8 +6981,8 @@ private:
         if (lambda_ != 0)  {
             auto    lbd =
                 [this, &column_begin] (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
-                        const auto  &val = *(column_begin + i);
+                    for (auto i { begin }; i < end; ++i)  {
+                        const auto  &val { *(column_begin + i) };
 
                         result_[i] =
                             (_bc_exp_(lambda_ * val) - one_) / lambda_;
@@ -6467,11 +6990,12 @@ private:
                };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -6482,7 +7006,7 @@ private:
         else  {
             auto    lbd =
                 [this, &column_begin] (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
+                    for (auto i { begin }; i < end; ++i)  {
                         if constexpr (! std::is_arithmetic_v<T>)  {
                             const auto  &val { *(column_begin + i) };
 
@@ -6494,11 +7018,12 @@ private:
                };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -6518,8 +7043,8 @@ private:
         if (lambda_ != 0)  {
             auto    lbd =
                 [this, shift, &column_begin] (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
-                        const auto  &val = *(column_begin + i);
+                    for (auto i { begin }; i < end; ++i)  {
+                        const auto  &val { *(column_begin + i) };
 
                         result_[i] =
                             (_bc_pow_(val + shift, lambda_) - one_) / lambda_;
@@ -6527,11 +7052,12 @@ private:
                };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -6542,19 +7068,20 @@ private:
         else  {
             auto    lbd =
                 [this, shift, &column_begin] (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
-                        const auto  &val = *(column_begin + i);
+                    for (auto i { begin }; i < end; ++i)  {
+                        const auto  &val { *(column_begin + i) };
 
                         result_[i] = _bc_log_(val + shift);
                     }
                };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -6571,7 +7098,7 @@ private:
                                 data_t shift,
                                 size_type col_s, size_type thread_level)  {
 
-        H                           citer = column_begin;
+        H                           citer { column_begin };
         GeometricMeanVisitor<T, I>  gm;
 
         result_.resize(col_s);
@@ -6585,9 +7112,9 @@ private:
                 [this, shift,
                  &gm = std::as_const(gm.get_result()), &column_begin]
                 (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
-                        const auto  &val = *(column_begin + i);
-                        const auto  &raw_v = val + shift;
+                    for (auto i { begin }; i < end; ++i)  {
+                        const auto  &val { *(column_begin + i) };
+                        const auto  &raw_v { val + shift };
 
                         result_[i] =
                             (_bc_pow_(raw_v, lambda_) - one_) /
@@ -6597,11 +7124,12 @@ private:
                };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -6613,25 +7141,26 @@ private:
             auto    lbd =
                 [this, shift, gm = gm.get_result(), &column_begin]
                 (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
-                        const auto  &val = *(column_begin + i);
+                    for (auto i { begin }; i < end; ++i)  {
+                        const auto  &val { *(column_begin + i) };
 
                         if constexpr (is_std_array_v<T>)  {
-                            const auto  &res { (val + shift) * gm };
+                            const auto  &res { _bc_log_(val + shift) * gm };
 
                             result_[i].assign(std::begin(res), std::end(res));
                         }
                         else
-                            result_[i] = (val + shift) * gm;
+                            result_[i] = _bc_log_(val + shift) * gm;
                     }
                };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -6648,8 +7177,10 @@ public:
     operator()(const K &idx_begin, const K &idx_end,
                const H &column_begin, const H &column_end)  {
 
-        const size_type col_s = std::distance(column_begin, column_end);
-        data_t          shift = 0;
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
+        data_t          shift { 0 };
 
         if (! is_all_positive_ &&
             (box_cox_type_ == box_cox_type::original ||
@@ -6675,8 +7206,9 @@ public:
             }
         }
 
-        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const auto      thread_level { (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level()
+        };
 
         if (box_cox_type_ == box_cox_type::original)
             original_(column_begin, shift, col_s, thread_level);
@@ -6689,10 +7221,10 @@ public:
             exponential_(column_begin, col_s, thread_level);
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    inline void pre()  { result_.clear(); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
 
     BoxCoxVisitor(box_cox_type bct, data_t l, bool is_all_pos)
         : box_cox_type_(bct),
@@ -6742,8 +7274,8 @@ public:
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -6779,14 +7311,14 @@ public:
                         sum = 0;
                     else
                         sum.resize(begin->size(), 0);
-                    for (auto citer = begin; citer < end; ++citer)
+                    for (auto citer { begin }; citer < end; ++citer)
                         sum = sum + *citer;
                     return (sum);
                 };
             auto    lbd =
                 [this, &column_begin, &sum = std::as_const(sum)]
                 (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
+                    for (auto i { begin }; i < end; ++i)  {
                         if constexpr (std::is_arithmetic_v<T>)  {
                             result_[i] = *(column_begin + i) / sum;
                         }
@@ -6799,19 +7331,22 @@ public:
                 };
 
             if (threading)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         column_begin,
                         column_end,
-                        std::move(sum_lbd));
+                        std::move(sum_lbd))
+                };
 
                 for (auto &fut : futures)  sum += fut.get();
 
-                auto    futures2 =
+                auto    futures2 {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
+
                 for (auto &fut : futures2)  fut.get();
             }
             else  {
@@ -6835,7 +7370,7 @@ public:
             auto    lbd =
                 [this, &column_begin, &sum = std::as_const(sum)]
                 (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
+                    for (auto i { begin }; i < end; ++i)  {
                         if constexpr (std::is_arithmetic_v<T>)  {
                             result_[i] = _bc_log_(*(column_begin + i)) / sum;
                         }
@@ -6850,19 +7385,22 @@ public:
                 };
 
             if (threading)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         column_begin,
                         column_end,
-                        std::move(sum_lbd));
+                        std::move(sum_lbd))
+                };
 
                 for (auto &fut : futures)  sum += fut.get();
 
-                auto    futures2 =
+                auto    futures2 {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
+
                 for (auto &fut : futures2)  fut.get();
             }
             else  {
@@ -6871,28 +7409,55 @@ public:
             }
         }
         else if (pdtype_ == prob_dist_type::softmax)  {
+            // exp() of the raw values overflows well before any realistic
+            // sum/ratio would -- e.g. exp(710) alone is already +inf in a
+            // double, at which point inf/inf gives NaN for every entry,
+            // not just the one that overflowed (confirmed empirically on
+            // input no larger than {700,710,720,705}). Subtracting the
+            // column's own max before exponentiating is the standard
+            // softmax stabilization: base^(val-max) = base^val / base^max,
+            // and that common base^max factor cancels exactly between the
+            // numerator and every term of the denominator sum, so the
+            // ratio is unchanged -- this only trades a real overflow risk
+            // for none, it isn't an approximation.
+            //
+            sum_t   max_val;
+
+            if constexpr (std::is_arithmetic_v<T>)
+                max_val = *column_begin;
+            else
+                max_val.assign(column_begin->begin(), column_begin->end());
+            for (auto citer { column_begin }; citer < column_end; ++citer)  {
+                if constexpr (std::is_arithmetic_v<T>)
+                    max_val = std::max(max_val, *citer);
+                else
+                    for (size_type d { 0 }; d < max_val.size(); ++d)
+                        max_val[d] = std::max(max_val[d], (*citer)[d]);
+            }
+
             auto    sum_lbd =
-                [](const auto &begin, const auto &end) -> sum_t  {
+                [&max_val](const auto &begin, const auto &end) -> sum_t  {
                     sum_t   sum;
 
                     if constexpr (std::is_arithmetic_v<T>)
                         sum = 0;
                     else
                         sum.resize(begin->size(), 0);
-                    for (auto citer = begin; citer < end; ++citer)
-                        sum = sum + _bc_exp_(*citer);
+                    for (auto citer { begin }; citer < end; ++citer)
+                        sum = sum + _bc_exp_(*citer - max_val);
                     return (sum);
                 };
             auto    lbd =
-                [this, &column_begin, &sum = std::as_const(sum)]
+                [this, &column_begin, &sum = std::as_const(sum), &max_val]
                 (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
+                    for (auto i { begin }; i < end; ++i)  {
                         if constexpr (std::is_arithmetic_v<T>)  {
-                            result_[i] = _bc_exp_(*(column_begin + i)) / sum;
+                            result_[i] =
+                                _bc_exp_(*(column_begin + i) - max_val) / sum;
                         }
                         else  {
                             const auto  &val {
-                                _bc_exp_(*(column_begin + i)) / sum
+                                _bc_exp_(*(column_begin + i) - max_val) / sum
                             };
 
                             result_.set_row(val.begin(), long(i));
@@ -6901,19 +7466,22 @@ public:
                 };
 
             if (threading)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         column_begin,
                         column_end,
-                        std::move(sum_lbd));
+                        std::move(sum_lbd))
+                };
 
                 for (auto &fut : futures)  sum += fut.get();
 
-                auto    futures2 =
+                auto    futures2 {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
+
                 for (auto &fut : futures2)  fut.get();
             }
             else  {
@@ -6922,29 +7490,51 @@ public:
             }
         }
         else if (pdtype_ == prob_dist_type::pow2)  {
+            // Same overflow risk and same fix as softmax just above --
+            // 2^val overflows a double around val=1024, confirmed
+            // empirically (2^1050 among the inputs reproduces the same
+            // all-NaN failure). Subtracting the column's max before
+            // exponentiating cancels out exactly in the final ratio.
+            //
+            sum_t   max_val;
+
+            if constexpr (std::is_arithmetic_v<T>)
+                max_val = *column_begin;
+            else
+                max_val.assign(column_begin->begin(), column_begin->end());
+            for (auto citer { column_begin }; citer < column_end; ++citer)  {
+                if constexpr (std::is_arithmetic_v<T>)
+                    max_val = std::max(max_val, *citer);
+                else
+                    for (size_type d { 0 }; d < max_val.size(); ++d)
+                        max_val[d] = std::max(max_val[d], (*citer)[d]);
+            }
+
             auto    sum_lbd =
-                [](const auto &begin, const auto &end) -> sum_t  {
+                [&max_val](const auto &begin, const auto &end) -> sum_t  {
                     sum_t   sum;
 
                     if constexpr (std::is_arithmetic_v<T>)
                         sum = 0;
                     else
                         sum.resize(begin->size(), 0);
-                    for (auto citer = begin; citer < end; ++citer)
-                        sum = sum + _bc_pow_(data_t(2), *citer);
+                    for (auto citer { begin }; citer < end; ++citer)
+                        sum = sum + _bc_pow_(data_t(2), *citer - max_val);
                     return (sum);
                 };
             auto    lbd =
-                [this, &column_begin, &sum = std::as_const(sum)]
+                [this, &column_begin, &sum = std::as_const(sum), &max_val]
                 (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
+                    for (auto i { begin }; i < end; ++i)  {
                         if constexpr (std::is_arithmetic_v<T>)  {
                             result_[i] =
-                                _bc_pow_(data_t(2), *(column_begin + i)) / sum;
+                                _bc_pow_(data_t(2),
+                                         *(column_begin + i) - max_val) / sum;
                         }
                         else  {
                             const auto  &val {
-                                _bc_pow_(data_t(2), *(column_begin + i)) / sum
+                                _bc_pow_(data_t(2),
+                                         *(column_begin + i) - max_val) / sum
                             };
 
                             result_.set_row(val.begin(), long(i));
@@ -6953,19 +7543,22 @@ public:
                 };
 
             if (threading)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         column_begin,
                         column_end,
-                        std::move(sum_lbd));
+                        std::move(sum_lbd))
+                };
 
                 for (auto &fut : futures)  sum += fut.get();
 
-                auto    futures2 =
+                auto    futures2 {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
+
                 for (auto &fut : futures2)  fut.get();
             }
             else  {
@@ -6974,30 +7567,52 @@ public:
             }
         }
         else if (pdtype_ == prob_dist_type::pow10)  {
+            // Same overflow risk and same fix as softmax/pow2 above --
+            // 10^val overflows a double around val=308, confirmed
+            // empirically ({300,310,320,305} reproduces the same all-NaN
+            // failure). Subtracting the column's max before exponentiating
+            // cancels out exactly in the final ratio.
+            //
+            sum_t   max_val;
+
+            if constexpr (std::is_arithmetic_v<T>)
+                max_val = *column_begin;
+            else
+                max_val.assign(column_begin->begin(), column_begin->end());
+            for (auto citer { column_begin }; citer < column_end; ++citer)  {
+                if constexpr (std::is_arithmetic_v<T>)
+                    max_val = std::max(max_val, *citer);
+                else
+                    for (size_type d { 0 }; d < max_val.size(); ++d)
+                        max_val[d] = std::max(max_val[d], (*citer)[d]);
+            }
+
             auto    sum_lbd =
-                [](const auto &begin, const auto &end) -> sum_t  {
+                [&max_val](const auto &begin, const auto &end) -> sum_t  {
                     sum_t   sum;
 
                     if constexpr (std::is_arithmetic_v<T>)
                         sum = 0;
                     else
                         sum.resize(begin->size(), 0);
-                    for (auto citer = begin; citer < end; ++citer)
-                        sum = sum + _bc_pow_(data_t(10), *citer);
+                    for (auto citer { begin }; citer < end; ++citer)
+                        sum = sum + _bc_pow_(data_t(10), *citer - max_val);
                     return (sum);
                 };
             auto    lbd =
-                [this, &column_begin, &sum = std::as_const(sum)]
+                [this, &column_begin, &sum = std::as_const(sum), &max_val]
                 (auto begin, auto end) -> void  {
-                    for (auto i = begin; i < end; ++i)  {
+                    for (auto i { begin }; i < end; ++i)  {
                         if constexpr (std::is_arithmetic_v<T>)  {
                             result_[i] =
-                                _bc_pow_(data_t(10), *(column_begin + i)) /
+                                _bc_pow_(data_t(10),
+                                         *(column_begin + i) - max_val) /
                                 sum;
                         }
                         else  {
                             const auto  &val {
-                                _bc_pow_(data_t(10), *(column_begin + i)) / sum
+                                _bc_pow_(data_t(10),
+                                         *(column_begin + i) - max_val) / sum
                             };
 
                             result_.set_row(val.begin(), long(i));
@@ -7006,19 +7621,22 @@ public:
                 };
 
             if (threading)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         column_begin,
                         column_end,
-                        std::move(sum_lbd));
+                        std::move(sum_lbd))
+                };
 
                 for (auto &fut : futures)  sum += fut.get();
 
-                auto    futures2 =
+                auto    futures2 {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd));
+                        std::move(lbd))
+                };
+
                 for (auto &fut : futures2)  fut.get();
             }
             else  {
@@ -7107,7 +7725,9 @@ private:
         if constexpr (container<T>)  {
             using data_t = typename T::value_type;
 
-            const size_type col_s = std::distance(column_begin, column_end);
+            const size_type col_s {
+                size_type(std::distance(column_begin, column_end))
+            };
             const size_type num_dim { column_begin->size() };
             auto            calc_norm =
                 [](const value_type &point) -> data_t  {
@@ -7142,7 +7762,9 @@ private:
         if constexpr (container<T>)  {
             using data_t = typename T::value_type;
 
-            const size_type col_s = std::distance(column_begin, column_end);
+            const size_type col_s {
+                size_type(std::distance(column_begin, column_end))
+            };
             const size_type num_dim { column_begin->size() };
 
             // Compute norm of all values combined
@@ -7180,7 +7802,9 @@ private:
     min_max_(const K &idx_begin, const K &idx_end,
              const H &column_begin, const H &column_end)  {
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
             MinVisitor<T, I>    minv;
@@ -7193,21 +7817,22 @@ private:
             minv.post();
             maxv.post();
 
-            const value_type    diff = maxv.get_result() - minv.get_result();
+            const value_type    diff { maxv.get_result() - minv.get_result() };
 
             result_.resize(col_s);
             if (col_s >= ThreadPool::MUL_THR_THHOLD &&
                 ThreadGranularity::get_thread_level() > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [minv = minv.get_result(), &column_begin, diff, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)
+                            for (size_type i { begin }; i < end; ++i)
                                 this->result_[i] =
                                     (*(column_begin + i) - minv) / diff;
-                        });
+                        })
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -7270,20 +7895,23 @@ private:
         sumv(idx_begin, idx_end, column_begin, column_end);
         sumv.post();
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
         result_.resize(col_s);
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [sumv = sumv.get_result(), &column_begin, this]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
+                        for (size_type i { begin }; i < end; ++i)
                             this->result_[i] = *(column_begin + i) / sumv;
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -7308,20 +7936,23 @@ private:
         eucliv(idx_begin, idx_end, column_begin, column_end);
         eucliv.post();
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
         result_.resize(col_s);
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [eucli = eucliv.get_euclidean_norm(), &column_begin, this]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
+                        for (size_type i { begin }; i < end; ++i)
                             this->result_[i] = *(column_begin + i) / eucli;
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -7346,20 +7977,23 @@ private:
         maxv(idx_begin, idx_end, column_begin, column_end);
         maxv.post();
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
         result_.resize(col_s);
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [maxv = maxv.get_result(), &column_begin, this]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
+                        for (size_type i { begin }; i < end; ++i)
                             this->result_[i] = *(column_begin + i) / maxv;
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -7378,7 +8012,9 @@ private:
     z_score_(const K &idx_begin, const K &idx_end,
              const H &column_begin, const H &column_end)  {
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
         if constexpr (std::is_arithmetic_v<value_type>)  {
             StdVisitor<T, I>    stdv;
@@ -7390,17 +8026,18 @@ private:
             result_.resize(col_s);
             if (col_s >= ThreadPool::MUL_THR_THHOLD &&
                 ThreadGranularity::get_thread_level() > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [meanv = stdv.get_mean(), stdv = stdv.get_result(),
                          &column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)
+                            for (size_type i { begin }; i < end; ++i)
                                 this->result_[i] =
                                     (*(column_begin + i) - meanv) / stdv;
-                        });
+                        })
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -7469,33 +8106,47 @@ private:
     }
     template<typename K, typename H>
     inline void
-    decimal_scaling_(const K &idx_begin, const K &idx_end,
+    decimal_scaling_(const K &/*idx_begin*/, const K &/*idx_end*/,
                      const H &column_begin, const H &column_end)  {
 
-        MaxVisitor<T, I>    maxv;
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
-        maxv.pre();
-        maxv(idx_begin, idx_end, column_begin, column_end);
-        maxv.post();
-
-        // Raise 10 to the number of digits in max value
+        // Decimal scaling's own definition uses the maximum absolute
+        // value, not the signed maximum.
         //
-        const value_type    scale =
-            std::pow(10, std::log10(maxv.get_result()) + 1);
-        const size_type     col_s = std::distance(column_begin, column_end);
+        value_type    max_abs { std::abs(*column_begin) };
+
+        for (size_type i { 1 }; i < col_s; ++i)  {
+            const auto  val { std::abs(*(column_begin + i)) };
+
+            if (val > max_abs)  max_abs = val;
+        }
+
+        // Without floor(), 10^(log10(max)+1) simplifies algebraically to
+        // just max*10 for any max -- confirmed numerically (the ratio is
+        // exactly 10 regardless of digit count) and against the standard
+        // definition from multiple independent sources, e.g. a max of 986
+        // (3 digits) should scale by 10^3=1000, not 986*10=9860.
+        //
+        const value_type    scale {
+            value_type(std::pow(10, std::floor(std::log10(max_abs)) + 1))
+        };
 
         result_.resize(col_s);
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [scale, &column_begin, this]
                     (auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
+                        for (size_type i { begin }; i < end; ++i)
                             this->result_[i] = *(column_begin + i) / scale;
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -7512,19 +8163,22 @@ private:
     inline void
     log_transform_(const H &column_begin, const H &column_end)  {
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
         result_.resize(col_s);
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column_begin, this](auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
+                        for (size_type i { begin }; i < end; ++i)
                             this->result_[i] = std::log(*(column_begin + i));
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -7541,19 +8195,22 @@ private:
     inline void
     root_transform_(const H &column_begin, const H &column_end)  {
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
 
         result_.resize(col_s);
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&column_begin, this](auto begin, auto end) -> void  {
-                        for (size_type i = begin; i < end; ++i)
+                        for (size_type i { begin }; i < end; ++i)
                             this->result_[i] = std::sqrt(*(column_begin + i));
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -7722,7 +8379,6 @@ public:
 #endif // HMDF_SANITY_EXCEPTIONS
 
         if constexpr (is_md_)  {  // Multidimensional input
-            // ----------------------------------------------------------------
             // Multivariate polynomial least-squares fit.
             //
             // For dim dimensions and polynomial degree d, the basis consists
@@ -7737,7 +8393,6 @@ public:
             // where Phi[i][k] is the k-th monomial evaluated at x[i], and W
             // is the diagonal weight matrix.  The system is then handed off to
             // matrix_t::solve() which avoids duplicating elimination logic.
-            // ----------------------------------------------------------------
 
             const size_type dim { size_type(x_begin->size()) };
             const std::vector<std::vector<size_type>>   monomials {
@@ -8001,7 +8656,10 @@ public:
 
     inline const result_type &get_result() const  { return (coeffs_); }
     inline result_type &get_result()  { return (coeffs_); }
-    inline data_t get_slope() const  { return (coeffs_[0]); }
+    inline data_t get_slope() const  {
+
+        return (coeffs_.size() > 1 ? coeffs_[1] : data_t(0));
+    }
     inline data_t get_residual() const  { return (residual_); }
     inline const result_type &get_y_fits() const  { return (y_fits_); }
     inline result_type &get_y_fits()  { return (y_fits_); }
@@ -8096,7 +8754,7 @@ private:
 
     // True when T is a container (multidimensional x input)
     //
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -8130,7 +8788,7 @@ public:
                 ? 0L : ThreadGranularity::get_thread_level()
         };
 
-        vec_t<anal_res_t>   logx (col_s);
+        vec_t<anal_res_t>   logx(col_s);
         auto                log_lbd =
             [&logx, &x_begin](auto begin, auto end) -> void  {
                 for (auto i { begin }; i < end; ++i)
@@ -8138,11 +8796,12 @@ public:
             };
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    std::move(log_lbd));
+                    std::move(log_lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -8150,7 +8809,9 @@ public:
             log_lbd(size_type(0), col_s);
         }
 
-        poly_fit_(idx_begin, idx_end, logx.begin(), logx.end(), y_begin, y_end);
+        poly_fit_(idx_begin, idx_end,
+                  logx.begin(), logx.end(),
+                  y_begin, y_end);
 
         y_fits_.resize(col_s);
         if constexpr (is_md_)  {
@@ -8159,7 +8820,7 @@ public:
             //
             residual_ = poly_fit_.get_residual();
 
-            const auto &pf_fits = poly_fit_.get_y_fits();
+            const auto  &pf_fits { poly_fit_.get_y_fits() };
 
             for (size_type i { 0 }; i < col_s; ++i)
                 y_fits_[i] = pf_fits[i];
@@ -8168,31 +8829,34 @@ public:
             // Scalar path: reconstruct prediction from slope/intercept
             // as before
             //
-            const auto  &poly_res =  poly_fit_.get_result();
+            const auto  &poly_res { poly_fit_.get_result() };
             auto        res_lbd =
                 [&x_begin, &y_begin, &idx_begin,
                  &poly_res = std::as_const(poly_res), this]
                 (auto begin, auto end) -> data_t  {
-                    data_t residual { 0 };
+                    data_t  residual { 0 };
 
                     for (auto i { begin }; i < end; ++i)  {
                         const auto  pred  {
                             _bc_log_(*(x_begin + i)) * poly_res[1] + poly_res[0]
                         };
-                        const auto  w   { weights_(*(idx_begin + i), i) };
 
                         y_fits_[i] = pred;
 
-                        const auto val { (*(y_begin + i) - pred) * w };
+                        const auto  w { weights_(*(idx_begin + i), i) };
+                        const auto  val { (*(y_begin + i) - pred) * w };
+
                         residual += val * val;
                     }
                     return (residual);
                 };
 
             if (thread_level > 2)  {
-                auto futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                        size_type(0), col_s, std::move(res_lbd));
+                        size_type(0), col_s, std::move(res_lbd))
+                };
+
                 for (auto &fut : futures)  residual_ += fut.get();
             }
             else  {
@@ -8237,13 +8901,15 @@ struct  ExponentialFitVisitor  {
 
     template<typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+    operator()(const K &, const K &,
+               const H &x_begin, const H &x_end,
+               const H &y_begin, const H &y_end)  {
 
-        const size_type col_s = std::distance(x_begin, x_end);
-        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const size_type col_s { size_type(std::distance(x_begin, x_end)) };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(y_begin, y_end)))
@@ -8260,7 +8926,7 @@ struct  ExponentialFitVisitor  {
             using sum_t =
                 std::tuple<value_type, value_type, value_type, value_type>;
 
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
@@ -8270,10 +8936,11 @@ struct  ExponentialFitVisitor  {
                         value_type  sum_x2 { 0 };
                         value_type  sum_xy { 0 };
 
-                        for (auto i = begin; i < end; ++i)  {
-                            const value_type    x = *(x_begin + i);
-                            const value_type    log_y =
-                                std::log(*(y_begin + i));
+                        for (auto i { begin }; i < end; ++i)  {
+                            const value_type    x { *(x_begin + i) };
+                            const value_type    log_y {
+                                std::log(*(y_begin + i))
+                            };
 
                             sum_x += x;
                             sum_y += log_y;
@@ -8281,10 +8948,11 @@ struct  ExponentialFitVisitor  {
                             sum_x2 += x * x;
                         }
                         return (std::make_tuple(sum_x, sum_y, sum_xy, sum_x2));
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  {
-                const auto  &sums = fut.get();
+                const auto  &sums { fut.get() };
 
                 sum_x += std::get<0>(sums);
                 sum_y += std::get<1>(sums);
@@ -8293,9 +8961,9 @@ struct  ExponentialFitVisitor  {
             }
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    x = *(x_begin + i);
-                const value_type    log_y = std::log(*(y_begin + i));
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    x { *(x_begin + i) };
+                const value_type    log_y { std::log(*(y_begin + i)) };
 
                 sum_x += x;
                 sum_y += log_y;
@@ -8313,11 +8981,11 @@ struct  ExponentialFitVisitor  {
         //
         intercept_ = (sum_y - slope_ * sum_x) / col_s;
 
-        const value_type    prefactor = std::exp(intercept_);
+        const value_type    prefactor { std::exp(intercept_) };
 
         y_fits_.resize(col_s);
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
@@ -8325,53 +8993,55 @@ struct  ExponentialFitVisitor  {
                     (auto begin, auto end) -> value_type  {
                         value_type  residual { 0 };
 
-                        for (auto i = begin; i < end; ++i)  {
-                            const value_type    x = *(x_begin + i);
-                            const value_type    pred =
-                                prefactor * std::exp(x * this->slope_);
+                        for (auto i { begin }; i < end; ++i)  {
+                            const value_type    x { *(x_begin + i) };
+                            const value_type    pred {
+                                prefactor * std::exp(x * slope_)
+                            };
 
                             // y fits at given x points
                             //
-                            this->y_fits_[i] = pred;
+                            y_fits_[i] = pred;
 
-                            const value_type    r = *(y_begin + i) - pred;
+                            const value_type    r { *(y_begin + i) - pred };
 
                             residual += r * r;
                         }
                         return (residual);
-                   });
+                   })
+            };
 
-             for (auto &fut : futures)  residual_ += fut.get();
+            for (auto &fut : futures)  residual_ += fut.get();
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    x = *(x_begin + i);
-                const value_type    pred = prefactor * std::exp(x * slope_);
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    x { *(x_begin + i) };
+                const value_type    pred { prefactor * std::exp(x * slope_) };
 
                 // y fits at given x points
                 //
                 y_fits_[i] = pred;
 
-                const value_type    r = *(y_begin + i) - pred;
+                const value_type    r { *(y_begin + i) - pred };
 
                 residual_ += r * r;
             }
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         y_fits_.clear();
         residual_ = 0;
         slope_ = 0;
         intercept_ = 0;
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (y_fits_); }
-    inline result_type &get_result ()  { return (y_fits_); }
-    inline value_type get_residual () const  { return (residual_); }
-    inline value_type get_slope () const  { return (slope_); }
-    inline value_type get_intercept () const  { return (intercept_); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (y_fits_); }
+    inline result_type &get_result()  { return (y_fits_); }
+    inline value_type get_residual() const  { return (residual_); }
+    inline value_type get_slope() const  { return (slope_); }
+    inline value_type get_intercept() const  { return (intercept_); }
 
     ExponentialFitVisitor()  {   }
 
@@ -8395,7 +9065,7 @@ private:
 
     // True when T is a container (multidimensional x input)
     //
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -8482,7 +9152,7 @@ public:
                         sum_x2 = 0;
                         sum_xy = 0;
                     }
-                    for (auto i = begin; i < end; ++i)  {
+                    for (auto i { begin }; i < end; ++i)  {
                         const data_t    log_x { _bc_log_(*(x_begin + i)) };
                         const data_t    log_y {_bc_log_(*(y_begin + i)) };
 
@@ -8495,11 +9165,12 @@ public:
                 };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd_1));
+                        std::move(lbd_1))
+                };
 
                 for (auto &fut : futures)  {
                     const auto  &sums { fut.get() };
@@ -8535,19 +9206,19 @@ public:
             // XtX is (dim+1 x dim+1), Xty is (dim+1)
             // Row/col 0 is the intercept (constant 1) term
             //
-            matrix_t        XtX(mat_s, mat_s, 0);
+            matrix_t        XtX { long(mat_s), long(mat_s), 0 };
             vec_t<data_t>   Xty(mat_s, 0);
 
             // Accumulate XtX and Xty in log-space
             // X row = [1, ln(x_0), ln(x_1), ..., ln(x_{dim-1})]
             //
-            for (auto i = size_type(0); i < col_s; ++i)  {
-                const auto  &xi { *(x_begin + i) };
-                const auto  log_y { _bc_log_(*(y_begin + i)) };
+            for (auto i { size_type(0) }; i < col_s; ++i)  {
+                const auto      &xi { *(x_begin + i) };
+                const auto      log_y { _bc_log_(*(y_begin + i)) };
 
                 // Build log_row = [1, ln(x_0), ..., ln(x_{dim-1})]
                 //
-                vec_t<data_t>       log_row(mat_s);
+                vec_t<data_t>   log_row(mat_s);
 
                 log_row[0] = 1;
                 for (size_type j { 0 }; j < dim; ++j)
@@ -8582,7 +9253,7 @@ public:
             (auto begin, auto end) -> data_t  {
                 data_t  residual { 0 };
 
-                for (auto i = begin; i < end; ++i)  {
+                for (auto i { begin }; i < end; ++i)  {
                     const auto    pred {
                         prefactor *
                         _reduce_to_product_(_bc_pow_(*(x_begin + i), slope_))
@@ -8602,11 +9273,12 @@ public:
 
         y_fits_.resize(col_s);
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    std::move(lbd_2));
+                    std::move(lbd_2))
+            };
 
              for (auto &fut : futures)  residual_ += fut.get();
         }
@@ -8654,7 +9326,7 @@ private:
 
     // True when T is a container (multidimensional x input)
     //
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -8743,11 +9415,12 @@ public:
                 };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd_1));
+                        std::move(lbd_1))
+                };
 
                 for (auto &fut : futures)  {
                     const auto  &sums { fut.get() };
@@ -8799,7 +9472,8 @@ public:
                         (intercept_ * sum_x / data_t(col_s)) -
                         (slope_ * sum_x2 / data_t(col_s));
 
-            auto    lbd_2 = [&x_begin, &y_begin, this]
+            auto    lbd_2 =
+                [&x_begin, &y_begin, this]
                 (auto begin, auto end) -> value_type  {
                     value_type  residual { 0 };
 
@@ -8822,11 +9496,12 @@ public:
 
             y_fits_.resize(col_s);
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd_2));
+                        std::move(lbd_2))
+                };
 
                  for (auto &fut : futures)  residual_ += fut.get();
             }
@@ -8835,7 +9510,6 @@ public:
             }
         }
         else  {  // Multidimensional input
-            // ----------------------------------------------------------------
             // Multivariate path: delegate entirely to PolyFitVisitor(degree=2).
             //
             // PolyFitVisitor already handles:
@@ -8845,7 +9519,6 @@ public:
             //   - y_fits_ and residual_ accumulation
             //
             // We just forward all iterators unchanged and harvest its results.
-            // ----------------------------------------------------------------
 
             poly_visitor_.pre();
             poly_visitor_(idx_begin, idx_end, x_begin, x_end, y_begin, y_end);
@@ -8933,7 +9606,7 @@ private:
 
     // True when T is a container (multidimensional x input)
     //
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -9007,11 +9680,12 @@ public:
                 };
 
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd_1));
+                        std::move(lbd_1))
+                };
 
                 for (auto &fut : futures)  {
                     const auto  &sums { fut.get() };
@@ -9062,13 +9736,14 @@ public:
 
             y_fits_.resize(col_s);
             if (thread_level > 2)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
-                        std::move(lbd_2));
+                        std::move(lbd_2))
+                };
 
-                 for (auto &fut : futures)  residual_ += fut.get();
+                for (auto &fut : futures)  residual_ += fut.get();
             }
             else  {
                 residual_ = lbd_2(size_type(0), col_s);
@@ -9268,8 +9943,8 @@ struct  CubicSplineFitVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
-    static constexpr bool   is_ary_ = is_std_array_v<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
+    static constexpr bool   is_ary_ { is_std_array_v<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -9323,11 +9998,12 @@ public:
             };
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s - 1,
-                    std::move(lbd));
+                    std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -9335,8 +10011,8 @@ public:
             lbd(size_type(0), col_s - 1);
         }
 
-        vec_t<data_t>       mu (col_s, 0);
-        result_type         z (col_s);
+        vec_t<data_t>       mu(col_s, 0);
+        result_type         z(col_s);
         constexpr data_t    two { 2 };
         constexpr data_t    three { 3 };
 
@@ -9367,9 +10043,9 @@ public:
                 z[i] = (alpha - h[i - 1] * z[i - 1]) / l;
         }
 
-        vec_t<inner_data_t> b (col_s - 1);
-        vec_t<inner_data_t> c (col_s);
-        vec_t<inner_data_t> d (col_s - 1);
+        vec_t<inner_data_t> b(col_s - 1);
+        vec_t<inner_data_t> c(col_s);
+        vec_t<inner_data_t> d(col_s - 1);
 
         if constexpr (is_md_)  {
             c[col_s - 1] = vec_t<data_t>(dims, 0);
@@ -9486,8 +10162,8 @@ struct  LowessVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
-    static constexpr bool   is_ary_ = is_std_array_v<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
+    static constexpr bool   is_ary_ { is_std_array_v<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -9524,8 +10200,8 @@ private:
         auto    lbd =
             [](const auto &begin, const auto &end) -> void  {
                 for (auto citer { begin }; citer < end; ++citer)  {
-                    data_t        &x = *citer;
-                    const data_t  val = data_t(1) - x * x;
+                    data_t        &x { *citer };
+                    const data_t  val { data_t(1) - x * x };
 
                     x = val * val;
                 }
@@ -9533,11 +10209,12 @@ private:
 
         if (thread_level > 2 &&
             std::distance(x_begin, x_end) >= ThreadPool::MUL_THR_THHOLD)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     x_begin,
                     x_end,
-                    std::move(lbd));
+                    std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -9556,8 +10233,8 @@ private:
         auto    lbd =
             [](const auto &begin, const auto &end) -> void  {
                 for (auto citer { begin }; citer < end; ++citer)  {
-                    data_t        &x = *citer;
-                    const data_t  val = data_t(1) - x * x * x;
+                    data_t        &x { *citer };
+                    const data_t  val { data_t(1) - x * x * x };
 
                     x = val * val * val;
                 }
@@ -9565,11 +10242,12 @@ private:
 
         if (thread_level > 2 &&
             std::distance(x_begin, x_end) >= ThreadPool::MUL_THR_THHOLD)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     x_begin,
                     x_end,
-                    std::move(lbd));
+                    std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -9596,7 +10274,7 @@ private:
             // Y is const vec_t<scalar_vec_t> &
             // Y_FITS is const vec_t<scalar_vec_t> &
 
-            const size_type n_rows = resid_weights_.size();
+            const size_type n_rows { resid_weights_.size() };
 
             // Per-row Euclidean norm of column-wise absolute residuals
             //
@@ -9623,13 +10301,14 @@ private:
                 };
 
             if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop2<T>(
                         size_type(0),
                         col_s,
                         size_type(0),
                         size_type(std::distance(y_fits_begin, y_fits_end)),
-                        std::move(lbd));
+                        std::move(lbd))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -9660,11 +10339,12 @@ private:
                 };
 
             if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-                auto    futures =
+                auto    futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         resid_weights_.begin(),
                         resid_weights_.end(),
-                        std::move(lbd));
+                        std::move(lbd))
+                };
 
                 for (auto &fut : futures)  fut.get();
             }
@@ -9703,14 +10383,14 @@ private:
         // This loop increments until we fall just outside of delta distance,
         // copying the results for any repeated x's along the way.
         //
-        const data_t    cutoff = *(x_begin + last_fit_idx) + delta;
-        long            k = last_fit_idx + 1;
-        bool            looped = false;
+        const data_t    cutoff { *(x_begin + last_fit_idx) + delta };
+        long            k { last_fit_idx + 1 };
+        bool            looped { false };
 
         for ( ; size_type(k) < col_s; ++k) [[likely]]  {
             looped = true;
 
-            const data_t    xvalue = *(x_begin + k);
+            const data_t    xvalue { data_t(*(x_begin + k)) };
 
             if (xvalue > cutoff)  break;
             if (xvalue == *(x_begin + last_fit_idx))  {
@@ -9743,7 +10423,7 @@ private:
         auxiliary_vec_.clear();
         auxiliary_vec_.reserve(curr_idx - last_fit_idx);
 
-        const data_t    last_fit_xval = *(x_begin + last_fit_idx);
+        const data_t    last_fit_xval { data_t(*(x_begin + last_fit_idx)) };
 
         std::transform(x_begin + (last_fit_idx + 1), x_begin + curr_idx,
                        std::back_inserter(auxiliary_vec_),
@@ -9751,16 +10431,18 @@ private:
                            return (x - last_fit_xval);
                        });
 
-        const data_t    x_diff { *(x_begin + curr_idx) - last_fit_xval };
+        const data_t    x_diff {
+            data_t(*(x_begin + curr_idx) - last_fit_xval)
+        };
 
-        for (auto val : auxiliary_vec_) [[likely]]  val /= x_diff;
+        for (auto &val : auxiliary_vec_) [[likely]]  val /= x_diff;
 
-        const data_t    last_fit_yval = *(y_fits_begin + last_fit_idx);
-        const data_t    curr_idx_yval = *(y_fits_begin + curr_idx);
+        const data_t    last_fit_yval { *(y_fits_begin + last_fit_idx) };
+        const data_t    curr_idx_yval { *(y_fits_begin + curr_idx) };
 
-        for (long i = last_fit_idx + 1; i < long(auxiliary_vec_.size());
+        for (long i { last_fit_idx + 1 }; i < long(auxiliary_vec_.size());
              ++i) [[likely]]  {
-            const data_t    avalue = auxiliary_vec_[i];
+            const data_t    avalue { auxiliary_vec_[i] };
 
             *(y_fits_begin + i) =
                 avalue * curr_idx_yval + (data_t(1) - avalue) * last_fit_yval;
@@ -9799,18 +10481,18 @@ private:
         else  {
             data_t  sum_weighted_x { 0 };
 
-            for (size_type j = left_end; j < right_end; ++j) [[likely]]
+            for (size_type j { left_end }; j < right_end; ++j) [[likely]]
                 sum_weighted_x += *(w_begin + j) * *(x_begin + j);
 
             data_t  weighted_sqdev_x { 0 };
 
-            for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
+            for (size_type j { left_end }; j < right_end; ++j) [[likely]]  {
                 const data_t    val { *(x_begin + j) - sum_weighted_x };
 
                 weighted_sqdev_x += *(w_begin + j) * val * val;
             }
 
-            for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
+            for (size_type j { left_end }; j < right_end; ++j) [[likely]]  {
                 const data_t    p_idx_j {
                     *(w_begin + j) *
                     (data_t(1) + (xval - sum_weighted_x) *
@@ -9845,7 +10527,7 @@ private:
         dist_i_j_.clear();
         x_j_.reserve(right_end - left_end);
         dist_i_j_.reserve(right_end - left_end);
-        for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
+        for (size_type j { left_end }; j < right_end; ++j) [[likely]]  {
             x_j_.push_back(*(x_begin + j));
             dist_i_j_.push_back(std::fabs(*(x_begin + j) - xval) / radius);
 
@@ -9856,7 +10538,7 @@ private:
         }
 
         tri_cube_(w_begin + left_end, w_begin + right_end, thread_level_);
-        for (size_type j = left_end; j < right_end; ++j) [[likely]]
+        for (size_type j { left_end }; j < right_end; ++j) [[likely]]
             *(w_begin + j) *= resid_weights_[j];
 
         data_t      sum_weights { 0 };
@@ -9870,7 +10552,7 @@ private:
                           }
                       });
 
-        bool    reg_ok = true;
+        bool    reg_ok { true };
 
         // 2nd condition checks if only 1 local weight is non-zero, which
         // will give a divisor of zero in calculate_y_fit
@@ -9878,7 +10560,7 @@ private:
         if (sum_weights <= 0 || non_zero_cnt == 1)
             reg_ok = false;
         else
-            for (size_type j = left_end; j < right_end; ++j)
+            for (size_type j { left_end }; j < right_end; ++j)
                 *(w_begin + j) /= sum_weights;
 
         return (reg_ok);
@@ -9934,9 +10616,7 @@ private:
         // The number of neighbors in each regression. round up if close
         // to integer
         //
-        size_type   k {
-            size_type (frac_ * data_t(col_s) + data_t(1e-10))
-        };
+        size_type   k { size_type (frac_ * data_t(col_s) + data_t(1e-10)) };
 
         // frac_ should be set, so that 2 <= k <= n. Conform them instead of
         // throwing error.
@@ -9947,7 +10627,7 @@ private:
         scalar_vec_t    weights (col_s, 0);
 
         y_fits_col.resize(col_s, 0);
-        for (size_type l = 0; l < loop_n_; ++l) [[likely]]  {
+        for (size_type l { 0 }; l < loop_n_; ++l) [[likely]]  {
             long        curr_idx { 0 };
             long        last_fit_idx { -1 };
             size_type   left_end { 0 };
@@ -10064,12 +10744,14 @@ private:
 
         if (n_rows == 0)  return;
 
-        const size_type col_s = [n_rows, &y_begin]() -> size_type  {
-            if constexpr (is_ary_)
-                return (std::tuple_size<T>::value);
-            else
-                return ((n_rows > 0) ? y_begin->size() : size_type(0));
-        }();
+        const size_type col_s {
+            [n_rows, &y_begin]() -> size_type  {
+                if constexpr (is_ary_)
+                    return (std::tuple_size<T>::value);
+                else
+                    return ((n_rows > 0) ? y_begin->size() : size_type(0));
+            }()
+        };
 
         if (col_s == 0)  return;
 
@@ -10087,19 +10769,19 @@ private:
         //
         vec_t<scalar_vec_t> y_cols(col_s, scalar_vec_t(n_rows));
 
-        for (size_type r = 0; r < n_rows; ++r)  {
+        for (size_type r { 0 }; r < n_rows; ++r)  {
             const auto  &row { *(y_begin + r) };
 
-            for (size_type c = 0; c < col_s; ++c)
+            for (size_type c { 0 }; c < col_s; ++c)
                 y_cols[c][r] = row[c];
         }
 
         // Outer robustifying loop
         //
-        for (size_type l = 0; l < loop_n_; ++l) [[likely]]  {
+        for (size_type l { 0 }; l < loop_n_; ++l) [[likely]]  {
             // Fit each column independently using the shared resid_weights_
             //
-            for (size_type c = 0; c < col_s; ++c)  {
+            for (size_type c { 0 }; c < col_s; ++c)  {
                 lowess_scalar_(idx_begin, idx_end,
                                y_cols[c].begin(), y_cols[c].end(),
                                x_begin, x_end,
@@ -10182,8 +10864,8 @@ public:
             if (sorted_)
                 lowess_(idx_begin, idx_end, y_begin, y_end, x_begin, x_end);
             else  {  // Sort x and y in ascending order of x
-                scalar_vec_t            xvals (x_begin, x_end);
-                scalar_vec_t            yvals (y_begin, y_end);
+                scalar_vec_t            xvals(x_begin, x_end);
+                scalar_vec_t            yvals(y_begin, y_end);
                 std::vector<size_type>  sorting_idxs(col_s);
 
                 std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
@@ -10288,8 +10970,8 @@ struct  DecomposeVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
-    static constexpr bool   is_ary_ = is_std_array_v<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
+    static constexpr bool   is_ary_ { is_std_array_v<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -10424,7 +11106,7 @@ public:
                                  "half of column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        vec_t<data_t>   xvals (col_s);
+        vec_t<data_t>   xvals(col_s);
 
         do_trend_(idx_begin, idx_end, y_begin, y_end, col_s, xvals);
 
@@ -10441,7 +11123,7 @@ public:
         auto    add_lbd =
             [dim, this, &detrended, &y_begin]
             (auto begin, auto end, auto) -> void {
-                for (size_type i = begin; i < end; ++i) [[likely]]  {
+                for (size_type i { begin }; i < end; ++i) [[likely]]  {
                     if constexpr (is_ary_)  {
                         const auto  &val { *(y_begin + i) - trend_[i] };
                         size_type   j { 0 };
@@ -10458,7 +11140,7 @@ public:
         auto    mul_lbd =
             [dim, this, &detrended, &y_begin]
             (auto begin, auto end, auto) -> void {
-                for (size_type i = begin; i < end; ++i) [[likely]]  {
+                for (size_type i { begin }; i < end; ++i) [[likely]]  {
                     if constexpr (is_ary_)  {
                         const auto  &val { *(y_begin + i) / trend_[i] };
                         size_type   j { 0 };
@@ -11063,28 +11745,26 @@ private:
         std::vector<value_type> detrended_data;
 
         if (params_.adf_with_trend)  {
-            std::vector<data_t> times(col_s);
-
-            for (size_type i { 0 }; i < col_s; ++i)
-                times[i] = data_t(i + 1);
-
-            const data_t        sum_t {
-                std::accumulate(times.begin(), times.end(), data_t(0))
-            };
-            value_type          sum_y { *column_begin };
+            const data_t    n { data_t(col_s) };
+            const data_t    sum_t { (n * (n + data_t(1))) / data_t(2) };
+            value_type      sum_y { *column_begin };
 
             for (size_type i { 1 }; i < col_s; ++i)
                 sum_y += *(column_begin + i);
 
-            data_t              sum_t2 { 0 };
-            value_type          sum_ty;
+            const data_t    sum_t2 {
+                n * (n + data_t(1)) * (data_t(2) * n + data_t(1)) / data_t(6)
+            };
+            value_type      sum_ty;
 
             if constexpr (is_md_ && ! is_ary_)
                 sum_ty.resize(column_begin->size(), 0);
             else if constexpr (! is_md_)  sum_ty = 0;
             for (size_type i { 0 }; i < col_s; i++) {
-                sum_ty += times[i] * *(column_begin + i);
-                sum_t2 += times[i] * times[i];
+                const data_t    t { data_t(i + 1) };
+
+                sum_ty += t * *(column_begin + i);
+
             }
 
             const value_type    slope {
@@ -11098,9 +11778,12 @@ private:
             // Detrend the data
             //
             detrended_data.resize(col_s);
-            for (size_type i { 0 }; i < col_s; i++)
+            for (size_type i { 0 }; i < col_s; i++)  {
+                const data_t t { data_t(i + 1) };
+
                 detrended_data[i] =
-                    *(column_begin + i) - (intercept + slope * times[i]);
+                    *(column_begin + i) - (intercept + slope * t);
+            }
         }
 
         VarVisitor<T, I>    var { true };

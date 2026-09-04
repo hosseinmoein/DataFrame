@@ -11652,9 +11652,9 @@ struct  NonZeroRangeVisitor  {
                const H2 &column2_begin, const H2 &column2_end)  {
 
         const std::size_t   col_s {
-            std::min({ std::distance(idx_begin, idx_end),
-                       std::distance(column1_begin, column1_end),
-                       std::distance(column2_begin, column2_end) })
+            size_type(std::min({ std::distance(idx_begin, idx_end),
+                                 std::distance(column1_begin, column1_end),
+                                 std::distance(column2_begin, column2_end) }))
         };
 
         bool                   there_is_zero { false };
@@ -11742,8 +11742,8 @@ struct  StationaryCheckVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
-    static constexpr bool   is_ary_ = is_std_array_v<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
+    static constexpr bool   is_ary_ { is_std_array_v<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -11767,8 +11767,8 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 5)
-            throw DataFrameError("StationaryCheckVisitor: "
-                                 "Time-series is too short");
+            throw DataFrameError(
+                "StationaryCheckVisitor: Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         if (method_ == stationary_test::kpss)
@@ -11778,6 +11778,7 @@ public:
     }
 
     inline void pre()  {
+
         if constexpr (is_md_)  {
             kpss_val_.clear();
             kpss_stat_.clear();
@@ -11863,7 +11864,7 @@ private:
             //
             data_t  norm_sq { 0 };
 
-            for (size_type i = 0; i < col_s; ++i)
+            for (size_type i { 0 }; i < col_s; ++i)
                 norm_sq += cum_sum[i] * cum_sum[i];
 
             kpss_val_ = norm_sq / (data_t(col_s) * data_t(col_s) * var_res);

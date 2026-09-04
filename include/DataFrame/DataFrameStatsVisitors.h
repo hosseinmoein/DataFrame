@@ -5873,7 +5873,8 @@ struct  NKthValueVisitor  {
 
     inline void pre()  { result_.clear(); }
     inline void post()  {   }
-    inline result_type get_result() const  { return (result_); }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
     inline size_type get_compute_size() const  { return (compute_size_); }
 
     explicit NKthValueVisitor(std::vector<size_type> &&ke,
@@ -6044,9 +6045,9 @@ public:
         else
             aux.insert(aux.end(), column_begin, column_end);
 
-        const size_type cs { aux.size() };
+        const size_type compute_size { aux.size() };
 
-        if (cs == 0)  return;
+        if (compute_size == 0)  return;
 
         const double    vec_len_frac { qt_ * col_s };
         const size_type int_idx {
@@ -6056,21 +6057,12 @@ public:
             ! (col_s & 0x01) || double(int_idx) < vec_len_frac
         };
 
-        // Rescales a rank against the original column size to one against
-        // `cs` (the post-filter size) -- when skip_nan_ is false, cs ==
-        // col_s always, so this is a no-op and reproduces the original
-        // behavior exactly. Clamped to [1, cs] for the same reason
-        // KthValueVisitor's own version is: an extreme rank/cs/col_s
-        // combination can otherwise round to 0, and since the result feeds
-        // an unsigned subtraction, that would underflow into an
-        // out-of-bounds offset.
-        //
         const auto  rescaled_kth =
-            [cs, col_s](size_type raw_idx) -> size_type  {
+            [compute_size, col_s](size_type raw_idx) -> size_type  {
                 return (std::clamp(
                     size_type(std::round(
-                        double(raw_idx * cs) / double(col_s))),
-                    size_type(1), cs));
+                        double(raw_idx * compute_size) / double(col_s))),
+                    size_type(1), compute_size));
             };
 
         if (qt_ == 0.0 || qt_ == 1.0)  {
@@ -6097,11 +6089,6 @@ public:
                     result_ = *nth1;
                 }
                 else  {
-                    // Same one-aux, partition-high-then-low-within-it trick
-                    // as MedianVisitor, instead of two independent
-                    // KthValueVisitor calls each rebuilding a NaN-filtered
-                    // copy and running its own full-range nth_element.
-                    //
                     const auto  nth2 {
                         aux.begin() + static_cast<std::ptrdiff_t>(kth2 - 1)
                     };
@@ -6169,6 +6156,157 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using qt_v = QuantileVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  NQuantileVisitor  {
+
+private:
+
+    using vec_type = std::vector<T, typename allocator_declare<T, A>::type>;
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+               const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE2
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s == 0)
+            throw DataFrameError("NQuantileVisitor: Column size > 0");
+        for (const auto qt : qts_)
+            if (qt < 0.0 || qt > 1.0)
+                throw DataFrameError("NQuantileVisitor: 1 >= quantiles >= 0");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        vec_type    aux;
+
+        if (skip_nan_)  {
+            aux.reserve(col_s);
+            std::copy_if(column_begin, column_end,
+                         std::back_inserter(aux),
+                         [](const value_type &v) -> bool {
+                             return (! is_nan__(v));
+                         });
+        }
+        else
+            aux.insert(aux.end(), column_begin, column_end);
+
+        const size_type compute_size { aux.size() };
+
+        if (compute_size == 0)  return;
+
+        const auto  rescaled_kth =
+            [compute_size, col_s](size_type raw_idx) -> size_type  {
+                return (std::clamp(
+                    size_type(std::round(
+                        double(raw_idx * compute_size) / double(col_s))),
+                    size_type(1), compute_size));
+            };
+
+        result_.resize(qts_.size());
+        for (size_type i { 0 }; const double qt : qts_)  {
+            const double    vec_len_frac { qt * col_s };
+            const size_type int_idx {
+                static_cast<size_type>(std::round(vec_len_frac))
+            };
+            const bool      need_two {
+                ! (col_s & 0x01) || double(int_idx) < vec_len_frac
+            };
+
+            if (qt == 0.0 || qt == 1.0)  {
+                const size_type kth { rescaled_kth((qt == 0.0) ? 1 : col_s) };
+                const auto      nth {
+                    aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
+                };
+
+                std::nth_element(aux.begin(), nth, aux.end());
+                result_[i++] = *nth;
+            }
+            else if (policy_ == quantile_policy::mid_point ||
+                     policy_ == quantile_policy::linear)  {
+                const size_type kth1 { rescaled_kth(int_idx) };
+                const auto      nth1 {
+                    aux.begin() + static_cast<std::ptrdiff_t>(kth1 - 1)
+                };
+
+                if (need_two && int_idx + 1 < col_s)  {
+                    const size_type kth2 { rescaled_kth(int_idx + 1) };
+
+                    if (kth2 == kth1)  {
+                        std::nth_element(aux.begin(), nth1, aux.end());
+                        result_[i++] = *nth1;
+                    }
+                    else  {
+                        const auto  nth2 {
+                            aux.begin() + static_cast<std::ptrdiff_t>(kth2 - 1)
+                        };
+                        const auto  nth_high { (kth1 > kth2) ? nth1 : nth2 };
+                        const auto  nth_low  { (kth1 > kth2) ? nth2 : nth1 };
+
+                        std::nth_element(aux.begin(), nth_high, aux.end());
+                        std::nth_element(aux.begin(), nth_low, nth_high);
+
+                        const value_type    v1 { *nth1 };
+                        const value_type    v2 { *nth2 };
+
+                        result_[i++] =
+                            (policy_ == quantile_policy::mid_point)
+                                 ? (v1 + v2) / value_type(2)
+                                 : v1 + (v2 - v1) * value_type(1.0 - qt);
+                    }
+                }
+                else  {
+                    std::nth_element(aux.begin(), nth1, aux.end());
+                    result_[i++] = *nth1;
+                }
+            }
+            else if (policy_ == quantile_policy::lower_value ||
+                     policy_ == quantile_policy::higher_value)  {
+                const size_type raw_idx {
+                    (policy_ == quantile_policy::lower_value)
+                         ? int_idx
+                         : ((((int_idx + 1) < col_s) && need_two)
+                                 ? int_idx + 1 : int_idx)
+                };
+                const size_type kth { rescaled_kth(raw_idx) };
+                const auto      nth {
+                    aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
+                };
+
+                std::nth_element(aux.begin(), nth, aux.end());
+                result_[i++] = *nth;
+            }
+        }
+    }
+
+    inline void pre()  { result_.clear(); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+
+    explicit
+    NQuantileVisitor(std::vector<double> &&quantiles,
+                     quantile_policy q_policy = quantile_policy::mid_point,
+                     bool skip_nan = false)
+        : qts_(quantiles), policy_(q_policy), skip_nan_(skip_nan)  {   }
+
+private:
+
+    result_type                 result_ {  };
+    const std::vector<double>   qts_;
+    const quantile_policy       policy_;
+    const bool                  skip_nan_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using nqt_v = NQuantileVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
@@ -9986,8 +10124,22 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(y_begin, y_end)) || col_s <= 3)
-            throw DataFrameError("CubicSplineFitVisitor: two columns must be "
-                                 "of equal sizes and > 3");
+            throw DataFrameError(
+                "CubicSplineFitVisitor: two columns must be "
+                "of equal sizes and > 3");
+
+        // The tridiagonal derivation below divides by h[i] = X[i+1] - X[i]
+        // and assumes h[i] > 0. A duplicate X divides by zero and NaN-
+        // poisons the whole result; a merely out-of-order X (no duplicate)
+        // divides by a negative, finite h[i] and silently produces a
+        // finite-looking but mathematically meaningless spline. Neither is
+        // detectable from the output alone, so it must be checked here.
+        //
+        for (size_type i { 1 }; i < col_s; ++i)
+            if (*(x_begin + i) <= *(x_begin + (i - 1)))
+                throw DataFrameError(
+                    "CubicSplineFitVisitor: X column must be strictly "
+                    "increasing");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         vec_t<data_t>   h(col_s, 0);
@@ -10047,14 +10199,10 @@ public:
         vec_t<inner_data_t> c(col_s);
         vec_t<inner_data_t> d(col_s - 1);
 
-        if constexpr (is_md_)  {
+        if constexpr (is_md_)
             c[col_s - 1] = vec_t<data_t>(dims, 0);
-            c[col_s - 2] = vec_t<data_t>(dims, 0);
-        }
-        else  {
+        else
             c[col_s - 1] = 0;
-            c[col_s - 2] = 0;
-        }
         for(long i { long(col_s - 2) }; i >= 0; --i) [[likely]]  {
             const auto  &yi { *(y_begin + i) };
             const auto  &yip1 { *(y_begin + (i + 1)) };
@@ -10386,13 +10534,14 @@ private:
         const data_t    cutoff { *(x_begin + last_fit_idx) + delta };
         long            k { last_fit_idx + 1 };
         bool            looped { false };
+        bool            broke { false };
 
         for ( ; size_type(k) < col_s; ++k) [[likely]]  {
             looped = true;
 
             const data_t    xvalue { data_t(*(x_begin + k)) };
 
-            if (xvalue > cutoff)  break;
+            if (xvalue > cutoff)  { broke = true; break; }
             if (xvalue == *(x_begin + last_fit_idx))  {
                 // if tied with previous x-value, just use the already fitted
                 // y, and update the last-fit counter.
@@ -10401,6 +10550,17 @@ private:
                 last_fit_idx = k;
             }
         }
+
+        // If the scan above ran off the end of the data without ever
+        // exceeding the cutoff (every remaining point was within delta),
+        // this loop's increment leaves k one past the last valid index.
+        // Pull it back so k lands on the last index actually visited,
+        // matching the case where the loop broke early (and matching what
+        // a range-based scan that simply stops at the last index would
+        // leave k at) -- otherwise the very last delta-window of the data
+        // computes one index too far right.
+        //
+        if (looped && ! broke)  k -= 1;
 
         // curr_idx, which indicates the next point to fit the regression at,
         // is either one prior to k (since k should be the first point outside
@@ -10440,9 +10600,13 @@ private:
         const data_t    last_fit_yval { *(y_fits_begin + last_fit_idx) };
         const data_t    curr_idx_yval { *(y_fits_begin + curr_idx) };
 
-        for (long i { last_fit_idx + 1 }; i < long(auxiliary_vec_.size());
-             ++i) [[likely]]  {
-            const data_t    avalue { auxiliary_vec_[i] };
+        // auxiliary_vec_[j] holds the interpolation fraction for absolute
+        // index (last_fit_idx + 1 + j); j is 0-based (it came from
+        // back_inserter starting at an empty vector), but i below is the
+        // absolute fit index, so the two must not be used interchangeably.
+        //
+        for (long i { last_fit_idx + 1 }; i < curr_idx; ++i) [[likely]]  {
+            const data_t    avalue { auxiliary_vec_[i - (last_fit_idx + 1)] };
 
             *(y_fits_begin + i) =
                 avalue * curr_idx_yval + (data_t(1) - avalue) * last_fit_yval;
@@ -10809,9 +10973,8 @@ public:
             std::vector<bool, typename allocator_declare<bool, A>::type>;
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        if (frac_ < 0 || frac_ > 1 || loop_n_ <= 2)
-            throw DataFrameError("LowessVisitor: 0 <= frac <= 1 and "
-                                 "loop num must be > 2");
+        if (frac_ < 0 || frac_ > 1)
+            throw DataFrameError("LowessVisitor: 0 <= frac <= 1");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         const size_type col_s { size_type(std::distance(x_begin, x_end)) };
@@ -11484,23 +11647,29 @@ struct  NonZeroRangeVisitor  {
 
     template <typename K, typename H1, typename H2>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H1 &column1_begin, const H1 &column1_end,
-                const H2 &column2_begin, const H2 &column2_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H1 &column1_begin, const H1 &column1_end,
+               const H2 &column2_begin, const H2 &column2_end)  {
 
-        const std::size_t   col_s =
-            std::min({ std::distance(idx_begin, idx_end),
-                       std::distance(column1_begin, column1_end),
-                       std::distance(column2_begin, column2_end) });
+        const std::size_t   col_s {
+            std::size_t(std::min({ std::distance(idx_begin, idx_end),
+                                   std::distance(column1_begin, column1_end),
+                                   std::distance(column2_begin, column2_end) }))
+        };
 
-        bool        there_is_zero = false;
-        result_type result;
+        bool                   there_is_zero { false };
+        result_type            result;
+        constexpr value_type   nudge {
+            std::is_floating_point_v<value_type>
+                ? value_type(std::numeric_limits<value_type>::epsilon())
+                : value_type(1)
+        };
 
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             result.resize(col_s);
 
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
@@ -11516,39 +11685,38 @@ struct  NonZeroRangeVisitor  {
                             if (v == 0)  there_is_zero = true;
                         }
                         return (there_is_zero);
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  there_is_zero |= fut.get();
             if (there_is_zero)  {
-                auto    local_futures =
+                auto    local_futures {
                     ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                         size_type(0),
                         col_s,
                         [&result]
                         (auto begin, auto end) -> void  {
                             for (size_type i = begin; i < end; ++i)
-                                result[i] +=
-                                    std::numeric_limits<value_type>::epsilon();
-                        });
+                                result[i] += nudge;
+                        })
+                };
 
                 for (auto &fut : local_futures)  fut.get();
             }
         }
         else  {
             result.resize(col_s);
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    v =
-                    *(column1_begin + i) - *(column2_begin + i);
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    v {
+                    *(column1_begin + i) - *(column2_begin + i)
+                };
 
                 result[i] = v;
                 if (v == 0)  there_is_zero = true;
             }
             if (there_is_zero)
                 std::for_each(result.begin(), result.end(),
-                              [](value_type &v) -> void  {
-                                  v += std::numeric_limits
-                                           <value_type>::epsilon();
-                              });
+                              [nudge](value_type &v) -> void  { v += nudge; });
         }
 
         result_.swap(result);
@@ -11574,8 +11742,8 @@ struct  StationaryCheckVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
-    static constexpr bool   is_ary_ = is_std_array_v<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
+    static constexpr bool   is_ary_ { is_std_array_v<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -11599,8 +11767,8 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 5)
-            throw DataFrameError("StationaryCheckVisitor: "
-                                 "Time-series is too short");
+            throw DataFrameError(
+                "StationaryCheckVisitor: Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         if (method_ == stationary_test::kpss)
@@ -11610,6 +11778,7 @@ public:
     }
 
     inline void pre()  {
+
         if constexpr (is_md_)  {
             kpss_val_.clear();
             kpss_stat_.clear();
@@ -11695,7 +11864,7 @@ private:
             //
             data_t  norm_sq { 0 };
 
-            for (size_type i = 0; i < col_s; ++i)
+            for (size_type i { 0 }; i < col_s; ++i)
                 norm_sq += cum_sum[i] * cum_sum[i];
 
             kpss_val_ = norm_sq / (data_t(col_s) * data_t(col_s) * var_res);
@@ -11764,7 +11933,6 @@ private:
                 const data_t    t { data_t(i + 1) };
 
                 sum_ty += t * *(column_begin + i);
-
             }
 
             const value_type    slope {

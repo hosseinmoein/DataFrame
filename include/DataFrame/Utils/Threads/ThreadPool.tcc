@@ -200,13 +200,10 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
     ret.reserve(blocks.first > 0 ? cap_thrs : size_type(1));
     if (blocks.first > 0)  {
         if (backward)  {
-            for (size_type i { n }; i >= 0; i -= blocks.first)  {
-                size_type   block_end { i - blocks.first };
+            for (size_type k { 0 }; k < effective_splits; ++k)  {
+                const size_type i { n - k * blocks.first };
+                const size_type block_end { i - blocks.first };
 
-                if (size_type((end + i) - (end + block_end + 1)) <
-                        (blocks.first - 1))
-                    block_end = -1;
-                if (block_end < 0)  break;
                 ret.emplace_back(dispatch(false,
                                           std::forward<F>(routine),
                                               end + block_end,
@@ -215,10 +212,10 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
             }
         }
         else  {
-            for (size_type i { 0 }; i < n; i += blocks.first)  {
-                size_type block_end { i + blocks.first };
+            for (size_type k { 0 }; k < effective_splits; ++k)  {
+                const size_type i { k * blocks.first };
+                const size_type block_end { i + blocks.first };
 
-                if (block_end > n)  break;
                 ret.emplace_back(dispatch(false,
                                           std::forward<F>(routine),
                                               begin + i,
@@ -280,10 +277,10 @@ ThreadPool::parallel_loop2(I1 begin1, I1 end1, I2 begin2, I2 end2,
 
     ret.reserve(blocks.first > 0 ? cap_thrs : size_type(1));
     if (blocks.first > 0)  {
-        for (size_type i { 0 }; i < n; i += blocks.first)  {
-            size_type block_end { i + blocks.first };
+        for (size_type k { 0 }; k < effective_splits; ++k)  {
+            const size_type i { k * blocks.first };
+            const size_type block_end { i + blocks.first };
 
-            if (block_end > n)  break;
             ret.emplace_back(dispatch(false,
                                       std::forward<F>(routine),
                                           begin1 + i,

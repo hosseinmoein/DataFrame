@@ -11652,9 +11652,9 @@ struct  NonZeroRangeVisitor  {
                const H2 &column2_begin, const H2 &column2_end)  {
 
         const std::size_t   col_s {
-            std::size_t(min({ std::distance(idx_begin, idx_end),
-                              std::distance(column1_begin, column1_end),
-                              std::distance(column2_begin, column2_end) }))
+            std::size_t(std::min({ std::distance(idx_begin, idx_end),
+                                   std::distance(column1_begin, column1_end),
+                                   std::distance(column2_begin, column2_end) }))
         };
 
         bool                   there_is_zero { false };

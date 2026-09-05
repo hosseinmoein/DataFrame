@@ -6050,12 +6050,29 @@ public:
         if (compute_size == 0)  return;
 
         const double    vec_len_frac { qt_ * col_s };
-        const size_type int_idx {
-            static_cast<size_type>(std::round(vec_len_frac))
+
+        // int_idx must be floor(vec_len_frac), not round(vec_len_frac):
+        // int_idx and int_idx+1 are later used as the two ranks bracketing
+        // the true (fractional) target rank, which only holds if int_idx is
+        // the floor. Rounding instead of flooring made int_idx jump to the
+        // ceiling whenever the fractional part was >= 0.5, so int_idx and
+        // int_idx+1 no longer bracketed vec_len_frac at all.
+        //
+        // need_two must reflect whether vec_len_frac has a genuine
+        // fractional remainder -- not col_s's parity, which was only ever
+        // coincidentally right for the classic "average the two middle
+        // values" median-of-even-n case and wrong for every other
+        // quantile. The epsilon absorbs floating-point noise from qt_*col_s
+        // (e.g. 0.1 * 10 not landing on exactly 1.0).
+        //
+        constexpr double    epsilon { 1e-9 };
+        const size_type     int_idx {
+            static_cast<size_type>(std::floor(vec_len_frac + epsilon))
         };
-        const bool      need_two {
-            ! (col_s & 0x01) || double(int_idx) < vec_len_frac
+        const double        frac_part {
+            std::max(0.0, vec_len_frac - double(int_idx))
         };
+        const bool          need_two { frac_part > epsilon };
 
         const auto  rescaled_kth =
             [compute_size, col_s](size_type raw_idx) -> size_type  {
@@ -6065,14 +6082,11 @@ public:
                     size_type(1), compute_size));
             };
 
-        if (qt_ == 0.0 || qt_ == 1.0)  {
-            const size_type kth { rescaled_kth((qt_ == 0.0) ? 1 : col_s) };
-            const auto      nth {
-                aux.begin() + static_cast<std::ptrdiff_t>(kth - 1)
-            };
-
-            std::nth_element(aux.begin(), nth, aux.end());
-            result_ = *nth;
+        if (qt_ == 0.0)  {
+            result_= std::ranges::min(aux);
+        }
+        else if (qt_ == 1.0)  {
+            result_ = std::ranges::max(aux);
         }
         else if (policy_ == quantile_policy::mid_point ||
                  policy_ == quantile_policy::linear)  {
@@ -6081,7 +6095,7 @@ public:
                 aux.begin() + static_cast<std::ptrdiff_t>(kth1 - 1)
             };
 
-            if (need_two && int_idx + 1 < col_s)  {
+            if (need_two && int_idx + 1 <= col_s)  {
                 const size_type kth2 { rescaled_kth(int_idx + 1) };
 
                 if (kth2 == kth1)  {
@@ -6103,7 +6117,7 @@ public:
 
                     result_ = (policy_ == quantile_policy::mid_point)
                                   ? (v1 + v2) / value_type(2)
-                                  : v1 + (v2 - v1) * value_type(1.0 - qt_);
+                                  : v1 + (v2 - v1) * value_type(frac_part);
                 }
             }
             else  {
@@ -6116,7 +6130,7 @@ public:
             const size_type raw_idx {
                 policy_ == quantile_policy::lower_value
                     ? int_idx
-                    : (int_idx + 1 < col_s && need_two ? int_idx + 1 : int_idx)
+                    : (int_idx + 1 <= col_s && need_two ? int_idx + 1 : int_idx)
             };
             const size_type kth { rescaled_kth(raw_idx) };
             const auto      nth {
@@ -6196,7 +6210,7 @@ public:
                          });
         }
         else
-            aux.insert(aux.end(), column_begin, column_end);
+            aux.assign(column_begin, column_end);
 
         const size_type compute_size { aux.size() };
 
@@ -6212,13 +6226,19 @@ public:
 
         result_.resize(qts_.size());
         for (size_type i { 0 }; const double qt : qts_)  {
-            const double    vec_len_frac { qt * col_s };
-            const size_type int_idx {
-                static_cast<size_type>(std::round(vec_len_frac))
+            const double        vec_len_frac { qt * col_s };
+            // See QuantileVisitor for why this must be floor (not round)
+            // and why need_two must test the fractional remainder directly
+            // (not col_s's parity).
+            //
+            constexpr double    epsilon { 1e-9 };
+            const size_type     int_idx {
+                static_cast<size_type>(std::floor(vec_len_frac + epsilon))
             };
-            const bool      need_two {
-                ! (col_s & 0x01) || double(int_idx) < vec_len_frac
+            const double        frac_part {
+                std::max(0.0, vec_len_frac - double(int_idx))
             };
+            const bool          need_two { frac_part > epsilon };
 
             if (qt == 0.0 || qt == 1.0)  {
                 const size_type kth { rescaled_kth((qt == 0.0) ? 1 : col_s) };
@@ -6236,7 +6256,7 @@ public:
                     aux.begin() + static_cast<std::ptrdiff_t>(kth1 - 1)
                 };
 
-                if (need_two && int_idx + 1 < col_s)  {
+                if (need_two && int_idx + 1 <= col_s)  {
                     const size_type kth2 { rescaled_kth(int_idx + 1) };
 
                     if (kth2 == kth1)  {
@@ -6259,7 +6279,7 @@ public:
                         result_[i++] =
                             (policy_ == quantile_policy::mid_point)
                                  ? (v1 + v2) / value_type(2)
-                                 : v1 + (v2 - v1) * value_type(1.0 - qt);
+                                 : v1 + (v2 - v1) * value_type(frac_part);
                     }
                 }
                 else  {
@@ -6272,7 +6292,7 @@ public:
                 const size_type raw_idx {
                     (policy_ == quantile_policy::lower_value)
                          ? int_idx
-                         : ((((int_idx + 1) < col_s) && need_two)
+                         : ((((int_idx + 1) <= col_s) && need_two)
                                  ? int_idx + 1 : int_idx)
                 };
                 const size_type kth { rescaled_kth(raw_idx) };
@@ -11651,12 +11671,11 @@ struct  NonZeroRangeVisitor  {
                const H1 &column1_begin, const H1 &column1_end,
                const H2 &column2_begin, const H2 &column2_end)  {
 
-        const std::size_t   col_s {
-            std::size_t(std::min({ std::distance(idx_begin, idx_end),
-                                   std::distance(column1_begin, column1_end),
-                                   std::distance(column2_begin, column2_end) }))
+        const size_type        col_s {
+            size_type(std::min({ std::distance(idx_begin, idx_end),
+                                 std::distance(column1_begin, column1_end),
+                                 std::distance(column2_begin, column2_end) }))
         };
-
         bool                   there_is_zero { false };
         result_type            result;
         constexpr value_type   nudge {
@@ -11665,7 +11684,7 @@ struct  NonZeroRangeVisitor  {
                 : value_type(1)
         };
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+        if (long(col_s) >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
             result.resize(col_s);
 
@@ -11675,11 +11694,12 @@ struct  NonZeroRangeVisitor  {
                     col_s,
                     [&result, &column1_begin, &column2_begin]
                     (auto begin, auto end) -> bool  {
-                        bool    there_is_zero = false;
+                        bool    there_is_zero { false };
 
-                        for (size_type i = begin; i < end; ++i)  {
-                            const value_type    v =
-                                *(column1_begin + i) - *(column2_begin + i);
+                        for (size_type i { begin }; i < end; ++i)  {
+                            const value_type    v {
+                                *(column1_begin + i) - *(column2_begin + i)
+                            };
 
                             result[i] = v;
                             if (v == 0)  there_is_zero = true;
@@ -11696,7 +11716,7 @@ struct  NonZeroRangeVisitor  {
                         col_s,
                         [&result]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)
+                            for (size_type i { begin }; i < end; ++i)
                                 result[i] += nudge;
                         })
                 };
@@ -11754,7 +11774,7 @@ public:
 
     using value_type = T;
     using index_type = I;
-    using size_type  = std::size_t;
+    using size_type = std::size_t;
     using result_type =
         typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
 
@@ -11774,7 +11794,7 @@ public:
         if (method_ == stationary_test::kpss)
             do_kpss_(idx_begin, idx_end, column_begin, column_end, col_s);
         else
-            do_adf_(idx_begin, idx_end, column_begin, column_end, col_s);
+            do_adf_(column_begin, col_s);
     }
 
     inline void pre()  {
@@ -11802,14 +11822,16 @@ public:
 
 private:
 
+    using matrix_t = Matrix<data_t, matrix_orient::row_major>;
+	
     // Helper: map a scalar KPSS value to its significance level
     //
     inline data_t
     classify_kpss_(data_t val) const  {
-        if (val < params_.critical_values[0]) return (data_t(0.1));
-        if (val < params_.critical_values[1]) return (data_t(0.05));
-        if (val < params_.critical_values[2]) return (data_t(0.025));
-        if (val < params_.critical_values[3]) return (data_t(0.01));
+        if (val < params_.critical_values[0])  return (data_t(0.1));
+        if (val < params_.critical_values[1])  return (data_t(0.05));
+        if (val < params_.critical_values[2])  return (data_t(0.025));
+        if (val < params_.critical_values[3])  return (data_t(0.01));
         return (data_t(0));
     }
 
@@ -11819,27 +11841,57 @@ private:
              const H &column_begin, const H &column_end,
              size_type col_s)  {
 
-        // Fit a linear trend line
-        //
-        linfit_v<T, I>      linfit;
         std::vector<data_t> times(col_s);
 
         std::iota(times.begin(), times.end(), data_t(1));
-        linfit.pre();
-        if constexpr (is_md_)
-            linfit(idx_begin, idx_end,
-                   column_begin, column_end, times.begin(), times.end());
-        else
-            linfit(idx_begin, idx_end,
-                   times.begin(), times.end(), column_begin, column_end);
-        linfit.post();
 
-        // Calculate residuals
+        // Calculate residuals from a linear trend fit
         //
         std::vector<value_type> residuals(col_s);
 
-        for (size_type i { 0 }; i < col_s; ++i)
-            residuals[i] = *(column_begin + i) - linfit.get_result()[i];
+        if constexpr (! is_md_)  {
+            linfit_v<T, I>  linfit;
+
+            linfit.pre();
+            linfit(idx_begin, idx_end,
+                   times.begin(), times.end(), column_begin, column_end);
+            linfit.post();
+            for (size_type i { 0 }; i < col_s; ++i)
+                residuals[i] = *(column_begin + i) - linfit.get_result()[i];
+        }
+        else  {
+            // LinearFitVisitor's MD mode fits MULTIPLE X predictors
+            // against a single SCALAR Y (genuine multivariate regression)
+            // -- it does not provide "shared scalar X, independent fit
+            // per Y dimension", which is what a per-dimension trend
+            // detrend needs. Feeding it column_begin (the actual MD data)
+            // as X and times as Y, as before, asked it to predict the
+            // time index from the data -- producing a fit on the scale of
+            // the time index, not a per-dimension detrended prediction.
+            // Fit each dimension's own scalar column against times
+            // separately with the plain (non-MD) LinearFitVisitor instead.
+            //
+            const size_type      ndim { column_begin->size() };
+            std::vector<data_t>  dim_col(col_s);
+
+            if constexpr (! is_ary_)
+                for (auto &r : residuals)  r.resize(ndim);
+
+            for (size_type d { 0 }; d < ndim; ++d)  {
+                for (size_type i { 0 }; i < col_s; ++i)
+                    dim_col[i] = (*(column_begin + i))[d];
+
+                LinearFitVisitor<data_t, I>  dim_linfit;
+
+                dim_linfit.pre();
+                dim_linfit(idx_begin, idx_end,
+                           times.begin(), times.end(),
+                           dim_col.begin(), dim_col.end());
+                dim_linfit.post();
+                for (size_type i { 0 }; i < col_s; ++i)
+                    residuals[i][d] = dim_col[i] - dim_linfit.get_result()[i];
+            }
+        }
 
         // Calculate cumulative sum of residuals
         //
@@ -11860,8 +11912,6 @@ private:
         const auto  &var_res { var.get_result() };
 
         if constexpr (! is_md_)  {
-            // Scalar path — identical to original
-            //
             data_t  norm_sq { 0 };
 
             for (size_type i { 0 }; i < col_s; ++i)
@@ -11871,22 +11921,13 @@ private:
             kpss_stat_ = classify_kpss_(kpss_val_);
         }
         else  {
-            // MD path — norm_sq and kpss_val_ are per-dimension
-            //
             const size_type ndim { column_begin->size() };
 
-            // var.get_result() is result_type = std::vector<data_t>
-            // with one variance entry per dimension
-            //
             std::vector<data_t> norm_sq(ndim, 0);
 
-            for (size_type i { 0 }; i < col_s; ++i)  {
-                // cum_sum[i] is value_type (vector or array).
-                // Elementwise square and accumulate per dimension.
-                //
+            for (size_type i { 0 }; i < col_s; ++i)
                 for (size_type d { 0 }; d < ndim; ++d)
                     norm_sq[d] += cum_sum[i][d] * cum_sum[i][d];
-            }
 
             const data_t    denom_scale { data_t(col_s * col_s) };
 
@@ -11899,99 +11940,109 @@ private:
         }
     }
 
-    template<typename K, typename H>
+    // Runs the ADF regression  Δy_t = α + β·y_(t-1) + Σ γ_j·Δy_(t-j)
+    // [+ δ·t]  on a single scalar series, returning the t-statistic on β
+    // (the actual ADF statistic). y_begin/y_end must be a scalar (data_t)
+    // range of length n; with_trend adds the linear-trend column.
+    //
+    inline data_t
+    do_adf_scalar_(const std::vector<data_t> &y,
+                   size_type lag,
+                   bool with_trend) const  {
+
+        const size_type     col_s { y.size() };
+        std::vector<data_t> dy(col_s - 1);
+
+        for (size_type j { 0 }; j < col_s - 1; ++j)
+            dy[j] = y[j + 1] - y[j];
+
+        const size_type n_obs { col_s - 1 - lag };
+        const size_type ylag_col { 1 };
+        const size_type n_cols { 2 + lag + (with_trend ? 1 : 0) };
+
+        matrix_t    X { long(n_obs), long(n_cols), 0 };
+        matrix_t    y_mat { long(n_obs), 1L, 0 };
+
+        for (size_type r { 0 }; r < n_obs; ++r)  {
+            const size_type    t { r + lag + 1 };
+
+            X(r, 0) = data_t(1);        // intercept
+            X(r, ylag_col) = y[t - 1];  // y_(t-1), the coefficient of interest
+            for (size_type j { 1 }; j <= lag; ++j)
+                X(r, 1 + j) = dy[t - j - 1];   // Δy_(t-j), j = 1..lag
+            if (with_trend)
+                X(r, n_cols - 1) = data_t(t);  // linear trend
+            y_mat(r, 0) = dy[t - 1];           // Δy_t (response)
+        }
+
+        const matrix_t  Xt { X.transpose2() };
+        const matrix_t  XtX { Xt * X };
+        const matrix_t  beta { XtX.solve(Xt * y_mat) };
+        data_t          rss { 0 };
+
+        for (size_type r { 0 }; r < n_obs; ++r)  {
+            data_t  pred { 0 };
+
+            for (size_type c { 0 }; c < n_cols; ++c)
+                pred += X(r, c) * beta(c, 0);
+
+            const data_t    e { y_mat(r, 0) - pred };
+
+            rss += e * e;
+        }
+
+        const data_t    sigma2 { rss / data_t(n_obs - n_cols) };
+
+        // Var(β) = σ^2 · diag((XtX)^-1)[ylag_col]. Get just that one
+        // diagonal entry by solving (XtX)·v = e_ylag for v (the ylag_col
+        // column of (XtX)^-1) instead of inverting the whole matrix; since
+        // (XtX)^-1 is symmetric, v's ylag_col-th entry is exactly the
+        // diagonal entry needed.
+        //
+        matrix_t    e_ylag { long(n_cols), 1L, 0 };
+
+        e_ylag(ylag_col, 0) = data_t(1);
+
+        const matrix_t  inv_col { XtX.solve(e_ylag) };
+        const data_t    se { std::sqrt(sigma2 * inv_col(ylag_col, 0)) };
+
+        return (beta(ylag_col, 0) / se);
+    }
+
+    template<typename H>
     inline void
-    do_adf_(const K &idx_begin, const K &idx_end,
-            const H &column_begin, const H &column_end,
-            size_type col_s)  {
+    do_adf_(const H &column_begin, size_type col_s)  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        if (col_s <= (params_.adf_lag + 1))
-            throw DataFrameError("StationaryCheckVisitor(ADF): "
-                                 "Time-series is too short");
+        if (col_s <= (params_.adf_lag + 2))
+            throw DataFrameError(
+                "StationaryCheckVisitor(ADF): Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        std::vector<value_type> detrended_data;
-
-        if (params_.adf_with_trend)  {
-            const data_t    n { data_t(col_s) };
-            const data_t    sum_t { (n * (n + data_t(1))) / data_t(2) };
-            value_type      sum_y { *column_begin };
-
-            for (size_type i { 1 }; i < col_s; ++i)
-                sum_y += *(column_begin + i);
-
-            const data_t    sum_t2 {
-                n * (n + data_t(1)) * (data_t(2) * n + data_t(1)) / data_t(6)
-            };
-            value_type      sum_ty;
-
-            if constexpr (is_md_ && ! is_ary_)
-                sum_ty.resize(column_begin->size(), 0);
-            else if constexpr (! is_md_)  sum_ty = 0;
-            for (size_type i { 0 }; i < col_s; i++) {
-                const data_t    t { data_t(i + 1) };
-
-                sum_ty += t * *(column_begin + i);
-            }
-
-            const value_type    slope {
-                (data_t(col_s) * sum_ty - sum_t * sum_y) /
-                (data_t(col_s) * sum_t2 - sum_t * sum_t)
-            };
-            const value_type    intercept {
-                (sum_y - slope * sum_t) / data_t(col_s)
-            };
-
-            // Detrend the data
-            //
-            detrended_data.resize(col_s);
-            for (size_type i { 0 }; i < col_s; i++)  {
-                const data_t t { data_t(i + 1) };
-
-                detrended_data[i] =
-                    *(column_begin + i) - (intercept + slope * t);
-            }
-        }
-
-        VarVisitor<T, I>    var { true };
-
-        var.pre();
-        if (params_.adf_with_trend)
-            var(idx_begin, idx_end,
-                detrended_data.begin(), detrended_data.end());
-        else
-            var(idx_begin, idx_end, column_begin, column_end);
-        var.post();
-
-        // Calculate Auto Covariance of lag
-        //
-        value_type  autocovar;
-        const auto  &mean { var.get_mean() };
-        const auto  &var_res { var.get_result() };
-
-        if constexpr (is_md_ && ! is_ary_)
-            autocovar.resize(column_begin->size(), 0);
-        else if constexpr (! is_md_)  autocovar = 0;
-        if (params_.adf_with_trend)
-            for (size_type i { params_.adf_lag }; i < col_s; ++i)
-                autocovar += (detrended_data[i] - mean) *
-                             (detrended_data[i - params_.adf_lag] - mean);
-        else
-            for (size_type i { params_.adf_lag }; i < col_s; ++i)
-                autocovar += (*(column_begin + i) - mean) *
-                             (*(column_begin + (i - params_.adf_lag)) - mean);
-        autocovar /= data_t(col_s - params_.adf_lag - 1);
-
         if constexpr (! is_md_)  {
-            adf_stat_ = autocovar / var_res;
+            std::vector<data_t> y(col_s);
+
+            for (size_type i { 0 }; i < col_s; ++i)
+                y[i] = data_t(*(column_begin + i));
+            adf_stat_ =
+                do_adf_scalar_(y, params_.adf_lag, params_.adf_with_trend);
         }
         else  {
-            const size_type ndim { column_begin->size() };
+            // Same reasoning as do_kpss_'s MD path: the ADF regression
+            // above is inherently single-series, so run it once per
+            // dimension on that dimension's own extracted scalar column.
+            //
+            const size_type      ndim { column_begin->size() };
+            std::vector<data_t>  dim_col(col_s);
 
             adf_stat_.resize(ndim);
-            for (size_type d { 0 }; d < ndim; ++d)
-                adf_stat_[d] = autocovar[d] / var_res(d, d);
+            for (size_type d { 0 }; d < ndim; ++d)  {
+                for (size_type i { 0 }; i < col_s; ++i)
+                    dim_col[i] = data_t((*(column_begin + i))[d]);
+                adf_stat_[d] =
+                    do_adf_scalar_(dim_col, params_.adf_lag,
+                                   params_.adf_with_trend);
+            }
         }
     }
 

@@ -5295,21 +5295,21 @@ static void test_quantile()  {
     };
 
     result = df.single_act_visit<double>("col_1", v2).get_result();
-    assert(result == 20.5);
+    assert(result == 20.0);
 
     QuantileVisitor<double, unsigned long, 128> v3 {
         0.5, quantile_policy::linear
     };
 
     result = df.single_act_visit<double>("col_1", v3).get_result();
-    assert(result == 20.5);
+    assert(result == 20.0);
 
     QuantileVisitor<double, unsigned long, 128> v4 {
         0.5, quantile_policy::higher_value
     };
 
     result = df.single_act_visit<double>("col_1", v4).get_result();
-    assert(result == 21.0);
+    assert(result == 20.0);
 
     QuantileVisitor<double, unsigned long, 128> v5 {
         0.5, quantile_policy::lower_value
@@ -5323,28 +5323,28 @@ static void test_quantile()  {
     };
 
     result = df.single_act_visit<double>("col_1", v6).get_result();
-    assert(result == 22.5);
+    assert(result == 22.0);
 
     QuantileVisitor<double, unsigned long, 128> v7 {
         0.55, quantile_policy::linear
     };
 
     result = df.single_act_visit<double>("col_1", v7).get_result();
-    assert(result == 22.45);
+    assert(result == 22.0);
 
     QuantileVisitor<double, unsigned long, 128> v8 {
         0.75, quantile_policy::mid_point
     };
 
     result = df.single_act_visit<double>("col_1", v8).get_result();
-    assert(result == 30.5);
+    assert(result == 30.0);
 
     QuantileVisitor<double, unsigned long, 128> v9 {
         0.75, quantile_policy::linear
     };
 
     result = df.single_act_visit<double>("col_1", v9).get_result();
-    assert(result == 30.25);
+    assert(result == 30.0);
 
     QuantileVisitor<double, unsigned long, 128> v10 {
         0, quantile_policy::linear
@@ -5361,21 +5361,21 @@ static void test_quantile()  {
     };
 
     result = df.single_act_visit<double>("col_1", v11).get_result();
-    assert(result == 31.0);
+    assert(result == 30.5);
 
     QuantileVisitor<double, unsigned long, 128> v12 {
         0.75, quantile_policy::linear
     };
 
     result = df.single_act_visit<double>("col_1", v12).get_result();
-    assert(result == 31.0);
+    assert(result == 30.75);
 
     QuantileVisitor<double, unsigned long, 128> v13 {
         0.75, quantile_policy::lower_value
     };
 
     result = df.single_act_visit<double>("col_1", v13).get_result();
-    assert(result == 31.0);
+    assert(result == 30.0);
 
     QuantileVisitor<double, unsigned long, 128> v14 {
         0.75, quantile_policy::higher_value
@@ -5396,7 +5396,7 @@ static void test_quantile()  {
     };
 
     result = df.single_act_visit<double>("col_1", v16).get_result();
-    assert(result == 29.29);
+    assert(result == 29.11);
 
     QuantileVisitor<double, unsigned long, 128> v17 {
         0.23, quantile_policy::mid_point
@@ -5417,7 +5417,7 @@ static void test_quantile()  {
     };
 
     result = df.single_act_visit<double>("col_1", v19).get_result();
-    assert(result == 9.77);
+    assert(result == 9.43);
 
     QuantileVisitor<double, unsigned long, 128> v20 {
         0.23, quantile_policy::lower_value
@@ -5458,11 +5458,11 @@ static void test_quantile()  {
 
     assert(nres.size() == 6);
     assert(nres[0] == 10.5);  // 25%
-    assert(nres[1] == 31.0);  // 75%
+    assert(nres[1] == 30.5);  // 75%
     assert(nres[2] == 41.0);  // 100%
     assert(nres[3] == 1.0);   // 0%
     assert(nres[4] == 6.5);   // 15%
-    assert(nres[5] == 21);    // 50%
+    assert(nres[5] == 20.5);    // 50%
 }
 
 // -----------------------------------------------------------------------------

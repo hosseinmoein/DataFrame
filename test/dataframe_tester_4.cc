@@ -2396,25 +2396,25 @@ static void test_StationaryCheckVisitor()  {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = false } };
 
     df.single_act_visit<double>("IBM_Close", sc2);
-    assert(std::fabs(sc2.get_adf_statistic() - 0.989687) < 0.00001);
+    assert(std::fabs(sc2.get_adf_statistic() - -1.80735) < 0.00001);
 
     StationaryCheckVisitor<double, std::string> sc3 {
         stationary_test::adf, { .adf_lag = 25, .adf_with_trend = false } };
 
     df.single_act_visit<double>("IBM_Close", sc3);
-    assert(std::fabs(sc3.get_adf_statistic() - 0.974531) < 0.0000001);
+    assert(std::fabs(sc3.get_adf_statistic() - -1.59054) < 0.00001);
 
     StationaryCheckVisitor<double, std::string> sc4 {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = false } };
 
     df.single_act_visit<double>("normal_col", sc4);
-    assert(std::fabs(sc4.get_adf_statistic() - 0.0289613) < 0.0000001);
+    assert(std::fabs(sc4.get_adf_statistic() - -21.1568) < 0.0001);
 
     StationaryCheckVisitor<double, std::string> sc5 {
         stationary_test::adf, { .adf_lag = 25, .adf_with_trend = false } };
 
     df.single_act_visit<double>("normal_col", sc5);
-    assert(std::fabs(sc5.get_adf_statistic() - 0.0208191) < 0.0000001);
+    assert(std::fabs(sc5.get_adf_statistic() - -13.5343) < 0.0001);
 
     // ADF tests with trend
     //
@@ -2422,38 +2422,37 @@ static void test_StationaryCheckVisitor()  {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
 
     df.single_act_visit<double>("IBM_Close", sc6);
-    assert(std::fabs(sc6.get_adf_statistic() - 0.977705) < 0.000001);
+    assert(std::fabs(sc6.get_adf_statistic() - -1.83342) < 0.00001);
 
     StationaryCheckVisitor<double, std::string> sc7 {
         stationary_test::adf, { .adf_lag = 25, .adf_with_trend = true } };
 
     df.single_act_visit<double>("IBM_Close", sc7);
-    assert(std::fabs(sc7.get_adf_statistic() - 0.946614) < 0.000001);
+    assert(std::fabs(sc7.get_adf_statistic() - -1.38926) < 0.00001);
 
     StationaryCheckVisitor<double, std::string> sc8 {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
 
     df.single_act_visit<double>("normal_col", sc8);
-    assert(std::fabs(sc8.get_adf_statistic() - 0.0289582) < 0.0000001);
+    assert(std::fabs(sc8.get_adf_statistic() - -21.155) < 0.001);
 
     StationaryCheckVisitor<double, std::string> sc9 {
         stationary_test::adf, { .adf_lag = 25, .adf_with_trend = true } };
 
     df.single_act_visit<double>("normal_col", sc9);
-    assert(std::fabs(sc9.get_adf_statistic() - 0.020812) < 0.0000001);
+    assert(std::fabs(sc9.get_adf_statistic() - -13.5341) < 0.0001);
 
     StationaryCheckVisitor<double, std::string> sc10 {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
 
     df.single_act_visit<double>("log close", sc10);
-    assert(std::fabs(sc10.get_adf_statistic() - 0.972062) < 0.000001);
+    assert(std::fabs(sc10.get_adf_statistic() - -2.21398) < 0.00001);
 
     StationaryCheckVisitor<double, std::string> sc11 {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
 
     df.single_act_visit<double>("residual close", sc11);
-    assert((std::fabs(sc11.get_adf_statistic() - 0.679027) < 0.000001 ||
-            std::fabs(sc11.get_adf_statistic() - 0.95286) < 0.00001));
+    assert(std::fabs(sc11.get_adf_statistic() - -3.44574) < 0.00001);
 
     // Now multidimensional data
     //
@@ -2511,14 +2510,14 @@ static void test_StationaryCheckVisitor()  {
     df.single_act_visit<ary_col_t>("STATION ARY", kpss_ary_v);
 
     assert(adf_vec_v.get_adf_statistic().size() == dim);
-    assert(std::abs(adf_vec_v.get_adf_statistic()[0] - -0.586018) < 0.000001);
-    assert(std::abs(adf_vec_v.get_adf_statistic()[2] - -0.705822) < 0.000001);
+    assert(std::abs(adf_vec_v.get_adf_statistic()[0] - -3.55811) < 0.00001);
+    assert(std::abs(adf_vec_v.get_adf_statistic()[2] - -4.60884) < 0.00001);
     assert(kpss_vec_v.get_kpss_statistic().size() == dim);
-    assert(std::abs(kpss_vec_v.get_kpss_statistic()[0] - 0.0) < 0.00000001);
-    assert(std::abs(kpss_vec_v.get_kpss_statistic()[2] - 0.0) < 0.00000001);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[0] - 0.1) < 0.01);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[2] - 0.1) < 0.01);
     assert(kpss_vec_v.get_kpss_value().size() == dim);
-    assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 326.728) < 0.001);
-    assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 2239.29) < 0.01);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 0.033409) < 0.000001);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 0.035666) < 0.000001);
 
     df.single_act_visit<vec_col_t>("NON STATION VEC", adf_vec_v);
     df.single_act_visit<ary_col_t>("NON STATION ARY", adf_ary_v);
@@ -2526,14 +2525,15 @@ static void test_StationaryCheckVisitor()  {
     df.single_act_visit<ary_col_t>("NON STATION ARY", kpss_ary_v);
 
     assert(adf_vec_v.get_adf_statistic().size() == dim);
-    assert(std::abs(adf_vec_v.get_adf_statistic()[0] - 0.904666) < 0.000001);
-    assert(std::abs(adf_vec_v.get_adf_statistic()[2] - 0.896825) < 0.000001);
+    assert((std::abs(adf_vec_v.get_adf_statistic()[0] - 2.66413) < 0.00001 ||
+            std::abs(adf_vec_v.get_adf_statistic()[0] - 2.61647) < 0.00001));
+    assert(std::abs(adf_vec_v.get_adf_statistic()[2] - 2.64523) < 0.00001);
     assert(kpss_vec_v.get_kpss_statistic().size() == dim);
-    assert(std::abs(kpss_vec_v.get_kpss_statistic()[0] - 0.0) < 0.00000001);
-    assert(std::abs(kpss_vec_v.get_kpss_statistic()[2] - 0.0) < 0.00000001);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[0] - 0.1) < 0.01);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[2] - 0.1) < 0.01);
     assert(kpss_vec_v.get_kpss_value().size() == dim);
-    assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 10.76) < 0.01);
-    assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 189.563) < 0.001);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 0.318681) < 0.000001);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 0.311255) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

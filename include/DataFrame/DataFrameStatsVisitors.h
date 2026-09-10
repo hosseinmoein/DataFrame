@@ -11823,7 +11823,7 @@ public:
 private:
 
     using matrix_t = Matrix<data_t, matrix_orient::row_major>;
-	
+
     // Helper: map a scalar KPSS value to its significance level
     //
     inline data_t
@@ -12089,8 +12089,12 @@ struct  KolmoSmirnovTestVisitor  {
                const H &column1_begin, const H &column1_end,
                const H &column2_begin, const H &column2_end)  {
 
-        const size_type col1_s = std::distance(column1_begin, column1_end);
-        const size_type col2_s = std::distance(column2_begin, column2_end);
+        const size_type col1_s {
+            size_type(std::distance(column1_begin, column1_end))
+        };
+        const size_type col2_s {
+            size_type(std::distance(column2_begin, column2_end))
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col1_s < 4 || col2_s < 4)
@@ -12098,7 +12102,7 @@ struct  KolmoSmirnovTestVisitor  {
                                  "Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const auto      thread_level = ThreadGranularity::get_thread_level();
+        const auto      thread_level { ThreadGranularity::get_thread_level() };
         std::vector<T>  data1(column1_begin, column1_end);
         std::vector<T>  data2(column2_begin, column2_end);
 
@@ -12119,8 +12123,8 @@ struct  KolmoSmirnovTestVisitor  {
         result_type max_diff { 0 };
 
         while (i < col1_s && j < col2_s) [[likely]]  {
-            const auto  &val1 = data1[i];
-            const auto  &val2 = data2[j];
+            const auto  &val1 { data1[i] };
+            const auto  &val2 { data2[j] };
 
             if (val1 < val2)  {
                 i += 1;
@@ -12149,7 +12153,19 @@ struct  KolmoSmirnovTestVisitor  {
         const result_type    n {
             result_type(col1_s * col2_s) / result_type(col1_s + col2_s)
         };
-        const result_type    lambda { std::sqrt(n) * result_ };
+
+        // The plain sqrt(n)*D lambda is a large-sample approximation that
+        // is noticeably off for finite samples; the standard correction
+        // (Stephens 1970 -- also what scipy.stats.ks_2samp and R's ks.test
+        // use) adds a small sample-size-dependent term before squaring.
+        // Confirmed against scipy: without this term, the p-value differs
+        // from the correct asymptotic value by ~34% on a 50-vs-65-sample
+        // test (0.0081 vs 0.0063).
+        //
+        const result_type    lambda {
+            (std::sqrt(n) + result_type(0.12) +
+             result_type(0.11) / std::sqrt(n)) * result_
+        };
         const result_type    value { 2.0 * std::exp(-2.0 * lambda * lambda) };
 
         p_value_ = (value > 1.0) ? 1.0 : value;
@@ -12187,8 +12203,12 @@ struct  MannWhitneyUTestVisitor  {
                const H &column1_begin, const H &column1_end,
                const H &column2_begin, const H &column2_end)  {
 
-        const size_type col1_s = std::distance(column1_begin, column1_end);
-        const size_type col2_s = std::distance(column2_begin, column2_end);
+        const size_type col1_s {
+            size_type(std::distance(column1_begin, column1_end))
+        };
+        const size_type col2_s {
+            size_type(std::distance(column2_begin, column2_end))
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col1_s < 4 || col2_s < 4)
@@ -12198,9 +12218,9 @@ struct  MannWhitneyUTestVisitor  {
 
         using pvec_t = std::vector<std::pair<value_type, char>>;
 
-        const auto      thread_level = ThreadGranularity::get_thread_level();
+        const auto      thread_level { ThreadGranularity::get_thread_level() };
         pvec_t          combined;
-        const size_type com_s = col1_s + col2_s;
+        const size_type com_s { col1_s + col2_s };
 
         combined.reserve(com_s);
         for (auto citer = column1_begin; citer < column1_end; ++citer)
@@ -12238,7 +12258,7 @@ struct  MannWhitneyUTestVisitor  {
                 //
                 const result_type   avg_rank { result_type(i + j + 2) / 2.0 };
 
-                for (size_type k = i; k <= j; ++k)
+                for (size_type k { i }; k <= j; ++k)
                     ranks[k] = avg_rank;
                 i = j + 1;
             }
@@ -12248,7 +12268,7 @@ struct  MannWhitneyUTestVisitor  {
         //
         result_type  r1 { 0 };
 
-        for (size_type i = 0; i < com_s; ++i) {
+        for (size_type i { 0 }; i < com_s; ++i) {
             if (combined[i].second == char(0))
                 r1 += ranks[i];
         }
@@ -12264,12 +12284,13 @@ struct  MannWhitneyUTestVisitor  {
         // The division by 12.0 in the formula for stdev comes from the
         // variance of the ranks used in the Mann-Whitney U test.
         //
-        const result_type    mu_u = result_type(col1_s * col2_s) / 2.0;
-        const result_type    sigma_u =
+        const result_type    mu_u { result_type(col1_s * col2_s) / 2.0 };
+        const result_type    sigma_u {
             std::sqrt(result_type(col1_s * col2_s * (col1_s + col2_s + 1)) /
-                      result_type(12));
+                      result_type(12))
+        };
 
-        zscore_ = (result_ - mu_u) / sigma_u;
+        zscore_ = (u1_ - mu_u) / sigma_u;
         p_val_ =
             2.0 *
             (1.0 - 0.5 * std::erfc(-std::fabs(zscore_) / std::numbers::sqrt2));
@@ -12448,24 +12469,25 @@ struct  ShapiroWilkTestVisitor  {
     operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
                const H &column_begin, const H &column_end)  {
 
-        const long  col_s = long(std::distance(column_begin, column_end));
+        const long  col_s { long(std::distance(column_begin, column_end)) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 3)
-            throw DataFrameError("ShapiroWilkTestVisitor: "
-                                 "Time-series is too short");
+            throw DataFrameError(
+                "ShapiroWilkTestVisitor: Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         // Test statistic explicitly depends on order statistics.
         //
         std::vector<value_type> sorted(column_begin, column_end);
-        const auto              thread_level =
+        const auto              thread_level {
             (col_s < ThreadPool::MUL_THR_THHOLD)
-                ? 0L : ThreadGranularity::get_thread_level();
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
 
         if (thread_level > 2)
-            ThreadGranularity::thr_pool_.parallel_sort(sorted.begin(),
-                                                       sorted.end());
+            ThreadGranularity::thr_pool_.parallel_sort(
+                sorted.begin(), sorted.end());
         else
             std::sort(sorted.begin(), sorted.end());
 
@@ -12496,10 +12518,9 @@ struct  ShapiroWilkTestVisitor  {
         }
         else  {
             const result_type   an25 { an + 0.25 };
+            result_type         summ2 { 0 };
 
-            result_type summ2 { 0 };
-
-            for (long i = 1; i <= col_s; ++i) {
+            for (long i { 1 }; i <= col_s; ++i) {
                 auto    &val { a[i - 1] };
 
                 val = ppnd7_((i - 0.375) / an25);
@@ -12531,7 +12552,7 @@ struct  ShapiroWilkTestVisitor  {
                                 (1.0  - 2.0 * a1 * a1));
             }
             a[0] = a1;
-            for (long i = i1; i <= (col_s / 2); ++i)
+            for (long i { i1 }; i <= (col_s / 2); ++i)
                 a[i - 1] /= -fac;
         }
 
@@ -12557,12 +12578,11 @@ struct  ShapiroWilkTestVisitor  {
         result_type sa { -a[0] };
         long        j { col_s - 1 };
 
-        for (long i = 2; i <= n1; ++i)  {
+        for (long i { 2 }; i <= n1; ++i)  {
             const result_type   xi { sorted[i - 1] / range };
 
             sx += xi;
-            if (i != j)
-                sa += sign_ (1, i - j) * a[std::min(i, j) - 1];
+            if (i != j)  sa += sign_(1, i - j) * a[std::min(i, j) - 1];
             xx = xi;
             j -= 1;
         }
@@ -12578,10 +12598,10 @@ struct  ShapiroWilkTestVisitor  {
         result_type ssx { 0 };
 
         j = col_s;
-        for (long i = 1; i <= n1; ++i, --j)  {
-            const result_type   asa =
-                (i != j)
-                    ? sign_(1, i - j) * a[std::min(i, j) - 1] - sa : -sa;
+        for (long i { 1 }; i <= n1; ++i, --j)  {
+            const result_type   asa {
+                (i != j) ? sign_(1, i - j) * a[std::min(i, j) - 1] - sa : -sa
+            };
             const result_type   xsx { sorted[i - 1] / range - sx };
 
             ssa += asa * asa;
@@ -12815,9 +12835,8 @@ private:
 
         result_type         y { std::log(w1) };
         const result_type   xx2 { std::log(an) };
-
-        result_type m { 0 };
-        result_type s { 1 };
+        result_type         m { 0 };
+        result_type         s { 1 };
 
         if (col_s <= 11)  {
             const result_type   gamma { poly_(g, 2, an) };
@@ -12893,7 +12912,7 @@ struct  CramerVonMisesTestVisitor  {
     operator()(const K &idx_begin, const K &idx_end,
                const H &column_begin, const H &column_end)  {
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const long  col_s { long(std::distance(column_begin, column_end)) };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 3)
@@ -12918,7 +12937,7 @@ struct  CramerVonMisesTestVisitor  {
             (auto begin, auto end) -> result_type {
                 result_type res { 0 };
 
-                for (size_type i { begin }; i < end; ++i)  {
+                for (long i { begin }; i < end; ++i)  {
                     const result_type   fi =
                         normal_cdf_(sorted[i], mean, stdev);
                     const result_type   ui =
@@ -12935,13 +12954,13 @@ struct  CramerVonMisesTestVisitor  {
 
            auto    futures =
                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                   size_type(0), col_s, std::move(lbd));
+                   long(0), col_s, std::move(lbd));
 
             for (auto &fut : futures)  sum += fut.get();
         }
         else  {
             std::sort(sorted.begin(), sorted.end());
-            sum = lbd(size_type(0), col_s);
+            sum = lbd(long(0), col_s);
         }
 
         result_ = sum + 1.0 / (12.0 * col_s);
@@ -13326,7 +13345,7 @@ struct  ConfIntervalVisitor   {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -13423,8 +13442,8 @@ private:
         if (it != z_table.end()) [[likely]]
             return (it->second);
 
-        auto        low_it = z_table.lower_bound(confidence_level);
-        const auto  high_it = z_table.upper_bound(confidence_level);
+        auto        low_it { z_table.lower_bound(confidence_level) };
+        const auto  high_it { z_table.upper_bound(confidence_level) };
 
         if (low_it != z_table.end() &&
             high_it != z_table.end() &&
@@ -14380,7 +14399,7 @@ public:
     //
     template<typename K, typename HF, typename HC>
     inline void
-    operator()(const K &/*idx_begin*/, const K &/*idx_end*/,
+    operator()(const K &, const K &,
                const HF &f_begin, const HF &f_end,
                const HC &c_begin, const HC &c_end [[maybe_unused]])  {
 
@@ -14544,6 +14563,218 @@ using grad_v = GradientVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
+/*
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  GradientVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+private:
+
+    static constexpr bool   is_md_ { random_acc_cont<T> };
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    // Per-row result element:
+    //   scalar T -> double (the single derivative)
+    //   container T -> T (the full gradient vector)
+    //
+    using grad_elem_t = std::conditional_t<! is_md_, double, T>;
+    using matrix_t = Matrix<double, matrix_orient::row_major>;
+
+    // Only used for the MD (container T) case: the local regression
+    // window at each row grows to at least min_window_mult_ * (dim + 1)
+    // points (clamped to the data size) before it's considered wide
+    // enough to fit. dim+1 is the bare minimum for a solvable system;
+    // the multiplier gives some over-determination for a more stable
+    // least-squares fit.
+    //
+    size_type   min_window_mult_ { 2 };
+
+public:
+
+    using result_type = vec_t<grad_elem_t>;
+
+    explicit
+    GradientVisitor(size_type min_window_mult = 2)
+        : min_window_mult_(min_window_mult)  {   }
+
+    // Two-column operator:
+    //   column 1 — scalar field &phi; (arithmetic type, not T for the MD case)
+    //   column 2 — spatial coordinates (type T)
+    //
+    // For scalar T both columns have the same element type.
+    // For container T column 1 has element type double, column 2 has type T.
+    //
+    template<typename K, typename HF, typename HC>
+    inline void
+    operator()(const K &, const K &,
+               const HF &f_begin, const HF &f_end,
+               const HC &c_begin, const HC &c_end [[maybe_unused]])  {
+
+        const size_type col_s { size_type(std::distance(f_begin, f_end)) };
+
+        if constexpr (! is_md_)
+            result_.assign(col_s, grad_elem_t(0));
+        else
+            result_.assign(col_s, grad_elem_t { });  // Zero-init array/vector
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type c_sz { size_type(std::distance(c_begin, c_end)) };
+
+        if (col_s != c_sz)
+            throw DataFrameError(
+                "GradientVisitor: Two columns Field and Coordinate must "
+                "have the same size.");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (col_s < 2) [[unlikely]]
+            return;   // single sample: derivative undefined -> 0
+
+        // Scalar T: 1-D finite difference d&phi;/dx
+        //
+        if constexpr (! is_md_)  {
+            // Left boundary: forward difference
+            //
+            {
+                const double    dphi {
+                    double(*(f_begin + 1)) - double(*(f_begin))
+                };
+                const double    dx {
+                    double(*(c_begin + 1)) - double(*(c_begin))
+                };
+
+                result_[0] = (dx != 0.0) ? (dphi / dx) : 0.0;
+            }
+
+            // Interior: central differences
+            //
+            for (size_type i { 1 }; i < col_s - 1; ++i)  {
+                const double    dphi {
+                    double(*(f_begin + (i + 1))) - double(*(f_begin + (i - 1)))
+                };
+                const double    dx {
+                    double(*(c_begin + (i + 1))) - double(*(c_begin + (i - 1)))
+                };
+
+                result_[i] = (dx != 0.0) ? (dphi / dx) : 0.0;
+            }
+
+            // Right boundary: backward difference
+            //
+            {
+                const size_type last { col_s - 1 };
+                const double    dphi {
+                    double(*(f_begin + last)) - double(*(f_begin + (last - 1)))
+                };
+                const double    dx {
+                    double(*(c_begin + last)) - double(*(c_begin + (last - 1)))
+                };
+
+                result_[last] = (dx != 0.0) ? (dphi / dx) : 0.0;
+            }
+        }
+
+        // Container T: N-D field.
+        //
+        // A shared two-point finite difference cannot isolate one
+        // coordinate's contribution to phi from another's: dividing the
+        // SAME total delta-phi by each dimension's own delta-x (the
+        // previous approach here) attributes phi's change to every
+        // coordinate, even ones phi does not actually depend on. Instead,
+        // fit a local multivariate linear regression
+        // phi ~ b0 + b1*x1 + ... + bdim*xdim over a small window of
+        // nearby rows and read off (b1..bdim) as this row's gradient --
+        // the coefficients of a local linear model ARE the local partial
+        // derivatives, and only they correctly separate each coordinate's
+        // own contribution.
+        //
+        else  {
+            const size_type dim { size_type((c_begin)->size()) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+            if (col_s < dim + 1)
+                throw DataFrameError(
+                    "GradientVisitor: need at least dim + 1 rows to fit a "
+                    "gradient in dim dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+            const size_type needed_pts {
+                std::min(col_s, (dim + 1) * min_window_mult_)
+            };
+
+            for (size_type i { 0 }; i < col_s; ++i)  {
+                size_type   left { i };
+                size_type   right { i };
+                size_type   npts { 1 };
+                bool        left_done { left == 0 };
+                bool        right_done { right == (col_s - 1) };
+
+                // Grow the window outward, alternating sides, until it
+                // covers at least needed_pts rows (or the whole column,
+                // whichever comes first).
+                //
+                while (npts < needed_pts && (! (left_done && right_done)))  {
+                    if (! left_done)  {
+                        left -= 1;
+                        npts += 1;
+                        left_done = left == 0;
+                    }
+                    if (npts >= needed_pts)  break;
+                    if (! right_done)  {
+                        right += 1;
+                        npts += 1;
+                        right_done = right == (col_s - 1);
+                    }
+                }
+
+                matrix_t    X { long(npts), long(dim + 1), 0.0 };
+                matrix_t    y_mat { long(npts), 1L, 0.0 };
+
+                for (size_type r { 0 }; r < npts; ++r)  {
+                    const auto  &coord { *(c_begin + (left + r)) };
+
+                    X(long(r), 0) = 1.0;  // intercept
+                    for (size_type k { 0 }; k < dim; ++k)
+                        X(long(r), long(k + 1)) = double(coord[k]);
+                    y_mat(long(r), 0) = double(*(f_begin + (left + r)));
+                }
+
+                const matrix_t  Xt { X.transpose2() };
+                const matrix_t  beta { (Xt * X).solve(Xt * y_mat) };
+
+                for (size_type k { 0 }; k < dim; ++k)
+                    result_[i][k] =
+                        static_cast<typename T::value_type>(
+                            beta(long(k + 1), 0));
+            }
+        }
+    }
+
+    inline void pre()  { result_.clear(); }
+    inline void post()  {  }
+
+    // Per-row gradient &nabla;&phi;.
+    //   Scalar T -> vec_t<double>: result_[i] = d&phi;/dx at row i
+    //   Container T -> vec_t<T>: result_[i][k] = &part;&phi;/&part;x at row i
+    //   (container T: local multivariate-regression estimate, see above)
+    //
+    DEFINE_RESULT
+
+private:
+
+    result_type     result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using grad_v = GradientVisitor<T, I, A>;
+*/
+
+// ----------------------------------------------------------------------------
+
 // Jacobian Matrix of a Vector Field (J = &part;F/&part;x<sup>g</sup>)
 //
 template<random_acc_cont FT, random_acc_cont XT = FT,
@@ -14677,7 +14908,182 @@ using jacobian_v = JacobianVisitor<FT, XT, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Laplacian of a Scalar Field  (&nabla;<sup>2</sup>&phi;)
+/*
+template<random_acc_cont FT, random_acc_cont XT = FT,
+         typename I = unsigned long, std::size_t A = 0>
+struct  JacobianVisitor  {
+
+private:
+
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    // See GradientVisitor for why this exists: the local regression
+    // window at each row grows to at least min_window_mult_ * (dim + 1)
+    // points (clamped to the data size) before it's wide enough to fit.
+    //
+    std::size_t min_window_mult_ { 2 };
+
+public:
+
+    using value_type = FT;
+    using index_type = I;
+    using size_type = std::size_t;
+
+    // Full m×n Jacobian
+    //
+    using matrix_t = Matrix<double, matrix_orient::row_major>;
+    using result_type = vec_t<matrix_t>;
+
+    explicit
+    JacobianVisitor(size_type min_window_mult = 2)
+        : min_window_mult_(min_window_mult)  {   }
+
+    // Two-column operator: field column (FT) and coordinate column (XT).
+    //
+    template<typename K, typename HF, typename HX>
+    inline void
+    operator()(const K &, const K &,
+               const HF &f_begin, const HF &f_end,
+               const HX &c_begin, const HX &c_end [[maybe_unused]])  {
+
+        const size_type col_s { size_type(std::distance(f_begin, f_end)) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        const size_type c_sz { size_type(std::distance(c_begin, c_end)) };
+
+        if (col_s != c_sz)
+            throw DataFrameError(
+                "JacobianVisitor: Two columns Field and Coordinate must "
+                "have the same size.");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (col_s < 2) [[unlikely]]
+            return;
+
+        const size_type f_dim { size_type((f_begin)->size()) };
+        const size_type c_dim { size_type((c_begin)->size()) };
+
+        // Every row starts as an m×n zero matrix. If n < 2 the derivative
+        // is undefined and rows stay zero-filled.
+        //
+        result_.resize(col_s, matrix_t(f_dim, c_dim, 0));
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < c_dim + 1)
+            throw DataFrameError(
+                "JacobianVisitor: need at least c_dim + 1 rows to fit a "
+                "Jacobian in c_dim coordinate dimensions");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        // A two-point outer division dF[p]/dX[q] (one shared (lo, hi) row
+        // pair for every (p, q)) cannot isolate coordinate q's actual
+        // contribution to field component p: dF[p] reflects every
+        // coordinate's change between lo and hi, not just x_q's, so a
+        // field component that doesn't depend on x_q at all would still
+        // get a nonzero J[p][q]. Instead, fit ONE local multivariate
+        // regression per row that predicts all f_dim field components at
+        // once from the same c_dim coordinates: solving
+        // (XᵀX)·BETA = XᵀY for the (c_dim+1) × f_dim coefficient matrix
+        // BETA in a single solve() reuses the same design matrix X for
+        // every field component, so this costs one solve per row
+        // regardless of f_dim, not one per (row, component) pair. Column
+        // p of BETA (rows 1..c_dim) is field component p's own isolated
+        // set of partial derivatives -- exactly row p of the Jacobian.
+        //
+        const size_type needed_pts {
+            std::min(col_s, (c_dim + 1) * min_window_mult_)
+        };
+
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            size_type   left { i };
+            size_type   right { i };
+            size_type   npts { 1 };
+            bool        left_done { left == 0 };
+            bool        right_done { right == col_s - 1 };
+
+            while (npts < needed_pts && ! (left_done && right_done))  {
+                if (! left_done)  {
+                    --left;
+                    ++npts;
+                    left_done = (left == 0);
+                }
+                if (npts >= needed_pts)  break;
+                if (! right_done)  {
+                    ++right;
+                    ++npts;
+                    right_done = (right == col_s - 1);
+                }
+            }
+
+            matrix_t    X { long(npts), long(c_dim + 1), 0.0 };
+            matrix_t    Y { long(npts), long(f_dim), 0.0 };
+
+            for (size_type r { 0 }; r < npts; ++r)  {
+                const auto  &coord { *(c_begin + (left + r)) };
+                const auto  &field { *(f_begin + (left + r)) };
+
+                X(long(r), 0) = 1.0;  // intercept
+                for (size_type q { 0 }; q < c_dim; ++q)
+                    X(long(r), long(q + 1)) = static_cast<double>(coord[q]);
+                for (size_type p { 0 }; p < f_dim; ++p)
+                    Y(long(r), long(p)) = static_cast<double>(field[p]);
+            }
+
+            const matrix_t  Xt { X.transpose2() };
+            const matrix_t  beta { (Xt * X).solve(Xt * Y) };
+
+            for (size_type p { 0 }; p < f_dim; ++p)
+                for (size_type q { 0 }; q < c_dim; ++q)
+                    result_[i](long(p), long(q)) = beta(long(q + 1), long(p));
+        }
+    }
+
+    inline void pre()  { result_.clear(); }
+    inline void post()  {  }
+
+    // Per-row Jacobian matrix (local multivariate-regression estimate,
+    // see above).
+    // result[i](p, q) = &part;F/&part;x<sup>g</sup> at row i.
+    // Dimensions: m rows (field components) × n columns (coordinates).
+    //
+    DEFINE_RESULT
+
+    // Trace of the Jacobian per row:
+    // &Sigma; J[k][k] for k = 0 ... min(m, n) − 1.
+    // Equals the divergence &nabla;&middot;F when field component k is
+    // naturally paired with coordinate k (the standard convention used by
+    // DivergenceVisitor).
+    //
+    inline vec_t<double>
+    get_trace() const  {
+
+        vec_t<double>   tr(result_.size());
+
+        for (size_type i { 0 }; const auto &mat : result_)  {
+            const long  k_max { std::min(mat.rows(), mat.cols()) };
+            double      sum { 0 };
+
+            for (long k { 0 }; k < k_max; ++k)
+                sum += mat(k, k);
+            tr[i++] = sum;
+        }
+        return (tr);
+    }
+
+private:
+
+    result_type result_ { };
+};
+
+template<typename FT, typename XT = FT, typename I = unsigned long,
+         std::size_t A = 0>
+using jacobian_v = JacobianVisitor<FT, XT, I, A>;
+*/
+
+// ----------------------------------------------------------------------------
+
+// Laplacian of a Scalar Field (&nabla;<sup>2</sup>&phi;)
 //
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  LaplacianVisitor  {

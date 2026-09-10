@@ -4871,7 +4871,7 @@ static void test_KolmoSmirnovTestVisitor()  {
 
     ibm.single_act_visit<double, double>("IBM_Low", "IBM_High", ks_test);
     assert((std::fabs(ks_test.get_result() - 0.0296) < 0.0001));
-    assert((std::fabs(ks_test.get_p_value() - 0.0242) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 0.023725) < 0.000001));
 
     ibm.single_act_visit<double, double>("IBM_Close", "uniform", ks_test);
     assert((std::fabs(ks_test.get_result() - 0.1224) < 0.0001));
@@ -4939,8 +4939,8 @@ static void test_MannWhitneyUTestVisitor()  {
     assert((std::fabs(mwu_test.get_result() - 12643394.5) < 0.0001));
     assert((std::fabs(mwu_test.get_u1() - 12667566.5) < 0.0001));
     assert((std::fabs(mwu_test.get_u2() - 12643394.5) < 0.0001));
-    assert((std::fabs(mwu_test.get_zscore() - -0.083) < 0.001));
-    assert((std::fabs(mwu_test.get_pvalue() - 0.9339) < 0.0001));
+    assert((std::fabs(mwu_test.get_zscore() - 0.082957) < 0.000001));
+    assert((std::fabs(mwu_test.get_pvalue() - 0.933885) < 0.000001));
 
     ibm.single_act_visit<double, double>("IBM_Low", "IBM_High", mwu_test);
     assert((std::fabs(mwu_test.get_result() - 12213043.0) < 0.0001));
@@ -4960,14 +4960,14 @@ static void test_MannWhitneyUTestVisitor()  {
     assert((std::fabs(mwu_test.get_result() - 30.0) < 0.0001));
     assert((std::fabs(mwu_test.get_u1() - 25310931.0) < 0.0001));
     assert((std::fabs(mwu_test.get_u2() - 30.0) < 0.0001));
-    assert((std::fabs(mwu_test.get_zscore() - -86.8661) < 0.001));
+    assert((std::fabs(mwu_test.get_zscore() - 86.8661) < 0.001));
     assert((std::fabs(mwu_test.get_pvalue() - 0.0) < 0.0001));
 
     ibm.single_act_visit<double, double>("uniform", "exponential", mwu_test);
     assert((std::fabs(mwu_test.get_result() - 0.0) < 0.0001));
     assert((std::fabs(mwu_test.get_u1() - 25310961.0) < 0.0001));
     assert((std::fabs(mwu_test.get_u2() - 0.0) < 0.0001));
-    assert((std::fabs(mwu_test.get_zscore() - -86.8663) < 0.001));
+    assert((std::fabs(mwu_test.get_zscore() - 86.8663) < 0.001));
     assert((std::fabs(mwu_test.get_pvalue() - 0.0) < 0.0001));
 
     ibm.single_act_visit<double, double>("exponential", "lognormal", mwu_test);

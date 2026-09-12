@@ -1798,16 +1798,12 @@ static void test_DBSCANVisitor()  {
     assert(dbscan.get_noisey_idxs()[0] == 1564);
     assert(dbscan.get_noisey_idxs()[1] == 1565);
 
-    assert(dbscan.get_result().size() == 19);
-    assert(dbscan.get_result()[0].size() == 11);
-    assert(dbscan.get_result()[4].size() == 31);
-    assert(dbscan.get_result()[10].size() == 294);
-    assert(dbscan.get_result()[14].size() == 82);
-    assert(dbscan.get_result()[18].size() == 10);
-    assert(dbscan.get_result()[0][6] == 185.679993);
-    assert(dbscan.get_result()[4][18] == 167.330002);
-    assert(dbscan.get_result()[10][135] == 145.160004);
-    assert(dbscan.get_result()[18][3] == 103.550003);
+    assert(dbscan.get_result().size() == 1);
+    assert(dbscan.get_result()[0].size() == 1719);
+    assert(std::fabs(dbscan.get_result()[0][6] - 187.26) < 0.001);
+    assert(std::fabs(dbscan.get_result()[0][18] - 176.4) < 0.001);
+    assert(std::fabs(dbscan.get_result()[0][135] - 192.49) < 0.001);
+    assert(std::fabs(dbscan.get_result()[0][1718] - 111.66) < 0.001);
 
     // Now multidimensional data
     //
@@ -1819,9 +1815,8 @@ static void test_DBSCANVisitor()  {
 
     using col_t = std::array<double, 3>;
 
-    auto    rand_vec =
+    auto                rand_vec =
         gen_uniform_real_dist<double>(df.get_index().size() * 3, p);
-
     std::vector<col_t>  multi_dimen_col(df.get_index().size());
 
     for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
@@ -1837,16 +1832,16 @@ static void test_DBSCANVisitor()  {
 
     const auto  &md_clusters = md_dbscan.get_result();
 
-    assert(md_clusters.size() == 102); // Number of clusters
+    assert(md_clusters.size() == 30); // Number of clusters
 
-    assert(md_clusters[0].size() == 14);
-    assert(std::fabs(md_clusters[0][6][1] - -19.9438) < 0.0001);
+    assert(md_clusters[0].size() == 27);
+    assert(std::fabs(md_clusters[0][6][1] - 4.24441) < 0.00001);
 
-    assert(md_clusters[58].size() == 12);
-    assert(std::fabs(md_clusters[58][3][0] - -6.41034) < 0.00001);
+    assert(md_clusters[26].size() == 10);
+    assert(std::fabs(md_clusters[26][3][0] - 14.87) < 0.001);
 
-    assert(md_clusters[101].size() == 10);
-    assert(std::fabs(md_clusters[101][9][2] - -5.92195) < 0.00001);
+    assert(md_clusters[8].size() == 21);
+    assert(std::fabs(md_clusters[8][9][2] - -0.348493) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

@@ -4327,54 +4327,6 @@ static void test_k_means()  {
         std::cout << citer << ", ";
     std::cout << std::endl;
 
-    // Using the calculated means, separate the given column into clusters
-    // const auto  &clusters = km_visitor.get_clusters();
-    // bool        found = false;
-
-    // for (auto iter : clusters)  {
-    //     if (::fabs(iter[0] - 1.89348) < 0.00001)  {
-    //         if (::fabs(iter[6] - 1.44231) < 0.00001)  {
-    //             found = true;
-    //             break;
-    //         }
-    //     }
-    // }
-    // assert(found);
-    // found = false;
-    // for (auto iter : clusters)  {
-    //     if (::fabs(iter[0] - 0.593126) < 0.00001)  {
-    //         if (::fabs(iter[2] - 0.950026) < 0.00001)  {
-    //             found = true;
-    //             break;
-    //         }
-    //     }
-    // }
-    // assert(found);
-    // found = false;
-    // for (auto iter : clusters)  {
-    //     if (::fabs(iter[0] - 14.2245) < 0.0001)  {
-    //         found = true;
-    //         break;
-    //     }
-    // }
-    // assert(found);
-    // found = false;
-    // for (auto iter : clusters)  {
-    //     if (::fabs(iter[0] - 6.90427) < 0.00001)  {
-    //         found = true;
-    //         break;
-    //     }
-    // }
-    // assert(found);
-    // found = false;
-    // for (auto iter : clusters)  {
-    //     if (::fabs(iter[0] - 3.8146) < 0.00001)  {
-    //         found = true;
-    //         break;
-    //     }
-    // }
-    // assert(found);
-
     // Now try with Points
     //
     p.seed = 200;
@@ -4408,62 +4360,6 @@ static void test_k_means()  {
         }
         std::cout << "\n\n" << std::endl;
     }
-
-    // found = false;
-    // for (auto iter : clusters2)  {
-    //     if (::fabs(iter[0].x - 18.9556) < 0.1 &&
-    //         ::fabs(iter[0].y - 2.17537) < 0.1)  {
-    //         if (::fabs(iter[6].x - 16.7309) < 0.1 &&
-    //             ::fabs(iter[6].y - 0.872376) < 0.1)  {
-    //             found = true;
-    //             break;
-    //         }
-    //     }
-    // }
-    // assert(found);
-
-    // found = false;
-    // for (auto iter : clusters2)  {
-    //     if (::fabs(iter[0].x - 0.943977) < 0.1 &&
-    //         ::fabs(iter[0].y - 0.910989) < 0.1)  {
-    //         if (::fabs(iter[2].x - 0.30509) < 0.1 &&
-    //             ::fabs(iter[2].y - 1.69017) < 0.1)  {
-    //             found = true;
-    //             break;
-    //         }
-    //     }
-    // }
-    // assert(found);
-    // found = false;
-    // for (auto iter : clusters2)  {
-    //     if (::fabs(iter[0].x - 4.31973) < 0.1 &&
-    //         ::fabs(iter[0].y - 1.24214) < 0.1)  {
-    //         if (::fabs(iter[3].x - 4.68381) < 0.1 &&
-    //             ::fabs(iter[3].y - 0.453632) < 0.1)  {
-    //             found = true;
-    //             break;
-    //         }
-    //     }
-    // }
-    // assert(found);
-    // found = false;
-    // for (auto iter : clusters2)  {
-    //     if (::fabs(iter[0].x - 1.5694) < 0.1 &&
-    //         ::fabs(iter[0].y - 15.3338) < 0.1)  {
-    //         found = true;
-    //         break;
-    //     }
-    // }
-    // assert(found);
-    // found = false;
-    // for (auto iter : clusters2)  {
-    //     if (::fabs(iter[0].x - 1.29624) < 0.1 &&
-    //         ::fabs(iter[0].y - 4.13919) < 0.1)  {
-    //         found = true;
-    //         break;
-    //     }
-    // }
-    // assert(found);
 
     // Now try with multidimensional dataset (vector of arrays)
     //
@@ -4563,6 +4459,7 @@ static void test_affinity_propagation()  {
     df.single_act_visit<double>("col1", ap_visitor);
 
     // Using the calculated means, separate the given column into clusters
+    //
     const auto  k_means = km_visitor.get_result();
     const auto  results = ap_visitor.get_clusters();
 

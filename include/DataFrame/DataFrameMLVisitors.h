@@ -46,6 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <numeric>
 #include <random>
 #include <type_traits>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -63,8 +64,8 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    inline void operator() (const index_type &idx,
-                            const value_type &x, const value_type &y)  {
+    inline void operator()(const index_type &idx,
+                           const value_type &x, const value_type &y)  {
 
         if (skip_nan_ && (is_nan__(x) || is_nan__(y))) [[unlikely]]  return;
 
@@ -78,33 +79,34 @@ public:
     }
     PASS_DATA_ONE_BY_ONE_2
 
-    inline void pre ()  {
+    inline void pre()  {
 
         n_ = 0;
         s_xy_ = 0;
         x_stats_.pre();
         y_stats_.pre();
     }
-    inline void post ()  {  }
+    inline void post()  {  }
 
-    inline size_type get_count () const  { return (n_); }
-    inline result_type get_slope () const  {
+    inline size_type get_count() const  { return (n_); }
+    inline result_type get_slope() const  {
 
         // Sum of the squares of the difference between each x and
         // the mean x value.
         //
-        const value_type    s_xx =
-            x_stats_.get_variance() * value_type(n_ - 1);
+        const value_type    s_xx {
+            x_stats_.get_variance() * value_type(n_ - 1)
+        };
 
         return (s_xy_ / s_xx);
     }
-    inline result_type get_intercept () const  {
+    inline result_type get_intercept() const  {
 
         return (y_stats_.get_mean() - get_slope() * x_stats_.get_mean());
     }
-    inline result_type get_corr () const  {
+    inline result_type get_corr() const  {
 
-        const value_type    t = x_stats_.get_std() * y_stats_.get_std();
+        const value_type    t { x_stats_.get_std() * y_stats_.get_std() };
 
         return (s_xy_ / (value_type(n_ - 1) * t));
     }
@@ -159,37 +161,39 @@ private:
     inline void calc_k_means_(const H &column_begin, size_type col_s)  {
 
         std::random_device                          rd;
-        std::mt19937                                gen(
-            (seed_ != seed_t(-1)) ? seed_ : rd());
-        std::uniform_int_distribution<size_type>    rd_gen(0, col_s - 1);
+        std::mt19937                                gen {
+            (seed_ != seed_t(-1)) ? seed_ : rd()
+        };
+        std::uniform_int_distribution<size_type>    rd_gen { 0, col_s - 1 };
 
         // Pick centroids as random points from the col.
         //
         for (auto &k_mean : result_) [[likely]]  {
-            const value_type    &value = *(column_begin + rd_gen(gen));
+            const value_type    &value { *(column_begin + rd_gen(gen)) };
 
             if (! is_nan__(value)) [[likely]]
                 k_mean = value;
         }
 
-        for (size_type iter = 0; iter < iter_num_; ++iter) [[likely]]  {
+        for (size_type iter { 0 }; iter < iter_num_; ++iter) [[likely]]  {
             result_type             new_means { value_type() };
             std::array<double, K>   counts { 0.0 };
 
             // Find assignments.
             //
-            for (size_type point = 0; point < col_s; ++point) [[likely]]  {
-                const value_type    &value = *(column_begin + point);
+            for (size_type point { 0 }; point < col_s; ++point) [[likely]]  {
+                const value_type    &value { *(column_begin + point) };
 
                 if (! is_nan__(value)) [[likely]]  {
-                    double      best_distance =
-                        std::numeric_limits<double>::max();
-                    size_type   best_cluster = 0;
+                    double      best_distance {
+                        std::numeric_limits<double>::max()
+                    };
+                    size_type   best_cluster { 0 };
 
-                    for (size_type cluster = 0; cluster < K;
-                         ++cluster) [[likely]]  {
-                        const double    distance =
-                            dfunc_(value, result_[cluster]);
+                    for (size_type cluster { 0 }; cluster < K; ++cluster)  {
+                        const double    distance {
+                            dfunc_(value, result_[cluster])
+                        };
 
                         if (distance < best_distance)  {
                             best_distance = distance;
@@ -199,27 +203,33 @@ private:
 
                     // Sum up and count points for each cluster.
                     //
-                    auto    &nm = new_means[best_cluster];
+                    auto    &nm { new_means[best_cluster] };
 
                     nm = nm + value;
                     counts[best_cluster] += 1.0;
                 }
             }
 
-            bool    done = true;
+            bool    done { true };
 
-            // Divide sums by counts to get new centroids.
+            // Divide sums by counts to get new centroids. A cluster that
+            // picked up no points this pass is left at its previous
+            // centroid -- there is nothing to average, and the old
+            // 0/0 -> 0/1 guard was substituting a fabricated value_type()
+            // (0 for arithmetic T), silently teleporting an empty
+            // cluster's centroid to zero instead of leaving it alone.
             //
-            for (size_type cluster = 0; cluster < K; ++cluster) [[likely]]  {
-                // Turn 0/0 into 0/1 to avoid zero division.
-                const double        count =
-                    std::max<double>(1.0, counts[cluster]);
-                const value_type    value = new_means[cluster] / count;
-                value_type          &result = result_[cluster];
+            for (size_type cluster { 0 }; cluster < K; ++cluster) [[likely]]  {
+                if (counts[cluster] > 0.0)  {
+                    const value_type    value {
+                        new_means[cluster] / counts[cluster]
+                    };
+                    value_type          &result { result_[cluster] };
 
-                if (dfunc_(value, result) > 0.0000001)  {
-                    done = false;
-                    result = value;
+                    if (dfunc_(value, result) > 0.0000001)  {
+                        done = false;
+                        result = value;
+                    }
                 }
             }
 
@@ -236,21 +246,21 @@ private:
         cluster_type    clusters;
         order_type      clusters_idxs;
 
-        for (size_type i = 0; i < K; ++i) [[likely]]  {
+        for (size_type i { 0 }; i < K; ++i) [[likely]]  {
             clusters[i].reserve(col_s / K + 2);
             clusters[i].push_back(&(result_[i]));
             clusters_idxs[i].reserve(col_s / K + 2);
         }
 
-        for (size_type j = 0; j < col_s; ++j) [[likely]]  {
-            const value_type    &value = *(column_begin + j);
+        for (size_type j { 0 }; j < col_s; ++j) [[likely]]  {
+            const value_type    &value { *(column_begin + j) };
 
             if (! is_nan__(value)) [[likely]]  {
                 double      min_dist { std::numeric_limits<double>::max() };
                 size_type   min_idx { 0 };
 
-                for (size_type i = 0; i < K; ++i)  {
-                    const double    dist = dfunc_(value, result_[i]);
+                for (size_type i { 0 }; i < K; ++i)  {
+                    const double    dist { dfunc_(value, result_[i]) };
 
                     if (dist < min_dist)  {
                         min_dist = dist;
@@ -270,38 +280,36 @@ public:
 
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin, const IV &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const IV &idx_begin, const IV &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
         calc_k_means_(column_begin, col_s);
-        if (cc_)
-            calc_clusters_(column_begin, col_s);
+        if (cc_)  calc_clusters_(column_begin, col_s);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         for (auto &iter : clusters_) iter.clear();
         for (auto &iter : clusters_idxs_) iter.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
-    inline const cluster_type &get_clusters () const  { return (clusters_); }
-    inline cluster_type &get_clusters ()  { return (clusters_); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+    inline const cluster_type &get_clusters() const  { return (clusters_); }
+    inline cluster_type &get_clusters()  { return (clusters_); }
     inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    get_clusters_idxs() const  { return (clusters_idxs_); }
 
     explicit
-    KMeansVisitor(
-        size_type num_of_iter,
-        bool calc_clusters = true,
-        distance_func f =
-            [](const value_type &x, const value_type &y) -> double  {
-                return ((x - y) * (x - y));
-            },
-        seed_t seed = seed_t(-1))
+    KMeansVisitor(size_type num_of_iter,
+                  bool calc_clusters = true,
+                  distance_func f =
+                      [](const value_type &x, const value_type &y) -> double  {
+                          return ((x - y) * (x - y));
+                      },
+                  seed_t seed = seed_t(-1))
         : iter_num_(num_of_iter),
           cc_(calc_clusters),
           seed_(seed),
@@ -342,21 +350,36 @@ private:
     cluster_type    clusters_ { };       // Clusters
     order_type      clusters_idxs_ { };  // Clusters indices
 
+    // Symmetric access into the packed (upper-triangular-inclusive)
+    // similarity array. sim(i, j) == sim(j, i), but get_similarity_()
+    // only ever physically stores the i <= j half -- a lookup with
+    // i > j must swap to the row that was actually filled, rather
+    // than reusing row i's own packed offset (which, for a column
+    // less than i, silently lands on some unrelated pair's entry).
+    //
+    static inline double
+    sim_at_(const vec_t<double> &simil, long i, long j, long col_s)  {
+
+        if (i <= j)
+            return (simil[(i * col_s) - ((i * (i + 1)) >> 1) + j]);
+        return (simil[(j * col_s) - ((j * (j + 1)) >> 1) + i]);
+    }
+
     template<typename H>
     inline vec_t<double>
     get_similarity_(const H &column_begin, long col_s)  {
 
         vec_t<double>   simil((col_s * (col_s + 1)) / 2, 0.0);
-        double          min_dist = std::numeric_limits<double>::max();
+        double          min_dist { std::numeric_limits<double>::max() };
 
         // Compute similarity between distinct data points i and j
         //
-        for (long i = 0; i < col_s - 1; ++i) [[likely]]  {
-            const value_type    &i_val = *(column_begin + i);
-            const long          i_idx = (i * col_s) - ((i * (i + 1)) >> 1);
+        for (long i { 0 }; i < col_s - 1; ++i) [[likely]]  {
+            const value_type    &i_val { *(column_begin + i) };
+            const long          i_idx { (i * col_s) - ((i * (i + 1)) >> 1) };
 
-            for (long j = i + 1; j < col_s; ++j)  [[likely]]  {
-                const double    dist = -dfunc_(i_val, *(column_begin + j));
+            for (long j { i + 1 }; j < col_s; ++j)  [[likely]]  {
+                const double    dist { -dfunc_(i_val, *(column_begin + j)) };
 
                 simil[i_idx + j] = dist;
                 if (dist < min_dist)  min_dist = dist;
@@ -365,7 +388,7 @@ private:
 
         // Assign min to diagonals
         //
-        for (long i = 0; i < col_s; ++i)
+        for (long i { 0 }; i < col_s; ++i)
             simil[(i * col_s) + i - ((i * (i + 1)) >> 1)] = min_dist;
 
         return (simil);
@@ -380,63 +403,85 @@ private:
         avail.resize(col_s * col_s, 0.0);
         respon.resize(col_s * col_s, 0.0);
 
-        const double    one_df = 1.0 - dfactor_;
+        const double    one_df { 1.0 - dfactor_ };
 
-        for (size_type m = 0; m < iter_num_; ++m) [[likely]]  {
-            // Update responsibility
+        for (size_type m { 0 }; m < iter_num_; ++m) [[likely]]  {
+            // Update responsibility:
+            //   r(i, k) = s(i, k) - max_{k' != k} [a(i, k') + s(i, k')]
+            //
+            // For fixed i, "max excluding k" only ever needs the
+            // overall max and, for whichever k achieves it, the
+            // second-highest value -- both obtainable in one O(n)
+            // pass instead of redoing an O(n) search for every k
+            // (which made this O(n^2) per row / O(n^3) per iteration
+            // instead of the documented O(n) per row / O(n^2) total).
             //
             for (long i = 0; i < col_s; ++i) [[likely]]  {
-                const long  i_idx = (i * col_s) - ((i * (i + 1)) >> 1);
+                double  max1 { -std::numeric_limits<double>::max() };
+                double  max2 { -std::numeric_limits<double>::max() };
+                long    argmax1 { -1 };
 
-                for (long j = 0; j < col_s; ++j) [[likely]]  {
-                    double  max_diff = -std::numeric_limits<double>::max();
+                for (long jj { 0 }; jj < col_s; ++jj) [[likely]]  {
+                    const double    value {
+                        sim_at_(simil, i, jj, col_s) + avail[jj * col_s + i]
+                    };
 
-                    for (long jj = 0; jj < col_s; ++jj)  {
-                        if (jj ^ j) [[likely]]   {
-                            const double    value =
-                               simil[i_idx + jj] + avail[jj * col_s + i];
-
-                            if (value > max_diff)
-                                max_diff = value;
-                        }
+                    if (value > max1)  {
+                        max2 = max1;
+                        max1 = value;
+                        argmax1 = jj;
                     }
+                    else if (value > max2)
+                        max2 = value;
+                }
 
-                    const long j_idx = j * col_s + i;
+                for (long j { 0 }; j < col_s; ++j) [[likely]]  {
+                    const double    max_diff { (j == argmax1) ? max2 : max1 };
+                    const long      j_idx { j * col_s + i };
 
-                    respon[j_idx] = one_df * (simil[i_idx + j] - max_diff) +
-                                    dfactor_ * respon[j_idx];
+                    respon[j_idx] =
+                        one_df * (sim_at_(simil, i, j, col_s) - max_diff) +
+                        dfactor_ * respon[j_idx];
                 }
             }
 
             // Update availability
             // Do diagonals first
             //
-            for (long i = 0; i < col_s; ++i) [[likely]]  {
-                const long  s1 = i * col_s;
-                const long  s2 = i * col_s + i;
-                double      sum = 0.0;
+            for (long i { 0 }; i < col_s; ++i) [[likely]]  {
+                const long  s1 { i * col_s };
+                const long  s2 { i * col_s + i };
+                double      sum { 0.0 };
 
-                for (long ii = 0; ii < col_s; ++ii) [[likely]]
+                for (long ii { 0 }; ii < col_s; ++ii) [[likely]]
                     if (ii ^ i)
                         sum += std::max(0.0, respon[s1 + ii]);
 
                 avail[s2] = one_df * sum + dfactor_ * avail[s2];
             }
-            for (long i = 0; i < col_s; ++i) [[likely]]  {
-                for (long j = 0; j < col_s; ++j)  [[likely]] {
-                    if (i ^ j) [[likely]]  {  // Not equal
-                        const long  s1 = j * col_s;
-                        const long  s2 = j * col_s + i;
-                        double      sum = 0.0;
-                        const long  max_i_j = std::max(i, j);
-                        const long  min_i_j = std::min(i, j);
 
-                        for (long ii = 0; ii < min_i_j; ++ii)
-                            sum += std::max(0.0, respon[s1 + ii]);
-                        for (long ii = min_i_j + 1; ii < max_i_j; ++ii)
-                            sum += std::max(0.0, respon[s1 + ii]);
-                        for (long ii = max_i_j + 1; ii < col_s; ++ii)
-                            sum += std::max(0.0, respon[s1 + ii]);
+            // Off-diagonals: a(i, j) needs
+            // sum_{i' not in {i, j}} max(0, r(i', j)) for every i, with
+            // j fixed. Rather than rescanning all n indices for every
+            // (i, j) pair (O(n) work x O(n^2) pairs = O(n^3) per
+            // iteration), compute the column total once per j --
+            // sum_{i' != j} max(0, r(i', j)), O(n) -- and reuse it for
+            // every i by subtracting out just the i'=i term.
+            //
+            for (long j { 0 }; j < col_s; ++j) [[likely]]  {
+                const long  s1 { j * col_s };
+                double      total_j { 0.0 };
+
+                for (long ii { 0 }; ii < col_s; ++ii) [[likely]]
+                    if (ii ^ j)
+                        total_j += std::max(0.0, respon[s1 + ii]);
+
+                for (long i { 0 }; i < col_s; ++i) [[likely]]  {
+                    if (i ^ j) [[likely]]  {  // Not equal
+                        const long      s2 { j * col_s + i };
+                        const double    sum {
+                            total_j - std::max(0.0, respon[s1 + i])
+                        };
 
                         avail[s2] =
                             one_df *
@@ -454,26 +499,26 @@ private:
     inline void
     calc_clusters_(const H &column_begin, long col_s)  {
 
-        const long  centers_size = result_.size();
+        const long  centers_size { long(result_.size()) };
 
         if (! centers_size)  return;
 
-        const auto  resv = col_s / centers_size;
+        const auto  resv { col_s / centers_size };
 
         clusters_.resize(centers_size);
         clusters_idxs_.resize(centers_size);
-        for (long i = 0; i < centers_size; ++i)  {
+        for (long i { 0 }; i < centers_size; ++i)  {
             clusters_[i].reserve(resv);
             clusters_idxs_[i].reserve(resv);
         }
 
-        for (long j = 0; j < col_s; ++j) [[likely]]  {
-            const value_type    &j_val = *(column_begin + j);
-            double              min_dist = dfunc_(j_val, result_[0]);
-            long                min_idx = 0;
+        for (long j { 0 }; j < col_s; ++j) [[likely]]  {
+            const value_type    &j_val { *(column_begin + j) };
+            double              min_dist { dfunc_(j_val, result_[0]) };
+            long                min_idx { 0 };
 
-            for (long i = 1; i < centers_size; ++i)  {
-                const double    dist = dfunc_(j_val, result_[i]);
+            for (long i { 1 }; i < centers_size; ++i)  {
+                const double    dist { dfunc_(j_val, result_[i]) };
 
                 if (dist < min_dist)  {
                     min_dist = dist;
@@ -489,11 +534,13 @@ public:
 
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin, const IV &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const IV &idx_begin, const IV &idx_end,
+               const H &column_begin, const H &column_end)  {
 
-        const long  col_s = std::min(std::distance(idx_begin, idx_end),
-                                     std::distance(column_begin, column_end));
+        const long  col_s {
+            long(std::min(std::distance(idx_begin, idx_end),
+                          std::distance(column_begin, column_end)))
+        };
 
         const vec_t<double> simil = get_similarity_(column_begin, col_s);
         vec_t<double>       avail;
@@ -502,8 +549,8 @@ public:
         get_avail_and_respon_(simil, col_s, avail, respon);
 
         result_.reserve(std::min(col_s / 100, long(16)));
-        for (long i = 0; i < col_s; ++i) [[likely]]  {
-            const long  idx = i * col_s + i;
+        for (long i { 0 }; i < col_s; ++i) [[likely]]  {
+            const long  idx { i * col_s + i };
 
             if (respon[idx] + avail[idx] > 0.0)
                 result_.push_back(&*(column_begin + i));
@@ -512,29 +559,29 @@ public:
         if (cc_)  calc_clusters_(column_begin,  col_s);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_.clear();
         clusters_.clear();
         clusters_idxs_.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
-    inline const cluster_type &get_clusters () const  { return (clusters_); }
-    inline cluster_type &get_clusters ()  { return (clusters_); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+    inline const cluster_type &get_clusters() const  { return (clusters_); }
+    inline cluster_type &get_clusters()  { return (clusters_); }
     inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    get_clusters_idxs() const  { return (clusters_idxs_); }
 
     explicit
-    AffinityPropVisitor(
-        size_type num_of_iter,
-        bool calc_clusters = true,
-        distance_func f =
-            [](const value_type &x, const value_type &y) -> double  {
-                return ((x - y) * (x - y));
-            },
-        double damping_factor = 0.9)
+    AffinityPropVisitor(size_type num_of_iter,
+                        bool calc_clusters = true,
+                        distance_func f =
+                            [](const value_type &x,
+                               const value_type &y) -> double  {
+                                return ((x - y) * (x - y));
+                            },
+                        double damping_factor = 0.9)
         : iter_num_(num_of_iter),
           cc_(calc_clusters),
           dfactor_(damping_factor), dfunc_(f)  {   }
@@ -550,7 +597,7 @@ struct  DBSCANVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
 public:
 
@@ -601,10 +648,10 @@ private:
                        const id_t col_s,
                        vec_t<id_t> &cluster_index)  {
 
-        const value_type    &value = *(column_begin + column_idx);
+        const value_type    &value { *(column_begin + column_idx) };
 
         cluster_index.clear();
-        for (id_t i = 0; i < col_s; ++i)  {
+        for (id_t i { 0 }; i < col_s; ++i)  {
             if (dfunc_(value, *(column_begin + i)) <= max_dist_)
                 cluster_index.push_back(i);
         }
@@ -622,8 +669,8 @@ private:
 
         calculate_cluster_(column_begin, column_idx, col_s, seeds);
 
-        const id_t          seeds_s = id_t(seeds.size());
-        const value_type    &value = *(column_begin + column_idx);
+        const id_t          seeds_s { id_t(seeds.size()) };
+        const value_type    &value { *(column_begin + column_idx) };
 
         if (seeds_s < min_mems_)  {
             cluster_ids[column_idx] = NOISE;
@@ -632,8 +679,8 @@ private:
 
         id_t    core_index { 0 };
 
-        for (id_t i = 0; i < seeds_s; ++i)  {
-            const auto  seed_val = seeds[i];
+        for (id_t i { 0 }; i < seeds_s; ++i)  {
+            const auto  seed_val { seeds[i] };
 
             cluster_ids[seed_val] = cluster_id;
             if (*(column_begin + seed_val) == value) [[unlikely]]
@@ -641,12 +688,12 @@ private:
         }
 
         seeds.erase(seeds.begin() + core_index);
-        for (id_t i = 0, n = seeds.size(); i < n; ++i)  {
+        for (id_t i { 0 }, n { id_t(seeds.size()) }; i < n; ++i)  {
             calculate_cluster_(column_begin, seeds[i], col_s, cluster_neighors);
 
             if (id_t(cluster_neighors.size()) >= min_mems_)  {
-                for (id_t j = 0; j < id_t(cluster_neighors.size()); ++j)  {
-                    auto    &cluster_val = cluster_ids[j];
+                for (id_t j { 0 }; j < id_t(cluster_neighors.size()); ++j)  {
+                    auto    &cluster_val { cluster_ids[cluster_neighors[j]] };
 
                     if (cluster_val < 0)  {  // NOISE or UNCLASSIFIED
                         if (cluster_val == UNCLASSIFIED)  {
@@ -666,19 +713,21 @@ public:
 
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin, const IV &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const IV &idx_begin, const IV &idx_end,
+               const H &column_begin, const H &column_end)  {
 
-        const id_t  col_s = std::min(std::distance(idx_begin, idx_end),
-                                     std::distance(column_begin, column_end));
-        vec_t<id_t> cluster_ids (col_s, UNCLASSIFIED);
+        const id_t  col_s {
+            id_t(std::min(std::distance(idx_begin, idx_end),
+                          std::distance(column_begin, column_end)))
+        };
+        vec_t<id_t> cluster_ids(col_s, UNCLASSIFIED);
         vec_t<id_t> seeds;
         vec_t<id_t> cluster_neighors;
         id_t        cluster_id { 0 };
 
         seeds.reserve(col_s / 20);
         cluster_neighors.reserve(col_s / 20);
-        for (id_t i = 0; i < col_s; ++i)  {
+        for (id_t i { 0 }; i < col_s; ++i)  {
             if (cluster_ids[i] == UNCLASSIFIED &&
                 expand_cluster_(column_begin,
                                 i,
@@ -691,17 +740,23 @@ public:
             }
         }
 
-        const auto  resv = col_s / cluster_id;
+        // cluster_id stays 0 whenever every point ends up NOISE (a
+        // legitimate outcome for sparse data or a tight max_dist_/high
+        // min_mems_, not just a contrived edge case) -- guard against
+        // dividing by it. The value is moot when cluster_id is 0 anyway,
+        // since the per-cluster reserve loop right below never runs.
+        //
+        const auto  resv { cluster_id > 0 ? col_s / cluster_id : 0 };
 
         clusters_.resize(cluster_id);
         clusters_idxs_.resize(cluster_id);
         noisey_idxs_.reserve(std::max(id_t(8), id_t(col_s / 500)));
-        for (long i = 0; i < cluster_id; ++i)  {
+        for (long i { 0 }; i < cluster_id; ++i)  {
             clusters_[i].reserve(resv);
             clusters_idxs_[i].reserve(resv);
         }
-        for (id_t i = 0; i < col_s; ++i)  {
-            const auto  this_id = cluster_ids[i];
+        for (id_t i { 0 }; i < col_s; ++i)  {
+            const auto  this_id { cluster_ids[i] };
 
             if (this_id >= 0) [[likely]]  {
                 clusters_[this_id].push_back(&(*(column_begin + i)));
@@ -713,19 +768,19 @@ public:
 
     inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         clusters_.clear();
         clusters_idxs_.clear();
         noisey_idxs_.clear();
     }
-    inline void post ()  {  }
+    inline void post()  {  }
 
-    inline const result_type &get_result () const  { return (clusters_); }
+    inline const result_type &get_result() const  { return (clusters_); }
     inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    get_clusters_idxs() const  { return (clusters_idxs_); }
     inline const vec_t<size_type> &
-    get_noisey_idxs () const  { return (noisey_idxs_); }
+    get_noisey_idxs() const  { return (noisey_idxs_); }
 
     DBSCANVisitor(id_t min_mems, double max_dist)
         : min_mems_(min_mems),

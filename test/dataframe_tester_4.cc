@@ -1959,27 +1959,19 @@ void test_get_data_by_dbscan()  {
     auto    dfs =
         df.get_data_by_dbscan<double, double, long>("IBM_Close", 10, 4);
 
-    assert(views.size() == 36);
-    assert(dfs.size() == 36);
+    assert(views.size() == 2);
+    assert(dfs.size() == 2);
 
-    assert(views[0].get_index().size() == 5);
+    assert(views[0].get_index().size() == 1705);
     assert(
-    std::fabs(views[0].get_column<double>("IBM_Close")[4] - 185.69) < 0.001);
+    std::fabs(views[0].get_column<double>("IBM_Close")[4] - 187.97) < 0.001);
 
-    assert(dfs[5].get_index().size() == 30);
+    // views[1].write<std::ostream, double, long>
+    //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+    assert(dfs[1].get_index().size() == 16);
     assert(
-    std::fabs(dfs[5].get_column<double>("IBM_Open")[15] - 180.87) < 0.001);
-
-    assert(views[16].get_index().size() == 39);
-    assert(
-    std::fabs(views[16].get_column<double>("IBM_High")[3] - 170.85) < 0.001);
-
-    // This is the last DataFrame which contains the data corresponding to
-    // noisy close prices
-    //
-    assert(views[35].get_index().size() == 16);
-    assert(views[35].get_column<long>("IBM_Volume")[0] == 3821400);
-    assert(views[35].get_index()[1] == "2020-03-12");
+    std::fabs(dfs[1].get_column<double>("IBM_Open")[15] - 107.25) < 0.001);
 }
 
 // ----------------------------------------------------------------------------

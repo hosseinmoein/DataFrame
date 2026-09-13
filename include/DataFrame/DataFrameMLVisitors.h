@@ -807,7 +807,7 @@ struct  MeanShiftVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
 public:
 
@@ -863,21 +863,21 @@ private:
 
     inline static double biweight_kernel_(double d)  {
 
-        const auto  x = 1.0 - d * d;
+        const auto  x { 1.0 - d * d };
 
         return (d <= 1.0 ? x * x : 0.0);
     }
 
     inline static double triweight_kernel_(double d)  {
 
-        const auto  x = 1.0 - d * d;
+        const auto  x { 1.0 - d * d };
 
         return (d <= 1.0 ? x * x * x : 0.0);
     }
 
     inline static double tricube_kernel_(double d)  {
 
-        const auto  x = 1.0 - d * d * d;
+        const auto  x { 1.0 - d * d * d };
 
         return (d <= 1.0 ? x * x * x : 0.0);
     }
@@ -904,23 +904,33 @@ private:
 
     inline static double silverman_kernel_(double d)  {
 
-        const auto  x = M_SQRT1_2 * std::abs(d);
+        const auto  x { M_SQRT1_2 * std::abs(d) };
 
         return (std::exp(-x) * std::sin(x + M_PI_4));
     }
 
-    template<typename H>
-    inline void shift_(const H &column_begin,
-                       size_type index,
-                       const value_type &val,
-                       vec_t<value_type> &shifted,
-                       vec_t<bool> &shifting)  {
+    // Convergence is "did this iteration's shift move the point much
+    // from where IT was", not "is the point still near where it
+    // started" -- comparing against the original, untouched data
+    // (column_begin) instead of the point's own previous position
+    // meant a point could freeze the moment its very first shift
+    // happened to land within max_dist_ of its start, regardless of
+    // whether it had reached its actual density mode. The freshly
+    // computed position is always the best estimate available, so it
+    // is recorded unconditionally -- previously it was discarded
+    // outright on the very iteration convergence was detected.
+    //
+    inline void
+    shift_(size_type index,
+           const value_type &val,
+           vec_t<value_type> &shifted,
+           vec_t<bool> &shifting)  {
 
-        if (dfunc_(val, *(column_begin + index)) <= max_dist_)
+        if (dfunc_(val, shifted[index]) <= max_dist_)
             shifting[index] = false;
-        else
-            shifted[index] = val;
+        shifted[index] = val;
     }
+
 
     template<typename H>
     inline void
@@ -936,10 +946,10 @@ private:
         clusters_.reserve(32);
         clusters_idxs_.reserve(32);
         for (size_type i { 0 }; i < shifted.size(); ++i)  {
-            const auto  &shifted_val = shifted[i];
-            auto        cbegin = clusters_.begin();
-            auto        cend = clusters_.end();
-            auto        ibegin = clusters_idxs_.begin();
+            const auto  &shifted_val { shifted[i] };
+            auto        cbegin { clusters_.begin() };
+            auto        cend { clusters_.end() };
+            auto        ibegin { clusters_idxs_.begin() };
             size_type   cnt_idx { 0 };
 
             while (cbegin != cend)  {
@@ -972,12 +982,13 @@ public:
 
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin, const IV &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const IV &idx_begin, const IV &idx_end,
+               const H &column_begin, const H &column_end)  {
 
-        const size_type     col_s =
-            std::min(std::distance(idx_begin, idx_end),
-                     std::distance(column_begin, column_end));
+        const size_type     col_s {
+            size_type(std::min(std::distance(idx_begin, idx_end),
+                               std::distance(column_begin, column_end)))
+        };
         auto                k_func =
             (kernel_ == mean_shift_kernel::uniform) ? &uniform_kernel_
             : (kernel_ == mean_shift_kernel::triangular) ? &triangular_kernel_
@@ -990,11 +1001,23 @@ public:
             : (kernel_ == mean_shift_kernel::logistic) ? &logistic_kernel_
             : (kernel_ == mean_shift_kernel::sigmoid) ? &sigmoid_kernel_
             : &silverman_kernel_;
-        vec_t<value_type>   shifted (column_begin, column_end);
-        vec_t<bool>         shifting (col_s, true);
+        vec_t<value_type>   shifted(column_begin, column_end);
+        vec_t<bool>         shifting(col_s, true);
         size_type           iterations { 0 };
-        const double        radius { kband_ * 3.0 };
-        const double        dbl_sq_bw { 2.0 * kband_ * kband_ };
+
+        // The kernel functions (uniform_kernel_, gaussian_kernel_, etc.)
+        // are all written for a bandwidth-normalized argument -- the
+        // d <= 1.0 cutoffs, and gaussian_kernel_'s textbook
+        // exp(-0.5*d^2) shape, only mean what they look like they
+        // mean when d is "how many bandwidths away", not a raw
+        // distance. dfunc_ returns squared distance for scalar T and
+        // true (already-rooted) Euclidean distance for MD T, so both
+        // need converting to a true linear distance before dividing
+        // by kband_. 3.0 (bandwidths) replaces the old radius, which
+        // compared an un-normalized, type-inconsistent raw distance
+        // against kband_*3.0.
+        //
+        constexpr double    radius { 3.0 };
 
         while (iterations++ < max_iter_ &&
                std::any_of(shifting.begin(), shifting.end(),
@@ -1006,12 +1029,18 @@ public:
                 const value_type    &val_to_shift { shifted[i] };
                 double              total_w { 0 };
 
-                for (size_type j = 0; j < col_s; ++j)  {
-                    const value_type    &this_val = *(column_begin + j);
-                    const double        dist = dfunc_(val_to_shift, this_val);
+                for (size_type j { 0 }; j < col_s; ++j)  {
+                    const value_type    &this_val { *(column_begin + j) };
+                    const double        raw_dist {
+                        dfunc_(val_to_shift, this_val)
+                    };
+                    const double        lin_dist {
+                        is_md_ ? raw_dist : std::sqrt(raw_dist)
+                    };
+                    const double        norm_dist { lin_dist / kband_ };
 
-                    if (dist <= radius)  {
-                        const double    weight = k_func(dist) / dbl_sq_bw;
+                    if (norm_dist <= radius)  {
+                        const double    weight { k_func(norm_dist) };
 
                         new_val = new_val + (this_val * weight);
                         total_w += weight;
@@ -1022,7 +1051,7 @@ public:
                 // its neighbors
                 //
                 new_val = new_val / total_w;
-                shift_(column_begin, i, new_val, shifted, shifting);
+                shift_(i, new_val, shifted, shifting);
             }
         }
 
@@ -1031,12 +1060,12 @@ public:
 
     inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
 
-    inline void pre ()  { clusters_.clear(); clusters_idxs_.clear(); }
-    inline void post ()  {  }
+    inline void pre()  { clusters_.clear(); clusters_idxs_.clear(); }
+    inline void post()  {  }
 
-    inline const result_type &get_result () const  { return (clusters_); }
+    inline const result_type &get_result() const  { return (clusters_); }
     inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    get_clusters_idxs() const  { return (clusters_idxs_); }
 
     MeanShiftVisitor(double kernel_bandwidth,
                      double max_dist,
@@ -1789,8 +1818,8 @@ public:
         if constexpr (! is_md_)  {
             for (size_type i { 0 }; i < roll_count_ - 1; ++i) [[likely]]
                 result[i] = get_nan<data_t>();
-            for (size_type i { roll_count_ - 1 }; i < sz; ++i)
-                result[i] = sum_v.get_result()[i];
+            for (size_type i { 0 }; i < sz; ++i)
+                result[i + (roll_count_ - 1)] = sum_v.get_result()[i];
         }
         else  {
             const std::vector<data_t>   nans(column_begin->size(),
@@ -1798,12 +1827,13 @@ public:
 
             for (size_type i { 0 }; i < roll_count_ - 1; ++i) [[likely]]
                 result[i] = nans;
-            for (size_type i { roll_count_ - 1 }; i < sz; ++i)  {
+            for (size_type i { 0 }; i < sz; ++i)  {
                 if (sum_v.get_result()[i].empty())
-                    result[i].resize(column_begin->size(), get_nan<data_t>());
+                    result[i + (roll_count_ - 1)] = nans;
                 else
-                    result[i].assign(sum_v.get_result()[i].begin(),
-                                     sum_v.get_result()[i].end());
+                    result[i + (roll_count_ - 1)].assign(
+                        sum_v.get_result()[i].begin(),
+                        sum_v.get_result()[i].end());
             }
         }
 

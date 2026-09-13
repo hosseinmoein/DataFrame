@@ -1870,18 +1870,18 @@ static void test_MeanShiftVisitor()  {
                          });
     df.single_act_visit<double>("IBM_Close", mshift);
 
-    assert(mshift.get_result().size() == 19);
-    assert(mshift.get_result()[0].size() == 106);
-    assert(mshift.get_result()[4].size() == 19);
-    assert(mshift.get_result()[6].size() == 274);
-    assert(mshift.get_result()[10].size() == 180);
-    assert(mshift.get_result()[14].size() == 29);
-    assert(mshift.get_result()[18].size() == 2);
-    assert(std::fabs(mshift.get_result()[0][6] - 184.16) < 0.001);
-    assert(std::fabs(mshift.get_result()[4][18] - 194.0) < 0.001);
-    assert(std::fabs(mshift.get_result()[6][273] - 154.31) < 0.001);
-    assert(std::fabs(mshift.get_result()[10][135] - 137.61) < 0.001);
-    assert(std::fabs(mshift.get_result()[18][1] - 94.77) < 0.001);
+    assert(mshift.get_result().size() == 18);
+    assert(mshift.get_result()[0].size() == 123);
+    assert(mshift.get_result()[4].size() == 57);
+    assert(mshift.get_result()[6].size() == 275);
+    assert(mshift.get_result()[10].size() == 54);
+    assert(mshift.get_result()[14].size() == 9);
+    assert(mshift.get_result()[17].size() == 2);
+    assert(std::fabs(mshift.get_result()[0][6] - 187.26) < 0.001);
+    assert(std::fabs(mshift.get_result()[4][18] - 166.08) < 0.001);
+    assert(std::fabs(mshift.get_result()[6][273] - 151.1) < 0.001);
+    assert(std::fabs(mshift.get_result()[10][35] - 129.57) < 0.001);
+    assert(std::fabs(mshift.get_result()[17][1] - 94.77) < 0.001);
 
     // Now multidimensional data
     //
@@ -1914,16 +1914,16 @@ static void test_MeanShiftVisitor()  {
 
     const auto  &md_clusters = md_mshift.get_result();
 
-    assert(md_clusters.size() == 53); // Number of clusters
+    assert(md_clusters.size() == 52); // Number of clusters
 
-    assert(md_clusters[0].size() == 74);
+    assert(md_clusters[0].size() == 73);
     assert(std::fabs(md_clusters[0][6][1] - -1.8807) < 0.0001);
 
-    assert(md_clusters[28].size() == 36);
+    assert(md_clusters[28].size() == 40);
     assert(std::fabs(md_clusters[28][3][0] - 12.6347) < 0.0001);
 
-    assert(md_clusters[52].size() == 1);
-    assert(std::fabs(md_clusters[52][0][2] - 19.2094) < 0.0001);
+    assert(md_clusters[51].size() == 1);
+    assert(std::fabs(md_clusters[51][0][2] - -19.7932) < 0.0001);
 }
 
 // ----------------------------------------------------------------------------
@@ -2011,23 +2011,23 @@ void test_get_data_by_mshift()  {
 
     assert(views.size() == 38);
     assert(dfs.size() == 38);
-    assert(views[0].get_index().size() == 56);
-    assert(dfs[0].get_index().size() == 56);
-    assert(views[4].get_index().size() == 20);
-    assert(views[6].get_index().size() == 3);
-    assert(views[10].get_index().size() == 45);
-    assert(views[14].get_index().size() == 101);
-    assert(views[18].get_index().size() == 164);
-    assert(dfs[18].get_index().size() == 164);
+    assert(views[0].get_index().size() == 57);
+    assert(dfs[0].get_index().size() == 57);
+    assert(views[4].get_index().size() == 14);
+    assert(views[6].get_index().size() == 26);
+    assert(views[10].get_index().size() == 122);
+    assert(views[14].get_index().size() == 25);
+    assert(views[18].get_index().size() == 89);
+    assert(dfs[18].get_index().size() == 89);
 
     assert(
-    (std::fabs(views[0].get_column<double>("IBM_Close")[7] - 183.69) < 0.001));
+    (std::fabs(views[0].get_column<double>("IBM_Close")[7] - 187.74) < 0.001));
     assert(
-    (std::fabs(dfs[5].get_column<double>("IBM_Open")[15] - 173.91) < 0.001));
+    (std::fabs(dfs[5].get_column<double>("IBM_Open")[15] - 172.97) < 0.001));
     assert(
-    (std::fabs(views[16].get_column<double>("IBM_High")[3] - 166.02) < 0.001));
-    assert(dfs[18].get_column<long>("IBM_Volume")[0] == 10189700);
-    assert(views[18].get_index()[1] == "2015-09-01");
+    (std::fabs(views[16].get_column<double>("IBM_High")[3] - 148.4) < 0.001));
+    assert(dfs[18].get_column<long>("IBM_Volume")[0] == 7073200);
+    assert(views[18].get_index()[1] == "2015-10-20");
 }
 
 // ----------------------------------------------------------------------------

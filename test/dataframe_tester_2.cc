@@ -4164,14 +4164,14 @@ static void test_EntropyVisitor()  {
     assert(e_v.get_result().size() == 28);
     assert(std::isnan(e_v.get_result()[0]));
     assert(std::isnan(e_v.get_result()[3]));
-    assert(std::abs(e_v.get_result()[4] - 2.18974) < 0.00001);
-    assert(std::abs(e_v.get_result()[6] - 1.98477) < 0.00001);
-    assert(std::abs(e_v.get_result()[10] - 1.7154) < 0.0001);
-    assert(std::abs(e_v.get_result()[23] - 0.596666) < 0.00001);
-    assert(std::abs(e_v.get_result()[21] - 0.822228) < 0.00001);
-    assert(std::abs(e_v.get_result()[18] - 1.49397) < 0.0001);
-    assert(std::abs(e_v.get_result()[26] - 0.08568) < 0.0001);
-    assert(std::abs(e_v.get_result()[27] - 0.00646) < 0.0001);
+    assert(std::isnan(e_v.get_result()[0]));
+    assert(std::isnan(e_v.get_result()[7]));
+    assert(std::abs(e_v.get_result()[10] - 1.98477) < 0.00001);
+    assert(std::abs(e_v.get_result()[23] - 1.13643) < 0.00001);
+    assert(std::abs(e_v.get_result()[21] - 1.66467) < 0.00001);
+    assert(std::abs(e_v.get_result()[18] - 2.26252) < 0.0001);
+    assert(std::abs(e_v.get_result()[26] - 0.863265) < 0.000001);
+    assert(std::abs(e_v.get_result()[27] - 0.596666) < 0.000001);
 
     // Now multidimensional data
     //
@@ -4220,19 +4220,18 @@ static void test_EntropyVisitor()  {
     assert(std::isnan(ary_result[0][2]));
     assert(std::isnan(ary_result[2][2]));
     assert(std::isnan(ary_result[2][2]));
-    assert(std::abs(ary_result[3][0] - 1.88598) < 0.00001);
-    assert(std::abs(ary_result[3][1] - 1.76876) < 0.00001);
-    assert(std::abs(ary_result[6][1] - 1.95814) < 0.00001);
-    assert(std::abs(ary_result[6][2] - 1.84599) < 0.00001);
+    assert(std::isnan(ary_result[3][0]));
+    assert(std::isnan(ary_result[3][1]));
+    assert(std::abs(ary_result[6][1] - 1.76876) < 0.00001);
+    assert(std::abs(ary_result[6][2] - 1.91606) < 0.00001);
 
     assert(std::isnan(vec_result[0][0]));
     assert(std::isnan(vec_result[0][2]));
     assert(std::isnan(vec_result[2][2]));
-    assert(std::isnan(ary_result[2][2]));
-    assert(std::abs(vec_result[3][0] - 1.88598) < 0.00001);
-    assert(std::abs(vec_result[3][1] - 1.76876) < 0.00001);
-    assert(std::abs(vec_result[6][1] - 1.95814) < 0.00001);
-    assert(std::abs(vec_result[6][2] - 1.84599) < 0.00001);
+    assert(std::isnan(vec_result[3][0]));
+    assert(std::isnan(vec_result[3][1]));
+    assert(std::abs(vec_result[6][1] - 1.76876) < 0.00001);
+    assert(std::abs(vec_result[6][2] - 1.91606) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

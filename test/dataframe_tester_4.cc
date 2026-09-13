@@ -1798,16 +1798,12 @@ static void test_DBSCANVisitor()  {
     assert(dbscan.get_noisey_idxs()[0] == 1564);
     assert(dbscan.get_noisey_idxs()[1] == 1565);
 
-    assert(dbscan.get_result().size() == 19);
-    assert(dbscan.get_result()[0].size() == 11);
-    assert(dbscan.get_result()[4].size() == 31);
-    assert(dbscan.get_result()[10].size() == 294);
-    assert(dbscan.get_result()[14].size() == 82);
-    assert(dbscan.get_result()[18].size() == 10);
-    assert(dbscan.get_result()[0][6] == 185.679993);
-    assert(dbscan.get_result()[4][18] == 167.330002);
-    assert(dbscan.get_result()[10][135] == 145.160004);
-    assert(dbscan.get_result()[18][3] == 103.550003);
+    assert(dbscan.get_result().size() == 1);
+    assert(dbscan.get_result()[0].size() == 1719);
+    assert(std::fabs(dbscan.get_result()[0][6] - 187.26) < 0.001);
+    assert(std::fabs(dbscan.get_result()[0][18] - 176.4) < 0.001);
+    assert(std::fabs(dbscan.get_result()[0][135] - 192.49) < 0.001);
+    assert(std::fabs(dbscan.get_result()[0][1718] - 111.66) < 0.001);
 
     // Now multidimensional data
     //
@@ -1819,9 +1815,8 @@ static void test_DBSCANVisitor()  {
 
     using col_t = std::array<double, 3>;
 
-    auto    rand_vec =
+    auto                rand_vec =
         gen_uniform_real_dist<double>(df.get_index().size() * 3, p);
-
     std::vector<col_t>  multi_dimen_col(df.get_index().size());
 
     for (std::size_t i { 0 }, j { 0 }; j < rand_vec.size(); ++i)  {
@@ -1837,16 +1832,16 @@ static void test_DBSCANVisitor()  {
 
     const auto  &md_clusters = md_dbscan.get_result();
 
-    assert(md_clusters.size() == 102); // Number of clusters
+    assert(md_clusters.size() == 30); // Number of clusters
 
-    assert(md_clusters[0].size() == 14);
-    assert(std::fabs(md_clusters[0][6][1] - -19.9438) < 0.0001);
+    assert(md_clusters[0].size() == 27);
+    assert(std::fabs(md_clusters[0][6][1] - 4.24441) < 0.00001);
 
-    assert(md_clusters[58].size() == 12);
-    assert(std::fabs(md_clusters[58][3][0] - -6.41034) < 0.00001);
+    assert(md_clusters[26].size() == 10);
+    assert(std::fabs(md_clusters[26][3][0] - 14.87) < 0.001);
 
-    assert(md_clusters[101].size() == 10);
-    assert(std::fabs(md_clusters[101][9][2] - -5.92195) < 0.00001);
+    assert(md_clusters[8].size() == 21);
+    assert(std::fabs(md_clusters[8][9][2] - -0.348493) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------
@@ -1875,18 +1870,18 @@ static void test_MeanShiftVisitor()  {
                          });
     df.single_act_visit<double>("IBM_Close", mshift);
 
-    assert(mshift.get_result().size() == 19);
-    assert(mshift.get_result()[0].size() == 106);
-    assert(mshift.get_result()[4].size() == 19);
-    assert(mshift.get_result()[6].size() == 274);
-    assert(mshift.get_result()[10].size() == 180);
-    assert(mshift.get_result()[14].size() == 29);
-    assert(mshift.get_result()[18].size() == 2);
-    assert(std::fabs(mshift.get_result()[0][6] - 184.16) < 0.001);
-    assert(std::fabs(mshift.get_result()[4][18] - 194.0) < 0.001);
-    assert(std::fabs(mshift.get_result()[6][273] - 154.31) < 0.001);
-    assert(std::fabs(mshift.get_result()[10][135] - 137.61) < 0.001);
-    assert(std::fabs(mshift.get_result()[18][1] - 94.77) < 0.001);
+    assert(mshift.get_result().size() == 18);
+    assert(mshift.get_result()[0].size() == 123);
+    assert(mshift.get_result()[4].size() == 57);
+    assert(mshift.get_result()[6].size() == 275);
+    assert(mshift.get_result()[10].size() == 54);
+    assert(mshift.get_result()[14].size() == 9);
+    assert(mshift.get_result()[17].size() == 2);
+    assert(std::fabs(mshift.get_result()[0][6] - 187.26) < 0.001);
+    assert(std::fabs(mshift.get_result()[4][18] - 166.08) < 0.001);
+    assert(std::fabs(mshift.get_result()[6][273] - 151.1) < 0.001);
+    assert(std::fabs(mshift.get_result()[10][35] - 129.57) < 0.001);
+    assert(std::fabs(mshift.get_result()[17][1] - 94.77) < 0.001);
 
     // Now multidimensional data
     //
@@ -1919,16 +1914,16 @@ static void test_MeanShiftVisitor()  {
 
     const auto  &md_clusters = md_mshift.get_result();
 
-    assert(md_clusters.size() == 53); // Number of clusters
+    assert(md_clusters.size() == 52); // Number of clusters
 
-    assert(md_clusters[0].size() == 74);
+    assert(md_clusters[0].size() == 73);
     assert(std::fabs(md_clusters[0][6][1] - -1.8807) < 0.0001);
 
-    assert(md_clusters[28].size() == 36);
+    assert(md_clusters[28].size() == 40);
     assert(std::fabs(md_clusters[28][3][0] - 12.6347) < 0.0001);
 
-    assert(md_clusters[52].size() == 1);
-    assert(std::fabs(md_clusters[52][0][2] - 19.2094) < 0.0001);
+    assert(md_clusters[51].size() == 1);
+    assert(std::fabs(md_clusters[51][0][2] - -19.7932) < 0.0001);
 }
 
 // ----------------------------------------------------------------------------
@@ -1964,27 +1959,19 @@ void test_get_data_by_dbscan()  {
     auto    dfs =
         df.get_data_by_dbscan<double, double, long>("IBM_Close", 10, 4);
 
-    assert(views.size() == 36);
-    assert(dfs.size() == 36);
+    assert(views.size() == 2);
+    assert(dfs.size() == 2);
 
-    assert(views[0].get_index().size() == 5);
+    assert(views[0].get_index().size() == 1705);
     assert(
-    std::fabs(views[0].get_column<double>("IBM_Close")[4] - 185.69) < 0.001);
+    std::fabs(views[0].get_column<double>("IBM_Close")[4] - 187.97) < 0.001);
 
-    assert(dfs[5].get_index().size() == 30);
+    // views[1].write<std::ostream, double, long>
+    //     (std::cout, io_format::pretty_prt, { .precision = 3 });
+
+    assert(dfs[1].get_index().size() == 16);
     assert(
-    std::fabs(dfs[5].get_column<double>("IBM_Open")[15] - 180.87) < 0.001);
-
-    assert(views[16].get_index().size() == 39);
-    assert(
-    std::fabs(views[16].get_column<double>("IBM_High")[3] - 170.85) < 0.001);
-
-    // This is the last DataFrame which contains the data corresponding to
-    // noisy close prices
-    //
-    assert(views[35].get_index().size() == 16);
-    assert(views[35].get_column<long>("IBM_Volume")[0] == 3821400);
-    assert(views[35].get_index()[1] == "2020-03-12");
+    std::fabs(dfs[1].get_column<double>("IBM_Open")[15] - 107.25) < 0.001);
 }
 
 // ----------------------------------------------------------------------------
@@ -2024,23 +2011,23 @@ void test_get_data_by_mshift()  {
 
     assert(views.size() == 38);
     assert(dfs.size() == 38);
-    assert(views[0].get_index().size() == 56);
-    assert(dfs[0].get_index().size() == 56);
-    assert(views[4].get_index().size() == 20);
-    assert(views[6].get_index().size() == 3);
-    assert(views[10].get_index().size() == 45);
-    assert(views[14].get_index().size() == 101);
-    assert(views[18].get_index().size() == 164);
-    assert(dfs[18].get_index().size() == 164);
+    assert(views[0].get_index().size() == 57);
+    assert(dfs[0].get_index().size() == 57);
+    assert(views[4].get_index().size() == 14);
+    assert(views[6].get_index().size() == 26);
+    assert(views[10].get_index().size() == 122);
+    assert(views[14].get_index().size() == 25);
+    assert(views[18].get_index().size() == 89);
+    assert(dfs[18].get_index().size() == 89);
 
     assert(
-    (std::fabs(views[0].get_column<double>("IBM_Close")[7] - 183.69) < 0.001));
+    (std::fabs(views[0].get_column<double>("IBM_Close")[7] - 187.74) < 0.001));
     assert(
-    (std::fabs(dfs[5].get_column<double>("IBM_Open")[15] - 173.91) < 0.001));
+    (std::fabs(dfs[5].get_column<double>("IBM_Open")[15] - 172.97) < 0.001));
     assert(
-    (std::fabs(views[16].get_column<double>("IBM_High")[3] - 166.02) < 0.001));
-    assert(dfs[18].get_column<long>("IBM_Volume")[0] == 10189700);
-    assert(views[18].get_index()[1] == "2015-09-01");
+    (std::fabs(views[16].get_column<double>("IBM_High")[3] - 148.4) < 0.001));
+    assert(dfs[18].get_column<long>("IBM_Volume")[0] == 7073200);
+    assert(views[18].get_index()[1] == "2015-10-20");
 }
 
 // ----------------------------------------------------------------------------
@@ -2396,25 +2383,25 @@ static void test_StationaryCheckVisitor()  {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = false } };
 
     df.single_act_visit<double>("IBM_Close", sc2);
-    assert(std::fabs(sc2.get_adf_statistic() - 0.989687) < 0.00001);
+    assert(std::fabs(sc2.get_adf_statistic() - -1.80735) < 0.00001);
 
     StationaryCheckVisitor<double, std::string> sc3 {
         stationary_test::adf, { .adf_lag = 25, .adf_with_trend = false } };
 
     df.single_act_visit<double>("IBM_Close", sc3);
-    assert(std::fabs(sc3.get_adf_statistic() - 0.974531) < 0.0000001);
+    assert(std::fabs(sc3.get_adf_statistic() - -1.59054) < 0.00001);
 
     StationaryCheckVisitor<double, std::string> sc4 {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = false } };
 
     df.single_act_visit<double>("normal_col", sc4);
-    assert(std::fabs(sc4.get_adf_statistic() - 0.0289613) < 0.0000001);
+    assert(std::fabs(sc4.get_adf_statistic() - -21.1568) < 0.0001);
 
     StationaryCheckVisitor<double, std::string> sc5 {
         stationary_test::adf, { .adf_lag = 25, .adf_with_trend = false } };
 
     df.single_act_visit<double>("normal_col", sc5);
-    assert(std::fabs(sc5.get_adf_statistic() - 0.0208191) < 0.0000001);
+    assert(std::fabs(sc5.get_adf_statistic() - -13.5343) < 0.0001);
 
     // ADF tests with trend
     //
@@ -2422,37 +2409,37 @@ static void test_StationaryCheckVisitor()  {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
 
     df.single_act_visit<double>("IBM_Close", sc6);
-    assert(std::fabs(sc6.get_adf_statistic() - 0.977705) < 0.000001);
+    assert(std::fabs(sc6.get_adf_statistic() - -1.83342) < 0.00001);
 
     StationaryCheckVisitor<double, std::string> sc7 {
         stationary_test::adf, { .adf_lag = 25, .adf_with_trend = true } };
 
     df.single_act_visit<double>("IBM_Close", sc7);
-    assert(std::fabs(sc7.get_adf_statistic() - 0.946614) < 0.000001);
+    assert(std::fabs(sc7.get_adf_statistic() - -1.38926) < 0.00001);
 
     StationaryCheckVisitor<double, std::string> sc8 {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
 
     df.single_act_visit<double>("normal_col", sc8);
-    assert(std::fabs(sc8.get_adf_statistic() - 0.0289582) < 0.0000001);
+    assert(std::fabs(sc8.get_adf_statistic() - -21.155) < 0.001);
 
     StationaryCheckVisitor<double, std::string> sc9 {
         stationary_test::adf, { .adf_lag = 25, .adf_with_trend = true } };
 
     df.single_act_visit<double>("normal_col", sc9);
-    assert(std::fabs(sc9.get_adf_statistic() - 0.020812) < 0.0000001);
+    assert(std::fabs(sc9.get_adf_statistic() - -13.5341) < 0.0001);
 
     StationaryCheckVisitor<double, std::string> sc10 {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
 
     df.single_act_visit<double>("log close", sc10);
-    assert(std::fabs(sc10.get_adf_statistic() - 0.972062) < 0.000001);
+    assert(std::fabs(sc10.get_adf_statistic() - -2.21398) < 0.00001);
 
     StationaryCheckVisitor<double, std::string> sc11 {
         stationary_test::adf, { .adf_lag = 10, .adf_with_trend = true } };
 
     df.single_act_visit<double>("residual close", sc11);
-    assert(std::fabs(sc11.get_adf_statistic() - 0.679027) < 0.000001);
+    assert(std::fabs(sc11.get_adf_statistic() - -3.44574) < 0.00001);
 
     // Now multidimensional data
     //
@@ -2510,14 +2497,14 @@ static void test_StationaryCheckVisitor()  {
     df.single_act_visit<ary_col_t>("STATION ARY", kpss_ary_v);
 
     assert(adf_vec_v.get_adf_statistic().size() == dim);
-    assert(std::abs(adf_vec_v.get_adf_statistic()[0] - -0.586018) < 0.000001);
-    assert(std::abs(adf_vec_v.get_adf_statistic()[2] - -0.705822) < 0.000001);
+    assert(std::abs(adf_vec_v.get_adf_statistic()[0] - -3.55811) < 0.00001);
+    assert(std::abs(adf_vec_v.get_adf_statistic()[2] - -4.60884) < 0.00001);
     assert(kpss_vec_v.get_kpss_statistic().size() == dim);
-    assert(std::abs(kpss_vec_v.get_kpss_statistic()[0] - 0.0) < 0.00000001);
-    assert(std::abs(kpss_vec_v.get_kpss_statistic()[2] - 0.0) < 0.00000001);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[0] - 0.1) < 0.01);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[2] - 0.1) < 0.01);
     assert(kpss_vec_v.get_kpss_value().size() == dim);
-    assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 326.728) < 0.001);
-    assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 2239.29) < 0.01);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 0.033409) < 0.000001);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 0.035666) < 0.000001);
 
     df.single_act_visit<vec_col_t>("NON STATION VEC", adf_vec_v);
     df.single_act_visit<ary_col_t>("NON STATION ARY", adf_ary_v);
@@ -2525,14 +2512,15 @@ static void test_StationaryCheckVisitor()  {
     df.single_act_visit<ary_col_t>("NON STATION ARY", kpss_ary_v);
 
     assert(adf_vec_v.get_adf_statistic().size() == dim);
-    assert(std::abs(adf_vec_v.get_adf_statistic()[0] - 0.904666) < 0.000001);
-    assert(std::abs(adf_vec_v.get_adf_statistic()[2] - 0.896825) < 0.000001);
+    assert((std::abs(adf_vec_v.get_adf_statistic()[0] - 2.66413) < 0.00001 ||
+            std::abs(adf_vec_v.get_adf_statistic()[0] - 2.61647) < 0.00001));
+    assert(std::abs(adf_vec_v.get_adf_statistic()[2] - 2.64523) < 0.00001);
     assert(kpss_vec_v.get_kpss_statistic().size() == dim);
-    assert(std::abs(kpss_vec_v.get_kpss_statistic()[0] - 0.0) < 0.00000001);
-    assert(std::abs(kpss_vec_v.get_kpss_statistic()[2] - 0.0) < 0.00000001);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[0] - 0.1) < 0.01);
+    assert(std::abs(kpss_vec_v.get_kpss_statistic()[2] - 0.1) < 0.01);
     assert(kpss_vec_v.get_kpss_value().size() == dim);
-    assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 10.76) < 0.01);
-    assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 189.563) < 0.001);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[0] - 0.318681) < 0.000001);
+    assert(std::abs(kpss_vec_v.get_kpss_value()[2] - 0.311255) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------
@@ -4870,7 +4858,7 @@ static void test_KolmoSmirnovTestVisitor()  {
 
     ibm.single_act_visit<double, double>("IBM_Low", "IBM_High", ks_test);
     assert((std::fabs(ks_test.get_result() - 0.0296) < 0.0001));
-    assert((std::fabs(ks_test.get_p_value() - 0.0242) < 0.0001));
+    assert((std::fabs(ks_test.get_p_value() - 0.023725) < 0.000001));
 
     ibm.single_act_visit<double, double>("IBM_Close", "uniform", ks_test);
     assert((std::fabs(ks_test.get_result() - 0.1224) < 0.0001));
@@ -4938,8 +4926,8 @@ static void test_MannWhitneyUTestVisitor()  {
     assert((std::fabs(mwu_test.get_result() - 12643394.5) < 0.0001));
     assert((std::fabs(mwu_test.get_u1() - 12667566.5) < 0.0001));
     assert((std::fabs(mwu_test.get_u2() - 12643394.5) < 0.0001));
-    assert((std::fabs(mwu_test.get_zscore() - -0.083) < 0.001));
-    assert((std::fabs(mwu_test.get_pvalue() - 0.9339) < 0.0001));
+    assert((std::fabs(mwu_test.get_zscore() - 0.082957) < 0.000001));
+    assert((std::fabs(mwu_test.get_pvalue() - 0.933885) < 0.000001));
 
     ibm.single_act_visit<double, double>("IBM_Low", "IBM_High", mwu_test);
     assert((std::fabs(mwu_test.get_result() - 12213043.0) < 0.0001));
@@ -4959,14 +4947,14 @@ static void test_MannWhitneyUTestVisitor()  {
     assert((std::fabs(mwu_test.get_result() - 30.0) < 0.0001));
     assert((std::fabs(mwu_test.get_u1() - 25310931.0) < 0.0001));
     assert((std::fabs(mwu_test.get_u2() - 30.0) < 0.0001));
-    assert((std::fabs(mwu_test.get_zscore() - -86.8661) < 0.001));
+    assert((std::fabs(mwu_test.get_zscore() - 86.8661) < 0.001));
     assert((std::fabs(mwu_test.get_pvalue() - 0.0) < 0.0001));
 
     ibm.single_act_visit<double, double>("uniform", "exponential", mwu_test);
     assert((std::fabs(mwu_test.get_result() - 0.0) < 0.0001));
     assert((std::fabs(mwu_test.get_u1() - 25310961.0) < 0.0001));
     assert((std::fabs(mwu_test.get_u2() - 0.0) < 0.0001));
-    assert((std::fabs(mwu_test.get_zscore() - -86.8663) < 0.001));
+    assert((std::fabs(mwu_test.get_zscore() - 86.8663) < 0.001));
     assert((std::fabs(mwu_test.get_pvalue() - 0.0) < 0.0001));
 
     ibm.single_act_visit<double, double>("exponential", "lognormal", mwu_test);

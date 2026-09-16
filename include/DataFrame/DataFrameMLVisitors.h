@@ -2051,7 +2051,7 @@ struct  SigmoidVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2109,11 +2109,20 @@ private:
 
         auto    lbd =
             [&column_begin, this](auto begin, auto end) -> void  {
-                for (size_type i { begin }; i < end; ++i)
-                   result_[i] =
-                       data_t(1) /
-                       _bc_sqrt_(data_t(1) + _bc_pow_(*(column_begin + i),
-                                                      data_t(2)));
+                for (size_type i { begin }; i < end; ++i)  {
+                   const auto   &val { *(column_begin + i) };
+                   const auto   denom {
+                       _bc_sqrt_(data_t(1) + _bc_pow_(val, data_t(2)))
+                   };
+
+                   if constexpr (is_md_)  {
+                       result_[i].resize(val.size());
+                       for (size_type d { 0 }; d < val.size(); ++d)
+                           result_[i][d] = val[d] / denom[d];
+                   }
+                   else
+                       result_[i] = val / denom;
+                }
             };
 
         apply_func_(col_s, thread_level, std::move(lbd));
@@ -2273,8 +2282,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
@@ -2290,7 +2299,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)
+                            for (size_type i { begin }; i < end; ++i)
                                 this->result_[i] =
                                     std::max(T(0), *(column_begin + i));
                         });
@@ -2302,7 +2311,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 this->result_[i] =
@@ -2317,7 +2326,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 this->result_[i] =
@@ -2337,7 +2346,7 @@ public:
                         col_s,
                         [&column_begin, &sigm = std::as_const(sigm), this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    col = *(column_begin + i);
                                 const value_type    sig = sigm.get_result()[i];
 
@@ -2352,7 +2361,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 this->result_[i] = softp_(v, this->param_);
@@ -2366,7 +2375,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 if (v > 0)
@@ -2384,7 +2393,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 this->result_[i] =
@@ -2399,7 +2408,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 this->result_[i] =
@@ -2482,12 +2491,12 @@ public:
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_.clear();
     }
-    inline void post ()  { OBO_PORT_POST }
+    inline void post()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -2499,15 +2508,18 @@ private:
     inline static value_type
     softp_(const value_type &v, const value_type &p)  {
 
-        return(std::log(T(1) + std::exp(p * v)) / p);
+        const value_type    y { p * v };
+
+        return ((std::max(y, T(0)) + std::log1p(std::exp(-std::fabs(y)))) / p);
     }
     inline static value_type
     standard_normal_dist_(const value_type &v)  {
 
-        static constexpr value_type two = 2;
-        static const     value_type sqrt_dbl_pi = std::sqrt(two * M_PI);
+        static const value_type inv_sqrt2 {
+            value_type(1) / std::sqrt(value_type(2))
+        };
 
-        return (std::exp(-(v * v) / two) / sqrt_dbl_pi);
+        return ((value_type(1) + std::erf(v * inv_sqrt2)) / value_type(2));
     }
 
     OBO_PORT_DECL
@@ -2527,7 +2539,7 @@ struct  PolicyLearningLossVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2574,9 +2586,8 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)
                 if ((action_prob_begin + i)->size() != dim ||
                     (reward_begin + i)->size() != dim)
-                    throw DataFrameError(
-                        "PolicyLearningLossVisitor: "
-                        "Inconsistent data dimensions");
+                    throw DataFrameError("PolicyLearningLossVisitor: "
+                                         "Inconsistent data dimensions");
         }
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -2629,19 +2640,25 @@ public:
                 for (size_type i { begin }; i < end; ++i)  {
                     const auto  &ap { *(action_prob_begin + i) };
                     const auto  &r { *(reward_begin + i) };
-                    const auto  &adjusted_r { (r - adjust) / scale };
+                    const auto  adjusted_r {
+                        (r - adjust) / (scale + data_t(epsilon_))
+                    };
 
-                    result_[i] = (_bc_log_(ap) * data_t(-1))  * adjusted_r;
+                    result_[i] =
+                        (_bc_log_(ap + data_t(epsilon_)) * data_t(-1)) *
+                        adjusted_r;
+
                 }
             };
 
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    std::move(lbd));
+                    std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2680,7 +2697,7 @@ struct  LossFunctionVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2732,7 +2749,7 @@ public:
         if constexpr (is_md_)  {
             auto mit = model_begin;
 
-            for (auto ait = actual_begin; ait != actual_end; ++ait)
+            for (auto ait { actual_begin }; ait != actual_end; ++ait)
                 if (ait->size() != dim || (mit++)->size() != dim)
                     throw DataFrameError("LossFunctionVisitor: "
                                          "Inconsistent data dimensions");
@@ -3086,7 +3103,7 @@ struct  VectorSimilarityVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3145,8 +3162,8 @@ public:
             DotProdVisitor<T, I>    dot_v;
 
             dot_v.pre();
-            dot_v (idx_begin, idx_end,
-                   column_begin1, column_end1, column_begin2, column_end2);
+            dot_v(idx_begin, idx_end,
+                  column_begin1, column_end1, column_begin2, column_end2);
             dot_v.post();
 
             const auto  dotp_res { dot_v.get_result() };
@@ -3171,8 +3188,9 @@ public:
                 if (! is_md_)  {
 #ifdef HMDF_SANITY_EXCEPTIONS
                     if (col_s1 != col_s2)
-                        throw DataFrameError("VectorSimilarityVisitor: "
-                                           "All columns must be of equal sizes");
+                        throw DataFrameError(
+                            "VectorSimilarityVisitor: "
+                            "All columns must be of equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS
 
                     // Must normalize the dot product first.
@@ -3228,10 +3246,10 @@ public:
                                     "All columns must be of equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-            const equal_t   eq { };
+            const equal_t   eq_perd { };
 
             for (size_type i { 0 }; i < col_s1; ++i)
-                if (! eq(*(column_begin1 + i), *(column_begin2 + i)))
+                if (! eq_perd(*(column_begin1 + i), *(column_begin2 + i)))
                     result_ += 1;
         }
     }
@@ -3516,7 +3534,7 @@ struct  SeasonalPeriodVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3531,7 +3549,7 @@ public:
     using result_type = double;
     using md_result_type = std::vector<result_type>;
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &column_begin, const H &column_end)  {
@@ -3539,7 +3557,7 @@ public:
         const size_type         col_s {
             size_type(std::distance(column_begin, column_end))
         };
-        std::vector<value_type> data (column_begin, column_end);
+        std::vector<value_type> data(column_begin, column_end);
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if constexpr (is_md_)  {
@@ -3553,7 +3571,7 @@ public:
 #endif // HMDF_SANITY_EXCEPTIONS
 
         if (params_.detrend)  {  // Take trend out
-            std::vector<size_type>  xvals (col_s);
+            std::vector<size_type>  xvals(col_s);
             size_type               xvalue { 0 };
 
             for (auto &val : xvals)  {
@@ -3564,13 +3582,13 @@ public:
             LowessVisitor<T, I> l_v {
                 params_.num_loops,
                 params_.frac,
-                params_.delta, //  * value_type(col_s),
+                params_.delta,
                 true
             };
 
             l_v.pre();
-            l_v (idx_begin, idx_end,
-                 data.begin(), data.end(), xvals.begin(), xvals.end());
+            l_v(idx_begin, idx_end,
+                data.begin(), data.end(), xvals.begin(), xvals.end());
             l_v.post();
 
             if constexpr (! is_md_)  {
@@ -3609,7 +3627,7 @@ public:
         FastFourierTransVisitor<T, I>   fft;
 
         fft.pre();
-        fft (idx_begin, idx_end, data.begin(), data.end());
+        fft(idx_begin, idx_end, data.begin(), data.end());
         fft.post();
 
         // mags is a vector in case of scalar input
@@ -3621,14 +3639,12 @@ public:
             const size_type n_bins { mags.size() };
 
             // For a real-valued input of length N, the FFT produces a
-            // symmetric spectrum — bin k and bin N-k carry identical
-            // magnitude.
-            // FIX: Restrict the scan to [1, N/2) — the unique, non-mirrored
-            // half of the spectrum.
+            // symmetric spectrum — (bin k and bin N - k carry identical
+            // magnitude).
+            // FIX: Restrict the scan to [1, N / 2) — the unique, non-mirrored
+            //      half of the spectrum.
             //
-            const size_type scan_len {
-                ((n_bins & 0x01) == 0) ? n_bins / 2 : (n_bins + 1) / 2
-            };
+            const size_type scan_len { n_bins / 2 + 1 };
 
             // Skip bin 0 (DC component) — it carries no frequency information
             // and would cause dom_freq_ = 0 and result_ = 1/0 = inf.
@@ -3645,17 +3661,17 @@ public:
             dom_freq_ =
                 result_type(dom_idx_) *
                 result_type(params_.sampling_rate) / result_type(mags.size());
-            result_   = result_type(1) / dom_freq_;
+            result_ = result_type(1) / dom_freq_;
         }
         else  {
             const size_type dim { size_type(mags.cols()) };
             const size_type n_bins { size_type(mags.rows()) };
 
             // For a real-valued input of length N, the FFT produces a
-            // symmetric spectrum — bin k and bin N-k carry identical
-            // magnitude.
-            // FIX: Restrict the scan to [1, N/2) — the unique, non-mirrored
-            // half of the spectrum.
+            // symmetric spectrum (bin k and bin N - k carry identical
+            // magnitude).
+            // FIX: Restrict the scan to [1, N / 2) — the unique, non-mirrored
+            //      half of the spectrum.
             //
             const size_type scan_len {
                 ((n_bins & 0x01) == 0) ? n_bins / 2 : (n_bins + 1) / 2
@@ -3742,10 +3758,10 @@ private:
 
     // Per-dimension storage — populated only when is_md_ == true.
     //
-    md_result_type          result_vec_   {  };
-    md_result_type          max_mag_vec_  {  };
+    md_result_type          result_vec_ {  };
+    md_result_type          max_mag_vec_ {  };
     md_result_type          dom_freq_vec_ {  };
-    std::vector<size_type>  dom_idx_vec_  {  };
+    std::vector<size_type>  dom_idx_vec_ {  };
 };
 
 template<typename T, typename I = unsigned long>
@@ -3761,7 +3777,7 @@ struct  DynamicTimeWarpVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3885,7 +3901,7 @@ struct  AnomalyDetectByFFTVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3965,7 +3981,7 @@ public:
 
             // vec<complex<complex<T>>>
             //
-            const auto  &ifft_res = ifft.get_result();
+            const auto  &ifft_res { ifft.get_result() };
 
             result_.reserve(((col_s / 40) < 32) ? size_type(32) : col_s / 40);
             for (size_type i { 0 }; i < col_s; ++i)  {
@@ -3985,9 +4001,10 @@ public:
             //   • fft_v<T> expects iterators over T (= std::vector<double>)
             //   • fft_res iterators dereference to cplx_t
             //
-            // Instead we mirror exactly what FastFourierTransVisitor does in its
-            // MD operator() path: extract each column as a channel_result_t,
-            // call itransform_() directly on it, then scatter back.
+            // Instead we mirror exactly what FastFourierTransVisitor does in
+            // its MD operator() path: extract each column as a
+            // channel_result_t, call itransform_() directly on it, then
+            // scatter back.
             //
             // We reuse FastFourierTransVisitor's static itransform_() by
             // instantiating a temporary fft_v<T> just to access the method.
@@ -4123,11 +4140,11 @@ private:
         aggr(idx_begin, idx_end, diff.begin(), diff.end());
         aggr.post();
 
-        const value_type    factor = num_of_std_ * unbiased_factor_;
-        const auto          &aggr_res = aggr.get_result();
+        const value_type    factor { num_of_std_ * unbiased_factor_ };
+        const auto          &aggr_res { aggr.get_result() };
 
         result_.reserve(diff.size() / 10);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i { 0 }; i < col_s; ++i)  {
             if (diff[i] > (aggr_res[i] * factor))
                 result_.push_back(i);
         }
@@ -4137,7 +4154,7 @@ public:
 
     template<typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end)  {
 
         if (type_ == hampel_type::median)
             hampel_(idx_begin, idx_end, column_begin, column_end,
@@ -4186,8 +4203,8 @@ struct  AnomalyDetectByIQRVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &, const K &,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
@@ -4197,10 +4214,10 @@ struct  AnomalyDetectByIQRVisitor  {
                                 "Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        vec_t   data(column_begin, column_end);
-
-        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        vec_t       data(column_begin, column_end);
+        const auto  thread_level { (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level()
+	    };
 
         if (thread_level > 2)
             ThreadGranularity::thr_pool_.parallel_sort(
@@ -4208,7 +4225,7 @@ struct  AnomalyDetectByIQRVisitor  {
         else
             std::sort(data.begin(), data.end());
 
-        const size_type     mid = col_s / 2;
+        const size_type     mid { col_s / 2 };
         const value_type    q1 { median_(data.begin(), data.begin() + mid) };
         const value_type    q3 {
             (col_s & size_type(0x01))
@@ -4221,7 +4238,7 @@ struct  AnomalyDetectByIQRVisitor  {
 
         result_.reserve(32);
         for (size_type i { 0 }; i < col_s; ++i)  {
-            const value_type    &val = *(column_begin + i);
+            const value_type    &val { *(column_begin + i) };
 
             if (val < low_bound || val > high_bound) [[unlikely]]
                 result_.push_back(i);
@@ -4244,9 +4261,9 @@ private:
     static inline T
     median_(const H &data_begin, const H &data_end)  {
 
-        const size_type     s = std::distance(data_begin, data_end);
-        const size_type     mid = s / 2;
-        const value_type    &mid_val = *(data_begin + mid);
+        const size_type     s { size_type(std::distance(data_begin, data_end)) };
+        const size_type     mid { s / 2 };
+        const value_type    &mid_val { *(data_begin + mid) };
 
         if (s & size_type(0x01))  // Odd
             return (mid_val);
@@ -4269,7 +4286,7 @@ struct  AnomalyDetectByZScoreVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -5484,7 +5501,7 @@ struct  LSTMForecastVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -6270,7 +6287,7 @@ struct  AnomalyDetectByKNNVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -6513,7 +6530,7 @@ struct  BIRCHVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
 public:
 
@@ -6651,18 +6668,18 @@ private:
 
         order_type  clusters_idxs(k_);
 
-        for (size_type i = 0; i < k_; ++i) [[likely]]
+        for (size_type i { 0 }; i < k_; ++i) [[likely]]
             clusters_idxs[i].reserve(col_s / k_ + 2);
 
-        for (size_type j = 0; j < col_s; ++j) [[likely]]  {
-            const value_type    &value = *(column_begin + j);
+        for (size_type j { 0 }; j < col_s; ++j) [[likely]]  {
+            const value_type    &value { *(column_begin + j) };
 
             if (! is_nan__(value)) [[likely]]  {
                 double      min_dist { std::numeric_limits<double>::max() };
                 size_type   min_idx { 0 };
 
-                for (size_type i = 0; i < k_; ++i)  {
-                    const double    dist = dfunc_(value, result_[i]);
+                for (size_type i { 0 }; i < k_; ++i)  {
+                    const double    dist { dfunc_(value, result_[i]) };
 
                     if (dist < min_dist)  {
                         min_dist = dist;
@@ -6741,7 +6758,7 @@ public:
 
     inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_.clear();
         clusters_idxs_.clear();
@@ -7294,7 +7311,7 @@ public:
         auto    oit { obs_begin };
 
         for (; cit != coord_end; ++cit, ++oit)  {
-            if (is_nan__(*oit))  [[unlikely]]  continue;
+            if (is_nan__(*oit)) [[unlikely]]  continue;
 
             bool    has_nan { false };
 
@@ -7324,7 +7341,7 @@ public:
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         coords_.clear();
         obs_.clear();
@@ -7364,7 +7381,7 @@ public:
         result_type result(static_cast<size_type>(std::distance(begin, end)));
         size_type   i { 0 };
 
-        for (auto it = begin; it != end; ++it)
+        for (auto it { begin }; it != end; ++it)
             result[i++] = predict(*it);
         return (result);
     }
@@ -7922,7 +7939,7 @@ public:
 
         for (size_type i { 0 }; i < k; ++i)  {
             for (size_type j { 0 }; j < k; ++j)  {
-                if (i == j) [[unlikely]] continue;
+                if (i == j) [[unlikely]]  continue;
 
                 const double    dist_ij {
                     centroid_dist_(centroids_[i], centroids_[j])
@@ -8004,7 +8021,7 @@ struct  CalinskiHarabaszVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
 public:
 

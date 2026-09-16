@@ -1947,9 +1947,9 @@ static void test_RectifyVisitor()  {
 
     df.single_act_visit<double>("dbl_col_2", gelu);
     assert(gelu.get_result().size() == 15);
-    assert(std::abs(gelu.get_result()[0] - 0.242) < 0.0001);
-    assert(std::abs(gelu.get_result()[5] - 0.2153) < 0.0001);
-    assert(std::abs(gelu.get_result()[14] - 0.0967) < 0.0001);
+    assert(std::abs(gelu.get_result()[0] - 0.841345) < 0.000001);
+    assert(std::abs(gelu.get_result()[5] - 0.511188) < 0.000001);
+    assert(std::abs(gelu.get_result()[14] - 0.149677) < 0.000001);
 
     recf_v<double, unsigned long>   silu(rectify_type::SiLU);
 
@@ -2403,11 +2403,11 @@ static void test_PolicyLearningLossVisitor()  {
         { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
     StlVecType<double>         dblvec =
         { 0.01, 0.5, 0.35, 0.1, 0.11, 0.05, 0.06, 0.03, 0.01, 0.01, 0.01, 0.01,
-          0.01, 0.01, 0.08};
+          0.01, 0.01, 0.08 };
     StlVecType<double>         dblvec2 =
-        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     StlVecType<double>         dblvec3 =
-        { 0, 1, -2, 3, 4, 5, 6, 7, -8, 9, 10, -11, 12, -13, 14};
+        { 0, 1, -2, 3, 4, 5, 6, 7, -8, 9, 10, -11, 12, -13, 14 };
 
     df.load_data(std::move(idxvec),
                  std::make_pair("action_prob", dblvec),

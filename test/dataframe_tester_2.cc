@@ -840,10 +840,9 @@ static void test_SigmoidVisitor()  {
         assert(fabs(result[i] - log_result[i]) < 0.00001);
 
     result = StlVecType<double> {
-        0.707107, 0.447214, 0.316228, 0.242536, 0.196116, 0.164399, 0.141421,
-        0.124035, 0.110432, 0.0995037, 0.0905357, 0.0830455, 0.0766965,
-        0.071247, 0.066519, 0.0623783, 0.058722, 0.05547, 0.0525588,
-        0.0499376, 0.0475651 };
+		0.707107, 0.894427, 0.948683, 0.970143, 0.980581, 0.986394, 0.989949,
+        0.992278, 0.993884, 0.995037, 0.995893, 0.996546, 0.997054, 0.997459,
+        0.997785, 0.998053, 0.998274, 0.99846, 0.998618, 0.998752, 0.998868 };
     for (size_t i = 0; i < result.size(); ++i)
         assert(fabs(result[i] - alg_result[i]) < 0.00001);
 
@@ -928,8 +927,8 @@ static void test_SigmoidVisitor()  {
     for (const auto &vec : md_lgb_res)
         assert(vec.size() == dim);
     assert(std::fabs(md_lgb_res[0][0] - 0.707107) < 0.000001);
-    assert(std::fabs(md_lgb_res[5][1] - 0.5547) < 0.0001);
-    assert(std::fabs(md_lgb_res[9][2] - 0.447214) < 0.000001);
+    assert(std::fabs(md_lgb_res[5][1] - 0.83205) < 0.00001);
+    assert(std::fabs(md_lgb_res[9][2] - 0.894427) < 0.000001);
 
     SigmoidVisitor<ary_col_t, unsigned long, 64>  md_gud_v {
         sigmoid_type::gudermannian

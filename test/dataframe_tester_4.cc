@@ -4090,7 +4090,7 @@ static void test_AnomalyDetectByFFTVisitor()  {
     ibm.single_act_visit<double>("IBM_Close", anomaly5);
     assert((anomaly5.get_result() == result2));
 
-    and_fft_v<double, std::string>  anomaly6(1000, 250.0,
+    and_fft_v<double, std::string>  anomaly6(1000, 10.0,
                                              normalization_type::z_score);
     const std::vector<std::size_t>  result3 = { 502, 1001, 2002 };
 

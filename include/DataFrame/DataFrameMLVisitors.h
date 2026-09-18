@@ -3927,6 +3927,7 @@ public:
                                     vec_t<size_type>,
                                     vec_t<std::pair<size_type, size_type>>>;
 
+
     template <typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
@@ -3965,10 +3966,29 @@ public:
         auto    fft_res = std::move(fft.get_result());
 
         if constexpr (! is_md_)  {
-            // Zero out high frequencies
+            // Zero out high frequencies -- but a real signal's FFT is
+            // conjugate-symmetric (bin k and bin N-k are mirrors), so
+            // zeroing everything from freq_num_ to the end also wipes
+            // out the mirror partners (indices N-freq_num_+1 .. N-1) of
+            // the very low-frequency bins we're trying to keep. Without
+            // its conjugate partner, each kept bin's contribution to the
+            // inverse FFT loses the term that makes it real and full-
+            // amplitude -- the reconstructed signal comes back at
+            // exactly half the true amplitude for every non-DC
+            // frequency (confirmed: a clean single sinusoid reconstructs
+            // at a flat 0.5x ratio, pre-fix). Zero only the middle,
+            // mirror-safe range [freq_num_, col_s-freq_num_+1) instead,
+            // leaving both the low bins and their mirrors intact. If
+            // freq_num_ is large enough that this range would be empty
+            // or invalid (the two kept halves would overlap), there's
+            // nothing to zero -- keep everything.
             //
-            std::fill(fft_res.begin() + freq_num_, fft_res.end(),
-                      typename decltype(fft_res)::value_type { });
+            const size_type mirror_bound { col_s - freq_num_ + 1 };
+
+            if (freq_num_ < mirror_bound)
+                std::fill(fft_res.begin() + freq_num_,
+                          fft_res.begin() + mirror_bound,
+                          typename decltype(fft_res)::value_type { });
 
             // Inverse FFT: input is vec<cplx_t>, fft_v<complex<T>> picks
             // the scalar path because complex<T> satisfies IS_SCALAR
@@ -3981,12 +4001,27 @@ public:
 
             // vec<complex<complex<T>>>
             //
-            const auto  &ifft_res { ifft.get_result() };
+            const auto  &ifft_res = ifft.get_result();
 
             result_.reserve(((col_s / 40) < 32) ? size_type(32) : col_s / 40);
             for (size_type i { 0 }; i < col_s; ++i)  {
+                // When normalization is enabled, the reconstruction was
+                // built from the NORMALIZED data -- comparing it against
+                // the raw, un-normalized column value is a scale
+                // mismatch that produces a meaningless residual unless
+                // the two scales happen to coincide by chance (confirmed:
+                // a clean sinusoid with a large offset/amplitude under
+                // z-score normalization got EVERY point flagged as an
+                // "anomaly", since the raw values are ~1000s while the
+                // normalized reconstruction is on a unit scale). Compare
+                // against the same-scale (normalized) value instead.
+                //
+                const data_t    orig_val {
+                    (nt_ > normalization_type::none)
+                        ? norm.get_result()[i] : *(column_begin + i)
+                };
                 const data_t    residual {
-                    std::abs(*(column_begin + i) - ifft_res[i].real())
+                    std::abs(orig_val - ifft_res[i].real())
                 };
 
                 if (residual > ath_)  result_.push_back(i);
@@ -4001,10 +4036,9 @@ public:
             //   • fft_v<T> expects iterators over T (= std::vector<double>)
             //   • fft_res iterators dereference to cplx_t
             //
-            // Instead we mirror exactly what FastFourierTransVisitor does in
-            // its MD operator() path: extract each column as a
-            // channel_result_t, call itransform_() directly on it, then
-            // scatter back.
+            // Instead we mirror exactly what FastFourierTransVisitor does in its
+            // MD operator() path: extract each column as a channel_result_t,
+            // call itransform_() directly on it, then scatter back.
             //
             // We reuse FastFourierTransVisitor's static itransform_() by
             // instantiating a temporary fft_v<T> just to access the method.
@@ -4015,11 +4049,18 @@ public:
 
             const size_type dim { size_type(fft_res.cols()) };
 
-            // Zero out high frequencies across all dims
+            // Zero out high frequencies across all dims -- same
+            // conjugate-mirror issue as the scalar path above: only zero
+            // the middle, mirror-safe range so each dimension's kept low
+            // bins keep their conjugate partners.
             //
-            for (size_type i { freq_num_ }; i < col_s; ++i)
-                for (size_type d { 0 }; d < dim; ++d)
-                    fft_res(i, d) = typename decltype(fft_res)::value_type { };
+            const size_type mirror_bound { col_s - freq_num_ + 1 };
+
+            if (freq_num_ < mirror_bound)
+                for (size_type i { freq_num_ }; i < mirror_bound; ++i)
+                    for (size_type d { 0 }; d < dim; ++d)
+                        fft_res(i, d) =
+                            typename decltype(fft_res)::value_type{ };
 
             // We need cplx_t which is fft_v<T>::cplx_t.
             // Derive it from the matrix element type to stay consistent.
@@ -4063,11 +4104,16 @@ public:
             }
 
             // Anomaly detection: compare original vs reconstructed per
-            // (sample, dim)
+            // (sample, dim). Same scale-mismatch fix as the scalar path:
+            // when normalized, compare against the normalized sample,
+            // not the raw one.
             //
             result_.reserve(((col_s / 40) < 32) ? size_type(32) : col_s / 40);
             for (size_type i { 0 }; i < col_s; ++i)  {
-                const auto  &sample { *(column_begin + i) };
+                const auto  &sample {
+                    (nt_ > normalization_type::none)
+                        ? norm.get_result()[i] : *(column_begin + i)
+                };
 
                 for (size_type d { 0 }; d < dim; ++d)  {
                     const data_t    residual {
@@ -4079,7 +4125,7 @@ public:
             }
         }
     }
-
+	
     DEFINE_PRE_POST
     DEFINE_RESULT
 
@@ -4159,7 +4205,7 @@ public:
         if (type_ == hampel_type::median)
             hampel_(idx_begin, idx_end, column_begin, column_end,
                     SimpleRollAdopter<MedianVisitor<T, I>, T, I>
-                        (MedianVisitor<T, I> { }, window_size_));
+                        (MedianVisitor<T, I> { true }, window_size_));
         else if (type_ == hampel_type::mean)
             hampel_(idx_begin, idx_end, column_begin, column_end,
                     SimpleRollAdopter<MeanVisitor<T, I>, T, I>
@@ -4217,7 +4263,7 @@ struct  AnomalyDetectByIQRVisitor  {
         vec_t       data(column_begin, column_end);
         const auto  thread_level { (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level()
-	    };
+        };
 
         if (thread_level > 2)
             ThreadGranularity::thr_pool_.parallel_sort(

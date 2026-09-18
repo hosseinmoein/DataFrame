@@ -510,26 +510,28 @@ public:
             // Y0 = X0
             // Yt = aXt + (1 - a)Yt-1
             //
-            value_type  prev_v { *column_begin };
+            value_type  prev_cpy { *column_begin };
 
             if constexpr (! is_md_)  {
                 for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
-                    const value_type    curr_v { *(column_begin + i) };
+                    const value_type    curr_cpy { *(column_begin + i) };
 
-                    *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
-                    prev_v = curr_v;
+                    *(column_begin + i) =
+                        prev_cpy + alfa_ * (curr_cpy - prev_cpy);
+                    prev_cpy = curr_cpy;
                 }
             }
             else  {
                 const size_type dim { column_begin->size() };
 
                 for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
-                    const value_type    curr_v { *(column_begin + i) };
+                    const value_type    curr_cpy { *(column_begin + i) };
+                    value_type          &curr_ref { *(column_begin + i) };
 
                     for (size_type d { 0 }; d < dim; ++d) [[likely]]  {
-                        (*(column_begin + i))[d] =
-                            prev_v[d] + alfa_[d] * (curr_v[d] - prev_v[d]);
-                        prev_v[d] = curr_v[d];
+                        curr_ref[d] = prev_cpy[d] +
+                                      alfa_[d] * (curr_cpy[d] - prev_cpy[d]);
+                        prev_cpy[d] = curr_cpy[d];
                     }
                 }
             }

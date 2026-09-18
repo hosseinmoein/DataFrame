@@ -46,6 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <numeric>
 #include <random>
 #include <type_traits>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -63,8 +64,8 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    inline void operator() (const index_type &idx,
-                            const value_type &x, const value_type &y)  {
+    inline void operator()(const index_type &idx,
+                           const value_type &x, const value_type &y)  {
 
         if (skip_nan_ && (is_nan__(x) || is_nan__(y))) [[unlikely]]  return;
 
@@ -78,33 +79,34 @@ public:
     }
     PASS_DATA_ONE_BY_ONE_2
 
-    inline void pre ()  {
+    inline void pre()  {
 
         n_ = 0;
         s_xy_ = 0;
         x_stats_.pre();
         y_stats_.pre();
     }
-    inline void post ()  {  }
+    inline void post()  {  }
 
-    inline size_type get_count () const  { return (n_); }
-    inline result_type get_slope () const  {
+    inline size_type get_count() const  { return (n_); }
+    inline result_type get_slope() const  {
 
         // Sum of the squares of the difference between each x and
         // the mean x value.
         //
-        const value_type    s_xx =
-            x_stats_.get_variance() * value_type(n_ - 1);
+        const value_type    s_xx {
+            x_stats_.get_variance() * value_type(n_ - 1)
+        };
 
         return (s_xy_ / s_xx);
     }
-    inline result_type get_intercept () const  {
+    inline result_type get_intercept() const  {
 
         return (y_stats_.get_mean() - get_slope() * x_stats_.get_mean());
     }
-    inline result_type get_corr () const  {
+    inline result_type get_corr() const  {
 
-        const value_type    t = x_stats_.get_std() * y_stats_.get_std();
+        const value_type    t { x_stats_.get_std() * y_stats_.get_std() };
 
         return (s_xy_ / (value_type(n_ - 1) * t));
     }
@@ -159,37 +161,39 @@ private:
     inline void calc_k_means_(const H &column_begin, size_type col_s)  {
 
         std::random_device                          rd;
-        std::mt19937                                gen(
-            (seed_ != seed_t(-1)) ? seed_ : rd());
-        std::uniform_int_distribution<size_type>    rd_gen(0, col_s - 1);
+        std::mt19937                                gen {
+            (seed_ != seed_t(-1)) ? seed_ : rd()
+        };
+        std::uniform_int_distribution<size_type>    rd_gen { 0, col_s - 1 };
 
         // Pick centroids as random points from the col.
         //
         for (auto &k_mean : result_) [[likely]]  {
-            const value_type    &value = *(column_begin + rd_gen(gen));
+            const value_type    &value { *(column_begin + rd_gen(gen)) };
 
             if (! is_nan__(value)) [[likely]]
                 k_mean = value;
         }
 
-        for (size_type iter = 0; iter < iter_num_; ++iter) [[likely]]  {
+        for (size_type iter { 0 }; iter < iter_num_; ++iter) [[likely]]  {
             result_type             new_means { value_type() };
             std::array<double, K>   counts { 0.0 };
 
             // Find assignments.
             //
-            for (size_type point = 0; point < col_s; ++point) [[likely]]  {
-                const value_type    &value = *(column_begin + point);
+            for (size_type point { 0 }; point < col_s; ++point) [[likely]]  {
+                const value_type    &value { *(column_begin + point) };
 
                 if (! is_nan__(value)) [[likely]]  {
-                    double      best_distance =
-                        std::numeric_limits<double>::max();
-                    size_type   best_cluster = 0;
+                    double      best_distance {
+                        std::numeric_limits<double>::max()
+                    };
+                    size_type   best_cluster { 0 };
 
-                    for (size_type cluster = 0; cluster < K;
-                         ++cluster) [[likely]]  {
-                        const double    distance =
-                            dfunc_(value, result_[cluster]);
+                    for (size_type cluster { 0 }; cluster < K; ++cluster)  {
+                        const double    distance {
+                            dfunc_(value, result_[cluster])
+                        };
 
                         if (distance < best_distance)  {
                             best_distance = distance;
@@ -199,27 +203,33 @@ private:
 
                     // Sum up and count points for each cluster.
                     //
-                    auto    &nm = new_means[best_cluster];
+                    auto    &nm { new_means[best_cluster] };
 
                     nm = nm + value;
                     counts[best_cluster] += 1.0;
                 }
             }
 
-            bool    done = true;
+            bool    done { true };
 
-            // Divide sums by counts to get new centroids.
+            // Divide sums by counts to get new centroids. A cluster that
+            // picked up no points this pass is left at its previous
+            // centroid -- there is nothing to average, and the old
+            // 0/0 -> 0/1 guard was substituting a fabricated value_type()
+            // (0 for arithmetic T), silently teleporting an empty
+            // cluster's centroid to zero instead of leaving it alone.
             //
-            for (size_type cluster = 0; cluster < K; ++cluster) [[likely]]  {
-                // Turn 0/0 into 0/1 to avoid zero division.
-                const double        count =
-                    std::max<double>(1.0, counts[cluster]);
-                const value_type    value = new_means[cluster] / count;
-                value_type          &result = result_[cluster];
+            for (size_type cluster { 0 }; cluster < K; ++cluster) [[likely]]  {
+                if (counts[cluster] > 0.0)  {
+                    const value_type    value {
+                        new_means[cluster] / counts[cluster]
+                    };
+                    value_type          &result { result_[cluster] };
 
-                if (dfunc_(value, result) > 0.0000001)  {
-                    done = false;
-                    result = value;
+                    if (dfunc_(value, result) > 0.0000001)  {
+                        done = false;
+                        result = value;
+                    }
                 }
             }
 
@@ -236,21 +246,21 @@ private:
         cluster_type    clusters;
         order_type      clusters_idxs;
 
-        for (size_type i = 0; i < K; ++i) [[likely]]  {
+        for (size_type i { 0 }; i < K; ++i) [[likely]]  {
             clusters[i].reserve(col_s / K + 2);
             clusters[i].push_back(&(result_[i]));
             clusters_idxs[i].reserve(col_s / K + 2);
         }
 
-        for (size_type j = 0; j < col_s; ++j) [[likely]]  {
-            const value_type    &value = *(column_begin + j);
+        for (size_type j { 0 }; j < col_s; ++j) [[likely]]  {
+            const value_type    &value { *(column_begin + j) };
 
             if (! is_nan__(value)) [[likely]]  {
                 double      min_dist { std::numeric_limits<double>::max() };
                 size_type   min_idx { 0 };
 
-                for (size_type i = 0; i < K; ++i)  {
-                    const double    dist = dfunc_(value, result_[i]);
+                for (size_type i { 0 }; i < K; ++i)  {
+                    const double    dist { dfunc_(value, result_[i]) };
 
                     if (dist < min_dist)  {
                         min_dist = dist;
@@ -270,38 +280,36 @@ public:
 
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin, const IV &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const IV &idx_begin, const IV &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
         calc_k_means_(column_begin, col_s);
-        if (cc_)
-            calc_clusters_(column_begin, col_s);
+        if (cc_)  calc_clusters_(column_begin, col_s);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         for (auto &iter : clusters_) iter.clear();
         for (auto &iter : clusters_idxs_) iter.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
-    inline const cluster_type &get_clusters () const  { return (clusters_); }
-    inline cluster_type &get_clusters ()  { return (clusters_); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+    inline const cluster_type &get_clusters() const  { return (clusters_); }
+    inline cluster_type &get_clusters()  { return (clusters_); }
     inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    get_clusters_idxs() const  { return (clusters_idxs_); }
 
     explicit
-    KMeansVisitor(
-        size_type num_of_iter,
-        bool calc_clusters = true,
-        distance_func f =
-            [](const value_type &x, const value_type &y) -> double  {
-                return ((x - y) * (x - y));
-            },
-        seed_t seed = seed_t(-1))
+    KMeansVisitor(size_type num_of_iter,
+                  bool calc_clusters = true,
+                  distance_func f =
+                      [](const value_type &x, const value_type &y) -> double  {
+                          return ((x - y) * (x - y));
+                      },
+                  seed_t seed = seed_t(-1))
         : iter_num_(num_of_iter),
           cc_(calc_clusters),
           seed_(seed),
@@ -342,21 +350,36 @@ private:
     cluster_type    clusters_ { };       // Clusters
     order_type      clusters_idxs_ { };  // Clusters indices
 
+    // Symmetric access into the packed (upper-triangular-inclusive)
+    // similarity array. sim(i, j) == sim(j, i), but get_similarity_()
+    // only ever physically stores the i <= j half -- a lookup with
+    // i > j must swap to the row that was actually filled, rather
+    // than reusing row i's own packed offset (which, for a column
+    // less than i, silently lands on some unrelated pair's entry).
+    //
+    static inline double
+    sim_at_(const vec_t<double> &simil, long i, long j, long col_s)  {
+
+        if (i <= j)
+            return (simil[(i * col_s) - ((i * (i + 1)) >> 1) + j]);
+        return (simil[(j * col_s) - ((j * (j + 1)) >> 1) + i]);
+    }
+
     template<typename H>
     inline vec_t<double>
     get_similarity_(const H &column_begin, long col_s)  {
 
         vec_t<double>   simil((col_s * (col_s + 1)) / 2, 0.0);
-        double          min_dist = std::numeric_limits<double>::max();
+        double          min_dist { std::numeric_limits<double>::max() };
 
         // Compute similarity between distinct data points i and j
         //
-        for (long i = 0; i < col_s - 1; ++i) [[likely]]  {
-            const value_type    &i_val = *(column_begin + i);
-            const long          i_idx = (i * col_s) - ((i * (i + 1)) >> 1);
+        for (long i { 0 }; i < col_s - 1; ++i) [[likely]]  {
+            const value_type    &i_val { *(column_begin + i) };
+            const long          i_idx { (i * col_s) - ((i * (i + 1)) >> 1) };
 
-            for (long j = i + 1; j < col_s; ++j)  [[likely]]  {
-                const double    dist = -dfunc_(i_val, *(column_begin + j));
+            for (long j { i + 1 }; j < col_s; ++j)  [[likely]]  {
+                const double    dist { -dfunc_(i_val, *(column_begin + j)) };
 
                 simil[i_idx + j] = dist;
                 if (dist < min_dist)  min_dist = dist;
@@ -365,7 +388,7 @@ private:
 
         // Assign min to diagonals
         //
-        for (long i = 0; i < col_s; ++i)
+        for (long i { 0 }; i < col_s; ++i)
             simil[(i * col_s) + i - ((i * (i + 1)) >> 1)] = min_dist;
 
         return (simil);
@@ -380,63 +403,85 @@ private:
         avail.resize(col_s * col_s, 0.0);
         respon.resize(col_s * col_s, 0.0);
 
-        const double    one_df = 1.0 - dfactor_;
+        const double    one_df { 1.0 - dfactor_ };
 
-        for (size_type m = 0; m < iter_num_; ++m) [[likely]]  {
-            // Update responsibility
+        for (size_type m { 0 }; m < iter_num_; ++m) [[likely]]  {
+            // Update responsibility:
+            //   r(i, k) = s(i, k) - max_{k' != k} [a(i, k') + s(i, k')]
+            //
+            // For fixed i, "max excluding k" only ever needs the
+            // overall max and, for whichever k achieves it, the
+            // second-highest value -- both obtainable in one O(n)
+            // pass instead of redoing an O(n) search for every k
+            // (which made this O(n^2) per row / O(n^3) per iteration
+            // instead of the documented O(n) per row / O(n^2) total).
             //
             for (long i = 0; i < col_s; ++i) [[likely]]  {
-                const long  i_idx = (i * col_s) - ((i * (i + 1)) >> 1);
+                double  max1 { -std::numeric_limits<double>::max() };
+                double  max2 { -std::numeric_limits<double>::max() };
+                long    argmax1 { -1 };
 
-                for (long j = 0; j < col_s; ++j) [[likely]]  {
-                    double  max_diff = -std::numeric_limits<double>::max();
+                for (long jj { 0 }; jj < col_s; ++jj) [[likely]]  {
+                    const double    value {
+                        sim_at_(simil, i, jj, col_s) + avail[jj * col_s + i]
+                    };
 
-                    for (long jj = 0; jj < col_s; ++jj)  {
-                        if (jj ^ j) [[likely]]   {
-                            const double    value =
-                               simil[i_idx + jj] + avail[jj * col_s + i];
-
-                            if (value > max_diff)
-                                max_diff = value;
-                        }
+                    if (value > max1)  {
+                        max2 = max1;
+                        max1 = value;
+                        argmax1 = jj;
                     }
+                    else if (value > max2)
+                        max2 = value;
+                }
 
-                    const long j_idx = j * col_s + i;
+                for (long j { 0 }; j < col_s; ++j) [[likely]]  {
+                    const double    max_diff { (j == argmax1) ? max2 : max1 };
+                    const long      j_idx { j * col_s + i };
 
-                    respon[j_idx] = one_df * (simil[i_idx + j] - max_diff) +
-                                    dfactor_ * respon[j_idx];
+                    respon[j_idx] =
+                        one_df * (sim_at_(simil, i, j, col_s) - max_diff) +
+                        dfactor_ * respon[j_idx];
                 }
             }
 
             // Update availability
             // Do diagonals first
             //
-            for (long i = 0; i < col_s; ++i) [[likely]]  {
-                const long  s1 = i * col_s;
-                const long  s2 = i * col_s + i;
-                double      sum = 0.0;
+            for (long i { 0 }; i < col_s; ++i) [[likely]]  {
+                const long  s1 { i * col_s };
+                const long  s2 { i * col_s + i };
+                double      sum { 0.0 };
 
-                for (long ii = 0; ii < col_s; ++ii) [[likely]]
+                for (long ii { 0 }; ii < col_s; ++ii) [[likely]]
                     if (ii ^ i)
                         sum += std::max(0.0, respon[s1 + ii]);
 
                 avail[s2] = one_df * sum + dfactor_ * avail[s2];
             }
-            for (long i = 0; i < col_s; ++i) [[likely]]  {
-                for (long j = 0; j < col_s; ++j)  [[likely]] {
-                    if (i ^ j) [[likely]]  {  // Not equal
-                        const long  s1 = j * col_s;
-                        const long  s2 = j * col_s + i;
-                        double      sum = 0.0;
-                        const long  max_i_j = std::max(i, j);
-                        const long  min_i_j = std::min(i, j);
 
-                        for (long ii = 0; ii < min_i_j; ++ii)
-                            sum += std::max(0.0, respon[s1 + ii]);
-                        for (long ii = min_i_j + 1; ii < max_i_j; ++ii)
-                            sum += std::max(0.0, respon[s1 + ii]);
-                        for (long ii = max_i_j + 1; ii < col_s; ++ii)
-                            sum += std::max(0.0, respon[s1 + ii]);
+            // Off-diagonals: a(i, j) needs
+            // sum_{i' not in {i, j}} max(0, r(i', j)) for every i, with
+            // j fixed. Rather than rescanning all n indices for every
+            // (i, j) pair (O(n) work x O(n^2) pairs = O(n^3) per
+            // iteration), compute the column total once per j --
+            // sum_{i' != j} max(0, r(i', j)), O(n) -- and reuse it for
+            // every i by subtracting out just the i'=i term.
+            //
+            for (long j { 0 }; j < col_s; ++j) [[likely]]  {
+                const long  s1 { j * col_s };
+                double      total_j { 0.0 };
+
+                for (long ii { 0 }; ii < col_s; ++ii) [[likely]]
+                    if (ii ^ j)
+                        total_j += std::max(0.0, respon[s1 + ii]);
+
+                for (long i { 0 }; i < col_s; ++i) [[likely]]  {
+                    if (i ^ j) [[likely]]  {  // Not equal
+                        const long      s2 { j * col_s + i };
+                        const double    sum {
+                            total_j - std::max(0.0, respon[s1 + i])
+                        };
 
                         avail[s2] =
                             one_df *
@@ -454,26 +499,26 @@ private:
     inline void
     calc_clusters_(const H &column_begin, long col_s)  {
 
-        const long  centers_size = result_.size();
+        const long  centers_size { long(result_.size()) };
 
         if (! centers_size)  return;
 
-        const auto  resv = col_s / centers_size;
+        const auto  resv { col_s / centers_size };
 
         clusters_.resize(centers_size);
         clusters_idxs_.resize(centers_size);
-        for (long i = 0; i < centers_size; ++i)  {
+        for (long i { 0 }; i < centers_size; ++i)  {
             clusters_[i].reserve(resv);
             clusters_idxs_[i].reserve(resv);
         }
 
-        for (long j = 0; j < col_s; ++j) [[likely]]  {
-            const value_type    &j_val = *(column_begin + j);
-            double              min_dist = dfunc_(j_val, result_[0]);
-            long                min_idx = 0;
+        for (long j { 0 }; j < col_s; ++j) [[likely]]  {
+            const value_type    &j_val { *(column_begin + j) };
+            double              min_dist { dfunc_(j_val, result_[0]) };
+            long                min_idx { 0 };
 
-            for (long i = 1; i < centers_size; ++i)  {
-                const double    dist = dfunc_(j_val, result_[i]);
+            for (long i { 1 }; i < centers_size; ++i)  {
+                const double    dist { dfunc_(j_val, result_[i]) };
 
                 if (dist < min_dist)  {
                     min_dist = dist;
@@ -489,11 +534,13 @@ public:
 
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin, const IV &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const IV &idx_begin, const IV &idx_end,
+               const H &column_begin, const H &column_end)  {
 
-        const long  col_s = std::min(std::distance(idx_begin, idx_end),
-                                     std::distance(column_begin, column_end));
+        const long  col_s {
+            long(std::min(std::distance(idx_begin, idx_end),
+                          std::distance(column_begin, column_end)))
+        };
 
         const vec_t<double> simil = get_similarity_(column_begin, col_s);
         vec_t<double>       avail;
@@ -502,8 +549,8 @@ public:
         get_avail_and_respon_(simil, col_s, avail, respon);
 
         result_.reserve(std::min(col_s / 100, long(16)));
-        for (long i = 0; i < col_s; ++i) [[likely]]  {
-            const long  idx = i * col_s + i;
+        for (long i { 0 }; i < col_s; ++i) [[likely]]  {
+            const long  idx { i * col_s + i };
 
             if (respon[idx] + avail[idx] > 0.0)
                 result_.push_back(&*(column_begin + i));
@@ -512,29 +559,29 @@ public:
         if (cc_)  calc_clusters_(column_begin,  col_s);
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_.clear();
         clusters_.clear();
         clusters_idxs_.clear();
     }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
-    inline const cluster_type &get_clusters () const  { return (clusters_); }
-    inline cluster_type &get_clusters ()  { return (clusters_); }
+    inline void post()  {  }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+    inline const cluster_type &get_clusters() const  { return (clusters_); }
+    inline cluster_type &get_clusters()  { return (clusters_); }
     inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    get_clusters_idxs() const  { return (clusters_idxs_); }
 
     explicit
-    AffinityPropVisitor(
-        size_type num_of_iter,
-        bool calc_clusters = true,
-        distance_func f =
-            [](const value_type &x, const value_type &y) -> double  {
-                return ((x - y) * (x - y));
-            },
-        double damping_factor = 0.9)
+    AffinityPropVisitor(size_type num_of_iter,
+                        bool calc_clusters = true,
+                        distance_func f =
+                            [](const value_type &x,
+                               const value_type &y) -> double  {
+                                return ((x - y) * (x - y));
+                            },
+                        double damping_factor = 0.9)
         : iter_num_(num_of_iter),
           cc_(calc_clusters),
           dfactor_(damping_factor), dfunc_(f)  {   }
@@ -550,7 +597,7 @@ struct  DBSCANVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
 public:
 
@@ -601,10 +648,10 @@ private:
                        const id_t col_s,
                        vec_t<id_t> &cluster_index)  {
 
-        const value_type    &value = *(column_begin + column_idx);
+        const value_type    &value { *(column_begin + column_idx) };
 
         cluster_index.clear();
-        for (id_t i = 0; i < col_s; ++i)  {
+        for (id_t i { 0 }; i < col_s; ++i)  {
             if (dfunc_(value, *(column_begin + i)) <= max_dist_)
                 cluster_index.push_back(i);
         }
@@ -622,8 +669,8 @@ private:
 
         calculate_cluster_(column_begin, column_idx, col_s, seeds);
 
-        const id_t          seeds_s = id_t(seeds.size());
-        const value_type    &value = *(column_begin + column_idx);
+        const id_t          seeds_s { id_t(seeds.size()) };
+        const value_type    &value { *(column_begin + column_idx) };
 
         if (seeds_s < min_mems_)  {
             cluster_ids[column_idx] = NOISE;
@@ -632,8 +679,8 @@ private:
 
         id_t    core_index { 0 };
 
-        for (id_t i = 0; i < seeds_s; ++i)  {
-            const auto  seed_val = seeds[i];
+        for (id_t i { 0 }; i < seeds_s; ++i)  {
+            const auto  seed_val { seeds[i] };
 
             cluster_ids[seed_val] = cluster_id;
             if (*(column_begin + seed_val) == value) [[unlikely]]
@@ -641,12 +688,12 @@ private:
         }
 
         seeds.erase(seeds.begin() + core_index);
-        for (id_t i = 0, n = seeds.size(); i < n; ++i)  {
+        for (id_t i { 0 }, n { id_t(seeds.size()) }; i < n; ++i)  {
             calculate_cluster_(column_begin, seeds[i], col_s, cluster_neighors);
 
             if (id_t(cluster_neighors.size()) >= min_mems_)  {
-                for (id_t j = 0; j < id_t(cluster_neighors.size()); ++j)  {
-                    auto    &cluster_val = cluster_ids[j];
+                for (id_t j { 0 }; j < id_t(cluster_neighors.size()); ++j)  {
+                    auto    &cluster_val { cluster_ids[cluster_neighors[j]] };
 
                     if (cluster_val < 0)  {  // NOISE or UNCLASSIFIED
                         if (cluster_val == UNCLASSIFIED)  {
@@ -666,19 +713,21 @@ public:
 
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin, const IV &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const IV &idx_begin, const IV &idx_end,
+               const H &column_begin, const H &column_end)  {
 
-        const id_t  col_s = std::min(std::distance(idx_begin, idx_end),
-                                     std::distance(column_begin, column_end));
-        vec_t<id_t> cluster_ids (col_s, UNCLASSIFIED);
+        const id_t  col_s {
+            id_t(std::min(std::distance(idx_begin, idx_end),
+                          std::distance(column_begin, column_end)))
+        };
+        vec_t<id_t> cluster_ids(col_s, UNCLASSIFIED);
         vec_t<id_t> seeds;
         vec_t<id_t> cluster_neighors;
         id_t        cluster_id { 0 };
 
         seeds.reserve(col_s / 20);
         cluster_neighors.reserve(col_s / 20);
-        for (id_t i = 0; i < col_s; ++i)  {
+        for (id_t i { 0 }; i < col_s; ++i)  {
             if (cluster_ids[i] == UNCLASSIFIED &&
                 expand_cluster_(column_begin,
                                 i,
@@ -691,17 +740,23 @@ public:
             }
         }
 
-        const auto  resv = col_s / cluster_id;
+        // cluster_id stays 0 whenever every point ends up NOISE (a
+        // legitimate outcome for sparse data or a tight max_dist_/high
+        // min_mems_, not just a contrived edge case) -- guard against
+        // dividing by it. The value is moot when cluster_id is 0 anyway,
+        // since the per-cluster reserve loop right below never runs.
+        //
+        const auto  resv { cluster_id > 0 ? col_s / cluster_id : 0 };
 
         clusters_.resize(cluster_id);
         clusters_idxs_.resize(cluster_id);
         noisey_idxs_.reserve(std::max(id_t(8), id_t(col_s / 500)));
-        for (long i = 0; i < cluster_id; ++i)  {
+        for (long i { 0 }; i < cluster_id; ++i)  {
             clusters_[i].reserve(resv);
             clusters_idxs_[i].reserve(resv);
         }
-        for (id_t i = 0; i < col_s; ++i)  {
-            const auto  this_id = cluster_ids[i];
+        for (id_t i { 0 }; i < col_s; ++i)  {
+            const auto  this_id { cluster_ids[i] };
 
             if (this_id >= 0) [[likely]]  {
                 clusters_[this_id].push_back(&(*(column_begin + i)));
@@ -713,19 +768,19 @@ public:
 
     inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         clusters_.clear();
         clusters_idxs_.clear();
         noisey_idxs_.clear();
     }
-    inline void post ()  {  }
+    inline void post()  {  }
 
-    inline const result_type &get_result () const  { return (clusters_); }
+    inline const result_type &get_result() const  { return (clusters_); }
     inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    get_clusters_idxs() const  { return (clusters_idxs_); }
     inline const vec_t<size_type> &
-    get_noisey_idxs () const  { return (noisey_idxs_); }
+    get_noisey_idxs() const  { return (noisey_idxs_); }
 
     DBSCANVisitor(id_t min_mems, double max_dist)
         : min_mems_(min_mems),
@@ -752,7 +807,7 @@ struct  MeanShiftVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
 public:
 
@@ -808,21 +863,21 @@ private:
 
     inline static double biweight_kernel_(double d)  {
 
-        const auto  x = 1.0 - d * d;
+        const auto  x { 1.0 - d * d };
 
         return (d <= 1.0 ? x * x : 0.0);
     }
 
     inline static double triweight_kernel_(double d)  {
 
-        const auto  x = 1.0 - d * d;
+        const auto  x { 1.0 - d * d };
 
         return (d <= 1.0 ? x * x * x : 0.0);
     }
 
     inline static double tricube_kernel_(double d)  {
 
-        const auto  x = 1.0 - d * d * d;
+        const auto  x { 1.0 - d * d * d };
 
         return (d <= 1.0 ? x * x * x : 0.0);
     }
@@ -849,23 +904,33 @@ private:
 
     inline static double silverman_kernel_(double d)  {
 
-        const auto  x = M_SQRT1_2 * std::abs(d);
+        const auto  x { M_SQRT1_2 * std::abs(d) };
 
         return (std::exp(-x) * std::sin(x + M_PI_4));
     }
 
-    template<typename H>
-    inline void shift_(const H &column_begin,
-                       size_type index,
-                       const value_type &val,
-                       vec_t<value_type> &shifted,
-                       vec_t<bool> &shifting)  {
+    // Convergence is "did this iteration's shift move the point much
+    // from where IT was", not "is the point still near where it
+    // started" -- comparing against the original, untouched data
+    // (column_begin) instead of the point's own previous position
+    // meant a point could freeze the moment its very first shift
+    // happened to land within max_dist_ of its start, regardless of
+    // whether it had reached its actual density mode. The freshly
+    // computed position is always the best estimate available, so it
+    // is recorded unconditionally -- previously it was discarded
+    // outright on the very iteration convergence was detected.
+    //
+    inline void
+    shift_(size_type index,
+           const value_type &val,
+           vec_t<value_type> &shifted,
+           vec_t<bool> &shifting)  {
 
-        if (dfunc_(val, *(column_begin + index)) <= max_dist_)
+        if (dfunc_(val, shifted[index]) <= max_dist_)
             shifting[index] = false;
-        else
-            shifted[index] = val;
+        shifted[index] = val;
     }
+
 
     template<typename H>
     inline void
@@ -881,10 +946,10 @@ private:
         clusters_.reserve(32);
         clusters_idxs_.reserve(32);
         for (size_type i { 0 }; i < shifted.size(); ++i)  {
-            const auto  &shifted_val = shifted[i];
-            auto        cbegin = clusters_.begin();
-            auto        cend = clusters_.end();
-            auto        ibegin = clusters_idxs_.begin();
+            const auto  &shifted_val { shifted[i] };
+            auto        cbegin { clusters_.begin() };
+            auto        cend { clusters_.end() };
+            auto        ibegin { clusters_idxs_.begin() };
             size_type   cnt_idx { 0 };
 
             while (cbegin != cend)  {
@@ -917,12 +982,13 @@ public:
 
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin, const IV &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const IV &idx_begin, const IV &idx_end,
+               const H &column_begin, const H &column_end)  {
 
-        const size_type     col_s =
-            std::min(std::distance(idx_begin, idx_end),
-                     std::distance(column_begin, column_end));
+        const size_type     col_s {
+            size_type(std::min(std::distance(idx_begin, idx_end),
+                               std::distance(column_begin, column_end)))
+        };
         auto                k_func =
             (kernel_ == mean_shift_kernel::uniform) ? &uniform_kernel_
             : (kernel_ == mean_shift_kernel::triangular) ? &triangular_kernel_
@@ -935,11 +1001,23 @@ public:
             : (kernel_ == mean_shift_kernel::logistic) ? &logistic_kernel_
             : (kernel_ == mean_shift_kernel::sigmoid) ? &sigmoid_kernel_
             : &silverman_kernel_;
-        vec_t<value_type>   shifted (column_begin, column_end);
-        vec_t<bool>         shifting (col_s, true);
+        vec_t<value_type>   shifted(column_begin, column_end);
+        vec_t<bool>         shifting(col_s, true);
         size_type           iterations { 0 };
-        const double        radius { kband_ * 3.0 };
-        const double        dbl_sq_bw { 2.0 * kband_ * kband_ };
+
+        // The kernel functions (uniform_kernel_, gaussian_kernel_, etc.)
+        // are all written for a bandwidth-normalized argument -- the
+        // d <= 1.0 cutoffs, and gaussian_kernel_'s textbook
+        // exp(-0.5*d^2) shape, only mean what they look like they
+        // mean when d is "how many bandwidths away", not a raw
+        // distance. dfunc_ returns squared distance for scalar T and
+        // true (already-rooted) Euclidean distance for MD T, so both
+        // need converting to a true linear distance before dividing
+        // by kband_. 3.0 (bandwidths) replaces the old radius, which
+        // compared an un-normalized, type-inconsistent raw distance
+        // against kband_*3.0.
+        //
+        constexpr double    radius { 3.0 };
 
         while (iterations++ < max_iter_ &&
                std::any_of(shifting.begin(), shifting.end(),
@@ -951,12 +1029,18 @@ public:
                 const value_type    &val_to_shift { shifted[i] };
                 double              total_w { 0 };
 
-                for (size_type j = 0; j < col_s; ++j)  {
-                    const value_type    &this_val = *(column_begin + j);
-                    const double        dist = dfunc_(val_to_shift, this_val);
+                for (size_type j { 0 }; j < col_s; ++j)  {
+                    const value_type    &this_val { *(column_begin + j) };
+                    const double        raw_dist {
+                        dfunc_(val_to_shift, this_val)
+                    };
+                    const double        lin_dist {
+                        is_md_ ? raw_dist : std::sqrt(raw_dist)
+                    };
+                    const double        norm_dist { lin_dist / kband_ };
 
-                    if (dist <= radius)  {
-                        const double    weight = k_func(dist) / dbl_sq_bw;
+                    if (norm_dist <= radius)  {
+                        const double    weight { k_func(norm_dist) };
 
                         new_val = new_val + (this_val * weight);
                         total_w += weight;
@@ -967,7 +1051,7 @@ public:
                 // its neighbors
                 //
                 new_val = new_val / total_w;
-                shift_(column_begin, i, new_val, shifted, shifting);
+                shift_(i, new_val, shifted, shifting);
             }
         }
 
@@ -976,12 +1060,12 @@ public:
 
     inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
 
-    inline void pre ()  { clusters_.clear(); clusters_idxs_.clear(); }
-    inline void post ()  {  }
+    inline void pre()  { clusters_.clear(); clusters_idxs_.clear(); }
+    inline void post()  {  }
 
-    inline const result_type &get_result () const  { return (clusters_); }
+    inline const result_type &get_result() const  { return (clusters_); }
     inline const order_type &
-    get_clusters_idxs () const  { return (clusters_idxs_); }
+    get_clusters_idxs() const  { return (clusters_idxs_); }
 
     MeanShiftVisitor(double kernel_bandwidth,
                      double max_dist,
@@ -1734,8 +1818,8 @@ public:
         if constexpr (! is_md_)  {
             for (size_type i { 0 }; i < roll_count_ - 1; ++i) [[likely]]
                 result[i] = get_nan<data_t>();
-            for (size_type i { roll_count_ - 1 }; i < sz; ++i)
-                result[i] = sum_v.get_result()[i];
+            for (size_type i { 0 }; i < sz; ++i)
+                result[i + (roll_count_ - 1)] = sum_v.get_result()[i];
         }
         else  {
             const std::vector<data_t>   nans(column_begin->size(),
@@ -1743,12 +1827,13 @@ public:
 
             for (size_type i { 0 }; i < roll_count_ - 1; ++i) [[likely]]
                 result[i] = nans;
-            for (size_type i { roll_count_ - 1 }; i < sz; ++i)  {
+            for (size_type i { 0 }; i < sz; ++i)  {
                 if (sum_v.get_result()[i].empty())
-                    result[i].resize(column_begin->size(), get_nan<data_t>());
+                    result[i + (roll_count_ - 1)] = nans;
                 else
-                    result[i].assign(sum_v.get_result()[i].begin(),
-                                     sum_v.get_result()[i].end());
+                    result[i + (roll_count_ - 1)].assign(
+                        sum_v.get_result()[i].begin(),
+                        sum_v.get_result()[i].end());
             }
         }
 
@@ -1966,7 +2051,7 @@ struct  SigmoidVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2024,11 +2109,20 @@ private:
 
         auto    lbd =
             [&column_begin, this](auto begin, auto end) -> void  {
-                for (size_type i { begin }; i < end; ++i)
-                   result_[i] =
-                       data_t(1) /
-                       _bc_sqrt_(data_t(1) + _bc_pow_(*(column_begin + i),
-                                                      data_t(2)));
+                for (size_type i { begin }; i < end; ++i)  {
+                   const auto   &val { *(column_begin + i) };
+                   const auto   denom {
+                       _bc_sqrt_(data_t(1) + _bc_pow_(val, data_t(2)))
+                   };
+
+                   if constexpr (is_md_)  {
+                       result_[i].resize(val.size());
+                       for (size_type d { 0 }; d < val.size(); ++d)
+                           result_[i][d] = val[d] / denom[d];
+                   }
+                   else
+                       result_[i] = val / denom;
+                }
             };
 
         apply_func_(col_s, thread_level, std::move(lbd));
@@ -2188,8 +2282,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
@@ -2205,7 +2299,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)
+                            for (size_type i { begin }; i < end; ++i)
                                 this->result_[i] =
                                     std::max(T(0), *(column_begin + i));
                         });
@@ -2217,7 +2311,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 this->result_[i] =
@@ -2232,7 +2326,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 this->result_[i] =
@@ -2252,7 +2346,7 @@ public:
                         col_s,
                         [&column_begin, &sigm = std::as_const(sigm), this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    col = *(column_begin + i);
                                 const value_type    sig = sigm.get_result()[i];
 
@@ -2267,7 +2361,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 this->result_[i] = softp_(v, this->param_);
@@ -2281,7 +2375,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 if (v > 0)
@@ -2299,7 +2393,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 this->result_[i] =
@@ -2314,7 +2408,7 @@ public:
                         col_s,
                         [&column_begin, this]
                         (auto begin, auto end) -> void  {
-                            for (size_type i = begin; i < end; ++i)  {
+                            for (size_type i { begin }; i < end; ++i)  {
                                 const value_type    v = *(column_begin + i);
 
                                 this->result_[i] =
@@ -2397,12 +2491,12 @@ public:
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_.clear();
     }
-    inline void post ()  { OBO_PORT_POST }
+    inline void post()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -2414,15 +2508,18 @@ private:
     inline static value_type
     softp_(const value_type &v, const value_type &p)  {
 
-        return(std::log(T(1) + std::exp(p * v)) / p);
+        const value_type    y { p * v };
+
+        return ((std::max(y, T(0)) + std::log1p(std::exp(-std::fabs(y)))) / p);
     }
     inline static value_type
     standard_normal_dist_(const value_type &v)  {
 
-        static constexpr value_type two = 2;
-        static const     value_type sqrt_dbl_pi = std::sqrt(two * M_PI);
+        static const value_type inv_sqrt2 {
+            value_type(1) / std::sqrt(value_type(2))
+        };
 
-        return (std::exp(-(v * v) / two) / sqrt_dbl_pi);
+        return ((value_type(1) + std::erf(v * inv_sqrt2)) / value_type(2));
     }
 
     OBO_PORT_DECL
@@ -2442,7 +2539,7 @@ struct  PolicyLearningLossVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2489,9 +2586,8 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)
                 if ((action_prob_begin + i)->size() != dim ||
                     (reward_begin + i)->size() != dim)
-                    throw DataFrameError(
-                        "PolicyLearningLossVisitor: "
-                        "Inconsistent data dimensions");
+                    throw DataFrameError("PolicyLearningLossVisitor: "
+                                         "Inconsistent data dimensions");
         }
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -2544,19 +2640,25 @@ public:
                 for (size_type i { begin }; i < end; ++i)  {
                     const auto  &ap { *(action_prob_begin + i) };
                     const auto  &r { *(reward_begin + i) };
-                    const auto  &adjusted_r { (r - adjust) / scale };
+                    const auto  adjusted_r {
+                        (r - adjust) / (scale + data_t(epsilon_))
+                    };
 
-                    result_[i] = (_bc_log_(ap) * data_t(-1))  * adjusted_r;
+                    result_[i] =
+                        (_bc_log_(ap + data_t(epsilon_)) * data_t(-1)) *
+                        adjusted_r;
+
                 }
             };
 
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
-                    std::move(lbd));
+                    std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2595,7 +2697,7 @@ struct  LossFunctionVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -2647,7 +2749,7 @@ public:
         if constexpr (is_md_)  {
             auto mit = model_begin;
 
-            for (auto ait = actual_begin; ait != actual_end; ++ait)
+            for (auto ait { actual_begin }; ait != actual_end; ++ait)
                 if (ait->size() != dim || (mit++)->size() != dim)
                     throw DataFrameError("LossFunctionVisitor: "
                                          "Inconsistent data dimensions");
@@ -3001,7 +3103,7 @@ struct  VectorSimilarityVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3060,8 +3162,8 @@ public:
             DotProdVisitor<T, I>    dot_v;
 
             dot_v.pre();
-            dot_v (idx_begin, idx_end,
-                   column_begin1, column_end1, column_begin2, column_end2);
+            dot_v(idx_begin, idx_end,
+                  column_begin1, column_end1, column_begin2, column_end2);
             dot_v.post();
 
             const auto  dotp_res { dot_v.get_result() };
@@ -3086,8 +3188,9 @@ public:
                 if (! is_md_)  {
 #ifdef HMDF_SANITY_EXCEPTIONS
                     if (col_s1 != col_s2)
-                        throw DataFrameError("VectorSimilarityVisitor: "
-                                           "All columns must be of equal sizes");
+                        throw DataFrameError(
+                            "VectorSimilarityVisitor: "
+                            "All columns must be of equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS
 
                     // Must normalize the dot product first.
@@ -3143,10 +3246,10 @@ public:
                                     "All columns must be of equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-            const equal_t   eq { };
+            const equal_t   eq_perd { };
 
             for (size_type i { 0 }; i < col_s1; ++i)
-                if (! eq(*(column_begin1 + i), *(column_begin2 + i)))
+                if (! eq_perd(*(column_begin1 + i), *(column_begin2 + i)))
                     result_ += 1;
         }
     }
@@ -3431,7 +3534,7 @@ struct  SeasonalPeriodVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3446,7 +3549,7 @@ public:
     using result_type = double;
     using md_result_type = std::vector<result_type>;
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &column_begin, const H &column_end)  {
@@ -3454,7 +3557,7 @@ public:
         const size_type         col_s {
             size_type(std::distance(column_begin, column_end))
         };
-        std::vector<value_type> data (column_begin, column_end);
+        std::vector<value_type> data(column_begin, column_end);
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if constexpr (is_md_)  {
@@ -3468,7 +3571,7 @@ public:
 #endif // HMDF_SANITY_EXCEPTIONS
 
         if (params_.detrend)  {  // Take trend out
-            std::vector<size_type>  xvals (col_s);
+            std::vector<size_type>  xvals(col_s);
             size_type               xvalue { 0 };
 
             for (auto &val : xvals)  {
@@ -3479,13 +3582,13 @@ public:
             LowessVisitor<T, I> l_v {
                 params_.num_loops,
                 params_.frac,
-                params_.delta, //  * value_type(col_s),
+                params_.delta,
                 true
             };
 
             l_v.pre();
-            l_v (idx_begin, idx_end,
-                 data.begin(), data.end(), xvals.begin(), xvals.end());
+            l_v(idx_begin, idx_end,
+                data.begin(), data.end(), xvals.begin(), xvals.end());
             l_v.post();
 
             if constexpr (! is_md_)  {
@@ -3524,7 +3627,7 @@ public:
         FastFourierTransVisitor<T, I>   fft;
 
         fft.pre();
-        fft (idx_begin, idx_end, data.begin(), data.end());
+        fft(idx_begin, idx_end, data.begin(), data.end());
         fft.post();
 
         // mags is a vector in case of scalar input
@@ -3536,14 +3639,12 @@ public:
             const size_type n_bins { mags.size() };
 
             // For a real-valued input of length N, the FFT produces a
-            // symmetric spectrum — bin k and bin N-k carry identical
-            // magnitude.
-            // FIX: Restrict the scan to [1, N/2) — the unique, non-mirrored
-            // half of the spectrum.
+            // symmetric spectrum — (bin k and bin N - k carry identical
+            // magnitude).
+            // FIX: Restrict the scan to [1, N / 2) — the unique, non-mirrored
+            //      half of the spectrum.
             //
-            const size_type scan_len {
-                ((n_bins & 0x01) == 0) ? n_bins / 2 : (n_bins + 1) / 2
-            };
+            const size_type scan_len { n_bins / 2 + 1 };
 
             // Skip bin 0 (DC component) — it carries no frequency information
             // and would cause dom_freq_ = 0 and result_ = 1/0 = inf.
@@ -3560,17 +3661,17 @@ public:
             dom_freq_ =
                 result_type(dom_idx_) *
                 result_type(params_.sampling_rate) / result_type(mags.size());
-            result_   = result_type(1) / dom_freq_;
+            result_ = result_type(1) / dom_freq_;
         }
         else  {
             const size_type dim { size_type(mags.cols()) };
             const size_type n_bins { size_type(mags.rows()) };
 
             // For a real-valued input of length N, the FFT produces a
-            // symmetric spectrum — bin k and bin N-k carry identical
-            // magnitude.
-            // FIX: Restrict the scan to [1, N/2) — the unique, non-mirrored
-            // half of the spectrum.
+            // symmetric spectrum (bin k and bin N - k carry identical
+            // magnitude).
+            // FIX: Restrict the scan to [1, N / 2) — the unique, non-mirrored
+            //      half of the spectrum.
             //
             const size_type scan_len {
                 ((n_bins & 0x01) == 0) ? n_bins / 2 : (n_bins + 1) / 2
@@ -3657,10 +3758,10 @@ private:
 
     // Per-dimension storage — populated only when is_md_ == true.
     //
-    md_result_type          result_vec_   {  };
-    md_result_type          max_mag_vec_  {  };
+    md_result_type          result_vec_ {  };
+    md_result_type          max_mag_vec_ {  };
     md_result_type          dom_freq_vec_ {  };
-    std::vector<size_type>  dom_idx_vec_  {  };
+    std::vector<size_type>  dom_idx_vec_ {  };
 };
 
 template<typename T, typename I = unsigned long>
@@ -3676,7 +3777,7 @@ struct  DynamicTimeWarpVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3800,7 +3901,7 @@ struct  AnomalyDetectByFFTVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -3825,6 +3926,7 @@ public:
         typename std::conditional_t<! is_md_,
                                     vec_t<size_type>,
                                     vec_t<std::pair<size_type, size_type>>>;
+
 
     template <typename K, typename H>
     inline void
@@ -3864,10 +3966,29 @@ public:
         auto    fft_res = std::move(fft.get_result());
 
         if constexpr (! is_md_)  {
-            // Zero out high frequencies
+            // Zero out high frequencies -- but a real signal's FFT is
+            // conjugate-symmetric (bin k and bin N-k are mirrors), so
+            // zeroing everything from freq_num_ to the end also wipes
+            // out the mirror partners (indices N-freq_num_+1 .. N-1) of
+            // the very low-frequency bins we're trying to keep. Without
+            // its conjugate partner, each kept bin's contribution to the
+            // inverse FFT loses the term that makes it real and full-
+            // amplitude -- the reconstructed signal comes back at
+            // exactly half the true amplitude for every non-DC
+            // frequency (confirmed: a clean single sinusoid reconstructs
+            // at a flat 0.5x ratio, pre-fix). Zero only the middle,
+            // mirror-safe range [freq_num_, col_s-freq_num_+1) instead,
+            // leaving both the low bins and their mirrors intact. If
+            // freq_num_ is large enough that this range would be empty
+            // or invalid (the two kept halves would overlap), there's
+            // nothing to zero -- keep everything.
             //
-            std::fill(fft_res.begin() + freq_num_, fft_res.end(),
-                      typename decltype(fft_res)::value_type { });
+            const size_type mirror_bound { col_s - freq_num_ + 1 };
+
+            if (freq_num_ < mirror_bound)
+                std::fill(fft_res.begin() + freq_num_,
+                          fft_res.begin() + mirror_bound,
+                          typename decltype(fft_res)::value_type { });
 
             // Inverse FFT: input is vec<cplx_t>, fft_v<complex<T>> picks
             // the scalar path because complex<T> satisfies IS_SCALAR
@@ -3884,8 +4005,23 @@ public:
 
             result_.reserve(((col_s / 40) < 32) ? size_type(32) : col_s / 40);
             for (size_type i { 0 }; i < col_s; ++i)  {
+                // When normalization is enabled, the reconstruction was
+                // built from the NORMALIZED data -- comparing it against
+                // the raw, un-normalized column value is a scale
+                // mismatch that produces a meaningless residual unless
+                // the two scales happen to coincide by chance (confirmed:
+                // a clean sinusoid with a large offset/amplitude under
+                // z-score normalization got EVERY point flagged as an
+                // "anomaly", since the raw values are ~1000s while the
+                // normalized reconstruction is on a unit scale). Compare
+                // against the same-scale (normalized) value instead.
+                //
+                const data_t    orig_val {
+                    (nt_ > normalization_type::none)
+                        ? norm.get_result()[i] : *(column_begin + i)
+                };
                 const data_t    residual {
-                    std::abs(*(column_begin + i) - ifft_res[i].real())
+                    std::abs(orig_val - ifft_res[i].real())
                 };
 
                 if (residual > ath_)  result_.push_back(i);
@@ -3913,11 +4049,18 @@ public:
 
             const size_type dim { size_type(fft_res.cols()) };
 
-            // Zero out high frequencies across all dims
+            // Zero out high frequencies across all dims -- same
+            // conjugate-mirror issue as the scalar path above: only zero
+            // the middle, mirror-safe range so each dimension's kept low
+            // bins keep their conjugate partners.
             //
-            for (size_type i { freq_num_ }; i < col_s; ++i)
-                for (size_type d { 0 }; d < dim; ++d)
-                    fft_res(i, d) = typename decltype(fft_res)::value_type { };
+            const size_type mirror_bound { col_s - freq_num_ + 1 };
+
+            if (freq_num_ < mirror_bound)
+                for (size_type i { freq_num_ }; i < mirror_bound; ++i)
+                    for (size_type d { 0 }; d < dim; ++d)
+                        fft_res(i, d) =
+                            typename decltype(fft_res)::value_type{ };
 
             // We need cplx_t which is fft_v<T>::cplx_t.
             // Derive it from the matrix element type to stay consistent.
@@ -3961,11 +4104,16 @@ public:
             }
 
             // Anomaly detection: compare original vs reconstructed per
-            // (sample, dim)
+            // (sample, dim). Same scale-mismatch fix as the scalar path:
+            // when normalized, compare against the normalized sample,
+            // not the raw one.
             //
             result_.reserve(((col_s / 40) < 32) ? size_type(32) : col_s / 40);
             for (size_type i { 0 }; i < col_s; ++i)  {
-                const auto  &sample { *(column_begin + i) };
+                const auto  &sample {
+                    (nt_ > normalization_type::none)
+                        ? norm.get_result()[i] : *(column_begin + i)
+                };
 
                 for (size_type d { 0 }; d < dim; ++d)  {
                     const data_t    residual {
@@ -3977,7 +4125,7 @@ public:
             }
         }
     }
-
+	
     DEFINE_PRE_POST
     DEFINE_RESULT
 
@@ -4038,11 +4186,11 @@ private:
         aggr(idx_begin, idx_end, diff.begin(), diff.end());
         aggr.post();
 
-        const value_type    factor = num_of_std_ * unbiased_factor_;
-        const auto          &aggr_res = aggr.get_result();
+        const value_type    factor { num_of_std_ * unbiased_factor_ };
+        const auto          &aggr_res { aggr.get_result() };
 
         result_.reserve(diff.size() / 10);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i { 0 }; i < col_s; ++i)  {
             if (diff[i] > (aggr_res[i] * factor))
                 result_.push_back(i);
         }
@@ -4052,12 +4200,12 @@ public:
 
     template<typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
+    operator()(K idx_begin, K idx_end, H column_begin, H column_end)  {
 
         if (type_ == hampel_type::median)
             hampel_(idx_begin, idx_end, column_begin, column_end,
                     SimpleRollAdopter<MedianVisitor<T, I>, T, I>
-                        (MedianVisitor<T, I> { }, window_size_));
+                        (MedianVisitor<T, I> { true }, window_size_));
         else if (type_ == hampel_type::mean)
             hampel_(idx_begin, idx_end, column_begin, column_end,
                     SimpleRollAdopter<MeanVisitor<T, I>, T, I>
@@ -4101,8 +4249,8 @@ struct  AnomalyDetectByIQRVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &, const K &,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
@@ -4112,10 +4260,10 @@ struct  AnomalyDetectByIQRVisitor  {
                                 "Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        vec_t   data(column_begin, column_end);
-
-        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        vec_t       data(column_begin, column_end);
+        const auto  thread_level { (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level()
+        };
 
         if (thread_level > 2)
             ThreadGranularity::thr_pool_.parallel_sort(
@@ -4123,7 +4271,7 @@ struct  AnomalyDetectByIQRVisitor  {
         else
             std::sort(data.begin(), data.end());
 
-        const size_type     mid = col_s / 2;
+        const size_type     mid { col_s / 2 };
         const value_type    q1 { median_(data.begin(), data.begin() + mid) };
         const value_type    q3 {
             (col_s & size_type(0x01))
@@ -4136,7 +4284,7 @@ struct  AnomalyDetectByIQRVisitor  {
 
         result_.reserve(32);
         for (size_type i { 0 }; i < col_s; ++i)  {
-            const value_type    &val = *(column_begin + i);
+            const value_type    &val { *(column_begin + i) };
 
             if (val < low_bound || val > high_bound) [[unlikely]]
                 result_.push_back(i);
@@ -4159,9 +4307,9 @@ private:
     static inline T
     median_(const H &data_begin, const H &data_end)  {
 
-        const size_type     s = std::distance(data_begin, data_end);
-        const size_type     mid = s / 2;
-        const value_type    &mid_val = *(data_begin + mid);
+        const size_type     s { size_type(std::distance(data_begin, data_end)) };
+        const size_type     mid { s / 2 };
+        const value_type    &mid_val { *(data_begin + mid) };
 
         if (s & size_type(0x01))  // Odd
             return (mid_val);
@@ -4184,7 +4332,7 @@ struct  AnomalyDetectByZScoreVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -5399,7 +5547,7 @@ struct  LSTMForecastVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -6185,7 +6333,7 @@ struct  AnomalyDetectByKNNVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -6428,7 +6576,7 @@ struct  BIRCHVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
 public:
 
@@ -6566,18 +6714,18 @@ private:
 
         order_type  clusters_idxs(k_);
 
-        for (size_type i = 0; i < k_; ++i) [[likely]]
+        for (size_type i { 0 }; i < k_; ++i) [[likely]]
             clusters_idxs[i].reserve(col_s / k_ + 2);
 
-        for (size_type j = 0; j < col_s; ++j) [[likely]]  {
-            const value_type    &value = *(column_begin + j);
+        for (size_type j { 0 }; j < col_s; ++j) [[likely]]  {
+            const value_type    &value { *(column_begin + j) };
 
             if (! is_nan__(value)) [[likely]]  {
                 double      min_dist { std::numeric_limits<double>::max() };
                 size_type   min_idx { 0 };
 
-                for (size_type i = 0; i < k_; ++i)  {
-                    const double    dist = dfunc_(value, result_[i]);
+                for (size_type i { 0 }; i < k_; ++i)  {
+                    const double    dist { dfunc_(value, result_[i]) };
 
                     if (dist < min_dist)  {
                         min_dist = dist;
@@ -6656,7 +6804,7 @@ public:
 
     inline void set_dist_func(distance_func &&f)  { dfunc_ = f; }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         result_.clear();
         clusters_idxs_.clear();
@@ -7209,7 +7357,7 @@ public:
         auto    oit { obs_begin };
 
         for (; cit != coord_end; ++cit, ++oit)  {
-            if (is_nan__(*oit))  [[unlikely]]  continue;
+            if (is_nan__(*oit)) [[unlikely]]  continue;
 
             bool    has_nan { false };
 
@@ -7239,7 +7387,7 @@ public:
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         coords_.clear();
         obs_.clear();
@@ -7279,7 +7427,7 @@ public:
         result_type result(static_cast<size_type>(std::distance(begin, end)));
         size_type   i { 0 };
 
-        for (auto it = begin; it != end; ++it)
+        for (auto it { begin }; it != end; ++it)
             result[i++] = predict(*it);
         return (result);
     }
@@ -7837,7 +7985,7 @@ public:
 
         for (size_type i { 0 }; i < k; ++i)  {
             for (size_type j { 0 }; j < k; ++j)  {
-                if (i == j) [[unlikely]] continue;
+                if (i == j) [[unlikely]]  continue;
 
                 const double    dist_ij {
                     centroid_dist_(centroids_[i], centroids_[j])
@@ -7919,7 +8067,7 @@ struct  CalinskiHarabaszVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
 public:
 

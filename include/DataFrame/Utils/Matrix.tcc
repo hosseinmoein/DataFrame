@@ -2523,9 +2523,10 @@ solve(const MA &rhs) const  {
     constexpr bool  is_vec { is_std_vector_v<MA> };
 
     size_type   rhs_size;
+    size_type   rhs_cols;
 
-    if constexpr (is_vec)  rhs_size = rhs.size();
-    else  rhs_size = rhs.rows();
+    if constexpr (is_vec)  { rhs_size = rhs.size(); rhs_cols = 1; }
+    else  { rhs_size = rhs.rows(); rhs_cols = rhs.cols(); }
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square() || cols() != rhs_size)
@@ -2533,7 +2534,7 @@ solve(const MA &rhs) const  {
                           "compatible with rhs");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    Matrix<T, MO>   tmp { rows(), cols() + 1L };
+    Matrix<T, MO>   tmp { rows(), cols() + rhs_cols };
 
     for (size_type r { 0 }; r < rows(); ++r)  {
         for (size_type c { 0 }; c < cols(); ++c)
@@ -2541,22 +2542,34 @@ solve(const MA &rhs) const  {
         if constexpr (is_vec)
             tmp(r, cols()) = rhs[r];
         else
-            tmp(r, cols()) = rhs(r, 0);
+            // A vector RHS is always a single column, but a matrix RHS
+            // can have any number of columns -- append them all here
+            // instead of only rhs(r, 0), or every column past the first
+            // is silently dropped (the augmented system, and hence the
+            // solved-for result below, never sees it).
+            //
+            for (size_type rc { 0 }; rc < rhs_cols; ++rc)
+                tmp(r, cols() + rc) = rhs(r, rc);
     }
 
     size_type   rank { 0 };
 
     tmp.rref(rank);
-
     if (rank != rows())
         throw NotFeasible("Matrix::solve(): Matrix is singular");
 
-    Matrix<T, MO>   sol { rhs_size, 1L };
+    Matrix<T, MO>   sol { rhs_size, rhs_cols };
 
-    for (size_type r { rows() - 1 }; r >= 0; --r)  {
-        sol(r, 0) = tmp(r, cols());
-        for (size_type c { r + 1 }; c < cols(); ++c)
-            sol(r, 0) -= tmp(r, c) * sol(c, 0);
+    // Back-substitute each RHS column into its own column of sol -- a
+    // single-column loop here (rc fixed at 0) is exactly what this
+    // function used to do; the loop just repeats it once per RHS column.
+    //
+    for (size_type rc { 0 }; rc < rhs_cols; ++rc)  {
+        for (size_type r { rows() - 1 }; r >= 0; --r)  {
+            sol(r, rc) = tmp(r, cols() + rc);
+            for (size_type c { r + 1 }; c < cols(); ++c)
+                sol(r, rc) -= tmp(r, c) * sol(c, rc);
+        }
     }
 
     return (sol);

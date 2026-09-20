@@ -5342,13 +5342,13 @@ static void test_MutualInfoVisitor()  {
     MutualInfoVisitor<int>  minfo;
 
     df.single_act_visit<int, int>("int_col_1", "int_col_1", minfo);
-    assert((std::fabs(minfo.get_result() - 12.4866) < 0.0001));
+    assert((std::fabs(minfo.get_result() - 2.89425) < 0.00001));
 
     df.single_act_visit<int, int>("int_col_1", "int_col_2", minfo);
-    assert((std::fabs(minfo.get_result() - 1.81499) < 0.00001));
+    assert((std::fabs(minfo.get_result() - 1.22157) < 0.00001));
 
     df.single_act_visit<int, int>("int_col_1", "int_col_3", minfo);
-    assert((std::fabs(minfo.get_result() - 4.24521) < 0.00001));
+    assert((std::fabs(minfo.get_result() - 0.954434) < 0.000001));
 
     // Now multidimensional data
     //
@@ -5391,7 +5391,7 @@ static void test_MutualInfoVisitor()  {
     assert((std::fabs(mi_ary.get_result() - 1.58496) < 0.00001));
 
     df.single_act_visit<vec_col_t, vec_col_t>("COL VEC2", "COL VEC2", mi_vec);
-    assert((std::fabs(mi_vec.get_result() - 4.0) < 0.000000001));
+    assert((std::fabs(mi_vec.get_result() - 1.0) < 0.000000001));
 
     df.single_act_visit<vec_col_t, vec_col_t>("COL VEC2", "COL VEC4", mi_vec);
     assert((std::fabs(mi_vec.get_result() - 1.0) < 0.000000001));

@@ -4125,7 +4125,7 @@ public:
             }
         }
     }
-	
+
     DEFINE_PRE_POST
     DEFINE_RESULT
 
@@ -4205,11 +4205,11 @@ public:
         if (type_ == hampel_type::median)
             hampel_(idx_begin, idx_end, column_begin, column_end,
                     SimpleRollAdopter<MedianVisitor<T, I>, T, I>
-                        (MedianVisitor<T, I> { true }, window_size_));
+                        (MedianVisitor<T, I>{ true }, window_size_));
         else if (type_ == hampel_type::mean)
             hampel_(idx_begin, idx_end, column_begin, column_end,
                     SimpleRollAdopter<MeanVisitor<T, I>, T, I>
-                        (MeanVisitor<T, I> { true }, window_size_));
+                        (MeanVisitor<T, I>{ true }, window_size_));
     }
 
     DEFINE_PRE_POST
@@ -4256,18 +4256,18 @@ struct  AnomalyDetectByIQRVisitor  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 20)
-           throw DataFrameError("AnomalyDetectByIQRVisitor: "
-                                "Time-series is too short");
+           throw DataFrameError(
+               "AnomalyDetectByIQRVisitor: Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         vec_t       data(column_begin, column_end);
-        const auto  thread_level { (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level()
+        const auto  thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
         };
 
         if (thread_level > 2)
-            ThreadGranularity::thr_pool_.parallel_sort(
-                data.begin(), data.end());
+            ThreadGranularity::thr_pool_.parallel_sort(data.begin(), data.end());
         else
             std::sort(data.begin(), data.end());
 
@@ -4359,11 +4359,11 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 10)
-           throw DataFrameError("AnomalyDetectByZScoreVisitor: "
-                                "Time-series is too short");
+           throw DataFrameError(
+               "AnomalyDetectByZScoreVisitor: Time-series is too short");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        StdVisitor<T, I>    svisit;
+        StdVisitor<T, I>    svisit { false, true };
 
         svisit.pre();
         svisit(idx_begin, idx_end, column_begin, column_end);
@@ -4418,7 +4418,7 @@ public:
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using dist_vec_t = std::vector<double>;
     using pvec_t = std::vector<std::pair<double, size_type>> ;
@@ -4491,9 +4491,10 @@ public:
             double  sum_reach_dist { 0 };
 
             for (long j { 0 }; j < neighbors.cols(); ++j)  {
-                const double    reach_d =
+                const double    reach_d {
                     std::max(neighbors(i, j).first,
-                             dfunc_(*(column_begin + j), *(column_begin + i)));
+                             dfunc_(*(column_begin + j), *(column_begin + i)))
+                };
 
                 reach_dists(long(i), j) = reach_d;
                 sum_reach_dist += reach_d;
@@ -4535,8 +4536,9 @@ private:
              size_type col_s, size_type index,
              knn_mat_t &neighbors, pvec_t &dists) const  {
 
-        const auto  thread_level { (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level()
+        const auto  thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
         };
         const auto  &idx_val { *(column_begin + index) };
         auto        lbd =
@@ -4549,9 +4551,10 @@ private:
             };
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0), col_s, std::move(lbd));
+                    size_type(0), col_s, std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
             ThreadGranularity::thr_pool_.parallel_sort(
@@ -4594,7 +4597,7 @@ struct  MutualInfoVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -4657,7 +4660,7 @@ public:
         };
 
         if (thread_level > 2)  {
-            auto    fut1 =
+            auto    fut1 {
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
                     [&column1_begin = std::as_const(column1_begin),
@@ -4670,8 +4673,9 @@ public:
 
                             it->second += 1.0;
                         }
-                    });
-            auto    fut2 =
+                    })
+            };
+            auto    fut2 {
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
                     [&column2_begin = std::as_const(column2_begin),
@@ -4684,8 +4688,9 @@ public:
 
                             it->second += 1.0;
                         }
-                    });
-            auto    fut3 =
+                    })
+            };
+            auto    fut3 {
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
                     [&column1_begin = std::as_const(column1_begin),
@@ -4700,7 +4705,8 @@ public:
 
                             it->second += 1.0;
                         }
-                    });
+                    })
+            };
 
             fut1.get();
             fut2.get();
@@ -4717,25 +4723,33 @@ public:
             }
         }
 
+        // The MI formula sums p(x,y)*log(p(x,y)/(p(x)p(y))) once per
+        // UNIQUE (x,y) pair (the support of the joint distribution) --
+        // count_xy already holds exactly that, one entry per unique
+        // pair with its occurrence count. Materialize it into a vector
+        // first so the summation can still be chunk-parallelized (an
+        // unordered_map has no random-access range to split), then
+        // iterate over pairs, not rows: a pair seen n_xy times must
+        // contribute its term exactly once, not n_xy times.
+        //
+        using xy_entry_t = std::pair<std::pair<T, T>, double>;
+
+        std::vector<xy_entry_t> xy_vec(count_xy.begin(), count_xy.end());
+
         double  mi { 0 };
         auto    lbd =
-            [&column1_begin = std::as_const(column1_begin),
-             &column2_begin = std::as_const(column2_begin),
-             &count_x = std::as_const(count_x),
+            [&count_x = std::as_const(count_x),
              &count_y = std::as_const(count_y),
-             &count_xy = std::as_const(count_xy),
+             &xy_vec = std::as_const(xy_vec),
              col_s]
             (auto begin, auto end) -> double  {
                 double  mi { 0 };
 
                 for (size_type i { begin }; i < end; ++i)  {
-                    const auto  &val1 { *(column1_begin + i) };
-                    const auto  &val2 { *(column2_begin + i) };
-                    const auto  p_x { count_x.find(val1)->second / col_s };
-                    const auto  p_y { count_y.find(val2)->second / col_s };
-                    const auto  p_xy {
-                        count_xy.find({ val1, val2 })->second / col_s
-                    };
+                    const auto  &[key, n_xy] { xy_vec[i] };
+                    const auto  p_xy { n_xy / col_s };
+                    const auto  p_x { count_x.find(key.first)->second / col_s };
+                    const auto  p_y { count_y.find(key.second)->second / col_s };
 
                     if (p_xy > 0)
                         mi += p_xy * std::log(p_xy / (p_x * p_y));
@@ -4743,17 +4757,18 @@ public:
                 return (mi);
             };
 
+        const size_type xy_s { xy_vec.size() };
 
         if (thread_level > 2)  {
             auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    size_type(0), col_s, std::move(lbd))
+                    size_type(0), xy_s, std::move(lbd))
             };
 
             for (auto &fut : futures)  mi += fut.get();
         }
         else  {
-            mi = lbd(size_type(0), col_s);
+            mi = lbd(size_type(0), xy_s);
         }
 
         // Convert from nat (natural unit) to bits (base 2)
@@ -4835,7 +4850,7 @@ struct  ARIMAVisitor  {
         // Now forecast
         //
 
-        result_type diffed = y_;
+        result_type diffed { y_ };
         result_type preds;
 
         preds.resize(periods_);
@@ -4885,7 +4900,7 @@ struct  ARIMAVisitor  {
     inline const result_type &get_result() const  { return (result_); }
     inline result_type &get_result()  { return (result_); }
 
-    inline value_type &get_sigma_sq() const  { return (sigma2_); }
+    inline const value_type &get_sigma_sq() const  { return (sigma2_); }
     inline const result_type &get_phi() const  { return (ar_coeffs_); }
     inline const result_type &get_theta() const  { return (ma_coeffs_); }
     inline const result_type &get_residuals() const  { return (residuals_); }
@@ -4913,7 +4928,7 @@ private:
         //
         for (long i { 0 }; i < n; ++i) {
             y[i] = b(0, i);
-            for (long j = 0; j < i; ++j)
+            for (long j { 0 }; j < i; ++j)
                 y[i] -= L(i, j) * y[j];
         }
 
@@ -4926,7 +4941,7 @@ private:
         //
         for (long i { n - 1 }; i >= 0; --i) {
             x[i] = z[i];
-            for (long j = i + 1; j < n; ++j)
+            for (long j { i + 1 }; j < n; ++j)
                 x[i] -= L(j, i) * x[j];
         }
 
@@ -4943,7 +4958,7 @@ private:
 
         long        m { n_ - p_ };
         matrix_t    X { m, p_, 0 };
-        vec_t       Y (m);
+        vec_t       Y(m);
 
         for (long i { 0 }; i < m; ++i) {
             for (long j { 0 }; j < p_; ++j)
@@ -4985,9 +5000,15 @@ private:
         for (long iter { 0 }; iter < max_iter; ++iter) {
             compute_residuals_();
 
-            // Update each MA coefficient with small step toward correlation
+            // Update each MA coefficient with small step toward correlation.
+            // Lag j's coefficient lives at ma_coeffs_[j-1] everywhere else
+            // in this visitor (compute_residuals_, the forecast loop) --
+            // j must run 1..q_ inclusive and store at j-1, or lag q_ is
+            // never fit and every coefficient that IS fit lands one slot
+            // off from where it's read. With the old `j=1; j<q_` bound
+            // this loop body never ran at all for the default q_=1.
             //
-            for (long j { 1 }; j < q_; ++j)  {
+            for (long j { 1 }; j <= q_; ++j)  {
                 value_type  numer { 0 };
                 value_type  denom { 0 };
 
@@ -4996,7 +5017,7 @@ private:
                     denom += residuals_[t - j] * residuals_[t - j];
                 }
                 if (denom != 0)
-                    ma_coeffs_[j] = numer / denom;
+                    ma_coeffs_[j - 1] = numer / denom;
             }
 
             value_type  diff { 0 };

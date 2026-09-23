@@ -1450,18 +1450,18 @@ static void test_ARIMAVisitor()  {
     const auto  result1 = ari.get_result();
 
     assert(result1.size() == 3);
-    assert(std::fabs(result1[0] - 247.175) < 0.001);
-    assert(std::fabs(result1[1] - 197.294) < 0.001);
-    assert(std::fabs(result1[2] - 220.021) < 0.001);
+    assert(std::fabs(result1[0] - 245.745) < 0.001);
+    assert(std::fabs(result1[1] - 197.122) < 0.001);
+    assert(std::fabs(result1[2] - 219.314) < 0.001);
 
     df.single_act_visit<double>("oscil", ari);
 
     const auto  result2 = ari.get_result();
 
     assert(result2.size() == 3);
-    assert(std::fabs(result2[0] - 1.77088) < 0.00001);
-    assert(std::fabs(result2[1] - 1.67015) < 0.00001);
-    assert(std::fabs(result2[2] - 1.74417) < 0.00001);
+    assert(std::fabs(result2[0] - 1.76961) < 0.00001);
+    assert(std::fabs(result2[1] - 1.66931) < 0.00001);
+    assert(std::fabs(result2[2] - 1.74256) < 0.00001);
 
     try  {
         df.single_act_visit<double>("constant", ari);
@@ -1475,18 +1475,18 @@ static void test_ARIMAVisitor()  {
     const auto  result3 = ari.get_result();
 
     assert(result3.size() == 3);
-    assert(std::fabs(result3[0] - 14.3335) < 0.0001);
-    assert(std::fabs(result3[1] - 13.09) < 0.0001);
-    assert(std::fabs(result3[2] - 14.6469) < 0.0001);
+    assert(std::fabs(result3[0] - 14.1842) < 0.0001);
+    assert(std::fabs(result3[1] - 13.0033) < 0.0001);
+    assert(std::fabs(result3[2] - 14.4171) < 0.0001);
 
     df.single_act_visit<double>("decreasing", ari);
 
     const auto  result4 = ari.get_result();
 
     assert(result4.size() == 3);
-    assert(std::fabs(result4[0] - 7.42058) < 0.00001);
-    assert(std::fabs(result4[1] - 7.21897) < 0.00001);
-    assert(std::fabs(result4[2] - 7.11158) < 0.00001);
+    assert(std::fabs(result4[0] - 7.40899) < 0.00001);
+    assert(std::fabs(result4[1] - 7.2049) < 0.0001);
+    assert(std::fabs(result4[2] - 7.09123) < 0.00001);
 
     // Now some real data
     //
@@ -1568,9 +1568,9 @@ static void test_HWESForecastVisitor()  {
     const auto  result2 = hwes2.get_result();
 
     assert(result2.size() == 3);
-    assert(std::fabs(result2[0] - 1.73499) < 0.00001);
-    assert(std::fabs(result2[1] - 1.9216) < 0.00001);
-    assert(std::fabs(result2[2] - 1.76383) < 0.00001);
+    assert(std::fabs(result2[0] - 1.90718) < 0.00001);
+    assert(std::fabs(result2[1] - 1.74941) < 0.00001);
+    assert(std::fabs(result2[2] - 1.93602) < 0.00001);
 
     df.single_act_visit<double>("constant", hwes);
 

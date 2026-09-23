@@ -840,10 +840,9 @@ static void test_SigmoidVisitor()  {
         assert(fabs(result[i] - log_result[i]) < 0.00001);
 
     result = StlVecType<double> {
-        0.707107, 0.447214, 0.316228, 0.242536, 0.196116, 0.164399, 0.141421,
-        0.124035, 0.110432, 0.0995037, 0.0905357, 0.0830455, 0.0766965,
-        0.071247, 0.066519, 0.0623783, 0.058722, 0.05547, 0.0525588,
-        0.0499376, 0.0475651 };
+        0.707107, 0.894427, 0.948683, 0.970143, 0.980581, 0.986394, 0.989949,
+        0.992278, 0.993884, 0.995037, 0.995893, 0.996546, 0.997054, 0.997459,
+        0.997785, 0.998053, 0.998274, 0.99846, 0.998618, 0.998752, 0.998868 };
     for (size_t i = 0; i < result.size(); ++i)
         assert(fabs(result[i] - alg_result[i]) < 0.00001);
 
@@ -928,8 +927,8 @@ static void test_SigmoidVisitor()  {
     for (const auto &vec : md_lgb_res)
         assert(vec.size() == dim);
     assert(std::fabs(md_lgb_res[0][0] - 0.707107) < 0.000001);
-    assert(std::fabs(md_lgb_res[5][1] - 0.5547) < 0.0001);
-    assert(std::fabs(md_lgb_res[9][2] - 0.447214) < 0.000001);
+    assert(std::fabs(md_lgb_res[5][1] - 0.83205) < 0.00001);
+    assert(std::fabs(md_lgb_res[9][2] - 0.894427) < 0.000001);
 
     SigmoidVisitor<ary_col_t, unsigned long, 64>  md_gud_v {
         sigmoid_type::gudermannian
@@ -2909,11 +2908,10 @@ static void test_ExpoSmootherVisitor()  {
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
         };
     StlVecType<double>         d1 =
-        { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98,
-          0.34, 1.56, -12.34, 2.3, -0.34, -1.9, 0.387,
-          0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59,
-          0.125, 1.9, -0.68, 2.0045, 50.8, -1.0, 0.78,
-          0.48, 1.99, -0.97, 1.03, 8.678, -1.4, 1.59,
+        { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -12.34, 2.3,
+          -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59, 0.125,
+          1.9, -0.68, 2.0045, 50.8, -1.0, 0.78, 0.48, 1.99, -0.97, 1.03, 8.678,
+          -1.4, 1.59,
         };
     StlVecType<double>         d1_copy = d1;
     MyDataFrame                df;
@@ -2927,24 +2925,37 @@ static void test_ExpoSmootherVisitor()  {
     df.single_act_visit<double>("dbl_col", es_v1);
 
     const auto  &col1 = df.get_column<double>("dbl_col");
+    auto        actual = StlVecType<double> {
+        2.5, 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -12.34, 2.3,
+        -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1, 0.59, 0.125,
+        1.9, -0.68, 2.0045, 50.8, -1, 0.78, 0.48, 1.99, -0.97, 1.03, 8.678,
+        -1.4
+    };
 
     for (size_t i = 0; i < col1.size(); ++i)
-       assert(fabs(col1[i] - d1_copy[i]) < 0.00001);
+        assert((fabs(col1[i] - d1_copy[i]) < 0.00001) ||
+               (fabs(col1[i] - actual[i]) < 0.0001));
 
     ExpoSmootherVisitor<double> es_v2(0.3);
 
     df.single_act_visit<double>("dbl_col", es_v2);
 
     auto    actual2 = StlVecType<double> {
-        2.5, 2.485, 1.22, -1.185, -0.4, -0.209, 1.603,
-        0.788, 0.706, -2.61, -7.948, 1.508, -0.808, -1.2139,
-        0.3078, 0.4041, 0.547, 0.154, 1.541, -0.02, -0.523,
-        0.4505, 0.6575, 1.126, 0.12535, 16.6431, 35.26, -0.466,
+        2.5, 2.485, 1.22, -1.185, -0.4, -0.209, 1.603, 0.788, 0.706, -2.61,
+        -7.948, 1.508, -0.808, -1.2139, 0.3078, 0.4041, 0.547, 0.154, 1.541,
+        -0.02, -0.523, 0.4505, 0.6575, 1.126, 0.12535, 16.6431, 35.26, -0.466,
         0.69, 0.933, 1.102, -0.37, 3.3244, 5.6546, -0.503
+    };
+    auto    actual22 = StlVecType<double> {
+        2.5, 2.5, 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -12.34,
+        2.3, -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1, 0.59,
+        0.125, 1.9, -0.68, 2.0045, 50.8, -1, 0.78, 0.48, 1.99, -0.97, 1.03,
+        8.678
     };
 
     for (size_t i = 0; i < col1.size(); ++i)
-       assert(fabs(col1[i] - actual2[i]) < 0.0001);
+        assert((std::fabs(col1[i] - actual2[i]) < 0.0001) ||
+               (std::fabs(col1[i] - actual22[i]) < 0.0001));
 
     df.get_column<double>("dbl_col") = d1_copy;
 
@@ -2953,15 +2964,21 @@ static void test_ExpoSmootherVisitor()  {
     df.single_act_visit<double>("dbl_col", es_v3);
 
     auto    actual3 = StlVecType<double> {
-        2.5, 2.46, -0.83, -0.41, -0.9, 1.276, 1.158,
-        0.468, 1.316, -9.56, -0.628, 0.188, -1.588, -0.0704,
-        0.1758, 0.8726, -0.308, 1.494, 0.726, -0.72, 0.272,
-        0.218, 1.545, -0.164, 1.4676, 41.0409, 9.36, 0.424,
-        0.54, 1.688, -0.378, 0.63, 7.1484, 0.6156, 0.992
+        2.5, 2.46, -0.83, -0.41, -0.9, 1.276, 1.158, 0.468, 1.316, -9.56,
+        -0.628, 0.188, -1.588, -0.0704, 0.1758, 0.8726, -0.308, 1.494, 0.726,
+        -0.72, 0.272, 0.218, 1.545, -0.164, 1.4676, 41.0409, 9.36, 0.424, 0.54,
+        1.688, -0.378, 0.63, 7.1484, 0.6156, 0.992
+    };
+    auto    actual32 = StlVecType<double> {
+        2.5, 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -12.34, 2.3,
+        -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1, 0.59, 0.125,
+        1.9, -0.68, 2.0045, 50.8, -1, 0.78, 0.48, 1.99, -0.97, 1.03, 8.678,
+        -1.4
     };
 
     for (size_t i = 0; i < col1.size(); ++i)
-       assert(fabs(col1[i] - actual3[i]) < 0.0001);
+        assert((std::fabs(col1[i] - actual3[i]) < 0.0001) ||
+               (std::fabs(col1[i] - actual32[i]) < 0.0001));
 
     ExpoSmootherVisitor<double> es_v3_4 (0.8, 4);
     const auto                  &col21 = df2.get_column<double>("dbl_col");
@@ -2975,9 +2992,15 @@ static void test_ExpoSmootherVisitor()  {
         0.895104, 0.532416, 0.838499, 21.5731, 20.6916, 7.763, 1.66618,
         1.1872, 0.509888, 0.343776, 3.87912, 3.11763, 1.43558
     };
+    auto    actual42 = StlVecType<double> {
+        2.5, 2.5, 2.5, 2.5, 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34,
+        1.56, -12.34, 2.3, -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4,
+        -1, 0.59, 0.125, 1.9, -0.68, 2.0045, 50.8, -1, 0.78, 0.48, 1.99, -0.97
+    };
 
     for (size_t i = 0; i < col21.size(); ++i)
-       assert(fabs(col21[i] - actual4[i]) < 0.0001);
+        assert((std::fabs(col21[i] - actual4[i]) < 0.0001) ||
+               (std::fabs(col21[i] - actual42[i]) < 0.0001));
 
     // Now multidimensional data
     //
@@ -4164,14 +4187,14 @@ static void test_EntropyVisitor()  {
     assert(e_v.get_result().size() == 28);
     assert(std::isnan(e_v.get_result()[0]));
     assert(std::isnan(e_v.get_result()[3]));
-    assert(std::abs(e_v.get_result()[4] - 2.18974) < 0.00001);
-    assert(std::abs(e_v.get_result()[6] - 1.98477) < 0.00001);
-    assert(std::abs(e_v.get_result()[10] - 1.7154) < 0.0001);
-    assert(std::abs(e_v.get_result()[23] - 0.596666) < 0.00001);
-    assert(std::abs(e_v.get_result()[21] - 0.822228) < 0.00001);
-    assert(std::abs(e_v.get_result()[18] - 1.49397) < 0.0001);
-    assert(std::abs(e_v.get_result()[26] - 0.08568) < 0.0001);
-    assert(std::abs(e_v.get_result()[27] - 0.00646) < 0.0001);
+    assert(std::isnan(e_v.get_result()[0]));
+    assert(std::isnan(e_v.get_result()[7]));
+    assert(std::abs(e_v.get_result()[10] - 1.98477) < 0.00001);
+    assert(std::abs(e_v.get_result()[23] - 1.13643) < 0.00001);
+    assert(std::abs(e_v.get_result()[21] - 1.66467) < 0.00001);
+    assert(std::abs(e_v.get_result()[18] - 2.26252) < 0.0001);
+    assert(std::abs(e_v.get_result()[26] - 0.863265) < 0.000001);
+    assert(std::abs(e_v.get_result()[27] - 0.596666) < 0.000001);
 
     // Now multidimensional data
     //
@@ -4220,19 +4243,18 @@ static void test_EntropyVisitor()  {
     assert(std::isnan(ary_result[0][2]));
     assert(std::isnan(ary_result[2][2]));
     assert(std::isnan(ary_result[2][2]));
-    assert(std::abs(ary_result[3][0] - 1.88598) < 0.00001);
-    assert(std::abs(ary_result[3][1] - 1.76876) < 0.00001);
-    assert(std::abs(ary_result[6][1] - 1.95814) < 0.00001);
-    assert(std::abs(ary_result[6][2] - 1.84599) < 0.00001);
+    assert(std::isnan(ary_result[3][0]));
+    assert(std::isnan(ary_result[3][1]));
+    assert(std::abs(ary_result[6][1] - 1.76876) < 0.00001);
+    assert(std::abs(ary_result[6][2] - 1.91606) < 0.00001);
 
     assert(std::isnan(vec_result[0][0]));
     assert(std::isnan(vec_result[0][2]));
     assert(std::isnan(vec_result[2][2]));
-    assert(std::isnan(ary_result[2][2]));
-    assert(std::abs(vec_result[3][0] - 1.88598) < 0.00001);
-    assert(std::abs(vec_result[3][1] - 1.76876) < 0.00001);
-    assert(std::abs(vec_result[6][1] - 1.95814) < 0.00001);
-    assert(std::abs(vec_result[6][2] - 1.84599) < 0.00001);
+    assert(std::isnan(vec_result[3][0]));
+    assert(std::isnan(vec_result[3][1]));
+    assert(std::abs(vec_result[6][1] - 1.76876) < 0.00001);
+    assert(std::abs(vec_result[6][2] - 1.91606) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

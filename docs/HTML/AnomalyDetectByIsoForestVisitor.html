@@ -58,7 +58,7 @@ body {
       </td>
       <td>
         Isolation Forest Anomaly Detection Visitor<BR>
-        Scores every point in the input column using an Isolation Forest, then flags as anomalous all points whose score exceeds threshold. Isolation Forest (Liu, Ting & Zhou 2008) isolates observations by recursively partitioning the data with random splits. Anomalies requirefewer splits to isolate than normal points, so they have shorter average path lengths across the ensemble of trees. The anomaly score is:<BR>
+        Scores every point in the input column using an Isolation Forest, then flags as anomalous all points whose score exceeds threshold. Isolation Forest (Liu, Ting & Zhou 2008) isolates observations by recursively partitioning the data with random splits. Anomalies require fewer splits to isolate than normal points, so they have shorter average path lengths across the ensemble of trees. The anomaly score is:<BR>
 
         <PRE>
 s(x, n) = 2<sup>(−E[h(x)] / c(n))</sup>
@@ -69,7 +69,7 @@ where
        = 2 * (ln(n − 1) + γ) − 2 * (n − 1) / n (Euler-Mascheroni: γ ≈ 0.5772)
 
 Score ∈ (0, 1]:
-  s -> 1: point is isolated very quickly → anomaly
+  s -> 1: point is isolated very quickly -> anomaly
   s -> 0: point requires many splits -> normal
   s = 0.5: point is indistinguishable from random noise
         </PRE>

@@ -1568,9 +1568,9 @@ static void test_HWESForecastVisitor()  {
     const auto  result2 = hwes2.get_result();
 
     assert(result2.size() == 3);
-    assert(std::fabs(result2[0] - 1.73499) < 0.00001);
-    assert(std::fabs(result2[1] - 1.9216) < 0.00001);
-    assert(std::fabs(result2[2] - 1.76383) < 0.00001);
+    assert(std::fabs(result2[0] - 1.90718) < 0.00001);
+    assert(std::fabs(result2[1] - 1.74941) < 0.00001);
+    assert(std::fabs(result2[2] - 1.93602) < 0.00001);
 
     df.single_act_visit<double>("constant", hwes);
 

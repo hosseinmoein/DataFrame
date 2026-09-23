@@ -5158,7 +5158,7 @@ struct  HWESForecastVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -5203,8 +5203,8 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 5)
-           throw DataFrameError("HWESForecastVisitor: "
-                                "Time-series is too short");
+           throw DataFrameError(
+               "HWESForecastVisitor: Time-series is too short");
         if (col_s < (2 * season_length_))
             throw DataFrameError("HWESForecastVisitor: "
                                  "Need at least two full seasons of data to "
@@ -5231,9 +5231,18 @@ public:
             // We need the most recent seasonal factors
             // (we have seasonal_factors_ as last L values)
             //
+            // seasonal_factors_ holds the trailing season_length_ raw
+            // seasonal values in original chronological order (position 0
+            // is the oldest retained one, at absolute time col_s - m;
+            // position m - 1 is the newest, at col_s - 1 -- see how fit_()
+            // populates it via seasons.begin() + (col_s-season_length_)).
+            // Step i's forecast target is i positions past the last
+            // retained position, so the correct offset into that trailing
+            // window is (i - 1) % m, counting forward from position 0
+            //
             for (size_type i { 1 }; i <= periods_; ++i) {
                 const size_type season_index { // index into seasonal_factors_
-                    ((col_s - 1 + i) % season_length_)
+                    (i - 1) % season_length_
                 };
 
                 if (season_type_ == decompose_type::additive)
@@ -5350,7 +5359,7 @@ private:
                 const long          idx_season_lag {
                     long(t) - long(season_length_)
                 };
-                value_type          s_lag = {
+                value_type          s_lag {
                     (idx_season_lag >= 0)
                         ? seasons[idx_season_lag]
                         : seasonal_factors_[(t % season_length_ +
@@ -5568,7 +5577,7 @@ struct  LSTMForecastVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ { random_acc_cont<T> };
+    static constexpr bool   is_md_ = random_acc_cont<T>;
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -5581,6 +5590,7 @@ public:
     using index_type = I;
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
+    using seed_t = unsigned int;
 
 private:
 
@@ -5651,7 +5661,7 @@ private:
         const long  input_size, hidden_size;
         matrix_t    W, U, b, dW, dU, db;
 
-        LSTMCell(long in, long hid, unsigned int seed)
+        LSTMCell(long in, long hid, seed_t seed)
             : input_size(in),
               hidden_size(hid),
               W(matrix_t::get_random(in,
@@ -5935,7 +5945,7 @@ private:
         const long  in, out;
         matrix_t    W, b, dW, db;
 
-        Linear(long in_dim, long out_dim, unsigned int seed)
+        Linear(long in_dim, long out_dim, seed_t seed)
             : in(in_dim),
               out(out_dim),
               W(matrix_t::get_random(in_dim,
@@ -6038,7 +6048,7 @@ private:
         std::vector<cache_t>    caches;
         matrix_t                h_last { }, c_last { };
 
-        LSTMLayer(long in_sz, long hid_sz, unsigned int seed)
+        LSTMLayer(long in_sz, long hid_sz, seed_t seed)
             : cell (in_sz, hid_sz, seed)  {   }
 
         mat_vec_t
@@ -6297,7 +6307,7 @@ public:
                         long epochs = 20,
                         data_t learning_rate = 0.001,
                         long periods = 3,
-                        unsigned int seed = static_cast<unsigned int>(-1))
+                        seed_t seed = static_cast<seed_t>(-1))
         : hidden_size_(hidden_size),
           seq_len_(seq_len),
           batch_size_(batch_size),
@@ -6336,7 +6346,7 @@ private:
     const data_t        learning_rate_;
 
     const long          periods_;  // Number of periods to forecast
-    const unsigned int  seed_;     // Seed for random number generator
+    const seed_t        seed_;     // Seed for random number generator
     result_type         result_ { };
 };
 

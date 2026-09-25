@@ -1725,7 +1725,7 @@ public:
 
     using value_type = T;
     using index_type = I;
-    using size_type  = std::size_t;
+    using size_type = std::size_t;
     using result_type =
         typename std::conditional_t<! is_md_,
                                     vec_t<data_t>,
@@ -1914,7 +1914,7 @@ public:
 
     using value_type = T;
     using index_type = I;
-    using size_type  = std::size_t;
+    using size_type = std::size_t;
     using result_type = vec_t<double>;
 
     template <typename K, typename H>
@@ -2064,7 +2064,7 @@ public:
 
     using value_type = T;
     using index_type = I;
-    using size_type  = std::size_t;
+    using size_type = std::size_t;
     using result_type =
         typename std::conditional_t<! is_md_,
                                     vec_t<data_t>,
@@ -2555,7 +2555,7 @@ public:
 
     using value_type = T;
     using index_type = I;
-    using size_type  = std::size_t;
+    using size_type = std::size_t;
     using result_type =
         typename std::conditional_t<! is_md_,
                                     vec_t<data_t>,
@@ -2708,7 +2708,7 @@ public:
 
     using value_type = T;
     using index_type = I;
-    using size_type  = std::size_t;
+    using size_type = std::size_t;
     using result_type =
         typename std::conditional_t<! is_md_, data_t, std::vector<data_t>>;
 
@@ -3124,7 +3124,7 @@ public:
 
     using value_type = T;
     using index_type = I;
-    using size_type  = std::size_t;
+    using size_type = std::size_t;
     using result_type = double;
 
     template <typename K, typename H>
@@ -3491,7 +3491,7 @@ public:
         // Update the accessible data
         //
         for (size_type i = 0; i < K; ++i)  {
-            const auto  val  = col_s / K + 10;
+            const auto  val = col_s / K + 10;
 
             clusters_[i].reserve(val);
             clusters_idxs_[i].reserve(val);
@@ -3545,7 +3545,7 @@ public:
 
     using value_type = T;
     using index_type = I;
-    using size_type  = std::size_t;
+    using size_type = std::size_t;
     using result_type = double;
     using md_result_type = std::vector<result_type>;
 
@@ -3788,7 +3788,7 @@ public:
 
     using value_type = T;
     using index_type = I;
-    using size_type  = std::size_t;
+    using size_type = std::size_t;
     using result_type = double;
     using distance_func = std::function<result_type(const T &x, const T &y)>;
 
@@ -3960,7 +3960,7 @@ public:
         fft.post();
 
         // fft_res type:
-        //   scalar --> channel_result_t  = vec<complex<T>>
+        //   scalar --> channel_result_t = vec<complex<T>>
         //   MD     --> Matrix<cplx_t, row_major>
         //
         auto    fft_res = std::move(fft.get_result());
@@ -5577,7 +5577,7 @@ struct  LSTMForecastVisitor  {
 
 private:
 
-    static constexpr bool   is_md_ = random_acc_cont<T>;
+    static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
         typename std::conditional_t<! is_md_,
@@ -5622,7 +5622,8 @@ private:
         const data_t    data_s { data_t(pred.rows() * pred.cols()) };
         auto            lbd =
             [&dout, data_s,
-             &pred = std::as_const(pred), &target = std::as_const(target)]
+             &pred = std::as_const(pred),
+             &target = std::as_const(target)]
             (long begin, long end) -> data_t  {
                 data_t  sum { 0 };
 
@@ -6159,8 +6160,7 @@ public:
 
         if constexpr (! is_md_)  {
             for (long i { 0 }; i < long(col_s); ++i)
-                norm_data[i][0] =
-                    (*(column_begin + i) - mean) / std_dev;
+                norm_data[i][0] = (*(column_begin + i) - mean) / std_dev;
         }
         else  {
             for (long i { 0 }; i < long(col_s); ++i)  {
@@ -6381,11 +6381,11 @@ public:
 
     // KDTree<double>::point_t is std::vector<double>.
     // For the scalar path, a "window" flattened to vector<data_t> is
-    // just {x[0], x[1], ..., x[window-1]}.
+    // just { x[0], x[1], ..., x[window-1] }.
     // For the MD path, a "window" is the concatenation of all inner elements
-    // across the window: {x[0][0],...,x[0][d-1], x[1][0],...,x[w-1][d-1]}.
+    // across the window: { x[0][0],...,x[0][d-1], x[1][0],...,x[w-1][d-1] }.
     //
-    using tree_point_t  = std::vector<data_t>;
+    using tree_point_t = std::vector<data_t>;
     using tree_points_t = std::vector<tree_point_t>;
 
     using distance_func =
@@ -6427,9 +6427,8 @@ public:
 
             for (size_type i { 1 }; i < col_s; ++i)
                 if ((column_begin + i)->size() != dim)
-                    throw DataFrameError(
-                        "AnomalyDetectByKNNVisitor: "
-                        "Inconsistent data dimensions");
+                    throw DataFrameError("AnomalyDetectByKNNVisitor: "
+                                         "Inconsistent data dimensions");
         }
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -6524,10 +6523,10 @@ private:
     // tree_point_t (std::vector<data_t>) that KDTree<data_t> expects.
     //
     // Scalar path  (T = double):
-    //   value_type = double, one element per position → [v0, v1, ..., v_{w-1}]
+    //   value_type = double, one element per position -> [v0, v1, ..., v_{w-1}]
     //
     // MD path (T = std::vector<double> or std::array<double, N>):
-    //   Each position contributes its inner elements concatenated →
+    //   Each position contributes its inner elements concatenated ->
     //   [v0[0],...,v0[d-1], v1[0],...,v_{w-1}[d-1]]
     //
     template <typename H>
@@ -6743,9 +6742,9 @@ private:
     inline void
     calc_clusters_(const H &column_begin, size_type col_s)  {
 
-        order_type  clusters_idxs(k_);
+        order_type  clusters_idxs(result_.size());
 
-        for (size_type i { 0 }; i < k_; ++i) [[likely]]
+        for (size_type i { 0 }; i < size_type(result_.size()); ++i) [[likely]]
             clusters_idxs[i].reserve(col_s / k_ + 2);
 
         for (size_type j { 0 }; j < col_s; ++j) [[likely]]  {
@@ -6755,7 +6754,7 @@ private:
                 double      min_dist { std::numeric_limits<double>::max() };
                 size_type   min_idx { 0 };
 
-                for (size_type i { 0 }; i < k_; ++i)  {
+                for (size_type i { 0 }; i < size_type(result_.size()); ++i)  {
                     const double    dist { dfunc_(value, result_[i]) };
 
                     if (dist < min_dist)  {
@@ -6789,15 +6788,19 @@ public:
         double              current_threshold { threshold_ };
         CFTree<value_type>  tree { };
 
-
         if constexpr (! is_md_)  {
-            CFTree<value_type>  tmp_tree { threshold_, 1, get_dist_func_() };
+            CFTree<value_type>  tmp_tree {
+                threshold_, 1, get_dist_func_(), max_entries_
+            };
 
             tree = std::move(tmp_tree);
         }
         else  {
             CFTree<value_type>  tmp_tree {
-                threshold_, size_type(column_begin->size()), get_dist_func_()
+                threshold_,
+                size_type(column_begin->size()),
+                get_dist_func_(),
+                max_entries_
             };
 
             tree = std::move(tmp_tree);
@@ -6805,6 +6808,8 @@ public:
 
         for (size_type i { 0 }; i < size_type(col_s); ++i)  {
             const value_type    &val { *(column_begin + i) };
+
+            if (is_nan__(val))  continue;
 
             while (! tree.insert(val))  {
                 // Tree is full, rebuild with larger threshold
@@ -6891,8 +6896,8 @@ public:
 // and a known value, fit the Kriging system so you can later call predict() at
 // any arbitrary location and get back a value plus its uncertainty.
 //
-template<std::size_t DIM, typename T, typename I = unsigned long,
-         std::size_t A = 0>
+template<std::size_t DIM,
+         typename T, typename I = unsigned long, std::size_t A = 0>
 struct  KrigingVisitor  {
 
 public:
@@ -6950,7 +6955,7 @@ private:
         // recurrence starting from K_0 and K_1 computed through the standard
         // rational Chebyshev approximations (Abramowitz & Stegun 9.8).
         //
-        auto k0 = [](double t) -> double  {
+        auto    k0 = [](double t) -> double  {
             if (t <= 2.0)  {
                 const double    y { t * t / 4.0 };
 
@@ -6970,7 +6975,7 @@ private:
                          z * (-0.00251540 + z * 0.00053208)))))));
             }
         };
-        auto k1 = [](double t) -> double  {
+        auto    k1 = [](double t) -> double  {
             if (t <= 2.0)  {
                 const double    y { t * t / 4.0 };
 
@@ -7004,7 +7009,7 @@ private:
             const size_type n { static_cast<size_type>(std::floor(nu)) };
 
             if (n == 0)  return (k_prev);
-            for (size_type i = 1; i < n; ++i)  {
+            for (size_type i { 1 }; i < n; ++i)  {
                 const double    k_next { (2.0 * i / x) * k_curr + k_prev };
 
                 k_prev = k_curr;
@@ -7051,7 +7056,7 @@ private:
     distance_(const coord_type &p1, const coord_type &p2) const noexcept  {
 
         if constexpr (DIM == 2)  {
-            if (params_.anisotropy_ratio < value_type(1) - value_type(1e-12))  {
+            if (params_.anisotropy_ratio < (T(1) - T(1e-12)))  {
                 const value_type    dx { p1[0] - p2[0] };
                 const value_type    dy { p1[1] - p2[1] };
                 const value_type    ca { std::cos(params_.anisotropy_angle) };
@@ -7083,8 +7088,7 @@ private:
     //
     inline value_type matern_corr_(value_type h) const  {
 
-        if (h <= 0)  [[unlikely]]
-            return (value_type(1));
+        if (h <= 0) [[unlikely]]  return (value_type(1));
 
         const double    nu { static_cast<double>(params_.matern_smoothness) };
         const double    r { static_cast<double>(params_.range) };
@@ -7104,8 +7108,7 @@ private:
         else if (std::fabs(nu - 2.5) < 1e-9)  {
             const double    s5 { std::sqrt(5.0) * hd / r };
 
-            return (static_cast<value_type>(
-                (1.0 + s5 + (s5 * s5) / 3.0) * std::exp(-s5)));
+            return (value_type((1.0 + s5 + (s5 * s5) / 3.0) * std::exp(-s5)));
         }
         else if (nu > 50.0)  {
             // Numerically converges to the Gaussian model in this limit.
@@ -7215,8 +7218,7 @@ private:
         obs_ = obs;
 
         const size_type dim_sys { params_.ordinary ? n + 1 : n };
-
-        matrix_t    K { dim_sys, dim_sys, 0 };
+        matrix_t        K { dim_sys, dim_sys, 0 };
 
         for (size_type i { 0 }; i < n; ++i)  {
             K(i, i) = covariance_(value_type(0)) + params_.ridge;
@@ -7255,16 +7257,19 @@ private:
         vec_t<value_type>   y(sys_dim_, 0), z(sys_dim_, 0), x(sys_dim_, 0);
 
         for (size_type i { 0 }; i < sys_dim_; ++i)  {
-            y[i] = rhs[i];
+            auto    &iy_val { y[i] };
+
+            iy_val = rhs[i];
             for (size_type j { 0 }; j < i; ++j)
-                y[i] -= lower_(i, j) * y[j];
+                iy_val -= lower_(i, j) * y[j];
+            z[i] = iy_val / diag_[i];
         }
-        for (size_type i { 0 }; i < sys_dim_; ++i)
-            z[i] = y[i] / diag_[i];
         for (size_type i { sys_dim_ - 1 }; i >= 0; --i)  {
-            x[i] = z[i];
+            auto    &ix_val { x[i] };
+
+            ix_val = z[i];
             for (size_type j { i + 1 }; j < sys_dim_; ++j)
-                x[i] -= lower_(j, i) * x[j];
+                ix_val -= lower_(j, i) * x[j];
         }
         return (x);
     }
@@ -7305,9 +7310,9 @@ private:
 
     // The core BLUE (Best Linear Unbiased Estimator) computation against
     // whatever system (global or a local neighborhood) is currently cached:
-    //   weights = K^-1 * k0     (k0 = covariances to the query point)
-    //   value    = weights . observations            (+ Lagrange handling)
-    //   variance = C(0) - k0 . weights  (- mu, for Ordinary Kriging)
+    //   weights = K^-1 * k0 (k0 = covariances to the query point)
+    //   value = weights . observations (+ Lagrange handling)
+    //   variance = C(0) - k0 . weights (- mu, for Ordinary Kriging)
     //
     Estimate predict_global_(const coord_type &query_pt) const  {
 
@@ -7371,9 +7376,8 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(obs_begin, obs_end)))
-            throw DataFrameError(
-                "KrigingVisitor: coordinate and observation "
-                "columns must have equal length");
+            throw DataFrameError("KrigingVisitor: coordinate and observation "
+                                 "columns must have equal length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         params_.sanity_check();
@@ -7393,8 +7397,8 @@ public:
             bool    has_nan { false };
 
             for (size_type d { 0 }; d < size_type(DIM); ++d)
-                if (is_nan__((*cit)[d]))  [[unlikely]] { has_nan = true; break; }
-            if (has_nan)  [[unlikely]]  continue;
+                if (is_nan__((*cit)[d])) [[unlikely]] { has_nan = true; break; }
+            if (has_nan) [[unlikely]]  continue;
 
             coords.push_back(*cit);
             obs.push_back(*oit);
@@ -7453,9 +7457,9 @@ public:
     //
     template<typename QV>
     inline result_type
-    predict_many (const QV &begin, const QV &end) const  {
+    predict_many(const QV &begin, const QV &end) const  {
 
-        result_type result(static_cast<size_type>(std::distance(begin, end)));
+        result_type result { size_type(std::distance(begin, end)) };
         size_type   i { 0 };
 
         for (auto it { begin }; it != end; ++it)
@@ -7471,19 +7475,54 @@ public:
     //
     inline vec_t<value_type> loo_cross_validate () const  {
 
-        const size_type     n { size_type(coords_.size()) };
-        vec_t<value_type>   residuals(n, 0);
+        const size_type                         n { size_type(coords_.size()) };
+        vec_t<value_type>                       residuals(n, 0);
+        const bool                              local {
+            params_.max_neighbors > 0 &&
+            size_type(params_.max_neighbors) < (n - 1)
+        };
+        const size_type                         k {
+            local ? size_type(params_.max_neighbors) : (n - 1)
+        };
+        vec_t<coord_type>                       train_c;
+        vec_t<value_type>                       train_o;
+        vec_t<std::pair<value_type, size_type>> dists;
 
+        train_c.reserve(local ? k : n - 1);
+        train_o.reserve(local ? k : n - 1);
+        dists.reserve(local ? n - 1 : 0);
         for (size_type leave_out { 0 }; leave_out < n; ++leave_out)  {
-            vec_t<coord_type>   train_c;
-            vec_t<value_type>   train_o;
+            train_c.clear();
+            train_o.clear();
 
-            train_c.reserve(n - 1);
-            train_o.reserve(n - 1);
-            for (size_type i = 0; i < n; ++i)  {
-                if (i == leave_out)  continue;
-                train_c.push_back(coords_[i]);
-                train_o.push_back(obs_[i]);
+            // Restrict each refit to the max_neighbors closest other points,
+            // mirroring predict_local_, so loo-cv stays tractable for large N
+            // under local-Kriging configurations (each refit becomes O(k^3)
+            // instead of O(n^3)) instead of silently ignoring max_neighbors.
+            //
+            if (local)  {
+                dists.clear();
+                for (size_type i { 0 }; i < n; ++i)  {
+                    if (i == leave_out)  continue;
+                    dists.push_back(
+                        { distance_(coords_[i], coords_[leave_out]), i });
+                }
+                std::partial_sort(
+                    dists.begin(), dists.begin() + k, dists.end(),
+                    [](const auto &a, const auto &b)  {
+                        return (a.first < b.first);
+                    });
+                for (size_type i { 0 }; i < k; ++i)  {
+                    train_c.push_back(coords_[dists[i].second]);
+                    train_o.push_back(obs_[dists[i].second]);
+                }
+            }
+            else  {
+                for (size_type i = 0; i < n; ++i)  {
+                    if (i == leave_out)  continue;
+                    train_c.push_back(coords_[i]);
+                    train_o.push_back(obs_[i]);
+                }
             }
 
             KrigingVisitor  loo(params_);
@@ -7496,7 +7535,7 @@ public:
         }
         return (residuals);
     }
-
+	
     explicit
     KrigingVisitor(const KrigingParams<value_type> &params = { })
         : params_(params)  {   }
@@ -7558,8 +7597,8 @@ private:
                     });
     }
 
-    static constexpr long   NOISE_1 { -1L };   // DBSCAN unclassified sentinel
-    static constexpr long   NOISE_2 { -2L };   // DBSCAN noise sentinel
+    static constexpr long   NOISE_1 { -1L };  // DBSCAN unclassified sentinel
+    static constexpr long   NOISE_2 { -2L };  // DBSCAN noise sentinel
 
 public:
 
@@ -7567,7 +7606,7 @@ public:
     //
     template<typename K, typename H1, typename H2>
     inline void
-    operator()(const K  &idx_begin, const K  &idx_end,
+    operator()(const K &idx_begin, const K &idx_end,
                const H1 &col_begin, const H1 &col_end,
                const H2 &lbl_begin, const H2 &lbl_end)  {
 
@@ -7600,18 +7639,16 @@ public:
                 cluster_ids.push_back(lbl);
         }
         std::sort(cluster_ids.begin(), cluster_ids.end());
-        cluster_ids.erase(
-            std::unique(cluster_ids.begin(), cluster_ids.end()),
-            cluster_ids.end());
+        cluster_ids.erase(std::unique(cluster_ids.begin(), cluster_ids.end()),
+                          cluster_ids.end());
 
         const size_type n_clusters { cluster_ids.size() };
 
-        // Fewer than 2 meaningful clusters → silhouette is undefined
+        // Fewer than 2 meaningful clusters -> silhouette is undefined
         //
-        if (n_clusters < 2) [[unlikely]]
-            return;
+        if (n_clusters < 2) [[unlikely]]  return;
 
-        // Build cluster label → ordinal map for O(log k) lookup
+        // Build cluster label -> ordinal map for O(log k) lookup
         //
         std::vector<std::pair<long, size_type>> label_to_ord;
 
@@ -7622,9 +7659,11 @@ public:
         auto    label_ord =
             [&label_to_ord = std::as_const(label_to_ord)]
             (long lbl) -> size_type  {
-                auto it = std::lower_bound(
-                              label_to_ord.begin(), label_to_ord.end(), lbl,
-                              [](const auto &p, long v) { return p.first < v; });
+                const auto  it {
+                    std::lower_bound(
+                        label_to_ord.begin(), label_to_ord.end(), lbl,
+                        [](const auto &p, long v) { return (p.first < v); })
+                };
 
                 return (it->second);
             };
@@ -7651,24 +7690,23 @@ public:
         // per-point, per-cluster distance sums
         //   dist_sums[i][c] = Σⱼ∈cluster_c dist(i, j)
         //
-        std::vector<std::vector<double>>
-            dist_sums(col_s, std::vector<double>(n_clusters, 0.0));
+        std::vector<std::vector<double>>    dist_sums(
+            col_s, std::vector<double>(n_clusters, 0.0)
+        );
 
         for (size_type i { 0 }; i < col_s; ++i)  {
             const long  lbl { *(lbl_begin + i) };
 
-            if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
-                continue;
+            if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]  continue;
 
             const value_type   &vi { *(col_begin + i) };
 
             for (size_type j { 0 }; j < col_s; ++j)  {
-                if (i == j) [[unlikely]] continue;
+                if (i == j) [[unlikely]]  continue;
 
                 const long  lbl { *(lbl_begin + j) };
 
-                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
-                    continue;
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]  continue;
 
                 const size_type c_j { label_ord(lbl) };
 
@@ -7684,13 +7722,12 @@ public:
         for (size_type i { 0 }; i < col_s; ++i)  {
             const long  lbl_i { *(lbl_begin + i) };
 
-            if (lbl_i == NOISE_1 || lbl_i == NOISE_2) [[unlikely]]
-                continue;
+            if (lbl_i == NOISE_1 || lbl_i == NOISE_2) [[unlikely]]  continue;
 
             const size_type c_i { label_ord(lbl_i) };
             const size_type sz_i { cluster_sz[c_i] };
 
-            // Singleton: a(i) undefined → s(i) = 0
+            // Singleton: a(i) undefined -> s(i) = 0
             //
             if (sz_i < 2) [[unlikely]]  {
                 ++scored_cnt;
@@ -7701,11 +7738,10 @@ public:
 
             // b(i) = mean distance to the nearest other cluster
             //
-            double  b_i { std::numeric_limits<double>::max() };
+            double          b_i { std::numeric_limits<double>::max() };
 
             for (size_type c { 0 }; c < n_clusters; ++c)  {
-                if (c == c_i) [[unlikely]]  continue;
-                if (cluster_sz[c] == 0) [[unlikely]]  continue;
+                if (c == c_i || cluster_sz[c] == 0) [[unlikely]]  continue;
 
                 const double    mean_d {
                     dist_sums[i][c] / double(cluster_sz[c])
@@ -7718,8 +7754,8 @@ public:
             const double    denom { std::max(a_i, b_i) };
             const double    s_i { (denom > 0.0) ? (b_i - a_i) / denom : 0.0 };
 
-            scores_[i]  = s_i;
-            score_sum  += s_i;
+            scores_[i] = s_i;
+            score_sum += s_i;
             ++scored_cnt;
         }
 
@@ -7882,14 +7918,14 @@ public:
                 cluster_ids.push_back(lbl);
         }
         std::sort(cluster_ids.begin(), cluster_ids.end());
-        cluster_ids.erase(
-            std::unique(cluster_ids.begin(), cluster_ids.end()),
-            cluster_ids.end());
+        cluster_ids.erase(std::unique(cluster_ids.begin(), cluster_ids.end()),
+                          cluster_ids.end());
 
         const size_type k { cluster_ids.size() };
 
-        if (k < 2) [[unlikely]]
-            return;  // DB undefined for fewer than 2 clusters
+        // DB undefined for fewer than 2 clusters
+        //
+        if (k < 2) [[unlikely]]  return;
 
         // label -> ordinal (binary-search on sorted cluster_ids)
         //
@@ -7914,7 +7950,7 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const long  lbl { *(lbl_begin + i) };
 
-                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]  continue;
 
                 const size_type c { label_ord(lbl) };
 
@@ -7933,8 +7969,7 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const long  lbl { *(lbl_begin + i) };
 
-                if (lbl == NOISE_1 || lbl == NOISE_2)
-                    continue;
+                if (lbl == NOISE_1 || lbl == NOISE_2)  continue;
                 dim = size_type((col_begin + i)->size());
                 break;
             }
@@ -7944,7 +7979,7 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const long  lbl { *(lbl_begin + i) };
 
-                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]  continue;
 
                 const size_type     c { label_ord(lbl) };
                 const value_type    &pt { *(col_begin + i) };
@@ -7973,7 +8008,7 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const long  lbl { *(lbl_begin + i) };
 
-                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]  continue;
 
                 const size_type c { label_ord(lbl) };
 
@@ -7988,7 +8023,7 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const long  lbl { *(lbl_begin + i) };
 
-                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]] continue;
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]  continue;
 
                 const size_type     c { label_ord(lbl) };
                 const value_type    &pt { *(col_begin + i) };
@@ -8001,7 +8036,7 @@ public:
 
                     sq += diff * diff;
                 }
-                scatter_[c] += std::sqrt(sq);   // Euclidean, consistent
+                scatter_[c] += std::sqrt(sq);  // Euclidean, consistent
             }
         }
 
@@ -8049,7 +8084,7 @@ public:
         worst_ratio_.clear();
         centroids_.clear();
     }
-    inline void post() {  }
+    inline void post()  {  }
 
     // The Davies-Bouldin index &isin; [0, &infin;). Lower is better.
     //
@@ -8233,8 +8268,7 @@ public:
         // CH undefined when clean_cnt == k (one point per cluster,
         // WGSS = 0, df = 0)
         //
-        if (clean_cnt <= k) [[unlikely]]
-            return;
+        if (clean_cnt <= k) [[unlikely]]  return;
 
         // 2. Compute per-cluster centroids μᵢ and global centroid μ
         //    Both accumulated in double regardless of T.
@@ -8246,8 +8280,7 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const long  lbl { *(lbl_begin + i) };
 
-                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
-                    continue;
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]  continue;
 
                 const value_type    v { *(col_begin + i) };
                 const size_type     c { label_ord(lbl) };
@@ -8283,8 +8316,7 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const long  lbl { *(lbl_begin + i) };
 
-                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
-                    continue;
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]  continue;
 
                 const size_type     c { label_ord(lbl) };
                 const value_type    &pt { *(col_begin + i) };
@@ -8319,8 +8351,7 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const long  lbl { *(lbl_begin + i) };
 
-                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
-                    continue;
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]  continue;
 
                 const size_type c { label_ord(lbl) };
 
@@ -8332,8 +8363,7 @@ public:
             for (size_type i { 0 }; i < col_s; ++i)  {
                 const long  lbl { *(lbl_begin + i) };
 
-                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]
-                    continue;
+                if (lbl == NOISE_1 || lbl == NOISE_2) [[unlikely]]  continue;
 
                 const size_type     c  { label_ord(lbl) };
                 const value_type    &pt { *(col_begin + i) };
@@ -8471,7 +8501,6 @@ public:
         };
 
         result_.reserve(col_s / 10 + 4);
-
         if (nt_ > normalization_type::none)  {
             const auto  &nr { norm.get_result() };
 

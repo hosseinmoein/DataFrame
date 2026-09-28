@@ -7585,7 +7585,7 @@ private:
             return ([](const T &x, const T &y) -> double  {
                         double  sum { 0.0 };
 
-                        for (size_type i { 0 }; i < size_type(x.size()); ++i)  {
+                        for (size_type i { 0 }; i < size_type(x.size()); ++i) {
                             const double    diff {
                                 static_cast<double>(x[i]) -
                                 static_cast<double>(y[i])
@@ -7809,7 +7809,6 @@ public:
     template<typename U>
     using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
 
-    // Centroid type: double for scalar T, std::vector<double> for MD T
     using centroid_t =
         std::conditional_t<! is_md_, double, std::vector<double>>;
 
@@ -7853,6 +7852,23 @@ private:
     // This ensures the user-supplied distance function is used consistently
     // for both intra-cluster scatter and inter-centroid separation.
     //
+    // Known limitation for non-floating-point T (e.g. int, long): centroids
+    // are inherently fractional (a sum divided by a count), but dfunc_'s
+    // signature is double(const T&, const T&), so a centroid must be cast
+    // back to T before every dfunc_ call here and in the scatter loop below
+    // -- silently truncating it. This is unavoidable without either an
+    // API-breaking change to distance_func's signature or dropping support
+    // for user-supplied custom distance functions (both scatter_ and
+    // centroid_dist_ must route through whatever dfunc_ the caller provided
+    // to honor a custom distance, and there is no way to know at runtime
+    // whether dfunc_ is the default or user-supplied). Callers with
+    // non-floating-point T should be aware DB-index/scatter values will be
+    // computed against truncated centroids; supplying an explicit
+    // floating-point-aware distance function does not avoid this, since the
+    // centroid itself is still cast to T before being passed in. This
+    // mirrors the equivalent, already-documented caveat for non-double MD
+    // element types below.
+    //
     inline double
     centroid_dist_(const centroid_t &a, const centroid_t &b) const  {
 
@@ -7885,7 +7901,7 @@ public:
 
     template<typename K, typename H1, typename H2>
     inline void
-    operator()(const K  &idx_begin, const K  &idx_end,
+    operator()(const K &idx_begin, const K &idx_end,
                const H1 &col_begin, const H1 &col_end,
                const H2 &lbl_begin, const H2 &lbl_end)  {
 
@@ -8153,8 +8169,14 @@ public:
 
 private:
 
-    // Default: squared Euclidean for scalar (matches KMeans/DBSCAN/DB),
-    //          Euclidean for MD.
+    // Default: squared Euclidean for both scalar and MD (matches
+    // KMeans/DBSCAN/DB's own scalar default). Calinski-Harabasz is a
+    // variance-ratio statistic -- BGSS and WGSS are explicitly sums of
+    // squares by definition (see the formula comments in operator() below)
+    // -- so, unlike Silhouette/Davies-Bouldin where squared-vs-raw distance
+    // is a free choice of metric, using raw (rooted) Euclidean distance for
+    // MD here would not merely rescale the result: it would stop computing
+    // a sum of squares at all, breaking the statistic's own definition.
     //
     inline static distance_func
     default_dist_()  {
@@ -8174,13 +8196,15 @@ private:
 
                             sum += diff * diff;
                         }
-                        return (std::sqrt(sum));
+                        return (sum);
                     });
     }
 
     // Distance between two centroid_t values — routes through dfunc_ for
     // scalar so that custom distance functions apply to centroid comparisons
-    // (same fix applied in DaviesBouldinIndexVisitor).
+    // (same fix applied in DaviesBouldinIndexVisitor). Returns squared
+    // distance for MD too, to match default_dist_ and the sum-of-squares
+    // definitions of BGSS/WGSS below -- see default_dist_'s comment.
     //
     inline double
     centroid_dist_(const centroid_t &a, const centroid_t &b) const  {
@@ -8195,7 +8219,7 @@ private:
 
                 sum += diff * diff;
             }
-            return (std::sqrt(sum));
+            return (sum);
         }
     }
 
@@ -8268,7 +8292,8 @@ public:
         // CH undefined when clean_cnt == k (one point per cluster,
         // WGSS = 0, df = 0)
         //
-        if (clean_cnt <= k) [[unlikely]]  return;
+        if (clean_cnt <= k) [[unlikely]]
+            return;
 
         // 2. Compute per-cluster centroids μᵢ and global centroid μ
         //    Both accumulated in double regardless of T.
@@ -8329,10 +8354,8 @@ public:
                 }
             }
             for (size_type c { 0 }; c < k; ++c)
-                for (auto &v : centroids_[c])
-                    v /= double(counts[c]);
-            for (auto &v : global_centroid_)
-                v /= double(clean_cnt);
+                for (auto &v : centroids_[c])  v /= double(counts[c]);
+            for (auto &v : global_centroid_)  v /= double(clean_cnt);
         }
 
         // 3. BGSS = Σᵢ nᵢ · d²(μᵢ, μ)
@@ -8374,7 +8397,10 @@ public:
 
                     sq += diff * diff;
                 }
-                cluster_wgss_[c] += std::sqrt(sq);
+
+                // squared, matching BGSS/WGSS's own sum-of-squares definition
+                //
+                cluster_wgss_[c] += sq;
             }
         }
 
@@ -8535,11 +8561,11 @@ public:
     inline const scores_type &get_scores() const  { return (scores_); }
 
     explicit
-    AnomalyDetectByIsoForestVisitor(long num_trees = 100,
-                                    long max_depth = 10,
-                                    double threshold = 0.6,
-                                    normalization_type norm_type =
-                                        normalization_type::none)
+    AnomalyDetectByIsoForestVisitor(
+        long num_trees = 100,
+        long max_depth = 10,
+        double threshold = 0.6,
+        normalization_type norm_type = normalization_type::none)
         : num_trees_(num_trees),
           max_depth_(max_depth),
           threshold_(threshold),

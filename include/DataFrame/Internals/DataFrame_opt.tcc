@@ -79,19 +79,19 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
 
     const size_type lhs_s { indices_.size() };
     const size_type rhs_s { rhs.indices_.size() };
-    const SpinGuard guard(lock_);
+    const SpinGuard guard { lock_ };
 
-    for (size_type lhs_i = 0, rhs_i = 0;
+    for (size_type lhs_i { 0 }, rhs_i { 0 };
          lhs_i < lhs_s && rhs_i < rhs_s; ++rhs_i) [[likely]]  {
-        while (indices_[lhs_i] < rhs.indices_[rhs_i] && lhs_i < lhs_s)
+        while (lhs_i < lhs_s && indices_[lhs_i] < rhs.indices_[rhs_i])
             lhs_i += 1;
+        if (lhs_i >= lhs_s)  break;
 
         if (indices_[lhs_i] == rhs.indices_[rhs_i])  {
             for (const auto &[name, idx] : column_list_) [[likely]]  {
-                mod_by_idx_functor_<Ts ...>  functor (name.c_str(),
-                                                      rhs,
-                                                      lhs_i,
-                                                      rhs_i);
+                mod_by_idx_functor_<Ts ...>  functor {
+                    name.c_str(), rhs, lhs_i, rhs_i
+                };
 
                 data_[idx].change(functor);
             }

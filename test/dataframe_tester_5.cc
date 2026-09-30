@@ -7078,6 +7078,33 @@ static void test_StreamAppender()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_parallel_sort()  {
+
+    std::cout << "\nTesting parallel_sort( ) ..." << std::endl;
+
+    constexpr std::size_t   N { 500'009 };
+    std::vector<int>        data(N);
+
+    std::srand(123);
+    for (int &item : data)  item = std::rand();
+
+    // Let's make it so it has a lot of duplicates
+    //
+    for (std::size_t i { 0 }; i < 1000; ++i)  {
+        data[std::rand() % N] = 1000;
+    }
+
+	ThreadPool  tp { 6 };  // 6 threads
+
+    tp.parallel_sort(data.begin(), data.end());
+	// std::sort(data.begin(), data.end());
+
+    for (std::size_t i { 1 }; i < N; ++i)
+        assert(data[i - 1] <= data[i]);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7127,6 +7154,7 @@ int main(int, char *[])  {
     test_read_chunked_data();
     test_streamed_write();
     test_StreamAppender();
+    test_parallel_sort();
 
     return (0);
 }

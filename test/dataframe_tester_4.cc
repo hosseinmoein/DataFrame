@@ -4234,13 +4234,11 @@ static void test_remove_data_by_fft()  {
     assert((ibm.get_column<double>("IBM_Open").size() == 5031));
     assert((ibm_view.get_column<double>("IBM_Open").size() == 5031));
 
-    ibm.remove_data_by_fft<double, double, long>("IBM_Close", 1000, 250,
-                                                 normalization_type::z_score);
-    assert((ibm.get_column<double>("IBM_Open").size() == (5031 - 3)));
+    ibm.remove_data_by_fft<double, double, long>("IBM_Close", 1000, 80);
+    assert((ibm.get_column<double>("IBM_Open").size() == (5031 - 9)));
 
-    ibm_view.remove_data_by_fft<double, double, long>
-        ("IBM_Close", 1000, 250, normalization_type::z_score);
-    assert((ibm_view.get_column<double>("IBM_Open").size() == (5031 - 3)));
+    ibm_view.remove_data_by_fft<double, double, long>("IBM_Close", 1000, 80);
+    assert((ibm_view.get_column<double>("IBM_Open").size() == (5031 - 9)));
 }
 
 // ----------------------------------------------------------------------------
@@ -4757,16 +4755,16 @@ static void test_detect_and_change()  {
             { "IBM_Close", "IBM_Open" },
             detect_method::fft,
             fill_policy::mid_point,
-            { .threshold = 250.0,
-              .norm_type = normalization_type::z_score,
+            { .threshold = 80.0,
+              .norm_type = normalization_type::none,
               .freq_num = 1000 });
 
-        assert((std::fabs(close_col[502] - 82.02) < 0.01));
-        assert((std::fabs(close_col[1001] - 89.805) < 0.01));
-        assert((std::fabs(close_col[2002] - 88.055) < 0.01));
-        assert((std::fabs(open_col[2] - 1.0) < 0.01));    // It didn't catch it
-        assert((std::fabs(open_col[3000] - 2.5) < 0.01)); // It didn't catch it
-        assert((std::fabs(open_col[5029] - 108.28) < 0.01));
+        assert((std::fabs(close_col[502] - 260.87) < 0.001));
+        assert((std::fabs(close_col[1001] - 292.555) < 0.001));
+        assert((std::fabs(close_col[2002] - 276.995) < 0.001));
+        assert((std::fabs(open_col[2] - 1.0) < 0.01));  // Didn't catch this
+        assert((std::fabs(open_col[3000] - 210.15) < 0.01));
+        assert((std::fabs(open_col[5029] - 294.488) < 0.01));
     }
 
     // Now we need a DataFrame with a numeric index to be able to use

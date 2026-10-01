@@ -345,16 +345,16 @@ struct  equal_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct  mod_by_idx_functor_ : DataVec::template visitor_base<Ts ...>  {
 
+    using match_vec_t = StlVecType<std::pair<size_type, size_type>>;
+
     inline mod_by_idx_functor_ (const char *n,
                                 const DataFrame &d,
-                                size_type li,
-                                size_type ri)
-        : name(n), rhs_df(d), lhs_idx(li), rhs_idx(ri)  {  }
+                                const match_vec_t &m)
+        : name(n), rhs_df(d), matches(m)  {  }
 
-    const char      *name;
-    const DataFrame &rhs_df;
-    const size_type lhs_idx;
-    const size_type rhs_idx;
+    const char          *name;
+    const DataFrame     &rhs_df;
+    const match_vec_t   &matches;  // (lhs row, rhs row) pairs
 
     template<typename T>
     void operator() (T &lhs_vec) const;

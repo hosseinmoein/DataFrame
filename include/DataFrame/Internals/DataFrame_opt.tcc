@@ -79,8 +79,12 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
 
     const size_type lhs_s { indices_.size() };
     const size_type rhs_s { rhs.indices_.size() };
-    const SpinGuard guard { lock_ };
+    typename mod_by_idx_functor_<Ts ...>::match_vec_t   matches;
 
+    // Find the matching rows first. The bounds of self's index must be checked
+    // before it is read.
+    //
+    matches.reserve(std::min(lhs_s, rhs_s));
     for (size_type lhs_i { 0 }, rhs_i { 0 };
          lhs_i < lhs_s && rhs_i < rhs_s; ++rhs_i) [[likely]]  {
         while (lhs_i < lhs_s && indices_[lhs_i] < rhs.indices_[rhs_i])
@@ -88,17 +92,19 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
         if (lhs_i >= lhs_s)  break;
 
         if (indices_[lhs_i] == rhs.indices_[rhs_i])  {
-            for (const auto &[name, idx] : column_list_) [[likely]]  {
-                mod_by_idx_functor_<Ts ...>  functor {
-                    name.c_str(), rhs, lhs_i, rhs_i
-                };
-
-                data_[idx].change(functor);
-            }
-
+            matches.emplace_back(lhs_i, rhs_i);
             lhs_i += 1;
         }
-        else if (indices_[lhs_i] < rhs.indices_[rhs_i])  break;
+    }
+
+    if (! matches.empty())  {
+        const SpinGuard guard { lock_ };
+
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            mod_by_idx_functor_<Ts ...> functor (name.c_str(), rhs, matches);
+
+            data_[idx].change(functor);
+        }
     }
 
     return (*this);

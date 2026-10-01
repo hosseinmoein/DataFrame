@@ -692,6 +692,35 @@ fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
 
 // ----------------------------------------------------------------------------
 
+// Removes the elements at the positions listed in sel_indices from vec in a
+// single O(n) pass. sel_indices must be sorted in ascending order. Positions
+// that are beyond the end of vec are ignored. This is only for real vectors
+// (not views), since it assigns elements.
+//
+template<typename VEC>
+static inline void
+remove_sorted_positions_(VEC &vec, const StlVecType<size_type> &sel_indices)  {
+
+    const size_type vec_s { vec.size() };
+    const size_type sel_s { sel_indices.size() };
+
+    if (sel_s == 0 || sel_indices[0] >= vec_s)  return;
+
+    size_type   next { 0 };
+    size_type   w { sel_indices[0] };
+
+    for (size_type r { w }; r < vec_s; ++r)  {
+        if (next < sel_s && sel_indices[next] == r)  {
+            while (next < sel_s && sel_indices[next] == r)  ++next;
+            continue;
+        }
+        vec[w++] = std::move(vec[r]);
+    }
+    vec.erase(vec.begin() + w, vec.end());
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename ... Ts>
 void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
 
@@ -708,20 +737,19 @@ void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
                 const sel_remove_functor_<Ts ...>   functor { col_indices };
 
                 for (auto citer { begin }; citer < end; ++citer)
-                    this->data_[citer->second].change(functor);
+                    data_[citer->second].change(functor);
             };
         auto    lbd_idx =
             [&col_indices = std::as_const(col_indices), this] () -> void  {
-                const size_type col_indices_s { col_indices.size() };
-                size_type       del_count { 0 };
+                if constexpr (
+                    std::is_base_of<HeteroVector<align_value>, H>::value)
+                    remove_sorted_positions_(indices_, col_indices);
+                else  {
+                    const size_type col_indices_s { col_indices.size() };
+                    size_type       del_count { 0 };
 
-                for (size_type i { 0 }; i < col_indices_s; ++i)  {
-                    if constexpr (
-                       std::is_base_of<HeteroVector<align_value>, H>::value)
-                        this->indices_.erase(this->indices_.begin() +
-                                             (col_indices[i] - del_count++));
-                    else
-                        this->indices_.erase(col_indices[i] - del_count++);
+                    for (size_type i { 0 }; i < col_indices_s; ++i)
+                        indices_.erase(col_indices[i] - del_count++);
                 }
             };
         auto    futures {
@@ -741,14 +769,13 @@ void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
             data_[citer.second].change(functor);
         guard.release();
 
-        const size_type col_indices_s { col_indices.size() };
-        size_type       del_count { 0 };
+        if constexpr (std::is_base_of<HeteroVector<align_value>, H>::value)
+            remove_sorted_positions_(indices_, col_indices);
+        else  {
+            const size_type col_indices_s { col_indices.size() };
+            size_type       del_count { 0 };
 
-        for (size_type i { 0 }; i < col_indices_s; ++i)  {
-            if constexpr (std::is_base_of<HeteroVector<align_value>, H>::value)
-                indices_.erase(indices_.begin() +
-                               (col_indices[i] - del_count++));
-            else
+            for (size_type i { 0 }; i < col_indices_s; ++i)
                 indices_.erase(col_indices[i] - del_count++);
         }
     }

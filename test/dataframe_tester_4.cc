@@ -965,6 +965,38 @@ static void test_difference()  {
     assert(! diff_df.has_column("self_dbl_col_2"));
     assert(! diff_df.has_column("other_dbl_col_2"));
     assert(! diff_df.has_column("dbl_col_2"));
+
+    // Columns of different lengths, with the last difference in another column
+    // further down. The tail rows must stay aligned with their rows.
+    //
+    {
+        MyDataFrame lhs;
+        MyDataFrame rhs;
+
+        lhs.load_index(MyDataFrame::gen_sequence_index(0, 6, 1));
+        rhs.load_index(MyDataFrame::gen_sequence_index(0, 6, 1));
+        lhs.load_column<double>("x", { 1, 2, 3, 4, 5, 6 });
+        rhs.load_column<double>("x", { 1, 9, 3, 4 },
+                                nan_policy::dont_pad_with_nans);
+        lhs.load_column<double>("y", { 10, 11, 12, 13, 14, 15 });
+        rhs.load_column<double>("y", { 10, 11, 12, 13, 99, 15 });
+
+        const auto  res = lhs.difference<double>(rhs);
+
+        assert(res.get_index().size() == 6);
+
+        const auto  &self_x = res.get_column<double>("self_x");
+
+        assert(self_x.size() == 6);
+        assert(std::isnan(self_x[0]));
+        assert(self_x[1] == 2.0);
+        assert(std::isnan(self_x[2]));
+        assert(std::isnan(self_x[3]));
+        assert(self_x[4] == 5.0);
+        assert(self_x[5] == 6.0);
+        assert(res.get_column<double>("self_y")[4] == 14.0);
+        assert(res.get_column<double>("other_y")[4] == 99.0);
+    }
 }
 
 // ----------------------------------------------------------------------------

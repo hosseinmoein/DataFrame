@@ -240,14 +240,13 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator()(const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    _write_csv_df_header_<std::ostream, ValueType>(os, name, vec.size())
-        << ':';
+    const long  vec_size { long(vec.size()) };
+    const long  sr { long(std::min(start_row, vec_size)) };
+    const long  er { long(std::min(end_row, vec_size)) };
 
-    const long  vec_size = vec.size();
-    const long  sr = std::min(start_row, vec_size);
-    const long  er = std::min(end_row, vec_size);
+    _write_csv_df_header_<std::ostream, ValueType>(os, name, er - sr) << ':';
 
-    for (long i = sr; i < er; ++i)
+    for (long i { sr }; i < er; ++i)
         _write_csv_df_index_(os, vec[i]) << delim;
     os << '\n';
 
@@ -265,13 +264,15 @@ DataFrame<I, H>::print_binary_functor_<Ts ...>::operator()(const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    char    col_name[MAX_COL_NAME_SIZE];
+    // Zero-filled, so the last byte written is never garbage
+    //
+    char    col_name[MAX_COL_NAME_SIZE] { };
 
     std::strncpy(col_name, name, sizeof(col_name) - 1);
     os.write(col_name, sizeof(col_name));
 
-    const long  local_start_row = std::min (long(vec.size()), start_row);
-    const long  local_end_row = std::min (long(vec.size()), end_row);
+    const long  local_start_row { std::min (long(vec.size()), start_row) };
+    const long  local_end_row { std::min (long(vec.size()), end_row) };
 
     if constexpr (std::is_same_v<ValueType, std::string> ||
                   std::is_same_v<ValueType, String8> ||
@@ -330,16 +331,16 @@ DataFrame<I, H>::print_json_functor_<Ts ...>::operator()(const T &vec)  {
     if (need_pre_comma)
         os << ",\n";
 
-    _write_json_df_header_<std::ostream, ValueType>(os, name, vec.size());
+    const long  vec_size { long(vec.size()) };
+    const long  sr { long(std::min(start_row, vec_size)) };
+    const long  er { long(std::min(end_row, vec_size)) };
 
-    const long  vec_size = vec.size();
-    const long  sr = std::min(start_row, vec_size);
-    const long  er = std::min(end_row, vec_size);
+    _write_json_df_header_<std::ostream, ValueType>(os, name, er - sr);
 
     os << "\"D\":[";
-    if (vec_size > 0)  {
-        _write_json_df_index_(os, vec[start_row]);
-        for (long i = sr + 1; i < er; ++i)  {
+    if (er > sr)  {
+        _write_json_df_index_(os, vec[sr]);
+        for (long i { sr + 1 }; i < er; ++i)  {
             os << ',';
             _write_json_df_index_(os, vec[i]);
         }
@@ -427,13 +428,22 @@ mod_by_idx_functor_<Ts ...>::operator()(T &lhs_vec) const  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const auto  &iter = rhs_df.column_tb_.find(name);
+    const auto  &iter { rhs_df.column_tb_.find(name) };
 
     if (iter != rhs_df.column_tb_.end())  {
-        const ColumnVecType<ValueType>  &rhs_vec =
-            rhs_df.get_column<ValueType>(name, false);
+        const ColumnVecType<ValueType>  &rhs_vec {
+            rhs_df.get_column<ValueType>(name, false)
+        };
+        const size_type                 lhs_s { lhs_vec.size() };
+        const size_type                 rhs_s { rhs_vec.size() };
 
-        lhs_vec[lhs_idx] = rhs_vec[rhs_idx];
+        // The column lookup is done once per column, not once per row. A
+        // column could be shorter than the index.
+        //
+        for (const auto &[lhs_i, rhs_i] : matches)  {
+            if (lhs_i < lhs_s && rhs_i < rhs_s)
+                lhs_vec[lhs_i] = rhs_vec[rhs_i];
+        }
     }
 }
 
@@ -545,18 +555,20 @@ operator()(const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const size_type rhs_s = vec.size();
-    const bool      has_col = result.has_column(name);
+    const size_type rhs_s { vec.size() };
+    const bool      has_col { result.has_column(name) };
 
     if (has_col)  {
-        auto            &result_vec =
-            result.template get_column<ValueType>(name);
-        const size_type min_s =
-            std::min(result_vec.size() + rhs_s, result.get_index().size());
-        size_type       count { vec.size() };
+        auto            &result_vec {
+            result.template get_column<ValueType>(name)
+        };
+        const size_type min_s {
+            std::min(result_vec.size() + rhs_s, result.get_index().size())
+        };
+        size_type       count { result_vec.size() };
 
         result_vec.reserve(min_s);
-        for (size_type i = 0; i < rhs_s && count < min_s; ++i, ++count)
+        for (size_type i { 0 }; i < rhs_s && count < min_s; ++i, ++count)
             result_vec.push_back(const_cast<ValueType *>(&(vec[i])));
     }
     else  {
@@ -566,7 +578,6 @@ operator()(const T &vec)  {
                                            typename VecType::iterator>(
             name, { nc_vec.begin(), nc_vec.end() });
     }
-
 }
 
 // ----------------------------------------------------------------------------
@@ -851,19 +862,19 @@ DataFrame<I, H>::
 sel_remove_functor_<Ts ...>::
 operator()(T &vec) const  {
 
-    const size_type sel_indices_s = sel_indices.size();
-    const size_type vec_s = vec.size();
-    size_type       del_count = 0;
+    if constexpr (std::is_base_of<HeteroVector<align_value>, H>::value)
+        remove_sorted_positions_(vec, sel_indices);
+    else  {
+        const size_type sel_indices_s { sel_indices.size() };
+        const size_type vec_s { vec.size() };
+        size_type       del_count { 0 };
 
-    for (size_type i = 0; i < sel_indices_s; ++i)  {
-        if (sel_indices[i] < vec_s)  {
-            if constexpr (std::is_base_of<HeteroVector<align_value>, H>::value)
-                vec.erase(vec.begin() + (sel_indices[i] - del_count++));
-            else
+        for (size_type i { 0 }; i < sel_indices_s; ++i)  {
+            if (sel_indices[i] < vec_s)
                 vec.erase(sel_indices[i] - del_count++);
+            else
+                break;
         }
-        else
-            break;
     }
 }
 
@@ -892,13 +903,15 @@ random_load_data_functor_<DF, Ts ...>::operator()(const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const size_type vec_s = vec.size();
-    const size_type n_rows = rand_indices.size();
+    const size_type                                 vec_s { vec.size() };
+    const size_type                                 n_rows {
+        rand_indices.size()
+    };
     typename DF::template ColumnVecType<ValueType>  new_vec;
-    size_type       prev_value { 0 };
+    size_type                                       prev_value { 0 };
 
     new_vec.reserve(n_rows);
-    for (size_type i = 0; i < n_rows; ++i) [[likely]]  {
+    for (size_type i { 0 }; i < n_rows; ++i) [[likely]]  {
         if (rand_indices[i] < vec_s)  {
             if (i == 0 || rand_indices[i] != prev_value)
                 new_vec.push_back(vec[rand_indices[i]]);
@@ -926,13 +939,13 @@ random_load_view_functor_<DF, Ts ...>::operator()(const T &vec) {
     using ValueType = typename VecType::value_type;
     using ViewType = typename DF::template ColumnVecType<ValueType>;
 
-    const size_type vec_s = vec.size();
-    const size_type n_rows = rand_indices.size();
+    const size_type vec_s { vec.size() };
+    const size_type n_rows { rand_indices.size() };
     ViewType        new_vec;
     size_type       prev_value { 0 };
 
     new_vec.reserve(n_rows);
-    for (size_type i = 0; i < n_rows; ++i) [[likely]]  {
+    for (size_type i { 0 }; i < n_rows; ++i) [[likely]]  {
         if (rand_indices[i] < vec_s)  {
             if (i == 0 || rand_indices[i] != prev_value)
                 new_vec.push_back(
@@ -1113,22 +1126,25 @@ operator()(const T &vec)  {
     using ValueType = typename VecType::value_type;
     using NewVecType = ColumnVecType<ValueType>;
 
-    const auto  &new_idx = res.get_index();
-    const auto  new_s = new_idx.size();
-    const auto  old_s = std::min(old_idx.size(), vec.size());
-    NewVecType  new_vec (new_s, get_nan<ValueType>());
+    const auto  &new_idx { res.get_index() };
+    const auto  new_s { new_idx.size() };
+    const auto  old_s { std::min(old_idx.size(), vec.size()) };
+    NewVecType  new_vec(new_s, get_nan<ValueType>());
     size_type   i { 0 }, j { 0 };
 
     if (new_s >= old_s)  {  // Frequency has increased
-        while (i < new_s && j < (old_s - 1))  {
+        // Note: old_s is unsigned, so "old_s - 1" must not be used when old_s
+        // could be zero. An empty column stays all NaN.
+        //
+        while (i < new_s && (j + 1) < old_s)  {
             if (new_idx[i] < old_idx[j + 1])
                 new_vec[i] = vec[j];
             else
                 new_vec[i] = vec[++j];
             i += 1;
         }
-        if (i > 0)  {
-            const ValueType &last = new_vec[i - 1];
+        if (old_s > 0)  {
+            const ValueType &last = vec[old_s - 1];
 
             for ( ; i < new_s; ++i)
                 new_vec[i] = last;
@@ -1264,9 +1280,10 @@ operator()(const T &vec)  {
     using ValueType = typename VecType::value_type;
 
     try  {
-        const auto      &other_vec =
-            other.template get_column<ValueType>(name, false);
-        const size_type col_s = std::min(vec.size(), other_vec.size());
+        const auto      &other_vec {
+            other.template get_column<ValueType>(name, false)
+        };
+        const size_type col_s { std::min(vec.size(), other_vec.size()) };
         size_type       last_idx { 0 };
         size_type       i { 0 };
         VecType         self_new_col;
@@ -1287,11 +1304,27 @@ operator()(const T &vec)  {
                 idx_set.insert(i);
             }
         }
-        for (size_type j = i; j < vec.size(); ++j) [[unlikely]]  {
+
+        // The two columns could be of different lengths. The extra rows of
+        // the longer one (the tail) must stay aligned with the rows they
+        // belong to. So, the equal rows between the last difference and the
+        // tail must be padded first, the same way the equal rows between
+        // two differences are padded above.
+        //
+        if (vec.size() > col_s || other_vec.size() > col_s)  {
+            for ( ; last_idx < col_s; ++last_idx)  {
+                if (vec.size() > col_s)
+                    self_new_col.push_back(get_nan<ValueType>());
+                if (other_vec.size() > col_s)
+                    other_new_col.push_back(get_nan<ValueType>());
+                idx_set.insert(last_idx);
+            }
+        }
+        for (size_type j { i }; j < vec.size(); ++j) [[unlikely]]  {
             self_new_col.push_back(vec[j]);
             idx_set.insert(j);
         }
-        for (size_type j = i; j < other_vec.size(); ++j) [[unlikely]]  {
+        for (size_type j { i }; j < other_vec.size(); ++j) [[unlikely]]  {
             other_new_col.push_back(other_vec[j]);
             idx_set.insert(j);
         }

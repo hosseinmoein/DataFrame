@@ -992,10 +992,15 @@ operator()(const T &vec)  {
 
     NewVecType  new_vec;
 
-    new_vec.reserve(vec.size() > to_delete.size()
-                        ? vec.size() - to_delete.size() : 0);
-    for (size_type i { 0 }; i < vec.size(); ++i)  {
-        if (! to_delete.contains(i))
+    const size_type vec_s { vec.size() };
+    const size_type mask_s { del_mask.size() };
+
+    // The column could be shorter than the index (and the delete count is
+    // based on the index)
+    //
+    new_vec.reserve(vec_s > del_count ? vec_s - del_count : 0);
+    for (size_type i { 0 }; i < vec_s; ++i)  {
+        if (i >= mask_s || ! del_mask[i])
             new_vec.push_back(vec[i]);
     }
 
@@ -1057,26 +1062,30 @@ DataFrame<I, H>::describe_functor_<Ts ...>::operator()(const T &vec)  {
     size_type   missing_cnt { 0 };
     ValueType   minv { get_nan<ValueType>() };
     ValueType   maxv { get_nan<ValueType>() };
-    ValueType   sum { get_nan<ValueType>() };
+    double      sum { get_nan<double>() };
     bool        found_valid { false };
 
     for (size_type i { 0 }; i < vec_s; ++i)  {
         if (is_nan<ValueType>(vec[i]))
             missing_cnt += 1;
         else if (! found_valid)  {
-            minv = maxv = sum = vec[i];
+            minv = maxv = vec[i];
+            sum = double(vec[i]);
             found_valid = true;
         }
         else  {
             if (vec[i] > maxv)  maxv = vec[i];
             if (vec[i] < minv)  minv = vec[i];
-            sum += vec[i];
+            sum += double(vec[i]);
         }
     }
     col_to_load.push_back(double(missing_cnt));
     col_to_load.push_back(sum  / double(vec_s - missing_cnt));
 
-    StdVisitor<ValueType, ValueType>    stdev;
+    // The visitors are instantiated on double so that integral and float
+    // columns are not accumulated (or interpolated) in their narrow type.
+    //
+    StdVisitor<double, double>  stdev;
 
     stdev.pre();
     stdev(vec.begin(), vec.end(), vec.begin(), vec.end());
@@ -1086,21 +1095,21 @@ DataFrame<I, H>::describe_functor_<Ts ...>::operator()(const T &vec)  {
     col_to_load.push_back(double(minv));
     col_to_load.push_back(double(maxv));
 
-    QuantileVisitor<ValueType, ValueType>   qt25 { 0.25 };
+    QuantileVisitor<double, double> qt25 { 0.25 };
 
     qt25.pre();
     qt25(vec.begin(), vec.end(), vec.begin(), vec.end());
     qt25.post();
     col_to_load.push_back(double(qt25.get_result()));
 
-    QuantileVisitor<ValueType, ValueType>   qt50 { 0.5 };
+    QuantileVisitor<double, double> qt50 { 0.5 };
 
     qt50.pre();
     qt50(vec.begin(), vec.end(), vec.begin(), vec.end());
     qt50.post();
     col_to_load.push_back(double(qt50.get_result()));
 
-    QuantileVisitor<ValueType, ValueType>   qt75 { 0.75 };
+    QuantileVisitor<double, double> qt75 { 0.75 };
 
     qt75.pre();
     qt75(vec.begin(), vec.end(), vec.begin(), vec.end());

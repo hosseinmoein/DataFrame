@@ -1248,41 +1248,47 @@ remove_dups_common_(const DataFrame &s_df,
                     const MAP &row_table,
                     const IndexVecType &index)  {
 
-    using count_set = DFUnorderedSet<size_type>;
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
-    const size_type idx_s = index.size();
-    count_set       rows_to_del;
+    // Every row appears in exactly one of the row_table's index vectors. So,
+    // a plain per-row mask is both exact and much cheaper than a hash set,
+    // since each column is then scanned with no hashing at all.
+    //
+    const size_type     idx_s { index.size() };
+    StlVecType<char>    del_mask(idx_s, 0);
+    size_type           del_count { 0 };
+    auto                mark =
+        [&del_mask, &del_count](auto first, auto last) -> void  {
+            for ( ; first != last; ++first)  {
+                del_mask[*first] = 1;
+                del_count += 1;
+            }
+        };
 
-    rows_to_del.reserve(idx_s / 100);
     if (rds == remove_dup_spec::keep_first)  {
         for (const auto &[val_tuple, idx_vec] : row_table)  {
-            if (idx_vec.size() > 1)
-                rows_to_del.insert(idx_vec.begin() + 1, idx_vec.end());
+            if (idx_vec.size() > 1)  mark(idx_vec.begin() + 1, idx_vec.end());
         }
     }
     else if (rds == remove_dup_spec::keep_last)  {
         for (const auto &[val_tuple, idx_vec] : row_table)  {
-            if (idx_vec.size() > 1)
-                rows_to_del.insert(idx_vec.begin(), idx_vec.end() - 1);
+            if (idx_vec.size() > 1)  mark(idx_vec.begin(), idx_vec.end() - 1);
         }
     }
     else  {  // remove_dup_spec::keep_none
         for (const auto &[val_tuple, idx_vec] : row_table)
-            if (idx_vec.size() > 1)
-                rows_to_del.insert(idx_vec.begin(), idx_vec.end());
+            if (idx_vec.size() > 1)  mark(idx_vec.begin(), idx_vec.end());
     }
 
     res_t                        new_df;
     typename res_t::IndexVecType new_index;
-    const SpinGuard              guard(lock_);
+    const SpinGuard              guard { lock_ };
 
     // Load the index
     //
-    new_index.reserve(idx_s - rows_to_del.size());
-    for (size_type i = 0; i < idx_s; ++i)  {
-        if (! rows_to_del.contains(i))
-            new_index.push_back(index[i]);
+    new_index.reserve(idx_s - del_count);
+    for (size_type i { 0 }; i < idx_s; ++i)  {
+        if (! del_mask[i])  new_index.push_back(index[i]);
     }
 
     new_df.load_index(std::move(new_index));
@@ -1290,42 +1296,46 @@ remove_dups_common_(const DataFrame &s_df,
     // Create the columns, so loading can proceed in parallel
     //
     for (const auto &citer : s_df.column_list_)  {
-        create_col_functor_<res_t, Ts ...>  functor(
-            citer.first.c_str(), new_df);
+        create_col_functor_<res_t, Ts ...>  functor {
+            citer.first.c_str(), new_df
+        };
 
         s_df.data_[citer.second].change(functor);
     }
 
-    const auto  thread_level =
+    const auto  thread_level {
         (new_df.get_index().size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : get_thread_level();
+            ? 0L : get_thread_level()
+    };
 
     if (thread_level > 2)  {
         auto    lbd =
-            [&rows_to_del = std::as_const(rows_to_del),
+            [&del_mask = std::as_const(del_mask),
+             del_count,
              &s_df = std::as_const(s_df),
              &new_df]
             (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    copy_remove_functor_<res_t, Ts ...> functor(
-                        citer->first.c_str(),
-                        rows_to_del,
-                        new_df);
+                for (auto citer { begin }; citer < end; ++citer)  {
+                    copy_remove_functor_<res_t, Ts ...> functor {
+                        citer->first.c_str(), del_mask, del_count, new_df
+                    };
 
                     s_df.data_[citer->second].change(functor);
                 }
             };
-        auto    futures =
+        auto    futures {
             thr_pool_.parallel_loop<double>(s_df.column_list_.begin(),
                                             s_df.column_list_.end(),
-                                            std::move(lbd));
+                                            std::move(lbd))
+        };
 
         for (auto &fut : futures)  fut.get();
     }
     else  {
         for (const auto &citer : s_df.column_list_)  {
             copy_remove_functor_<res_t, Ts ...> functor(citer.first.c_str(),
-                                                        rows_to_del,
+                                                        del_mask,
+                                                        del_count,
                                                         new_df);
 
             s_df.data_[citer.second].change(functor);

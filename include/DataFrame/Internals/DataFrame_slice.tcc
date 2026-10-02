@@ -47,44 +47,56 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
-    const auto  &lower =
-        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
-    const auto  &upper =
-        std::upper_bound (indices_.begin(), indices_.end(), range.end);
+    const auto  &lower {
+        std::lower_bound(indices_.begin(), indices_.end(), range.begin)
+    };
+    const auto  &upper {
+        std::upper_bound(indices_.begin(), indices_.end(), range.end)
+    };
     res_t       df;
 
-    if (lower != indices_.end())  {
+    // If range.begin > range.end, lower could be after upper. That is an empty
+    // range.
+    //
+    if (lower != indices_.end() && lower <= upper)  {
         df.load_index(lower, upper);
 
-        const size_type b_dist = std::distance(indices_.begin(), lower);
-        const size_type e_dist =
-            std::distance(indices_.begin(),
-                          upper < indices_.end() ? upper : indices_.end());
-        const SpinGuard guard(lock_);
+        const size_type b_dist {
+            size_type(std::distance(indices_.begin(), lower))
+        };
+        const size_type e_dist {
+            size_type(std::distance(indices_.begin(),
+                                    upper < indices_.end()
+                                        ? upper : indices_.end()))
+        };
+        const SpinGuard guard { lock_ };
 
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            create_col_functor_<res_t, Ts ...>  functor(name.c_str(), df);
+            create_col_functor_<res_t, Ts ...>  functor { name.c_str(), df };
 
             data_[idx].change(functor);
         }
 
-        const auto  thread_level =
+        const auto  thread_level {
             (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-                ? 0L : get_thread_level();
+                ? 0L : get_thread_level()
+        };
         auto        lbd =
             [b_dist, e_dist, &df, this]
             (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    load_functor_<res_t, Ts ...>  functor (
-                         citer->first.c_str(), b_dist, e_dist, df);
+                for (auto citer { begin }; citer < end; ++citer)  {
+                    load_functor_<res_t, Ts ...>  functor {
+                         citer->first.c_str(), b_dist, e_dist, df
+                    };
 
                     this->data_[citer->second].change(functor);
                 }
             };
 
         if (thread_level > 2)  {
-            auto    futuers = thr_pool_.parallel_loop<double>(
-                column_list_.begin(), column_list_.end(), std::move(lbd));
+            auto    futuers { thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd))
+            };
 
             for (auto &fut : futuers)  fut.get();
         }
@@ -107,7 +119,7 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
-    const DFUnorderedSet<IndexType> val_table (values.begin(), values.end());
+    const DFUnorderedSet<IndexType> val_table(values.begin(), values.end());
     typename res_t::IndexVecType    new_index;
     StlVecType<size_type>           locations;
     const size_type                 values_s = values.size();
@@ -180,31 +192,36 @@ template<typename ... Ts>
 typename DataFrame<I, H>::View
 DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
-    const auto  lower =
-        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
-    const auto  upper =
-        std::upper_bound (indices_.begin(), indices_.end(), range.end);
+    const auto  lower {
+        std::lower_bound(indices_.begin(), indices_.end(), range.begin)
+    };
+    const auto  upper {
+        std::upper_bound(indices_.begin(), indices_.end(), range.end)
+    };
     View        dfv;
 
-    if (lower != indices_.end() &&
-        (upper != indices_.end() || indices_.back() == range.end)) [[likely]] {
-        IndexType       *upper_address { nullptr };
-        const size_type b_dist = std::distance(indices_.begin(), lower);
-        const size_type e_dist = std::distance(indices_.begin(), upper);
+    // The range is inclusive. So, if range.end is at or beyond the last index,
+    // upper is the end iterator and the view extends to the last row, exactly
+    // the same as get_data_by_idx(). If range.begin > range.end, lower could be
+    // after upper. That is an empty range.
+    //
+    if (lower != indices_.end() && lower <= upper) [[likely]] {
+        const size_type b_dist {
+            size_type(std::distance(indices_.begin(), lower))
+        };
+        const size_type e_dist {
+            size_type(std::distance(indices_.begin(), upper))
+        };
+        IndexType       *upper_address { &(indices_.front()) + e_dist };
 
-        if (upper != indices_.end())
-            upper_address = &*upper;
-        else
-            upper_address = &(indices_.front()) + e_dist;
         dfv.indices_ = typename View::IndexVecType(&*lower, upper_address);
 
-        const SpinGuard guard(lock_);
+        const SpinGuard guard { lock_ };
 
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            view_setup_functor_<View, Ts ...>   functor (name.c_str(),
-                                                         b_dist,
-                                                         e_dist,
-                                                         dfv);
+            view_setup_functor_<View, Ts ...>   functor {
+                name.c_str(), b_dist, e_dist, dfv
+            };
 
             data_[idx].change(functor);
         }
@@ -220,32 +237,34 @@ template<typename ... Ts>
 typename DataFrame<I, H>::ConstView
 DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
 
-    const auto  lower =
-        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
-    const auto  upper =
-        std::upper_bound (indices_.begin(), indices_.end(), range.end);
+    const auto  lower {
+        std::lower_bound (indices_.begin(), indices_.end(), range.begin)
+    };
+    const auto  upper {
+        std::upper_bound (indices_.begin(), indices_.end(), range.end)
+    };
     ConstView   dfcv;
 
-    if (lower != indices_.end() &&
-        (upper != indices_.end() || indices_.back() == range.end)) [[likely]] {
-        const IndexType *upper_address = nullptr;
-        const size_type b_dist = std::distance(indices_.begin(), lower);
-        const size_type e_dist = std::distance(indices_.begin(), upper);
+    // See the non-const version
+    //
+    if (lower != indices_.end() && lower <= upper) [[likely]] {
+        const size_type b_dist {
+            size_type(std::distance(indices_.begin(), lower))
+        };
+        const size_type e_dist {
+            size_type(std::distance(indices_.begin(), upper))
+        };
+        const IndexType *upper_address { &(indices_.front()) + e_dist };
 
-        if (upper != indices_.end())
-            upper_address = &*upper;
-        else
-            upper_address = &(indices_.front()) + e_dist;
         dfcv.indices_ =
             typename ConstView::IndexVecType(&*lower, upper_address);
 
-        const SpinGuard guard(lock_);
+        const SpinGuard guard { lock_ };
 
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            view_setup_functor_<ConstView, Ts ...>  functor (name.c_str(),
-                                                             b_dist,
-                                                             e_dist,
-                                                             dfcv);
+            view_setup_functor_<ConstView, Ts ...>  functor {
+                name.c_str(), b_dist, e_dist, dfcv
+            };
 
             data_[idx].change(functor);
         }
@@ -2777,8 +2796,8 @@ get_data_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
     const auto              thread_level =
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
     auto                    mean_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            MeanVisitor<T, I>   mean { true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            MeanVisitor<double, I>  mean { true };
 
             mean.pre();
             mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -2786,16 +2805,16 @@ get_data_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
             return (mean.get_result());
         };
     auto                    stdev_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            StdVisitor<T, I>    stdev { true, true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            StdVisitor<double, I>   stdev { true, true };
 
             stdev.pre();
             stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             stdev.post();
             return (stdev.get_result());
         };
-    T                       stdev;
-    T                       mean;
+    double                  stdev;
+    double                  mean;
 
     if (thread_level > 2)  {
         auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
@@ -2813,7 +2832,7 @@ get_data_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
 
     col_indices.reserve(col_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
-        const T z = (vec[i] - mean) / stdev;
+        const double    z = (double(vec[i]) - mean) / stdev;
 
         if (z < high_stdev && z > low_stdev)
             col_indices.push_back(i);
@@ -2835,8 +2854,8 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev)  {
     const auto              thread_level =
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
     auto                    mean_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            MeanVisitor<T, I>   mean { true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            MeanVisitor<double, I>  mean { true };
 
             mean.pre();
             mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -2844,16 +2863,16 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev)  {
             return (mean.get_result());
         };
     auto                    stdev_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            StdVisitor<T, I>    stdev { true, true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            StdVisitor<double, I>   stdev { true, true };
 
             stdev.pre();
             stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             stdev.post();
             return (stdev.get_result());
         };
-    T                       stdev;
-    T                       mean;
+    double                  stdev;
+    double                  mean;
 
     if (thread_level > 2)  {
         auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
@@ -2871,7 +2890,7 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev)  {
 
     col_indices.reserve(col_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
-        const T z = (vec[i] - mean) / stdev;
+        const double    z = (double(vec[i]) - mean) / stdev;
 
         if (z < high_stdev && z > low_stdev)
             col_indices.push_back(i);
@@ -2893,8 +2912,8 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
     const auto              thread_level =
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
     auto                    mean_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            MeanVisitor<T, I>   mean { true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            MeanVisitor<double, I>  mean { true };
 
             mean.pre();
             mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -2902,16 +2921,16 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
             return (mean.get_result());
         };
     auto                    stdev_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            StdVisitor<T, I>    stdev { true, true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            StdVisitor<double, I>   stdev { true, true };
 
             stdev.pre();
             stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             stdev.post();
             return (stdev.get_result());
         };
-    T                       stdev;
-    T                       mean;
+    double                  stdev;
+    double                  mean;
 
     if (thread_level > 2)  {
         auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
@@ -2929,7 +2948,7 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
 
     col_indices.reserve(col_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
-        const T z = (vec[i] - mean) / stdev;
+        const double    z = (double(vec[i]) - mean) / stdev;
 
         if (z < high_stdev && z > low_stdev)
             col_indices.push_back(i);

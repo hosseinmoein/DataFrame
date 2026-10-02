@@ -706,14 +706,19 @@ struct  columns_info_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename DF, typename ... Ts>
 struct  copy_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
+    // del_mask[i] is non-zero if row i is to be removed. del_count is the
+    // number of such rows.
+    //
     inline copy_remove_functor_ (const char *n,
-                                 const DFUnorderedSet<std::size_t>  &td,
+                                 const StlVecType<char> &dm,
+                                 size_type dc,
                                  DF &d)
-        : name(n), to_delete (td), df(d)  {   }
+        : name(n), del_mask (dm), del_count (dc), df(d)  {   }
 
-    const char                          *name;
-    const DFUnorderedSet<std::size_t>   &to_delete;
-    DF                                  &df;
+    const char              *name;
+    const StlVecType<char>  &del_mask;
+    const size_type         del_count;
+    DF                      &df;
 
     template<typename T>
     void operator() (const T &vec);

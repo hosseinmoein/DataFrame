@@ -227,6 +227,35 @@ static void test_concat_view()  {
     assert(const_result3.get_column<double>("dbl_col_2")[0] == 100.0);
     assert(const_result3.get_column<double>("dbl_col_2")[5] == 105.0);
     assert(const_result3.get_column<double>("dbl_col_2")[10] == 112.0);
+
+    // The two data frames have different lengths, and the rhs is the longer
+    // one. All of the rhs rows must show up in the view. (This used to be
+    // truncated to the length of the lhs column.)
+    //
+    {
+        MyDataFrame short_df;
+        MyDataFrame long_df;
+
+        short_df.load_index(MyDataFrame::gen_sequence_index(0, 5, 1));
+        long_df.load_index(MyDataFrame::gen_sequence_index(1000, 1008, 1));
+        short_df.load_column<double>("dbl_col", { 0.0, 1.0, 2.0, 3.0, 4.0 });
+        long_df.load_column<double>("dbl_col",
+                                    { 1000.0, 1001.0, 1002.0, 1003.0,
+                                      1004.0, 1005.0, 1006.0, 1007.0 });
+
+        auto    result4 {
+            short_df.concat_view<decltype(long_df), double>
+                (long_df, concat_policy::all_columns)
+        };
+        const auto  &col { result4.get_column<double>("dbl_col") };
+
+        assert(result4.get_index().size() == 13);
+        assert(col.size() == 13);
+        assert(col[0] == 0.0);
+        assert(col[4] == 4.0);
+        assert(col[5] == 1000.0);
+        assert(col[12] == 1007.0);
+    }
 }
 
 // ----------------------------------------------------------------------------

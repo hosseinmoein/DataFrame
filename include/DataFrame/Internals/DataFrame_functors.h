@@ -79,11 +79,10 @@ template<typename ... Ts>
 struct  sort_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline sort_functor_ (const StlVecType<size_t> &si, size_t is)
-        : sorted_idxs(si), idx_s(is), done_vec(idx_s)  {   }
+        : sorted_idxs(si), idx_s(is)  {   }
 
     const StlVecType<size_t>   &sorted_idxs;
     const size_t               idx_s;
-    StlVecType<char>           done_vec;
 
     template<typename T2>
     void operator() (T2 &vec);
@@ -346,16 +345,16 @@ struct  equal_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct  mod_by_idx_functor_ : DataVec::template visitor_base<Ts ...>  {
 
+    using match_vec_t = StlVecType<std::pair<size_type, size_type>>;
+
     inline mod_by_idx_functor_ (const char *n,
                                 const DataFrame &d,
-                                size_type li,
-                                size_type ri)
-        : name(n), rhs_df(d), lhs_idx(li), rhs_idx(ri)  {  }
+                                const match_vec_t &m)
+        : name(n), rhs_df(d), matches(m)  {  }
 
-    const char      *name;
-    const DataFrame &rhs_df;
-    const size_type lhs_idx;
-    const size_type rhs_idx;
+    const char          *name;
+    const DataFrame     &rhs_df;
+    const match_vec_t   &matches;  // (lhs row, rhs row) pairs
 
     template<typename T>
     void operator() (T &lhs_vec) const;
@@ -707,14 +706,19 @@ struct  columns_info_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename DF, typename ... Ts>
 struct  copy_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
+    // del_mask[i] is non-zero if row i is to be removed. del_count is the
+    // number of such rows.
+    //
     inline copy_remove_functor_ (const char *n,
-                                 const DFUnorderedSet<std::size_t>  &td,
+                                 const StlVecType<char> &dm,
+                                 size_type dc,
                                  DF &d)
-        : name(n), to_delete (td), df(d)  {   }
+        : name(n), del_mask (dm), del_count (dc), df(d)  {   }
 
-    const char                          *name;
-    const DFUnorderedSet<std::size_t>   &to_delete;
-    DF                                  &df;
+    const char              *name;
+    const StlVecType<char>  &del_mask;
+    const size_type         del_count;
+    DF                      &df;
 
     template<typename T>
     void operator() (const T &vec);

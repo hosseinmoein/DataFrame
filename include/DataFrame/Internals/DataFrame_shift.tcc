@@ -44,36 +44,39 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
     if (periods > 0) [[likely]] {
         if (sp == shift_policy::down || sp == shift_policy::up) [[likely]]  {
             vertical_shift_functor_<Ts ...> functor(periods, sp);
-            const size_type                 num_cols = data_.size();
-            const auto                      thread_level =
+            const size_type                 num_cols { data_.size() };
+            const auto                      thread_level {
                 (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-                    ? 0L : get_thread_level();
-            const SpinGuard                 guard(lock_);
+                    ? 0L : get_thread_level()
+            };
+            const SpinGuard                 guard { lock_ };
 
             if (thread_level > 2)  {
                 auto    lbd =
                     [&functor, this](auto begin, auto end) -> void  {
-                        for (size_type idx = begin; idx < end; ++idx)
+                        for (size_type idx { begin }; idx < end; ++idx)
                             this->data_[idx].change(functor);
                     };
-                auto    futuers =
+                auto    futuers {
                     thr_pool_.parallel_loop<double>(
-                        size_type(0), num_cols, std::move(lbd));
+                        size_type(0), num_cols, std::move(lbd))
+                };
 
                 for (auto &fut : futuers)  fut.get();
             }
             else  {
-                for (size_type idx = 0; idx < num_cols; ++idx) [[likely]]
+                for (size_type idx { 0 }; idx < num_cols; ++idx) [[likely]]
                     data_[idx].change(functor);
             }
         }
         else  {
-            while (periods-- > 0)  {
-                const char                      *col_name =
+            while (periods-- > 0 && (! column_list_.empty()))  {
+                const char                      *col_name {
                     (sp == shift_policy::left)
                         ? column_list_.front().first.c_str()
-                        : column_list_.back().first.c_str();
-                remove_column_functor_<Ts ...>  functor (col_name, *this);
+                        : column_list_.back().first.c_str()
+                };
+                remove_column_functor_<Ts ...>  functor { col_name, *this };
 
                 for (const auto &[name, idx] : column_list_) [[likely]]  {
                     if (name == col_name)  {
@@ -96,7 +99,7 @@ shift(size_type periods, shift_policy sp) const  {
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call shift()");
 
-    DataFrame   slug = *this;
+    DataFrame   slug { *this };
 
     slug.template self_shift<Ts ...>(periods, sp);
     return (slug);
@@ -113,7 +116,7 @@ shift(const char *col_name, size_type periods, shift_policy sp) const  {
                   "Only a StdDataFrame can call shift()");
 
     ColumnVecType<T>            result = get_column<T>(col_name);
-    vertical_shift_functor_<T>  functor(periods, sp);
+    vertical_shift_functor_<T>  functor { periods, sp };
 
     functor (result);
     return (result);

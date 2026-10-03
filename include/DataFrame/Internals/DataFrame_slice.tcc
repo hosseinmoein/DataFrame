@@ -43,48 +43,60 @@ namespace hmdf
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
+DataFrame<I, H>::get_data_by_idx(Index2D<IndexType> range) const  {
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
-    const auto  &lower =
-        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
-    const auto  &upper =
-        std::upper_bound (indices_.begin(), indices_.end(), range.end);
+    const auto  &lower {
+        std::lower_bound(indices_.begin(), indices_.end(), range.begin)
+    };
+    const auto  &upper {
+        std::upper_bound(indices_.begin(), indices_.end(), range.end)
+    };
     res_t       df;
 
-    if (lower != indices_.end())  {
+    // If range.begin > range.end, lower could be after upper. That is an empty
+    // range.
+    //
+    if (lower != indices_.end() && lower <= upper)  {
         df.load_index(lower, upper);
 
-        const size_type b_dist = std::distance(indices_.begin(), lower);
-        const size_type e_dist =
-            std::distance(indices_.begin(),
-                          upper < indices_.end() ? upper : indices_.end());
-        const SpinGuard guard(lock_);
+        const size_type b_dist {
+            size_type(std::distance(indices_.begin(), lower))
+        };
+        const size_type e_dist {
+            size_type(std::distance(indices_.begin(),
+                                    upper < indices_.end()
+                                        ? upper : indices_.end()))
+        };
+        const SpinGuard guard { lock_ };
 
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            create_col_functor_<res_t, Ts ...>  functor(name.c_str(), df);
+            create_col_functor_<res_t, Ts ...>  functor { name.c_str(), df };
 
             data_[idx].change(functor);
         }
 
-        const auto  thread_level =
+        const auto  thread_level {
             (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-                ? 0L : get_thread_level();
+                ? 0L : get_thread_level()
+        };
         auto        lbd =
             [b_dist, e_dist, &df, this]
             (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    load_functor_<res_t, Ts ...>  functor (
-                         citer->first.c_str(), b_dist, e_dist, df);
+                for (auto citer { begin }; citer < end; ++citer)  {
+                    load_functor_<res_t, Ts ...>  functor {
+                         citer->first.c_str(), b_dist, e_dist, df
+                    };
 
                     this->data_[citer->second].change(functor);
                 }
             };
 
         if (thread_level > 2)  {
-            auto    futuers = thr_pool_.parallel_loop<double>(
-                column_list_.begin(), column_list_.end(), std::move(lbd));
+            auto    futuers { thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd))
+            };
 
             for (auto &fut : futuers)  fut.get();
         }
@@ -107,7 +119,7 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
-    const DFUnorderedSet<IndexType> val_table (values.begin(), values.end());
+    const DFUnorderedSet<IndexType> val_table(values.begin(), values.end());
     typename res_t::IndexVecType    new_index;
     StlVecType<size_type>           locations;
     const size_type                 values_s = values.size();
@@ -178,33 +190,38 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::View
-DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
+DataFrame<I, H>::get_view_by_idx(Index2D<IndexType> range)  {
 
-    const auto  lower =
-        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
-    const auto  upper =
-        std::upper_bound (indices_.begin(), indices_.end(), range.end);
+    const auto  lower {
+        std::lower_bound(indices_.begin(), indices_.end(), range.begin)
+    };
+    const auto  upper {
+        std::upper_bound(indices_.begin(), indices_.end(), range.end)
+    };
     View        dfv;
 
-    if (lower != indices_.end() &&
-        (upper != indices_.end() || indices_.back() == range.end)) [[likely]] {
-        IndexType       *upper_address { nullptr };
-        const size_type b_dist = std::distance(indices_.begin(), lower);
-        const size_type e_dist = std::distance(indices_.begin(), upper);
+    // The range is inclusive. So, if range.end is at or beyond the last index,
+    // upper is the end iterator and the view extends to the last row, exactly
+    // the same as get_data_by_idx(). If range.begin > range.end, lower could be
+    // after upper. That is an empty range.
+    //
+    if (lower != indices_.end() && lower <= upper) [[likely]] {
+        const size_type b_dist {
+            size_type(std::distance(indices_.begin(), lower))
+        };
+        const size_type e_dist {
+            size_type(std::distance(indices_.begin(), upper))
+        };
+        IndexType       *upper_address { &(indices_.front()) + e_dist };
 
-        if (upper != indices_.end())
-            upper_address = &*upper;
-        else
-            upper_address = &(indices_.front()) + e_dist;
         dfv.indices_ = typename View::IndexVecType(&*lower, upper_address);
 
-        const SpinGuard guard(lock_);
+        const SpinGuard guard { lock_ };
 
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            view_setup_functor_<View, Ts ...>   functor (name.c_str(),
-                                                         b_dist,
-                                                         e_dist,
-                                                         dfv);
+            view_setup_functor_<View, Ts ...>   functor {
+                name.c_str(), b_dist, e_dist, dfv
+            };
 
             data_[idx].change(functor);
         }
@@ -218,34 +235,36 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::ConstView
-DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
+DataFrame<I, H>::get_view_by_idx(Index2D<IndexType> range) const  {
 
-    const auto  lower =
-        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
-    const auto  upper =
-        std::upper_bound (indices_.begin(), indices_.end(), range.end);
+    const auto  lower {
+        std::lower_bound (indices_.begin(), indices_.end(), range.begin)
+    };
+    const auto  upper {
+        std::upper_bound (indices_.begin(), indices_.end(), range.end)
+    };
     ConstView   dfcv;
 
-    if (lower != indices_.end() &&
-        (upper != indices_.end() || indices_.back() == range.end)) [[likely]] {
-        const IndexType *upper_address = nullptr;
-        const size_type b_dist = std::distance(indices_.begin(), lower);
-        const size_type e_dist = std::distance(indices_.begin(), upper);
+    // See the non-const version
+    //
+    if (lower != indices_.end() && lower <= upper) [[likely]] {
+        const size_type b_dist {
+            size_type(std::distance(indices_.begin(), lower))
+        };
+        const size_type e_dist {
+            size_type(std::distance(indices_.begin(), upper))
+        };
+        const IndexType *upper_address { &(indices_.front()) + e_dist };
 
-        if (upper != indices_.end())
-            upper_address = &*upper;
-        else
-            upper_address = &(indices_.front()) + e_dist;
         dfcv.indices_ =
             typename ConstView::IndexVecType(&*lower, upper_address);
 
-        const SpinGuard guard(lock_);
+        const SpinGuard guard { lock_ };
 
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            view_setup_functor_<ConstView, Ts ...>  functor (name.c_str(),
-                                                             b_dist,
-                                                             e_dist,
-                                                             dfcv);
+            view_setup_functor_<ConstView, Ts ...>  functor {
+                name.c_str(), b_dist, e_dist, dfcv
+            };
 
             data_[idx].change(functor);
         }
@@ -346,12 +365,16 @@ get_view_by_idx(const StlVecType<IndexType> &values) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
-get_data_by_loc (Index2D<long> range, inclusiveness incld) const  {
+get_data_by_loc(Index2D<long> range, inclusiveness incld) const  {
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
     if (range.begin < 0)
         range.begin = static_cast<long>(indices_.size()) + range.begin;
+    // Python-like negative indexing: -1 is the last row, so, with the default
+    // inclusiveness, { x, -1 } does not include the last row. This is the same
+    // as remove_data_by_loc().
+    //
     if (range.end < 0)
         range.end = static_cast<long>(indices_.size()) + range.end + 1;
 
@@ -365,51 +388,57 @@ get_data_by_loc (Index2D<long> range, inclusiveness incld) const  {
             df.load_index(indices_.begin() + col_begin,
                           indices_.begin() + col_end);
 
-            const SpinGuard guard(lock_);
+            const SpinGuard guard { lock_ };
 
             for (const auto &[name, idx] : column_list_) [[likely]]  {
-                create_col_functor_<res_t, Ts ...>  functor(name.c_str(), df);
+                create_col_functor_<res_t, Ts ...>  functor {
+                    name.c_str(), df
+                };
 
                 data_[idx].change(functor);
             }
 
-            const auto  thread_level =
+            const auto  thread_level {
                 (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-                    ? 0L : get_thread_level();
+                    ? 0L : get_thread_level()
+            };
 
             if (thread_level > 2)  {
                 auto    lbd =
                 [&range = std::as_const(range), &df, this, incld]
-                    (const auto &begin, const auto &end) -> void  {
-                        for (auto citer = begin; citer < end; ++citer)  {
-                            load_functor_<res_t, Ts ...>    functor(
-                                citer->first.c_str(),
-                                static_cast<size_type>(range.begin),
-                                static_cast<size_type>(range.end),
-                                df,
-                                nan_policy::pad_with_nans,
-                                incld);
+                (const auto &begin, const auto &end) -> void  {
+                    for (auto citer { begin }; citer < end; ++citer)  {
+                        load_functor_<res_t, Ts ...>    functor {
+                            citer->first.c_str(),
+                            static_cast<size_type>(range.begin),
+                            static_cast<size_type>(range.end),
+                            df,
+                            nan_policy::pad_with_nans,
+                            incld
+                        };
 
-                            this->data_[citer->second].change(functor);
-                        }
-                    };
+                            data_[citer->second].change(functor);
+                    }
+                };
 
-                auto    futuers =
+                auto    futuers {
                     thr_pool_.parallel_loop<double>(column_list_.begin(),
                                                     column_list_.end(),
-                                                    std::move(lbd));
+                                                    std::move(lbd))
+                };
 
                 for (auto &fut : futuers)  fut.get();
             }
             else  {
                 for (const auto &[name, idx] : column_list_) [[likely]]  {
-                    load_functor_<res_t, Ts ...>    functor(
+                    load_functor_<res_t, Ts ...>    functor {
                         name.c_str(),
                         static_cast<size_type>(range.begin),
                         static_cast<size_type>(range.end),
                         df,
                         nan_policy::pad_with_nans,
-                        incld);
+                        incld
+                    };
 
                     data_[idx].change(functor);
                 }
@@ -433,7 +462,7 @@ get_data_by_loc (Index2D<long> range, inclusiveness incld) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
-get_data_by_loc (const StlVecType<long> &locations) const  {
+get_data_by_loc(const StlVecType<long> &locations) const  {
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
@@ -502,9 +531,9 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::View DataFrame<I, H>::
-get_view_by_loc (Index2D<long> range, inclusiveness incld)  {
+get_view_by_loc(Index2D<long> range, inclusiveness incld)  {
 
-    const long  idx_s = static_cast<long>(indices_.size());
+    const long  idx_s { static_cast<long>(indices_.size()) };
 
     if (range.begin < 0)
         range.begin = idx_s + range.begin;
@@ -522,15 +551,16 @@ get_view_by_loc (Index2D<long> range, inclusiveness incld)  {
                 typename View::IndexVecType(&(indices_[0]) + col_begin,
                                             &(indices_[0]) + col_end);
 
-            const SpinGuard guard(lock_);
+            const SpinGuard guard { lock_ };
 
             for (const auto &[name, idx] : column_list_) [[likely]]  {
-                view_setup_functor_<View, Ts ...>   functor (
+                view_setup_functor_<View, Ts ...>   functor {
                     name.c_str(),
                     static_cast<size_type>(range.begin),
                     static_cast<size_type>(range.end),
                     dfv,
-                    incld);
+                    incld
+                };
 
                 data_[idx].change(functor);
             }
@@ -552,9 +582,9 @@ get_view_by_loc (Index2D<long> range, inclusiveness incld)  {
 template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::ConstView DataFrame<I, H>::
-get_view_by_loc (Index2D<long> range, inclusiveness incld) const  {
+get_view_by_loc(Index2D<long> range, inclusiveness incld) const  {
 
-    const long  idx_s = static_cast<long>(indices_.size());
+    const long  idx_s { static_cast<long>(indices_.size()) };
 
     if (range.begin < 0)
         range.begin = idx_s + range.begin;
@@ -572,15 +602,16 @@ get_view_by_loc (Index2D<long> range, inclusiveness incld) const  {
                 typename ConstView::IndexVecType(&(indices_[0]) + col_begin,
                                                  &(indices_[0]) + col_end);
 
-            const SpinGuard guard(lock_);
+            const SpinGuard guard { lock_ };
 
             for (const auto &[name, idx] : column_list_) [[likely]]  {
-                view_setup_functor_<ConstView, Ts ...>  functor (
+                view_setup_functor_<ConstView, Ts ...>  functor {
                     name.c_str(),
                     static_cast<size_type>(range.begin),
                     static_cast<size_type>(range.end),
                     dfcv,
-                    incld);
+                    incld
+                };
 
                 data_[idx].change(functor);
             }
@@ -603,7 +634,7 @@ get_view_by_loc (Index2D<long> range, inclusiveness incld) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::PtrView
-DataFrame<I, H>::get_view_by_loc (const StlVecType<long> &locations)  {
+DataFrame<I, H>::get_view_by_loc(const StlVecType<long> &locations)  {
 
     using TheView = PtrView;
 
@@ -642,7 +673,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
-get_view_by_loc (const StlVecType<long> &locations) const  {
+get_view_by_loc(const StlVecType<long> &locations) const  {
 
     using TheView = ConstPtrView;
 
@@ -680,7 +711,7 @@ get_view_by_loc (const StlVecType<long> &locations) const  {
 template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
-get_data_by_sel (const char *name, F &sel_functor) const requires
+get_data_by_sel(const char *name, F &sel_functor) const requires
 std::invocable<F, const IndexType &, const T &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 
@@ -702,7 +733,7 @@ std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
-get_view_by_sel (const char *name, F &sel_functor) requires
+get_view_by_sel(const char *name, F &sel_functor) requires
 std::invocable<F, const IndexType &, const T &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 
@@ -724,7 +755,7 @@ std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
-get_view_by_sel (const char *name, F &sel_functor) const requires
+get_view_by_sel(const char *name, F &sel_functor) const requires
 std::invocable<F, const IndexType &, const T &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 
@@ -746,8 +777,8 @@ std::same_as<std::invoke_result_t<F, const IndexType &, const T &>, bool>  {
 template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
-get_data_by_sel (const char *name1, const char *name2,
-                 F &sel_functor) const requires
+get_data_by_sel(const char *name1, const char *name2,
+                F &sel_functor) const requires
 std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &,
                                   const T1 &, const T2 &>, bool>  {
@@ -779,8 +810,8 @@ std::same_as<std::invoke_result_t<F, const IndexType &,
 template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
-get_view_by_sel (const char *name1, const char *name2,
-                 F &sel_functor) requires
+get_view_by_sel(const char *name1, const char *name2,
+                F &sel_functor) requires
 std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &,
                                   const T1 &, const T2 &>, bool>  {
@@ -813,8 +844,8 @@ template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
-get_view_by_sel (const char *name1, const char *name2,
-                 F &sel_functor) const requires
+get_view_by_sel(const char *name1, const char *name2,
+                F &sel_functor) const requires
 std::invocable<F, const IndexType &, const T1 &, const T2 &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &,
                                   const T1 &, const T2 &>, bool>  {
@@ -846,10 +877,10 @@ std::same_as<std::invoke_result_t<F, const IndexType &,
 template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
-get_data_by_sel (const char *name1,
-                 const char *name2,
-                 const char *name3,
-                 F &sel_functor) const requires
+get_data_by_sel(const char *name1,
+                const char *name2,
+                const char *name3,
+                F &sel_functor) const requires
 std::invocable<F, const IndexType &, const T1 &, const T2 &, const T3 &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &,
                                      const T1 &, const T2 &,
@@ -885,7 +916,7 @@ std::same_as<std::invoke_result_t<F, const IndexType &,
 template<typename I, typename H>
 template<typename Tuple, typename F, typename... FilterCols>
 DataFrame<I, H> DataFrame<I, H>::
-get_data_by_sel (F &sel_functor) const  {
+get_data_by_sel(F &sel_functor) const  {
 
     const size_type idx_s = indices_.size();
     // Get columns to std::tuple
@@ -981,7 +1012,7 @@ get_data_by_sel (F &sel_functor) const  {
 template<typename I, typename H>
 template<typename Tuple, typename F, typename... FilterCols>
 DataFrame<I, H> DataFrame<I, H>::
-get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
+get_data_by_sel(F &sel_functor, FilterCols && ... filter_cols) const  {
 
     const size_type idx_s = indices_.size();
     // Get columns to std::tuple
@@ -1076,10 +1107,10 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
 template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
-get_view_by_sel (const char *name1,
-                 const char *name2,
-                 const char *name3,
-                 F &sel_functor) requires
+get_view_by_sel(const char *name1,
+                const char *name2,
+                const char *name3,
+                F &sel_functor) requires
 std::invocable<F, const IndexType &, const T1 &, const T2 &, const T3 &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &,
                                      const T1 &, const T2 &,
@@ -1116,10 +1147,10 @@ template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
-get_view_by_sel (const char *name1,
-                 const char *name2,
-                 const char *name3,
-                 F &sel_functor) const requires
+get_view_by_sel(const char *name1,
+                const char *name2,
+                const char *name3,
+                F &sel_functor) const requires
 std::invocable<F, const IndexType &, const T1 &, const T2 &, const T3 &> &&
 std::same_as<std::invoke_result_t<F, const IndexType &,
                                      const T1 &, const T2 &,
@@ -2069,7 +2100,7 @@ get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
-get_view_by_rand (random_policy spec, double n, seed_t seed)  {
+get_view_by_rand(random_policy spec, double n, seed_t seed)  {
 
     bool            use_seed = false;
     size_type       n_rows = static_cast<size_type>(n);
@@ -2144,7 +2175,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
-get_view_by_rand (random_policy spec, double n, seed_t seed) const  {
+get_view_by_rand(random_policy spec, double n, seed_t seed) const  {
 
     bool            use_seed = false;
     size_type       n_rows = static_cast<size_type>(n);
@@ -2220,12 +2251,13 @@ template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_every_n(size_type n, size_type starting_idx) const  {
 
-    const size_type idx_s = indices_.size();
+    const size_type idx_s { indices_.size() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (n >= (idx_s - 1) || starting_idx >= idx_s)
+    if (n > (idx_s - 1) || starting_idx >= idx_s || n == 0)
         throw NotFeasible("get_data_every_n(): "
-                          "n and starting_idx must be < index column length");
+                          "n and starting_idx must be < index column length "
+						  "and n > 0");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     StlVecType<size_type>   col_indices;
@@ -2244,12 +2276,13 @@ template<typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_every_n(size_type n, size_type starting_idx)  {
 
-    const size_type idx_s = indices_.size();
+    const size_type idx_s { indices_.size() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (n >= (idx_s - 1) || starting_idx >= idx_s)
-        throw NotFeasible("get_data_every_n(): "
-                          "n and starting_idx must be < index column length");
+    if (n > (idx_s - 1) || starting_idx >= idx_s || n == 0)
+        throw NotFeasible("get_view_every_n(): "
+                          "n and starting_idx must be < index column length "
+						  "and n > 0");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     StlVecType<size_type>   col_indices;
@@ -2268,12 +2301,13 @@ template<typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
 get_view_every_n(size_type n, size_type starting_idx) const  {
 
-    const size_type idx_s = indices_.size();
+    const size_type idx_s { indices_.size() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-    if (n >= (idx_s - 1) || starting_idx >= idx_s)
-        throw NotFeasible("get_data_every_n(): "
-                          "n and starting_idx must be < index column length");
+    if (n > (idx_s - 1) || starting_idx >= idx_s || n == 0)
+        throw NotFeasible("get_view_every_n(): "
+                          "n and starting_idx must be < index column length "
+                          "and n >0");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     StlVecType<size_type>   col_indices;
@@ -2603,7 +2637,7 @@ template<comparable T, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_n_largest_data(const char *col_name, size_type n, bool abs_value) const  {
 
-    const size_type idx_s = indices_.size();
+    const size_type idx_s { indices_.size() };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (n >= idx_s)
@@ -2611,15 +2645,12 @@ get_n_largest_data(const char *col_name, size_type n, bool abs_value) const  {
                           "n  must be < index column length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const auto              per_vec =
-        permutation_vec<T>(
+    const StlVecType<size_type> col_indices {
+        n_permutation_vec_<T>(
             col_name,
-            abs_value ? sort_spec::abs_desce : sort_spec::desce);
-    const auto              col_s = std::min(n, per_vec.size());
-    StlVecType<size_type>   col_indices(col_s);
-
-    for (size_type i = 0; i < col_s; ++i)
-        col_indices[i] = per_vec[i];
+            abs_value ? sort_spec::abs_desce : sort_spec::desce,
+            n)
+    };
 
     return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2639,15 +2670,12 @@ get_n_largest_view(const char *col_name, size_type n, bool abs_value)  {
                           "n  must be < index column length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const auto              per_vec =
-        permutation_vec<T>(
+    const StlVecType<size_type> col_indices {
+        n_permutation_vec_<T>(
             col_name,
-            abs_value ? sort_spec::abs_desce : sort_spec::desce);
-    const auto              col_s = std::min(n, per_vec.size());
-    StlVecType<size_type>   col_indices(col_s);
-
-    for (size_type i = 0; i < col_s; ++i)
-        col_indices[i] = per_vec[i];
+            abs_value ? sort_spec::abs_desce : sort_spec::desce,
+            n)
+    };
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2667,15 +2695,12 @@ get_n_largest_view(const char *col_name, size_type n, bool abs_value) const  {
                           "n  must be < index column length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const auto              per_vec =
-        permutation_vec<T>(
+    const StlVecType<size_type> col_indices {
+        n_permutation_vec_<T>(
             col_name,
-            abs_value ? sort_spec::abs_desce : sort_spec::desce);
-    const auto              col_s = std::min(n, per_vec.size());
-    StlVecType<size_type>   col_indices(col_s);
-
-    for (size_type i = 0; i < col_s; ++i)
-        col_indices[i] = per_vec[i];
+            abs_value ? sort_spec::abs_desce : sort_spec::desce,
+            n)
+    };
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2695,15 +2720,12 @@ get_n_smallest_data(const char *col_name, size_type n, bool abs_value) const  {
                           "n  must be < index column length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const auto              per_vec =
-        permutation_vec<T>(
+    const StlVecType<size_type> col_indices {
+        n_permutation_vec_<T>(
             col_name,
-            abs_value ? sort_spec::abs_ascen : sort_spec::ascen);
-    const auto              col_s = std::min(n, per_vec.size());
-    StlVecType<size_type>   col_indices(col_s);
-
-    for (size_type i = 0; i < col_s; ++i)
-        col_indices[i] = per_vec[i];
+            abs_value ? sort_spec::abs_ascen : sort_spec::ascen,
+            n)
+    };
 
     return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2723,15 +2745,12 @@ get_n_smallest_view(const char *col_name, size_type n, bool abs_value)  {
                           "n  must be < index column length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const auto              per_vec =
-        permutation_vec<T>(
+    const StlVecType<size_type> col_indices {
+        n_permutation_vec_<T>(
             col_name,
-            abs_value ? sort_spec::abs_ascen : sort_spec::ascen);
-    const auto              col_s = std::min(n, per_vec.size());
-    StlVecType<size_type>   col_indices(col_s);
-
-    for (size_type i = 0; i < col_s; ++i)
-        col_indices[i] = per_vec[i];
+            abs_value ? sort_spec::abs_ascen : sort_spec::ascen,
+            n)
+    };
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2751,15 +2770,12 @@ get_n_smallest_view(const char *col_name, size_type n, bool abs_value) const  {
                           "n  must be < index column length");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    const auto              per_vec =
-        permutation_vec<T>(
+    const StlVecType<size_type> col_indices {
+        n_permutation_vec_<T>(
             col_name,
-            abs_value ? sort_spec::abs_ascen : sort_spec::ascen);
-    const auto              col_s = std::min(n, per_vec.size());
-    StlVecType<size_type>   col_indices(col_s);
-
-    for (size_type i = 0; i < col_s; ++i)
-        col_indices[i] = per_vec[i];
+            abs_value ? sort_spec::abs_ascen : sort_spec::ascen,
+            n)
+    };
 
     return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
@@ -2777,8 +2793,8 @@ get_data_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
     const auto              thread_level =
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
     auto                    mean_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            MeanVisitor<T, I>   mean { true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            MeanVisitor<double, I>  mean { true };
 
             mean.pre();
             mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -2786,16 +2802,16 @@ get_data_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
             return (mean.get_result());
         };
     auto                    stdev_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            StdVisitor<T, I>    stdev { true, true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            StdVisitor<double, I>   stdev { true, true };
 
             stdev.pre();
             stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             stdev.post();
             return (stdev.get_result());
         };
-    T                       stdev;
-    T                       mean;
+    double                  stdev;
+    double                  mean;
 
     if (thread_level > 2)  {
         auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
@@ -2813,7 +2829,7 @@ get_data_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
 
     col_indices.reserve(col_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
-        const T z = (vec[i] - mean) / stdev;
+        const double    z = (double(vec[i]) - mean) / stdev;
 
         if (z < high_stdev && z > low_stdev)
             col_indices.push_back(i);
@@ -2835,8 +2851,8 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev)  {
     const auto              thread_level =
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
     auto                    mean_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            MeanVisitor<T, I>   mean { true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            MeanVisitor<double, I>  mean { true };
 
             mean.pre();
             mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -2844,16 +2860,16 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev)  {
             return (mean.get_result());
         };
     auto                    stdev_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            StdVisitor<T, I>    stdev { true, true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            StdVisitor<double, I>   stdev { true, true };
 
             stdev.pre();
             stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             stdev.post();
             return (stdev.get_result());
         };
-    T                       stdev;
-    T                       mean;
+    double                  stdev;
+    double                  mean;
 
     if (thread_level > 2)  {
         auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
@@ -2871,7 +2887,7 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev)  {
 
     col_indices.reserve(col_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
-        const T z = (vec[i] - mean) / stdev;
+        const double    z = (double(vec[i]) - mean) / stdev;
 
         if (z < high_stdev && z > low_stdev)
             col_indices.push_back(i);
@@ -2893,8 +2909,8 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
     const auto              thread_level =
         (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
     auto                    mean_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            MeanVisitor<T, I>   mean { true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            MeanVisitor<double, I>  mean { true };
 
             mean.pre();
             mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -2902,16 +2918,16 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
             return (mean.get_result());
         };
     auto                    stdev_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            StdVisitor<T, I>    stdev { true, true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            StdVisitor<double, I>   stdev { true, true };
 
             stdev.pre();
             stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             stdev.post();
             return (stdev.get_result());
         };
-    T                       stdev;
-    T                       mean;
+    double                  stdev;
+    double                  mean;
 
     if (thread_level > 2)  {
         auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
@@ -2929,7 +2945,7 @@ get_view_by_stdev(const char *col_name, T high_stdev, T low_stdev) const  {
 
     col_indices.reserve(col_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
-        const T z = (vec[i] - mean) / stdev;
+        const double    z = (double(vec[i]) - mean) / stdev;
 
         if (z < high_stdev && z > low_stdev)
             col_indices.push_back(i);
@@ -3622,7 +3638,24 @@ get_view_at_times(DateTime::HourType hr,
 
 // ----------------------------------------------------------------------------
 
+// Time of day as a single comparable number, so that comparing two times is
+// a plain lexicographic (hour, minute, second, millisecond) comparison.
+//
+inline static std::int64_t
+_DT_time_key_(DateTime::HourType hr,
+              DateTime::MinuteType mn,
+              DateTime::SecondType sc,
+              DateTime::MillisecondType msc)  {
+
+    return (((std::int64_t(hr) * 60 + std::int64_t(mn)) * 60 +
+             std::int64_t(sc)) * 1000 + std::int64_t(msc));
+}
+
+// ----------------------------------------------------------------------------
+
 // Benchmark time vs. Data time
+// Returns true if the data time is before (or equal to, if incld is true) the
+// benchmark time.
 //
 inline static bool
 _DT_before_times_(DateTime::HourType b_hr,
@@ -3635,17 +3668,17 @@ _DT_before_times_(DateTime::HourType b_hr,
                   DateTime::MillisecondType d_msc,
                   bool incld = false)  {
 
-    if (! incld) [[likely]]
-        return ((d_hr < b_hr) ||
-                (d_hr == b_hr && d_mn < b_mn) ||
-                (d_mn == b_mn && d_sc < b_sc) ||
-                (d_sc == b_sc && d_msc < b_msc));
-    return (d_hr <= b_hr && d_mn <= b_mn && d_sc <= b_sc && d_msc <= b_msc);
+    const std::int64_t  b { _DT_time_key_(b_hr, b_mn, b_sc, b_msc) };
+    const std::int64_t  d { _DT_time_key_(d_hr, d_mn, d_sc, d_msc) };
+
+    return (incld ? d <= b : d < b);
 }
 
 // ----------------------------------------------------------------------------
 
 // Benchmark time vs. Data time
+// Returns true if the data time is after (or equal to, if incld is true) the
+// benchmark time.
 //
 inline static bool
 _DT_after_times_(DateTime::HourType b_hr,
@@ -3658,12 +3691,10 @@ _DT_after_times_(DateTime::HourType b_hr,
                  DateTime::MillisecondType d_msc,
                  bool incld = false)  {
 
-    if (! incld) [[likely]]
-        return ((d_hr > b_hr) ||
-                (d_hr == b_hr && d_mn > b_mn) ||
-                (d_mn == b_mn && d_sc > b_sc) ||
-                (d_sc == b_sc && d_msc > b_msc));
-    return (d_hr >= b_hr && d_mn >= b_mn && d_sc >= b_sc && d_msc >= b_msc);
+    const std::int64_t  b { _DT_time_key_(b_hr, b_mn, b_sc, b_msc) };
+    const std::int64_t  d { _DT_time_key_(d_hr, d_mn, d_sc, d_msc) };
+
+    return (incld ? d >= b : d > b);
 }
 
 // ----------------------------------------------------------------------------

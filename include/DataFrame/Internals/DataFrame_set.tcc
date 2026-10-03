@@ -47,8 +47,8 @@ DataFrame<I, H>::create_column (const char *name, bool do_lock)  {
                               "Data column name cannot be 'INDEX'");
 
     const SpinGuard guard { do_lock ? lock_ : nullptr };
-	const auto      iter { column_tb_.find(name) };
-	
+    const auto      iter { column_tb_.find(name) };
+
     if (iter != column_tb_.end()) [[unlikely]]  {
         DataVec  &hv { data_[iter->second] };
 
@@ -547,35 +547,66 @@ load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call load_indicators()");
 
-    using map_t = DFUnorderedMap<T, StlVecType<IT> *>;
+    using map_t = DFUnorderedMap<T, size_type>;
 
-    const SpinGuard guard(lock_);
-    const auto      &cat_col = get_column<T>(cat_col_name, false);
-    const auto      col_s = cat_col.size();
-    map_t           val_map;
-    size_type       ret_cnt = 0;
+    size_type               col_s { 0 };
+    map_t                   val_map;
+    StlVecType<T>           unique_vals;
+    // The ordinal of each row's category in unique_vals
+    //
+    StlVecType<size_type>   row_ords;
+    const SpinGuard         guard { lock_ };
 
-    val_map.reserve(col_s / 2);
-    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-        const auto  val = cat_col[i];
-        auto        in_ret = val_map.emplace(std::make_pair(val, nullptr));
+    // First pass: find the unique categories, in order of first appearance.
+    // Nothing is created in this pass.
+    //
+    {
+        const auto  &cat_col { get_column<T>(cat_col_name, false) };
 
-        if (in_ret.second)  {
-            ColNameType new_name;
+        col_s = cat_col.size();
+        val_map.reserve(col_s / 2);
+        row_ords.reserve(col_s);
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const auto  in_ret {
+                val_map.try_emplace(cat_col[i], unique_vals.size())
+            };
 
-            if (numeric_cols_prefix)
-                new_name = numeric_cols_prefix;
-            new_name += _to_string_(val).c_str();
-
-            auto    *new_col = &(create_column<IT>(new_name.c_str(), false));
-
-            new_col->resize(col_s, IT(0));
-            in_ret.first->second = new_col;
-            ret_cnt += col_s;
+            if (in_ret.second)
+                unique_vals.push_back(cat_col[i]);
+            row_ords.push_back(in_ret.first->second);
         }
-        in_ret.first->second->at(i) = IT(1);
     }
-    return (ret_cnt);
+
+    // Second pass: create all the new columns. Creating a column can
+    // reallocate the column storage, which invalidates every reference to a
+    // column obtained before it. So, here nothing is kept but the names.
+    //
+    const size_type         uniq_s { unique_vals.size() };
+    StlVecType<ColNameType> new_names;
+
+    new_names.reserve(uniq_s);
+    for (size_type i { 0 }; i < uniq_s; ++i)  {
+        ColNameType new_name;
+
+        if (numeric_cols_prefix)
+            new_name = numeric_cols_prefix;
+        new_name += _to_string_(unique_vals[i]).c_str();
+
+        create_column<IT>(new_name.c_str(), false).assign(col_s, IT(0));
+        new_names.push_back(std::move(new_name));
+    }
+
+    // Third pass: now that the column storage is stable, get the columns and
+    // fill them.
+    //
+    StlVecType<StlVecType<IT> *>    new_cols(uniq_s, nullptr);
+
+    for (size_type i { 0 }; i < uniq_s; ++i)
+        new_cols[i] = &(get_column<IT>(new_names[i].c_str(), false));
+    for (size_type i { 0 }; i < col_s; ++i) [[likely]]
+        (*(new_cols[row_ords[i]]))[i] = IT(1);
+
+    return (uniq_s * col_s);
 }
 
 // ----------------------------------------------------------------------------
@@ -591,22 +622,37 @@ from_indicators(const StlVecType<const char *> &ind_col_names,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call from_indicators()");
 
-    const size_type                     ind_col_s = ind_col_names.size();
-    StlVecType<const StlVecType<T> *>   ind_cols(ind_col_s, nullptr);
-    SpinGuard                           guard (lock_);
+    const size_type ind_col_s { ind_col_names.size() };
 
-    for (size_type i = 0; i < ind_col_s; ++i) [[likely]]
+    if (ind_col_s == 0) [[unlikely]]
+        throw DataFrameError("DataFrame::from_indicators(): ERROR: "
+                             "No indicator column name is given");
+
+    StlVecType<const StlVecType<T> *>   ind_cols(ind_col_s, nullptr);
+    SpinGuard                           guard { lock_ };
+
+    // Make sure all the indicator columns exist before creating the new column
+    //
+    for (size_type i { 0 }; i < ind_col_s; ++i) [[likely]]
         ind_cols[i] = &(get_column<T>(ind_col_names[i], false));
 
-    const size_type col_s = ind_cols[0]->size();
-    auto            &new_col = create_column<CT>(cat_col_name, false);
-    const size_type pre_offset =
-        numeric_cols_prefix == nullptr ? 0 : strlen(numeric_cols_prefix);
+    auto            &new_col { create_column<CT>(cat_col_name, false) };
+    const size_type pre_offset {
+        numeric_cols_prefix == nullptr ? 0 : strlen(numeric_cols_prefix)
+    };
+
+    // Creating a column can reallocate the column storage, which invalidates
+    // every reference to a column obtained before it. So, get them again.
+    //
+    for (size_type i { 0 }; i < ind_col_s; ++i) [[likely]]
+        ind_cols[i] = &(get_column<T>(ind_col_names[i], false));
+
+    const size_type col_s { ind_cols[0]->size() };
 
     guard.release();
     new_col.reserve(col_s);
-    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-        for (size_type j = 0; j < ind_col_s; ++j) [[likely]]  {
+    for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+        for (size_type j { 0 }; j < ind_col_s; ++j) [[likely]]  {
             if (ind_cols[j]->at(i))  {
                 new_col.push_back(
                     _string_to_<CT>(ind_col_names[j] + pre_offset));

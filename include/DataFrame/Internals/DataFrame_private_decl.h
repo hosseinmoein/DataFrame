@@ -2500,6 +2500,70 @@ get_scaled_data_matrix_(std::vector<const char *> &&col_names,
 
 // ----------------------------------------------------------------------------
 
+// It returns the first n entries (or all of them, if n is greater than the
+// column length) of what permutation_vec(name, dir) would return. If n is
+// small compared to the column, there is no need to sort the whole column. A
+// partial sort is much faster (O(n log n) instead of O(n log n)), and the
+// result is the same up to the order of equal values, which is not defined by
+// sort() anyway.
+//
+template<comparable T>
+StlVecType<size_type>
+n_permutation_vec_(const char *name, sort_spec dir, size_type n) const  {
+
+    const ColumnVecType<T>  *vec { nullptr };
+
+    {
+        const SpinGuard guard { lock_ };
+
+        if (! ::strcmp(name, DF_INDEX_COL_NAME))
+            vec = reinterpret_cast<const ColumnVecType<T> *>(&indices_);
+        else
+            vec = &(get_column<T>(name, false));
+    }
+
+    const size_type col_s { vec->size() };
+    const size_type k { std::min(n, col_s) };
+
+    // For a large n, the full (and possibly parallel) sort is as good or
+    // better
+    //
+    if (k > (col_s / 32))  {
+        const auto              full = permutation_vec<T>(name, dir);
+        StlVecType<size_type>   result(std::min(k, full.size()));
+
+        std::copy_n(full.begin(), result.size(), result.begin());
+        return (result);
+    }
+
+    StlVecType<size_type>   result(col_s);
+    auto                    part_sort =
+        [&result, k](auto &&comp) -> void  {
+            std::partial_sort(result.begin(), result.begin() + k,
+                              result.end(), comp);
+        };
+    const auto              &v = *vec;
+
+    std::iota(result.begin(), result.end(), 0);
+    if (dir == sort_spec::ascen)
+        part_sort([&v](size_type l, size_type r) { return (v[l] < v[r]); });
+    else if (dir == sort_spec::desce)
+        part_sort([&v](size_type l, size_type r) { return (v[l] > v[r]); });
+    else if (dir == sort_spec::abs_ascen)
+        part_sort([&v](size_type l, size_type r)  {
+                      return (abs__(v[l]) < abs__(v[r]));
+                  });
+    else if (dir == sort_spec::abs_desce)
+        part_sort([&v](size_type l, size_type r)  {
+                      return (abs__(v[l]) > abs__(v[r]));
+                  });
+
+    result.resize(k);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

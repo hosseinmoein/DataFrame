@@ -2859,6 +2859,20 @@ struct _LikeClauseUtil_  {
 
 // ----------------------------------------------------------------------------
 
+// NO_WILDCARD_MATCH means that there is no match, and that the input was
+// exhausted while the rest of the pattern was still looking for something
+// after a '*'. So, no later starting position of that '*' can match
+// either, and the caller's '*' should stop retrying. Without this, a
+// pattern with several '*' takes exponential time on an input that does
+// not match.
+//
+enum class  like_clause_res : unsigned char  {
+
+    NO_MATCH = 0,
+    MATCH = 1,
+    NO_MATCH_INPUT_EXHAUSTED = 2,
+};
+
 // This compares two null-terminated strings for equality where the first
 // string can potentially be a "glob" expression (forget about regular
 // expressions).
@@ -2889,18 +2903,20 @@ struct _LikeClauseUtil_  {
 //       moderately sized strings. I have not tested this with huge/massive
 //       strings.
 //
-static inline bool
-_like_clause_compare_(const char *pattern,
-                      const char *input_str,
-                      bool case_insensitive = false,
-                      unsigned int esc_char = '\\')  {
+static inline like_clause_res
+_like_clause_compare_impl_(const char *pattern,
+                           const char *input_str,
+                           bool case_insensitive,
+                           unsigned int esc_char)  {
 
     using value_type = _LikeClauseUtil_::value_type;
 
-    const value_type    *upattern =
-        reinterpret_cast<const value_type *>(pattern);
-    const value_type    *uinput_str =
-        reinterpret_cast<const value_type *>(input_str);
+    const value_type    *upattern {
+        reinterpret_cast<const value_type *>(pattern)
+    };
+    const value_type    *uinput_str {
+        reinterpret_cast<const value_type *>(input_str)
+    };
     unsigned int        c, c2;
     const value_type    match_one { '?' };
     const value_type    match_all { '*' };
@@ -2915,28 +2931,31 @@ _like_clause_compare_(const char *pattern,
                    c == match_one)  {
                 if (c == match_one &&
                     _LikeClauseUtil_::char_read(&uinput_str) == 0)
-                    return (false);
+                    return (like_clause_res::NO_MATCH_INPUT_EXHAUSTED);
             }
             if (c == 0)  {
-                return (true);
+                return (like_clause_res::MATCH);
             }
             else if (c == esc_char)  {
                 c = _LikeClauseUtil_::char_read(&upattern);
                 if (c == 0)
-                    return (false);
+                    return (like_clause_res::NO_MATCH);
             }
             else if (c == match_set)  {
+                like_clause_res rc { like_clause_res::NO_MATCH };
+
                 while (*uinput_str &&
-                       _like_clause_compare_(
+                       (rc = _like_clause_compare_impl_(
                            reinterpret_cast<const char *>(&upattern[-1]),
                            reinterpret_cast<const char *>(uinput_str),
                            case_insensitive,
-                           esc_char) == 0)  {
+                           esc_char)) == like_clause_res::NO_MATCH)  {
                     if ((*(uinput_str++)) >= 0xc0)
                         while ((*uinput_str & 0xc0) == 0x80)
                             uinput_str++;
                 }
-                return (*uinput_str != 0);
+                return (*uinput_str != 0
+                            ? rc : like_clause_res::NO_MATCH_INPUT_EXHAUSTED);
             }
             while ((c2 = _LikeClauseUtil_::char_read(&uinput_str)) != 0)  {
                 if (case_insensitive)  {
@@ -2952,28 +2971,37 @@ _like_clause_compare_(const char *pattern,
                         c2 = _LikeClauseUtil_::char_read(&uinput_str);
                 }
                 if (c2 == 0)
-                    return (false);
-                if (_like_clause_compare_(
+                    return (like_clause_res::NO_MATCH_INPUT_EXHAUSTED);
+
+                const like_clause_res   rc {
+                    _like_clause_compare_impl_(
                         reinterpret_cast<const char *>(upattern),
                         reinterpret_cast<const char *>(uinput_str),
                         case_insensitive,
-                        esc_char))
-                    return (true);
+                        esc_char)
+                };
+
+                // A match, or a failure caused by running out of input.
+                // In both cases retrying with this '*' consuming more is
+                // pointless.
+                //
+                if (rc != like_clause_res::NO_MATCH)
+                    return (rc);
             }
-            return (false);
+            return (like_clause_res::NO_MATCH_INPUT_EXHAUSTED);
         }
         else if (c == match_one && ! prev_escape)  {
             if (_LikeClauseUtil_::char_read(&uinput_str) == 0)
-                return (false);
+                return (like_clause_res::NO_MATCH_INPUT_EXHAUSTED);
         }
-        else if (c == match_set)  {
+        else if (c == match_set && ! prev_escape)  {
             unsigned int    prior_c { 0 };
             int             seen { 0 };
             int             invert { 0 };
 
             c = _LikeClauseUtil_::char_read(&uinput_str);
             if (c == 0)
-                return (false);
+                return (like_clause_res::NO_MATCH_INPUT_EXHAUSTED);
             c2 = _LikeClauseUtil_::char_read(&upattern);
             if (c2 == '^')  {
                 invert = 1;
@@ -3002,24 +3030,41 @@ _like_clause_compare_(const char *pattern,
                 c2 = _LikeClauseUtil_::char_read(&upattern);
             }
             if (c2 == 0 || (seen ^ invert) == 0)
-                return (false);
+                return (like_clause_res::NO_MATCH);
         }
         else if (esc_char == c && ! prev_escape)  {
             prev_escape = true;
         }
         else  {
             c2 = _LikeClauseUtil_::char_read(&uinput_str);
+            if (c2 == 0)
+                return (like_clause_res::NO_MATCH_INPUT_EXHAUSTED);
             if (case_insensitive)  {
                 _LikeClauseUtil_::upper_to_lower(c);
                 _LikeClauseUtil_::upper_to_lower(c2);
             }
             if (c != c2)
-                return (false);
+                return (like_clause_res::NO_MATCH);
             prev_escape = false;
         }
     }
 
-    return (*uinput_str == 0);
+    return (*uinput_str == 0
+                ? like_clause_res::MATCH : like_clause_res::NO_MATCH);
+}
+
+// ----------------------------------------------------------------------------
+
+static inline bool
+_like_clause_compare_(const char *pattern,
+                      const char *input_str,
+                      bool case_insensitive = false,
+                      unsigned int esc_char = '\\')  {
+
+    return (_like_clause_compare_impl_(pattern,
+                                       input_str,
+                                       case_insensitive,
+                                       esc_char) == like_clause_res::MATCH);
 }
 
 // ----------------------------------------------------------------------------

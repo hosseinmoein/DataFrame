@@ -71,12 +71,12 @@ struct  HeteroConstPtrView {
     template<typename T>
     HeteroConstPtrView(VectorConstPtrView<T, A> &&vec);
     HeteroConstPtrView(const HeteroConstPtrView &that);
-    HeteroConstPtrView(HeteroConstPtrView &&that);
+    HeteroConstPtrView(HeteroConstPtrView &&that) noexcept;
 
     ~HeteroConstPtrView() { clear(); }
 
     HeteroConstPtrView &operator= (const HeteroConstPtrView &rhs);
-    HeteroConstPtrView &operator= (HeteroConstPtrView &&rhs);
+    HeteroConstPtrView &operator= (HeteroConstPtrView &&rhs) noexcept;
 
     template<typename T>
     [[nodiscard]] VectorConstPtrView<T, A> &get_vector();

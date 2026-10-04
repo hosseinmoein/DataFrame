@@ -941,10 +941,10 @@ template<typename ... Ts>
 void DataFrame<I, H>::
 truncate(IndexType &&before, IndexType &&after)  {
 
-    const auto  begin = indices_.begin();
-    const auto  end = indices_.end();
-    const auto  l_citer = std::lower_bound(begin, end, before);
-    const auto  u_citer = std::upper_bound(begin, end, after);
+    const auto  begin { indices_.begin() };
+    const auto  end { indices_.end() };
+    const auto  l_citer { std::lower_bound(begin, end, before) };
+    const auto  u_citer { std::upper_bound(begin, end, after) };
     size_type   l_index { 0 };
     size_type   u_index { indices_.size() };
 
@@ -953,22 +953,30 @@ truncate(IndexType &&before, IndexType &&after)  {
     if (u_citer != end)
         u_index = std::distance(begin, u_citer);
 
+    // An empty or inverted range (i.e. before > after) leaves nothing. Without
+    // this, l_index > u_index and the second erase() of indices_ below goes
+    // past the end of the container.
+    //
+    if (l_index > u_index)  l_index = u_index;
+
     {
-        const auto      thread_level =
+        const auto      thread_level {
             (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-                ? 0L : get_thread_level();
+                ? 0L : get_thread_level()
+        };
         auto            lbd =
             [this, l_index, u_index] (auto begin, auto end) -> void  {
-                truncate_functor_<Ts ...>   functor (l_index, u_index);
+                truncate_functor_<Ts ...>   functor { l_index, u_index };
 
-                for (auto citer = begin; citer < end; ++citer)
+                for (auto citer { begin }; citer < end; ++citer)
                     this->data_[citer->second].change(functor);
             };
-        const SpinGuard guard(lock_);
+        const SpinGuard guard { lock_ };
 
         if (thread_level > 2)  {
-            auto    futures = thr_pool_.parallel_loop<double>(
-                column_list_.begin(), column_list_.end(), std::move(lbd));
+            auto    futures { thr_pool_.parallel_loop<double>(
+                column_list_.begin(), column_list_.end(), std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }

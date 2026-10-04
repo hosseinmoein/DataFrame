@@ -383,7 +383,7 @@ HeteroVector<A>::HeteroVector ()  {
 template<std::size_t A> HeteroVector<A>::
 HeteroVector (const HeteroVector &that)  { *this = that; }
 template<std::size_t A> HeteroVector<A>::
-HeteroVector (HeteroVector &&that)  { *this = std::move(that); }
+HeteroVector (HeteroVector &&that) noexcept  { *this = std::move(that); }
 
 // ----------------------------------------------------------------------------
 
@@ -406,7 +406,7 @@ HeteroVector<A> &HeteroVector<A>::operator= (const HeteroVector &rhs)  {
 // ----------------------------------------------------------------------------
 
 template<std::size_t A>
-HeteroVector<A> &HeteroVector<A>::operator= (HeteroVector &&rhs)  {
+HeteroVector<A> &HeteroVector<A>::operator= (HeteroVector &&rhs) noexcept  {
 
     if (&rhs != this) [[likely]]  {
         clear();

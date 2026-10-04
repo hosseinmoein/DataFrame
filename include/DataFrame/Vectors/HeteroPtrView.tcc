@@ -356,7 +356,8 @@ HeteroPtrView<A>::HeteroPtrView() = default;
 template<std::size_t A>
 HeteroPtrView<A>::HeteroPtrView (const HeteroPtrView &that)  { *this = that; }
 template<std::size_t A>
-HeteroPtrView<A>::HeteroPtrView (HeteroPtrView &&that)  { *this = that; }
+HeteroPtrView<A>::
+HeteroPtrView (HeteroPtrView &&that) noexcept  { *this = that; }
 
 // ----------------------------------------------------------------------------
 
@@ -378,7 +379,7 @@ HeteroPtrView<A> &HeteroPtrView<A>::operator= (const HeteroPtrView &rhs)  {
 // ----------------------------------------------------------------------------
 
 template<std::size_t A>
-HeteroPtrView<A> &HeteroPtrView<A>::operator= (HeteroPtrView &&rhs)  {
+HeteroPtrView<A> &HeteroPtrView<A>::operator= (HeteroPtrView &&rhs) noexcept  {
 
     if (&rhs != this) [[likely]]  {
         clear();

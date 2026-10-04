@@ -359,7 +359,7 @@ HeteroView<A>::HeteroView() = default;
 template<std::size_t A>
 HeteroView<A>::HeteroView (const HeteroView &that)  { *this = that; }
 template<std::size_t A>
-HeteroView<A>::HeteroView (HeteroView &&that)  { *this = that; }
+HeteroView<A>::HeteroView (HeteroView &&that) noexcept  { *this = that; }
 
 // ----------------------------------------------------------------------------
 
@@ -381,7 +381,7 @@ HeteroView<A> &HeteroView<A>::operator= (const HeteroView &rhs)  {
 // ----------------------------------------------------------------------------
 
 template<std::size_t A>
-HeteroView<A> &HeteroView<A>::operator= (HeteroView &&rhs)  {
+HeteroView<A> &HeteroView<A>::operator= (HeteroView &&rhs) noexcept  {
 
     if (&rhs != this) [[likely]]  {
         clear();

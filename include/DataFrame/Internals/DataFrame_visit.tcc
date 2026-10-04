@@ -124,11 +124,11 @@ template<typename I, typename H>
 template<typename T, typename V>
 V &DataFrame<I, H>::visit (const char *name, V &visitor, bool in_reverse)  {
 
-    auto            &vec = get_column<T>(name);
-    const size_type idx_s = indices_.size();
-    const size_type min_s = std::min<size_type>(vec.size(), idx_s);
-    size_type       i = 0;
-    T               nan_val = get_nan<T>();
+    auto            &vec { get_column<T>(name) };
+    const size_type idx_s { indices_.size() };
+    const size_type min_s { std::min<size_type>(vec.size(), idx_s) };
+    size_type       i { 0 };
+    T               nan_val { get_nan<T>() };
 
     visitor.pre();
     if (! in_reverse) [[likely]]  {
@@ -138,12 +138,12 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor, bool in_reverse)  {
             visitor (indices_[i], nan_val);
     }
     else  {
-        const size_type diff = idx_s - min_s;
-        const size_type idx_s_1 = idx_s - 1;
+        const size_type diff { idx_s - min_s };
+        const size_type idx_s_1 { idx_s - 1 };
 
         for (; i < diff; ++i)
             visitor (indices_[idx_s_1 - i], nan_val);
-        for (; i < min_s; ++i)
+        for (; i < idx_s; ++i)
             visitor (indices_[idx_s_1 - i], vec[idx_s_1 - i]);
     }
     visitor.post();
@@ -236,7 +236,7 @@ visit (const char *name1, const char *name2, V &visitor, bool in_reverse)  {
             visitor (indices_[i],
                      ((idx_s_1 - i) < data_s1) ? vec1[idx_s_1 - i] : nan_val1,
                      ((idx_s_1 - i) < data_s2) ? vec2[idx_s_1 - i] : nan_val2);
-        for (; i < min_s; ++i) [[likely]]
+        for (; i < idx_s; ++i) [[likely]]
             visitor (indices_[idx_s_1 - i],
                      vec1[idx_s_1 - i],
                      vec2[idx_s_1 - i]);
@@ -353,7 +353,7 @@ visit (const char *name1,
                      ((idx_s_1 - i) < data_s1) ? vec1[idx_s_1 - i] : nan_val1,
                      ((idx_s_1 - i) < data_s2) ? vec2[idx_s_1 - i] : nan_val2,
                      ((idx_s_1 - i) < data_s3) ? vec3[idx_s_1 - i] : nan_val3);
-        for (; i < min_s; ++i) [[likely]]
+        for (; i < idx_s; ++i) [[likely]]
             visitor (indices_[idx_s_1 - i],
                      vec1[idx_s_1 - i],
                      vec2[idx_s_1 - i],
@@ -487,7 +487,7 @@ visit (const char *name1,
                      ((idx_s_1 - i) < data_s2) ? vec2[idx_s_1 - i] : nan_val2,
                      ((idx_s_1 - i) < data_s3) ? vec3[idx_s_1 - i] : nan_val3,
                      ((idx_s_1 - i) < data_s4) ? vec4[idx_s_1 - i] : nan_val4);
-        for (; i < min_s; ++i) [[likely]]
+        for (; i < idx_s; ++i) [[likely]]
             visitor (indices_[idx_s_1 - i],
                      vec1[idx_s_1 - i],
                      vec2[idx_s_1 - i],
@@ -637,7 +637,7 @@ visit (const char *name1,
                      ((idx_s_1 - i) < data_s3) ? vec3[idx_s_1 - i] : nan_val3,
                      ((idx_s_1 - i) < data_s4) ? vec4[idx_s_1 - i] : nan_val4,
                      ((idx_s_1 - i) < data_s5) ? vec5[idx_s_1 - i] : nan_val5);
-        for (; i < min_s; ++i) [[likely]]
+        for (; i < idx_s; ++i) [[likely]]
             visitor (indices_[idx_s_1 - i],
                      vec1[idx_s_1 - i],
                      vec2[idx_s_1 - i],
@@ -741,15 +741,28 @@ visit_async(const char *name1,
 template<typename I, typename H>
 template<typename T, typename V>
 V &DataFrame<I, H>::
-single_act_visit (const char *name, V &visitor, bool in_reverse)  {
+single_act_visit(const char *name, V &visitor, bool in_reverse)  {
 
-    auto    &vec = get_column<T>(name);
+    auto    &vec { get_column<T>(name) };
 
     visitor.pre();
     if (! in_reverse) [[likely]]
         visitor (indices_.begin(), indices_.end(), vec.begin(), vec.end());
-    else
-        visitor (indices_.rbegin(), indices_.rend(), vec.rbegin(), vec.rend());
+    else  {
+        // In reverse, all ranges must start at the same row. Otherwise, with
+        // ranges of different lengths, the reversed ranges are misaligned
+        // relative to each other (i.e. the last index row is paired with the
+        // last element of a shorter column). So, they all start at the last
+        // row that is common to all of them.
+        //
+        const size_type min_s {
+            std::min<size_type>(indices_.size(), vec.size())
+        };
+
+        visitor (indices_.rbegin() + (indices_.size() - min_s),
+                 indices_.rend(),
+                 vec.rbegin() + (vec.size() - min_s), vec.rend());
+    }
     visitor.post();
 
     return (visitor);
@@ -810,9 +823,9 @@ single_act_visit (const char *name1,
                   V &visitor,
                   bool in_reverse)  {
 
-    SpinGuard               guard (lock_);
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    SpinGuard               guard { lock_ };
+    const ColumnVecType<T1> &vec1 { get_column<T1>(name1, false) };
+    const ColumnVecType<T2> &vec2 { get_column<T2>(name2, false) };
 
     guard.release();
     visitor.pre();
@@ -820,10 +833,15 @@ single_act_visit (const char *name1,
         visitor (indices_.begin(), indices_.end(),
                  vec1.begin(), vec1.end(),
                  vec2.begin(), vec2.end());
-    else
-        visitor (indices_.rbegin(), indices_.rend(),
-                 vec1.rbegin(), vec1.rend(),
-                 vec2.rbegin(), vec2.rend());
+    else  {
+        const size_type min_s =
+            std::min<size_type>({ indices_.size(), vec1.size(), vec2.size() });
+
+        visitor (indices_.rbegin() + (indices_.size() - min_s),
+                 indices_.rend(),
+                 vec1.rbegin() + (vec1.size() - min_s), vec1.rend(),
+                 vec2.rbegin() + (vec2.size() - min_s), vec2.rend());
+    }
     visitor.post();
 
     return (visitor);
@@ -899,10 +917,10 @@ single_act_visit (const char *name1,
                   V &visitor,
                   bool in_reverse)  {
 
-    SpinGuard               guard (lock_);
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    SpinGuard               guard { lock_ };
+    const ColumnVecType<T1> &vec1 { get_column<T1>(name1, false) };
+    const ColumnVecType<T2> &vec2 { get_column<T2>(name2, false) };
+    const ColumnVecType<T3> &vec3 { get_column<T3>(name3, false) };
 
     guard.release();
     visitor.pre();
@@ -911,11 +929,17 @@ single_act_visit (const char *name1,
                  vec1.begin(), vec1.end(),
                  vec2.begin(), vec2.end(),
                  vec3.begin(), vec3.end());
-    else
-        visitor (indices_.rbegin(), indices_.rend(),
-                 vec1.rbegin(), vec1.rend(),
-                 vec2.rbegin(), vec2.rend(),
-                 vec3.rbegin(), vec3.rend());
+    else  {
+        const size_type min_s =
+            std::min<size_type>({ indices_.size(), vec1.size(), vec2.size(),
+                                  vec3.size() });
+
+        visitor (indices_.rbegin() + (indices_.size() - min_s),
+                 indices_.rend(),
+                 vec1.rbegin() + (vec1.size() - min_s), vec1.rend(),
+                 vec2.rbegin() + (vec2.size() - min_s), vec2.rend(),
+                 vec3.rbegin() + (vec3.size() - min_s), vec3.rend());
+    }
     visitor.post();
 
     return (visitor);
@@ -1016,12 +1040,18 @@ single_act_visit (const char *name1,
                  vec2.begin(), vec2.end(),
                  vec3.begin(), vec3.end(),
                  vec4.begin(), vec4.end());
-    else
-        visitor (indices_.rbegin(), indices_.rend(),
-                 vec1.rbegin(), vec1.rend(),
-                 vec2.rbegin(), vec2.rend(),
-                 vec3.rbegin(), vec3.rend(),
-                 vec4.rbegin(), vec4.rend());
+    else  {
+        const size_type min_s =
+            std::min<size_type>({ indices_.size(), vec1.size(), vec2.size(),
+					vec3.size(), vec4.size() });
+
+        visitor (indices_.rbegin() + (indices_.size() - min_s),
+                 indices_.rend(),
+                 vec1.rbegin() + (vec1.size() - min_s), vec1.rend(),
+                 vec2.rbegin() + (vec2.size() - min_s), vec2.rend(),
+                 vec3.rbegin() + (vec3.size() - min_s), vec3.rend(),
+                 vec4.rbegin() + (vec4.size() - min_s), vec4.rend());
+    }
     visitor.post();
 
     return (visitor);
@@ -1133,13 +1163,19 @@ single_act_visit (const char *name1,
                  vec3.begin(), vec3.end(),
                  vec4.begin(), vec4.end(),
                  vec5.begin(), vec5.end());
-    else
-        visitor (indices_.rbegin(), indices_.rend(),
-                 vec1.rbegin(), vec1.rend(),
-                 vec2.rbegin(), vec2.rend(),
-                 vec3.rbegin(), vec3.rend(),
-                 vec4.rbegin(), vec4.rend(),
-                 vec5.rbegin(), vec5.rend());
+    else  {
+        const size_type min_s =
+            std::min<size_type>({ indices_.size(), vec1.size(), vec2.size(),
+					vec3.size(), vec4.size(), vec5.size() });
+
+        visitor (indices_.rbegin() + (indices_.size() - min_s),
+                 indices_.rend(),
+                 vec1.rbegin() + (vec1.size() - min_s), vec1.rend(),
+                 vec2.rbegin() + (vec2.size() - min_s), vec2.rend(),
+                 vec3.rbegin() + (vec3.size() - min_s), vec3.rend(),
+                 vec4.rbegin() + (vec4.size() - min_s), vec4.rend(),
+                 vec5.rbegin() + (vec5.size() - min_s), vec5.rend());
+    }
     visitor.post();
 
     return (visitor);

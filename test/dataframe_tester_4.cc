@@ -965,6 +965,38 @@ static void test_difference()  {
     assert(! diff_df.has_column("self_dbl_col_2"));
     assert(! diff_df.has_column("other_dbl_col_2"));
     assert(! diff_df.has_column("dbl_col_2"));
+
+    // Columns of different lengths, with the last difference in another column
+    // further down. The tail rows must stay aligned with their rows.
+    //
+    {
+        MyDataFrame lhs;
+        MyDataFrame rhs;
+
+        lhs.load_index(MyDataFrame::gen_sequence_index(0, 6, 1));
+        rhs.load_index(MyDataFrame::gen_sequence_index(0, 6, 1));
+        lhs.load_column<double>("x", { 1, 2, 3, 4, 5, 6 });
+        rhs.load_column<double>("x", { 1, 9, 3, 4 },
+                                nan_policy::dont_pad_with_nans);
+        lhs.load_column<double>("y", { 10, 11, 12, 13, 14, 15 });
+        rhs.load_column<double>("y", { 10, 11, 12, 13, 99, 15 });
+
+        const auto  res = lhs.difference<double>(rhs);
+
+        assert(res.get_index().size() == 6);
+
+        const auto  &self_x = res.get_column<double>("self_x");
+
+        assert(self_x.size() == 6);
+        assert(std::isnan(self_x[0]));
+        assert(self_x[1] == 2.0);
+        assert(std::isnan(self_x[2]));
+        assert(std::isnan(self_x[3]));
+        assert(self_x[4] == 5.0);
+        assert(self_x[5] == 6.0);
+        assert(res.get_column<double>("self_y")[4] == 14.0);
+        assert(res.get_column<double>("other_y")[4] == 99.0);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -4234,13 +4266,11 @@ static void test_remove_data_by_fft()  {
     assert((ibm.get_column<double>("IBM_Open").size() == 5031));
     assert((ibm_view.get_column<double>("IBM_Open").size() == 5031));
 
-    ibm.remove_data_by_fft<double, double, long>("IBM_Close", 1000, 250,
-                                                 normalization_type::z_score);
-    assert((ibm.get_column<double>("IBM_Open").size() == (5031 - 3)));
+    ibm.remove_data_by_fft<double, double, long>("IBM_Close", 1000, 80);
+    assert((ibm.get_column<double>("IBM_Open").size() == (5031 - 9)));
 
-    ibm_view.remove_data_by_fft<double, double, long>
-        ("IBM_Close", 1000, 250, normalization_type::z_score);
-    assert((ibm_view.get_column<double>("IBM_Open").size() == (5031 - 3)));
+    ibm_view.remove_data_by_fft<double, double, long>("IBM_Close", 1000, 80);
+    assert((ibm_view.get_column<double>("IBM_Open").size() == (5031 - 9)));
 }
 
 // ----------------------------------------------------------------------------
@@ -4757,16 +4787,16 @@ static void test_detect_and_change()  {
             { "IBM_Close", "IBM_Open" },
             detect_method::fft,
             fill_policy::mid_point,
-            { .threshold = 250.0,
-              .norm_type = normalization_type::z_score,
+            { .threshold = 80.0,
+              .norm_type = normalization_type::none,
               .freq_num = 1000 });
 
-        assert((std::fabs(close_col[502] - 82.02) < 0.01));
-        assert((std::fabs(close_col[1001] - 89.805) < 0.01));
-        assert((std::fabs(close_col[2002] - 88.055) < 0.01));
-        assert((std::fabs(open_col[2] - 1.0) < 0.01));    // It didn't catch it
-        assert((std::fabs(open_col[3000] - 2.5) < 0.01)); // It didn't catch it
-        assert((std::fabs(open_col[5029] - 108.28) < 0.01));
+        assert((std::fabs(close_col[502] - 260.87) < 0.001));
+        assert((std::fabs(close_col[1001] - 292.555) < 0.001));
+        assert((std::fabs(close_col[2002] - 276.995) < 0.001));
+        assert((std::fabs(open_col[2] - 1.0) < 0.01));  // Didn't catch this
+        assert((std::fabs(open_col[3000] - 210.15) < 0.01));
+        assert((std::fabs(open_col[5029] - 294.488) < 0.01));
     }
 
     // Now we need a DataFrame with a numeric index to be able to use

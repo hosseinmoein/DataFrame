@@ -42,24 +42,34 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call remove_data_by_idx()");
 
-    const auto  &lower =
-        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
-    const auto  &upper =
-        std::upper_bound (indices_.begin(), indices_.end(), range.end);
+    const auto  &lower {
+        std::lower_bound (indices_.begin(), indices_.end(), range.begin)
+    };
+    const auto  &upper {
+        std::upper_bound (indices_.begin(), indices_.end(), range.end)
+    };
 
-    if (lower != indices_.end()) [[likely]]  {
-        const size_type b_dist = std::distance(indices_.begin(), lower);
-        const size_type e_dist =
-            std::distance(indices_.begin(),
-                          upper < indices_.end() ? upper : indices_.end());
+    // If range.begin > range.end, lower could be after upper. That is an empty
+    // range, and erasing [lower, upper) with lower > upper is undefined.
+    //
+    if (lower != indices_.end() && lower <= upper) [[likely]]  {
+        const size_type b_dist {
+            size_type(std::distance(indices_.begin(), lower))
+        };
+        const size_type e_dist {
+            size_type(std::distance(indices_.begin(),
+                                    upper < indices_.end()
+                                        ? upper : indices_.end()))
+        };
 
         make_consistent<Ts ...>();
         indices_.erase(lower, upper);
 
-        const auto      thread_level =
+        const auto      thread_level {
             (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-                ? 0L : get_thread_level();
-        const SpinGuard guard(lock_);
+                ? 0L : get_thread_level()
+        };
+        const SpinGuard guard { lock_ };
 
         if (thread_level > 2)  {
             auto    lbd =
@@ -67,13 +77,14 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
                 (const auto &begin, const auto &end) -> void  {
                     remove_functor_<Ts ...> functor (b_dist, e_dist);
 
-                    for (auto citer = begin; citer < end; ++citer)
+                    for (auto citer { begin }; citer < end; ++citer)
                         this->data_[citer->second].change(functor);
                 };
-            auto    futures =
+            auto    futures {
                 thr_pool_.parallel_loop<double>(column_list_.begin(),
                                                 column_list_.end(),
-                                                std::move(lbd));
+                                                std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -500,13 +511,19 @@ remove_data_by_stdev(const char *col_name, T above_stdev, T below_stdev)  {
                   "Only a StdDataFrame or a PtrView can call "
                   "remove_data_by_stdev()");
 
-    const ColumnVecType<T>  &vec = get_column<T>(col_name);
-    const size_type         col_s = vec.size();
-    const auto              thread_level =
-        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    const ColumnVecType<T>  &vec { get_column<T>(col_name) };
+    const size_type         col_s { vec.size() };
+    const auto              thread_level {
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
+
+    // mean, stdev, and the z-score are all computed in double. If T is an
+    // integral type, doing this in T truncates the mean and the stdev, and a
+    // stdev of zero (a constant column) would be an integer division by zero.
+    //
     auto                    mean_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            MeanVisitor<T, I>   mean { true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            MeanVisitor<double, I>  mean { true };
 
             mean.pre();
             mean(indices_.begin(), indices_.end(), vec.begin(), vec.end());
@@ -514,20 +531,20 @@ remove_data_by_stdev(const char *col_name, T above_stdev, T below_stdev)  {
             return (mean.get_result());
         };
     auto                    stdev_lbd =
-        [&vec = std::as_const(vec), this]() -> T  {
-            StdVisitor<T, I>    stdev { true, true };
+        [&vec = std::as_const(vec), this]() -> double  {
+            StdVisitor<double, I>   stdev { true, true };
 
             stdev.pre();
             stdev(indices_.begin(), indices_.end(), vec.begin(), vec.end());
             stdev.post();
             return (stdev.get_result());
         };
-    T                       stdev;
-    T                       mean;
+    double                  stdev;
+    double                  mean;
 
     if (thread_level > 2)  {
-        auto    stdev_fut = thr_pool_.dispatch(false, stdev_lbd);
-        auto    mean_fut = thr_pool_.dispatch(false, mean_lbd);
+        auto    stdev_fut { thr_pool_.dispatch(false, stdev_lbd) };
+        auto    mean_fut { thr_pool_.dispatch(false, mean_lbd) };
 
         mean = mean_fut.get();
         stdev = stdev_fut.get();
@@ -540,10 +557,10 @@ remove_data_by_stdev(const char *col_name, T above_stdev, T below_stdev)  {
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(col_s / 3);
-    for (size_type i = 0; i < col_s; ++i)  {
-        const T z = (vec[i] - mean) / stdev;
+    for (size_type i { 0 }; i < col_s; ++i)  {
+        const double    z { (double(vec[i]) - mean) / stdev };
 
-        if (z > above_stdev || z < below_stdev)
+        if (z > double(above_stdev) || z < double(below_stdev))
             col_indices.push_back(i);
     }
 
@@ -643,7 +660,7 @@ remove_data_by_isof(const char *col_name,
                     long num_trees,
                     long max_depth,
                     double threshold,
-					normalization_type ntype)  {
+                    normalization_type ntype)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
                   std::is_base_of<HeteroPtrView<align_value>, H>::value,

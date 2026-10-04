@@ -67,9 +67,9 @@ public:
 
     VectorView() = default;
     VectorView(const VectorView &) = default;
-    VectorView(VectorView &&) = default;
+    VectorView(VectorView &&) noexcept = default;
     VectorView &operator= (const VectorView &) = default;
-    VectorView &operator= (VectorView &&) = default;
+    VectorView &operator= (VectorView &&) noexcept = default;
     ~VectorView() = default;
 
     inline VectorView (value_type *bp, value_type *ep) noexcept
@@ -503,13 +503,13 @@ public:
 
     VectorConstView() = default;
     VectorConstView(const VectorConstView &) = default;
-    VectorConstView(VectorConstView &&) = default;
+    VectorConstView(VectorConstView &&) noexcept = default;
     VectorConstView &operator= (const VectorConstView &) = default;
-    VectorConstView &operator= (VectorConstView &&) = default;
+    VectorConstView &operator= (VectorConstView &&) noexcept = default;
     ~VectorConstView() = default;
 
     inline
-    VectorConstView (const value_type *bp, const value_type *ep) noexcept
+    VectorConstView(const value_type *bp, const value_type *ep) noexcept
         : begin_ptr_(bp), end_ptr_(ep)  {   }
 
     // The purpose of this method is for the user be able to conform to STL

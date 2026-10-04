@@ -334,7 +334,7 @@ ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
 
     if (begin >= end) return;
 
-    const size_type data_size = std::distance(begin, end);
+    const size_type data_size { size_type(std::distance(begin, end)) };
 
     if (data_size <= TH)  {
         std::sort(begin, end, compare);
@@ -343,32 +343,51 @@ ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
 
     // Pivot selection (median‑of‑three)
     //
-    auto        mid { begin + (data_size / 2) };
-    auto        pivot_it { _median_of_three_(begin, mid, end - 1, compare) };
-    const auto  pivot { *pivot_it };
+    auto    mid { begin + (data_size / 2) };
+    auto    pivot_it { _median_of_three_(begin, mid, end - 1, compare) };
+
+    // The pivot must be a value copy, not a reference into the range. With
+    // proxy iterators (e.g. std::ranges::views::zip), *pivot_it is a tuple of
+    // references that would keep aliasing the slot the pivot is swapped out
+    // of, so the pivot would change under the partition and the result would
+    // be mis-sorted.
+    //
+    const std::iter_value_t<I>  pivot { *pivot_it };
 
     std::iter_swap(pivot_it, end - 1);  // Move pivot to end ‑ 1
 
-    auto    cut {
+    // Three-way partition:
+    // [begin, lt) < pivot, [lt, eq) == pivot, [eq, end - 1) > pivot.
+    // Elements equal to the pivot are never recursed into. With a two-way
+    // partition, data with many duplicate keys shrinks by one element per
+    // level: recursion depth O(n), quadratic time, and stack overflow.
+    //
+    const auto  lt {
         std::ranges::partition(begin, end - 1,
                                [&pivot, &compare](const auto &x) -> bool {
                                    return (compare(x, pivot));
-                               })
+                               }).begin()
+    };
+    const auto  eq {
+        std::ranges::partition(lt, end - 1,
+                               [&pivot, &compare](const auto &x) -> bool {
+                                   return (! compare(pivot, x));
+                               }).begin()
     };
 
-    std::iter_swap(cut.begin(), end - 1);  // Restore pivot
+    std::iter_swap(eq, end - 1);  // Restore pivot to the end of equal block
 
     auto    lf { dispatch(false,
                           &ThreadPool::parallel_sort<I, P, TH>,
                           this,
                           begin,
-                          cut.begin(),
+                          lt,
                           compare)
     };
     auto    rf { dispatch(false,
                           &ThreadPool::parallel_sort<I, P, TH>,
                           this,
-                          cut.begin() + 1,
+                          eq + 1,
                           end,
                           compare)
     };

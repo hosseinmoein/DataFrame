@@ -59,12 +59,12 @@ struct HeteroVector  {
 
     HeteroVector();
     HeteroVector(const HeteroVector &that);
-    HeteroVector(HeteroVector &&that);
+    HeteroVector(HeteroVector &&that) noexcept;
 
     ~HeteroVector() { clear(); }
 
     HeteroVector &operator= (const HeteroVector &rhs);
-    HeteroVector &operator= (HeteroVector &&rhs);
+    HeteroVector &operator= (HeteroVector &&rhs) noexcept;
 
     template<typename T>
     [[nodiscard]] std::vector<T, typename allocator_declare<T, A>::type> &

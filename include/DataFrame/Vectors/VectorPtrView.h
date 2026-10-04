@@ -117,7 +117,7 @@ public:
 
     inline VectorPtrView () = default;
     inline VectorPtrView (const VectorPtrView &) = default;
-    inline VectorPtrView (VectorPtrView &&) = default;
+    inline VectorPtrView (VectorPtrView &&) noexcept = default;
     inline VectorPtrView(const std::vector<T> &rhs)  { *this = rhs; }
     inline VectorPtrView(std::vector<T> &rhs)  { *this = rhs; }
     template<typename ITR>
@@ -150,7 +150,7 @@ public:
     }
 
     inline VectorPtrView &operator = (const VectorPtrView &) = default;
-    inline VectorPtrView &operator = (VectorPtrView &&) = default;
+    inline VectorPtrView &operator = (VectorPtrView &&) noexcept = default;
     VectorPtrView &operator = (const std::vector<T> &rhs) = delete;
     inline VectorPtrView &operator = (std::vector<T> &rhs)  {
 
@@ -635,7 +635,7 @@ public:
 
     inline VectorConstPtrView () = default;
     inline VectorConstPtrView (const VectorConstPtrView &) = default;
-    inline VectorConstPtrView (VectorConstPtrView &&) = default;
+    inline VectorConstPtrView (VectorConstPtrView &&) noexcept = default;
     inline VectorConstPtrView(const std::vector<T> &rhs)  { *this = rhs; }
     inline VectorConstPtrView(std::vector<T> &rhs)  { *this = rhs; }
     template<typename ITR>
@@ -669,7 +669,8 @@ public:
 
     inline VectorConstPtrView &
     operator = (const VectorConstPtrView &) = default;
-    inline VectorConstPtrView &operator = (VectorConstPtrView &&) = default;
+    inline VectorConstPtrView &
+    operator = (VectorConstPtrView &&) noexcept = default;
     inline VectorConstPtrView &operator = (const std::vector<T> &rhs)  {
 
         VectorConstPtrView   tmp_vec;

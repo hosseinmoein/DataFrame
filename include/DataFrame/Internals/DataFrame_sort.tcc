@@ -43,7 +43,7 @@ permutation_vec(const char *name, sort_spec dir) const  {
     const ColumnVecType<T>  *vec { nullptr };
 
     {
-        const SpinGuard guard (lock_);
+        const SpinGuard guard { lock_ };
 
         if (! ::strcmp(name, DF_INDEX_COL_NAME))
             vec = reinterpret_cast<const ColumnVecType<T> *>(&indices_);
@@ -51,10 +51,11 @@ permutation_vec(const char *name, sort_spec dir) const  {
             vec = &(get_column<T>(name, false));
     }
 
-    const size_type         col_s = vec->size();
+    const size_type         col_s { vec->size() };
     std::vector<size_type>  result(col_s);
-    const auto              thread_level =
-        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    const auto              thread_level {
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
 
     std::iota(result.begin(), result.end(), 0);
     if (dir == sort_spec::ascen)  {
@@ -122,7 +123,7 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
     make_consistent<Ts ...>();
 
     ColumnVecType<T>    *vec { nullptr };
-    const SpinGuard     guard (lock_);
+    const SpinGuard     guard { lock_ };
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
         vec = reinterpret_cast<ColumnVecType<T> *>(&indices_);
@@ -144,16 +145,18 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
                     return (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)));
                  };
 
-    const size_type         idx_s = indices_.size();
+    const size_type         idx_s { indices_.size() };
     StlVecType<size_type>   sorting_idxs(idx_s);
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto        zip = std::ranges::views::zip(*vec, sorting_idxs);
-    auto        zip_idx =
-        std::ranges::views::zip(*vec, indices_, sorting_idxs);
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    auto        zip { std::ranges::views::zip(*vec, sorting_idxs) };
+    auto        zip_idx {
+        std::ranges::views::zip(*vec, indices_, sorting_idxs)
+    };
+    const auto  thread_level {
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
 
     if (dir == sort_spec::ascen)  {
         if (thread_level > 2)  {
@@ -223,9 +226,10 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
                 if (citer->first != name)
                     this->data_[citer->second].change(functor);
         };
-        auto    futures =
+        auto    futures {
             thr_pool_.parallel_loop<double>(
-                column_list_.begin(), column_list_.end(), std::move(lbd));
+                column_list_.begin(), column_list_.end(), std::move(lbd))
+        };
 
         for (auto &fut : futures)  fut.get();
     }
@@ -254,7 +258,7 @@ sort(const char *name1, sort_spec dir1,
 
     ColumnVecType<T1>   *vec1 { nullptr };
     ColumnVecType<T2>   *vec2 { nullptr };
-    const SpinGuard     guard (lock_);
+    const SpinGuard     guard { lock_ };
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))  {
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
@@ -367,16 +371,18 @@ sort(const char *name1, sort_spec dir1,
             return (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)));
         };
 
-    const size_type         idx_s = indices_.size();
+    const size_type         idx_s { indices_.size() };
     StlVecType<size_type>   sorting_idxs(idx_s);
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto        zip = std::ranges::views::zip(*vec1, *vec2, sorting_idxs);
-    auto        zip_idx =
-        std::ranges::views::zip(*vec1, *vec2, indices_, sorting_idxs);
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    auto        zip { std::ranges::views::zip(*vec1, *vec2, sorting_idxs) };
+    auto        zip_idx {
+        std::ranges::views::zip(*vec1, *vec2, indices_, sorting_idxs)
+    };
+    const auto  thread_level {
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
 
     if (dir1 == sort_spec::ascen && dir2 == sort_spec::ascen)  {
         if (thread_level > 2)  {
@@ -614,9 +620,11 @@ sort(const char *name1, sort_spec dir1,
                 if (citer->first != name1 && citer->first != name2)
                     this->data_[citer->second].change(functor);
         };
-        auto    futures =
+        auto    futures {
             thr_pool_.parallel_loop<double>(
-                column_list_.begin(), column_list_.end(), std::move(lbd));
+                column_list_.begin(), column_list_.end(), std::move(lbd))
+
+        };
 
         for (auto &fut : futures)  fut.get();
     }
@@ -643,7 +651,7 @@ permutation_vec(const char *name1, sort_spec dir1,
     const ColumnVecType<T2> *vec2 { nullptr };
 
     {
-        const SpinGuard guard (lock_);
+        const SpinGuard guard { lock_ };
 
         if (! ::strcmp(name1, DF_INDEX_COL_NAME))
             vec1 = reinterpret_cast<const ColumnVecType<T1> *>(&indices_);
@@ -656,10 +664,11 @@ permutation_vec(const char *name1, sort_spec dir1,
             vec2 = &(get_column<T2>(name2, false));
     }
 
-    const size_type         col_s = std::min(vec1->size(), vec2->size());
+    const size_type         col_s { std::min(vec1->size(), vec2->size()) };
     std::vector<size_type>  result(col_s);
-    const auto              thread_level =
-        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    const auto              thread_level {
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
 
     std::iota(result.begin(), result.end(), 0);
     if (dir1 == sort_spec::ascen && dir2 == sort_spec::ascen)  {
@@ -908,7 +917,7 @@ sort(const char *name1, sort_spec dir1,
     ColumnVecType<T1>   *vec1 { nullptr };
     ColumnVecType<T2>   *vec2 { nullptr };
     ColumnVecType<T3>   *vec3 { nullptr };
-    const SpinGuard     guard (lock_);
+    const SpinGuard     guard { lock_ };
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))  {
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
@@ -993,17 +1002,20 @@ sort(const char *name1, sort_spec dir1,
                 return (abs__(std::get<2>(lhs)) > abs__(std::get<2>(rhs)));
         };
 
-    const size_type         idx_s = indices_.size();
+    const size_type         idx_s { indices_.size() };
     StlVecType<size_type>   sorting_idxs(idx_s);
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto        zip =
-        std::ranges::views::zip(*vec1, *vec2, *vec3, sorting_idxs);
-    auto        zip_idx =
-        std::ranges::views::zip(*vec1, *vec2, *vec3, indices_, sorting_idxs);
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    auto        zip {
+        std::ranges::views::zip(*vec1, *vec2, *vec3, sorting_idxs)
+    };
+    auto        zip_idx {
+        std::ranges::views::zip(*vec1, *vec2, *vec3, indices_, sorting_idxs)
+    };
+    const auto  thread_level {
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
 
     if (thread_level > 2)  {
         if (! ignore_index)
@@ -1012,10 +1024,8 @@ sort(const char *name1, sort_spec dir1,
             thr_pool_.parallel_sort(zip.begin(), zip.end(), cf);
     }
     else  {
-        if (! ignore_index)
-            std::ranges::sort(zip_idx, cf);
-        else
-            std::ranges::sort(zip, cf);
+        if (! ignore_index)  std::ranges::sort(zip_idx, cf);
+        else  std::ranges::sort(zip, cf);
     }
 
     if (((column_list_.size() - 3) > 1) && get_thread_level() > 2)  {
@@ -1031,9 +1041,10 @@ sort(const char *name1, sort_spec dir1,
                     citer->first != name3)
                     this->data_[citer->second].change(functor);
         };
-        auto    futures =
+        auto    futures {
             thr_pool_.parallel_loop<double>(
-                column_list_.begin(), column_list_.end(), std::move(lbd));
+                column_list_.begin(), column_list_.end(), std::move(lbd))
+        };
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1064,7 +1075,7 @@ permutation_vec(const char *name1, sort_spec dir1,
     const ColumnVecType<T3> *vec3 { nullptr };
 
     {
-        const SpinGuard guard (lock_);
+        const SpinGuard guard { lock_ };
 
         if (! ::strcmp(name1, DF_INDEX_COL_NAME))
             vec1 = reinterpret_cast<const ColumnVecType<T1> *>(&indices_);
@@ -1148,11 +1159,13 @@ permutation_vec(const char *name1, sort_spec dir1,
                 return (abs__(vec3[lhs]) > abs__(vec3[rhs]));
         };
 
-    const size_type         col_s =
-        std::min({ vec1->size(), vec2->size(), vec3->size() });
+    const size_type         col_s {
+        std::min({ vec1->size(), vec2->size(), vec3->size() })
+    };
     std::vector<size_type>  result(col_s);
-    const auto              thread_level =
-        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    const auto              thread_level {
+        (col_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
 
     std::iota(result.begin(), result.end(), 0);
     if (thread_level > 2)
@@ -1179,11 +1192,11 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    const ColumnVecType<T1> *vec1 { nullptr };
-    const ColumnVecType<T2> *vec2 { nullptr };
-    const ColumnVecType<T3> *vec3 { nullptr };
-    const ColumnVecType<T4> *vec4 { nullptr };
-    const SpinGuard         guard (lock_);
+    ColumnVecType<T1>   *vec1 { nullptr };
+    ColumnVecType<T2>   *vec2 { nullptr };
+    ColumnVecType<T3>   *vec3 { nullptr };
+    ColumnVecType<T4>   *vec4 { nullptr };
+    const SpinGuard     guard { lock_ };
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))  {
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
@@ -1300,18 +1313,21 @@ sort(const char *name1, sort_spec dir1,
                 return (abs__(std::get<3>(lhs)) > abs__(std::get<3>(rhs)));
         };
 
-    const size_type         idx_s = indices_.size();
+    const size_type         idx_s { indices_.size() };
     StlVecType<size_type>   sorting_idxs(idx_s);
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto         zip =
-        std::ranges::views::zip(*vec1, *vec2, *vec3, *vec4, sorting_idxs);
-    auto         zip_idx =
+    auto         zip {
+        std::ranges::views::zip(*vec1, *vec2, *vec3, *vec4, sorting_idxs)
+    };
+    auto         zip_idx {
         std::ranges::views::zip(*vec1, *vec2, *vec3, *vec4,
-                                indices_, sorting_idxs);
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+                                indices_, sorting_idxs)
+    };
+    const auto  thread_level {
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
 
     if (thread_level > 2)  {
         if (! ignore_index)
@@ -1320,10 +1336,8 @@ sort(const char *name1, sort_spec dir1,
             thr_pool_.parallel_sort(zip.begin(), zip.end(), cf);
     }
     else  {
-        if (! ignore_index)
-            std::ranges::sort(zip_idx, cf);
-        else
-            std::ranges::sort(zip, cf);
+        if (! ignore_index)  std::ranges::sort(zip_idx, cf);
+        else  std::ranges::sort(zip, cf);
     }
 
     if (((column_list_.size() - 4) > 1) && get_thread_level() > 2)  {
@@ -1340,9 +1354,10 @@ sort(const char *name1, sort_spec dir1,
                     citer->first != name4)
                     this->data_[citer->second].change(functor);
         };
-        auto    futures =
+        auto    futures {
             thr_pool_.parallel_loop<double>(
-                column_list_.begin(), column_list_.end(), std::move(lbd));
+                column_list_.begin(), column_list_.end(), std::move(lbd))
+        };
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1377,12 +1392,12 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    const ColumnVecType<T1> *vec1 { nullptr };
-    const ColumnVecType<T2> *vec2 { nullptr };
-    const ColumnVecType<T3> *vec3 { nullptr };
-    const ColumnVecType<T4> *vec4 { nullptr };
-    const ColumnVecType<T5> *vec5 { nullptr };
-    const SpinGuard         guard (lock_);
+    ColumnVecType<T1>   *vec1 { nullptr };
+    ColumnVecType<T2>   *vec2 { nullptr };
+    ColumnVecType<T3>   *vec3 { nullptr };
+    ColumnVecType<T4>   *vec4 { nullptr };
+    ColumnVecType<T5>   *vec5 { nullptr };
+    const SpinGuard     guard { lock_ };
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))  {
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
@@ -1412,7 +1427,7 @@ sort(const char *name1, sort_spec dir1,
     else
         vec4 = &(get_column<T4>(name4, false));
 
-    if (! ::strcmp(name4, DF_INDEX_COL_NAME))  {
+    if (! ::strcmp(name5, DF_INDEX_COL_NAME))  {
         vec5 = reinterpret_cast<ColumnVecType<T5> *>(&indices_);
         ignore_index = true;
     }
@@ -1532,19 +1547,22 @@ sort(const char *name1, sort_spec dir1,
                 return (abs__(std::get<4>(lhs)) > abs__(std::get<4>(rhs)));
         };
 
-    const size_type         idx_s = indices_.size();
+    const size_type         idx_s { indices_.size() };
     StlVecType<size_type>   sorting_idxs(idx_s);
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto        zip =
+    auto        zip {
         std::ranges::views::zip(*vec1, *vec2, *vec3, *vec4, *vec5,
-                                sorting_idxs);
-    auto        zip_idx =
+                                sorting_idxs)
+    };
+    auto        zip_idx {
         std::ranges::views::zip(*vec1, *vec2, *vec3, *vec4, *vec5,
-                                indices_, sorting_idxs);
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+                                indices_, sorting_idxs)
+    };
+    const auto  thread_level {
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
 
     if (thread_level > 2)  {
         if (! ignore_index)
@@ -1553,10 +1571,8 @@ sort(const char *name1, sort_spec dir1,
             thr_pool_.parallel_sort(zip.begin(), zip.end(), cf);
     }
     else  {
-        if (! ignore_index)
-            std::ranges::sort(zip_idx, cf);
-        else
-            std::ranges::sort(zip, cf);
+        if (! ignore_index)  std::ranges::sort(zip_idx, cf);
+        else  std::ranges::sort(zip, cf);
     }
 
     if (((column_list_.size() - 5) > 1) && get_thread_level() > 2)  {
@@ -1574,9 +1590,10 @@ sort(const char *name1, sort_spec dir1,
                     citer->first != name5)
                     this->data_[citer->second].change(functor);
         };
-        auto    futures =
+        auto    futures {
             thr_pool_.parallel_loop<double>(
-                column_list_.begin(), column_list_.end(), std::move(lbd));
+                column_list_.begin(), column_list_.end(), std::move(lbd))
+        };
 
         for (auto &fut : futures)  fut.get();
     }
@@ -1725,7 +1742,7 @@ sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
     else
         vec = &(get_column<T>(name));
 
-    const size_type                 idx_s = indices_.size();
+    const size_type                 idx_s { indices_.size() };
     DFUnorderedMap<T, size_type>    freq_map;
 
     if (dir == sort_spec::ascen || dir == sort_spec::desce)  {
@@ -1792,11 +1809,13 @@ sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto        zip = std::ranges::views::zip(*vec, sorting_idxs);
-    auto        zip_idx =
-        std::ranges::views::zip(*vec, indices_, sorting_idxs);
-    const auto  thread_level =
-        (idx_s < (ThreadPool::MUL_THR_THHOLD / 3)) ? 0L : get_thread_level();
+    auto        zip { std::ranges::views::zip(*vec, sorting_idxs) };
+    auto        zip_idx {
+        std::ranges::views::zip(*vec, indices_, sorting_idxs)
+    };
+    const auto  thread_level {
+        (idx_s < (ThreadPool::MUL_THR_THHOLD / 3)) ? 0L : get_thread_level()
+    };
 
     if (dir == sort_spec::ascen)  {
         if (thread_level > 2)  {
@@ -1848,10 +1867,8 @@ sort_freq(const char *name, sort_spec dir, bool ignore_index)  {
                 thr_pool_.parallel_sort(zip.begin(), zip.end(), ad);
         }
         else  {
-            if (! ignore_index)
-                std::ranges::sort(zip_idx, ad);
-            else
-                std::ranges::sort(zip, ad);
+            if (! ignore_index)  std::ranges::sort(zip_idx, ad);
+            else  std::ranges::sort(zip, ad);
         }
     }
 

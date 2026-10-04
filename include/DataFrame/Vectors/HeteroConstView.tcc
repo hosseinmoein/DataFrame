@@ -250,7 +250,8 @@ template<std::size_t A>
 HeteroConstView<A>::
 HeteroConstView(const HeteroConstView &that) { *this = that; }
 template<std::size_t A>
-HeteroConstView<A>::HeteroConstView(HeteroConstView &&that)  { *this = that; }
+HeteroConstView<A>::
+HeteroConstView(HeteroConstView &&that) noexcept  { *this = that; }
 
 // ----------------------------------------------------------------------------
 
@@ -273,7 +274,8 @@ operator= (const HeteroConstView &rhs)  {
 // ----------------------------------------------------------------------------
 
 template<std::size_t A>
-HeteroConstView<A> &HeteroConstView<A>::operator= (HeteroConstView &&rhs)  {
+HeteroConstView<A> &HeteroConstView<A>::
+operator= (HeteroConstView &&rhs) noexcept  {
 
     if (&rhs != this) [[likely]]  {
         clear();

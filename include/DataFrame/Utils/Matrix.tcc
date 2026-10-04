@@ -2492,8 +2492,7 @@ ldlt(std::vector<T> &D, MA &L) const  {
             sum += l_tmp(k, j) * l_tmp(k, j) * d_tmp[j];
         d_tmp[k] = at(k, k) - sum;
 
-        if (std::abs(d_tmp[k]) < std::numeric_limits<T>::epsilon())
-                [[unlikely]]
+        if (std::abs(d_tmp[k]) < std::numeric_limits<T>::epsilon()) [[unlikely]]
             throw NotFeasible("Matrix::ldlt(): Matrix is singular");
 
         // Compute L(i,k) for i = k+1 .. rows-1
@@ -3661,8 +3660,8 @@ Matrix<T, MO, IS_SYM> Matrix<T, MO, IS_SYM>::
 get_random(size_type rows, size_type cols, T low, T high, unsigned int seed)
     requires std::floating_point<T>  {
 
-    Matrix                  result;
-    RandGenParams<double>   rp;
+    Matrix              result;
+    RandGenParams<T>    rp;
 
     rp.min_value = low;
     rp.max_value = high;

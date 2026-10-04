@@ -2100,10 +2100,14 @@ bucketize_async(bucket_type bt,
 
     using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
+    // value must be captured by copy. It is a const reference parameter, so
+    // the caller can, and typically does, pass a temporary (e.g. a literal).
+    // That temporary is gone by the time this lambda runs on another thread.
+    //
     return (thr_pool_.dispatch(
         true,
         [bt,
-         &value,
+         value = V(value),
          idx_visitor = std::forward<I_V>(idx_visitor),
          ... args = std::forward<Ts>(args),
          this]() mutable -> res_t  {

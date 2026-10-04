@@ -67,12 +67,12 @@ struct HeteroView  {
     void set_empty_vec();
 
     HeteroView(const HeteroView &that);
-    HeteroView(HeteroView &&that);
+    HeteroView(HeteroView &&that) noexcept;
 
     ~HeteroView() { clear(); }
 
     HeteroView &operator= (const HeteroView &rhs);
-    HeteroView &operator= (HeteroView &&rhs);
+    HeteroView &operator= (HeteroView &&rhs) noexcept;
 
     template<typename T>
     [[nodiscard]] VectorView<T, A> &get_vector();

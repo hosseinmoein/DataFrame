@@ -1637,7 +1637,7 @@ MC_station_dist(std::vector<const char *> &&col_names,
 
     size_type                               cols_s { col_names.size() };
     size_type                               min_col_s { indices_.size() };
-    std::vector<const ColumnVecType<T> *>   columns (cols_s, nullptr);
+    std::vector<const ColumnVecType<T> *>   columns(cols_s, nullptr);
 
     {
         SpinGuard   guard { lock_ };
@@ -1689,9 +1689,7 @@ MC_station_dist(std::vector<const char *> &&col_names,
 
             // Derive num_states from the first column's first observation.
             //
-            const std::size_t   ndim {
-                _num_dims_(columns[0]->front())
-            };
+            const std::size_t   ndim { _num_dims_(columns[0]->front()) };
             std::size_t         num_states { 1 };
 
             for (std::size_t d { 0 }; d < ndim; ++d)  {
@@ -1884,7 +1882,7 @@ DataFrame<I, H>::kshape_groups(const std::vector<const char *> &col_names,
         columns[0] = &get_column<T>(col_names[0], false);
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        const size_type col_s = columns[0]->size();
+        const size_type col_s { columns[0]->size() };
 #endif // HMDF_SANITY_EXCEPTIONS
 
         for (long i { 1 }; i < name_s; ++i)  {

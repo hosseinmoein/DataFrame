@@ -1732,6 +1732,24 @@ inline static S &_write_csv_df_index_(S &o, unsigned char value)  {
 
 // ----------------------------------------------------------------------------
 
+// The binary format stores the length of each string in 16 bits.
+//
+template<typename STR>
+inline static uint16_t
+_binary_str_size_(const STR &str)  {
+
+    const auto  str_sz { str.size() };
+
+    if (str_sz > std::numeric_limits<uint16_t>::max()) [[unlikely]]
+        throw DataFrameError("_binary_str_size_(): ERROR: A string longer "
+                             "than 65535 characters cannot be written in "
+                             "binary format");
+
+    return (static_cast<uint16_t>(str_sz));
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename STRM, typename V>
 inline static void
 _write_binary_common_(STRM &strm, [[maybe_unused]] const V &vec,
@@ -1766,13 +1784,13 @@ _write_binary_string_(STRM &strm, const V &str_vec,
 
     // It is better for compression, if you write the alike data together
     //
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint16_t  str_sz = static_cast<uint16_t>(str_vec[i].size());
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const uint16_t  str_sz { _binary_str_size_(str_vec[i]) };
 
         strm.write(reinterpret_cast<const char *>(&str_sz), sizeof(str_sz));
     }
     for (uint64_t i = start_row; i < end_row; ++i)  {
-        const auto  &str = str_vec[i];
+        const auto  &str { str_vec[i] };
 
         strm.write(str.data(), str.size() * sizeof(char));
     }
@@ -1849,13 +1867,13 @@ _write_binary_str_dbl_pair_(STRM &strm, const V &p_vec,
 
     _write_binary_common_(strm, p_vec, start_row, end_row);
 
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint16_t  str_sz = static_cast<uint16_t>(p_vec[i].first.size());
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const uint16_t  str_sz { _binary_str_size_(p_vec[i].first) };
 
         strm.write(reinterpret_cast<const char *>(&str_sz), sizeof(str_sz));
     }
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const auto      &str = p_vec[i].first;
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const auto  &str { p_vec[i].first };
 
         strm.write(str.data(), str.size() * sizeof(char));
         strm.write(reinterpret_cast<const char *>(&(p_vec[i].second)),
@@ -1878,9 +1896,8 @@ _write_binary_str_str_pair_(STRM &strm, const V &p_vec,
     _write_binary_common_(strm, p_vec, start_row, end_row);
 
     for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint16_t  str_sz1 = static_cast<uint16_t>(p_vec[i].first.size());
-        const uint16_t  str_sz2 =
-            static_cast<uint16_t>(p_vec[i].second.size());
+        const uint16_t  str_sz1 { _binary_str_size_(p_vec[i].first) };
+        const uint16_t  str_sz2 { _binary_str_size_(p_vec[i].second) };
 
         strm.write(reinterpret_cast<const char *>(&str_sz1), sizeof(str_sz1));
         strm.write(reinterpret_cast<const char *>(&str_sz2), sizeof(str_sz2));
@@ -1990,7 +2007,7 @@ _write_binary_str_set_(STRM &strm, const S &str_sets,
 
         strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
         for (const auto &str : str_sets[i])  {
-            const uint16_t  str_sz = static_cast<uint16_t>(str.size());
+            const uint16_t  str_sz { _binary_str_size_(str) };
 
             strm.write(reinterpret_cast<const char *>(&str_sz),
                        sizeof(str_sz));
@@ -2019,7 +2036,7 @@ _write_binary_str_dbl_map_(STRM &strm, const M &sd_maps,
 
         strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
         for (const auto &[str, dbl] : sd_maps[i])  {
-            const uint16_t  str_sz = static_cast<uint16_t>(str.size());
+            const uint16_t  str_sz { _binary_str_size_(str) };
 
             strm.write(reinterpret_cast<const char *>(&str_sz),
                        sizeof(str_sz));

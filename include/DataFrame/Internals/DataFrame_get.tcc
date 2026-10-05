@@ -850,21 +850,22 @@ std::invocable<F, const T &, const T &, const T &, const T &> &&
 std::same_as<std::invoke_result_t<F, const T &, const T &,
                                      const T &, const T &>, T>  {
 
-    SpinGuard   guard (lock_);
-    const auto  &lhs_col = get_column<T>(col_name, false);
-    const auto  &df1_col = df1.template get_column<T>(col_name, false);
-    const auto  &df2_col = df2.template get_column<T>(col_name, false);
-    const auto  &df3_col = df3.template get_column<T>(col_name, false);
+    SpinGuard   guard { lock_ };
+    const auto  &lhs_col { get_column<T>(col_name, false) };
+    const auto  &df1_col { df1.template get_column<T>(col_name, false) };
+    const auto  &df2_col { df2.template get_column<T>(col_name, false) };
+    const auto  &df3_col { df3.template get_column<T>(col_name, false) };
 
     guard.release();
 
-    const size_type col_s = std::min<size_type>(
-        { lhs_col.size(), df1_col.size(), df2_col.size(), df3_col.size() });
+    const size_type col_s { std::min<size_type>(
+        { lhs_col.size(), df1_col.size(), df2_col.size(), df3_col.size() })
+    };
     StlVecType<T>   result(col_s);
 
-    for (size_type i = 0; i < col_s; ++i) [[likely]]
-        result[i] = std::move(functor(lhs_col[i], df1_col[i], df2_col[i],
-                                      df3_col[i]));
+    for (size_type i { 0 }; i < col_s; ++i) [[likely]]
+        result[i] =
+            std::move(functor(lhs_col[i], df1_col[i], df2_col[i], df3_col[i]));
 
     return (result);
 }
@@ -876,7 +877,7 @@ template<StringOnly T>
 StringStats
 DataFrame<I, H>::get_str_col_stats(const char *col_name) const  {
 
-    const auto              &col = get_column<T>(col_name);
+    const auto              &col { get_column<T>(col_name) };
     size_type               total_chars { 0 };
     size_type               total_digits { 0 };
     size_type               total_alphabets { 0 };
@@ -944,8 +945,14 @@ template<typename T, typename C>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::inversion_count(const char *col_name) const  {
 
-    const auto      &col = get_column<T>(col_name);
-    const auto      col_s = col.size();
+    const auto      &col { get_column<T>(col_name) };
+    const auto      col_s { col.size() };
+
+    // A column with fewer than two elements has no inversions. Also, col_s - 1
+    // below would underflow for an empty column.
+    //
+    if (col_s < 2)  return (0);
+
     StlVecType<T>   original(col.begin(), col.end());
     StlVecType<T>   temp(col_s);
 

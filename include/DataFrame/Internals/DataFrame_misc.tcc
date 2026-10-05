@@ -572,7 +572,7 @@ operator()(const T &vec)  {
             result_vec.push_back(const_cast<ValueType *>(&(vec[i])));
     }
     else  {
-        T   &nc_vec = const_cast<T &>(vec);
+        T   &nc_vec { const_cast<T &>(vec) };
 
         result.template setup_view_column_<ValueType,
                                            typename VecType::iterator>(
@@ -605,8 +605,13 @@ operator()(const T &vec)  {
                                                false);
     }
     else  {
-        res_vec &res_vec = result.template get_column<ValueType>(name);
+        res_vec &res_vec { result.template get_column<ValueType>(name) };
 
+        // If the column is shorter than the original index, pad it so the
+        // appended values line up with the appended index rows.
+        //
+        if (res_vec.size() < original_index_s)
+            res_vec.resize(original_index_s, get_nan<ValueType>());
         res_vec.insert(res_vec.end(), vec.begin(), vec.end());
     }
 }

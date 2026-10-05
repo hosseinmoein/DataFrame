@@ -785,6 +785,45 @@ void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
 
 // ----------------------------------------------------------------------------
 
+// Read-only view of the keys of a vector of JoinSortingPair (sorted by key).
+// It lets the sorted-merge helpers, that handle runs of duplicate keys on both
+// sides (i.e. the full Cartesian product), serve the unsorted case too.
+//
+template<typename T>
+struct  JoinKeyView_  {
+
+    using value_type = T;
+
+    const StlVecType<JoinSortingPair<T>>    &pairs;
+
+    inline size_type size() const  { return (pairs.size()); }
+    inline const T &
+    operator [](size_type i) const  { return (*(pairs[i].first)); }
+};
+
+// ----------------------------------------------------------------------------
+
+// The sorted-merge helpers return positions in the sorted vectors. This
+// replaces them with the original row numbers.
+//
+template<typename T>
+static void
+remap_join_idx_(IndexIdxVector &idx_vec,
+                const StlVecType<JoinSortingPair<T>> &lhs,
+                const StlVecType<JoinSortingPair<T>> &rhs)  {
+
+    constexpr size_type NONE { std::numeric_limits<size_type>::max() };
+
+    for (auto &item : idx_vec)  {
+        if (std::get<0>(item) != NONE)
+            std::get<0>(item) = lhs[std::get<0>(item)].second;
+        if (std::get<1>(item) != NONE)
+            std::get<1>(item) = rhs[std::get<1>(item)].second;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
 static void
 join_helper_common_(

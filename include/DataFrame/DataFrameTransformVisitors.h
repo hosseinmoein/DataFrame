@@ -98,7 +98,7 @@ public:
             ang_cos != data_t(0)
                 ? (ang_cos + std::sin(ang) - data_t(1)) / ang_cos : data_t(0)
         };
-        const data_t    t_plus { data_t(1) + alpha * data_t(0.5) };
+        const data_t    t_plus { data_t(1) - alpha * data_t(0.5) };
         const data_t    t_minus { data_t(1) - alpha };
         value_type      prev_input { *column_begin };
         value_type      prev_filter { };
@@ -351,8 +351,8 @@ public:
 private:
 
     result_type         count_ { 0 };
-    const value_type    &upper_;
-    const value_type    &lower_;
+    const value_type    upper_;
+    const value_type    lower_;
     const value_type    nan_ { get_nan<T>() };
 };
 
@@ -510,28 +510,30 @@ public:
             // Y0 = X0
             // Yt = aXt + (1 - a)Yt-1
             //
-            value_type  prev_cpy { *column_begin };
+            // Yt-1 is the previous SMOOTHED value, not the previous input
+            //
+            value_type  prev_smoothed { *column_begin };
 
             if constexpr (! is_md_)  {
                 for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
-                    const value_type    curr_cpy { *(column_begin + i) };
+                    value_type  &curr_ref { *(column_begin + i) };
 
-                    *(column_begin + i) =
-                        prev_cpy + alfa_ * (curr_cpy - prev_cpy);
-                    prev_cpy = curr_cpy;
+                    curr_ref =
+                        prev_smoothed + alfa_ * (curr_ref - prev_smoothed);
+                    prev_smoothed = curr_ref;
                 }
             }
             else  {
                 const size_type dim { column_begin->size() };
 
                 for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
-                    const value_type    curr_cpy { *(column_begin + i) };
-                    value_type          &curr_ref { *(column_begin + i) };
+                    value_type  &curr_ref { *(column_begin + i) };
 
                     for (size_type d { 0 }; d < dim; ++d) [[likely]]  {
-                        curr_ref[d] = prev_cpy[d] +
-                                      alfa_[d] * (curr_cpy[d] - prev_cpy[d]);
-                        prev_cpy[d] = curr_cpy[d];
+                        curr_ref[d] =
+                            prev_smoothed[d] +
+                            alfa_[d] * (curr_ref[d] - prev_smoothed[d]);
+                        prev_smoothed[d] = curr_ref[d];
                     }
                 }
             }
@@ -548,7 +550,7 @@ public:
 
 private:
 
-    const value_type    &alfa_;
+    const value_type    alfa_;
     const size_type     repeat_count_;
     result_type         count_ { 0 };
 };
@@ -601,16 +603,25 @@ public:
         }
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        value_type  prev_v { *column_begin };
-        value_type  tf { *(column_begin + 1) - prev_v };
+        // Y0 = X0
+        // B0 = X1 - X0
+        // Yt = aXt + (1 - a)(Yt-1 + Bt-1)
+        // Bt = b(Yt - Yt-1) + (1 - b)Bt-1
+        //
+        // Yt-1 is the previous SMOOTHED value, not the previous input
+        //
+        value_type  prev_y { *column_begin };
+        value_type  tf { *(column_begin + 1) - prev_y };
 
         for (size_type i { 1 }; i < count_; ++i) [[likely]]  {
-            const value_type    curr_v { *(column_begin + i) };
+            value_type  &curr_ref { *(column_begin + i) };
+            const auto  curr_y {
+                alfa_ * curr_ref + (data_t(1) - alfa_) * (prev_y + tf)
+            };
 
-            *(column_begin + i) =
-                alfa_ * curr_v + (data_t(1) - alfa_) * (prev_v + tf);
-            tf = beta_ * (curr_v - prev_v) + (data_t(1) - beta_) * tf;
-            prev_v = curr_v;
+            tf = beta_ * (curr_y - prev_y) + (data_t(1) - beta_) * tf;
+            prev_y = curr_y;
+            curr_ref = curr_y;
         }
     }
 

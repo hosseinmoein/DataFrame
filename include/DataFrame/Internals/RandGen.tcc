@@ -492,16 +492,22 @@ std::vector<T, typename allocator_declare<T, A>::type>
 gen_dft_sample_freq(std::size_t n, T spacing)  {
 
     std::vector<T, typename allocator_declare<T, A>::type>  result;
-    const T     multiplier = T(1) / (T(n) * spacing);
-    const long  mid_size = long((n - 1) / 2 + 1);
+
+    if (n == 0)  return (result);
+
+    const T     multiplier { T(1) / (T(n) * spacing) };
+    const long  mid_size { long((n - 1) / 2 + 1) };
+
+    // The non-negative frequencies are 0, 1, ..., mid_size - 1. The negative
+    // ones are -(n / 2), ..., -1. For an even n, that includes the Nyquist
+    // frequency -(n / 2). This is the same layout as numpy.fft.fftfreq().
+    //
+    const long  neg_size { long(n / 2) };
 
     result.reserve(n);
-    for (long i = 0; i < mid_size; ++i)
-        result.push_back(i);
-    for (long i = 0; i < mid_size - 1; ++i)
-        result.push_back(-mid_size + i + 1);
-    for (std::size_t i = 0; i < result.size(); ++i)
-        result[i] *= multiplier;
+    for (long i { 0 }; i < mid_size; ++i)  result.push_back(i);
+    for (long i { 0 }; i < neg_size; ++i)  result.push_back(-neg_size + i);
+    for (auto &val : result)  val *= multiplier;
 
     return (result);
 }

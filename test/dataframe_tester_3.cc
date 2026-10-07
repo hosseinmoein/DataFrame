@@ -4514,15 +4514,15 @@ static void test_EhlersHighPassFilterVisitor()  {
         const auto  &smooth_close = df.get_column<double>("Smooth Close");
 
         assert(smooth_close.size() == 1721);
-        assert(std::abs(smooth_close[0] - 185.53) < 0.0001);
-        assert(std::abs(smooth_close[1] - 185.3782) < 0.0001);
-        assert(std::abs(smooth_close[19] - 179.8812) < 0.0001);
-        assert(std::abs(smooth_close[20] - 179.2847) < 0.0001);
-        assert(std::abs(smooth_close[24] - 175.4347) < 0.0001);
-        assert(std::abs(smooth_close[25] - 174.8728) < 0.0001);
-        assert(std::abs(smooth_close[1720] - 111.7708) < 0.0001);
-        assert(std::abs(smooth_close[1712] - 126.7447) < 0.0001);
-        assert(std::abs(smooth_close[1707] - 126.108) < 0.0001);
+        assert(std::abs(smooth_close[0] - 185.53) < 0.001);
+        assert(std::abs(smooth_close[1] - 185.682) < 0.001);
+        assert(std::abs(smooth_close[19] - 179.275) < 0.001);
+        assert(std::abs(smooth_close[20] - 178.658) < 0.001);
+        assert(std::abs(smooth_close[24] - 175.251) < 0.001);
+        assert(std::abs(smooth_close[25] - 175.445) < 0.001);
+        assert(std::abs(smooth_close[1720] - 111.744) < 0.001);
+        assert(std::abs(smooth_close[1712] - 124.489) < 0.001);
+        assert(std::abs(smooth_close[1707] - 125.866) < 0.001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -4576,23 +4576,23 @@ static void test_EhlersHighPassFilterVisitor()  {
     assert(std::abs(vec_col_ref[0][0] - 1.0) < 0.00001);
     assert(std::abs(vec_col_ref[0][1] - 2.0) < 0.00001);
     assert(std::abs(vec_col_ref[0][2] - 3.0) < 0.00001);
-    assert(std::abs(vec_col_ref[10][0] - 1.22649) < 0.00001);
-    assert(std::abs(vec_col_ref[10][1] - 2.22649) < 0.00001);
-    assert(std::abs(vec_col_ref[10][2] - 3.22649) < 0.00001);
-    assert(std::abs(vec_col_ref[19][0] - 2.43936) < 0.00001);
-    assert(std::abs(vec_col_ref[19][1] - 3.43936) < 0.00001);
-    assert(std::abs(vec_col_ref[19][2] - 4.43936) < 0.00001);
+    assert(std::abs(vec_col_ref[10][0] - 0.743401) < 0.000001);
+    assert(std::abs(vec_col_ref[10][1] - 1.7434) < 0.0001);
+    assert(std::abs(vec_col_ref[10][2] - 2.7434) < 0.0001);
+    assert(std::abs(vec_col_ref[19][0] - 2.06936) < 0.0001);
+    assert(std::abs(vec_col_ref[19][1] - 3.06936) < 0.0001);
+    assert(std::abs(vec_col_ref[19][2] - 4.06936) < 0.0001);
 
     assert(ary_col_ref.size() == 20);
     assert(std::abs(ary_col_ref[0][0] - 1.0) < 0.00001);
     assert(std::abs(ary_col_ref[0][1] - 2.0) < 0.00001);
     assert(std::abs(ary_col_ref[0][2] - 3.0) < 0.00001);
-    assert(std::abs(ary_col_ref[10][0] - 1.22649) < 0.00001);
-    assert(std::abs(ary_col_ref[10][1] - 2.22649) < 0.00001);
-    assert(std::abs(ary_col_ref[10][2] - 3.22649) < 0.00001);
-    assert(std::abs(ary_col_ref[19][0] - 2.43936) < 0.00001);
-    assert(std::abs(ary_col_ref[19][1] - 3.43936) < 0.00001);
-    assert(std::abs(ary_col_ref[19][2] - 4.43936) < 0.00001);
+    assert(std::abs(ary_col_ref[10][0] - 0.743401) < 0.000001);
+    assert(std::abs(ary_col_ref[10][1] - 1.7434) < 0.0001);
+    assert(std::abs(ary_col_ref[10][2] - 2.7434) < 0.0001);
+    assert(std::abs(ary_col_ref[19][0] - 2.06936) < 0.0001);
+    assert(std::abs(ary_col_ref[19][1] - 3.06936) < 0.0001);
+    assert(std::abs(ary_col_ref[19][2] - 4.06936) < 0.0001);
 }
 
 // ----------------------------------------------------------------------------

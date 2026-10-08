@@ -1171,13 +1171,13 @@ struct  RSIVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &prices_begin, const H &prices_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &prices_begin, const H &prices_end)  {
 
-        const size_type col_s = std::distance(prices_begin, prices_end);
+        const size_type col_s {
+            size_type(std::distance(prices_begin, prices_end))
+        };
 
-        // This data doesn't make sense
-        //
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (avg_period_ >= T(col_s - 3))
             throw DataFrameError("RSIVisitor: avg period must be < "
@@ -1199,10 +1199,15 @@ struct  RSIVisitor  {
         for (size_type i { 1 }; i < size_type(avg_period_); ++i) [[likely]]  {
             const value_type    value = return_v.get_result()[i];
 
-            if (value > 0)
-                avg_up = (avg_up * avg_period_1 + value) / avg_period_;
-            else if (value < 0)
-                avg_down = (avg_down * avg_period_1 - value) / avg_period_;
+            // Both averages must decay on every step. A zero is added to
+            // the one that doesn't move.
+            //
+            avg_up =
+                (avg_up * avg_period_1 + (value > 0 ? value : 0)) /
+                avg_period_;
+            avg_down =
+                (avg_down * avg_period_1 + (value < 0 ? -value : 0)) /
+                avg_period_;
         }
 
         result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
@@ -1214,10 +1219,12 @@ struct  RSIVisitor  {
         for (size_type i { size_type(avg_period_) }; i < col_s; ++i)  {
             const value_type    value { return_v.get_result()[i] };
 
-            if (value > 0)
-                avg_up = (avg_up * avg_period_1 + value) / avg_period_;
-            else if (value < 0)
-                avg_down = (avg_down * avg_period_1 - value) / avg_period_;
+            avg_up =
+                (avg_up * avg_period_1 + (value > 0 ? value : 0)) /
+                avg_period_;
+            avg_down =
+                (avg_down * avg_period_1 + (value < 0 ? -value : 0)) /
+                avg_period_;
             result[i] = h - (h / (T(1) + avg_up / avg_down));
         }
         result_.swap(result);
@@ -1811,8 +1818,10 @@ struct  HullRollingMeanVisitor  {
 
         GET_COL_SIZE
 
-        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const auto  thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
 
         wma_t   wma_half { WeightedMeanVisitor<T, I>(), roll_count_ / 2 };
         wma_t   wma_full { WeightedMeanVisitor<T, I>(), roll_count_ };
@@ -1820,22 +1829,24 @@ struct  HullRollingMeanVisitor  {
         wma_half.pre();
         wma_full.pre();
         if (thread_level > 2)  {
-            auto    fut1 =
+            auto    fut1 {
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
                     [&wma_half,
                      &idx_begin, &idx_end,
                      &column_begin, &column_end]() -> void  {
                         wma_half(idx_begin, idx_end, column_begin, column_end);
-                    });
-            auto    fut2 =
+                    })
+            };
+            auto    fut2 {
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
                     [&wma_full,
                      &idx_begin, &idx_end,
                      &column_begin, &column_end]() -> void  {
                         wma_full(idx_begin, idx_end, column_begin, column_end);
-                    });
+                    })
+            };
 
             fut1.get();
             fut2.get();
@@ -1850,10 +1861,10 @@ struct  HullRollingMeanVisitor  {
         result_type result { std::move(wma_half.get_result()) };
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
-                    col_s - 1,
+                    col_s,
                     [&wma_full = std::as_const(wma_full.get_result()),
                      &result]
                     (auto begin, auto end) mutable -> void  {
@@ -1862,13 +1873,14 @@ struct  HullRollingMeanVisitor  {
 
                             r = T(2) * r - wma_full[i];
                         }
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
             std::transform(wma_full.get_result().begin(),
-                           wma_full.get_result().begin() + (col_s - 1),
+                           wma_full.get_result().begin() + col_s,
                            result.begin(),
                            result.begin(),
                            [](const auto &wf, const auto &r) -> value_type  {
@@ -1889,12 +1901,12 @@ struct  HullRollingMeanVisitor  {
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_.clear();
     }
-    inline void post ()  { OBO_PORT_POST }
+    inline void post()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -2540,7 +2552,6 @@ template<typename T, typename I = unsigned long, std::size_t A = 0>
 using gk_vol_v = GarmanKlassVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
-
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  YangZhangVolVisitor  {
 
@@ -2548,13 +2559,16 @@ struct  YangZhangVolVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &low_begin, const H &low_end,
-                const H &high_begin, const H &high_end,
-                const H &open_begin, const H &open_end,
-                const H &close_begin, const H &close_end)  {
+    operator()(const K &, const K &,
+               const H &low_begin, const H &low_end,
+               const H &high_begin, const H &high_end,
+               const H &open_begin, const H &open_end,
+               const H &close_begin, const H &close_end)  {
 
-        const size_type col_s = std::distance(close_begin, close_end);
+        const size_type col_s {
+            size_type(std::distance(close_begin, close_end))
+        };
+
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (roll_count_ == 0 ||
@@ -2567,14 +2581,14 @@ struct  YangZhangVolVisitor  {
 #endif // HMDF_SANITY_EXCEPTIONS
 
         const value_type    k {
-            T(0.34) / (T(1) + T(roll_count_ + 1) / T(roll_count_ - 1)) };
+            T(0.34) / (T(1.34) + T(roll_count_ + 1) / T(roll_count_ - 1)) };
         const value_type    one_k { T(1) - k };
         const value_type    norm { T(1) / T(roll_count_ - 1) };
         result_type         result(col_s, std::numeric_limits<T>::quiet_NaN());
 
         if (col_s >= (ThreadPool::MUL_THR_THHOLD / 2) &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_count_,
                     col_s,
@@ -2582,7 +2596,7 @@ struct  YangZhangVolVisitor  {
                      k, one_k, norm,
                      &low_begin, &high_begin, &open_begin, &close_begin]
                     (auto begin, auto end) mutable -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                        for (size_type i { begin }; i < end; ++i) [[likely]]  {
                             value_type  c_vol_sum { 0 };
                             value_type  o_vol_sum { 0 };
                             value_type  rs_vol_sum { 0 };
@@ -2593,21 +2607,25 @@ struct  YangZhangVolVisitor  {
                                 const value_type    close {
                                     *(close_begin + j) };
                                 const value_type    ho_rt {
-                                    std::log(*(high_begin + j) / open) };
+                                    std::log(*(high_begin + j) / open)
+                                };
                                 const value_type    lo_rt {
-                                    std::log(*(low_begin + j) / open) };
+                                    std::log(*(low_begin + j) / open)
+                                };
                                 const value_type    co_rt {
                                     std::log(close/ open) };
                                 const value_type    oc_rt {
                                     j > 0
                                         ? std::log(open /
                                                    *(close_begin + (j - 1)))
-                                        : std::numeric_limits<T>::quiet_NaN()};
+                                        : std::numeric_limits<T>::quiet_NaN()
+                                };
                                 const value_type    cc_rt {
                                     j > 0
                                         ? std::log(close /
                                                    *(close_begin + (j - 1)))
-                                        : std::numeric_limits<T>::quiet_NaN()};
+                                        : std::numeric_limits<T>::quiet_NaN()
+                                };
                                 // Rogers-Satchell volatility
                                 const value_type    rs_vol {
                                     ho_rt * (ho_rt - co_rt) +
@@ -2623,7 +2641,8 @@ struct  YangZhangVolVisitor  {
                                           one_k * rs_vol_sum) *
                                 std::sqrt(this->trading_periods_);
                         }
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2637,21 +2656,26 @@ struct  YangZhangVolVisitor  {
                     const value_type    open { *(open_begin + j) };
                     const value_type    close { *(close_begin + j) };
                     const value_type    ho_rt {
-                        std::log(*(high_begin + j) / open) };
+                        std::log(*(high_begin + j) / open)
+                    };
                     const value_type    lo_rt {
-                        std::log(*(low_begin + j) / open) };
+                        std::log(*(low_begin + j) / open)
+                    };
                     const value_type    co_rt { std::log(close/ open) };
                     const value_type    oc_rt {
                         j > 0
                             ? std::log(open / *(close_begin + (j - 1)))
-                            : std::numeric_limits<T>::quiet_NaN() };
+                            : std::numeric_limits<T>::quiet_NaN()
+                    };
                     const value_type    cc_rt {
                         j > 0
                             ? std::log(close / *(close_begin + (j - 1)))
-                            : std::numeric_limits<T>::quiet_NaN() };
+                            : std::numeric_limits<T>::quiet_NaN()
+                    };
                     // Rogers-Satchell volatility
                     const value_type    rs_vol {
-                        ho_rt * (ho_rt - co_rt) + lo_rt * (lo_rt - co_rt) };
+                        ho_rt * (ho_rt - co_rt) + lo_rt * (lo_rt - co_rt)
+                    };
 
                     c_vol_sum += cc_rt * cc_rt * norm;
                     o_vol_sum += oc_rt * oc_rt * norm;
@@ -3727,10 +3751,13 @@ struct  EBSineWaveVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &close_begin, const H &close_end)  {
+    operator()(const K &, const K &,
+               const H &close_begin, const H &close_end)  {
 
-        const size_type col_s = std::distance(close_begin, close_end);
+        const size_type col_s {
+            size_type(std::distance(close_begin, close_end))
+        };
+
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (hp_period_ <= 38 || bar_period_ >= col_s ||
@@ -3743,17 +3770,18 @@ struct  EBSineWaveVisitor  {
         value_type          last_close { *close_begin };
         value_type          last_high_pass { 0 };
         value_type          filter_hist[2] = { 0, 0 };
-        const value_type    sin_hp { std::sin(T(360) / T(hp_period_)) };
-        const value_type    cos_hp { std::cos(T(360) / T(hp_period_)) };
+        const value_type    sin_hp { std::sin(T(2) * T(M_PI) / T(hp_period_)) };
+        const value_type    cos_hp { std::cos(T(2) * T(M_PI) / T(hp_period_)) };
         const value_type    cos_bar {
-            std::cos(std::sqrt(T(2)) * T(180) / T(bar_period_)) };
+            std::cos(std::sqrt(T(2)) * T(M_PI) / T(bar_period_)) };
         const value_type    alpha1 { (T(1) - sin_hp) / cos_hp };
         const value_type    alpha1_effect { T(0.5) * (T(1) + alpha1) };
 
         // Smooth with a Super Smoother Filter from equation 3-3
         //
         const value_type    alpha2 {
-            std::exp(-std::sqrt(T(2)) * T(M_PI) / T(bar_period_)) };
+            std::exp(-std::sqrt(T(2)) * T(M_PI) / T(bar_period_))
+        };
         const value_type    c2 { T(2) * alpha2 * cos_bar };
         const value_type    c3 { T(-1) * alpha2 * alpha2 };
         const value_type    c1 { T(1) - c2 - c3 };
@@ -3766,19 +3794,23 @@ struct  EBSineWaveVisitor  {
             //
             const value_type    high_pass {
                 alpha1_effect * (this_close - last_close) +
-                alpha1 * last_high_pass };
+                alpha1 * last_high_pass
+            };
             const value_type    filter {
                 c1 * (high_pass + last_high_pass) / T(2) +
-                c2 * filter_hist[1] + c3 * filter_hist[0] };
+                c2 * filter_hist[1] + c3 * filter_hist[0]
+            };
 
             // 3 bar average of wave amplitude and power
             //
             const value_type    wave {
-                (filter + filter_hist[1] + filter_hist[0]) / T(3) };
+                (filter + filter_hist[1] + filter_hist[0]) / T(3)
+            };
             const value_type    power {
                 (filter * filter +
                  filter_hist[1] * filter_hist[1] +
-                 filter_hist[0] * filter_hist[0]) / T(3) };
+                 filter_hist[0] * filter_hist[0]) / T(3)
+            };
 
             // Normalize the average wave to square root of the average power
             //
@@ -3794,12 +3826,12 @@ struct  EBSineWaveVisitor  {
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_.clear();
     }
-    inline void post ()  { OBO_PORT_POST }
+    inline void post()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -3918,13 +3950,13 @@ struct  VarIdxDynAvgVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        if (roll_period_ <= 1 && roll_period_ >= col_s)
+        if (roll_period_ <= 1 || roll_period_ >= col_s)
             throw DataFrameError("VarIdxDynAvgVisitor: 1 < roll period < "
                                  "column size");
 #endif // HMDF_SANITY_EXCEPTIONS
@@ -3935,8 +3967,10 @@ struct  VarIdxDynAvgVisitor  {
         diff (idx_begin, idx_end, column_begin, column_end);
         diff.post();
 
-        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const auto  thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
         result_type positive { std::move(diff.get_result()) };
 
         positive[0] = 0;
@@ -3944,7 +3978,7 @@ struct  VarIdxDynAvgVisitor  {
         result_type negative = positive;
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
@@ -3955,7 +3989,8 @@ struct  VarIdxDynAvgVisitor  {
                             if (negative[i] > 0)  negative[i] = 0;
                             else  negative[i] = std::fabs(negative[i]);
                         }
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -3968,7 +4003,8 @@ struct  VarIdxDynAvgVisitor  {
         }
 
         SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    sum {
-            SumVisitor<T, I>(), roll_period_ };
+            SumVisitor<T, I>(), roll_period_
+        };
 
         sum.pre();
         sum (idx_begin, idx_end, positive.begin(), positive.end());
@@ -3982,7 +4018,7 @@ struct  VarIdxDynAvgVisitor  {
         result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_period_,
                     col_s,
@@ -3994,7 +4030,8 @@ struct  VarIdxDynAvgVisitor  {
 
                             result[i] = std::fabs((p - n) / (p + n));
                         }
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -4023,12 +4060,12 @@ struct  VarIdxDynAvgVisitor  {
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_.clear();
     }
-    inline void post ()  { OBO_PORT_POST }
+    inline void post()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -4198,12 +4235,15 @@ struct  AvgDirMovIdxVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &low_begin, const H &low_end,
-                const H &high_begin, const H &high_end,
-                const H &close_begin, const H &close_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &low_begin, const H &low_end,
+               const H &high_begin, const H &high_end,
+               const H &close_begin, const H &close_end)  {
 
-        const size_type col_s = std::distance(close_begin, close_end);
+        const size_type col_s {
+            size_type(std::distance(close_begin, close_end))
+        };
+
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s <= 3 ||
@@ -4213,17 +4253,19 @@ struct  AvgDirMovIdxVisitor  {
                                  "equal size and column size > 3");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
-        result_type pos_di(col_s);
-        result_type neg_di(col_s);
-        result_type true_range(col_s, 0);
+        const auto  thread_level { (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level()
+        };
+        const size_type n_moves { col_s - 1 };  // Bar-to-bar transitions
+        result_type     pos_di(n_moves);
+        result_type     neg_di(n_moves);
+        result_type     true_range(n_moves, 0);
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
-                    col_s - 1,
+                    n_moves,
                     [&close_begin, &low_begin, &high_begin,
                      &pos_di, &neg_di, &true_range]
                     (auto begin, auto end) -> void  {
@@ -4250,12 +4292,13 @@ struct  AvgDirMovIdxVisitor  {
                                 std::max(nxt_h, close) -
                                 std::min(nxt_l, close);
                         }
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            for (size_type i { 0 }; i < col_s - 1; ++i) [[likely]]  {
+            for (size_type i { 0 }; i < n_moves; ++i) [[likely]]  {
                 const value_type    nxt_h { *(high_begin + (i + 1)) };
                 const value_type    nxt_l { *(low_begin + (i + 1)) };
                 const value_type    pos_move { nxt_h - *(high_begin + i) };
@@ -4268,13 +4311,13 @@ struct  AvgDirMovIdxVisitor  {
 
                 const value_type    close { *(close_begin + i) };
 
-                true_range[i] =
-                    std::max(nxt_h, close) - std::min(nxt_l, close);
+                true_range[i] = std::max(nxt_h, close) - std::min(nxt_l, close);
             }
         }
 
-        ewm_v<double, I, A> ewm(exponential_decay_spec::span,
-                                dir_smoother_, true);
+        ewm_v<T, I, A>  ewm {
+            exponential_decay_spec::span, dir_smoother_, true
+        };
 
         ewm.pre();
         ewm (idx_begin, idx_end, true_range.begin(), true_range.end());
@@ -4291,26 +4334,37 @@ struct  AvgDirMovIdxVisitor  {
         ewm.post();
         neg_di.swap(ewm.get_result());
 
-        result_type dx(col_s);
+        result_type dx(n_moves);
         value_type  prev_val { 0 };
 
-        for (size_type i { 0 }; i < col_s - 1; ++i) [[likely]]  {
+        for (size_type i { 0 }; i < n_moves; ++i) [[likely]]  {
             const value_type    pos_val { pos_di[i] / true_range[i] };
             const value_type    neg_val { neg_di[i] / true_range[i] };
             const value_type    val {
-                std::fabs(pos_val - neg_val) / (pos_val + neg_val) };
+                std::fabs(pos_val - neg_val) / (pos_val + neg_val)
+            };
 
             if (! is_nan__(val))  prev_val = val;
             dx[i] = prev_val;
         }
 
-        ewm_v<double, I, A> ewm2(exponential_decay_spec::span,
-                                 adx_smoother_, true);
+        ewm_v<T, I, A>  ewm2 {
+            exponential_decay_spec::span, adx_smoother_, true
+        };
 
         ewm2.pre();
-        ewm2 (idx_begin, idx_end, dx.begin(), dx.end());
+        ewm2(idx_begin, idx_end, dx.begin(), dx.end());
         ewm2.post();
-        result_.swap(ewm2.get_result());
+
+        // Move k is the transition from bar k to bar k + 1, so it is known
+        // only at bar k + 1. The first bar has no previous bar.
+        //
+        result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
+
+        std::copy(ewm2.get_result().begin(),
+                  ewm2.get_result().begin() + n_moves,
+                  result.begin() + 1);
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -4627,8 +4681,8 @@ struct  ArnaudLegouxMAVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &, const K &,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
 
@@ -4642,7 +4696,7 @@ struct  ArnaudLegouxMAVisitor  {
 
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_count_,
                     col_s,
@@ -4657,7 +4711,8 @@ struct  ArnaudLegouxMAVisitor  {
 
                             result[i] = win_sum / this->cum_sum_;
                         }
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -4677,12 +4732,12 @@ struct  ArnaudLegouxMAVisitor  {
 
     OBO_PORT_OPT
 
-    inline void pre ()  {
+    inline void pre()  {
 
         OBO_PORT_PRE
         result_.clear();
     }
-    inline void post ()  { OBO_PORT_POST }
+    inline void post()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -4696,9 +4751,18 @@ struct  ArnaudLegouxMAVisitor  {
 
         const value_type    denom = T(2) * s_ * s_;
 
+        // The Gaussian is centered at m_ counting from the OLDEST bar of the
+        // window (i = 0 is the oldest). The loops above index the window
+        // from the NEWEST bar backwards (j = 0 is the newest), so the
+        // weights are stored in reverse order.
+        //
         for (size_type i { 0 }; i < roll_count_; ++i)  {
-            wtd_[i] = std::exp(-((T(i) - m_) * (T(i) - m_)) / denom);
-            cum_sum_ += wtd_[i];
+            const value_type    w {
+                std::exp(-((T(i) - m_) * (T(i) - m_)) / denom)
+            };
+
+            wtd_[roll_count_ - 1 - i] = w;
+            cum_sum_ += w;
         }
     }
 

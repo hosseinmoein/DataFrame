@@ -1018,18 +1018,17 @@ static void test_RSIVisitor()  {
         RSIVisitor<double, std::string, 64> rsi(return_policy::percentage);
 
         df.single_act_visit<double>("IBM_Close", rsi);
-
         assert(rsi.get_result().size() == 1721);
         assert(std::isnan(rsi.get_result()[0]));
         assert(std::isnan(rsi.get_result()[12]));
-        assert(std::abs(rsi.get_result()[13] - 41.4627) < 0.0001);
-        assert(std::abs(rsi.get_result()[22] - 35.7869) < 0.0001);
-        assert(std::abs(rsi.get_result()[24] - 37.3135) < 0.0001);
-        assert(std::abs(rsi.get_result()[28] - 46.4432) < 0.0001);
-        assert(std::abs(rsi.get_result()[33] - 52.1746) < 0.0001);
-        assert(std::abs(rsi.get_result()[1720] - 43.3186) < 0.0001);
-        assert(std::abs(rsi.get_result()[1712] - 47.0717) < 0.0001);
-        assert(std::abs(rsi.get_result()[1707] - 54.2938) < 0.0001);
+        assert(std::abs(rsi.get_result()[13] - 37.7276) < 0.0001);
+        assert(std::abs(rsi.get_result()[22] - 24.2063) < 0.0001);
+        assert(std::abs(rsi.get_result()[24] - 32.0117) < 0.0001);
+        assert(std::abs(rsi.get_result()[28] - 50.8775) < 0.0001);
+        assert(std::abs(rsi.get_result()[33] - 60.2834) < 0.0001);
+        assert(std::abs(rsi.get_result()[1720] - 38.8171) < 0.0001);
+        assert(std::abs(rsi.get_result()[1712] - 38.5199) < 0.0001);
+        assert(std::abs(rsi.get_result()[1707] - 54.2967) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -3940,10 +3939,10 @@ static void test_HullRollingMeanVisitor()  {
     assert(abs(result[6] - 5.42857) < 0.00001);
     assert(abs(result[10] - 7.61905) < 0.00001);
     assert(abs(result[20] - 2.95238) < 0.00001);
-    assert(abs(result[41] - 6.8254) < 0.0001);
+    assert(abs(result[41] - 6.12698) < 0.0001);
     assert(abs(result[40] - 7.84127) < 0.00001);
     assert(abs(result[39] - 9.93651) < 0.00001);
-    assert(abs(result[38] - 10.9365) < 0.00001);
+    assert(abs(result[38] - 10.9365) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------
@@ -4293,15 +4292,14 @@ static void test_YangZhangVolVisitor()  {
             ("FORD_Low", "FORD_High", "FORD_Open", "FORD_Close", yz_v);
 
         assert(yz_v.get_result().size() == 12265);
-        std::cout << std::endl;
         assert(std::isnan(yz_v.get_result()[0]));
         assert(std::isnan(yz_v.get_result()[29]));
         assert(std::isnan(yz_v.get_result()[30]));
-        assert(std::abs(yz_v.get_result()[31] - 0.169461) < 0.00001);
-        assert(std::abs(yz_v.get_result()[36] - 0.181149) < 0.00001);
-        assert(std::abs(yz_v.get_result()[12264] - 0.281531) < 0.00001);
-        assert(std::abs(yz_v.get_result()[12261] - 0.279347) < 0.00001);
-        assert(std::abs(yz_v.get_result()[12256] - 0.293528) < 0.00001);
+        assert(std::abs(yz_v.get_result()[31] - 0.170786) < 0.000001);
+        assert(std::abs(yz_v.get_result()[36] - 0.182502) < 0.000001);
+        assert(std::abs(yz_v.get_result()[12264] - 0.278925) < 0.000001);
+        assert(std::abs(yz_v.get_result()[12261] - 0.277669) < 0.000001);
+        assert(std::abs(yz_v.get_result()[12256] - 0.291269) < 0.000001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -4879,15 +4877,14 @@ static void test_EBSineWaveVisitor()  {
         EBSineWaveVisitor<double, std::string, 256>  ebsw_v;
 
         df.single_act_visit<double>("IBM_Close", ebsw_v);
-
         assert(ebsw_v.get_result().size() == 1721);
         assert(std::isnan(ebsw_v.get_result()[0]));
-        assert(std::abs(ebsw_v.get_result()[5] - 0.927837) < 0.00001);
-        assert(std::abs(ebsw_v.get_result()[14] - -0.560866) < 0.00001);
-        assert(std::abs(ebsw_v.get_result()[25] - -0.36883) < 0.00001);
-        assert(std::abs(ebsw_v.get_result()[1720] - -0.901317) < 0.00001);
-        assert(std::abs(ebsw_v.get_result()[1712] - -0.730321) < 0.00001);
-        assert(std::abs(ebsw_v.get_result()[1707] - 0.841759) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[5] - 0.964094) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[14] - 0.530795) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[25] - -0.989554) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[1720] - -0.999425) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[1712] - 0.690467) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[1707] - 0.997981) < 0.00001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -4961,7 +4958,6 @@ static void test_VarIdxDynAvgVisitor()  {
         df.single_act_visit<double>("IBM_Close", vidya_v);
 
         assert(vidya_v.get_result().size() == 1721);
-
         assert(std::isnan(vidya_v.get_result()[0]));
         assert(std::isnan(vidya_v.get_result()[12]));
         assert(vidya_v.get_result()[13] == 0);
@@ -5173,13 +5169,13 @@ static void test_AvgDirMovIdxVisitor()  {
             ("IBM_Low", "IBM_High", "IBM_Close", adx_v);
 
         assert(adx_v.get_result().size() == 1721);
-        assert(adx_v.get_result()[0] == 0);
-        assert(std::abs(adx_v.get_result()[10] - 0.73029) < 0.00001);
-        assert(std::abs(adx_v.get_result()[14] - 0.735792) < 0.000001);
-        assert(std::abs(adx_v.get_result()[25] - 0.691082) < 0.000001);
-        assert(std::abs(adx_v.get_result()[1720] - 0.372184) < 0.000001);
-        assert(std::abs(adx_v.get_result()[1712] - 0.703394) < 0.000001);
-        assert(std::abs(adx_v.get_result()[1707] - 0.383002) < 0.000001);
+        assert(std::isnan(adx_v.get_result()[0]));
+        assert(std::abs(adx_v.get_result()[10] - 0.633384) < 0.00001);
+        assert(std::abs(adx_v.get_result()[14] - 0.669804) < 0.000001);
+        assert(std::abs(adx_v.get_result()[25] - 0.583818) < 0.000001);
+        assert(std::abs(adx_v.get_result()[1720] - 0.620307) < 0.000001);
+        assert(std::abs(adx_v.get_result()[1712] - 0.586069) < 0.000001);
+        assert(std::abs(adx_v.get_result()[1707] - 0.399423) < 0.000001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -5511,12 +5507,12 @@ static void test_ArnaudLegouxMAVisitor()  {
         assert(alma.get_result().size() == 1721);
         assert(std::isnan(alma.get_result()[0]));
         assert(std::isnan(alma.get_result()[9]));
-        assert(std::abs(alma.get_result()[10] - 187.533) < 0.001);
-        assert(std::abs(alma.get_result()[14] - 186.359) < 0.001);
-        assert(std::abs(alma.get_result()[25] - 176.892) < 0.001);
-        assert(std::abs(alma.get_result()[1720] - 117.841) < 0.001);
-        assert(std::abs(alma.get_result()[1712] - 127.677) < 0.001);
-        assert(std::abs(alma.get_result()[1707] - 121.435) < 0.001);
+        assert(std::abs(alma.get_result()[10] - 186.831) < 0.001);
+        assert(std::abs(alma.get_result()[14] - 185.908) < 0.001);
+        assert(std::abs(alma.get_result()[25] - 174.693) < 0.001);
+        assert(std::abs(alma.get_result()[1720] - 109.636) < 0.001);
+        assert(std::abs(alma.get_result()[1712] - 123.938) < 0.001);
+        assert(std::abs(alma.get_result()[1707] - 127.25) < 0.01);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

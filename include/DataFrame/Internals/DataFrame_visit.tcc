@@ -233,7 +233,7 @@ visit (const char *name1, const char *name2, V &visitor, bool in_reverse)  {
         const size_type idx_s_1 = idx_s - 1;
 
         for (; i < diff; ++i)
-            visitor (indices_[i],
+            visitor (indices_[idx_s_1 - i],
                      ((idx_s_1 - i) < data_s1) ? vec1[idx_s_1 - i] : nan_val1,
                      ((idx_s_1 - i) < data_s2) ? vec2[idx_s_1 - i] : nan_val2);
         for (; i < idx_s; ++i) [[likely]]
@@ -349,7 +349,7 @@ visit (const char *name1,
         const size_type idx_s_1 = idx_s - 1;
 
         for (; i < diff; ++i)
-            visitor (indices_[i],
+            visitor (indices_[idx_s_1 - i],
                      ((idx_s_1 - i) < data_s1) ? vec1[idx_s_1 - i] : nan_val1,
                      ((idx_s_1 - i) < data_s2) ? vec2[idx_s_1 - i] : nan_val2,
                      ((idx_s_1 - i) < data_s3) ? vec3[idx_s_1 - i] : nan_val3);
@@ -482,7 +482,7 @@ visit (const char *name1,
         const size_type idx_s_1 = idx_s - 1;
 
         for (; i < diff; ++i)
-            visitor (indices_[i],
+            visitor (indices_[idx_s_1 - i],
                      ((idx_s_1 - i) < data_s1) ? vec1[idx_s_1 - i] : nan_val1,
                      ((idx_s_1 - i) < data_s2) ? vec2[idx_s_1 - i] : nan_val2,
                      ((idx_s_1 - i) < data_s3) ? vec3[idx_s_1 - i] : nan_val3,
@@ -631,7 +631,7 @@ visit (const char *name1,
         const size_type idx_s_1 = idx_s - 1;
 
         for (; i < diff; ++i)
-            visitor (indices_[i],
+            visitor (indices_[idx_s_1 - i],
                      ((idx_s_1 - i) < data_s1) ? vec1[idx_s_1 - i] : nan_val1,
                      ((idx_s_1 - i) < data_s2) ? vec2[idx_s_1 - i] : nan_val2,
                      ((idx_s_1 - i) < data_s3) ? vec3[idx_s_1 - i] : nan_val3,

@@ -2317,7 +2317,6 @@ template<typename T, typename V>
 DataFrame<I, H> DataFrame<I, H>::
 transpose(IndexVecType &&indices, const V &new_col_names) const  {
 
-    const size_type num_cols { column_list_.size() };
     const size_type idx_s { indices_.size() };
 
     if (new_col_names.size() != idx_s)
@@ -2326,6 +2325,7 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
                                 "to number of rows");
 
     StlVecType<const ColumnVecType<T> *>    current_cols;
+    const size_type                         num_cols { column_list_.size() };
 
     current_cols.reserve(num_cols);
     for (const auto &citer : column_list_)
@@ -2334,7 +2334,7 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
     StlVecType<StlVecType<T>>   trans_cols(indices_.size());
     DataFrame                   df;
 
-    for (auto &vec : trans_cols)  vec.reserve(idx_s);
+    for (auto &vec : trans_cols)  vec.reserve(num_cols);
     for (size_type j { 0 }; j < num_cols; ++j)  {
         const auto      &col { *current_cols[j] };
         const size_type col_size { col.size() };

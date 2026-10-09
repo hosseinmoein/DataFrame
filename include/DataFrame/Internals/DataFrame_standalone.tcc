@@ -253,7 +253,7 @@ static S &operator << (S &stream, const std::vector<T, A> &data)  {
 
     if (! data.empty())  {
         stream << data.size() << '[' << data[0];
-        for (std::size_t i = 1; i < data.size(); ++i)
+        for (std::size_t i { 1 }; i < data.size(); ++i)
             stream << '|' << data[i];
         stream << ']';
     }
@@ -267,7 +267,7 @@ static S &operator << (S &stream, const std::set<T> &data)  {
 
     if (! data.empty())  {
         stream << data.size() << '[' << *(data.cbegin());
-        for (auto citer = ++(data.cbegin()); citer != data.cend(); ++citer)
+        for (auto citer { ++(data.cbegin()) }; citer != data.cend(); ++citer)
             stream << '|' << *citer;
         stream << ']';
     }
@@ -281,7 +281,7 @@ static S &operator << (S &stream, const std::array<T, N> &data)  {
 
     if (! data.empty())  {
         stream << data.size() << '[' << data[0];
-        for (std::size_t i = 1; i < data.size(); ++i)
+        for (std::size_t i { 1 }; i < data.size(); ++i)
             stream << '|' << data[i];
         stream << ']';
     }
@@ -296,7 +296,7 @@ static S &operator << (S &stream, const std::map<K, V> &data)  {
     if (! data.empty())  {
         stream << data.size() << '{'
                << data.cbegin()->first << ':' << data.cbegin()->second;
-        for (auto citer = ++(data.cbegin()); citer != data.cend(); ++citer)
+        for (auto citer { ++(data.cbegin()) }; citer != data.cend(); ++citer)
             stream << '|' << citer->first << ':' << citer->second;
         stream << '}';
     }
@@ -311,7 +311,7 @@ static S &operator << (S &stream, const std::unordered_map<K, V> &data)  {
     if (! data.empty())  {
         stream << data.size() << '{'
                << data.cbegin()->first << ':' << data.cbegin()->second;
-        for (auto citer = ++(data.cbegin()); citer != data.cend(); ++citer)
+        for (auto citer { ++(data.cbegin()) }; citer != data.cend(); ++citer)
             stream << '|' << citer->first << ':' << citer->second;
         stream << '}';
     }
@@ -325,8 +325,8 @@ static S &operator << (S &stream, const Matrix<T, MO> &data)  {
 
     if (! data.empty())  {
         stream << data.rows() << 'X' << data.cols() << '[';
-        for (long r = 0; r < data.rows(); ++r)  {
-            for (long c = 0; c < data.cols(); ++c)
+        for (long r { 0 }; r < data.rows(); ++r)  {
+            for (long c { 0 }; c < data.cols(); ++c)
                 stream << data(r, c) << '|';
             if (r < (data.rows() - 1))
                 stream << '\n';
@@ -590,7 +590,7 @@ _load_groupby_data_1_(
         for (std::size_t i { 0 }; i < vec_size; ++i)  {
             if (input_col[get_pos(i)] != input_col[get_pos(marker)])  {
                 idx_visitor.pre();
-                for (std::size_t j = marker; j < i; ++j)
+                for (std::size_t j { marker }; j < i; ++j)
                     idx_visitor(src_idx[get_pos(j)], src_idx[get_pos(j)]);
                 idx_visitor.post();
                 dst_idx.push_back(idx_visitor.get_result());
@@ -1321,10 +1321,10 @@ inline static S &_write_json_df_index_(S &o, unsigned char value)  {
 // ----------------------------------------------------------------------------
 
 inline static void
-_get_token_from_file_ (std::istream &file,
-                       char delim,
-                       std::string &value,
-                       char alt_delim = '\0') {
+_get_token_from_file_(std::istream &file,
+                      char delim,
+                      std::string &value,
+                      char alt_delim = '\0') {
 
     std::streambuf  *rdbuf { file.rdbuf() };
     int             ch;
@@ -1349,10 +1349,10 @@ _get_token_from_file_ (std::istream &file,
 // ----------------------------------------------------------------------------
 
 inline static void
-_get_token_from_string_ (std::string &str,
-                         std::size_t &str_idx,
-                         char delim,
-                         std::string &value)  {
+_get_token_from_string_(std::string &str,
+                        std::size_t &str_idx,
+                        char delim,
+                        std::string &value)  {
 
     std::size_t idx { 0 };
 
@@ -1374,30 +1374,25 @@ _get_str_dbl_pair_from_value_(const char *value)  {
     using val_t = std::pair<std::string, double>;
 
     std::size_t vcnt { 0 };
-    val_t       data ("", std::numeric_limits<double>::quiet_NaN());
+    val_t       data { "", std::numeric_limits<double>::quiet_NaN() };
 
     while (value[vcnt] && value[vcnt] != '<')  ++vcnt;
     if (! value[vcnt])  return (data);
     vcnt += 1;  // skip <
 
-    char        buffer[2048];
-    std::size_t bcnt { 0 };
+    std::string buffer;
 
-    buffer[0] = '\0';
     while (value[vcnt] && value[vcnt] != ':')
-        buffer[bcnt++] = value[vcnt++];
+        buffer += value[vcnt++];
     if (! value[vcnt])  return (data);
-    buffer[bcnt] = '\0';
     data.first = buffer;
     vcnt += 1;  // skip :
 
-    bcnt = 0;
-    buffer[0] = '\0';
+    buffer.clear();
     while (value[vcnt] && value[vcnt] != '>')
-        buffer[bcnt++] = value[vcnt++];
-    if (! value[vcnt] || buffer[0] == '\0')  return (data);
-    buffer[bcnt] = '\0';
-    data.second = std::strtod(buffer, nullptr);
+        buffer += value[vcnt++];
+    if (! value[vcnt] || buffer.empty())  return (data);
+    data.second = std::strtod(buffer.c_str(), nullptr);
 
     return (data);
 }
@@ -1410,8 +1405,8 @@ _get_dbl_dbl_pair_from_value_(const char *value)  {
     using val_t = std::pair<double, double>;
 
     std::size_t vcnt { 0 };
-    val_t       data (std::numeric_limits<double>::quiet_NaN(),
-                      std::numeric_limits<double>::quiet_NaN());
+    val_t       data { std::numeric_limits<double>::quiet_NaN(),
+                       std::numeric_limits<double>::quiet_NaN() };
 
     while (value[vcnt] && value[vcnt] != '<')  ++vcnt;
     if (! value[vcnt])  return (data);
@@ -1448,30 +1443,25 @@ _get_str_str_pair_from_value_(const char *value)  {
     using val_t = std::pair<std::string, std::string>;
 
     std::size_t vcnt { 0 };
-    val_t       data ("", "");
+    val_t       data { "", "" };
 
     while (value[vcnt] && value[vcnt] != '<')  ++vcnt;
     if (! value[vcnt])  return (data);
     vcnt += 1;  // skip <
 
-    char        buffer[2048];
-    std::size_t bcnt { 0 };
+    std::string buffer;
 
-    buffer[0] = '\0';
     while (value[vcnt] && value[vcnt] != ':')
-        buffer[bcnt++] = value[vcnt++];
+        buffer += value[vcnt++];
     if (! value[vcnt])  return (data);
-    buffer[bcnt] = '\0';
     data.first = buffer;
     vcnt += 1;  // skip :
 
-    bcnt = 0;
-    buffer[0] = '\0';
+    buffer.clear();
     while (value[vcnt] && value[vcnt] != '>')
-        buffer[bcnt++] = value[vcnt++];
-    if (! value[vcnt] || buffer[0] == '\0')  return (data);
-    buffer[bcnt] = '\0';
-    data.second = buffer;
+        buffer += value[vcnt++];
+    if (! value[vcnt] || buffer.empty())  return (data);
+    data.second = std::move(buffer);
 
     return (data);
 }
@@ -1483,7 +1473,7 @@ _get_dbl_vec_from_value_(const char *value)  {
 
     using vec_t = std::vector<double>;
 
-    std::size_t vcnt = 0;
+    std::size_t vcnt { 0 };
     char        buffer[128];
 
     while (value[vcnt] != '[')  {
@@ -1516,24 +1506,19 @@ _get_str_vec_from_value_(const char *value)  {
     using vec_t = std::vector<std::string>;
 
     std::size_t vcnt { 0 };
-    char        buffer[2048];
+    std::string buffer;
 
-    while (value[vcnt] != '[')  {
-        buffer[vcnt] = value[vcnt];
-        vcnt += 1;
-    }
-    buffer[vcnt] = '\0';
+    while (value[vcnt] != '[')
+        buffer += value[vcnt++];
 
-    vec_t       data;
-    std::size_t bcnt;
+    vec_t   data;
 
-    data.reserve(std::strtol(buffer, nullptr, 10));
+    data.reserve(std::strtol(buffer.c_str(), nullptr, 10));
     vcnt += 1;  // skip [
     while (value[vcnt] && value[vcnt] != ']')  {
-        bcnt = 0;
+        buffer.clear();
         while (value[vcnt] != '|' && value[vcnt] != ']')
-            buffer[bcnt++] = value[vcnt++];
-        buffer[bcnt] = '\0';
+            buffer += value[vcnt++];
         data.push_back(buffer);
         vcnt += 1;  // skip separator
     }
@@ -1547,7 +1532,7 @@ _get_dbl_set_from_value_(const char *value)  {
 
     using set_t = typename std::set<double>;
 
-    std::size_t vcnt = 0;
+    std::size_t vcnt { 0 };
     char        buffer[128];
 
     while (value[vcnt] != '[')  {
@@ -1578,24 +1563,18 @@ _get_str_set_from_value_(const char *value)  {
 
     using set_t = typename std::set<std::string>;
 
-    std::size_t vcnt = 0;
-    char        buffer[2048];
+    std::size_t vcnt { 0 };
+    std::string buffer;
 
-    while (value[vcnt] != '[')  {
-        buffer[vcnt] = value[vcnt];
-        vcnt += 1;
-    }
-    buffer[vcnt] = '\0';  // That is the count which is useless for sets
+    while (value[vcnt] != '[')  vcnt += 1;  // The count is useless for sets
 
-    set_t       data;
-    std::size_t bcnt;
+    set_t   data;
 
     vcnt += 1;  // skip [
     while (value[vcnt] && value[vcnt] != ']')  {
-        bcnt = 0;
+        buffer.clear();
         while (value[vcnt] != '|' && value[vcnt] != ']')
-            buffer[bcnt++] = value[vcnt++];
-        buffer[bcnt] = '\0';
+            buffer += value[vcnt++];
         data.insert(buffer);
         vcnt += 1;  // skip separator
     }
@@ -1611,36 +1590,30 @@ _get_str_dbl_map_from_value_(const char *value)  {
     using map_t = MAP;
     using unomap_t = std::unordered_map<std::string, double>;
 
-    std::size_t vcnt = 0;
-    char        buffer[256];
+    std::size_t vcnt { 0 };
+    std::string buffer;
 
-    while (value[vcnt] != '{')  {
-        buffer[vcnt] = value[vcnt];
-        vcnt += 1;
-    }
-    buffer[vcnt] = '\0';
+    while (value[vcnt] != '{')
+        buffer += value[vcnt++];
 
-    map_t       data;
-    std::size_t bcnt;
+    map_t   data;
 
     if constexpr (std::is_base_of_v<unomap_t, map_t>)
-        data.reserve(std::strtol(buffer, nullptr, 10));
+        data.reserve(std::strtol(buffer.c_str(), nullptr, 10));
     vcnt += 1;  // skip {
     while (value[vcnt] && value[vcnt] != '}')  {
-        bcnt = 0;
+        buffer.clear();
         while (value[vcnt] != ':')
-            buffer[bcnt++] = value[vcnt++];
-        buffer[bcnt] = '\0';
+            buffer += value[vcnt++];
         vcnt += 1;  // skip :
 
-        std::string key = buffer;
+        std::string key = std::move(buffer);
 
-        bcnt = 0;
+        buffer.clear();
         while (value[vcnt] != '|' && value[vcnt] != '}')
-            buffer[bcnt++] = value[vcnt++];
-        buffer[bcnt] = '\0';
+            buffer += value[vcnt++];
 
-        const double    local_value = std::strtod(buffer, nullptr);
+        const double    local_value { std::strtod(buffer.c_str(), nullptr) };
 
         data.emplace(std::make_pair(std::move(key), local_value));
         vcnt += 1;  // skip separator
@@ -1658,7 +1631,7 @@ _write_csv_df_header_(S &o, const char *col_name, std::size_t col_size,
     o << col_name << ':' << col_size << ':';
 
     if (! dt_format) [[likely]]  {
-        const auto  &citer = _typeinfo_name_.find(typeid(T));
+        const auto  &citer { _typeinfo_name_.find(typeid(T)) };
 
         if (citer != _typeinfo_name_.end()) [[likely]]
             o << '<' << citer->second << '>';
@@ -1679,7 +1652,7 @@ _write_json_df_header_(S &o, const char *col_name, std::size_t col_size)  {
 
     o << '"' << col_name << "\":{\"N\":" << col_size << ',';
 
-    const auto  &citer = _typeinfo_name_.find(typeid(T));
+    const auto  &citer { _typeinfo_name_.find(typeid(T)) };
 
     if (citer != _typeinfo_name_.end()) [[likely]]
         o << "\"T\":\"" << citer->second << "\",";
@@ -1732,6 +1705,24 @@ inline static S &_write_csv_df_index_(S &o, unsigned char value)  {
 
 // ----------------------------------------------------------------------------
 
+// The binary format stores the length of each string in 16 bits.
+//
+template<typename STR>
+inline static uint16_t
+_binary_str_size_(const STR &str)  {
+
+    const auto  str_sz { str.size() };
+
+    if (str_sz > std::numeric_limits<uint16_t>::max()) [[unlikely]]
+        throw DataFrameError("_binary_str_size_(): ERROR: A string longer "
+                             "than 65535 characters cannot be written in "
+                             "binary format");
+
+    return (static_cast<uint16_t>(str_sz));
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename STRM, typename V>
 inline static void
 _write_binary_common_(STRM &strm, [[maybe_unused]] const V &vec,
@@ -1741,7 +1732,7 @@ _write_binary_common_(STRM &strm, [[maybe_unused]] const V &vec,
     using ValueType = typename VecType::value_type;
 
     char        buffer[32];
-    const auto  &citer = _typeinfo_name_.find(typeid(ValueType));
+    const auto  &citer { _typeinfo_name_.find(typeid(ValueType)) };
 
     if (citer != _typeinfo_name_.end()) [[likely]]
         std::strncpy(buffer, citer->second, sizeof(buffer) - 1);
@@ -1749,7 +1740,7 @@ _write_binary_common_(STRM &strm, [[maybe_unused]] const V &vec,
         std::strncpy(buffer, "N/A", sizeof(buffer) - 1);
     strm.write(buffer, sizeof(buffer));
 
-    const uint64_t  vec_size = end_row - start_row;
+    const uint64_t  vec_size { end_row - start_row };
 
     strm.write(reinterpret_cast<const char *>(&vec_size), sizeof(vec_size));
     return;
@@ -1766,13 +1757,13 @@ _write_binary_string_(STRM &strm, const V &str_vec,
 
     // It is better for compression, if you write the alike data together
     //
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint16_t  str_sz = static_cast<uint16_t>(str_vec[i].size());
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const uint16_t  str_sz { _binary_str_size_(str_vec[i]) };
 
         strm.write(reinterpret_cast<const char *>(&str_sz), sizeof(str_sz));
     }
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const auto  &str = str_vec[i];
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const auto  &str { str_vec[i] };
 
         strm.write(str.data(), str.size() * sizeof(char));
     }
@@ -1793,8 +1784,8 @@ _write_binary_data_(STRM &strm, const V &vec,
     _write_binary_common_(strm, vec, start_row, end_row);
 
     if constexpr (std::is_same_v<ValueType, bool>)  {
-        for (uint64_t i = start_row; i < end_row; ++i)  {
-            const bool  bval = vec[i];
+        for (uint64_t i { start_row }; i < end_row; ++i)  {
+            const bool  bval { vec[i] };
 
             strm.write(reinterpret_cast<const char *>(&bval), sizeof(bool));
         }
@@ -1828,8 +1819,8 @@ _write_binary_datetime_(STRM &strm, const V &dt_vec,
 
     _write_binary_common_(strm, dt_vec, start_row, end_row);
 
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const double    val = static_cast<double>(dt_vec[i]);
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const double    val { static_cast<double>(dt_vec[i]) };
 
         strm.write(reinterpret_cast<const char *>(&val), sizeof(val));
     }
@@ -1849,13 +1840,13 @@ _write_binary_str_dbl_pair_(STRM &strm, const V &p_vec,
 
     _write_binary_common_(strm, p_vec, start_row, end_row);
 
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint16_t  str_sz = static_cast<uint16_t>(p_vec[i].first.size());
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const uint16_t  str_sz { _binary_str_size_(p_vec[i].first) };
 
         strm.write(reinterpret_cast<const char *>(&str_sz), sizeof(str_sz));
     }
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const auto      &str = p_vec[i].first;
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const auto  &str { p_vec[i].first };
 
         strm.write(str.data(), str.size() * sizeof(char));
         strm.write(reinterpret_cast<const char *>(&(p_vec[i].second)),
@@ -1877,17 +1868,16 @@ _write_binary_str_str_pair_(STRM &strm, const V &p_vec,
 
     _write_binary_common_(strm, p_vec, start_row, end_row);
 
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint16_t  str_sz1 = static_cast<uint16_t>(p_vec[i].first.size());
-        const uint16_t  str_sz2 =
-            static_cast<uint16_t>(p_vec[i].second.size());
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const uint16_t  str_sz1 { _binary_str_size_(p_vec[i].first) };
+        const uint16_t  str_sz2 { _binary_str_size_(p_vec[i].second) };
 
         strm.write(reinterpret_cast<const char *>(&str_sz1), sizeof(str_sz1));
         strm.write(reinterpret_cast<const char *>(&str_sz2), sizeof(str_sz2));
     }
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const auto  &str1 = p_vec[i].first;
-        const auto  &str2 = p_vec[i].second;
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const auto  &str1 { p_vec[i].first };
+        const auto  &str2 { p_vec[i].second };
 
         strm.write(str1.data(), str1.size() * sizeof(char));
         strm.write(str2.data(), str2.size() * sizeof(char));
@@ -1908,7 +1898,7 @@ _write_binary_dbl_dbl_pair_(STRM &strm, const V &p_vec,
 
     _write_binary_common_(strm, p_vec, start_row, end_row);
 
-    for (uint64_t i = start_row; i < end_row; ++i)  {
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
         strm.write(reinterpret_cast<const char *>(&(p_vec[i].first)),
                    sizeof(double));
         strm.write(reinterpret_cast<const char *>(&(p_vec[i].second)),
@@ -1929,7 +1919,7 @@ _write_binary_dbl_vec_(STRM &strm, const V &vecs,
 
     _write_binary_common_(strm, vecs, start_row, end_row);
 
-    for (uint64_t i = start_row; i < end_row; ++i)
+    for (uint64_t i { start_row }; i < end_row; ++i)
         _write_binary_data_(strm, vecs[i], 0, vecs[i].size());
 
     return (strm);
@@ -1946,7 +1936,7 @@ _write_binary_str_vec_(STRM &strm, const V &vecs,
 
     _write_binary_common_(strm, vecs, start_row, end_row);
 
-    for (uint64_t i = start_row; i < end_row; ++i)
+    for (uint64_t i { start_row }; i < end_row; ++i)
         _write_binary_string_(strm, vecs[i], 0, vecs[i].size());
 
     return (strm);
@@ -1963,8 +1953,8 @@ _write_binary_dbl_set_(STRM &strm, const S &dbl_sets,
 
     _write_binary_common_(strm, dbl_sets, start_row, end_row);
 
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint64_t  sz = dbl_sets[i].size();
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const uint64_t  sz { dbl_sets[i].size() };
 
         strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
         for (const double val : dbl_sets[i])
@@ -1985,12 +1975,12 @@ _write_binary_str_set_(STRM &strm, const S &str_sets,
 
     _write_binary_common_(strm, str_sets, start_row, end_row);
 
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint64_t  sz = str_sets[i].size();
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const uint64_t  sz { str_sets[i].size() };
 
         strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
         for (const auto &str : str_sets[i])  {
-            const uint16_t  str_sz = static_cast<uint16_t>(str.size());
+            const uint16_t  str_sz { _binary_str_size_(str) };
 
             strm.write(reinterpret_cast<const char *>(&str_sz),
                        sizeof(str_sz));
@@ -2014,12 +2004,12 @@ _write_binary_str_dbl_map_(STRM &strm, const M &sd_maps,
 
     _write_binary_common_(strm, sd_maps, start_row, end_row);
 
-    for (uint64_t i = start_row; i < end_row; ++i)  {
-        const uint64_t  sz = sd_maps[i].size();
+    for (uint64_t i { start_row }; i < end_row; ++i)  {
+        const uint64_t  sz { sd_maps[i].size() };
 
         strm.write(reinterpret_cast<const char *>(&sz), sizeof(sz));
         for (const auto &[str, dbl] : sd_maps[i])  {
-            const uint16_t  str_sz = static_cast<uint16_t>(str.size());
+            const uint16_t  str_sz { _binary_str_size_(str) };
 
             strm.write(reinterpret_cast<const char *>(&str_sz),
                        sizeof(str_sz));
@@ -2065,8 +2055,9 @@ inline static STRM &
 _read_binary_string_(STRM &strm, V &str_vec, bool needs_flipping,
                      std::size_t start_row, std::size_t num_rows)  {
 
-    const uint64_t          vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
+    const uint64_t          vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+    };
     std::vector<uint16_t>   sizes (vec_size, 0);
 
     strm.read(reinterpret_cast<char *>(sizes.data()),
@@ -2078,18 +2069,19 @@ _read_binary_string_(STRM &strm, V &str_vec, bool needs_flipping,
             s = swaper(s);
     }
 
-    const uint64_t  read_end =
+    const uint64_t  read_end {
         num_rows == std::numeric_limits<std::size_t>::max()
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+    };
 
     // Now read the strings. We read all data regardless of num_rows
     // to advance the file pointer
     //
     str_vec.reserve(read_end > vec_size
                         ? vec_size - start_row : read_end - start_row);
-    for (uint64_t i = 0; i < vec_size; ++i)  {
+    for (uint64_t i { 0 }; i < vec_size; ++i)  {
         if (i >= start_row && i < read_end) [[likely]]  {
-            STR_T   str (std::size_t(sizes[i]), 0);
+            STR_T   str(std::size_t(sizes[i]), 0);
 
             strm.read(str.data(), sizes[i] * sizeof(char));
             str_vec.emplace_back(std::move(str));
@@ -2111,17 +2103,19 @@ _read_binary_data_(STRM &strm, V &vec, bool needs_flipping,
     using VecType = typename std::remove_reference<V>::type;
     using ValueType = typename VecType::value_type;
 
-    const uint64_t  vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
-    const uint64_t  read_end =
+    const uint64_t  vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+    };
+    const uint64_t  read_end {
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+    };
 
     strm.seekg(start_row * sizeof(ValueType), std::ios_base::cur);
     if constexpr (std::is_same_v<ValueType, bool>)  {
         vec.reserve(read_end - start_row);
-        for (uint64_t i = start_row; i < read_end; ++i)  {
+        for (uint64_t i { start_row }; i < read_end; ++i)  {
             bool    val;
 
             strm.read(reinterpret_cast<char *>(&val), sizeof(val));
@@ -2148,30 +2142,34 @@ _read_binary_datetime_(STRM &strm, V &dt_vec, bool needs_flipping,
 
     using ValueType = double;
 
-    const uint64_t  vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
-    const uint64_t  read_end =
+    const uint64_t  vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+    };
+    const uint64_t  read_end {
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+    };
 
     strm.seekg(start_row * sizeof(ValueType), std::ios_base::cur);
 
     SwapBytes<ValueType, sizeof(ValueType)>   swaper { };
 
     dt_vec.reserve(read_end - start_row);
-    for (uint64_t i = start_row; i < read_end; ++i)  {
+    for (uint64_t i { start_row }; i < read_end; ++i)  {
         ValueType   val { 0 };
 
         strm.read(reinterpret_cast<char *>(&val), sizeof(val));
         if (needs_flipping)  val = swaper(val);
 
         DateTime                        dt;
-        const DateTime::EpochType       tm =
-            static_cast<DateTime::EpochType>(val);
-        const DateTime::NanosecondType  nano =
+        const DateTime::EpochType       tm {
+            static_cast<DateTime::EpochType>(val)
+        };
+        const DateTime::NanosecondType  nano {
             static_cast<DateTime::NanosecondType>(
-                (val - static_cast<ValueType>(tm)) * 1'000'000'000.0);
+                (val - static_cast<ValueType>(tm)) * 1'000'000'000.0)
+        };
 
         dt.set_time(tm, nano);
         dt_vec.emplace_back(dt);
@@ -2190,9 +2188,10 @@ inline static STRM &
 _read_binary_str_dbl_pair_(STRM &strm, V &p_vec, bool needs_flipping,
                            std::size_t start_row, std::size_t num_rows)  {
 
-    const uint64_t          vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
-    std::vector<uint16_t>   str_sizes (vec_size, 0);
+    const uint64_t          vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+    };
+    std::vector<uint16_t>   str_sizes(vec_size, 0);
 
     strm.read(reinterpret_cast<char *>(str_sizes.data()),
               vec_size * sizeof(uint16_t));
@@ -2203,15 +2202,16 @@ _read_binary_str_dbl_pair_(STRM &strm, V &p_vec, bool needs_flipping,
             s = swaper(s);
     }
 
-    const uint64_t  read_end =
+    const uint64_t  read_end {
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+    };
 
     p_vec.reserve(read_end - start_row);
-    for (uint64_t i = 0; i < vec_size; ++i)  {
+    for (uint64_t i { 0 }; i < vec_size; ++i)  {
         if (i >= start_row && i < read_end) [[likely]]  {
-            std::string str (std::size_t(str_sizes[i]), 0);
+            std::string str(std::size_t(str_sizes[i]), 0);
             double      val { 0 };
 
             strm.read(str.data(), str_sizes[i] * sizeof(char));
@@ -2236,9 +2236,10 @@ inline static STRM &
 _read_binary_str_str_pair_(STRM &strm, V &p_vec, bool needs_flipping,
                            std::size_t start_row, std::size_t num_rows)  {
 
-    const uint64_t          vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
-    std::vector<uint16_t>   str_sizes (vec_size * 2, 0);
+    const uint64_t          vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+    };
+    std::vector<uint16_t>   str_sizes(vec_size * 2, 0);
 
     strm.read(reinterpret_cast<char *>(str_sizes.data()),
               vec_size * 2 * sizeof(uint16_t));
@@ -2249,17 +2250,18 @@ _read_binary_str_str_pair_(STRM &strm, V &p_vec, bool needs_flipping,
             s = swaper(s);
     }
 
-    const uint64_t  read_end =
+    const uint64_t  read_end {
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+    };
     std::size_t     sizes_idx { 0 };
 
     p_vec.reserve(read_end - start_row);
-    for (uint64_t i = 0; i < vec_size; ++i, sizes_idx += 2)  {
+    for (uint64_t i { 0 }; i < vec_size; ++i, sizes_idx += 2)  {
         if (i >= start_row && i < read_end) [[likely]]  {
-            std::string str1 (std::size_t(str_sizes[sizes_idx]), 0);
-            std::string str2 (std::size_t(str_sizes[sizes_idx + 1]), 0);
+            std::string str1(std::size_t(str_sizes[sizes_idx]), 0);
+            std::string str2(std::size_t(str_sizes[sizes_idx + 1]), 0);
 
             strm.read(str1.data(), str_sizes[sizes_idx] * sizeof(char));
             strm.read(str2.data(), str_sizes[sizes_idx + 1] * sizeof(char));
@@ -2282,15 +2284,17 @@ inline static STRM &
 _read_binary_dbl_dbl_pair_(STRM &strm, V &p_vec, bool needs_flipping,
                            std::size_t start_row, std::size_t num_rows)  {
 
-    const uint64_t  vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
-    const uint64_t  read_end =
+    const uint64_t  vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+    };
+    const uint64_t  read_end {
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+    };
 
     p_vec.reserve(read_end - start_row);
-    for (uint64_t i = 0; i < vec_size; ++i)  {
+    for (uint64_t i { 0 }; i < vec_size; ++i)  {
         if (i >= start_row && i < read_end) [[likely]]  {
             double      val[2];
 
@@ -2320,15 +2324,17 @@ _read_binary_dbl_vec_(STRM &strm, V &vec, bool needs_flipping,
     using VecType = typename std::remove_reference<V>::type;
     using ValueType = typename VecType::value_type;
 
-    const uint64_t  vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
-    const uint64_t  read_end =
+    const uint64_t  vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+    };
+    const uint64_t  read_end {
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+    };
 
     vec.reserve(read_end - start_row);
-    for (uint64_t i = 0; i < vec_size; ++i)  {
+    for (uint64_t i { 0 }; i < vec_size; ++i)  {
         // Skip type name
         //
         strm.seekg(32 * sizeof(char), std::ios_base::cur);
@@ -2341,8 +2347,9 @@ _read_binary_dbl_vec_(STRM &strm, V &vec, bool needs_flipping,
             vec.push_back(std::move(dbl_vec));
         }
         else  {  // Skip the data
-            const uint64_t  inner_vec_size =
-                _read_binary_common_(strm, needs_flipping, 0);
+            const uint64_t  inner_vec_size {
+                _read_binary_common_(strm, needs_flipping, 0)
+            };
 
             strm.seekg(inner_vec_size * sizeof(double), std::ios_base::cur);
         }
@@ -2362,16 +2369,18 @@ _read_binary_str_vec_(STRM &strm, V &vec, bool needs_flipping,
     using VecType = typename std::remove_reference<V>::type;
     using ValueType = typename VecType::value_type;
 
-    const uint64_t  vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
-    const uint64_t  read_end =
+    const uint64_t  vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+    };
+    const uint64_t  read_end {
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+    };
     ValueType       str_vec;
 
     vec.reserve(read_end - start_row);
-    for (uint64_t i = 0; i < vec_size; ++i)  {
+    for (uint64_t i { 0 }; i < vec_size; ++i)  {
         // Skip type name
         //
         strm.seekg(32 * sizeof(char), std::ios_base::cur);
@@ -2398,17 +2407,19 @@ _read_binary_dbl_set_(STRM &strm, V &set_vec, bool needs_flipping,
     using VecType = typename std::remove_reference<V>::type;
     using ValueType = typename VecType::value_type;
 
-    const uint64_t                          vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
-    const uint64_t                          read_end =
+    const uint64_t                          vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+    };
+    const uint64_t                          read_end {
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+    };
     SwapBytes<uint64_t, sizeof(uint64_t)>   int_swaper { };
     SwapBytes<double, sizeof(double)>       dbl_swaper { };
 
     set_vec.reserve(read_end - start_row);
-    for (uint64_t i = 0; i < vec_size; ++i)  {
+    for (uint64_t i { 0 }; i < vec_size; ++i)  {
         uint64_t    set_size { 0 };
 
         strm.read(reinterpret_cast<char *>(&set_size), sizeof(set_size));
@@ -2417,7 +2428,7 @@ _read_binary_dbl_set_(STRM &strm, V &set_vec, bool needs_flipping,
         if (i >= start_row && i < read_end) [[likely]]  {
             ValueType   dbl_set;
 
-            for (uint64_t i = 0; i < set_size; ++i)   {
+            for (uint64_t i { 0 }; i < set_size; ++i)   {
                 double  val { 0 };
 
                 strm.read(reinterpret_cast<char *>(&val), sizeof(val));
@@ -2445,16 +2456,18 @@ _read_binary_str_set_(STRM &strm, V &set_vec, bool needs_flipping,
     using VecType = typename std::remove_reference<V>::type;
     using ValueType = typename VecType::value_type;
 
-    const uint64_t                          vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
-    const uint64_t                          read_end =
+    const uint64_t                          vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+	};
+    const uint64_t                          read_end {
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+	};
     SwapBytes<uint64_t, sizeof(uint64_t)>   int_swaper { };
 
     set_vec.reserve(read_end - start_row);
-    for (uint64_t i = 0; i < vec_size; ++i)  {
+    for (uint64_t i { 0 }; i < vec_size; ++i)  {
         uint64_t    set_size { 0 };
 
         strm.read(reinterpret_cast<char *>(&set_size), sizeof(set_size));
@@ -2495,23 +2508,25 @@ _read_binary_str_dbl_map_(STRM &strm, V &map_vec, bool needs_flipping,
     using VecType = typename std::remove_reference<V>::type;
     using ValueType = typename VecType::value_type;
 
-    const uint64_t                          vec_size =
-        _read_binary_common_(strm, needs_flipping, start_row);
-    const uint64_t                          read_end =
+    const uint64_t                          vec_size {
+        _read_binary_common_(strm, needs_flipping, start_row)
+    };
+    const uint64_t                          read_end {
         (num_rows == std::numeric_limits<std::size_t>::max() ||
          (start_row + num_rows) > vec_size)
-            ? vec_size : uint64_t(start_row + num_rows);
+            ? vec_size : uint64_t(start_row + num_rows)
+    };
     SwapBytes<uint64_t, sizeof(uint64_t)>   int_swaper { };
     SwapBytes<double, sizeof(double)>       dbl_swaper { };
 
     map_vec.reserve(read_end - start_row);
-    for (uint64_t i = 0; i < vec_size; ++i)  {
+    for (uint64_t i { 0 }; i < vec_size; ++i)  {
         uint64_t    map_size { 0 };
 
         strm.read(reinterpret_cast<char *>(&map_size), sizeof(map_size));
         if (needs_flipping)  map_size = int_swaper(map_size);
 
-        std::vector<uint16_t>   sizes (map_size, 0);
+        std::vector<uint16_t>   sizes(map_size, 0);
 
         strm.read(reinterpret_cast<char *>(sizes.data()),
                   map_size * sizeof(uint16_t));
@@ -2617,7 +2632,7 @@ struct  TupleHash  {
     template<typename ... TT>
     inline std::size_t operator()(std::tuple<TT ...> const &input) const  {
 
-        std::size_t seed = 0;
+        std::size_t seed { 0 };
 
         _hash_value_impl_<std::tuple<TT ...>>::apply(seed, input);
         return (seed);
@@ -2634,12 +2649,12 @@ _sort_by_sorted_index_(T &to_be_sorted,
                        size_t idx_s) {
 
     std::ranges::fill(done_vec, 0);
-    for (std::size_t i = 0; i < idx_s; ++i) [[likely]]  {
+    for (std::size_t i { 0 }; i < idx_s; ++i) [[likely]]  {
         if (! done_vec[i]) [[likely]]  {
             done_vec[i] = 1;
 
-            std::size_t prev_j = i;
-            std::size_t j = sorting_idxs[i];
+            std::size_t prev_j { i };
+            std::size_t j { sorting_idxs[i] };
 
             while (i != j) [[likely]]  {
                 std::swap(to_be_sorted[prev_j], to_be_sorted[j]);
@@ -2737,9 +2752,10 @@ _inv_merge_sort_(Con &original,
     std::size_t inv_count { 0 };
 
     if (right > left) {
-        const auto  thr_lvl =
+        const auto  thr_lvl {
             ((right - left) < (ThreadPool::MUL_THR_THHOLD / 2))
-                ? 0L : thread_level;
+                ? 0L : thread_level
+        };
 
         // Divide the original into two parts and call _inv_merge_sort_()
         // for each of the parts
@@ -2750,7 +2766,7 @@ _inv_merge_sort_(Con &original,
         // and number of inversions in merging
         //
         if (thr_lvl > 2)  {
-            fut_type    left_fut =
+            fut_type    left_fut {
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
                         _inv_merge_sort_<Con, Comp>,
@@ -2759,8 +2775,9 @@ _inv_merge_sort_(Con &original,
                     left,
                     mid,
                     comp,
-                    thread_level);
-            fut_type    right_fut =
+                    thread_level)
+            };
+            fut_type    right_fut {
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
                     _inv_merge_sort_<Con, Comp>,
@@ -2769,7 +2786,8 @@ _inv_merge_sort_(Con &original,
                     mid + 1,
                     right,
                     comp,
-                    thread_level);
+                    thread_level)
+            };
 
             ThreadGranularity::thr_pool_.run_task();
             ThreadGranularity::thr_pool_.run_task();
@@ -2816,24 +2834,23 @@ struct _LikeClauseUtil_  {
         38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
         56, 57, 58, 59, 60, 61, 62, 63, 64, 97, 98, 99, 100, 101, 102, 103,
         104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117,
-        118,
-        119, 120, 121, 122, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102,
-        103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
-        117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130,
-        131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144,
-        145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158,
-        159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172,
-        173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186,
-        187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200,
-        201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214,
-        215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228,
-        229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242,
-        243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+        118, 119, 120, 121, 122, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101,
+        102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115,
+        116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
+        130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143,
+        144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157,
+        158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171,
+        172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185,
+        186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199,
+        200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213,
+        214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227,
+        228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241,
+        242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
     };
 
     static unsigned int char_read(const value_type **str_ptr_ptr)  {
 
-        unsigned int    c = *((*str_ptr_ptr)++);
+        unsigned int    c { *((*str_ptr_ptr)++) };
 
         // For this routine, we assume the char string is always
         // zero-terminated.
@@ -3078,8 +3095,8 @@ static inline T _atoi_(const char *str, int len)  {
 
     if (*str == '-')  {  // Handle negative
         sign = -1ll;
-        ++str;
-        --len;
+        str += 1;
+        len -= 1;
     }
     while (len > 0 &&  (! ::isdigit(str[len - 1])))  --len;
 
@@ -3116,9 +3133,9 @@ template<typename V, typename N>
 static inline std::pair<N, N>
 _get_inclusive_indices_(const V &vec, N begin, N end, inclusiveness incld)  {
 
-    const N col_s = vec.size();
-    N       col_begin = begin < col_s ? begin : col_s;
-    N       col_end = col_begin < end ? end : col_begin;
+    const N col_s { N(vec.size()) };
+    N       col_begin { begin < col_s ? begin : col_s };
+    N       col_end { col_begin < end ? end : col_begin };
 
     if (col_end > col_s)  col_end = col_s;
     if (incld == inclusiveness::end)  {
@@ -3144,17 +3161,26 @@ V _shift_vector_(const V &vec, long shift)  {
     using value_type = typename V::value_type;
 
     const long  col_s { static_cast<long>(vec.size()) };
+
+    if (col_s == 0)  return (V());
+
     auto        make_zero_elem =
         [&vec = std::as_const(vec)]() -> value_type  {
             if constexpr (random_acc_cont<value_type>)  {
-                // value_type is itself a container (vector/array of doubles)
+                // value_type is itself a container (vector/array of doubles).
+                // Copy an existing element, so it has the right dimension,
+                // and zero it. Brace initialization must not be used here:
+                // for a vector it would pick the initializer_list constructor
+                // and produce the two elements { dim, 0 }.
                 //
-                return (value_type {
-                            typename value_type::value_type(vec[0].size()),
-                            0 });
+                value_type  zero_elem { vec[0] };
+
+                std::fill(zero_elem.begin(), zero_elem.end(),
+                          typename value_type::value_type(0));
+                return (zero_elem);
             }
             else  {
-                return (value_type { 0 });
+                return (value_type(0));
             }
         };
     V           shifted(col_s, make_zero_elem());
@@ -3446,7 +3472,7 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
             norm_v2.post();
 
             const auto  [dist, shift] =
-                _shape_based_dist_(norm_v2.get_result(), norm_v.get_result());
+                _shape_based_dist_(norm_v.get_result(), norm_v2.get_result());
 
             aligned[i++] = _shift_vector_(*series, shift);
         }
@@ -3518,7 +3544,7 @@ void _compute_bounds_(const std::vector<T, A> &column,
                       std::vector<scalar_t<T>> &out_max)  {
 
     static constexpr bool   is_md { random_acc_cont<T> };
-    const std::size_t       ndim  { _num_dims_(column[0]) };
+    const std::size_t       ndim { _num_dims_(column[0]) };
 
     if (out_min.empty())
         out_min.resize(ndim);
@@ -3583,8 +3609,9 @@ _discretize_joint_(const T &pt,
                    std::size_t bins) noexcept  {
 
     static constexpr bool   is_md { random_acc_cont<T> };
-    const std::size_t       ndim  { _num_dims_(pt) };
-    std::size_t             flat  { 0 };
+
+    const std::size_t   ndim { _num_dims_(pt) };
+    std::size_t         flat { 0 };
 
     if constexpr (is_md)  {
         for (std::size_t d { 0 }; d < ndim; ++d)

@@ -1018,18 +1018,17 @@ static void test_RSIVisitor()  {
         RSIVisitor<double, std::string, 64> rsi(return_policy::percentage);
 
         df.single_act_visit<double>("IBM_Close", rsi);
-
         assert(rsi.get_result().size() == 1721);
         assert(std::isnan(rsi.get_result()[0]));
         assert(std::isnan(rsi.get_result()[12]));
-        assert(std::abs(rsi.get_result()[13] - 41.4627) < 0.0001);
-        assert(std::abs(rsi.get_result()[22] - 35.7869) < 0.0001);
-        assert(std::abs(rsi.get_result()[24] - 37.3135) < 0.0001);
-        assert(std::abs(rsi.get_result()[28] - 46.4432) < 0.0001);
-        assert(std::abs(rsi.get_result()[33] - 52.1746) < 0.0001);
-        assert(std::abs(rsi.get_result()[1720] - 43.3186) < 0.0001);
-        assert(std::abs(rsi.get_result()[1712] - 47.0717) < 0.0001);
-        assert(std::abs(rsi.get_result()[1707] - 54.2938) < 0.0001);
+        assert(std::abs(rsi.get_result()[13] - 37.7276) < 0.0001);
+        assert(std::abs(rsi.get_result()[22] - 24.2063) < 0.0001);
+        assert(std::abs(rsi.get_result()[24] - 32.0117) < 0.0001);
+        assert(std::abs(rsi.get_result()[28] - 50.8775) < 0.0001);
+        assert(std::abs(rsi.get_result()[33] - 60.2834) < 0.0001);
+        assert(std::abs(rsi.get_result()[1720] - 38.8171) < 0.0001);
+        assert(std::abs(rsi.get_result()[1712] - 38.5199) < 0.0001);
+        assert(std::abs(rsi.get_result()[1707] - 54.2967) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -2941,21 +2940,15 @@ static void test_ExpoSmootherVisitor()  {
     df.single_act_visit<double>("dbl_col", es_v2);
 
     auto    actual2 = StlVecType<double> {
-        2.5, 2.485, 1.22, -1.185, -0.4, -0.209, 1.603, 0.788, 0.706, -2.61,
-        -7.948, 1.508, -0.808, -1.2139, 0.3078, 0.4041, 0.547, 0.154, 1.541,
-        -0.02, -0.523, 0.4505, 0.6575, 1.126, 0.12535, 16.6431, 35.26, -0.466,
-        0.69, 0.933, 1.102, -0.37, 3.3244, 5.6546, -0.503
-    };
-    auto    actual22 = StlVecType<double> {
-        2.5, 2.5, 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -12.34,
-        2.3, -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1, 0.59,
-        0.125, 1.9, -0.68, 2.0045, 50.8, -1, 0.78, 0.48, 1.99, -0.97, 1.03,
-        8.678
+        2.5, 2.485, 1.2445, 0.84115, 0.258805, 0.742163, 0.813514, 0.67146,
+        0.938022, -3.04538, -1.44177, -1.11124, -1.34787, -0.827407, -0.542285,
+        -0.0615993, -0.23812, 0.442316, 0.429621, 0.000734997, 0.177514,
+        0.16176, 0.683232, 0.274262, 0.793334, 15.7953, 10.7567, 7.76371,
+        5.5786, 4.50202, 2.86041, 2.31129, 4.2213, 2.53491, 2.25144
     };
 
     for (size_t i = 0; i < col1.size(); ++i)
-        assert((std::fabs(col1[i] - actual2[i]) < 0.0001) ||
-               (std::fabs(col1[i] - actual22[i]) < 0.0001));
+        assert((std::fabs(col1[i] - actual2[i]) < 0.0001));
 
     df.get_column<double>("dbl_col") = d1_copy;
 
@@ -2964,21 +2957,15 @@ static void test_ExpoSmootherVisitor()  {
     df.single_act_visit<double>("dbl_col", es_v3);
 
     auto    actual3 = StlVecType<double> {
-        2.5, 2.46, -0.83, -0.41, -0.9, 1.276, 1.158, 0.468, 1.316, -9.56,
-        -0.628, 0.188, -1.588, -0.0704, 0.1758, 0.8726, -0.308, 1.494, 0.726,
-        -0.72, 0.272, 0.218, 1.545, -0.164, 1.4676, 41.0409, 9.36, 0.424, 0.54,
-        1.688, -0.378, 0.63, 7.1484, 0.6156, 0.992
-    };
-    auto    actual32 = StlVecType<double> {
-        2.5, 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -12.34, 2.3,
-        -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1, 0.59, 0.125,
-        1.9, -0.68, 2.0045, 50.8, -1, 0.78, 0.48, 1.99, -0.97, 1.03, 8.678,
-        -1.4
+        2.5, 2.46, -0.828, -0.2456, -0.92912, 1.31018, 1.04604, 0.481207,
+        1.34424, -9.60315, -0.0806303, -0.288126, -1.57763, -0.00592504,
+        0.097215, 0.867443, -0.346511, 1.5547, 0.63094, -0.673812, 0.337238,
+        0.167448, 1.55349, -0.233302, 1.55694, 40.9514, 7.39028, 2.10206,
+        0.804411, 1.75288, -0.425424, 0.738915, 7.09018, 0.298037, 1.33161
     };
 
     for (size_t i = 0; i < col1.size(); ++i)
-        assert((std::fabs(col1[i] - actual3[i]) < 0.0001) ||
-               (std::fabs(col1[i] - actual32[i]) < 0.0001));
+        assert((std::fabs(col1[i] - actual3[i]) < 0.0001));
 
     ExpoSmootherVisitor<double> es_v3_4 (0.8, 4);
     const auto                  &col21 = df2.get_column<double>("dbl_col");
@@ -2986,21 +2973,15 @@ static void test_ExpoSmootherVisitor()  {
     df2.single_act_visit<double>("dbl_col", es_v3_4);
 
     auto    actual4 = StlVecType<double> {
-        2.5, 2.47952, 0.77968, -0.27248, -0.67824, 0.261712, 0.9932, 0.799584,
-        0.97488, -4.33518, -3.8625, -1.05213, -0.877632, -0.632813, -0.087968,
-        0.494816, 0.193696, 0.731832, 0.922821, 0.051104, -0.055568, 0.152752,
-        0.895104, 0.532416, 0.838499, 21.5731, 20.6916, 7.763, 1.66618,
-        1.1872, 0.509888, 0.343776, 3.87912, 3.11763, 1.43558
-    };
-    auto    actual42 = StlVecType<double> {
-        2.5, 2.5, 2.5, 2.5, 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34,
-        1.56, -12.34, 2.3, -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4,
-        -1, 0.59, 0.125, 1.9, -0.68, 2.0045, 50.8, -1, 0.78, 0.48, 1.99, -0.97
+        2.5, 2.47952, 0.783776, 0.066976, -0.509741, 0.363199, 0.815194,
+        0.687833, 1.00603, -4.38921, -2.79003, -1.28679, -1.28013, -0.639015,
+        -0.190314, 0.396383, 0.0781416, 0.793802, 0.793116, 0.0362468, 0.10559,
+        0.151083, 0.873655, 0.387457, 0.925997, 21.4832, 16.5657, 8.44511,
+        3.6629, 2.21433, 0.738794, 0.585184, 3.91034, 2.43449, 1.67792
     };
 
     for (size_t i = 0; i < col21.size(); ++i)
-        assert((std::fabs(col21[i] - actual4[i]) < 0.0001) ||
-               (std::fabs(col21[i] - actual42[i]) < 0.0001));
+        assert((std::fabs(col21[i] - actual4[i]) < 0.0001));
 
     // Now multidimensional data
     //
@@ -3059,20 +3040,20 @@ static void test_ExpoSmootherVisitor()  {
 
     assert(std::abs(ary_col_ref[0][0] - 2.5) < 0.00001);
     assert(std::abs(ary_col_ref[0][2] - -1.65) < 0.00001);
-    assert(std::abs(ary_col_ref[3][0] - -4.60042) < 0.00001);
-    assert(std::abs(ary_col_ref[3][1] - 0.979024) < 0.000001);
-    assert(std::abs(ary_col_ref[8][1] - 21.4163) < 0.0001);
-    assert(std::abs(ary_col_ref[8][2] - -0.545339) < 0.000001);
-    assert(std::abs(ary_col_ref[11][0] - -0.799429) < 0.000001);
-    assert(std::abs(ary_col_ref[11][2] - 4.1202) < 0.0001);
+    assert(std::abs(ary_col_ref[3][0] - -4.50252) < 0.00001);
+    assert(std::abs(ary_col_ref[3][1] - 1.11552) < 0.00001);
+    assert(std::abs(ary_col_ref[8][1] - 21.2502) < 0.0001);
+    assert(std::abs(ary_col_ref[8][2] - -0.398169) < 0.000001);
+    assert(std::abs(ary_col_ref[11][0] - -0.627266) < 0.000001);
+    assert(std::abs(ary_col_ref[11][2] - 3.38414) < 0.00001);
     assert(std::abs(vec_col_ref[0][0] - 2.5) < 0.00001);
     assert(std::abs(vec_col_ref[0][2] - -1.65) < 0.00001);
-    assert(std::abs(vec_col_ref[3][0] - -4.60042) < 0.00001);
-    assert(std::abs(vec_col_ref[3][1] - 0.979024) < 0.000001);
-    assert(std::abs(vec_col_ref[8][1] - 21.4163) < 0.0001);
-    assert(std::abs(vec_col_ref[8][2] - -0.545339) < 0.000001);
-    assert(std::abs(vec_col_ref[11][0] - -0.799429) < 0.000001);
-    assert(std::abs(vec_col_ref[11][2] - 4.1202) < 0.0001);
+    assert(std::abs(vec_col_ref[3][0] - -4.50252) < 0.00001);
+    assert(std::abs(vec_col_ref[3][1] - 1.11552) < 0.00001);
+    assert(std::abs(vec_col_ref[8][1] - 21.2502) < 0.0001);
+    assert(std::abs(vec_col_ref[8][2] - -0.398169) < 0.000001);
+    assert(std::abs(vec_col_ref[11][0] - -0.627266) < 0.000001);
+    assert(std::abs(vec_col_ref[11][2] - 3.38414) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
@@ -3114,11 +3095,11 @@ static void test_HWExpoSmootherVisitor()  {
     df.single_act_visit<double>("dbl_col", es_v2);
 
     auto    actual2 = StlVecType<double> {
-        2.5, 2.45, 1.185, -2.354, -0.6674, -0.64944, 2.17034,
-        0.879202, 0.581521, -2.34309, -11.6799, 3.36809, -0.431147, -1.42459,
-        0.821747, 0.638548, 0.950029, -0.0829826, 2.14921, -0.111474, -0.969884,
-        0.627569, 0.633542, 1.60863, -0.307475, 17.1351, 49.2179, -6.59525,
-        -2.48915, -1.05849, 0.329906, -1.66206, 3.10917, 7.6669, -2.11746,
+        2.5, 2.45, 1.185, 0.4243, -0.471106, -0.282357, -0.158951, -0.127892,
+        0.315996, -3.394, -2.67252, -2.36278, -2.37123, -1.6345, -0.955403,
+        -0.0695294, 0.173125, 1.04821, 1.28958, 0.931793, 0.926526, 0.742956,
+        1.0728, 0.628958, 0.966542, 15.9661, 15.1058, 13.1049, 10.1353,
+        7.35094, 3.87058, 1.45345, 2.00505, 0.168523, -0.408269
     };
 
     for (size_t i = 0; i < col1.size(); ++i)
@@ -3131,11 +3112,11 @@ static void test_HWExpoSmootherVisitor()  {
     df.single_act_visit<double>("dbl_col", es_v3);
 
     auto    actual3 = StlVecType<double> {
-        2.5, 2.45, -0.84, -1.068, -0.7836, 1.13928, 1.60586,
-        0.415171, 1.20303, -9.38739, -2.81748, 2.0925, -1.6295, -0.3283,
-        0.49014, 0.893228, -0.153954, 1.25121, 1.10624, -0.904752, 0.0110497,
-        0.42021, 1.51104, 0.113208, 1.11024, 41.3989, 17.2389, -6.28822,
-        -0.517644, 1.42847, -0.188306, 0.194339, 7.38127, 1.88585, -0.366429
+        2.5, 2.45, -0.84, -0.7764, -1.13078, 1.19404, 1.37962, 0.648979,
+        1.2811, -9.53398, -1.78085, 0.26952, -0.958499, 0.0229365, 0.241024,
+        0.958706, -0.200929, 1.42374, 0.832679, -0.682447, 0.0832937, 0.188734,
+        1.58903, 0.00411128, 1.3969, 41.1007, 13.809, 0.296909, -2.33634,
+        0.14747, -0.54455, 0.644758, 7.24757, 1.42121, 0.842363
     };
 
     for (size_t i = 0; i < col1.size(); ++i)
@@ -3200,20 +3181,20 @@ static void test_HWExpoSmootherVisitor()  {
 
     assert(std::abs(ary_col_ref[0][0] - 2.5) < 0.00001);
     assert(std::abs(ary_col_ref[0][2] - -1.65) < 0.00001);
-    assert(std::abs(ary_col_ref[3][0] - -9.6072) < 0.0001);
-    assert(std::abs(ary_col_ref[3][1] - 1.9964) < 0.0001);
-    assert(std::abs(ary_col_ref[8][1] - 41.4642) < 0.0001);
-    assert(std::abs(ary_col_ref[8][2] - -1.17294) < 0.00001);
-    assert(std::abs(ary_col_ref[11][0] - -1.62144) < 0.00001);
-    assert(std::abs(ary_col_ref[11][2] - 3.45742) < 0.00001);
+    assert(std::abs(ary_col_ref[3][0] - -9.87216) < 0.00001);
+    assert(std::abs(ary_col_ref[3][1] - 1.63712) < 0.00001);
+    assert(std::abs(ary_col_ref[8][1] - 41.1924) < 0.0001);
+    assert(std::abs(ary_col_ref[8][2] - -1.10146) < 0.00001);
+    assert(std::abs(ary_col_ref[11][0] - -1.53468) < 0.00001);
+    assert(std::abs(ary_col_ref[11][2] - 3.14189) < 0.00001);
     assert(std::abs(vec_col_ref[0][0] - 2.5) < 0.00001);
     assert(std::abs(vec_col_ref[0][2] - -1.65) < 0.00001);
-    assert(std::abs(vec_col_ref[3][0] - -9.6072) < 0.0001);
-    assert(std::abs(vec_col_ref[3][1] - 1.9964) < 0.0001);
-    assert(std::abs(vec_col_ref[8][1] - 41.4642) < 0.0001);
-    assert(std::abs(vec_col_ref[8][2] - -1.17294) < 0.00001);
-    assert(std::abs(vec_col_ref[11][0] - -1.62144) < 0.00001);
-    assert(std::abs(vec_col_ref[11][2] - 3.45742) < 0.00001);
+    assert(std::abs(vec_col_ref[3][0] - -9.87216) < 0.00001);
+    assert(std::abs(vec_col_ref[3][1] - 1.63712) < 0.00001);
+    assert(std::abs(vec_col_ref[8][1] - 41.1924) < 0.0001);
+    assert(std::abs(vec_col_ref[8][2] - -1.10146) < 0.00001);
+    assert(std::abs(vec_col_ref[11][0] - -1.53468) < 0.00001);
+    assert(std::abs(vec_col_ref[11][2] - 3.14189) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
@@ -3958,10 +3939,10 @@ static void test_HullRollingMeanVisitor()  {
     assert(abs(result[6] - 5.42857) < 0.00001);
     assert(abs(result[10] - 7.61905) < 0.00001);
     assert(abs(result[20] - 2.95238) < 0.00001);
-    assert(abs(result[41] - 6.8254) < 0.0001);
+    assert(abs(result[41] - 6.12698) < 0.0001);
     assert(abs(result[40] - 7.84127) < 0.00001);
     assert(abs(result[39] - 9.93651) < 0.00001);
-    assert(abs(result[38] - 10.9365) < 0.00001);
+    assert(abs(result[38] - 10.9365) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------
@@ -4311,15 +4292,14 @@ static void test_YangZhangVolVisitor()  {
             ("FORD_Low", "FORD_High", "FORD_Open", "FORD_Close", yz_v);
 
         assert(yz_v.get_result().size() == 12265);
-        std::cout << std::endl;
         assert(std::isnan(yz_v.get_result()[0]));
         assert(std::isnan(yz_v.get_result()[29]));
         assert(std::isnan(yz_v.get_result()[30]));
-        assert(std::abs(yz_v.get_result()[31] - 0.169461) < 0.00001);
-        assert(std::abs(yz_v.get_result()[36] - 0.181149) < 0.00001);
-        assert(std::abs(yz_v.get_result()[12264] - 0.281531) < 0.00001);
-        assert(std::abs(yz_v.get_result()[12261] - 0.279347) < 0.00001);
-        assert(std::abs(yz_v.get_result()[12256] - 0.293528) < 0.00001);
+        assert(std::abs(yz_v.get_result()[31] - 0.170786) < 0.000001);
+        assert(std::abs(yz_v.get_result()[36] - 0.182502) < 0.000001);
+        assert(std::abs(yz_v.get_result()[12264] - 0.278925) < 0.000001);
+        assert(std::abs(yz_v.get_result()[12261] - 0.277669) < 0.000001);
+        assert(std::abs(yz_v.get_result()[12256] - 0.291269) < 0.000001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -4518,9 +4498,9 @@ static void test_KamaVisitor()  {
         assert(k_v.get_result().size() == 5031);
         assert(std::isnan(k_v.get_result()[0]));
         assert(std::isnan(k_v.get_result()[8]));
-        assert(k_v.get_result()[9] == 0);
-        assert(std::abs(k_v.get_result()[29] - 31.6281) < 0.0001);
-        assert(std::abs(k_v.get_result()[34] - 47.2049) < 0.0001);
+        assert(std::isnan(k_v.get_result()[9]));
+        assert(std::abs(k_v.get_result()[29] - 98.4321) < 0.0001);
+        assert(std::abs(k_v.get_result()[34] - 95.7078) < 0.0001);
         assert(std::abs(k_v.get_result()[5030] - 112.438) < 0.001);
         assert(std::abs(k_v.get_result()[5026] - 118.829) < 0.001);
         assert(std::abs(k_v.get_result()[5021] - 125.937) < 0.001);
@@ -4897,15 +4877,14 @@ static void test_EBSineWaveVisitor()  {
         EBSineWaveVisitor<double, std::string, 256>  ebsw_v;
 
         df.single_act_visit<double>("IBM_Close", ebsw_v);
-
         assert(ebsw_v.get_result().size() == 1721);
         assert(std::isnan(ebsw_v.get_result()[0]));
-        assert(std::abs(ebsw_v.get_result()[5] - 0.927837) < 0.00001);
-        assert(std::abs(ebsw_v.get_result()[14] - -0.560866) < 0.00001);
-        assert(std::abs(ebsw_v.get_result()[25] - -0.36883) < 0.00001);
-        assert(std::abs(ebsw_v.get_result()[1720] - -0.901317) < 0.00001);
-        assert(std::abs(ebsw_v.get_result()[1712] - -0.730321) < 0.00001);
-        assert(std::abs(ebsw_v.get_result()[1707] - 0.841759) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[5] - 0.964094) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[14] - 0.530795) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[25] - -0.989554) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[1720] - -0.999425) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[1712] - 0.690467) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[1707] - 0.997981) < 0.00001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -4979,13 +4958,12 @@ static void test_VarIdxDynAvgVisitor()  {
         df.single_act_visit<double>("IBM_Close", vidya_v);
 
         assert(vidya_v.get_result().size() == 1721);
-
         assert(std::isnan(vidya_v.get_result()[0]));
         assert(std::isnan(vidya_v.get_result()[12]));
-        assert(vidya_v.get_result()[13] == 0);
-        assert(std::abs(vidya_v.get_result()[14] - 2.70068) < 0.00001);
-        assert(std::abs(vidya_v.get_result()[21] - 57.6682) < 0.0001);
-        assert(std::abs(vidya_v.get_result()[31] - 106.451) < 0.001);
+        assert(std::isnan(vidya_v.get_result()[13]));
+        assert(std::abs(vidya_v.get_result()[14] - 182.257) < 0.001);
+        assert(std::abs(vidya_v.get_result()[21] - 180.407) < 0.001);
+        assert(std::abs(vidya_v.get_result()[31] - 179.303) < 0.001);
         assert(std::abs(vidya_v.get_result()[1720] - 118.962) < 0.001);
         assert(std::abs(vidya_v.get_result()[1712] - 123.811) < 0.001);
         assert(std::abs(vidya_v.get_result()[1707] - 123.712) < 0.001);
@@ -5191,13 +5169,13 @@ static void test_AvgDirMovIdxVisitor()  {
             ("IBM_Low", "IBM_High", "IBM_Close", adx_v);
 
         assert(adx_v.get_result().size() == 1721);
-        assert(adx_v.get_result()[0] == 0);
-        assert(std::abs(adx_v.get_result()[10] - 0.73029) < 0.00001);
-        assert(std::abs(adx_v.get_result()[14] - 0.735792) < 0.000001);
-        assert(std::abs(adx_v.get_result()[25] - 0.691082) < 0.000001);
-        assert(std::abs(adx_v.get_result()[1720] - 0.372184) < 0.000001);
-        assert(std::abs(adx_v.get_result()[1712] - 0.703394) < 0.000001);
-        assert(std::abs(adx_v.get_result()[1707] - 0.383002) < 0.000001);
+        assert(std::isnan(adx_v.get_result()[0]));
+        assert(std::abs(adx_v.get_result()[10] - 0.633384) < 0.00001);
+        assert(std::abs(adx_v.get_result()[14] - 0.669804) < 0.000001);
+        assert(std::abs(adx_v.get_result()[25] - 0.583818) < 0.000001);
+        assert(std::abs(adx_v.get_result()[1720] - 0.620307) < 0.000001);
+        assert(std::abs(adx_v.get_result()[1712] - 0.586069) < 0.000001);
+        assert(std::abs(adx_v.get_result()[1707] - 0.399423) < 0.000001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -5529,12 +5507,12 @@ static void test_ArnaudLegouxMAVisitor()  {
         assert(alma.get_result().size() == 1721);
         assert(std::isnan(alma.get_result()[0]));
         assert(std::isnan(alma.get_result()[9]));
-        assert(std::abs(alma.get_result()[10] - 187.533) < 0.001);
-        assert(std::abs(alma.get_result()[14] - 186.359) < 0.001);
-        assert(std::abs(alma.get_result()[25] - 176.892) < 0.001);
-        assert(std::abs(alma.get_result()[1720] - 117.841) < 0.001);
-        assert(std::abs(alma.get_result()[1712] - 127.677) < 0.001);
-        assert(std::abs(alma.get_result()[1707] - 121.435) < 0.001);
+        assert(std::abs(alma.get_result()[10] - 186.831) < 0.001);
+        assert(std::abs(alma.get_result()[14] - 185.908) < 0.001);
+        assert(std::abs(alma.get_result()[25] - 174.693) < 0.001);
+        assert(std::abs(alma.get_result()[1720] - 109.636) < 0.001);
+        assert(std::abs(alma.get_result()[1712] - 123.938) < 0.001);
+        assert(std::abs(alma.get_result()[1707] - 127.25) < 0.01);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -5796,8 +5774,8 @@ static void test_DecayVisitor()  {
         assert(std::abs(decay.get_result()[30] - 183.69) < 0.01);
         assert(std::abs(decay.get_result()[35] - 183.45) < 0.01);
         assert(std::abs(decay.get_result()[1720] - 111.66) < 0.01);
-        assert(std::abs(decay.get_result()[1712] - 125.513) < 0.01);
-        assert(std::abs(decay.get_result()[1707] - 127.203) < 0.01);
+        assert(std::abs(decay.get_result()[1712] - 117.37) < 0.01);
+        assert(std::abs(decay.get_result()[1707] - 125.1) < 0.01);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

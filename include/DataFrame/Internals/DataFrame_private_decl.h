@@ -64,12 +64,16 @@ using JoinSortingPair = std::pair<const T *, size_type>;
 template<typename S>
 void read_json_(S &file, bool columns_only);
 
+// -------------------------------------
+
 template<typename S>
 size_type read_binary_(S &file,
                        bool columns_only,
                        size_type starting_row,
                        size_type num_rows,
                        BinaryReadState *ext_state = nullptr);
+
+// -------------------------------------
 
 template<typename S>
 void read_csv_(S &file, bool columns_only, char delim);
@@ -96,6 +100,8 @@ size_type read_csv2_(S &stream,
                      char delim,
                      CSV2ReadState *ext_state = nullptr);
 
+// -------------------------------------
+
 // Grants ChunkedReader (defined in the separate header
 // <DataFrame/Utils/IO/ChunkedReader.h>) access to the read_csv2_() overload
 // above, so it can drive resumable chunked reads without read_csv2_()
@@ -104,11 +110,15 @@ size_type read_csv2_(S &stream,
 template<typename FS, typename FDF>
 friend class DataFrameChunkedReader;
 
+// -------------------------------------
+
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_join_helper_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const IndexIdxVector &joined_index_idx);
+
+// -------------------------------------
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
@@ -116,6 +126,8 @@ column_join_helper_(const LHS_T &lhs,
                     const RHS_T &rhs,
                     const char *col_name,
                     const IndexIdxVector &joined_index_idx);
+
+// -------------------------------------
 
 template<typename LHS_T, typename RHS_T, typename T1, typename T2,
          typename ... Ts>
@@ -125,6 +137,8 @@ column_join_helper2_(const LHS_T &lhs,
                      const char *lhs_col_name,
                      const char *rhs_col_name,
                      const IndexIdxVector &joined_index_idx);
+
+// -------------------------------------
 
 template<typename LHS_T, typename RHS_T,
          typename LHS_COL1_T, typename RHS_COL1_T,
@@ -139,16 +153,22 @@ column_join_helper4_(const LHS_T &lhs,
                      const char *rhs_col2_name,
                      const IndexIdxVector &joined_index_idx);
 
+// -------------------------------------
+
 template<typename T>
 static IndexIdxVector
 get_inner_index_idx_vector_(const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
                             const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+
+// -------------------------------------
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_inner_join_(const LHS_T &lhs, const RHS_T &rhs,
                   const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
                   const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
+
+// -------------------------------------
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
@@ -158,16 +178,22 @@ column_inner_join_(const LHS_T &lhs,
                    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
                    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
+// -------------------------------------
+
 template<typename T>
 static IndexIdxVector
 get_left_index_idx_vector_(const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
                            const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+
+// -------------------------------------
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
+
+// -------------------------------------
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
@@ -177,16 +203,22 @@ column_left_join_(const LHS_T &lhs,
                   const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
                   const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
+// -------------------------------------
+
 template<typename T>
 static IndexIdxVector
 get_right_index_idx_vector_(const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
                             const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+
+// -------------------------------------
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
                   const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
                   const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
+
+// -------------------------------------
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
@@ -196,9 +228,13 @@ column_right_join_(const LHS_T &lhs,
                    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
                    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
+// -------------------------------------
+
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static void
 concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns);
+
+// -------------------------------------
 
 template<typename T>
 static IndexIdxVector
@@ -206,12 +242,16 @@ get_left_right_index_idx_vector_(
     const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
     const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
+// -------------------------------------
+
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_left_right_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
     const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
+
+// -------------------------------------
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
@@ -266,7 +306,7 @@ setup_view_column_(const char *name, Index2D<ITR> range)  {
     else
         dv.template set_empty_vec<T>();
 
-    const SpinGuard guard(lock_);
+    const SpinGuard guard { lock_ };
 
     data_.emplace_back(dv);
     column_tb_.emplace(name, data_.size() - 1);
@@ -345,28 +385,29 @@ load_column_(const char *name,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call load_column()");
 
-    const size_type idx_s = indices_.size();
-    const size_type data_s = column.size();
+    const size_type idx_s { indices_.size() };
+    const size_type data_s { column.size() };
 
     using value_t = typename StlVecType<T>::value_type;
 
-    size_type   ret_cnt = data_s;
+    size_type   ret_cnt { data_s };
 
     if (padding == nan_policy::pad_with_nans && data_s < idx_s)  {
-        for (size_type i = 0; i < idx_s - data_s; ++i)  {
+        for (size_type i { 0 }; i < idx_s - data_s; ++i)  {
             column.push_back (std::move(get_nan<value_t>()));
             ret_cnt += 1;
         }
     }
 
-    const auto          iter = column_tb_.find (name);
-    StlVecType<value_t> *vec_ptr = nullptr;
-    const SpinGuard     guard (do_lock ? lock_ : nullptr);
+    const auto          iter { column_tb_.find (name) };
+    StlVecType<value_t> *vec_ptr { nullptr };
+    const SpinGuard     guard { do_lock ? lock_ : nullptr };
 
-    if (iter == column_tb_.end()) [[likely]]
+    if (iter == column_tb_.end())  { [[likely]]
         vec_ptr = &(create_column<value_t>(name, false));
+    }
     else  {
-        DataVec &hv = data_[iter->second];
+        DataVec &hv { data_[iter->second] };
 
         vec_ptr = &(hv.template get_vector<value_t>());
     }
@@ -396,7 +437,7 @@ drop_missing_rows_(T &vec,
                    size_type threshold,
                    size_type col_num)  {
 
-    size_type   erase_count = 0;
+    size_type   erase_count { 0 };
     auto        dropper =
         [&vec, &erase_count](const auto &idx) -> void  {
             vec.erase(vec.begin() + (idx - erase_count++));
@@ -427,12 +468,12 @@ fill_missing_value_(ColumnVecType<T> &vec,
                     int limit,
                     size_type col_num)  {
 
-    const size_type vec_size = vec.size();
-    int             count = 0;
+    const size_type vec_size { vec.size() };
+    int             count { 0 };
 
     if (limit < 0)
         vec.reserve(col_num);
-    for (size_type i = 0; i < col_num; ++i)  {
+    for (size_type i { 0 }; i < col_num; ++i)  {
         if (limit >= 0 && count >= limit)  break;
         if (i >= vec_size)  {
             vec.push_back(value);
@@ -452,14 +493,14 @@ template<typename T>
 static void
 fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
-    const size_type vec_size = vec.size();
+    const size_type vec_size { vec.size() };
 
     if (vec_size == 0)  return;
 
-    int count = 0;
-    T   last_value = vec[0];
+    int count { 0 };
+    T   last_value { vec[0] };
 
-    for (size_type i = 1; i < col_num; ++i)  {
+    for (size_type i { 1 }; i < col_num; ++i)  {
         if (limit >= 0 && count >= limit)  break;
         if (i >= vec_size)  {
             if (! is_nan(last_value))  {
@@ -548,11 +589,11 @@ template<typename T>
 static void
 fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
 
-    const long  vec_size = static_cast<long>(vec.size());
+    const long  vec_size { static_cast<long>(vec.size()) };
 
     if (vec_size == 0)  return;
 
-    int count = 0;
+    int count { 0 };
     T   last_value { vec[vec_size - 1] };
 
     for (long i { vec_size - 1 }; i >= 0; --i)  {
@@ -785,6 +826,45 @@ void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
 
 // ----------------------------------------------------------------------------
 
+// Read-only view of the keys of a vector of JoinSortingPair (sorted by key).
+// It lets the sorted-merge helpers, that handle runs of duplicate keys on both
+// sides (i.e. the full Cartesian product), serve the unsorted case too.
+//
+template<typename T>
+struct  JoinKeyView_  {
+
+    using value_type = T;
+
+    const StlVecType<JoinSortingPair<T>>    &pairs;
+
+    inline size_type size() const  { return (pairs.size()); }
+    inline const T &
+    operator [](size_type i) const  { return (*(pairs[i].first)); }
+};
+
+// ----------------------------------------------------------------------------
+
+// The sorted-merge helpers return positions in the sorted vectors. This
+// replaces them with the original row numbers.
+//
+template<typename T>
+static void
+remap_join_idx_(IndexIdxVector &idx_vec,
+                const StlVecType<JoinSortingPair<T>> &lhs,
+                const StlVecType<JoinSortingPair<T>> &rhs)  {
+
+    constexpr size_type NONE { std::numeric_limits<size_type>::max() };
+
+    for (auto &item : idx_vec)  {
+        if (std::get<0>(item) != NONE)
+            std::get<0>(item) = lhs[std::get<0>(item)].second;
+        if (std::get<1>(item) != NONE)
+            std::get<1>(item) = rhs[std::get<1>(item)].second;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
 static void
 join_helper_common_(
@@ -866,8 +946,9 @@ join_helper_common_(
                  &joined_index_idx = std::as_const(joined_index_idx),
                  &result](std::string name) -> void  {
                     // 0 = Left
-                    index_join_functor_oneside_<0, res_t, Ts ...>
-                        functor (name.c_str(), joined_index_idx, result);
+                    index_join_functor_oneside_<0, res_t, Ts ...>   functor {
+                        name.c_str(), joined_index_idx, result
+                    };
 
                     lhs.data_[idx].change(functor);
                 };
@@ -887,8 +968,9 @@ join_helper_common_(
                  &joined_index_idx = std::as_const(joined_index_idx),
                  &result](std::string name) -> void  {
                     // 0 = Left
-                    index_join_functor_oneside_<0, res_t, Ts ...>
-                        functor (name.c_str(), joined_index_idx, result);
+                    index_join_functor_oneside_<0, res_t, Ts ...>   functor {
+                        name.c_str(), joined_index_idx, result
+                    };
 
                     lhs.data_[idx].change(functor);
                 };
@@ -911,10 +993,12 @@ join_helper_common_(
                      &joined_index_idx = std::as_const(joined_index_idx),
                      &result] () -> void  {
                         index_join_functor_common_<res_t, RHS_T, Ts ...>
-                            functor(name.c_str(),
-                                    rhs,
-                                    joined_index_idx,
-                                    result);
+                            functor {
+                                name.c_str(),
+                                rhs,
+                                joined_index_idx,
+                                result
+                        };
 
                         lhs.data_[idx].change(functor);
                     };
@@ -932,10 +1016,9 @@ join_helper_common_(
                      &joined_index_idx = std::as_const(joined_index_idx),
                      &result] () -> void  {
                         // 0 = Left
-                        index_join_functor_oneside_<0, res_t, Ts ...>
-                            functor (name.c_str(),
-                                     joined_index_idx,
-                                     result);
+                        index_join_functor_oneside_<0, res_t, Ts ...> functor {
+                            name.c_str(), joined_index_idx, result
+                        };
 
                         lhs.data_[idx].change(functor);
                     };
@@ -960,8 +1043,9 @@ join_helper_common_(
              &joined_index_idx = std::as_const(joined_index_idx),
              &result](std::string name) -> void  {
                 // 1 = Right
-                index_join_functor_oneside_<1, res_t, Ts ...>
-                    functor (name.c_str(), joined_index_idx, result);
+                index_join_functor_oneside_<1, res_t, Ts ...>   functor {
+                    name.c_str(), joined_index_idx, result
+                };
 
                 rhs.data_[idx].change(functor);
             };
@@ -986,8 +1070,9 @@ join_helper_common_(
             const auto  lhs_citer = lhs.column_tb_.find(name);
 
             if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
-                create_col_functor_<res_t, Ts ...>
-                    create_f(name.c_str(), result);
+                create_col_functor_<res_t, Ts ...>  create_f {
+                    name.c_str(), result
+                };
 
                 rhs.data_[idx].change(create_f);
             }
@@ -1043,11 +1128,11 @@ get_inner_index_idx_vector_sorted_(const LHS_V &lhs, const RHS_V &rhs)  {
 
     while (li < lhs_s && ri < rhs_s) [[likely]]  {
         if (lhs[li] < rhs[ri])  {
-            ++li;
+            li += 1;
             continue;
         }
         if (rhs[ri] < lhs[li])  {
-            ++ri;
+            ri += 1;
             continue;
         }
 
@@ -1058,8 +1143,8 @@ get_inner_index_idx_vector_sorted_(const LHS_V &lhs, const RHS_V &rhs)  {
         const size_type lhs_begin { li };
         const size_type rhs_begin { ri };
 
-        while (li < lhs_s && lhs[li] == key)  ++li;
-        while (ri < rhs_s && rhs[ri] == key)  ++ri;
+        while (li < lhs_s && lhs[li] == key)  li += 1;
+        while (ri < rhs_s && rhs[ri] == key)  ri += 1;
 
         for (size_type l { lhs_begin }; l < li; ++l)
             for (size_type r { rhs_begin }; r < ri; ++r)
@@ -1333,10 +1418,9 @@ remove_dups_common_(const DataFrame &s_df,
     }
     else  {
         for (const auto &citer : s_df.column_list_)  {
-            copy_remove_functor_<res_t, Ts ...> functor(citer.first.c_str(),
-                                                        del_mask,
-                                                        del_count,
-                                                        new_df);
+            copy_remove_functor_<res_t, Ts ...> functor {
+                citer.first.c_str(), del_mask, del_count, new_df
+            };
 
             s_df.data_[citer.second].change(functor);
         }
@@ -1362,45 +1446,44 @@ data_by_sel_common_(const StlVecType<size_type> &col_indices,
         new_index.push_back(indices_[citer]);
     ret_df.load_index(std::move(new_index));
 
-    const SpinGuard guard(lock_);
+    const SpinGuard guard { lock_ };
 
     for (const auto &[name, idx] : column_list_) [[likely]]  {
-        create_col_functor_<res_t, Ts ...>  functor(name.c_str(), ret_df);
+        create_col_functor_<res_t, Ts ...>  functor { name.c_str(), ret_df };
 
         data_[idx].change(functor);
     }
 
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+    const auto  thread_level {
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level()
+    };
 
     if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &ret_df, this]
             (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<res_t, size_type, Ts ...> functor(
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        ret_df);
+                for (auto citer { begin }; citer < end; ++citer)  {
+                    sel_load_functor_<res_t, size_type, Ts ...> functor {
+                        citer->first.c_str(), col_indices, idx_s, ret_df
+                    };
 
-                    this->data_[citer->second].change(functor);
+                    data_[citer->second].change(functor);
                 }
             };
 
-        auto    futures =
+        auto    futures {
             thr_pool_.parallel_loop<double>(column_list_.begin(),
                                             column_list_.end(),
-                                            std::move(lbd));
+                                            std::move(lbd))
+        };
 
         for (auto &fut : futures)  fut.get();
     }
     else  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            sel_load_functor_<res_t, size_type, Ts ...> functor(name.c_str(),
-                                                                col_indices,
-                                                                idx_s,
-                                                                ret_df);
+            sel_load_functor_<res_t, size_type, Ts ...> functor {
+                name.c_str(), col_indices, idx_s, ret_df
+            };
 
             data_[idx].change(functor);
         }
@@ -1426,14 +1509,12 @@ view_by_sel_common_(const StlVecType<size_type> &col_indices,
         new_index.push_back(&(indices_[citer]));
     ret_dfv.indices_ = std::move(new_index);
 
-    const SpinGuard guard(lock_);
+    const SpinGuard guard { lock_ };
 
     for (const auto &[name, idx] : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            name.c_str(),
-            col_indices,
-            idx_s,
-            ret_dfv);
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor {
+            name.c_str(), col_indices, idx_s, ret_dfv
+        };
 
         data_[idx].change(functor);
     }
@@ -1458,14 +1539,12 @@ view_by_sel_common_(const StlVecType<size_type> &col_indices,
         new_index.push_back(&(indices_[citer]));
     ret_dfv.indices_ = std::move(new_index);
 
-    const SpinGuard guard(lock_);
+    const SpinGuard guard { lock_ };
 
     for (const auto &[name, idx] : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            name.c_str(),
-            col_indices,
-            idx_s,
-            ret_dfv);
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor {
+            name.c_str(), col_indices, idx_s, ret_dfv
+        };
 
         data_[idx].change(functor);
     }
@@ -1508,21 +1587,23 @@ void top_n_common_(const char *col_name, V &&visitor, R &result) const  {
     }
     result.indices_ = std::move(new_index);
 
-    const SpinGuard guard(lock_);
+    const SpinGuard guard { lock_ };
 
     if constexpr (std::is_same_v<res_t,
                                  DataFrame<I, HeteroVector<align_value>>>)  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            sel_load_functor_<res_t, size_type, Ts ...> functor(
-                name.c_str(), idxs, 0, result);
+            sel_load_functor_<res_t, size_type, Ts ...> functor {
+                name.c_str(), idxs, 0, result
+            };
 
             data_[idx].change(functor);
         }
     }
     else  {  // Views
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            sel_load_view_functor_<size_type, res_t, Ts ...>    functor(
-                name.c_str(), idxs, 0, result);
+            sel_load_view_functor_<size_type, res_t, Ts ...>    functor {
+                name.c_str(), idxs, 0, result
+            };
 
             data_[idx].change(functor);
         }
@@ -1572,21 +1653,23 @@ above_quantile_common_(const char *col_name,
     }
     result.indices_ = std::move(new_index);
 
-    const SpinGuard guard(lock_);
+    const SpinGuard guard { lock_ };
 
     if constexpr (std::is_same_v<res_t,
                                   DataFrame<I, HeteroVector<align_value>>>)  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            sel_load_functor_<res_t, size_type, Ts ...> functor(
-                name.c_str(), idxs, 0, result);
+            sel_load_functor_<res_t, size_type, Ts ...> functor {
+                name.c_str(), idxs, 0, result
+            };
 
             data_[idx].change(functor);
         }
     }
     else  {  // Views
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            sel_load_view_functor_<size_type, res_t, Ts ...>    functor(
-                name.c_str(), idxs, 0, result);
+            sel_load_view_functor_<size_type, res_t, Ts ...>    functor {
+                name.c_str(), idxs, 0, result
+            };
 
             data_[idx].change(functor);
         }
@@ -1611,18 +1694,19 @@ replace_vector_vals_(V &data_vec,
 
     using map_t = DFUnorderedMap<T, T>;
 
-    const auto  v_zip = std::ranges::views::zip(old_values, new_values);
-    const map_t v_map (v_zip.begin(), v_zip.end());
-    const auto  thread_level =
+    const auto  v_zip { std::ranges::views::zip(old_values, new_values) };
+    const map_t v_map(v_zip.begin(), v_zip.end());
+    const auto  thread_level {
         (data_vec.size() < ThreadPool::MUL_THR_THHOLD || limit >= 0)
-            ? 0L : get_thread_level();
+            ? 0L : get_thread_level()
+    };
     auto        lbd =
         [&v_map = std::as_const(v_map)]
         (auto begin, auto end) -> std::size_t  {
             std::size_t count { 0 };
 
-            for (auto iter = begin; iter < end; ++iter)  {
-                const auto  map_iter = v_map.find(*iter);
+            for (auto iter { begin }; iter < end; ++iter)  {
+                const auto  map_iter { v_map.find(*iter) };
 
                 if (map_iter != v_map.end())  {
                     *iter = map_iter->second;
@@ -1633,9 +1717,11 @@ replace_vector_vals_(V &data_vec,
         };
 
     if (thread_level > 2)  {
-        auto    futures = thr_pool_.parallel_loop<T>(data_vec.begin(),
-                                                     data_vec.end(),
-                                                     std::move(lbd));
+        auto    futures {
+            thr_pool_.parallel_loop<T>(data_vec.begin(),
+                                       data_vec.end(),
+                                       std::move(lbd))
+        };
 
         for (auto &fut : futures)  count += fut.get();
     }
@@ -1647,7 +1733,7 @@ replace_vector_vals_(V &data_vec,
             for (auto &data : data_vec)  {
                 if (count >= static_cast<std::size_t>(limit))  return;
 
-                const auto  map_iter = v_map.find(data);
+                const auto  map_iter { v_map.find(data) };
 
                 if (map_iter != v_map.end())  {
                     data = map_iter->second;
@@ -1756,7 +1842,7 @@ explode_helper_(DataFrame &result,
         for (const auto &val : col[i])
             new_col.push_back(val);
 
-    SpinGuard   guard (lock_);
+    SpinGuard   guard { lock_ };
 
     result.template load_column<NEW_COL_T>(col_name,
                                            std::move(new_col),
@@ -1764,7 +1850,9 @@ explode_helper_(DataFrame &result,
                                            false);
     for (const auto &[name, idx] : column_list_) [[likely]]
         if (name != col_name)  {
-            explode_functor_<Ts ...>   functor(name.c_str(), result, idx_mask);
+            explode_functor_<Ts ...>   functor {
+                name.c_str(), result, idx_mask
+            };
 
             data_[idx].change(functor);
         }
@@ -1891,7 +1979,7 @@ json_str_col_vector_push_back_(StlVecType<STR> &vec,
                                char delim)  {
 
     char    value[2048];
-    char    c = 0;
+    char    c { 0 };
 
     while (file.get(c))
         if (c != ' ' && c != '\n' && c != '\t')  {
@@ -1903,7 +1991,7 @@ json_str_col_vector_push_back_(StlVecType<STR> &vec,
         if (c == ']')  break;
         file.unget();
 
-        std::size_t count = 0;
+        std::size_t count { 0 };
 
         while (file.get(c))
             if (c != ' ' && c != '\n' && c != '\t')  break;
@@ -2087,7 +2175,7 @@ struct  IdxParserFunctor_<std::string, Dummy>  {
                            char delim) const  {
 
         auto                   converter =
-            [](const char *s, char **)-> const char * { return s; };
+            [](const char *s, char **)-> const char * { return (s); };
         const ColVectorPushBack_<const char *, StlVecType<std::string>>  slug;
 
         slug(vec, file, converter, file_type, delim);
@@ -2105,7 +2193,7 @@ struct  IdxParserFunctor_<DateTime, Dummy>  {
                            char delim) const  {
 
         auto                    converter =
-            [](const char *, char **)-> DateTime  { return DateTime(); };
+            [](const char *, char **)-> DateTime  { return (DateTime()); };
         const ColVectorPushBack_<DateTime, StlVecType<DateTime>>  slug;
 
         slug(vec, file, converter, file_type, delim);
@@ -2337,11 +2425,12 @@ canon_corr_imp_(const MA &X, const MA &Y) const  {
     using value_type = typename MA::data_t;
     using col_mat_t = Matrix<value_type, matrix_orient::column_major>;
 
-    const auto  XY_cov = _calc_centered_cov_(X, Y);
-    const auto  X_cov = _calc_centered_cov_(X, X);
-    const auto  Y_cov = _calc_centered_cov_(Y, Y);
-    const auto  sq_root_mat =
-        X_cov.inverse() * XY_cov * Y_cov.inverse() * XY_cov.transpose();
+    const auto  XY_cov { _calc_centered_cov_(X, Y) };
+    const auto  X_cov { _calc_centered_cov_(X, X) };
+    const auto  Y_cov { _calc_centered_cov_(Y, Y) };
+    const auto  sq_root_mat {
+        X_cov.inverse() * XY_cov * Y_cov.inverse() * XY_cov.transpose()
+    };
     col_mat_t   U;
     col_mat_t   S;
     col_mat_t   V;
@@ -2450,10 +2539,10 @@ inline Matrix<T, matrix_orient::column_major>
 get_scaled_data_matrix_(std::vector<const char *> &&col_names,
                         normalization_type norm_type) const  {
 
-    const size_type                         col_num = col_names.size();
+    const size_type                         col_num { col_names.size() };
     size_type                               min_col_s { indices_.size() };
     std::vector<const ColumnVecType<T> *>   columns(col_num, nullptr);
-    SpinGuard                               guard (lock_);
+    SpinGuard                               guard { lock_ };
 
     for (size_type i { 0 }; i < col_num; ++i)  {
         columns[i] = &get_column<T>(col_names[i], false);
@@ -2463,7 +2552,8 @@ get_scaled_data_matrix_(std::vector<const char *> &&col_names,
     guard.release();
 
     Matrix<T, matrix_orient::column_major>  data_mat {
-        long(min_col_s), long(col_num) };
+        long(min_col_s), long(col_num)
+    };
     auto                                    lbd =
         [norm_type, &data_mat, &columns = std::as_const(columns), this]
         (auto begin, auto end) -> void  {
@@ -2483,13 +2573,15 @@ get_scaled_data_matrix_(std::vector<const char *> &&col_names,
                     data_mat.set_column(columns[c]->begin(), c);
             }
         };
-    const auto                              thread_level =
+    const auto                              thread_level {
         (min_col_s >= ThreadPool::MUL_THR_THHOLD || col_num >= 20 )
-            ? get_thread_level() : 0L;
+            ? get_thread_level() : 0L
+    };
 
     if (thread_level > 2)  {
-        auto    futures =
-            thr_pool_.parallel_loop<T>(size_type(0), col_num, std::move(lbd));
+        auto    futures {
+            thr_pool_.parallel_loop<T>(size_type(0), col_num, std::move(lbd))
+        };
 
         for (auto &fut : futures)  fut.get();
     }

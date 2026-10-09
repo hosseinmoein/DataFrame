@@ -95,6 +95,7 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
         start_row = std::max(long(0), end_row + params.max_recs);
 
     const std::ios_base::fmtflags   original_f { o.flags() };
+    const std::streamsize           original_p { o.precision() };
 
     if (iof != io_format::binary)  o.precision(params.precision);
 
@@ -287,12 +288,7 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
             }
         }
 
-        const auto          num_rows {
-            std::min(params.max_recs < 0
-                         ? long(indices_.size())
-                         : params.max_recs,
-                     long(indices_.size()))
-        };
+        const long          num_rows { end_row - start_row };
         const long          num_columns { long(col_names.size()) };
         const std::string   blank { " " };
         const char *const   bar_space = "| ";
@@ -439,6 +435,7 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
 
     o << std::flush;
     o.flags(original_f);
+    o.precision(original_p);
     return (true);
 }
 

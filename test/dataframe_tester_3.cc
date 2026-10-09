@@ -2100,13 +2100,13 @@ static void test_PriceDistanceVisitor()  {
 
         assert(pdist.get_result().size() == 1721);
         assert(std::isnan(pdist.get_result()[0]));
-        assert(std::abs(pdist.get_result()[13] - 7.51) < 0.001);
-        assert(std::abs(pdist.get_result()[14] - 6.2) < 0.1);
-        assert(std::abs(pdist.get_result()[18] - 5.63) < 0.001);
-        assert(std::abs(pdist.get_result()[25] - 3.65) < 0.01);
-        assert(std::isnan(pdist.get_result()[1720]));
-        assert(std::abs(pdist.get_result()[1712] - 4.9) < 0.001);
-        assert(std::abs(pdist.get_result()[1707] - 3.94) < 0.01);
+        assert(std::abs(pdist.get_result()[13] - 13.84) < 0.001);
+        assert(std::abs(pdist.get_result()[14] - 5.53999) < 0.00001);
+        assert(std::abs(pdist.get_result()[18] - 5.73001) < 0.00001);
+        assert(std::abs(pdist.get_result()[25] - 4.33998) < 0.0001);
+        assert(std::abs(pdist.get_result()[1720] - 5.35001) < 0.0001);
+        assert(std::abs(pdist.get_result()[1712] - 9.91001) < 0.0001);
+        assert(std::abs(pdist.get_result()[1707] - 4.55) < 0.01);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -3079,50 +3079,50 @@ static void test_QuantQualEstimationVisitor()  {
         assert(qqe.get_result().size() == 1721);
         assert(std::abs(qqe.get_result()[0] - 0) < 0.0001);
         assert(std::abs(qqe.get_result()[12] - 0) < 0.0001);
-        assert(std::abs(qqe.get_result()[14] - 38.9522) < 0.0001);
-        assert(std::abs(qqe.get_result()[19] - 43.4102) < 0.0001);
-        assert(std::abs(qqe.get_result()[20] - 43.4102) < 0.0001);
-        assert(std::abs(qqe.get_result()[24] - 43.4102) < 0.0001);
-        assert(std::abs(qqe.get_result()[25] - 43.4102) < 0.0001);
-        assert(std::abs(qqe.get_result()[1720] - 45.3732) < 0.0001);
-        assert(std::abs(qqe.get_result()[1712] - 50.833) < 0.0001);
-        assert(std::abs(qqe.get_result()[1707] - 50.5242) < 0.0001);
+        assert(std::abs(qqe.get_result()[14] - 35.4257) < 0.0001);
+        assert(std::abs(qqe.get_result()[19] - 37.517) < 0.001);
+        assert(std::abs(qqe.get_result()[20] - 37.517) < 0.001);
+        assert(std::abs(qqe.get_result()[24] - 35.8487) < 0.0001);
+        assert(std::abs(qqe.get_result()[25] - 35.8487) < 0.0001);
+        assert(std::abs(qqe.get_result()[1720] - 38.6595) < 0.0001);
+        assert(std::abs(qqe.get_result()[1712] - 55.0116) < 0.0001);
+        assert(std::abs(qqe.get_result()[1707] - 52.6157) < 0.0001);
 
         assert(qqe.get_rsi_ma().size() == 1721);
         assert(std::abs(qqe.get_rsi_ma()[0] - 0) < 0.0001);
         assert(std::abs(qqe.get_rsi_ma()[12] - 0) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[14] - 40.9359) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[19] - 37.3239) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[20] - 37.7247) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[24] - 37.0269) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[25] - 38.5705) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[1720] - 42.5588) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[1712] - 50.95) < 0.0001);
-        assert(std::abs(qqe.get_rsi_ma()[1707] - 52.7244) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[14] - 38.4984) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[19] - 30.5246) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[20] - 30.4209) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[24] - 29.313) < 0.001);
+        assert(std::abs(qqe.get_rsi_ma()[25] - 33.2523) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[1720] - 33.8848) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[1712] - 49.041) < 0.001);
+        assert(std::abs(qqe.get_rsi_ma()[1707] - 56.8174) < 0.0001);
 
         assert(qqe.get_long_line().size() == 1721);
         assert(std::abs(qqe.get_long_line()[0] - 0) < 0.0001);
         assert(std::abs(qqe.get_long_line()[12] - 0) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[14] - 38.9522) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[19] - 31.4282) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[20] - 31.4282) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[24] - 31.4282) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[25] - 31.4282) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[1720] - 39.9557) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[1712] - 50.833) < 0.0001);
-        assert(std::abs(qqe.get_long_line()[1707] - 50.5242) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[14] - 35.4257) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[19] - 27.405) < 0.001);
+        assert(std::abs(qqe.get_long_line()[20] - 27.405) < 0.001);
+        assert(std::abs(qqe.get_long_line()[24] - 20.2712) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[25] - 24.0873) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[1720] - 28.3272) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[1712] - 43.0704) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[1707] - 52.6157) < 0.0001);
 
         assert(qqe.get_short_line().size() == 1721);
         assert(std::abs(qqe.get_short_line()[0] - 0) < 0.0001);
         assert(std::abs(qqe.get_short_line()[12] - 0) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[14] - 43.4102) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[19] - 43.4102) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[20] - 43.4102) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[24] - 43.4102) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[25] - 43.4102) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[1720] - 45.3732) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[1712] - 53.3534) < 0.0001);
-        assert(std::abs(qqe.get_short_line()[1707] - 54.3629) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[14] - 39.4801) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[19] - 37.517) < 0.001);
+        assert(std::abs(qqe.get_short_line()[20] - 37.517) < 0.001);
+        assert(std::abs(qqe.get_short_line()[24] - 35.8487) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[25] - 35.8487) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[1720] - 38.6595) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[1712] - 55.0116) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[1707] - 62.7225) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -4514,15 +4514,15 @@ static void test_EhlersHighPassFilterVisitor()  {
         const auto  &smooth_close = df.get_column<double>("Smooth Close");
 
         assert(smooth_close.size() == 1721);
-        assert(std::abs(smooth_close[0] - 185.53) < 0.0001);
-        assert(std::abs(smooth_close[1] - 185.3782) < 0.0001);
-        assert(std::abs(smooth_close[19] - 179.8812) < 0.0001);
-        assert(std::abs(smooth_close[20] - 179.2847) < 0.0001);
-        assert(std::abs(smooth_close[24] - 175.4347) < 0.0001);
-        assert(std::abs(smooth_close[25] - 174.8728) < 0.0001);
-        assert(std::abs(smooth_close[1720] - 111.7708) < 0.0001);
-        assert(std::abs(smooth_close[1712] - 126.7447) < 0.0001);
-        assert(std::abs(smooth_close[1707] - 126.108) < 0.0001);
+        assert(std::abs(smooth_close[0] - 185.53) < 0.001);
+        assert(std::abs(smooth_close[1] - 185.682) < 0.001);
+        assert(std::abs(smooth_close[19] - 179.275) < 0.001);
+        assert(std::abs(smooth_close[20] - 178.658) < 0.001);
+        assert(std::abs(smooth_close[24] - 175.251) < 0.001);
+        assert(std::abs(smooth_close[25] - 175.445) < 0.001);
+        assert(std::abs(smooth_close[1720] - 111.744) < 0.001);
+        assert(std::abs(smooth_close[1712] - 124.489) < 0.001);
+        assert(std::abs(smooth_close[1707] - 125.866) < 0.001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -4576,23 +4576,23 @@ static void test_EhlersHighPassFilterVisitor()  {
     assert(std::abs(vec_col_ref[0][0] - 1.0) < 0.00001);
     assert(std::abs(vec_col_ref[0][1] - 2.0) < 0.00001);
     assert(std::abs(vec_col_ref[0][2] - 3.0) < 0.00001);
-    assert(std::abs(vec_col_ref[10][0] - 1.22649) < 0.00001);
-    assert(std::abs(vec_col_ref[10][1] - 2.22649) < 0.00001);
-    assert(std::abs(vec_col_ref[10][2] - 3.22649) < 0.00001);
-    assert(std::abs(vec_col_ref[19][0] - 2.43936) < 0.00001);
-    assert(std::abs(vec_col_ref[19][1] - 3.43936) < 0.00001);
-    assert(std::abs(vec_col_ref[19][2] - 4.43936) < 0.00001);
+    assert(std::abs(vec_col_ref[10][0] - 0.743401) < 0.000001);
+    assert(std::abs(vec_col_ref[10][1] - 1.7434) < 0.0001);
+    assert(std::abs(vec_col_ref[10][2] - 2.7434) < 0.0001);
+    assert(std::abs(vec_col_ref[19][0] - 2.06936) < 0.0001);
+    assert(std::abs(vec_col_ref[19][1] - 3.06936) < 0.0001);
+    assert(std::abs(vec_col_ref[19][2] - 4.06936) < 0.0001);
 
     assert(ary_col_ref.size() == 20);
     assert(std::abs(ary_col_ref[0][0] - 1.0) < 0.00001);
     assert(std::abs(ary_col_ref[0][1] - 2.0) < 0.00001);
     assert(std::abs(ary_col_ref[0][2] - 3.0) < 0.00001);
-    assert(std::abs(ary_col_ref[10][0] - 1.22649) < 0.00001);
-    assert(std::abs(ary_col_ref[10][1] - 2.22649) < 0.00001);
-    assert(std::abs(ary_col_ref[10][2] - 3.22649) < 0.00001);
-    assert(std::abs(ary_col_ref[19][0] - 2.43936) < 0.00001);
-    assert(std::abs(ary_col_ref[19][1] - 3.43936) < 0.00001);
-    assert(std::abs(ary_col_ref[19][2] - 4.43936) < 0.00001);
+    assert(std::abs(ary_col_ref[10][0] - 0.743401) < 0.000001);
+    assert(std::abs(ary_col_ref[10][1] - 1.7434) < 0.0001);
+    assert(std::abs(ary_col_ref[10][2] - 2.7434) < 0.0001);
+    assert(std::abs(ary_col_ref[19][0] - 2.06936) < 0.0001);
+    assert(std::abs(ary_col_ref[19][1] - 3.06936) < 0.0001);
+    assert(std::abs(ary_col_ref[19][2] - 4.06936) < 0.0001);
 }
 
 // ----------------------------------------------------------------------------

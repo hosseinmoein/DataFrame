@@ -1010,8 +1010,6 @@ read_csv2_(S &stream,
            char delim,
            CSV2ReadState *ext_state)  {
 
-    constexpr unsigned long data_size = 64 * 1024;
-
     // SpecVec is now CSV2SpecVec (a plain std::vector<CSV2ColSpec>,
     // see CSV2State.h) rather than a StlVecType<CSV2ColSpec>.
     // This is a bookkeeping-only container (one entry per column, not per
@@ -1021,7 +1019,7 @@ read_csv2_(S &stream,
     //
     using SpecVec = CSV2SpecVec;
 
-    char                line[data_size];
+    std::string         line;
     std::string         value;
     int                 actual_col_count { 0 };
     size_type           data_rows_read { 0 };
@@ -1087,18 +1085,21 @@ read_csv2_(S &stream,
             row_cnt >= starting_row + num_rows) [[unlikely]]
             break;
 
-        line[0] = '\0';
+        line.clear();
         if constexpr (std::same_as<S, std::FILE *>)  {
-            if (std::fgets(line, sizeof(line) - 1, stream) == nullptr)
-                continue;
+            char    chunk[4096];
+
+            while (std::fgets(chunk, sizeof(chunk), stream) != nullptr)  {
+                line += chunk;
+                if (line.back() == '\n')  break;
+            }
+            if (line.empty())  continue;
         }
         else  {
-            stream.getline(line, sizeof(line) - 1);
-            if (stream.fail())
-                continue;
+            if (! std::getline(stream, line))  continue;
         }
 
-        if (line[0] == '\0' || line[0] == '#' ||
+        if (line.empty() || line[0] == '#' ||
             line[0] == '\n' || line[0] == '\r') [[unlikely]]  continue;
 
         sstream.clear();

@@ -1058,41 +1058,15 @@ DataFrame<I, H>::get_inner_index_idx_vector_(
     const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
     const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
-    size_type       lhs_current = 0;
-    const size_type lhs_end = col_vec_lhs.size();
-    size_type       rhs_current = 0;
-    const size_type rhs_end = col_vec_rhs.size();
-    IndexIdxVector  joined_index_idx;
+    // Same duplicate-key handling (full Cartesian product of the runs of equal
+    // keys) as the sorted-index case.
+    //
+    auto    joined_index_idx =
+        get_inner_index_idx_vector_sorted_(
+            JoinKeyView_<T> { col_vec_lhs },
+            JoinKeyView_<T> { col_vec_rhs });
 
-    joined_index_idx.reserve(std::min(lhs_end, rhs_end));
-    while (lhs_current != lhs_end && rhs_current != rhs_end) [[likely]] {
-        if (*(col_vec_lhs[lhs_current].first) <
-            *(col_vec_rhs[rhs_current].first))  {
-            lhs_current += 1;
-        }
-        else  {
-            if (*(col_vec_lhs[lhs_current].first) ==
-                *(col_vec_rhs[rhs_current].first))  {
-                const auto  &prev_value = *(col_vec_lhs[lhs_current].first);
-
-                while (rhs_current < rhs_end &&
-                       *(col_vec_lhs[lhs_current].first) ==
-                       *(col_vec_rhs[rhs_current].first))  {
-                    joined_index_idx.emplace_back(
-                        col_vec_lhs[lhs_current].second,
-                        col_vec_rhs[rhs_current++].second);
-                }
-                lhs_current += 1;
-                while (lhs_current < lhs_end &&
-                       *(col_vec_lhs[lhs_current].first) == prev_value)  {
-                    joined_index_idx.emplace_back(
-                        col_vec_lhs[lhs_current++].second,
-                        col_vec_rhs[rhs_current - 1].second);
-                }
-            }
-            else  rhs_current += 1;
-        }
-    }
+    remap_join_idx_<T>(joined_index_idx, col_vec_lhs, col_vec_rhs);
     return (joined_index_idx);
 }
 
@@ -1137,50 +1111,15 @@ DataFrame<I, H>::get_left_index_idx_vector_(
     const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
     const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
-    size_type       lhs_current = 0;
-    const size_type lhs_end = col_vec_lhs.size();
-    size_type       rhs_current = 0;
-    const size_type rhs_end = col_vec_rhs.size();
-    IndexIdxVector  joined_index_idx;
+    // Same duplicate-key handling (full Cartesian product of the runs of equal
+    // keys) as the sorted-index case.
+    //
+    auto    joined_index_idx =
+        get_left_index_idx_vector_sorted_(
+            JoinKeyView_<T> { col_vec_lhs },
+            JoinKeyView_<T> { col_vec_rhs });
 
-    joined_index_idx.reserve(lhs_end);
-    while (lhs_current != lhs_end || rhs_current != rhs_end) [[likely]] {
-        if (lhs_current >= lhs_end) [[unlikely]]  break;
-        if (rhs_current >= rhs_end)  {
-            joined_index_idx.emplace_back(
-                col_vec_lhs[lhs_current++].second,
-                std::numeric_limits<size_type>::max());
-            continue;
-        }
-
-        if (*(col_vec_lhs[lhs_current].first) <
-                *(col_vec_rhs[rhs_current].first))
-            joined_index_idx.emplace_back(
-                col_vec_lhs[lhs_current++].second,
-                std::numeric_limits<size_type>::max());
-        else  {
-            if (*(col_vec_lhs[lhs_current].first) ==
-                *(col_vec_rhs[rhs_current].first))  {
-                const auto  &prev_value = *(col_vec_lhs[lhs_current].first);
-
-                while (rhs_current < rhs_end &&
-                       *(col_vec_lhs[lhs_current].first) ==
-                       *(col_vec_rhs[rhs_current].first))  {
-                    joined_index_idx.emplace_back(
-                        col_vec_lhs[lhs_current].second,
-                        col_vec_rhs[rhs_current++].second);
-                }
-                lhs_current += 1;
-                while (lhs_current < lhs_end &&
-                       *(col_vec_lhs[lhs_current].first) == prev_value)  {
-                    joined_index_idx.emplace_back(
-                        col_vec_lhs[lhs_current++].second,
-                        col_vec_rhs[rhs_current - 1].second);
-                }
-            }
-            else  rhs_current += 1;
-        }
-    }
+    remap_join_idx_<T>(joined_index_idx, col_vec_lhs, col_vec_rhs);
     return (joined_index_idx);
 }
 // ----------------------------------------------------------------------------
@@ -1224,53 +1163,15 @@ DataFrame<I, H>::get_right_index_idx_vector_(
     const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
     const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
-    size_type       lhs_current = 0;
-    const size_type lhs_end = col_vec_lhs.size();
-    size_type       rhs_current = 0;
-    const size_type rhs_end = col_vec_rhs.size();
-    IndexIdxVector  joined_index_idx;
+    // Same duplicate-key handling (full Cartesian product of the runs of equal
+    // keys) as the sorted-index case.
+    //
+    auto    joined_index_idx =
+        get_right_index_idx_vector_sorted_(
+            JoinKeyView_<T> { col_vec_lhs },
+            JoinKeyView_<T> { col_vec_rhs });
 
-    joined_index_idx.reserve(rhs_end);
-    while (lhs_current != lhs_end || rhs_current != rhs_end) [[likely]] {
-        if (rhs_current >= rhs_end)  break;
-        if (lhs_current >= lhs_end)  {
-            joined_index_idx.emplace_back(
-                std::numeric_limits<size_type>::max(),
-                col_vec_rhs[rhs_current++].second);
-            continue;
-        }
-
-        if (*(col_vec_lhs[lhs_current].first) <
-            *(col_vec_rhs[rhs_current].first))  {
-            lhs_current += 1;
-        }
-        else  {
-            if (*(col_vec_rhs[rhs_current].first) ==
-                *(col_vec_lhs[lhs_current].first))  {
-                const auto  &prev_value = *(col_vec_rhs[rhs_current].first);
-
-                while (lhs_current < lhs_end &&
-                       *(col_vec_rhs[rhs_current].first) ==
-                       *(col_vec_lhs[lhs_current].first))  {
-                    joined_index_idx.emplace_back(
-                        col_vec_lhs[lhs_current++].second,
-                        col_vec_rhs[rhs_current].second);
-                }
-                rhs_current += 1;
-                while (rhs_current < rhs_end &&
-                       *(col_vec_rhs[rhs_current].first) == prev_value)  {
-                    joined_index_idx.emplace_back(
-                        col_vec_lhs[lhs_current - 1].second,
-                        col_vec_rhs[rhs_current++].second);
-                }
-            }
-            else  {
-                joined_index_idx.emplace_back(
-                    std::numeric_limits<size_type>::max(),
-                    col_vec_rhs[rhs_current++].second);
-            }
-        }
-    }
+    remap_join_idx_<T>(joined_index_idx, col_vec_lhs, col_vec_rhs);
     return (joined_index_idx);
 }
 
@@ -1315,57 +1216,15 @@ DataFrame<I, H>::get_left_right_index_idx_vector_(
     const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
     const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
-    size_type       lhs_current = 0;
-    const size_type lhs_end = col_vec_lhs.size();
-    size_type       rhs_current = 0;
-    const size_type rhs_end = col_vec_rhs.size();
-    IndexIdxVector  joined_index_idx;
+    // Same duplicate-key handling (full Cartesian product of the runs of equal
+    // keys) as the sorted-index case.
+    //
+    auto    joined_index_idx =
+        get_left_right_index_idx_vector_sorted_(
+            JoinKeyView_<T> { col_vec_lhs },
+            JoinKeyView_<T> { col_vec_rhs });
 
-    joined_index_idx.reserve(std::max(lhs_end, rhs_end));
-    while (lhs_current != lhs_end || rhs_current != rhs_end) [[likely]] {
-        if (lhs_current >= lhs_end && rhs_current < rhs_end)  {
-            joined_index_idx.emplace_back(
-                std::numeric_limits<size_type>::max(),
-                col_vec_rhs[rhs_current++].second);
-        }
-        else if (rhs_current >= rhs_end && lhs_current < lhs_end)  {
-            joined_index_idx.emplace_back(
-                col_vec_lhs[lhs_current++].second,
-                std::numeric_limits<size_type>::max());
-            continue;
-        }
-        else if (*(col_vec_lhs[lhs_current].first) <
-                 *(col_vec_rhs[rhs_current].first))  {
-            joined_index_idx.emplace_back(
-                col_vec_lhs[lhs_current++].second,
-                std::numeric_limits<size_type>::max());
-        }
-        else  {
-            if (*(col_vec_lhs[lhs_current].first) ==
-                *(col_vec_rhs[rhs_current].first))  {
-                const auto  &prev_value = *(col_vec_lhs[lhs_current].first);
-
-                while (rhs_current < rhs_end &&
-                       *(col_vec_lhs[lhs_current].first) ==
-                       *(col_vec_rhs[rhs_current].first))  {
-                    joined_index_idx.emplace_back(
-                        col_vec_lhs[lhs_current].second,
-                        col_vec_rhs[rhs_current++].second);
-                }
-                lhs_current += 1;
-                while (lhs_current < lhs_end &&
-                       *(col_vec_lhs[lhs_current].first) == prev_value)  {
-                    joined_index_idx.emplace_back(
-                        col_vec_lhs[lhs_current++].second,
-                        col_vec_rhs[rhs_current - 1].second);
-                }
-            }
-            else
-                joined_index_idx.emplace_back(
-                    std::numeric_limits<size_type>::max(),
-                    col_vec_rhs[rhs_current++].second);
-        }
-    }
+    remap_join_idx_<T>(joined_index_idx, col_vec_lhs, col_vec_rhs);
     return (joined_index_idx);
 }
 

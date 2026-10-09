@@ -3161,17 +3161,26 @@ V _shift_vector_(const V &vec, long shift)  {
     using value_type = typename V::value_type;
 
     const long  col_s { static_cast<long>(vec.size()) };
+
+    if (col_s == 0)  return (V());
+
     auto        make_zero_elem =
         [&vec = std::as_const(vec)]() -> value_type  {
             if constexpr (random_acc_cont<value_type>)  {
-                // value_type is itself a container (vector/array of doubles)
+                // value_type is itself a container (vector/array of doubles).
+                // Copy an existing element, so it has the right dimension,
+                // and zero it. Brace initialization must not be used here:
+                // for a vector it would pick the initializer_list constructor
+                // and produce the two elements { dim, 0 }.
                 //
-                return (value_type {
-                            typename value_type::value_type(vec[0].size()),
-                            0 });
+                value_type  zero_elem { vec[0] };
+
+                std::fill(zero_elem.begin(), zero_elem.end(),
+                          typename value_type::value_type(0));
+                return (zero_elem);
             }
             else  {
-                return (value_type { 0 });
+                return (value_type(0));
             }
         };
     V           shifted(col_s, make_zero_elem());
@@ -3463,7 +3472,7 @@ V _kshape_extract_shape_(const std::vector<const V *> &cluster,
             norm_v2.post();
 
             const auto  [dist, shift] =
-                _shape_based_dist_(norm_v2.get_result(), norm_v.get_result());
+                _shape_based_dist_(norm_v.get_result(), norm_v2.get_result());
 
             aligned[i++] = _shift_vector_(*series, shift);
         }

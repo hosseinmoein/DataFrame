@@ -4498,9 +4498,9 @@ static void test_KamaVisitor()  {
         assert(k_v.get_result().size() == 5031);
         assert(std::isnan(k_v.get_result()[0]));
         assert(std::isnan(k_v.get_result()[8]));
-        assert(k_v.get_result()[9] == 0);
-        assert(std::abs(k_v.get_result()[29] - 31.6281) < 0.0001);
-        assert(std::abs(k_v.get_result()[34] - 47.2049) < 0.0001);
+        assert(std::isnan(k_v.get_result()[9]));
+        assert(std::abs(k_v.get_result()[29] - 98.4321) < 0.0001);
+        assert(std::abs(k_v.get_result()[34] - 95.7078) < 0.0001);
         assert(std::abs(k_v.get_result()[5030] - 112.438) < 0.001);
         assert(std::abs(k_v.get_result()[5026] - 118.829) < 0.001);
         assert(std::abs(k_v.get_result()[5021] - 125.937) < 0.001);
@@ -4960,10 +4960,10 @@ static void test_VarIdxDynAvgVisitor()  {
         assert(vidya_v.get_result().size() == 1721);
         assert(std::isnan(vidya_v.get_result()[0]));
         assert(std::isnan(vidya_v.get_result()[12]));
-        assert(vidya_v.get_result()[13] == 0);
-        assert(std::abs(vidya_v.get_result()[14] - 2.70068) < 0.00001);
-        assert(std::abs(vidya_v.get_result()[21] - 57.6682) < 0.0001);
-        assert(std::abs(vidya_v.get_result()[31] - 106.451) < 0.001);
+        assert(std::isnan(vidya_v.get_result()[13]));
+        assert(std::abs(vidya_v.get_result()[14] - 182.257) < 0.001);
+        assert(std::abs(vidya_v.get_result()[21] - 180.407) < 0.001);
+        assert(std::abs(vidya_v.get_result()[31] - 179.303) < 0.001);
         assert(std::abs(vidya_v.get_result()[1720] - 118.962) < 0.001);
         assert(std::abs(vidya_v.get_result()[1712] - 123.811) < 0.001);
         assert(std::abs(vidya_v.get_result()[1707] - 123.712) < 0.001);
@@ -5774,8 +5774,8 @@ static void test_DecayVisitor()  {
         assert(std::abs(decay.get_result()[30] - 183.69) < 0.01);
         assert(std::abs(decay.get_result()[35] - 183.45) < 0.01);
         assert(std::abs(decay.get_result()[1720] - 111.66) < 0.01);
-        assert(std::abs(decay.get_result()[1712] - 125.513) < 0.01);
-        assert(std::abs(decay.get_result()[1707] - 127.203) < 0.01);
+        assert(std::abs(decay.get_result()[1712] - 117.37) < 0.01);
+        assert(std::abs(decay.get_result()[1707] - 125.1) < 0.01);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

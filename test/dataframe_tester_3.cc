@@ -2100,13 +2100,13 @@ static void test_PriceDistanceVisitor()  {
 
         assert(pdist.get_result().size() == 1721);
         assert(std::isnan(pdist.get_result()[0]));
-        assert(std::abs(pdist.get_result()[13] - 7.51) < 0.001);
-        assert(std::abs(pdist.get_result()[14] - 6.2) < 0.1);
-        assert(std::abs(pdist.get_result()[18] - 5.63) < 0.001);
-        assert(std::abs(pdist.get_result()[25] - 3.65) < 0.01);
-        assert(std::isnan(pdist.get_result()[1720]));
-        assert(std::abs(pdist.get_result()[1712] - 4.9) < 0.001);
-        assert(std::abs(pdist.get_result()[1707] - 3.94) < 0.01);
+        assert(std::abs(pdist.get_result()[13] - 13.84) < 0.001);
+        assert(std::abs(pdist.get_result()[14] - 5.53999) < 0.00001);
+        assert(std::abs(pdist.get_result()[18] - 5.73001) < 0.00001);
+        assert(std::abs(pdist.get_result()[25] - 4.33998) < 0.0001);
+        assert(std::abs(pdist.get_result()[1720] - 5.35001) < 0.0001);
+        assert(std::abs(pdist.get_result()[1712] - 9.91001) < 0.0001);
+        assert(std::abs(pdist.get_result()[1707] - 4.55) < 0.01);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

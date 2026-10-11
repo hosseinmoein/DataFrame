@@ -74,13 +74,13 @@ public:
                                     lazy_type<T>,
                                     value_type_of<T>>::type;
 
-    using scalar_ma_t = Matrix<data_t, MO>;
-
+    using scalar_ma_t = Matrix<data_t, MO, IS_SYM>;
+    using non_sym_ma_t = Matrix<T, MO, false>;
     using trans_result_t =
         typename std::conditional<
             MO == matrix_orient::column_major,
-            Matrix<T, matrix_orient::row_major>,
-            Matrix<T, matrix_orient::column_major>>::type;
+            Matrix<T, matrix_orient::row_major, IS_SYM>,
+            Matrix<T, matrix_orient::column_major, IS_SYM>>::type;
 
     Matrix() = default;
     Matrix(size_type rows, size_type cols, const_reference def_v = T());
@@ -140,12 +140,12 @@ public:
     // It returns requested column in a one-column matrix
     //
     [[nodiscard]]
-    Matrix<T, MO> get_column_mat(size_type col) const noexcept;
+    non_sym_ma_t get_column_mat(size_type col) const noexcept;
 
     // It returns requested row in a one-row matrix
     //
     [[nodiscard]]
-    Matrix<T, MO> get_row_mat(size_type row) const noexcept;
+    non_sym_ma_t get_row_mat(size_type row) const noexcept;
 
     [[nodiscard]] bool is_square() const noexcept;
 
@@ -407,8 +407,8 @@ public:
     // MA can be either a matrix of one column or a std::vector.
     //
     template<typename MA>
-    [[nodiscard]] inline Matrix solve(const MA &rhs) const;
-    [[nodiscard]] inline Matrix solve() const;  // rhs is the last column
+    [[nodiscard]] inline non_sym_ma_t solve(const MA &rhs) const;
+    [[nodiscard]] inline non_sym_ma_t solve() const; // rhs is the last column
 
     // In 2-D, when you talk about the point (2, 4), you can think of the
     // 2 and 4 as directions to get from the origin to the point
@@ -443,7 +443,7 @@ public:
     //     see: http://en.wikipedia.org/wiki/Cofactor_expansion
     //
     // NOTE: This is a relatively _expensive_ calculation. Its complexity
-    //       is O(n!), where n is the number of rows or columns.
+    //       is O(n^3), where n is the number of rows or columns.
     //
     [[nodiscard]] inline value_type determinant() const;
 
@@ -648,788 +648,235 @@ private:
     size_type   cols_ { 0 };
     storage_t   matrix_ { };
 
-    //
-    // Iterators
-    //
+private:  // Iterators
 
-public:
-
-    class   row_iterator;
-    class   row_const_iterator : public std::random_access_iterator_tag  {
+    // A random access iterator over every element of the matrix, either row
+    // by row (BY_ROW: [0, 0], [0, 1], ... [0, cols - 1], [1, 0], ...) or
+    // column by column. IS_CONST selects the const flavor.
+    //
+    // The position is kept as one linear index, pos_, in the iterator's own
+    // traversal order, so ==, <, -, += and -= are O(1), exact, and work to
+    // and from end() (which is pos_ == rows * cols). When the traversal order
+    // is also the storage order (a row iterator over a row-major matrix, a
+    // column iterator over a column-major matrix) dereference indexes the
+    // storage directly. In every other case, including symmetric matrices
+    // with their packed storage, the [row, column] pair is tracked as well
+    // and advanced incrementally, so ++ and -- never divide.
+    //
+    template<bool IS_CONST, bool BY_ROW>
+    class   iterator_impl_  {
 
     public:
 
         using iterator_category = std::random_access_iterator_tag;
+        using iterator_concept = std::random_access_iterator_tag;
         using value_type = T;
         using size_type = long;
-        using pointer = value_type *;
-        using const_pointer = const value_type *;
-        using reference = value_type &;
-        using const_reference = const value_type &;
-        using difference_type = typename std::vector<T>::difference_type;
+        using difference_type = std::ptrdiff_t;
+        using pointer = std::conditional_t<IS_CONST, const T *, T *>;
+        using const_pointer = const T *;
+        using reference = std::conditional_t<IS_CONST, const T &, T &>;
+        using const_reference = const T &;
 
-        inline row_const_iterator() = default;
+    private:
 
-        inline row_const_iterator(const self_t *m,
-                                  size_type row = 0,
-                                  size_type col = 0)
-            : mptr_(m), row_(row), col_(col)  {   }
+        using matrix_ptr =
+            std::conditional_t<IS_CONST, const self_t *, self_t *>;
 
-        inline bool operator ==(const row_const_iterator &rhs) const  {
+        // Traversal order == storage order
+        //
+        static constexpr bool   DIRECT_ {
+            ! IS_SYM && (BY_ROW == (MO == matrix_orient::row_major))
+        };
 
-            return (mptr_ == rhs.mptr_ &&
-                    row_ == rhs.row_ &&
-                    col_ == rhs.col_);
+        inline difference_type size_() const noexcept  {
+
+            return (mptr_->rows_ * mptr_->cols_);
         }
-        inline bool operator !=(const row_const_iterator &rhs) const  {
 
-            return (! (*this == rhs));
+        // Recompute [row_, col_] from pos_. A position of size_() maps to
+        // [rows, 0] when going by row and [0, cols] when going by column.
+        //
+        inline void sync_() noexcept  {
+
+            const size_type len { BY_ROW ? mptr_->cols_ : mptr_->rows_ };
+
+            if (len > 0)  {
+                const size_type line { pos_ / len };
+                const size_type in_line { pos_ % len };
+
+                if constexpr (BY_ROW)  { row_ = line; col_ = in_line; }
+                else  { col_ = line; row_ = in_line; }
+            }
+            else  { row_ = 0; col_ = 0; }
         }
-        inline bool
-        operator >(const row_const_iterator &rhs) const noexcept  {
 
-            return (row_ > rhs.row_ || (row_ == rhs.row_ && col_ > rhs.col_));
+    public:
+
+        inline iterator_impl_() = default;
+
+        // Any position outside the matrix, including [rows, cols], is end().
+        //
+        inline explicit
+        iterator_impl_(matrix_ptr m, size_type row = 0, size_type col = 0)
+            noexcept
+            : mptr_(m)  {
+
+            pos_ = (row < 0 || col < 0 || row >= m->rows_ || col >= m->cols_)
+                       ? size_()
+                       : (BY_ROW ? row * m->cols_ + col : col * m->rows_ + row);
+            if constexpr (! DIRECT_)  sync_();
         }
-        inline bool
-        operator >=(const row_const_iterator &rhs) const noexcept  {
 
-            return (row_ > rhs.row_ || (row_ == rhs.row_ && col_ >= rhs.col_));
+        // iterator -> const_iterator
+        //
+        template<bool IS_CONST2>
+        requires (IS_CONST && ! IS_CONST2)
+        inline iterator_impl_(const iterator_impl_<IS_CONST2, BY_ROW> &rhs)
+            noexcept
+            : mptr_(rhs.mptr_), pos_(rhs.pos_), row_(rhs.row_), col_(rhs.col_)
+        {   }
+
+        inline bool operator ==(const iterator_impl_ &rhs) const noexcept  {
+
+            return (mptr_ == rhs.mptr_ && pos_ == rhs.pos_);
         }
-        inline bool
-        operator <(const row_const_iterator &rhs) const noexcept  {
+        inline std::strong_ordering
+        operator <=>(const iterator_impl_ &rhs) const noexcept  {
 
-            return (! (*this >= rhs));
-        }
-        inline bool
-        operator <=(const row_const_iterator &rhs) const noexcept  {
-
-            return (! (*this > rhs));
+            return (pos_ <=> rhs.pos_);
         }
 
         // Following STL style, this iterator appears as a pointer
         // to value_type.
         //
-        inline const_pointer operator ->() const noexcept  {
+        inline reference operator *() const noexcept  {
 
-            return (&(mptr_->at(row_, col_)));
+            if constexpr (DIRECT_)
+                return (mptr_->matrix_[pos_]);
+            else
+                return (mptr_->at(row_, col_));
         }
-        inline const_reference operator *() const noexcept  {
+        inline pointer operator ->() const noexcept  {
 
-            return (mptr_->at(row_, col_));
+            return (std::addressof(**this));
         }
-        inline operator const_pointer() const noexcept  {
+        inline reference operator [](difference_type n) const noexcept  {
 
-            return (&(mptr_->at(row_, col_)));
+            return (*(*this + n));
         }
 
-       // We are following STL style iterator interface.
-       //
-        inline row_const_iterator &operator ++() noexcept  {    // ++Prefix
+        // Address of the current element, or nullptr for end().
+        //
+        inline explicit operator pointer() const noexcept  {
 
-            col_ += 1;
-            if (col_ >= mptr_->cols())  { col_ = 0; row_ += 1; }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
+            return (pos_ >= 0 && pos_ < size_() ? std::addressof(**this)
+                                                : nullptr);
+        }
+
+        inline iterator_impl_ &operator ++() noexcept  {    // ++Prefix
+
+            pos_ += 1;
+            if constexpr (! DIRECT_)  {
+                if constexpr (BY_ROW)  {
+                    if (++col_ == mptr_->cols_)  { col_ = 0; ++row_; }
+                }
+                else  {
+                    if (++row_ == mptr_->rows_)  { row_ = 0; ++col_; }
+                }
             }
             return (*this);
         }
-        inline row_const_iterator operator ++(int) noexcept  {  // Postfix++
+        inline iterator_impl_ operator ++(int) noexcept  {  // Postfix++
 
-            const size_type row = row_;
-            const size_type col = col_;
+            const iterator_impl_    save { *this };
 
-            col_ += 1;
-            if (col_ >= mptr_->cols())  { col_ = 0; row_ += 1; }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (row_const_iterator(mptr_, row, col));
+            ++(*this);
+            return (save);
         }
 
-        inline row_const_iterator &operator +=(size_type i) noexcept  {
+        inline iterator_impl_ &operator --() noexcept  {    // --Prefix
 
-            col_ += i;
-            if (col_ >= mptr_->cols())  {
-                row_ += col_ / mptr_->cols();
-                col_ %= mptr_->cols();
-            }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
+            pos_ -= 1;
+            if constexpr (! DIRECT_)  {
+                if constexpr (BY_ROW)  {
+                    if (col_ == 0)  { col_ = mptr_->cols_ - 1; --row_; }
+                    else  col_ -= 1;
+                }
+                else  {
+                    if (row_ == 0)  { row_ = mptr_->rows_ - 1; --col_; }
+                    else  row_ -= 1;
+                }
             }
             return (*this);
         }
+        inline iterator_impl_ operator --(int) noexcept  {  // Postfix--
 
-        inline row_const_iterator &operator --() noexcept  {    // --Prefix
+            const iterator_impl_    save { *this };
 
-            col_ -= 1;
-            if (col_ < 0)  { col_ = mptr_->cols() - 1; row_ -= 1; }
+            --(*this);
+            return (save);
+        }
+
+        inline iterator_impl_ &operator +=(difference_type n) noexcept  {
+
+            pos_ += n;
+            if constexpr (! DIRECT_)  sync_();
             return (*this);
         }
-        inline row_const_iterator operator --(int) noexcept  {  // Postfix--
+        inline iterator_impl_ &operator -=(difference_type n) noexcept  {
 
-            const size_type row = row_;
-            const size_type col = col_;
-
-            col_ -= 1;
-            if (col_ < 0)  { col_ = mptr_->cols() - 1; row_ -= 1; }
-            return (row_const_iterator(mptr_, row, col));
+            return (*this += -n);
         }
 
-        inline row_const_iterator &operator -=(int i) noexcept  {
+        inline iterator_impl_ operator +(difference_type n) const noexcept  {
 
-            col_ -= i;
-            if (col_ < 0)  {
-                row_ -= col_ / mptr_->cols();
-                col_ %= mptr_->cols();
-            }
-            return (*this);
+            iterator_impl_  result { *this };
+
+            result += n;
+            return (result);
         }
+        inline iterator_impl_ operator -(difference_type n) const noexcept  {
 
-        inline row_const_iterator operator +(size_type i) noexcept  {
+            iterator_impl_  result { *this };
 
-            const size_type row = row_;
-            const size_type col = col_;
-
-            col_ += i;
-            if (col_ >= mptr_->cols())  {
-                row_ += col_ / mptr_->cols();
-                col_ %= mptr_->cols();
-            }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (row_const_iterator(mptr_, row, col));
+            result += -n;
+            return (result);
         }
+        friend inline iterator_impl_
+        operator +(difference_type n, const iterator_impl_ &it) noexcept  {
 
-        inline row_const_iterator operator -(size_type i) noexcept  {
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            col_ -= i;
-            if (col_ < 0)  {
-                row_ -= col_ / mptr_->cols();
-                col_ %= mptr_->cols();
-            }
-            return (row_const_iterator(mptr_, row, col));
+            return (it + n);
         }
+        friend inline difference_type
+        operator -(const iterator_impl_ &lhs,
+                   const iterator_impl_ &rhs) noexcept  {
 
-        inline row_const_iterator operator +(int i) noexcept  {
-
-            return (*this + size_type(i));
-        }
-
-        inline row_const_iterator operator -(int i) noexcept  {
-
-            return (*this - size_type(i));
-        }
-
-        friend difference_type
-        operator -(row_const_iterator lhs, row_const_iterator rhs)  {
-
-            if (lhs.mptr_ != rhs.mptr_)
-                throw NotFeasible("- operation in iterator is not feasible");
-
-            const size_type row_diff = lhs.row_ - rhs.row_;
-            const size_type col_diff = lhs.col_ - rhs.col_;
-
-            return (difference_type(
-                        std::abs(row_diff) * rhs.mptr_->cols() - col_diff));
+            return (lhs.pos_ - rhs.pos_);
         }
 
     private:
 
-        const self_t    *mptr_ { nullptr };
+        template<bool, bool>
+        friend class iterator_impl_;
+
+        matrix_ptr      mptr_ { nullptr };
+        difference_type pos_ { 0 };
         size_type       row_ { 0 };
         size_type       col_ { 0 };
     };
 
-    // It goes through the matrix row-by-row starting at [0, 0]
-    //
-    class   row_iterator : public std::random_access_iterator_tag  {
-
-    public:
-
-        using iterator_category = std::random_access_iterator_tag;
-        using value_type = T;
-        using size_type = long;
-        using pointer = value_type *;
-        using const_pointer = const value_type *;
-        using reference = value_type &;
-        using const_reference = const value_type &;
-        using difference_type = typename std::vector<T>::difference_type;
-
-    public:
-
-        inline row_iterator() = default;
-
-        inline row_iterator(self_t *m, size_type row = 0, size_type col = 0)
-            : mptr_(m), row_(row), col_(col)  {   }
-
-        inline bool operator ==(const row_iterator &rhs) const  {
-
-            return (mptr_ == rhs.mptr_ &&
-                    row_ == rhs.row_ &&
-                    col_ == rhs.col_);
-        }
-        inline bool operator !=(const row_iterator &rhs) const  {
-
-            return (! (*this == rhs));
-        }
-        inline bool operator >(const row_iterator &rhs) const noexcept  {
-
-            return (row_ > rhs.row_ || (row_ == rhs.row_ && col_ > rhs.col_));
-        }
-        inline bool operator >=(const row_iterator &rhs) const noexcept  {
-
-            return (row_ > rhs.row_ || (row_ == rhs.row_ && col_ >= rhs.col_));
-        }
-        inline bool operator <(const row_iterator &rhs) const noexcept  {
-
-            return (! (*this >= rhs));
-        }
-        inline bool operator <=(const row_iterator &rhs) const noexcept  {
-
-            return (! (*this > rhs));
-        }
-
-        // Following STL style, this iterator appears as a pointer
-        // to value_type.
-        //
-        inline pointer operator ->() const noexcept  {
-
-            return (&(mptr_->at(row_, col_)));
-        }
-        inline reference operator *() const noexcept  {
-
-            return (mptr_->at(row_, col_));
-        }
-        inline operator pointer() const noexcept  {
-
-            return (&(mptr_->at(row_, col_)));
-        }
-
-       // We are following STL style iterator interface.
-       //
-        inline row_iterator &operator ++() noexcept  {    // ++Prefix
-
-            col_ += 1;
-            if (col_ >= mptr_->cols())  { col_ = 0; row_ += 1; }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (*this);
-        }
-        inline row_iterator operator ++(int) noexcept  {  // Postfix++
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            col_ += 1;
-            if (col_ >= mptr_->cols())  { col_ = 0; row_ += 1; }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (row_iterator(mptr_, row, col));
-        }
-
-        inline row_iterator &operator +=(size_type i) noexcept  {
-
-            col_ += i;
-            if (col_ >= mptr_->cols())  {
-                row_ += col_ / mptr_->cols();
-                col_ %= mptr_->cols();
-            }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (*this);
-        }
-
-        inline row_iterator &operator --() noexcept  {    // --Prefix
-
-            col_ -= 1;
-            if (col_ < 0)  { col_ = mptr_->cols() - 1; row_ -= 1; }
-            return (*this);
-        }
-        inline row_iterator operator --(int) noexcept  {  // Postfix--
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            col_ -= 1;
-            if (col_ < 0)  { col_ = mptr_->cols() - 1; row_ -= 1; }
-            return (row_iterator(mptr_, row, col));
-        }
-
-        inline row_iterator &operator -=(int i) noexcept  {
-
-            col_ -= i;
-            if (col_ < 0)  {
-                row_ -= col_ / mptr_->cols();
-                col_ %= mptr_->cols();
-            }
-            return (*this);
-        }
-
-        inline row_iterator operator +(size_type i) noexcept  {
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            col_ += i;
-            if (col_ >= mptr_->cols())  {
-                row_ += col_ / mptr_->cols();
-                col_ %= mptr_->cols();
-            }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (row_iterator(mptr_, row, col));
-        }
-
-        inline row_iterator operator -(size_type i) noexcept  {
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            col_ -= i;
-            if (col_ < 0)  {
-                row_ -= col_ / mptr_->cols();
-                col_ %= mptr_->cols();
-            }
-            return (row_iterator(mptr_, row, col));
-        }
-
-        inline row_iterator operator +(int i) noexcept  {
-
-            return (*this + size_type(i));
-        }
-
-        inline row_iterator operator -(int i) noexcept  {
-
-            return (*this - size_type(i));
-        }
-
-        friend difference_type
-        operator -(row_iterator lhs, row_iterator rhs)  {
-
-            if (lhs.mptr_ != rhs.mptr_)
-                throw NotFeasible(
-                    "- operation between iterators is not feasible");
-
-            const size_type row_diff = lhs.row_ - rhs.row_;
-            const size_type col_diff = lhs.col_ - rhs.col_;
-
-            return (difference_type(
-                        std::abs(row_diff) * rhs.mptr_->cols() - col_diff));
-        }
-
-    private:
-
-        self_t      *mptr_ { nullptr };
-        size_type   row_ { 0 };
-        size_type   col_ { 0 };
-    };
-
-    class   col_iterator;
-    class   col_const_iterator : public std::random_access_iterator_tag  {
-
-    public:
-
-        using iterator_category = std::random_access_iterator_tag;
-        using value_type = T;
-        using size_type = long;
-        using pointer = value_type *;
-        using const_pointer = const value_type *;
-        using reference = value_type &;
-        using const_reference = const value_type &;
-        using difference_type = typename std::vector<T>::difference_type;
-
-    public:
-
-        inline col_const_iterator() = default;
-
-        inline col_const_iterator(const self_t *m,
-                                  size_type row = 0,
-                                  size_type col = 0)
-            : mptr_(m), row_(row), col_(col)  {   }
-
-        inline bool operator ==(const col_const_iterator &rhs) const  {
-
-            return (mptr_ == rhs.mptr_ &&
-                    row_ == rhs.row_ &&
-                    col_ == rhs.col_);
-        }
-        inline bool operator !=(const col_const_iterator &rhs) const  {
-
-            return (! (*this == rhs));
-        }
-        inline bool
-        operator >(const col_const_iterator &rhs) const noexcept  {
-
-            return (col_ > rhs.col_ || (col_ == rhs.col_ && row_ > rhs.row_));
-        }
-        inline bool
-        operator >=(const col_const_iterator &rhs) const noexcept  {
-
-            return (col_ > rhs.col_ || (col_ == rhs.col_ && row_ >= rhs.row_));
-        }
-        inline bool
-        operator <(const col_const_iterator &rhs) const noexcept  {
-
-            return (! (*this >= rhs));
-        }
-        inline bool
-        operator <=(const col_const_iterator &rhs) const noexcept  {
-
-            return (! (*this > rhs));
-        }
-
-        // Following STL style, this iterator appears as a pointer
-        // to value_type.
-        //
-        inline const_pointer operator ->() const noexcept  {
-
-            return (&(mptr_->at(row_, col_)));
-        }
-        inline const_reference operator *() const noexcept  {
-
-            return (mptr_->at(row_, col_));
-        }
-        inline operator const_pointer() const noexcept  {
-
-            return (&(mptr_->at(row_, col_)));
-        }
-
-       // We are following STL style iterator interface.
-       //
-        inline col_const_iterator &operator ++() noexcept  {    // ++Prefix
-
-            row_ += 1;
-            if (row_ >= mptr_->rows())  { row_ = 0; col_ += 1; }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (*this);
-        }
-        inline col_const_iterator operator ++(int) noexcept  {  // Postfix++
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            row_ += 1;
-            if (row_ >= mptr_->rows())  { row_ = 0; col_ += 1; }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (col_const_iterator(mptr_, row, col));
-        }
-
-        inline col_const_iterator &operator +=(size_type i) noexcept  {
-
-            row_ += i;
-            if (row_ >= mptr_->rows())  {
-                col_ += row_ / mptr_->rows();
-                row_ %= mptr_->rows();
-            }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (*this);
-        }
-
-        inline col_const_iterator &operator --() noexcept  {    // --Prefix
-
-            row_ -= 1;
-            if (row_ < 0)  { row_ = mptr_->rows() - 1; col_ -= 1; }
-            return (*this);
-        }
-        inline col_const_iterator operator --(int) noexcept  {  // Postfix--
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            row_ -= 1;
-            if (row_ < 0)  { row_ = mptr_->rows() - 1; col_ -= 1; }
-            return (col_const_iterator(mptr_, row, col));
-        }
-
-        inline col_const_iterator &operator -=(int i) noexcept  {
-
-            row_ -= i;
-            if (row_ < 0)  {
-                col_ -= row_ / mptr_->rows();
-                row_ %= mptr_->rows();
-            }
-            return (*this);
-        }
-
-        inline col_const_iterator operator +(size_type i) noexcept  {
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            row_ += i;
-            if (row_ >= mptr_->rows())  {
-                col_ += row_ / mptr_->rows();
-                row_ %= mptr_->rows();
-            }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (col_const_iterator(mptr_, row, col));
-        }
-
-        inline col_const_iterator operator -(size_type i) noexcept  {
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            row_ -= i;
-            if (row_ < 0)  {
-                col_ -= row_ / mptr_->rows();
-                row_ %= mptr_->rows();
-            }
-            return (col_const_iterator(mptr_, row, col));
-        }
-
-        inline col_const_iterator operator +(int i) noexcept  {
-
-            return (*this + size_type(i));
-        }
-
-        inline col_const_iterator operator -(int i) noexcept  {
-
-            return (*this - size_type(i));
-        }
-
-        friend difference_type
-        operator -(col_const_iterator lhs, col_const_iterator rhs) noexcept  {
-
-            if (lhs.mptr_ != rhs.mptr_)
-                throw NotFeasible(
-                    "- operation between iterators is not feasible");
-
-            const size_type row_diff = lhs.row_ - rhs.row_;
-            const size_type col_diff = lhs.col_ - rhs.col_;
-
-            return (difference_type(
-                        std::abs(col_diff) * rhs.mptr_->rows() - row_diff));
-        }
-
-    private:
-
-        const self_t    *mptr_ { nullptr };
-        size_type       row_ { 0 };
-        size_type       col_ { 0 };
-    };
-
-    // It goes through the matrix row-by-row starting at [0, 0]
-    //
-    class   col_iterator : public std::random_access_iterator_tag  {
-
-    public:
-
-        using iterator_category = std::random_access_iterator_tag;
-        using value_type = T;
-        using size_type = long;
-        using pointer = value_type *;
-        using const_pointer = const value_type *;
-        using reference = value_type &;
-        using const_reference = const value_type &;
-        using difference_type = typename std::vector<T>::difference_type;
-
-    public:
-
-        inline col_iterator() = default;
-
-        inline col_iterator(self_t *m, size_type row = 0, size_type col = 0)
-            : mptr_(m), row_(row), col_(col)  {   }
-
-        inline bool operator ==(const col_iterator &rhs) const  {
-
-            return (mptr_ == rhs.mptr_ &&
-                    row_ == rhs.row_ &&
-                    col_ == rhs.col_);
-        }
-        inline bool operator !=(const col_iterator &rhs) const  {
-
-            return (! (*this == rhs));
-        }
-        inline bool operator >(const col_iterator &rhs) const noexcept  {
-
-            return (col_ > rhs.col_ || (col_ == rhs.col_ && row_ > rhs.row_));
-        }
-        inline bool operator >=(const col_iterator &rhs) const noexcept  {
-
-            return (col_ > rhs.col_ || (col_ == rhs.col_ && row_ >= rhs.row_));
-        }
-        inline bool operator <(const col_iterator &rhs) const noexcept  {
-
-            return (! (*this >= rhs));
-        }
-        inline bool operator <=(const col_iterator &rhs) const noexcept  {
-
-            return (! (*this > rhs));
-        }
-
-        // Following STL style, this iterator appears as a pointer
-        // to value_type.
-        //
-        inline pointer operator ->() const noexcept  {
-
-            return (&(mptr_->at(row_, col_)));
-        }
-        inline reference operator *() const noexcept  {
-
-            return (mptr_->at(row_, col_));
-        }
-        inline operator pointer() const noexcept  {
-
-            return (&(mptr_->at(row_, col_)));
-        }
-
-       // We are following STL style iterator interface.
-       //
-        inline col_iterator &operator ++() noexcept  {    // ++Prefix
-
-            row_ += 1;
-            if (row_ >= mptr_->rows())  { row_ = 0; col_ += 1; }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (*this);
-        }
-        inline col_iterator operator ++(int) noexcept  {  // Postfix++
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            row_ += 1;
-            if (row_ >= mptr_->rows())  { row_ = 0; col_ += 1; }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (col_iterator(mptr_, row, col));
-        }
-
-        inline col_iterator &operator +=(size_type i) noexcept  {
-
-            row_ += i;
-            if (row_ >= mptr_->rows())  {
-                col_ += row_ / mptr_->rows();
-                row_ %= mptr_->rows();
-            }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (*this);
-        }
-
-        inline col_iterator &operator --() noexcept  {    // --Prefix
-
-            row_ -= 1;
-            if (row_ < 0)  { row_ = mptr_->rows() - 1; col_ -= 1; }
-            return (*this);
-        }
-        inline col_iterator operator --(int) noexcept  {  // Postfix--
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            row_ -= 1;
-            if (row_ < 0)  { row_ = mptr_->rows() - 1; col_ -= 1; }
-            return (col_iterator(mptr_, row, col));
-        }
-
-        inline col_iterator &operator -=(int i) noexcept  {
-
-            row_ -= i;
-            if (row_ < 0)  {
-                col_ -= row_ / mptr_->rows();
-                row_ %= mptr_->rows();
-            }
-            return (*this);
-        }
-
-        inline col_iterator operator +(size_type i) noexcept  {
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            row_ += i;
-            if (row_ >= mptr_->rows())  {
-                col_ += row_ / mptr_->rows();
-                row_ %= mptr_->rows();
-            }
-            if (col_ >= mptr_->cols() || row_ >= mptr_->rows())  {
-                col_ = mptr_->cols();
-                row_ = mptr_->rows();
-            }
-            return (col_iterator(mptr_, row, col));
-        }
-
-        inline col_iterator operator -(size_type i) noexcept  {
-
-            const size_type row = row_;
-            const size_type col = col_;
-
-            row_ -= i;
-            if (row_ < 0)  {
-                col_ -= row_ / mptr_->rows();
-                row_ %= mptr_->rows();
-            }
-            return (col_iterator(mptr_, row, col));
-        }
-
-        inline col_iterator operator +(int i) noexcept  {
-
-            return (*this + size_type(i));
-        }
-
-        inline col_iterator operator -(int i) noexcept  {
-
-            return (*this - size_type(i));
-        }
-
-        friend difference_type
-        operator -(col_iterator lhs, col_iterator rhs)  {
-
-            if (lhs.mptr_ != rhs.mptr_)
-                throw NotFeasible(
-                    "- operation between iterators is not feasible");
-
-            const size_type row_diff = lhs.row_ - rhs.row_;
-            const size_type col_diff = lhs.col_ - rhs.col_;
-
-            return (difference_type(
-                        std::abs(col_diff) * rhs.mptr_->rows() - row_diff));
-        }
-
-    private:
-
-        self_t      *mptr_ { nullptr };
-        size_type   row_ { 0 };
-        size_type   col_ { 0 };
-    };
-
 public:
+	
+    // It goes through the matrix row-by-row starting at [0, 0]
+    //
+    using row_iterator = iterator_impl_<false, true>;
+    using row_const_iterator = iterator_impl_<true, true>;
+
+    // It goes through the matrix column-by-column starting at [0, 0]
+    //
+    using col_iterator = iterator_impl_<false, false>;
+    using col_const_iterator = iterator_impl_<true, false>;
 
     // Forwards
     //
@@ -1533,8 +980,8 @@ public:
 template<typename T, matrix_orient MO1, matrix_orient MO2,
          bool IS_SYM1, bool IS_SYM2>
 static inline bool
-operator !=(const Matrix<T, MO1, IS_SYM1> &lhs,
-            const Matrix<T, MO2, IS_SYM2> &rhs);
+operator != (const Matrix<T, MO1, IS_SYM1> &lhs,
+             const Matrix<T, MO2, IS_SYM2> &rhs);
 
 // -------------------------------------
 

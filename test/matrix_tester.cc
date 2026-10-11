@@ -202,8 +202,8 @@ int main(int, char *[]) {
     assert(*col_iter2 == 7);
     assert(*row_iter2 == 6);
 
-    assert(((col_iter1 - col_iter2) == 7));
-    assert(((row_iter1 - row_iter2) == 7));
+    assert(((col_iter1 - col_iter2) == -7));
+    assert(((row_iter1 - row_iter2) == -7));
 
     const auto  col_mat2 = col_mat;
 
@@ -1090,6 +1090,104 @@ int main(int, char *[]) {
         assert(col_row_wise(4, 3) == 23);
         assert(col_row_wise(8, 0) == 27);
         assert(col_row_wise(8, 3) == 36);
+    }
+
+    // Testing iterators
+    //
+    {
+        auto    col_iter1 { col_mat.col_begin() };
+        auto    col_iter2 { col_mat.col_begin() };
+        auto    row_iter1 { col_mat.row_begin() };
+        auto    row_iter2 { col_mat.row_begin() };
+
+        col_iter2 += 7;
+        row_iter2 += 7;
+
+        assert(*col_iter1 == 0);
+        assert(*row_iter1 == 0);
+        assert(*col_iter2 == 7);
+        assert(*row_iter2 == 6);
+
+        assert(((col_iter2 - col_iter1) == 7));
+        assert(((row_iter2 - row_iter1) == 7));
+        assert(((col_iter1 - col_iter2) == -7));
+        assert(((row_iter1 - row_iter2) == -7));
+
+        // Random access iterator arithmetic, checked against operator () for
+        // every position, on both orientations.
+        //
+        {
+            const long  nrows { col_mat.rows() };
+            const long  ncols { col_mat.cols() };
+            const long  total { nrows * ncols };
+            auto        rb { col_mat.row_cbegin() };
+            auto        re { col_mat.row_cend() };
+            auto        cb { col_mat.col_cbegin() };
+            auto        ce { col_mat.col_cend() };
+
+            assert((re - rb) == total);
+            assert((rb - re) == -total);
+            assert((ce - cb) == total);
+            assert(std::distance(rb, re) == total);
+            assert(std::distance(cb, ce) == total);
+            assert(rb + total == re);
+            assert(re - total == rb);
+            assert(rb == col_mat.row_begin());     // const vs. non-const
+            assert(rb < re && re > rb && rb <= rb && re >= re);
+
+            for (long i { 0 }; i < total; ++i)  {
+                assert(*(rb + i) == col_mat(i / ncols, i % ncols));
+                assert(rb[i] == col_mat(i / ncols, i % ncols));
+                assert(*(i + rb) == col_mat(i / ncols, i % ncols));
+                assert(*(re - (total - i)) == col_mat(i / ncols, i % ncols));
+                assert(*(cb + i) == col_mat(i % nrows, i / nrows));
+                assert(cb[i] == col_mat(i % nrows, i / nrows));
+                assert(((rb + i) - rb) == i);
+                assert((rb - (rb + i)) == -i);
+
+                auto    it { rb };
+
+                it += i;
+                it -= i / 2;
+                assert(it == rb + (i - i / 2));
+            }
+
+            // The iterators must be unchanged by + and -
+            //
+            auto    it { col_mat.row_begin() };
+            auto    it2 { it + 7 };
+
+            assert(it == col_mat.row_begin());
+            assert(*it2 == col_mat(1, 1));
+            assert((it2 - 3) - it == 4);
+            assert(it2 - it == 7);
+
+            // Reverse iteration visits every element, last one first
+            //
+            long    count { 0 };
+
+            for (auto rit { col_mat.row_crbegin() }; rit != col_mat.row_crend();
+                 ++rit, ++count)  {
+                const long  i { total - 1 - count };
+
+                assert(*rit == col_mat(i / ncols, i % ncols));
+            }
+            assert(count == total);
+
+            count = 0;
+            for (auto rit { col_mat.col_crbegin() }; rit != col_mat.col_crend();
+                 ++rit, ++count)  {
+                const long  i { total - 1 - count };
+
+                assert(*rit == col_mat(i % nrows, i / nrows));
+            }
+            assert(count == total);
+
+            // Algorithms that need a real random access iterator
+            //
+            assert(std::is_sorted(row_mat.row_cbegin(), row_mat.row_cend()));
+            assert(std::is_sorted(col_mat.col_cbegin(), col_mat.col_cend()));
+        }
     }
 
     test_thread_pool();

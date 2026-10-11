@@ -691,7 +691,7 @@ private:  // Iterators
 
         inline difference_type size_() const noexcept  {
 
-            return (mptr_->rows_ * mptr_->cols_);
+            return (difference_type(mptr_->rows_ * mptr_->cols_));
         }
 
         // Recompute [row_, col_] from pos_. A position of size_() maps to
@@ -702,8 +702,8 @@ private:  // Iterators
             const size_type len { BY_ROW ? mptr_->cols_ : mptr_->rows_ };
 
             if (len > 0)  {
-                const size_type line { pos_ / len };
-                const size_type in_line { pos_ % len };
+                const size_type line { size_type(pos_) / len };
+                const size_type in_line { size_type(pos_) % len };
 
                 if constexpr (BY_ROW)  { row_ = line; col_ = in_line; }
                 else  { col_ = line; row_ = in_line; }
@@ -752,10 +752,8 @@ private:  // Iterators
         //
         inline reference operator *() const noexcept  {
 
-            if constexpr (DIRECT_)
-                return (mptr_->matrix_[pos_]);
-            else
-                return (mptr_->at(row_, col_));
+            if constexpr (DIRECT_)  return (mptr_->matrix_[size_type(pos_)]);
+            else  return (mptr_->at(row_, col_));
         }
         inline pointer operator ->() const noexcept  {
 

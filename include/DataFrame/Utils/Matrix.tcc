@@ -77,9 +77,10 @@ _echelon_(M &m, typename M::size_type pivot_cols,
             continue;
         }
 
-        if (max_row != rank)
+        if (max_row != rank)  {
             for (size_type cc { c }; cc < m.cols(); ++cc)
                 std::swap(m(rank, cc), m(max_row, cc));
+        }
 
         const value_type    diag { m(rank, c) };
 
@@ -113,8 +114,8 @@ Matrix(size_type rows, size_type cols, const_reference def_v)
 #ifdef HMDF_SANITY_EXCEPTIONS
     if constexpr (IS_SYM)  {
         if (cols != rows)
-            throw DataFrameError("Matrix::Matrix(): "
-                                 "Symmetric matrix must be square");
+            throw DataFrameError(
+                "Matrix::Matrix(): Symmetric matrix must be square");
     }
 #endif // HMDF_SANITY_EXCEPTIONS
 }
@@ -191,8 +192,8 @@ Matrix<T, MO, IS_SYM>::reserve(size_type rows, size_type cols)  {
     if constexpr (IS_SYM)  {
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (cols != rows)
-            throw DataFrameError("Matrix::reserve(): "
-                                 "Symmetric matrix must be square");
+            throw DataFrameError(
+                "Matrix::reserve(): Symmetric matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
         matrix_.reserve((cols * (cols + 1L)) / 2L);
     }
@@ -222,8 +223,8 @@ resize(size_type rows, size_type cols, const_reference def_v) {
     if constexpr (IS_SYM)  {
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (cols != rows)
-            throw DataFrameError("Matrix::resize(): "
-                                 "Symmetric matrix must be square");
+            throw DataFrameError(
+                "Matrix::resize(): Symmetric matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
         matrix_.resize((cols * (cols + 1L)) / 2L, def_v);
     }
@@ -2712,8 +2713,8 @@ solve(const MA &rhs) const  {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
     if (! is_square() || cols() != rhs_size)
-        throw NotFeasible("Matrix::solve(): Matrix must be square and "
-                          "compatible with rhs");
+        throw NotFeasible(
+            "Matrix::solve(): Matrix must be square and compatible with rhs");
 #endif // HMDF_SANITY_EXCEPTIONS
 
     non_sym_ma_t    tmp { rows(), cols() + rhs_cols };
@@ -2721,9 +2722,10 @@ solve(const MA &rhs) const  {
     for (size_type r { 0 }; r < rows(); ++r)  {
         for (size_type c { 0 }; c < cols(); ++c)
             tmp(r, c) = at(r, c);
-        if constexpr (is_vec)
+        if constexpr (is_vec)  {
             tmp(r, cols()) = rhs[r];
-        else
+        }
+        else  {
             // A vector RHS is always a single column, but a matrix RHS
             // can have any number of columns -- append them all here
             // instead of only rhs(r, 0), or every column past the first
@@ -2732,6 +2734,7 @@ solve(const MA &rhs) const  {
             //
             for (size_type rc { 0 }; rc < rhs_cols; ++rc)
                 tmp(r, cols() + rc) = rhs(r, rc);
+        }
     }
 
     // Gaussian elimination with partial pivoting on A. Only an exactly zero
@@ -2812,9 +2815,10 @@ Matrix<T, MO, IS_SYM>::determinant() const  {
         //
         non_sym_ma_t    dense { rows(), cols() };
 
-        for (size_type c { 0 }; c < cols(); ++c)
+        for (size_type c { 0 }; c < cols(); ++c)  {
             for (size_type r { 0 }; r < rows(); ++r)
                 dense(r, c) = at(r, c);
+        }
         return (dense.determinant());
     }
 
@@ -2929,44 +2933,144 @@ inline MA &Matrix<T, MO, IS_SYM>::adjoint(MA &that) const  {
         throw NotFeasible("Matrix::adjoint(): Matrix must be square");
 #endif // HMDF_SANITY_EXCEPTIONS
 
-    that.resize(rows(), cols());
+    if constexpr (IS_SYM)  {
+        // The elimination below applies row operations, which do not
+        // preserve symmetry. Work on a general copy.
+        //
+        non_sym_ma_t    dense { rows(), cols() };
 
-    auto        row_lbd =
-        [&that, this](auto begin, auto end) -> void  {
-            for (size_type r { begin }; r < end; ++r)
-                for (size_type c { 0 }; c < cols(); ++c)
-                    that(c, r) = cofactor(r, c);
-        };
-    auto        col_lbd =
-        [&that, this](auto begin, auto end) -> void  {
-            for (size_type c { begin }; c < end; ++c)
-                for (size_type r { 0 }; r < cols(); ++r)
-                    that(c, r) = cofactor(r, c);
-        };
-    const long  thread_level {
-        (cols() >= 20L) ? ThreadGranularity::get_thread_level() : 0
-    };
-
-    if (thread_level > 2)  {
-        std::vector<std::future<void>>  futures;
-
-        if constexpr (MO == matrix_orient::column_major)
-            futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(col_lbd));
-        else
-            futures =
-                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
-                    0L, cols(), std::move(row_lbd));
-
-        for (auto &fut : futures)  fut.get();
+        for (size_type c { 0 }; c < cols(); ++c)  {
+            for (size_type r { 0 }; r < rows(); ++r)
+                dense(r, c) = at(r, c);
+        }
+        return (dense.adjoint(that));
     }
     else  {
-        if constexpr (MO == matrix_orient::column_major)  col_lbd(0L, cols());
-        else  row_lbd(0L, cols());
-    }
+        const size_type n { rows() };
 
-    return (that);
+        that.resize(n, n);
+
+        // The adjoint of a 1 x 1 matrix is 1 and of a 2 x 2 matrix has a
+        // closed form. Both are exact.
+        //
+        if (n == 1)  { that(0, 0) = value_type(1); return (that); }
+        if (n == 2)  {
+            that(0, 0) = at(1, 1);
+            that(0, 1) = -at(0, 1);
+            that(1, 0) = -at(1, 0);
+            that(1, 1) = at(0, 0);
+            return (that);
+        }
+
+        // Adjoint(A) = Determinant(A) * Inverse(A).
+        //
+        // The inverse and the determinant come out of one Gauss-Jordan
+        // elimination with partial pivoting, O(n^3). The textbook way, a
+        // determinant of an (n - 1) x (n - 1) minor for each of the n^2
+        // elements, is O(n^5) and allocates a matrix per element.
+        //
+        // The result is as accurate as the cofactor way, including for
+        // matrices that are numerically singular. The one case it cannot
+        // handle is an exactly zero pivot, where the matrix has no inverse
+        // but the adjoint still exists (it is zero for rank <= n - 2 and
+        // rank one for rank n - 1). That falls back to the cofactors.
+        //
+        Matrix      aux_mat { *this };
+        Matrix      inv { n, n, 0 };
+        value_type  det { 1 };
+        bool        singular { false };
+
+        for (size_type d { 0 }; d < n; ++d)  inv.at(d, d) = value_type(1);
+
+        for (size_type r { 0 }; r < n; ++r)  {
+            const size_type idx { aux_mat.ppivot_(r, n, n) };
+
+            if (idx == NOPOS_ ||
+                std::abs(aux_mat.at(r, r)) <=
+                    std::numeric_limits<value_type>::min())  {
+                singular = true;
+                break;
+            }
+
+            if (idx != 0)  {
+                det = -det;
+                for (size_type c { 0 }; c < n; ++c)
+                    std::swap(inv.at(r, c), inv.at(idx, c));
+            }
+
+            const value_type    diag { aux_mat.at(r, r) };
+
+            det *= diag;
+
+            // Columns 0 .. r - 1 of aux_mat are already eliminated (zero)
+            //
+            for (size_type c { r }; c < n; ++c)
+                aux_mat.at(r, c) /= diag;
+            for (size_type c { 0 }; c < n; ++c)
+                inv.at(r, c) /= diag;
+
+            for (size_type r2 { 0 }; r2 < n; ++r2)  {
+                if (r2 != r)  {
+                    const value_type    off_diag { aux_mat.at(r2, r) };
+
+                    if (off_diag == value_type(0))  continue;
+
+                    for (size_type c { r }; c < n; ++c)
+                        aux_mat.at(r2, c) -= off_diag * aux_mat.at(r, c);
+                    for (size_type c { 0 }; c < n; ++c)
+                        inv.at(r2, c) -= off_diag * inv.at(r, c);
+                }
+            }
+        }
+
+        if (! singular)  {
+            for (size_type c { 0 }; c < n; ++c)
+                for (size_type r { 0 }; r < n; ++r)
+                    that(r, c) = det * inv.at(r, c);
+            return (that);
+        }
+
+        // Exactly singular: the cofactors
+        //
+        auto        row_lbd =
+            [&that, this](auto begin, auto end) -> void  {
+                for (size_type r { begin }; r < end; ++r)
+                    for (size_type c { 0 }; c < cols(); ++c)
+                        that(c, r) = cofactor(r, c);
+            };
+        auto        col_lbd =
+            [&that, this](auto begin, auto end) -> void  {
+                for (size_type c { begin }; c < end; ++c)
+                    for (size_type r { 0 }; r < cols(); ++r)
+                        that(c, r) = cofactor(r, c);
+            };
+        const long  thread_level {
+            (cols() >= 20L) ? ThreadGranularity::get_thread_level() : 0
+        };
+
+        if (thread_level > 2)  {
+            std::vector<std::future<void>>  futures;
+
+            if constexpr (MO == matrix_orient::column_major)
+                futures =
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        0L, cols(), std::move(col_lbd));
+            else
+                futures =
+                    ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                        0L, cols(), std::move(row_lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            if constexpr (MO == matrix_orient::column_major)
+                col_lbd(0L, cols());
+            else
+                row_lbd(0L, cols());
+        }
+
+        return (that);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -4578,7 +4682,7 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
         if (lhs_rows >= 8 && rhs_cols >= 4 && lhs_cols >= 16 &&
             lhs_rows * lhs_cols * rhs_cols >= HMDF_GEMM_MIN_WORK)  {
             const long  big_thr {
-                ((lhs_rows * lhs_cols * rhs_cols) >= 20'000'000L)
+                ((lhs_rows * lhs_cols * rhs_cols) >= 10'000'000L)
                     ? ThreadGranularity::get_thread_level() : 0
             };
             auto        pbd =
@@ -4605,12 +4709,11 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
         }
     }
 
-    const long              thread_level {
+    const long  thread_level {
         (lhs_cols >= 600L || rhs_cols >= 600L)
             ? ThreadGranularity::get_thread_level() : 0
     };
-
-    auto    col_lbd =
+    auto        col_lbd =
         [lhs_rows, lhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -4642,7 +4745,7 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
                 }
             }
         };
-    auto    row_lbd =
+    auto        row_lbd =
         [lhs_cols, rhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {

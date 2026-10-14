@@ -7084,6 +7084,66 @@ static void test_parallel_sort()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_StochasticOscillatorVisitor()  {
+
+    std::cout << "\nTesting StochasticOscillatorVisitor{ } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    stoch_v<double, std::string>    stoch;
+
+    df.single_act_visit<double, double, double>
+        ("IBM_Low", "IBM_High", "IBM_Close", stoch);
+
+    // Result is %K, which is the same as get_pct_k()
+    //
+    assert(stoch.get_result().size() == 5031);
+    assert(std::isnan(stoch.get_result()[0]));
+    assert(std::isnan(stoch.get_result()[12]));
+    assert(std::abs(stoch.get_result()[13] - 95.8763) < 0.0001);
+    assert(std::abs(stoch.get_result()[16] - 65.1961) < 0.0001);
+    assert(std::abs(stoch.get_result()[23] - 89.0) < 0.001);
+    assert(std::abs(stoch.get_result()[25] - 7.0) < 0.001);
+    assert(std::abs(stoch.get_result()[30] - 12.4444) < 0.0001);
+    assert(std::abs(stoch.get_result()[5022] - 2.84034) < 0.00001);
+    assert(std::abs(stoch.get_result()[5029] - 13.3901) < 0.0001);
+    assert(std::abs(stoch.get_result()[5030] - 26.7849) < 0.0001);
+
+    assert(stoch.get_pct_k().size() == 5031);
+    assert(std::isnan(stoch.get_pct_k()[0]));
+    assert(std::isnan(stoch.get_pct_k()[12]));
+    assert(std::abs(stoch.get_pct_k()[13] - 95.8763) < 0.0001);
+    assert(std::abs(stoch.get_pct_k()[16] - 65.1961) < 0.0001);
+    assert(std::abs(stoch.get_pct_k()[23] - 89.0) < 0.001);
+    assert(std::abs(stoch.get_pct_k()[25] - 7.0) < 0.001);
+    assert(std::abs(stoch.get_pct_k()[30] - 12.4444) < 0.0001);
+    assert(std::abs(stoch.get_pct_k()[5022] - 2.84034) < 0.00001);
+    assert(std::abs(stoch.get_pct_k()[5029] - 13.3901) < 0.0001);
+    assert(std::abs(stoch.get_pct_k()[5030] - 26.7849) < 0.0001);
+
+    assert(stoch.get_pct_d().size() == 5031);
+    assert(std::isnan(stoch.get_pct_d()[0]));
+    assert(std::isnan(stoch.get_pct_d()[14]));
+    assert(std::abs(stoch.get_pct_d()[15] - 67.9065) < 0.0001);
+    assert(std::abs(stoch.get_pct_d()[16] - 57.6797) < 0.0001);
+    assert(std::abs(stoch.get_pct_d()[23] - 56.9627) < 0.0001);
+    assert(std::abs(stoch.get_pct_d()[25] - 44.0) < 0.001);
+    assert(std::abs(stoch.get_pct_d()[30] - 9.81481) < 0.00001);
+    assert(std::abs(stoch.get_pct_d()[5022] - 28.5447) < 0.0001);
+    assert(std::abs(stoch.get_pct_d()[5029] - 6.09002) < 0.00001);
+    assert(std::abs(stoch.get_pct_d()[5030] - 14.3247) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7134,6 +7194,7 @@ int main(int, char *[])  {
     test_streamed_write();
     test_StreamAppender();
     test_parallel_sort();
+    test_StochasticOscillatorVisitor();
 
     return (0);
 }

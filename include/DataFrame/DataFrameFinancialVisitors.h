@@ -8158,6 +8158,159 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using pav_v = PeaksAndValleysVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+// Stochastic Oscillator: %K and %D
+//
+// %K = 100 * (close - lowest_low(k_period)) /
+//             (highest_high(k_period) - lowest_low(k_period))
+// %D = simple moving average of %K over d_period
+//
+// get_result() and get_pct_k() return %K. get_pct_d() returns %D.
+// If the highest high equals the lowest low over a window, %K is 0.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  StochasticOscillatorVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &low_begin, const H &low_end,
+               const H &high_begin, const H &high_end,
+               const H &close_begin, const H &close_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(close_begin, close_end))
+        };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            k_period_ == 0 || d_period_ == 0 || k_period_ > col_s)
+            throw DataFrameError("StochasticOscillatorVisitor: All columns "
+                                 "must be of equal size, periods > 0 and "
+                                 "%K period <= column size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v {
+            MinVisitor<T, I>(), k_period_
+        };
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v {
+            MaxVisitor<T, I>(), k_period_
+        };
+
+        min_v.pre();
+        max_v.pre();
+        if (thread_level > 2)  {
+            auto    fut1 {
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [&min_v,
+                     &idx_begin, &idx_end,
+                     &low_begin, &low_end]() -> void  {
+                        min_v(idx_begin, idx_end, low_begin, low_end);
+                    })
+            };
+            auto    fut2 {
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [&max_v,
+                     &idx_begin, &idx_end,
+                     &high_begin, &high_end]() -> void  {
+                        max_v(idx_begin, idx_end, high_begin, high_end);
+                    })
+            };
+
+            fut1.get();
+            fut2.get();
+        }
+        else  {
+            min_v(idx_begin, idx_end, low_begin, low_end);
+            max_v(idx_begin, idx_end, high_begin, high_end);
+        }
+        min_v.post();
+        max_v.post();
+
+        // Highest high is turned into %K in place
+        //
+        result_type pct_k { std::move(max_v.get_result()) };
+        auto        lbd =
+            [&min_v = std::as_const(min_v.get_result()),
+			 &pct_k,
+             &close_begin = std::as_const(close_begin)]
+            (auto begin, auto end) mutable -> void  {
+                for (size_type i = begin; i < end; ++i) [[likely]]  {
+                    const value_type    low { min_v[i] };
+                    value_type          &res { pct_k[i] };
+                    const value_type    range { res - low };
+
+                    // NaN range falls through and stays NaN
+                    //
+                    res = (range == T(0))
+                              ? T(0)
+                              : T(100) * (*(close_begin + i) - low) / range;
+                }
+    	    };
+                    
+        if (thread_level > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    size_type(0), col_s, std::move(lbd))
+			};
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            lbd(size_type(0), col_s);
+        }
+
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   mean_v {
+            MeanVisitor<T, I>(), d_period_
+        };
+
+        mean_v.pre();
+        mean_v(idx_begin, idx_end, pct_k.begin(), pct_k.end());
+        mean_v.post();
+
+        pct_k_.swap(pct_k);
+        pct_d_ = std::move(mean_v.get_result());
+    }
+
+    inline void pre()  {
+
+        pct_k_.clear();
+        pct_d_.clear();
+    }
+    inline void post()  {   }
+
+    inline const result_type &get_result() const  { return (pct_k_); }
+    inline result_type &get_result()  { return (pct_k_); }
+    inline const result_type &get_pct_k() const  { return (pct_k_); }
+    inline result_type &get_pct_k()  { return (pct_k_); }
+    inline const result_type &get_pct_d() const  { return (pct_d_); }
+    inline result_type &get_pct_d()  { return (pct_d_); }
+
+    explicit
+    StochasticOscillatorVisitor(size_type k_period = 14, size_type d_period = 3)
+        : k_period_(k_period), d_period_(d_period)  {   }
+
+private:
+
+    const size_type k_period_;
+    const size_type d_period_;
+    result_type     pct_k_ { };
+    result_type     pct_d_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using stoch_v = StochasticOscillatorVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -8242,7 +8242,7 @@ struct  StochasticOscillatorVisitor  {
         result_type pct_k { std::move(max_v.get_result()) };
         auto        lbd =
             [&min_v = std::as_const(min_v.get_result()),
-			 &pct_k,
+             &pct_k,
              &close_begin = std::as_const(close_begin)]
             (auto begin, auto end) mutable -> void  {
                 for (size_type i = begin; i < end; ++i) [[likely]]  {
@@ -8256,13 +8256,13 @@ struct  StochasticOscillatorVisitor  {
                               ? T(0)
                               : T(100) * (*(close_begin + i) - low) / range;
                 }
-    	    };
+            };
                     
         if (thread_level > 2)  {
             auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0), col_s, std::move(lbd))
-			};
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -8310,6 +8310,157 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using stoch_v = StochasticOscillatorVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+// Money Flow Index (MFI), a volume-weighted RSI
+//
+// typical price = (high + low + close) / 3
+// raw money flow = typical price * volume
+// MFI = 100 * positive_flow / (positive_flow + negative_flow)
+//       over a rolling window of "period" bars. A bar's flow is positive
+//       (negative) if its typical price is above (below) the previous bar's.
+//       Bars with unchanged typical price count toward neither.
+//
+// The first "period" values are NaN. If there is no flow at all in a window,
+// the MFI is 0.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  MoneyFlowIndexVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H, typename V>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &low_begin, const H &low_end,
+               const H &high_begin, const H &high_end,
+               const H &close_begin, const H &close_end,
+               const V &volume_begin, const V &volume_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(close_begin, close_end))
+        };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            col_s != size_type(std::distance(volume_begin, volume_end)) ||
+            period_ == 0 || period_ >= col_s)
+            throw DataFrameError("MoneyFlowIndexVisitor: All columns must be "
+                                 "of equal size and 0 < period < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        result_type typical(col_s);
+
+        // Index 0 has no previous bar, so it stays NaN. This makes every
+        // rolling window that contains it NaN too.
+        //
+        result_type pos_flow(col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type neg_flow(col_s, std::numeric_limits<T>::quiet_NaN());
+        auto        typical_func =
+            [&typical,
+             &low_begin = std::as_const(low_begin),
+             &high_begin = std::as_const(high_begin),
+             &close_begin = std::as_const(close_begin)]
+            (size_type begin, size_type end) -> void  {
+                for (size_type i { begin }; i < end; ++i) [[likely]]
+                    typical[i] = (*(high_begin + i) +
+                                  *(low_begin + i) +
+                                  *(close_begin + i)) / T(3);
+            };
+        auto        flow_func =
+            [&typical = std::as_const(typical),
+             &pos_flow, &neg_flow,
+             &volume_begin = std::as_const(volume_begin)]
+            (size_type begin, size_type end) -> void  {
+                for (size_type i { begin }; i < end; ++i) [[likely]]  {
+                    const value_type    flow {
+                        typical[i] * T(*(volume_begin + i))
+                    };
+
+                    if (typical[i] > typical[i - 1])  {
+                        pos_flow[i] = flow;
+                        neg_flow[i] = T(0);
+                    }
+                    else if (typical[i] < typical[i - 1])  {
+                        pos_flow[i] = T(0);
+                        neg_flow[i] = flow;
+                    }
+                    else
+                        pos_flow[i] = neg_flow[i] = T(0);
+                }
+            };
+
+        if (thread_level > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    size_type(0),
+                    col_s,
+                    [&typical_func](auto begin, auto end) mutable -> void  {
+                        typical_func(begin, end);
+                    })
+            };
+
+            for (auto &fut : futures)  fut.get();
+            futures =
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    size_type(1),
+                    col_s,
+                    [&flow_func](auto begin, auto end) mutable -> void  {
+                        flow_func(begin, end);
+                    });
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            typical_func(0, col_s);
+            flow_func(1, col_s);
+        }
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    sum_v {
+            SumVisitor<T, I>(), period_
+        };
+
+        sum_v.pre();
+        sum_v(idx_begin, idx_end, pos_flow.begin(), pos_flow.end());
+        sum_v.post();
+        pos_flow = std::move(sum_v.get_result());
+
+        sum_v.pre();
+        sum_v(idx_begin, idx_end, neg_flow.begin(), neg_flow.end());
+        sum_v.post();
+        neg_flow = std::move(sum_v.get_result());
+
+        // pos_flow becomes the result. NaN totals fall through and stay NaN.
+        //
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    total { pos_flow[i] + neg_flow[i] };
+
+            pos_flow[i] =
+                (total == T(0)) ? T(0) : T(100) * pos_flow[i] / total;
+        }
+
+        result_.swap(pos_flow);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    MoneyFlowIndexVisitor(size_type period = 14) : period_(period)  {   }
+
+private:
+
+    const size_type period_;
+    result_type     result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using mfi_v = MoneyFlowIndexVisitor<T, I, A>;
 
 } // namespace hmdf
 

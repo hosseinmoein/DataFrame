@@ -7144,6 +7144,40 @@ static void test_StochasticOscillatorVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_MoneyFlowIndexVisitor()  {
+
+    std::cout << "\nTesting MoneyFlowIndexVisitor{ } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    mfi_v<double, std::string>  mfi;
+
+    df.single_act_visit<double, double, double, long>
+        ("IBM_Low", "IBM_High", "IBM_Adj_Close", "IBM_Volume", mfi);
+
+    assert(mfi.get_result().size() == 5031);
+    assert(std::isnan(mfi.get_result()[0]));
+    assert(std::isnan(mfi.get_result()[13]));
+    assert(std::abs(mfi.get_result()[14] - 53.2331) < 0.0001);
+    assert(std::abs(mfi.get_result()[16] - 43.7236) < 0.0001);
+    assert(std::abs(mfi.get_result()[23] - 46.3373) < 0.0001);
+    assert(std::abs(mfi.get_result()[25] - 41.575) < 0.001);
+    assert(std::abs(mfi.get_result()[30] - 28.458) < 0.001);
+    assert(std::abs(mfi.get_result()[5022] - 51.9539) < 0.0001);
+    assert(std::abs(mfi.get_result()[5029] - 26.7108) < 0.0001);
+    assert(std::abs(mfi.get_result()[5030] - 33.2447) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7195,6 +7229,7 @@ int main(int, char *[])  {
     test_StreamAppender();
     test_parallel_sort();
     test_StochasticOscillatorVisitor();
+    test_MoneyFlowIndexVisitor();
 
     return (0);
 }

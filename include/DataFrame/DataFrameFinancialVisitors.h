@@ -8462,6 +8462,174 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using mfi_v = MoneyFlowIndexVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+// Aroon indicator: Aroon Up, Aroon Down and Aroon Oscillator
+//
+// For each bar, the window is the current bar plus the previous "period" bars
+// (period + 1 bars in all).
+//
+// Aroon Up   = 100 * (period - bars_since_highest_high) / period
+// Aroon Down = 100 * (period - bars_since_lowest_low) / period
+// Oscillator = Aroon Up - Aroon Down  (range -100 to 100)
+//
+// If the highest high (lowest low) occurs more than once in the window, the
+// most recent occurrence counts. The first "period" values of all results are
+// NaN. A window that contains a NaN in the relevant column gives NaN.
+//
+// get_result() and get_aroon_up() return Aroon Up.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  AroonVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &, const K &,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(high_begin, high_end))
+        };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            period_ == 0 || period_ >= col_s)
+            throw DataFrameError("AroonVisitor: All columns must be of equal "
+                                 "size and 0 < period < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        result_type up;
+        result_type down;
+
+        if (thread_level > 2)  {
+            auto    fut1 {
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [this, &up, &high_begin, col_s]() -> void  {
+                        aroon_(high_begin, col_s,
+                               [](const auto &a, const auto &b) -> bool  {
+                                   return (a <= b);
+                               },
+                               up);
+                    })
+            };
+            auto    fut2 {
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [this, &down, &low_begin, col_s]() -> void  {
+                        aroon_(low_begin, col_s,
+                               [](const auto &a, const auto &b) -> bool  {
+                                   return (a >= b);
+                               },
+                               down);
+                    })
+            };
+
+            fut1.get();
+            fut2.get();
+        }
+        else  {
+            aroon_(high_begin, col_s,
+                   [](const auto &a, const auto &b) -> bool  {
+                       return (a <= b);
+                   },
+                   up);
+            aroon_(low_begin, col_s,
+                   [](const auto &a, const auto &b) -> bool  {
+                       return (a >= b);
+                   },
+                   down);
+        }
+
+        result_type osc(col_s);
+
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]
+            osc[i] = up[i] - down[i];
+
+        up_.swap(up);
+        down_.swap(down);
+        osc_.swap(osc);
+    }
+
+    inline void pre()  {
+
+        up_.clear();
+        down_.clear();
+        osc_.clear();
+    }
+    inline void post()  {   }
+
+    inline const result_type &get_result() const  { return (up_); }
+    inline result_type &get_result()  { return (up_); }
+    inline const result_type &get_aroon_up () const  { return (up_); }
+    inline result_type &get_aroon_up()  { return (up_); }
+    inline const result_type &get_aroon_down () const  { return (down_); }
+    inline result_type &get_aroon_down()  { return (down_); }
+    inline const result_type &
+    get_aroon_oscillator() const  { return (osc_); }
+    inline result_type &get_aroon_oscillator()  { return (osc_); }
+
+    explicit
+    AroonVisitor(size_type period = 25) : period_(period)  {   }
+
+private:
+
+    // Finds the position of the extreme value in a sliding window of
+    // period_ + 1 bars in O(n) using a monotonic queue of indices. "evict"
+    // returns true if the first argument can never be the extreme again once
+    // the second argument has arrived.
+    //
+    template <typename H, typename F>
+    inline void
+    aroon_(const H &begin,
+           size_type col_s,
+           F &&evict,
+           result_type &result) const  {
+
+        result.assign(col_s, std::numeric_limits<T>::quiet_NaN());
+
+        std::vector<size_type>  queue(col_s);  // Each index enters only once
+        size_type               head { 0 };
+        size_type               tail { 0 };
+        bool                    has_nan { false };
+        size_type               last_nan { 0 };
+
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    val { *(begin + i) };
+
+            if (std::isnan(val))  {
+                has_nan = true;
+                last_nan = i;
+            }
+            else  {
+                while (tail > head && evict(*(begin + queue[tail - 1]), val))
+                    tail -= 1;
+                queue[tail++] = i;
+            }
+            while (head < tail && i - queue[head] > period_)  ++head;
+
+            if (i >= period_ && (! has_nan || i - last_nan > period_))
+                result[i] =
+                    T(100) * T(period_ - (i - queue[head])) / T(period_);
+        }
+    }
+
+    const size_type period_;
+    result_type     up_ { };
+    result_type     down_ { };
+    result_type     osc_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using aroon_v = AroonVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

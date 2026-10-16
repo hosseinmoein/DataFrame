@@ -7178,6 +7178,63 @@ static void test_MoneyFlowIndexVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_AroonVisitor()  {
+
+    std::cout << "\nTesting AroonVisitor{ } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    AroonVisitor<double, std::string>   aroon;
+
+    df.single_act_visit<double, double>("IBM_Low", "IBM_High", aroon);
+
+    // Same as calling get_aroon_up()
+    //
+    assert(aroon.get_result().size() == 5031);
+    assert(std::isnan(aroon.get_result()[0]));
+    assert(std::isnan(aroon.get_result()[24]));
+    assert(std::abs(aroon.get_result()[25] - 92.0) < 0.001);
+    assert(std::abs(aroon.get_result()[30] - 72.0) < 0.001);
+    assert(std::abs(aroon.get_result()[40] - 32.0) < 0.001);
+    assert(std::abs(aroon.get_result()[51] - 68.0) < 0.001);
+    assert(std::abs(aroon.get_result()[101] - 0.0) < 0.001);
+    assert(std::abs(aroon.get_result()[5022] - 68.0) < 0.001);
+    assert(std::abs(aroon.get_result()[5029] - 40.0) < 0.001);
+    assert(std::abs(aroon.get_result()[5030] - 36.0) < 0.001);
+
+    assert(std::isnan(aroon.get_aroon_down()[0]));
+    assert(std::isnan(aroon.get_aroon_down()[24]));
+    assert(std::abs(aroon.get_aroon_down()[25] - 32.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_down()[30] - 96.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_down()[40] - 80.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_down()[51] - 36.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_down()[101] - 80.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_down()[5022] - 28.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_down()[5029] - 96.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_down()[5030] - 92.0) < 0.001);
+
+    assert(std::isnan(aroon.get_aroon_oscillator()[0]));
+    assert(std::isnan(aroon.get_aroon_oscillator()[24]));
+    assert(std::abs(aroon.get_aroon_oscillator()[25] - 60.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_oscillator()[30] - -24.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_oscillator()[40] - -48.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_oscillator()[51] - 32.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_oscillator()[101] - -80.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_oscillator()[5022] - 40.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_oscillator()[5029] - -56.0) < 0.001);
+    assert(std::abs(aroon.get_aroon_oscillator()[5030] - -56.0) < 0.001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7230,6 +7287,7 @@ int main(int, char *[])  {
     test_parallel_sort();
     test_StochasticOscillatorVisitor();
     test_MoneyFlowIndexVisitor();
+    test_AroonVisitor();
 
     return (0);
 }

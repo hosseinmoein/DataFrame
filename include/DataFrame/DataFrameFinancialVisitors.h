@@ -8630,6 +8630,152 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using aroon_v = AroonVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+// Donchian Channels
+//
+// upper band  = highest high over the last "period" bars, including the
+//               current bar
+// lower band  = lowest low over the last "period" bars, including the
+//               current bar
+// middle band = (upper band + lower band) / 2
+//
+// The first period - 1 values of all results are NaN.
+//
+// get_result() and get_upper_band() return the upper band.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  DonchianChannelsVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &low_begin, const H &low_end,
+               const H &high_begin, const H &high_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(high_begin, high_end))
+        };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            period_ == 0 || period_ > col_s)
+            throw DataFrameError("DonchianChannelsVisitor: All columns must "
+                                 "be of equal size and 0 < period <= column "
+                                 "size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    max_v {
+            MaxVisitor<T, I>(), period_
+        };
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>    min_v {
+            MinVisitor<T, I>(), period_
+        };
+
+        max_v.pre();
+        min_v.pre();
+        if (thread_level > 2)  {
+            auto    fut1 {
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [&max_v,
+                     &idx_begin, &idx_end,
+                     &high_begin, &high_end]() -> void  {
+                        max_v(idx_begin, idx_end, high_begin, high_end);
+                    })
+            };
+            auto    fut2 {
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [&min_v,
+                     &idx_begin, &idx_end,
+                     &low_begin, &low_end]() -> void  {
+                        min_v(idx_begin, idx_end, low_begin, low_end);
+                    })
+            };
+
+            fut1.get();
+            fut2.get();
+        }
+        else  {
+            max_v(idx_begin, idx_end, high_begin, high_end);
+            min_v(idx_begin, idx_end, low_begin, low_end);
+        }
+        max_v.post();
+        min_v.post();
+
+        result_type middle(col_s);
+
+        if (thread_level > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    size_type(0),
+                    col_s,
+                    [&upper = std::as_const(max_v.get_result()),
+                     &lower = std::as_const(min_v.get_result()),
+                     &middle]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]
+                            middle[i] = (upper[i] + lower[i]) / T(2);
+                    })
+            };
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]
+                middle[i] =
+                    (max_v.get_result()[i] + min_v.get_result()[i]) / T(2);
+        }
+
+        upper_band_ = std::move(max_v.get_result());
+        lower_band_ = std::move(min_v.get_result());
+        middle_band_.swap(middle);
+    }
+
+    inline void pre()  {
+
+        upper_band_.clear();
+        lower_band_.clear();
+        middle_band_.clear();
+    }
+    inline void post()  {   }
+
+    inline const result_type &get_result() const  { return (upper_band_); }
+    inline result_type &get_result()  { return (upper_band_); }
+
+    inline const result_type &
+    get_upper_band () const  { return (upper_band_); }
+    inline result_type &get_upper_band()  { return (upper_band_); }
+
+    inline const result_type &
+    get_lower_band() const  { return (lower_band_); }
+    inline result_type &get_lower_band()  { return (lower_band_); }
+
+    inline const result_type &
+    get_middle_band() const  { return (middle_band_); }
+    inline result_type &get_middle_band()  { return (middle_band_); }
+
+    explicit
+    DonchianChannelsVisitor(size_type period = 20) : period_(period)  {   }
+
+private:
+
+    const size_type period_;
+    result_type     upper_band_ { };
+    result_type     lower_band_ { };
+    result_type     middle_band_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using donchian_v = DonchianChannelsVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

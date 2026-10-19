@@ -7235,6 +7235,65 @@ static void test_AroonVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_DonchianChannelsVisitor()  {
+
+    std::cout << "\nTesting DonchianChannelsVisitor{ } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    donchian_v<double, std::string> donc;
+
+    df.single_act_visit<double, double>("IBM_Low", "IBM_High", donc);
+
+    // Same as calling get_upper_band()
+    //
+    assert(donc.get_result().size() == 5031);
+    assert(std::isnan(donc.get_result()[0]));
+    assert(std::isnan(donc.get_result()[18]));
+    assert(std::abs(donc.get_result()[19] - 104.375) < 0.001);
+    assert(std::abs(donc.get_result()[30] - 104.75) < 0.001);
+    assert(std::abs(donc.get_result()[40] - 104.75) < 0.001);
+    assert(std::abs(donc.get_result()[51] - 99.75) < 0.001);
+    assert(std::abs(donc.get_result()[101] - 108.4) < 0.001);
+    assert(std::abs(donc.get_result()[5022] - 135.5) < 0.001);
+    assert(std::abs(donc.get_result()[5029] - 135.5) < 0.001);
+    assert(std::abs(donc.get_result()[5030] - 135.5) < 0.001);
+
+    assert(donc.get_lower_band().size() == 5031);
+    assert(std::isnan(donc.get_lower_band()[0]));
+    assert(std::isnan(donc.get_lower_band()[18]));
+    assert(std::abs(donc.get_lower_band()[19] - 91.625) < 0.001);
+    assert(std::abs(donc.get_lower_band()[30] - 90.6875) < 0.0001);
+    assert(std::abs(donc.get_lower_band()[40] - 80.0625) < 0.0001);
+    assert(std::abs(donc.get_lower_band()[51] - 80.0625) < 0.0001);
+    assert(std::abs(donc.get_lower_band()[101] - 87.65) < 0.001);
+    assert(std::abs(donc.get_lower_band()[5022] - 116.48) < 0.001);
+    assert(std::abs(donc.get_lower_band()[5029] - 105.92) < 0.001);
+    assert(std::abs(donc.get_lower_band()[5030] - 105.92) < 0.001);
+
+    assert(donc.get_middle_band().size() == 5031);
+    assert(std::isnan(donc.get_middle_band()[0]));
+    assert(std::isnan(donc.get_middle_band()[18]));
+    assert(std::abs(donc.get_middle_band()[19] - 98.0) < 0.001);
+    assert(std::abs(donc.get_middle_band()[30] - 97.7188) < 0.0001);
+    assert(std::abs(donc.get_middle_band()[40] - 92.4062) < 0.0001);
+    assert(std::abs(donc.get_middle_band()[51] - 89.9062) < 0.0001);
+    assert(std::abs(donc.get_middle_band()[101] - 98.025) < 0.001);
+    assert(std::abs(donc.get_middle_band()[5022] - 125.99) < 0.01);
+    assert(std::abs(donc.get_middle_band()[5029] - 120.71) < 0.001);
+    assert(std::abs(donc.get_middle_band()[5030] - 120.71) < 0.001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7288,6 +7347,7 @@ int main(int, char *[])  {
     test_StochasticOscillatorVisitor();
     test_MoneyFlowIndexVisitor();
     test_AroonVisitor();
+    test_DonchianChannelsVisitor();
 
     return (0);
 }

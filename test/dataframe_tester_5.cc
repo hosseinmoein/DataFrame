@@ -7294,6 +7294,70 @@ static void test_DonchianChannelsVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_SupertrendVisitor()  {
+
+    std::cout << "\nTesting SupertrendVisitor{ } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    supertrend_v<double, std::string>   st;
+
+    df.single_act_visit<double, double, double>
+        ("IBM_Low", "IBM_High", "IBM_Close", st);
+
+    // Same as calling get_supertrend()
+    //
+    assert(st.get_result().size() == 5031);
+    assert(std::isnan(st.get_result()[0]));
+    assert(std::isnan(st.get_result()[8]));
+    assert(std::abs(st.get_result()[9] - 86.7938) < 0.0001);
+    assert(std::abs(st.get_result()[10] - 86.9581) < 0.0001);
+    assert(std::abs(st.get_result()[25] - 91.1886) < 0.0001);
+    assert(std::abs(st.get_result()[51] - 98.5394) < 0.0001);
+    assert(std::abs(st.get_result()[52] - 90.8008) < 0.0001);
+    assert(std::abs(st.get_result()[77] - 118.575) < 0.001);
+    assert(std::abs(st.get_result()[101] - 102.913) < 0.001);
+    assert(std::abs(st.get_result()[5022] - 128.97) < 0.001);
+    assert(std::abs(st.get_result()[5029] - 117.745) < 0.001);
+    assert(std::abs(st.get_result()[5030] - 117.745) < 0.001);
+
+    assert(st.get_trend().size() == 5031);
+    assert(std::isnan(st.get_trend()[8]));
+    assert(st.get_trend()[9] == 1.0);
+    assert(st.get_trend()[25] == 1.0);
+    assert(st.get_trend()[51] == -1.0);
+    assert(st.get_trend()[52] == 1.0);
+    assert(st.get_trend()[77] == -1.0);
+    assert(st.get_trend()[101] == -1.0);
+    assert(st.get_trend()[5030] == -1.0);
+
+    assert(st.get_upper_band().size() == 5031);
+    assert(std::isnan(st.get_upper_band()[8]));
+    assert(std::abs(st.get_upper_band()[9] - 111.581) < 0.001);
+    assert(std::abs(st.get_upper_band()[25] - 107.091) < 0.001);
+    assert(std::abs(st.get_upper_band()[51] - 98.5394) < 0.0001);
+    assert(std::abs(st.get_upper_band()[101] - 102.913) < 0.001);
+    assert(std::abs(st.get_upper_band()[5030] - 117.745) < 0.001);
+
+    assert(st.get_lower_band().size() == 5031);
+    assert(std::isnan(st.get_lower_band()[8]));
+    assert(std::abs(st.get_lower_band()[9] - 86.7938) < 0.0001);
+    assert(std::abs(st.get_lower_band()[25] - 91.1886) < 0.0001);
+    assert(std::abs(st.get_lower_band()[51] - 82.7474) < 0.0001);
+    assert(std::abs(st.get_lower_band()[101] - 83.2584) < 0.0001);
+    assert(std::abs(st.get_lower_band()[5030] - 106.575) < 0.001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7348,6 +7412,7 @@ int main(int, char *[])  {
     test_MoneyFlowIndexVisitor();
     test_AroonVisitor();
     test_DonchianChannelsVisitor();
+    test_SupertrendVisitor();
 
     return (0);
 }

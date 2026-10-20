@@ -8776,6 +8776,165 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using donchian_v = DonchianChannelsVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+// Supertrend
+//
+// ATR = Wilder's smoothed average true range over "period" bars. It is
+//       seeded with the simple mean of the first "period" true ranges
+//       (the first bar's true range is high - low).
+// basic upper = (high + low) / 2 + multiplier * ATR
+// basic lower = (high + low) / 2 - multiplier * ATR
+// The final bands only tighten while the trend holds: the final upper band
+// can only move down (and the final lower band only up) until the previous
+// close breaks through it.
+// Supertrend = final lower band in an uptrend, final upper band in a downtrend.
+// The trend flips when the close crosses the active band.
+//
+// The first period - 1 values of all results are NaN. The first valid bar
+// starts in an uptrend. Input columns must not contain NaN.
+//
+// get_result() and get_supertrend() return the Supertrend line.
+// get_trend() returns +1 for an uptrend and -1 for a downtrend.
+// get_upper_band() and get_lower_band() return the final bands.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  SupertrendVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &, const K &,
+               const H &low_begin, [[maybe_unused]] const H &low_end,
+               const H &high_begin, [[maybe_unused]] const H &high_end,
+               const H &close_begin, const H &close_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(close_begin, close_end))
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            period_ == 0 || period_ > col_s)
+            throw DataFrameError("SupertrendVisitor: All columns must be of "
+                                 "equal size and 0 < period <= column size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        constexpr value_type    nan { std::numeric_limits<T>::quiet_NaN() };
+
+        result_type             line(col_s, nan);
+        result_type             trend(col_s, nan);
+        result_type             upper(col_s, nan);
+        result_type             lower(col_s, nan);
+        value_type              atr { 0 };
+        value_type              prev_close { *close_begin };
+        value_type              prev_upper { 0 };
+        value_type              prev_lower { 0 };
+        value_type              dir { 1 };
+
+        // The recurrences depend on the previous bar, so this loop is
+        // inherently sequential.
+        //
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    high { *(high_begin + i) };
+            const value_type    low { *(low_begin + i) };
+            const value_type    close { *(close_begin + i) };
+            const value_type    tr {
+                (i == 0)
+                    ? high - low
+                    : std::max({ high - low,
+                                 std::fabs(high - prev_close),
+                                 std::fabs(low - prev_close) })
+            };
+
+            if (i < period_)  {
+                atr += tr;
+                if (i + 1 < period_)  {
+                    prev_close = close;
+                    continue;
+                }
+                atr /= value_type(period_);
+            }
+            else
+                atr = (atr * T(period_ - 1) + tr) / T(period_);
+
+            const value_type    mid { (high + low) / T(2) };
+            const value_type    basic_upper { mid + multiplier_ * atr };
+            const value_type    basic_lower { mid - multiplier_ * atr };
+            value_type          final_upper { basic_upper };
+            value_type          final_lower { basic_lower };
+
+            if (i + 1 > period_)  {
+                if (basic_upper >= prev_upper && prev_close <= prev_upper)  {
+                    final_upper = prev_upper;
+                }
+                if (basic_lower <= prev_lower && prev_close >= prev_lower)  {
+                    final_lower = prev_lower;
+                }
+                if (dir > T(0))  {
+                    if (close < final_lower)  dir = -1;
+                }
+                else  {
+                    if (close > final_upper)  dir = 1;
+                }
+            }
+
+            upper[i] = final_upper;
+            lower[i] = final_lower;
+            trend[i] = dir;
+            line[i] = (dir > T(0)) ? final_lower : final_upper;
+            prev_upper = final_upper;
+            prev_lower = final_lower;
+            prev_close = close;
+        }
+
+        line_.swap(line);
+        trend_.swap(trend);
+        upper_band_.swap(upper);
+        lower_band_.swap(lower);
+    }
+
+    inline void pre()  {
+
+        line_.clear();
+        trend_.clear();
+        upper_band_.clear();
+        lower_band_.clear();
+    }
+    inline void post()  {   }
+
+    inline const result_type &get_result() const  { return (line_); }
+    inline result_type &get_result()  { return (line_); }
+    inline const result_type &get_supertrend() const  { return (line_); }
+    inline result_type &get_supertrend()  { return (line_); }
+    inline const result_type &get_trend() const  { return (trend_); }
+    inline result_type &get_trend()  { return (trend_); }
+    inline const result_type &
+    get_upper_band() const  { return (upper_band_); }
+    inline result_type &get_upper_band()  { return (upper_band_); }
+    inline const result_type &
+    get_lower_band() const  { return (lower_band_); }
+    inline result_type &get_lower_band()  { return (lower_band_); }
+
+    explicit
+    SupertrendVisitor(size_type period = 10, value_type multiplier = 3)
+        : period_(period), multiplier_(multiplier)  {   }
+
+private:
+
+    const size_type     period_;
+    const value_type    multiplier_;
+    result_type         line_ { };
+    result_type         trend_ { };
+    result_type         upper_band_ { };
+    result_type         lower_band_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using supertrend_v = SupertrendVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

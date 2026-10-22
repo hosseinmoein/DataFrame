@@ -7358,6 +7358,78 @@ static void test_SupertrendVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_IchimokuVisitor()  {
+
+    std::cout << "\nTesting IchimokuVisitor{ } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    ichimoku_v<double, std::string> ich;
+
+    df.single_act_visit<double, double, double>
+        ("IBM_Low", "IBM_High", "IBM_Close", ich);
+
+    // Same as calling get_tenkan_sen()
+    //
+    assert(ich.get_result().size() == 5031);
+    assert(std::isnan(ich.get_result()[0]));
+    assert(std::isnan(ich.get_result()[7]));
+    assert(std::abs(ich.get_result()[8] - 97.6875) < 0.0001);
+    assert(std::abs(ich.get_result()[25] - 98.5) < 0.001);
+    assert(std::abs(ich.get_result()[51] - 95.375) < 0.001);
+    assert(std::abs(ich.get_result()[52] - 100.5) < 0.001);
+    assert(std::abs(ich.get_result()[101] - 93.825) < 0.001);
+    assert(std::abs(ich.get_result()[5022] - 126.17) < 0.001);
+    assert(std::abs(ich.get_result()[5030] - 113.035) < 0.001);
+
+    assert(ich.get_kijun_sen().size() == 5031);
+    assert(std::isnan(ich.get_kijun_sen()[0]));
+    assert(std::isnan(ich.get_kijun_sen()[24]));
+    assert(std::abs(ich.get_kijun_sen()[25] - 98.1875) < 0.0001);
+    assert(std::abs(ich.get_kijun_sen()[51] - 89.9062) < 0.0001);
+    assert(std::abs(ich.get_kijun_sen()[52] - 95.0312) < 0.0001);
+    assert(std::abs(ich.get_kijun_sen()[101] - 99.275) < 0.001);
+    assert(std::abs(ich.get_kijun_sen()[5022] - 125.99) < 0.01);
+    assert(std::abs(ich.get_kijun_sen()[5030] - 120.71) < 0.001);
+
+    assert(ich.get_senkou_span_a().size() == 5031);
+    assert(std::isnan(ich.get_senkou_span_a()[0]));
+    assert(std::isnan(ich.get_senkou_span_a()[50]));
+    assert(std::abs(ich.get_senkou_span_a()[51] - 98.3438) < 0.0001);
+    assert(std::abs(ich.get_senkou_span_a()[52] - 98.3438) < 0.0001);
+    assert(std::abs(ich.get_senkou_span_a()[77] - 92.6406) < 0.0001);
+    assert(std::abs(ich.get_senkou_span_a()[101] - 109.096) < 0.001);
+    assert(std::abs(ich.get_senkou_span_a()[5022] - 125.225) < 0.001);
+    assert(std::abs(ich.get_senkou_span_a()[5030] - 122.183) < 0.001);
+
+    assert(ich.get_senkou_span_b().size() == 5031);
+    assert(std::isnan(ich.get_senkou_span_b()[0]));
+    assert(std::isnan(ich.get_senkou_span_b()[76]));
+    assert(std::abs(ich.get_senkou_span_b()[77] - 92.4062) < 0.0001);
+    assert(std::abs(ich.get_senkou_span_b()[101] - 99.3512) < 0.0001);
+    assert(std::abs(ich.get_senkou_span_b()[5022] - 123.685) < 0.001);
+    assert(std::abs(ich.get_senkou_span_b()[5030] - 124.325) < 0.001);
+
+    assert(ich.get_chikou_span().size() == 5031);
+    assert(std::abs(ich.get_chikou_span()[0] - 97.0) < 0.001);
+    assert(std::abs(ich.get_chikou_span()[9] - 81.5625) < 0.0001);
+    assert(std::abs(ich.get_chikou_span()[25] - 96.6875) < 0.0001);
+    assert(std::abs(ich.get_chikou_span()[101] - 115.9) < 0.001);
+    assert(! std::isnan(ich.get_chikou_span()[5004]));
+    assert(std::isnan(ich.get_chikou_span()[5005]));
+    assert(std::isnan(ich.get_chikou_span()[5030]));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7413,6 +7485,7 @@ int main(int, char *[])  {
     test_AroonVisitor();
     test_DonchianChannelsVisitor();
     test_SupertrendVisitor();
+    test_IchimokuVisitor();
 
     return (0);
 }

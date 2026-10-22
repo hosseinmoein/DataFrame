@@ -54,7 +54,7 @@ struct  ReturnVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &, const K &,
                const H &column_begin, const H &column_end)  {
@@ -157,7 +157,7 @@ private:
     S_RT    short_roller_;
     L_RT    long_roller_;
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline std::size_t
     run_short_roller_(const K &idx_begin,
                       const K &idx_end,
@@ -198,7 +198,7 @@ private:
         }
         return (col_s);
     }
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline std::size_t
     run_long_roller_(const K &idx_begin,
                      const K &idx_end,
@@ -242,7 +242,7 @@ private:
 
 public:
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &prices_begin, const H &prices_end)  {
@@ -369,7 +369,7 @@ private:
     SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   mean_roller_;
     SimpleRollAdopter<StdVisitor<T, I>, T, I, A>    std_roller_;
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     run_mean_roller_(const K &idx_begin,
                      const K &idx_end,
@@ -381,7 +381,7 @@ private:
         mean_roller_.post();
     }
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     run_std_roller_(const K &idx_begin,
                     const K &idx_end,
@@ -397,7 +397,7 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &prices_begin, const H &prices_end)  {
@@ -529,7 +529,7 @@ struct  MACDVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -871,7 +871,7 @@ struct  VWBASVisitor  {
             accumulate_(bid_size, ask_size, bid_price, ask_price);
         }
     }
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(K idx_begin, K,
                H bid_price_begin, H bid_price_end,
@@ -1086,7 +1086,7 @@ struct  SharpeRatioVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &, const K &,
                const H &asset_ret_begin, const H &asset_ret_end,
@@ -1187,7 +1187,7 @@ struct  RSIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &prices_begin, const H &prices_end)  {
@@ -1273,7 +1273,7 @@ struct  RSXVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &, const K &,
                const H &column_begin, const H &column_end)  {
@@ -1403,7 +1403,7 @@ struct  RVIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &close_begin, const H &close_end,
@@ -1439,7 +1439,7 @@ struct  RVIVisitor  {
 
 private:
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     rvi_(const K &idx_begin, const K &idx_end,
          const H &ts_begin, const H &ts_end,
@@ -1623,7 +1623,7 @@ private:
 
 public:
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1740,7 +1740,7 @@ struct  MassIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &high_begin, const H &high_end,
@@ -1838,7 +1838,7 @@ struct  HullRollingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1961,7 +1961,7 @@ struct  RollingMidValueVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
@@ -2030,7 +2030,7 @@ struct  DrawdownVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -2119,7 +2119,7 @@ struct  WilliamPrcRVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -2235,7 +2235,7 @@ struct  PSLVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &close_begin, const H &close_end)  {
@@ -2270,7 +2270,7 @@ struct  PSLVisitor  {
         calculate_(idx_begin, idx_end);
     }
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &close_begin, const H &close_end,
@@ -2322,7 +2322,7 @@ struct  PSLVisitor  {
 
 private:
 
-    template <typename K>
+    template<typename K>
     inline void calculate_(const K &idx_begin, const K &idx_end)  {
 
         SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum_r {
@@ -2372,7 +2372,7 @@ struct  CCIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -2486,7 +2486,7 @@ struct  GarmanKlassVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
@@ -2588,7 +2588,7 @@ struct  YangZhangVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &, const K &,
                const H &low_begin, const H &low_end,
@@ -2747,7 +2747,7 @@ struct  KamaVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &column_begin, const H &column_end)  {
@@ -2856,7 +2856,7 @@ struct  FisherTransVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -2984,7 +2984,7 @@ struct  PercentPriceOSCIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &close_begin, const H &close_end)  {
@@ -3116,7 +3116,7 @@ struct  SlopeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -3211,7 +3211,7 @@ struct  UltimateOSCIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -3415,7 +3415,7 @@ struct  UlcerIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -3546,7 +3546,7 @@ struct  TTMTrendVisitor  {
     using result_type =
         std::vector<bool, typename allocator_declare<bool, A>::type>;
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
@@ -3652,7 +3652,7 @@ struct  ParabolicSARVisitor  {
     using result_type =
         std::vector<bool, typename allocator_declare<bool, A>::type>;
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
@@ -3813,7 +3813,7 @@ struct  EBSineWaveVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &, const K &,
                const H &close_begin, const H &close_end)  {
@@ -3924,7 +3924,7 @@ struct  EhlerSuperSmootherVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
@@ -4012,7 +4012,7 @@ struct  VarIdxDynAvgVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &column_begin, const H &column_end)  {
@@ -4161,7 +4161,7 @@ struct  PivotPointSRVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
@@ -4302,7 +4302,7 @@ struct  AvgDirMovIdxVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &low_begin, const H &low_end,
@@ -4461,7 +4461,7 @@ struct  HoltWinterChannelVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &close_begin, const H &close_end)  {
@@ -4568,7 +4568,7 @@ struct  HeikinAshiCndlVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
@@ -4652,7 +4652,7 @@ struct  CenterOfGravityVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -4748,7 +4748,7 @@ struct  ArnaudLegouxMAVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &, const K &,
                const H &column_begin, const H &column_end)  {
@@ -4857,7 +4857,7 @@ struct  RateOfChangeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -4931,7 +4931,7 @@ struct  AccumDistVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H, typename V>
+    template<typename K, typename H, typename V>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -5016,7 +5016,7 @@ struct  ChaikinMoneyFlowVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H, typename V>
+    template<typename K, typename H, typename V>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -5086,7 +5086,7 @@ struct  VertHorizFilterVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -5236,7 +5236,7 @@ struct  OnBalanceVolumeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H, typename V>
+    template<typename K, typename H, typename V>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &close_begin, const H &close_end,
@@ -5308,7 +5308,7 @@ struct  TrueRangeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &/*low_end*/,
@@ -5422,7 +5422,7 @@ struct  DecayVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &, const K &,
                const H &column_begin, const H &column_end)  {
@@ -5494,7 +5494,7 @@ struct  HodgesTompkinsVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -5568,7 +5568,7 @@ struct  ParkinsonVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -5678,7 +5678,7 @@ struct  CoppockCurveVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -5774,7 +5774,7 @@ struct  BalanceOfPowerVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -5846,7 +5846,7 @@ struct  ChandeKrollStopVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -6038,7 +6038,7 @@ struct  VortexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -6190,7 +6190,7 @@ struct  KeltnerChannelsVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -6351,7 +6351,7 @@ struct  TrixVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -6443,7 +6443,7 @@ struct  PrettyGoodOsciVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -6567,7 +6567,7 @@ struct  T3MovingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -6698,7 +6698,7 @@ struct  TreynorRatioVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &asset_ret_begin, const H &asset_ret_end,
@@ -6788,7 +6788,7 @@ struct  InertiaVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &close_begin, const H &close_end,
@@ -6852,7 +6852,7 @@ struct  RelativeVigorIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -6957,7 +6957,7 @@ struct  ElderRayIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &close_begin, const H &close_end,
@@ -7046,7 +7046,7 @@ struct  ChopIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &close_begin, const H &close_end,
@@ -7193,7 +7193,7 @@ struct  DetrendPriceOsciVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -7274,7 +7274,7 @@ struct  AccelerationBandsVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &close_begin, const H &close_end,
@@ -7400,7 +7400,7 @@ struct  PriceDistanceVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &low_begin, const H &low_end,
@@ -7512,7 +7512,7 @@ struct  EldersThermometerVisitor  {
     using bool_vec =
         std::vector<bool, typename allocator_declare<bool, A>::type>;
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -7654,7 +7654,7 @@ struct  EldersForceIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H, typename V>
+    template<typename K, typename H, typename V>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &close_begin, const H &close_end,
@@ -7729,7 +7729,7 @@ struct  EaseOfMovementVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H, typename V>
+    template<typename K, typename H, typename V>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &low_end,
@@ -7826,7 +7826,7 @@ struct  PriceVolumeTrendVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H, typename V>
+    template<typename K, typename H, typename V>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &close_begin, const H &close_end,
@@ -7897,7 +7897,7 @@ struct  QuantQualEstimationVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &price_begin, const H &price_end)  {
@@ -8095,7 +8095,7 @@ struct  PeaksAndValleysVisitor  {
         std::vector<ResultItem,
                     typename allocator_declare<ResultItem, A>::type>;
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &/*idx_end*/,
                 const H &prices_begin, const H &prices_end)  {
@@ -8174,7 +8174,7 @@ struct  StochasticOscillatorVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &low_begin, const H &low_end,
@@ -8484,7 +8484,7 @@ struct  AroonVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
@@ -8586,7 +8586,7 @@ private:
     // returns true if the first argument can never be the extreme again once
     // the second argument has arrived.
     //
-    template <typename H, typename F>
+    template<typename H, typename F>
     inline void
     aroon_(const H &begin,
            size_type col_s,
@@ -8649,7 +8649,7 @@ struct  DonchianChannelsVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &idx_begin, const K &idx_end,
                const H &low_begin, const H &low_end,
@@ -8803,7 +8803,7 @@ struct  SupertrendVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template<typename K, typename H>
     inline void
     operator()(const K &, const K &,
                const H &low_begin, [[maybe_unused]] const H &low_end,
@@ -8934,6 +8934,221 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using supertrend_v = SupertrendVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+// Ichimoku Cloud (Ichimoku Kinko Hyo)
+//
+// tenkan-sen (conversion line) = (highest high + lowest low) / 2 over
+//                                tenkan_period bars (default 9)
+// kijun-sen (base line) = same over kijun_period bars (default 26)
+// senkou span A = (tenkan-sen + kijun-sen) / 2, plotted displacement bars
+//                 ahead (default 26)
+// senkou span B = (highest high + lowest low) / 2 over senkou_b_period bars
+//                 (default 52), plotted displacement bars ahead
+// chikou span = close, plotted displacement bars behind
+//
+// All results have the same length as the input. The cloud is aligned to the
+// bar it is plotted under: senkou[i] is computed from bars up to
+// i - displacement, so it is known at bar i and has no look-ahead. The
+// cloud's projection past the last input bar is not part of the results.
+// chikou[i] = close[i + displacement] by definition, so it does look ahead
+// and its last displacement values are NaN. Do not use it as a feature in a
+// backtest.
+//
+// Unavailable values are NaN:
+//   tenkan-sen:  the first tenkan_period - 1 values
+//   kijun-sen:   the first kijun_period - 1 values
+//   span A:      the first max(tenkan_period, kijun_period) - 1 +
+//                displacement values
+//   span B:      the first senkou_b_period - 1 + displacement values
+//   chikou span: the last displacement values
+//
+// get_result() and get_tenkan_sen() return the conversion line.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  IchimokuVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &low_begin, const H &low_end,
+               const H &high_begin, const H &high_end,
+               const H &close_begin, const H &close_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(close_begin, close_end))
+        };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            tenkan_period_ == 0 || kijun_period_ == 0 ||
+            senkou_b_period_ == 0 ||
+            tenkan_period_ > col_s || kijun_period_ > col_s ||
+            senkou_b_period_ > col_s || displacement_ >= col_s)
+            throw DataFrameError("IchimokuVisitor: All columns must be of "
+                                 "equal size, 0 < periods <= column size and "
+                                 "displacement < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        result_type tenkan;
+        result_type kijun;
+        result_type span_b_raw;
+
+        if (thread_level > 2)  {
+            auto    fut1 {
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [&, this]() -> void  {
+                        tenkan = mid_(idx_begin, idx_end,
+                                      low_begin, low_end,
+                                      high_begin, high_end,
+                                      tenkan_period_);
+                    })
+            };
+            auto    fut2 {
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [&, this]() -> void  {
+                        kijun = mid_(idx_begin, idx_end,
+                                     low_begin, low_end,
+                                     high_begin, high_end,
+                                     kijun_period_);
+                    })
+            };
+
+            span_b_raw = mid_(idx_begin, idx_end,
+                              low_begin, low_end,
+                              high_begin, high_end,
+                              senkou_b_period_);
+            fut1.get();
+            fut2.get();
+        }
+        else  {
+            tenkan = mid_(idx_begin, idx_end,
+                          low_begin, low_end,
+                          high_begin, high_end,
+                          tenkan_period_);
+            kijun = mid_(idx_begin, idx_end,
+                         low_begin, low_end,
+                         high_begin, high_end,
+                         kijun_period_);
+            span_b_raw = mid_(idx_begin, idx_end,
+                              low_begin, low_end,
+                              high_begin, high_end,
+                              senkou_b_period_);
+        }
+
+        constexpr value_type    nan { std::numeric_limits<T>::quiet_NaN() };
+
+        result_type span_a(col_s, nan);
+        result_type span_b(col_s, nan);
+        result_type chikou(col_s, nan);
+
+        for (size_type i { displacement_ }; i < col_s; ++i) [[likely]]  {
+            const size_type src { i - displacement_ };
+
+            span_a[i] = (tenkan[src] + kijun[src]) / T(2);
+            span_b[i] = span_b_raw[src];
+        }
+        for (size_type i { 0 }; i + displacement_ < col_s; ++i) [[likely]]
+            chikou[i] = *(close_begin + (i + displacement_));
+
+        tenkan_.swap(tenkan);
+        kijun_.swap(kijun);
+        span_a_.swap(span_a);
+        span_b_.swap(span_b);
+        chikou_.swap(chikou);
+    }
+
+    inline void pre()  {
+
+        tenkan_.clear();
+        kijun_.clear();
+        span_a_.clear();
+        span_b_.clear();
+        chikou_.clear();
+    }
+    inline void post()  {   }
+
+    inline const result_type &get_result() const  { return (tenkan_); }
+    inline result_type &get_result()  { return (tenkan_); }
+    inline const result_type &get_tenkan_sen() const  { return (tenkan_); }
+    inline result_type &get_tenkan_sen()  { return (tenkan_); }
+    inline const result_type &get_kijun_sen() const  { return (kijun_); }
+    inline result_type &get_kijun_sen()  { return (kijun_); }
+    inline const result_type &
+    get_senkou_span_a() const  { return (span_a_); }
+    inline result_type &get_senkou_span_a()  { return (span_a_); }
+    inline const result_type &
+    get_senkou_span_b() const  { return (span_b_); }
+    inline result_type &get_senkou_span_b()  { return (span_b_); }
+    inline const result_type &get_chikou_span() const  { return (chikou_); }
+    inline result_type &get_chikou_span()  { return (chikou_); }
+
+    explicit
+    IchimokuVisitor(size_type tenkan_period = 9,
+                    size_type kijun_period = 26,
+                    size_type senkou_b_period = 52,
+                    size_type displacement = 26)
+        : tenkan_period_(tenkan_period),
+          kijun_period_(kijun_period),
+          senkou_b_period_(senkou_b_period),
+          displacement_(displacement)  {   }
+
+private:
+
+    // (highest high + lowest low) / 2 over a rolling window of period bars
+    //
+    template<typename K, typename H>
+    inline result_type
+    mid_(const K &idx_begin, const K &idx_end,
+         const H &low_begin, const H &low_end,
+         const H &high_begin, const H &high_end,
+         size_type period) const  {
+
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    max_v {
+            MaxVisitor<T, I>(), period
+        };
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>    min_v {
+            MinVisitor<T, I>(), period
+        };
+
+        max_v.pre();
+        min_v.pre();
+        max_v(idx_begin, idx_end, high_begin, high_end);
+        min_v(idx_begin, idx_end, low_begin, low_end);
+        max_v.post();
+        min_v.post();
+
+        result_type result { std::move(max_v.get_result()) };
+        const auto  &lowest { min_v.get_result() };
+
+        for (size_type i { 0 }; i < result.size(); ++i) [[likely]]
+            result[i] = (result[i] + lowest[i]) / T(2);
+        return (result);
+    }
+
+    const size_type tenkan_period_;
+    const size_type kijun_period_;
+    const size_type senkou_b_period_;
+    const size_type displacement_;
+    result_type     tenkan_ { };
+    result_type     kijun_ { };
+    result_type     span_a_ { };
+    result_type     span_b_ { };
+    result_type     chikou_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ichimoku_v = IchimokuVisitor<T, I, A>;
 
 } // namespace hmdf
 

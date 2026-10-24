@@ -893,6 +893,17 @@ enum class  policy_loss_baseline : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+// Method used by ValueAtRiskVisitor to estimate the tail of a return
+// distribution
+//
+enum class  var_policy : unsigned char  {
+
+    historical = 1,  // Non-parametric. Use the empirical return distribution
+    gaussian = 2,    // Parametric. Assume returns are normally distributed
+};
+
+// ----------------------------------------------------------------------------
+
 // Different methods of detecting anomalous data points. Anomalous data don’t
 // mean NaN or missing datapoints. The best description is unusual datapoints.
 //
@@ -911,7 +922,7 @@ template<typename T>
 struct  DefaultAbsDist  {
 
     inline double
-	operator()(const T &x, const T &y) const noexcept  {
+    operator()(const T &x, const T &y) const noexcept  {
 
         return (std::fabs(x - y));
     }

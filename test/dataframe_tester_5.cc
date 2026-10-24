@@ -7430,6 +7430,161 @@ static void test_IchimokuVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ValueAtRiskVisitor()  {
+
+    std::cout << "\nTesting ValueAtRiskVisitor{ } ..." << std::endl;
+
+    constexpr double            nval = std::numeric_limits<double>::quiet_NaN();
+    ULDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    StlVecType<double>          d1 =
+        { 2.5, 2.45, -0.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -0.34, 2.3,
+          -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59 };
+    StlVecType<double>          with_nan =
+        { nval, 0.01, -0.02, 0.005, nval, 0.03, -0.015, 0.007, -0.04, 0.02,
+          0.011, -0.003, 0.0, 0.025, -0.01, nval, nval, nval, nval, nval,
+          nval };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("d1", d1),
+                 std::make_pair("with_nan", with_nan));
+
+    // Historical
+    {
+        varisk_v<double>    v90 { 0.90 };
+        varisk_v<double>    v95;  // Default confidence is 95%
+        varisk_v<double>    v99 { 0.99 };
+
+        df.single_act_visit<double>("d1", v90);
+        df.single_act_visit<double>("d1", v95);
+        df.single_act_visit<double>("d1", v99);
+
+        assert(std::abs(v90.get_var() - 1.0) < 0.000001);
+        assert(std::abs(v90.get_cvar() - 1.333333) < 0.000001);
+        assert(std::abs(v95.get_var() - 1.1) < 0.000001);
+        assert(std::abs(v95.get_cvar() - 1.5) < 0.000001);
+        assert(v95.get_result() == v95.get_var());
+        assert(std::abs(v99.get_var() - 1.74) < 0.000001);
+        assert(std::abs(v99.get_cvar() - 1.9) < 0.000001);
+        assert(v90.get_cvar() >= v90.get_var());
+        assert(v95.get_cvar() >= v95.get_var());
+        assert(v99.get_cvar() >= v99.get_var());
+    }
+
+    // Gaussian
+    {
+        varisk_v<double>    g90 { 0.90, var_policy::gaussian };
+        varisk_v<double>    g95 { 0.95, var_policy::gaussian };
+        varisk_v<double>    g95b { 0.95, var_policy::gaussian, true };
+        varisk_v<double>    g99 { 0.99, var_policy::gaussian };
+
+        df.single_act_visit<double>("d1", g90);
+        df.single_act_visit<double>("d1", g95);
+        df.single_act_visit<double>("d1", g95b);
+        df.single_act_visit<double>("d1", g99);
+
+        assert(std::abs(g90.get_var() - 1.123424) < 0.000001);
+        assert(std::abs(g90.get_cvar() - 1.723327) < 0.000001);
+        assert(std::abs(g95.get_var() - 1.583778) < 0.000001);
+        assert(std::abs(g95.get_cvar() - 2.113262) < 0.000001);
+        assert(std::abs(g95b.get_var() - 1.533547) < 0.000001);
+        assert(std::abs(g95b.get_cvar() - 2.050271) < 0.000001);
+        assert(std::abs(g99.get_var() - 2.447324) < 0.000001);
+        assert(std::abs(g99.get_cvar() - 2.876714) < 0.000001);
+    }
+
+    // NaN values are skipped
+    {
+        varisk_v<double>    hist { 0.90 };
+        varisk_v<double>    gaus { 0.90, var_policy::gaussian };
+
+        df.single_act_visit<double>("with_nan", hist);
+        df.single_act_visit<double>("with_nan", gaus);
+
+        assert(std::abs(hist.get_var() - 0.019) < 0.000001);
+        assert(std::abs(hist.get_cvar() - 0.03) < 0.000001);
+        assert(std::abs(gaus.get_var() - 0.0233427) < 0.0000001);
+        assert(std::abs(gaus.get_cvar() - 0.0325343) < 0.0000001);
+    }
+
+    // No valid data
+    {
+        StlVecType<unsigned long>   idx2 = { 1, 2, 3 };
+        StlVecType<double>          all_nan = { nval, nval, nval };
+        ULDataFrame                 df2;
+
+        df2.load_data(std::move(idx2), std::make_pair("all_nan", all_nan));
+
+        varisk_v<double>    hist;
+        varisk_v<double>    gaus { 0.95, var_policy::gaussian };
+
+        df2.single_act_visit<double>("all_nan", hist);
+        df2.single_act_visit<double>("all_nan", gaus);
+        assert(std::isnan(hist.get_var()) && std::isnan(hist.get_cvar()));
+        assert(std::isnan(gaus.get_var()) && std::isnan(gaus.get_cvar()));
+    }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    for (const double c : { 0.0, 1.0, -0.5, 1.5 })  {
+        varisk_v<double>    bad_conf { c };
+        bool                thrown { false };
+
+        try  {
+            df.single_act_visit<double>("d1", bad_conf);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    StrDataFrame    ibm_df;  // Real data
+
+    try  {
+        ibm_df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    ibm_df.load_result_as_column<double>(
+        "IBM_Close",
+        ReturnVisitor<double, std::string>(return_policy::percentage),
+        "IBM_Return");
+
+    varisk_v<double, std::string>   h90 { 0.90 };
+    varisk_v<double, std::string>   h95 { 0.95 };
+    varisk_v<double, std::string>   h99 { 0.99 };
+    varisk_v<double, std::string>   g90b { 0.90, var_policy::gaussian, true };
+    varisk_v<double, std::string>   g95 { 0.95, var_policy::gaussian };
+    varisk_v<double, std::string>   g99 { 0.99, var_policy::gaussian };
+
+    ibm_df.single_act_visit<double>("IBM_Return", h90);
+    ibm_df.single_act_visit<double>("IBM_Return", h95);
+    ibm_df.single_act_visit<double>("IBM_Return", h99);
+    ibm_df.single_act_visit<double>("IBM_Return", g90b);
+    ibm_df.single_act_visit<double>("IBM_Return", g95);
+    ibm_df.single_act_visit<double>("IBM_Return", g99);
+
+    assert(std::abs(h90.get_var() - 0.0155130) < 0.0000001);
+    assert(std::abs(h90.get_cvar() - 0.0289660) < 0.0000001);
+    assert(std::abs(h95.get_var() - 0.0235495) < 0.0000001);
+    assert(std::abs(h95.get_cvar() - 0.0388069) < 0.0000001);
+    assert(std::abs(h99.get_var() - 0.0490875) < 0.0000001);
+    assert(std::abs(h99.get_cvar() - 0.0623592) < 0.0000001);
+    assert(std::abs(g90b.get_var() - 0.0203943) < 0.0000001);
+    assert(std::abs(g90b.get_cvar() - 0.0279850) < 0.0000001);
+    assert(std::abs(g95.get_var() - 0.0262219) < 0.0000001);
+    assert(std::abs(g95.get_cvar() - 0.0329222) < 0.0000001);
+    assert(std::abs(g99.get_var() - 0.0371496) < 0.0000001);
+    assert(std::abs(g99.get_cvar() - 0.0425833) < 0.0000001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7486,6 +7641,7 @@ int main(int, char *[])  {
     test_DonchianChannelsVisitor();
     test_SupertrendVisitor();
     test_IchimokuVisitor();
+    test_ValueAtRiskVisitor();
 
     return (0);
 }

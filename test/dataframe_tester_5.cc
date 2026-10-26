@@ -7585,6 +7585,164 @@ static void test_ValueAtRiskVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_CalmarRatioVisitor()  {
+
+    std::cout << "\nTesting CalmarRatioVisitor{ } ..." << std::endl;
+
+    const double                nval = std::numeric_limits<double>::quiet_NaN();
+    const double                inf = std::numeric_limits<double>::infinity();
+    ULDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    StlVecType<double>          rets =
+        { 0.025, 0.0245, -0.0065, -0.001, -0.011, 0.0187, 0.0098, 0.0034,
+          0.0156, -0.0034, 0.023, -0.0034, -0.019, 0.00387, 0.00123, 0.0106,
+          -0.0065, 0.0203, 0.004, -0.01, 0.0059 };
+    StlVecType<double>          with_nan =
+        { nval, 0.01, -0.02, 0.005, nval, 0.03, -0.015, 0.007, -0.04, 0.02,
+          0.011, -0.003, 0.0, 0.025, -0.01, nval, nval, nval, nval, nval,
+          nval };
+    StlVecType<double>          no_loss =
+        { 0.01, 0.02, 0.0, 0.01, 0.005, 0.0, 0.0, 0.01, 0.0, 0.003, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+    StlVecType<double>          flat(21, 0.0);
+    StlVecType<double>          wipeout =
+        { 0.5, -1.5, 0.2, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("rets", rets),
+                 std::make_pair("with_nan", with_nan),
+                 std::make_pair("no_loss", no_loss),
+                 std::make_pair("flat", flat),
+                 std::make_pair("wipeout", wipeout));
+
+    calmarr_v<double>   calmar;
+
+    df.single_act_visit<double>("rets", calmar);
+    assert(std::abs(calmar.get_result() - 109.786065) < 0.000001);
+    assert(std::abs(calmar.get_annualized_return() - 2.452116) < 0.000001);
+    assert(std::abs(calmar.get_max_drawdown() - 0.0223354) < 0.0000001);
+
+    // Same numbers, but interpreted as log returns. Compounding is different,
+    // so the results are different.
+    //
+    {
+        calmarr_v<double>   calmar_log { 252, true };
+
+        df.single_act_visit<double>("rets", calmar_log);
+        assert(std::abs(calmar_log.get_result() - 114.200555) < 0.000001);
+        assert(std::abs(calmar_log.get_annualized_return() - 2.529655) <
+               0.000001);
+        assert(std::abs(calmar_log.get_max_drawdown() - 0.0221510) <
+               0.0000001);
+    }
+
+    // NaNs are skipped
+    //
+    {
+        calmarr_v<double>   calmar_nan;
+
+        df.single_act_visit<double>("with_nan", calmar_nan);
+        assert(std::abs(calmar_nan.get_result() - 8.574800) < 0.000001);
+        assert(std::abs(calmar_nan.get_annualized_return() - 0.409711) <
+               0.000001);
+        assert(std::abs(calmar_nan.get_max_drawdown() - 0.0477808) <
+               0.0000001);
+    }
+
+    // No drawdown: +infinity, if there is a gain. NaN, if there is none.
+    //
+    {
+        calmarr_v<double>   calmar_nl;
+        calmarr_v<double>   calmar_flat;
+
+        df.single_act_visit<double>("no_loss", calmar_nl);
+        df.single_act_visit<double>("flat", calmar_flat);
+        assert(calmar_nl.get_max_drawdown() == 0.0);
+        assert(calmar_nl.get_annualized_return() > 0.0);
+        assert(calmar_nl.get_result() == inf);
+        assert(calmar_flat.get_max_drawdown() == 0.0);
+        assert(calmar_flat.get_annualized_return() == 0.0);
+        assert(std::isnan(calmar_flat.get_result()));
+    }
+
+    // A return of -150% wipes out the equity curve
+    //
+    {
+        calmarr_v<double>   calmar_wo;
+
+        df.single_act_visit<double>("wipeout", calmar_wo);
+        assert(calmar_wo.get_max_drawdown() == 1.0);
+        assert(calmar_wo.get_annualized_return() == -1.0);
+        assert(calmar_wo.get_result() == -1.0);
+    }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    {
+        calmarr_v<double>   bad { 0 };
+        bool                thrown { false };
+
+        try  {
+            df.single_act_visit<double>("rets", bad);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    // Real data
+    //
+    StrDataFrame    ibm_df;
+
+    try  {
+        ibm_df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    ibm_df.load_result_as_column<double>(
+        "IBM_Close",
+        ReturnVisitor<double, std::string>(return_policy::percentage),
+        "IBM_Return");
+    ibm_df.load_result_as_column<double>(
+        "IBM_Close",
+        ReturnVisitor<double, std::string>(return_policy::log),
+        "IBM_Log_Return");
+
+    calmarr_v<double, std::string>  ibm_calmar;
+    calmarr_v<double, std::string>  ibm_calmar_log { 252, true };
+    calmarr_v<double, std::string>  ibm_calmar_monthly { 12 };
+
+    ibm_df.single_act_visit<double>("IBM_Return", ibm_calmar);
+    ibm_df.single_act_visit<double>("IBM_Log_Return", ibm_calmar_log);
+    ibm_df.single_act_visit<double>("IBM_Return", ibm_calmar_monthly);
+
+    assert(std::abs(ibm_calmar.get_result() - 0.0111663) < 0.0000001);
+    assert(std::abs(ibm_calmar.get_annualized_return() - 0.00627036) <
+           0.00000001);
+    assert(std::abs(ibm_calmar.get_max_drawdown() - 0.561545) < 0.000001);
+
+    // Percentage and log returns of the same prices describe the same equity
+    // curve
+    //
+    assert(std::abs(ibm_calmar_log.get_result() -
+                    ibm_calmar.get_result()) < 0.000001);
+    assert(std::abs(ibm_calmar_log.get_max_drawdown() -
+                    ibm_calmar.get_max_drawdown()) < 0.000001);
+
+    assert(std::abs(ibm_calmar_monthly.get_result() - 0.000530146) <
+           0.000000001);
+    assert(std::abs(ibm_calmar_monthly.get_annualized_return() -
+                    0.000297701) < 0.000000001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7642,6 +7800,7 @@ int main(int, char *[])  {
     test_SupertrendVisitor();
     test_IchimokuVisitor();
     test_ValueAtRiskVisitor();
+    test_CalmarRatioVisitor();
 
     return (0);
 }

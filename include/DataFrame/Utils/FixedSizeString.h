@@ -53,11 +53,11 @@ namespace hmdf
 //       OF THE PROGRAMMER TO TAKE CARE OF THAT.
 //
 
-class   VirtualString {
+class   VirtualString  {
 
 public:
 
-    using size_type = std::size_t;
+    using size_type = unsigned long;
     using value_type = char;
     using pointer = value_type *;
     using const_pointer = const value_type *;
@@ -66,7 +66,7 @@ public:
     using iterator = pointer;
     using const_iterator = const_pointer;
 
-    inline static const size_type  npos = static_cast<size_type>(-1);
+    inline static const size_type  npos { static_cast<size_type>(-1) };
 
     [[nodiscard]] inline iterator begin() noexcept  { return (string_); }
     [[nodiscard]] inline const_iterator
@@ -281,15 +281,29 @@ public:
     [[nodiscard]] inline bool empty() const noexcept  { return (size_ == 0); }
 
     // Fowler–Noll–Vo (FNV-1a) hash function
-    // This is for 64-bit systems
     //
-    [[nodiscard]] inline size_type hash() const noexcept {
+    [[nodiscard]] inline size_type hash() const noexcept  {
 
-        size_type   h { 14695981039346656037UL }; // offset basis
+        constexpr bool  four_byte { sizeof(size_type) == 4 };
 
-        for (const_pointer s { string_ }; *s; ++s)
-            h = (h ^ static_cast<unsigned char>(*s)) * 1099511628211UL;
-        return (h);
+        return(
+            [this](auto f_b) -> size_type  {
+                if constexpr (decltype(f_b)::value)  {
+                    size_type   h { 2166136261U }; // offset basis
+
+                    for (const_pointer s { string_ }; *s; ++s)
+                        h = (h ^ static_cast<unsigned char>(*s)) * 16777619U;
+                    return (h);
+                }
+                else  {
+                    size_type   h { 14695981039346656037UL }; // offset basis
+
+                    for (const_pointer s { string_ }; *s; ++s)
+                        h = (h ^ static_cast<unsigned char>(*s)) *
+                            1099511628211UL;
+                    return (h);
+                }
+            }(std::bool_constant<four_byte>{}));
     }
 
 protected:
@@ -321,7 +335,7 @@ class   FixedSizeString : public VirtualString  {
 public:
 
     inline FixedSizeString() noexcept
-        : VirtualString(buffer_) { *buffer_ = 0; _forced_size(); }
+        : VirtualString(buffer_)  { *buffer_ = 0; _forced_size(); }
     inline FixedSizeString(const_pointer str) noexcept
         : VirtualString(buffer_)  { *this = str; }
     inline FixedSizeString(const FixedSizeString &that) noexcept
@@ -350,7 +364,7 @@ public:
         _forced_size();
         return (*this);
     }
-    inline FixedSizeString &operator =(const_pointer rhs) noexcept {
+    inline FixedSizeString &operator =(const_pointer rhs) noexcept  {
 
         snprintf_nowarn(buffer_, S, "%s", rhs);
         _forced_size();
@@ -405,7 +419,7 @@ namespace std  {
 template<>
 struct  hash<typename hmdf::VirtualString>  {
 
-    inline size_t operator()(const hmdf::VirtualString &key) const noexcept {
+    inline size_t operator()(const hmdf::VirtualString &key) const noexcept  {
 
         return (key.hash());
     }

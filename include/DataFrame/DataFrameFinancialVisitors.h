@@ -9459,6 +9459,39 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using calmarr_v = CalmarRatioVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -57,7 +57,7 @@ class   VirtualString  {
 
 public:
 
-    using size_type = unsigned long;
+    using size_type = std::size_t;
     using value_type = char;
     using pointer = value_type *;
     using const_pointer = const value_type *;

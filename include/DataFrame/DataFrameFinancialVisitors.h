@@ -9186,16 +9186,28 @@ struct  ValueAtRiskVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    template<typename K, typename H>
+    template <typename K, typename H>
     inline void
     operator()(const K &, const K &,
                const H &column_begin, const H &column_end)  {
 
-#ifdef HMDF_SANITY_EXCEPTIONS
-        if (confidence_ <= 0.0 || confidence_ >= 1.0)
-            throw DataFrameError(
-                "ValueAtRiskVisitor: Confidence level must be > 0 and < 1");
-#endif // HMDF_SANITY_EXCEPTIONS
+        // Written as a negated conjunction, so a NaN confidence level is
+        // caught too. Every comparison with NaN is false.
+        //
+        if (! (confidence_ > 0.0 && confidence_ < 1.0))
+            throw DataFrameError("ValueAtRiskVisitor: confidence level must "
+                                 "be > 0 and < 1");
+
+        constexpr value_type    nan { std::numeric_limits<T>::quiet_NaN() };
+
+        var_ = nan;
+        cvar_ = nan;
+
+        // Without sanity exceptions, an invalid confidence level (including
+        // NaN) must not reach the quantile calculation below. Casting a NaN or
+        // a negative double to an unsigned integer is undefined behavior.
+        //
+        if (! (confidence_ > 0.0 && confidence_ < 1.0))  return;
 
         if (policy_ == var_policy::gaussian)  {
             StdVisitor<T, I>    std_vis { biased_, true };  // Skip NaN
@@ -9208,11 +9220,12 @@ struct  ValueAtRiskVisitor  {
 
             if (std_vis.get_count() < 2)  return;
 
-            const double        mu { double(std_vis.get_mean()) };
-            const double        sigma { double(std_vis.get_result()) };
-            const double        z { inverse_normal_cdf_(confidence_) };
             constexpr double    inv_sqrt_2pi { 0.3989422804014327 };
-            const double        pdf_z { inv_sqrt_2pi * std::exp(-0.5 * z * z) };
+
+            const double    mu { double(std_vis.get_mean()) };
+            const double    sigma { double(std_vis.get_result()) };
+            const double    z { inverse_normal_cdf_(confidence_) };
+            const double    pdf_z { inv_sqrt_2pi * std::exp(-0.5 * z * z) };
 
             var_ = value_type(-mu + z * sigma);
             cvar_ = value_type(-mu + sigma * pdf_z / (1.0 - confidence_));
@@ -9222,6 +9235,7 @@ struct  ValueAtRiskVisitor  {
 
             rets.reserve(std::distance(column_begin, column_end));
             for (auto citer { column_begin }; citer != column_end; ++citer)
+                    [[likely]]
                 if (! is_nan__(*citer))  rets.push_back(*citer);
 
             const size_type n { rets.size() };
@@ -9267,7 +9281,6 @@ struct  ValueAtRiskVisitor  {
         cvar_ = std::numeric_limits<T>::quiet_NaN();
     }
     inline void post()  {  }
-
     inline result_type get_result() const  { return (var_); }
     inline result_type get_var() const  { return (var_); }
     inline result_type get_cvar() const  { return (cvar_); }
@@ -9461,36 +9474,104 @@ using calmarr_v = CalmarRatioVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
+// Information Ratio measures the consistency of an asset's (or a portfolio's)
+// excess return over a benchmark per unit of the risk taken to get it:
+//     IR = mean(asset_ret - benchmark_ret) / std(asset_ret - benchmark_ret)
+// The denominator is the tracking error.
+//
+// Both input columns are assumed to be returns, not prices. Observations
+// where either of the two values is NaN are skipped.
+//
+// The result is per period by default. If periods_per_year is greater than 1,
+// the result is annualized by sqrt(periods_per_year), and the active return
+// and the tracking error are annualized by periods_per_year and
+// sqrt(periods_per_year), respectively. If biased is true, the population
+// standard deviation is used. If there are less than 2 valid observations,
+// the results are NaN. A zero tracking error gives +/-infinity or NaN.
+//
+// Mathematically, this is the same quantity SharpeRatioVisitor calculates, if
+// its second return column is a benchmark. This visitor additionally
+// annualizes, skips NaNs and exposes the two components.
+//
+// get_result() returns the Information Ratio. get_active_return() and
+// get_tracking_error() return the two components.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  InformationRatioVisitor  {
 
+    DEFINE_VISIT_BASIC_TYPES_2
 
+    template <typename K, typename H>
+    inline void
+    operator()(const K &, const K &,
+               const H &asset_ret_begin,
+               [[maybe_unused]] const H &asset_ret_end,
+               const H &benchmark_ret_begin, const H &benchmark_ret_end)  {
 
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (std::distance(asset_ret_begin, asset_ret_end) !=
+                std::distance(benchmark_ret_begin, benchmark_ret_end) ||
+            periods_per_year_ == 0)
+            throw DataFrameError("InformationRatioVisitor: two column sizes "
+                                 "must be equal and periods per year must be "
+                                 "> 0");
+#endif // HMDF_SANITY_EXCEPTIONS
 
+        constexpr value_type    nan { std::numeric_limits<T>::quiet_NaN() };
 
+        StdVisitor<T, I>    std_vis { biased_, true };  // Skip NaN
+        const index_type    index_val { };  // Ignored
+        auto                a_citer { asset_ret_begin };
 
+        std_vis.pre();
+        for (auto b_citer { benchmark_ret_begin };
+             b_citer != benchmark_ret_end;
+             ++a_citer, ++b_citer) [[likely]]
+            std_vis(index_val, *a_citer - *b_citer);
+        std_vis.post();
 
+        if (std_vis.get_count() < 2)  {
+            active_return_ = nan;
+            tracking_error_ = nan;
+            result_ = nan;
+            return;
+        }
 
+        const value_type    ppy { value_type(periods_per_year_) };
 
+        active_return_ = std_vis.get_mean() * ppy;
+        tracking_error_ = std_vis.get_result() * std::sqrt(ppy);
+        result_ = active_return_ / tracking_error_;
+    }
 
+    inline void pre()  {
 
+        result_ = std::numeric_limits<T>::quiet_NaN();
+        active_return_ = std::numeric_limits<T>::quiet_NaN();
+        tracking_error_ = std::numeric_limits<T>::quiet_NaN();
+    }
+    inline void post()  {  }
 
+    inline result_type get_result() const  { return (result_); }
+    inline result_type get_active_return() const  { return (active_return_); }
+    inline result_type
+    get_tracking_error() const  { return (tracking_error_); }
 
+    explicit
+    InformationRatioVisitor(bool biased = false, size_type periods_per_year = 1)
+        : biased_(biased), periods_per_year_(periods_per_year)  {  }
 
+private:
 
+    const bool      biased_;
+    const size_type periods_per_year_;
+    result_type     result_ { std::numeric_limits<T>::quiet_NaN() };
+    result_type     active_return_ { std::numeric_limits<T>::quiet_NaN() };
+    result_type     tracking_error_ { std::numeric_limits<T>::quiet_NaN() };
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using infor_v = InformationRatioVisitor<T, I, A>;
 
 } // namespace hmdf
 

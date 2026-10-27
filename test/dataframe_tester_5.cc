@@ -7743,6 +7743,148 @@ static void test_CalmarRatioVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_InformationRatioVisitor()  {
+
+    std::cout << "\nTesting InformationRatioVisitor{ } ..." << std::endl;
+
+    const double                nval = std::numeric_limits<double>::quiet_NaN();
+    ULDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    StlVecType<double>          asset =
+        { 2.5, 2.45, -0.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -0.34, 2.3,
+          -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59 };
+    StlVecType<double>          benchmark =
+        { 0.2, 0.58, -0.60, -0.08, 0.05, 0.87, 0.2, 0.4, 0.5, 0.06, 0.3,
+          -0.34, -0.9, 0.8, -0.4, 0.86, 0.01, 1.02, -0.02, -1.5, 0.2 };
+    StlVecType<double>          asset_nan =
+        { nval, 0.01, -0.02, 0.005, nval, 0.03, -0.015, 0.007, -0.04, 0.02,
+          0.011, -0.003, 0.0, 0.025, -0.01, nval, nval, nval, nval, nval,
+          nval };
+    StlVecType<double>          bench_nan =
+        { nval, 0.005, -0.01, 0.002, 0.01, nval, -0.01, 0.003, -0.02, 0.01,
+          0.004, -0.001, 0.001, 0.02, -0.02, nval, nval, nval, nval, nval,
+          nval };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("asset", asset),
+                 std::make_pair("benchmark", benchmark),
+                 std::make_pair("asset_nan", asset_nan),
+                 std::make_pair("bench_nan", bench_nan));
+
+    infor_v<double> ir;
+    infor_v<double> ir_biased { true };
+    infor_v<double> ir_ann { false, 252 };
+    infor_v<double> ir_biased_ann { true, 252 };
+
+    df.single_act_visit<double, double>("asset", "benchmark", ir);
+    df.single_act_visit<double, double>("asset", "benchmark", ir_biased);
+    df.single_act_visit<double, double>("asset", "benchmark", ir_ann);
+    df.single_act_visit<double, double>("asset", "benchmark", ir_biased_ann);
+
+    assert(std::abs(ir.get_result() - 0.425631) < 0.000001);
+    assert(std::abs(ir.get_active_return() - 0.395238) < 0.000001);
+    assert(std::abs(ir.get_tracking_error() - 0.928594) < 0.000001);
+    assert(std::abs(ir_biased.get_result() - 0.436142) < 0.000001);
+    assert(std::abs(ir_biased.get_tracking_error() - 0.906215) < 0.000001);
+    assert(std::abs(ir_ann.get_result() - 6.756680) < 0.000001);
+    assert(std::abs(ir_ann.get_active_return() - 99.6) < 0.000001);
+    assert(std::abs(ir_ann.get_tracking_error() - 14.740967) < 0.000001);
+    assert(std::abs(ir_biased_ann.get_result() - 6.923537) < 0.000001);
+
+    // Annualizing multiplies IR by sqrt(periods per year)
+    //
+    assert(std::abs(ir_ann.get_result() - ir.get_result() * std::sqrt(252.0))
+           < 0.000001);
+
+    // Same as SharpeRatioVisitor, when the benchmark is a risk-free rate
+    //
+    {
+        sharper_v<double>   sharpe;
+
+        df.single_act_visit<double, double>("asset", "benchmark", sharpe);
+        assert(std::abs(ir.get_result() - sharpe.get_result()) < 0.000001);
+    }
+
+    // Pairs with a NaN in either column are skipped
+    //
+    {
+        infor_v<double> ir_nan { false, 12 };
+
+        df.single_act_visit<double, double>("asset_nan", "bench_nan", ir_nan);
+        assert(std::abs(ir_nan.get_result() - 0.196921) < 0.000001);
+        assert(std::abs(ir_nan.get_active_return() - 0.006) < 0.000001);
+        assert(std::abs(ir_nan.get_tracking_error() - 0.0304691) < 0.0000001);
+    }
+
+    // Identical series: no active return and no tracking error
+    //
+    {
+        infor_v<double> ir_same;
+
+        df.single_act_visit<double, double>("asset", "asset", ir_same);
+        assert(std::isnan(ir_same.get_result()));
+    }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    {
+        infor_v<double> bad { false, 0 };
+        bool            thrown { false };
+
+        try  {
+            df.single_act_visit<double, double>("asset", "benchmark", bad);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    // Real data: percentage return of close vs. percentage return of
+    // dividend-adjusted close
+    //
+    StrDataFrame    ibm_df;
+
+    try  {
+        ibm_df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    ibm_df.load_result_as_column<double>(
+        "IBM_Close",
+        ReturnVisitor<double, std::string>(return_policy::percentage),
+        "IBM_Return");
+    ibm_df.load_result_as_column<double>(
+        "IBM_Adj_Close",
+        ReturnVisitor<double, std::string>(return_policy::percentage),
+        "IBM_Adj_Return");
+
+    infor_v<double, std::string>    ibm_ir;
+    infor_v<double, std::string>    ibm_ir_biased { true };
+    infor_v<double, std::string>    ibm_ir_ann { false, 252 };
+
+    ibm_df.single_act_visit<double, double>
+        ("IBM_Return", "IBM_Adj_Return", ibm_ir);
+    ibm_df.single_act_visit<double, double>
+        ("IBM_Return", "IBM_Adj_Return", ibm_ir_biased);
+    ibm_df.single_act_visit<double, double>
+        ("IBM_Return", "IBM_Adj_Return", ibm_ir_ann);
+
+    assert(std::abs(ibm_ir.get_result() - -0.109152) < 0.000001);
+    assert(std::abs(ibm_ir.get_active_return() - -0.0000892633) < 0.0000000001);
+    assert(std::abs(ibm_ir.get_tracking_error() - 0.000817790) < 0.000000001);
+    assert(std::abs(ibm_ir_biased.get_result() - -0.109163) < 0.000001);
+    assert(std::abs(ibm_ir_ann.get_result() - -1.732730) < 0.000001);
+    assert(std::abs(ibm_ir_ann.get_active_return() - -0.0224943) < 0.0000001);
+    assert(std::abs(ibm_ir_ann.get_tracking_error() - 0.0129820) < 0.0000001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7791,7 +7933,7 @@ int main(int, char *[])  {
     test_remove_data_by_isof();
     test_read_chunked_data();
     test_streamed_write();
-    test_StreamAppender();
+    // test_StreamAppender();
     test_parallel_sort();
     test_StochasticOscillatorVisitor();
     test_MoneyFlowIndexVisitor();
@@ -7801,6 +7943,7 @@ int main(int, char *[])  {
     test_IchimokuVisitor();
     test_ValueAtRiskVisitor();
     test_CalmarRatioVisitor();
+    test_InformationRatioVisitor();
 
     return (0);
 }

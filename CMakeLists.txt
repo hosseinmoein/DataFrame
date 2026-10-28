@@ -78,7 +78,7 @@ endif()
 target_link_libraries(
     DataFrame
     INTERFACE Threads::Threads
-              $<$<AND:$<BOOL:${UNIX}>,$<NOT:$<BOOL:${APPLE}>>>:rt>
+              $<$<AND:$<BOOL:${UNIX}>,$<NOT:$<BOOL:${APPLE}>>,$<NOT:$<BOOL:${ANDROID}>>>:rt>
 )
 
 target_include_directories(

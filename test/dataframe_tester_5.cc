@@ -7016,7 +7016,10 @@ static void test_StreamAppender()  {
         std::atomic<std::size_t>        reads_done { 0 };
         std::atomic<bool>               saw_inconsistency { false };
 
-        // That is how you set the lock
+        // That is how you set the lock. The lock is a static member of
+        // MyDataFrame, shared by every MyDataFrame in the process. It must
+        // not be left pointing at this local variable after this block, so
+        // it is reset to nullptr below, once both threads are done.
         //
         SpinLock    lock;
 
@@ -7030,6 +7033,12 @@ static void test_StreamAppender()  {
         std::thread reader([&]()  {
             while (! stop.load())  {
                 appender.with_lock([&](MyDataFrame &d) -> void  {
+                    // The writer creates column "v" with its first
+                    // push_row(). This thread can get the lock before that
+                    // happens, in which case there is nothing to read yet.
+                    //
+                    if (! d.has_column("v"))  return;
+
                     const auto  &idx { d.get_index() };
                     const auto  &v_col { d.get_column<double>("v") };
 
@@ -7049,6 +7058,13 @@ static void test_StreamAppender()  {
 
         writer.join();
         reader.join();
+
+        // Both threads are done. Unregister the lock before it goes out of
+        // scope. Otherwise every later MyDataFrame operation that takes the
+        // lock (load_data(), for one) would lock a destroyed SpinLock in a
+        // dead stack frame.
+        //
+        MyDataFrame::remove_lock();
 
         assert(! saw_inconsistency.load());
         assert(appender.size() > 0);
@@ -7933,7 +7949,7 @@ int main(int, char *[])  {
     test_remove_data_by_isof();
     test_read_chunked_data();
     test_streamed_write();
-    // test_StreamAppender();
+    test_StreamAppender();
     test_parallel_sort();
     test_StochasticOscillatorVisitor();
     test_MoneyFlowIndexVisitor();

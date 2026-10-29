@@ -7901,6 +7901,147 @@ static void test_InformationRatioVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_EWMAVolVisitor()  {
+
+    std::cout << "\nTesting EWMAVolVisitor{ } ..." << std::endl;
+
+    const double                nval = std::numeric_limits<double>::quiet_NaN();
+    ULDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 123450, 123451, 123452, 123453, 123454, 123455,
+          123456, 123457, 123458, 123459, 123460, 123461 };
+    StlVecType<double>          ret =
+        { 0.01, -0.02, 0.015, nval, 0.005, -0.03,
+          0.02, 0.0, -0.01, 0.025, nval, -0.015 };
+    StlVecType<double>          lead_nan = { nval, nval, 0.01, -0.02, 0.03 };
+
+    df.load_data(std::move(idxvec), std::make_pair("ret", ret));
+
+    ewma_vol_v<double>  ewma_94;
+    ewma_vol_v<double>  ewma_8 { 0.8, 1 };
+
+    df.single_act_visit<double>("ret", ewma_94);
+    df.single_act_visit<double>("ret", ewma_8);
+
+    const auto  &r94 = ewma_94.get_result();
+    const auto  &r8 = ewma_8.get_result();
+
+    assert(r94.size() == 12);
+    assert(r8.size() == 12);
+
+    // The first valid observation seeds the variance
+    //
+    assert(std::abs(r8[0] - 0.01) < 0.000001);
+    assert(std::abs(r94[0] - 0.01 * std::sqrt(252.0)) < 0.000001);
+
+    assert(std::abs(r94[1] - 0.17244129) < 0.00000001);
+    assert(std::abs(r94[2] - 0.17707016) < 0.00000001);
+    assert(std::abs(r94[4] - 0.17277329) < 0.00000001);
+    assert(std::abs(r94[5] - 0.20412637) < 0.00000001);
+    assert(std::abs(r94[9] - 0.22006037) < 0.00000001);
+    assert(std::abs(r94[11] - 0.22118538) < 0.00000001);
+    assert(std::abs(r8[1] - 0.01264911) < 0.00000001);
+    assert(std::abs(r8[11] - 0.01694526) < 0.00000001);
+
+    // NaN observations give NaN results and are skipped by the recursion
+    //
+    assert(std::isnan(r94[3]) && std::isnan(r94[10]));
+    assert(std::isnan(r8[3]) && std::isnan(r8[10]));
+
+    // Annualizing multiplies the per period volatility by sqrt(252)
+    //
+    {
+        ewma_vol_v<double>  ewma_94_pp { 0.94, 1 };
+
+        df.single_act_visit<double>("ret", ewma_94_pp);
+        for (size_t i = 0; i < 12; ++i)
+            if (! std::isnan(r94[i]))
+                assert(std::abs(r94[i] -
+                                ewma_94_pp.get_result()[i] * std::sqrt(252.0))
+                       < 0.000001);
+    }
+
+    // Leading NaNs, as from ReturnVisitor
+    //
+    {
+        ULDataFrame df2;
+
+        df2.load_data(StlVecType<unsigned long> { 1, 2, 3, 4, 5 },
+                      std::make_pair("ret", lead_nan));
+
+        ewma_vol_v<double>  ewma_lead { 0.94, 1 };
+
+        df2.single_act_visit<double>("ret", ewma_lead);
+        assert(std::isnan(ewma_lead.get_result()[0]));
+        assert(std::isnan(ewma_lead.get_result()[1]));
+        assert(std::abs(ewma_lead.get_result()[2] - 0.01) < 0.00000001);
+        assert(std::abs(ewma_lead.get_result()[3] - 0.01086278) < 0.00000001);
+        assert(std::abs(ewma_lead.get_result()[4] - 0.01284212) < 0.00000001);
+    }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    {
+        ewma_vol_v<double>  bad_lambda { 1.0 };
+        ewma_vol_v<double>  bad_periods { 0.94, 0 };
+        bool                thrown { false };
+
+        try  {
+            df.single_act_visit<double>("ret", bad_lambda);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+
+        thrown = false;
+        try  {
+            df.single_act_visit<double>("ret", bad_periods);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    // Real data: percentage returns of IBM close
+    //
+    StrDataFrame    ibm_df;
+
+    try  {
+        ibm_df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    ibm_df.load_result_as_column<double>(
+        "IBM_Close",
+        ReturnVisitor<double, std::string>(return_policy::percentage),
+        "IBM_Return");
+
+    ewma_vol_v<double, std::string> ibm_94;
+    ewma_vol_v<double, std::string> ibm_97 { 0.97, 1 };
+
+    ibm_df.single_act_visit<double>("IBM_Return", ibm_94);
+    ibm_df.single_act_visit<double>("IBM_Return", ibm_97);
+
+    const auto  &i94 = ibm_94.get_result();
+    const auto  &i97 = ibm_97.get_result();
+
+    assert(i94.size() == 5031);
+    assert(std::isnan(i94[0]));
+    assert(std::abs(i94[1] - 0.54357858) < 0.00000001);
+    assert(std::abs(i94[2] - 0.53153471) < 0.00000001);
+    assert(std::abs(i94[100] - 0.56048032) < 0.00000001);
+    assert(std::abs(i94[2500] - 0.14034458) < 0.00000001);
+    assert(std::abs(i94[5030] - 0.36545901) < 0.00000001);
+    assert(std::isnan(i97[0]));
+    assert(std::abs(i97[1] - 0.03424223) < 0.00000001);
+    assert(std::abs(i97[100] - 0.03473627) < 0.00000001);
+    assert(std::abs(i97[2500] - 0.01018846) < 0.00000001);
+    assert(std::abs(i97[5030] - 0.02107590) < 0.00000001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -7960,6 +8101,7 @@ int main(int, char *[])  {
     test_ValueAtRiskVisitor();
     test_CalmarRatioVisitor();
     test_InformationRatioVisitor();
+    test_EWMAVolVisitor();
 
     return (0);
 }

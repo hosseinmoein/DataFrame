@@ -8257,7 +8257,7 @@ struct  StochasticOscillatorVisitor  {
                               : T(100) * (*(close_begin + i) - low) / range;
                 }
             };
-                    
+
         if (thread_level > 2)  {
             auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
@@ -9572,6 +9572,87 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using infor_v = InformationRatioVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+// EWMA (RiskMetrics) volatility. It is the exponentially weighted moving
+// estimate of the volatility of a return series, assuming zero mean returns:
+//
+//     var[0] = r[0]^2
+//     var[t] = lambda * var[t-1] + (1 - lambda) * r[t]^2
+//     vol[t] = sqrt(var[t] * trading_periods)
+//
+// The input column is assumed to be returns, not prices. Note that lambda is
+// the weight of the previous variance (RiskMetrics convention), not the
+// weight of the newest observation as in the decay parameter of
+// ExponentiallyWeightedVarVisitor. The first valid observation seeds the
+// variance, so the first few results are noisy until the seed has decayed.
+// NaN observations are skipped: their results are NaN and the variance state
+// carries over to the next valid observation. Results before the first valid
+// observation are NaN.
+//
+// The result is annualized by sqrt(trading_periods). Pass 1 for the per
+// period volatility. lambda must be in (0, 1) exclusive.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  EWMAVolVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &, const K &,
+               const H &column_begin, const H &column_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (lambda_ <= value_type(0) ||
+            lambda_ >= value_type(1) ||
+            trading_periods_ == 0)
+            throw DataFrameError("EWMAVolVisitor: lambda must be in (0, 1) "
+                                 "and trading periods must be > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        constexpr value_type    nan { std::numeric_limits<T>::quiet_NaN() };
+
+        const value_type    one_minus_lambda { value_type(1) - lambda_ };
+        const value_type    periods { value_type(trading_periods_) };
+        result_type         result(col_s, nan);
+        value_type          var { 0 };
+        bool                seeded { false };
+
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    r { *(column_begin + i) };
+
+            if (std::isnan(r)) [[unlikely]]  continue;
+
+            var = seeded ? lambda_ * var + one_minus_lambda * r * r : r * r;
+            seeded = true;
+            result[i] = std::sqrt(var * periods);
+        }
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    EWMAVolVisitor(value_type lambda = 0.94, size_type trading_periods = 252)
+        : lambda_(lambda), trading_periods_(trading_periods)  {  }
+
+private:
+
+    const value_type    lambda_;
+    const size_type     trading_periods_;
+    result_type         result_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ewma_vol_v = EWMAVolVisitor<T, I, A>;
 
 } // namespace hmdf
 

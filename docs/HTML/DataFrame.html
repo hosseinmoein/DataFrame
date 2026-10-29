@@ -1800,6 +1800,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates the EWMA (RiskMetrics) volatility"><a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/EWMAVolVisitor.html">EWMAVolVisitor</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates rolling Garman Klass volatility"><a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/GarmanKlassVolVisitor.html">GarmanKlassVolVisitor</a>{}</td>
     </tr>
 
@@ -2767,7 +2771,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     All types; both built-in and user defined. Some interfaces may put a conceptual (i.e. C++23 concepts) limit on the column type. For example,  <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/pivot_table.html"> pivot_table()</a> function requires the column type to be hash-able.</LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">Why did you use the visitor pattern for analytical algorithms?</font></I><BR>
-    <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#5">This is why</a></LI>
+    <a href="https://hosseinmoein.github.io/DataFrame/docs/HTML/DataFrame.html#51">This is why</a></LI>
 
     <LI><I><font color="darkred" face="Arial" size="+1">Why isn&apos;t there a custom column class type for DataFrame columns (similar to series in Pandas) instead of simple std::vector<...>?</font></I><BR>
 	I don&apos;t see any point in providing such a class. A C++ programmer can accomplish all the functionalities she needs using a reference to a std::vector. The additional series-like class adds no value.</LI>

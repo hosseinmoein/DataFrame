@@ -8042,6 +8042,164 @@ static void test_EWMAVolVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_RogersSatchellVolVisitor()  {
+
+    std::cout << "\nTesting RogersSatchellVolVisitor{ } ..." << std::endl;
+
+    ULDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
+          123458, 123459, 123460, 123461, 123462, 123463, 123464 };
+    StlVecType<double>          open =
+        { 100.0, 101.2, 100.5, 102.3, 103.1, 102.0, 101.4, 103.8,
+          104.5, 103.2, 105.0, 106.1, 105.3, 104.2, 105.9 };
+    StlVecType<double>          high =
+        { 101.8, 101.9, 102.6, 103.5, 103.4, 102.4, 104.0, 105.0,
+          104.9, 105.3, 106.5, 106.3, 105.6, 106.0, 107.0 };
+    StlVecType<double>          low =
+        { 99.5, 100.1, 100.2, 101.9, 101.8, 100.9, 101.0, 103.2,
+          102.8, 102.9, 104.6, 104.8, 103.9, 103.8, 105.5 };
+    StlVecType<double>          close =
+        { 101.0, 100.6, 102.0, 103.0, 102.2, 101.5, 103.5, 104.4,
+          103.0, 104.8, 105.9, 105.0, 104.5, 105.6, 106.4 };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("open", open),
+                 std::make_pair("high", high),
+                 std::make_pair("low", low),
+                 std::make_pair("close", close));
+
+    rs_vol_v<double>    rs_5 { 5, 252 };
+    rs_vol_v<double>    rs_3 { 3, 1 };
+    rs_vol_v<double>    rs_all { 15, 252 };
+
+    df.single_act_visit<double, double, double, double>
+        ("low", "high", "open", "close", rs_5);
+    df.single_act_visit<double, double, double, double>
+        ("low", "high", "open", "close", rs_3);
+    df.single_act_visit<double, double, double, double>
+        ("low", "high", "open", "close", rs_all);
+
+    const auto  &r5 = rs_5.get_result();
+    const auto  &r3 = rs_3.get_result();
+
+    assert(r5.size() == 15);
+    assert(r3.size() == 15);
+
+    // The first roll count - 1 results are NaN
+    //
+    for (size_t i = 0; i < 4; ++i)  assert(std::isnan(r5[i]));
+    for (size_t i = 0; i < 2; ++i)  assert(std::isnan(r3[i]));
+
+    assert(std::abs(r5[4] - 0.18989137) < 0.00000001);
+    assert(std::abs(r5[5] - 0.17368440) < 0.00000001);
+    assert(std::abs(r5[6] - 0.18434049) < 0.00000001);
+    assert(std::abs(r5[9] - 0.18799629) < 0.00000001);
+    assert(std::abs(r5[14] - 0.15905491) < 0.00000001);
+    assert(std::abs(r3[2] - 0.01333207) < 0.00000001);
+    assert(std::abs(r3[3] - 0.01177596) < 0.00000001);
+    assert(std::abs(r3[14] - 0.01045614) < 0.00000001);
+
+    // One window covering all of the data
+    //
+    assert(std::abs(rs_all.get_result()[14] - 0.17953626) < 0.00000001);
+    for (size_t i = 0; i < 14; ++i)  assert(std::isnan(rs_all.get_result()[i]));
+
+    // Annualizing multiplies the per period volatility by sqrt(252)
+    //
+    {
+        rs_vol_v<double>    rs_5_pp { 5, 1 };
+
+        df.single_act_visit<double, double, double, double>
+            ("low", "high", "open", "close", rs_5_pp);
+        for (size_t i = 4; i < 15; ++i)
+            assert(std::abs(r5[i] -
+                            rs_5_pp.get_result()[i] * std::sqrt(252.0))
+                   < 0.000001);
+    }
+
+    // A flat bar (O = H = L = C) has no volatility
+    //
+    {
+        ULDataFrame df2;
+
+        df2.load_data(StlVecType<unsigned long> { 1, 2, 3 },
+                      std::make_pair("open", StlVecType<double> { 5, 5, 5 }),
+                      std::make_pair("high", StlVecType<double> { 5, 5, 5 }),
+                      std::make_pair("low", StlVecType<double> { 5, 5, 5 }),
+                      std::make_pair("close", StlVecType<double> { 5, 5, 5 }));
+
+        rs_vol_v<double>    rs_flat { 2, 252 };
+
+        df2.single_act_visit<double, double, double, double>
+            ("low", "high", "open", "close", rs_flat);
+        assert(std::isnan(rs_flat.get_result()[0]));
+        assert(rs_flat.get_result()[1] == 0.0);
+        assert(rs_flat.get_result()[2] == 0.0);
+    }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    {
+        rs_vol_v<double>    bad_roll { 16, 252 };
+        rs_vol_v<double>    zero_roll { 0, 252 };
+        bool                thrown { false };
+
+        try  {
+            df.single_act_visit<double, double, double, double>
+                ("low", "high", "open", "close", bad_roll);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+
+        thrown = false;
+        try  {
+            df.single_act_visit<double, double, double, double>
+                ("low", "high", "open", "close", zero_roll);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    // Real data: IBM OHLC
+    //
+    StrDataFrame    ibm_df;
+
+    try  {
+        ibm_df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    rs_vol_v<double, std::string>   ibm_30 { 30, 252 };
+    rs_vol_v<double, std::string>   ibm_20 { 20, 1 };
+
+    ibm_df.single_act_visit<double, double, double, double>
+        ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", ibm_30);
+    ibm_df.single_act_visit<double, double, double, double>
+        ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", ibm_20);
+
+    const auto  &i30 = ibm_30.get_result();
+    const auto  &i20 = ibm_20.get_result();
+
+    assert(i30.size() == 5031);
+    assert(std::isnan(i30[28]));
+    assert(std::abs(i30[29] - 0.38856109) < 0.00000001);
+    assert(std::abs(i30[30] - 0.38751657) < 0.00000001);
+    assert(std::abs(i30[100] - 0.46112102) < 0.00000001);
+    assert(std::abs(i30[2500] - 0.11169911) < 0.00000001);
+    assert(std::abs(i30[5030] - 0.23118449) < 0.00000001);
+    assert(std::isnan(i20[18]));
+    assert(std::abs(i20[19] - 0.02103504) < 0.00000001);
+    assert(std::abs(i20[100] - 0.02815175) < 0.00000001);
+    assert(std::abs(i20[2500] - 0.00672148) < 0.00000001);
+    assert(std::abs(i20[5030] - 0.01490774) < 0.00000001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -8102,6 +8260,7 @@ int main(int, char *[])  {
     test_CalmarRatioVisitor();
     test_InformationRatioVisitor();
     test_EWMAVolVisitor();
+    test_RogersSatchellVolVisitor();
 
     return (0);
 }

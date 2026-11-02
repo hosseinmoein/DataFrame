@@ -9654,6 +9654,121 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using ewma_vol_v = EWMAVolVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+// Rogers-Satchell volatility estimator. It uses open, high, low and close
+// prices and, unlike Parkinson and Garman-Klass, allows for a non-zero drift:
+//
+//     rs[i]  = ln(H/C) * ln(H/O) + ln(L/C) * ln(L/O)
+//     vol[i] = sqrt(mean(rs over the last roll_count bars) * trading_periods)
+//
+// The rolling window includes the current bar (same as ParkinsonVolVisitor).
+// The first roll_count - 1 results are NaN. For valid bars (L <= O, C <= H)
+// each rs[i] is >= 0. The result is annualized by sqrt(trading_periods).
+//
+// The columns must be passed in this order: low, high, open, close, as in
+// GarmanKlassVolVisitor and YangZhangVolVisitor.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  RogersSatchellVolVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &low_begin, const H &low_end,
+               const H &high_begin, const H &high_end,
+               const H &open_begin, const H &open_end,
+               const H &close_begin, const H &close_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(close_begin, close_end))
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            col_s != size_type(std::distance(open_begin, open_end)) ||
+            roll_count_ == 0 || roll_count_ > col_s)
+            throw DataFrameError("RogersSatchellVolVisitor: All columns must "
+                                 "be of equal size and 0 < roll count <= "
+                                 "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        const auto  thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+        result_type result(col_s);
+        auto        rs_term =
+            [&low_begin = std::as_const(low_begin),
+             &high_begin = std::as_const(high_begin),
+             &open_begin = std::as_const(open_begin),
+             &close_begin = std::as_const(close_begin)]
+            (size_type i) -> value_type  {
+                const value_type    h { *(high_begin + i) };
+                const value_type    l { *(low_begin + i) };
+                const value_type    o { *(open_begin + i) };
+                const value_type    c { *(close_begin + i) };
+
+                return (std::log(h / c) * std::log(h / o) +
+                        std::log(l / c) * std::log(l / o));
+            };
+
+        if (thread_level > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    size_type(0),
+                    col_s,
+                    [&result, &rs_term](auto begin, auto end) mutable -> void {
+                        for (size_type i { begin }; i < end; ++i) [[likely]]
+                            result[i] = rs_term(i);
+                    })
+            };
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]
+                result[i] = rs_term(i);
+        }
+
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   avg {
+            MeanVisitor<T, I>(), roll_count_
+        };
+
+        avg.pre();
+        avg(idx_begin, idx_end, result.begin(), result.end());
+        avg.post();
+        result = std::move(avg.get_result());
+
+        const value_type    periods { value_type(trading_periods_) };
+
+        for (size_type i { roll_count_ - 1 }; i < col_s; ++i) [[likely]]
+            result[i] = std::sqrt(result[i] * periods);
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    RogersSatchellVolVisitor(size_type roll_count = 30,
+                             size_type trading_periods = 252)
+        : roll_count_(roll_count), trading_periods_(trading_periods)  {  }
+
+private:
+
+    result_type     result_ {  };
+    const size_type roll_count_;
+    const size_type trading_periods_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using rs_vol_v = RogersSatchellVolVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -8200,6 +8200,229 @@ static void test_RogersSatchellVolVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_AmihudIlliquidityVisitor()  {
+
+    std::cout << "\nTesting AmihudIlliquidityVisitor{ } ..." << std::endl;
+
+    auto    near = [](double a, double b) -> bool  {
+        return (std::abs(a - b) <= 1e-9 * std::abs(b) + 1e-18);
+    };
+
+    ULDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
+          123458, 123459, 123460, 123461, 123462, 123463, 123464 };
+    StlVecType<double>          close =
+        { 101.0, 100.6, 102.0, 103.0, 102.2, 101.5, 103.5, 104.4,
+          103.0, 104.8, 105.9, 105.0, 104.5, 105.6, 106.4 };
+    StlVecType<long>            volume =
+        { 1200000, 950000, 1100000, 1500000, 800000, 700000, 1300000,
+          1600000, 900000, 1000000, 1700000, 1250000, 600000, 1400000,
+          1800000 };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("close", close),
+                 std::make_pair("volume", volume));
+
+    amihud_v<double>    am_5 { 5, 1e6 };
+    amihud_v<double>    am_3 { 3, 1 };
+
+    df.single_act_visit<double, long>("close", "volume", am_5);
+    df.single_act_visit<double, long>("close", "volume", am_3);
+
+    const auto  &r5 = am_5.get_result();
+    const auto  &d5 = am_5.get_daily_illiq();
+    const auto  &r3 = am_3.get_result();
+
+    assert(r5.size() == 15);
+    assert(d5.size() == 15);
+    assert(r3.size() == 15);
+
+    // Index 0 has no return. The first roll count results are NaN.
+    //
+    assert(std::isnan(d5[0]));
+    for (size_t i = 0; i < 5; ++i)  assert(std::isnan(r5[i]));
+    for (size_t i = 0; i < 3; ++i)  assert(std::isnan(r3[i]));
+
+    assert(near(d5[1], 4.1439740918739814e-05));
+    assert(near(d5[2], 0.00012403298568659405));
+    assert(near(d5[3], 6.345580303318716e-05));
+    assert(near(d5[14], 3.955596060859331e-05));
+    assert(near(r5[5], 8.406546055166938e-05));
+    assert(near(r5[6], 0.00010506689697964483));
+    assert(near(r5[7], 9.067176077852451e-05));
+    assert(near(r5[14], 6.195153176729681e-05));
+    assert(near(r3[3], 7.630950987950701e-11));
+    assert(near(r3[14], 6.223471135751873e-11));
+
+    // Scaling is linear
+    //
+    {
+        amihud_v<double>    am_5_unit { 5, 1 };
+
+        df.single_act_visit<double, long>("close", "volume", am_5_unit);
+        for (size_t i = 5; i < 15; ++i)
+            assert(near(r5[i], am_5_unit.get_result()[i] * 1e6));
+    }
+
+    // A zero volume bar and a NaN close give NaN bars that the rolling mean
+    // skips. The bar after a NaN close has no valid previous close.
+    //
+    {
+        ULDataFrame df2;
+        auto        volume2 = volume;
+        auto        close2 = close;
+
+        volume2[7] = 0;
+        close2[9] = std::numeric_limits<double>::quiet_NaN();
+        df2.load_data(StlVecType<unsigned long> {
+                          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
+                      std::make_pair("close", close2),
+                      std::make_pair("volume", volume2));
+
+        amihud_v<double>    am_skip { 3, 1e6 };
+
+        df2.single_act_visit<double, long>("close", "volume", am_skip);
+
+        const auto  &rs = am_skip.get_result();
+        const auto  &ds = am_skip.get_daily_illiq();
+
+        for (size_t i : { 0, 7, 9, 10 })  assert(std::isnan(ds[i]));
+        for (size_t i : { 1, 2, 3, 4, 5, 6, 8, 11, 12, 13, 14 })
+            assert(! std::isnan(ds[i]));
+
+        assert(std::isnan(rs[2]));
+        assert(near(rs[3], 7.6309509879507e-05));
+        assert(near(rs[4], 9.416207459634486e-05));
+        assert(near(rs[6], 0.00011261523205948096));
+        assert(near(rs[7], 0.00012142413055459477));
+        assert(near(rs[8], 0.00014555335195985734));
+        assert(near(rs[9], 0.0001446597808610977));
+        assert(near(rs[10], 0.0001446597808610977));  // only bar 8 is valid
+        assert(near(rs[11], 6.475111290975344e-05));
+        assert(near(rs[14], 6.223471135751874e-05));
+
+        // A window with no valid bar is NaN
+        //
+        amihud_v<double>    am_one { 1, 1e6 };
+
+        df2.single_act_visit<double, long>("close", "volume", am_one);
+        assert(std::isnan(am_one.get_result()[7]));
+        assert(std::isnan(am_one.get_result()[9]));
+        assert(std::isnan(am_one.get_result()[10]));
+        assert(near(am_one.get_result()[8], ds[8]));
+    }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    {
+        amihud_v<double>    bad_roll { 15, 1 };
+        amihud_v<double>    zero_roll { 0, 1 };
+        bool                thrown { false };
+
+        try  {
+            df.single_act_visit<double, long>("close", "volume", bad_roll);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+
+        thrown = false;
+        try  {
+            df.single_act_visit<double, long>("close", "volume", zero_roll);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    // Large data, which takes the multithreaded path. The reference is a
+    // plain scalar loop.
+    //
+    {
+        constexpr size_t    N { 300000 };
+        ULDataFrame         df_big;
+        StlVecType<double>  big_close(N);
+        StlVecType<long>    big_volume(N);
+
+        for (size_t i = 0; i < N; ++i)  {
+            big_close[i] = 50.0 + 10.0 * std::sin(double(i) * 0.001) +
+                           0.5 * std::cos(double(i) * 0.37);
+            big_volume[i] = long(1000 + (i * 7919) % 5000);
+        }
+        big_volume[1000] = 0;
+
+        StlVecType<unsigned long>   big_idx(N);
+
+        std::iota(big_idx.begin(), big_idx.end(), 0UL);
+        df_big.load_data(std::move(big_idx),
+                         std::make_pair("close", big_close),
+                         std::make_pair("volume", big_volume));
+
+        amihud_v<double>    am_big { 21, 1e6 };
+
+        df_big.single_act_visit<double, long>("close", "volume", am_big);
+
+        const auto  &rb = am_big.get_result();
+        const auto  &db = am_big.get_daily_illiq();
+
+        assert(rb.size() == N);
+        assert(std::isnan(db[0]));
+        assert(std::isnan(db[1000]));
+        for (size_t i : { 1, 2, 999, 1001, 150000, 299999 })  {
+            const double    expected {
+                1e6 * std::abs(big_close[i] / big_close[i - 1] - 1.0) /
+                (big_close[i] * double(big_volume[i]))
+            };
+
+            assert(near(db[i], expected));
+        }
+
+        double  sum { 0 };
+
+        for (size_t j = 299999 - 20; j <= 299999; ++j)  sum += db[j];
+        assert(near(rb[299999], sum / 21.0));
+        assert(std::isnan(rb[20]));
+        assert(! std::isnan(rb[21]));
+    }
+
+    // Real data: IBM
+    //
+    StrDataFrame    ibm_df;
+
+    try  {
+        ibm_df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    amihud_v<double, std::string>   ibm_21 { 21, 1e6 };
+    amihud_v<double, std::string>   ibm_5 { 5, 1e6 };
+
+    ibm_df.single_act_visit<double, long>
+        ("IBM_Adj_Close", "IBM_Volume", ibm_21);
+    ibm_df.single_act_visit<double, long>("IBM_Adj_Close", "IBM_Volume", ibm_5);
+
+    const auto  &i21 = ibm_21.get_result();
+    const auto  &i5 = ibm_5.get_result();
+
+    assert(i21.size() == 5031);
+    assert(std::isnan(i21[20]));
+    assert(near(ibm_21.get_daily_illiq()[1], 7.081846978121279e-05));
+    assert(near(ibm_21.get_daily_illiq()[20], 9.954753206478371e-05));
+    assert(near(i21[21], 5.650568658964664e-05));
+    assert(near(i21[22], 5.7053223329909664e-05));
+    assert(near(i21[100], 4.1973095617023975e-05));
+    assert(near(i21[2500], 1.0560410420907394e-05));
+    assert(near(i21[5030], 2.058261944150584e-05));
+    assert(std::isnan(i5[4]));
+    assert(near(i5[5], 4.5877021572063764e-05));
+    assert(near(i5[6], 3.367369646463122e-05));
+    assert(near(i5[5030], 3.1070814714029556e-05));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -8261,6 +8484,7 @@ int main(int, char *[])  {
     test_InformationRatioVisitor();
     test_EWMAVolVisitor();
     test_RogersSatchellVolVisitor();
+    test_AmihudIlliquidityVisitor();
 
     return (0);
 }

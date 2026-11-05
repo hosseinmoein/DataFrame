@@ -9769,6 +9769,125 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using rs_vol_v = RogersSatchellVolVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+// Amihud illiquidity ratio. It measures the price impact of volume: the
+// absolute return per unit of dollar volume. A higher value means a less
+// liquid market.
+//
+//     ret[i]    = close[i] / close[i - 1] - 1
+//     illiq[i]  = scale * |ret[i]| / (close[i] * volume[i])
+//     result[i] = mean of illiq over the last roll_count bars
+//
+// The rolling window includes the current bar. A bar's illiq is NaN if its
+// volume, its close or the previous close is NaN or not positive (this
+// includes zero volume bars, where the ratio is unbounded). NaN bars are
+// skipped by the rolling mean, which is over the remaining bars of the window.
+// A window with no valid bar gives NaN. Index 0 has no return, so the first
+// roll_count results are NaN.
+//
+// Use scale to put the ratio into convenient units. 1e6 is the convention in
+// the academic literature for dollar volume in dollars. The default is 1.
+//
+// The columns must be passed in this order: close, volume.
+//
+// get_result() returns the rolling mean. get_daily_illiq() returns the
+// per-bar values.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  AmihudIlliquidityVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H, typename V>
+    inline void
+    operator()(const K &, const K &,
+               const H &close_begin, const H &close_end,
+               const V &volume_begin, const V &volume_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(close_begin, close_end))
+        };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(volume_begin, volume_end)) ||
+            roll_count_ == 0 || roll_count_ >= col_s)
+            throw DataFrameError("AmihudIlliquidityVisitor: All columns must "
+                                 "be of equal size and 0 < roll count < "
+                                 "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        constexpr value_type    nan { std::numeric_limits<T>::quiet_NaN() };
+
+        result_type daily(col_s, nan);
+        auto        illiq_func =
+            [&daily,
+             &close_begin = std::as_const(close_begin),
+             &volume_begin = std::as_const(volume_begin),
+             scale = scale_]
+            (size_type begin, size_type end) -> void  {
+                for (size_type i { begin }; i < end; ++i) [[likely]]  {
+                    const value_type    c { *(close_begin + i) };
+                    const value_type    p { *(close_begin + (i - 1)) };
+                    const value_type    v { value_type(*(volume_begin + i)) };
+
+                    // NaN fails every one of these comparisons
+                    //
+                    if (! (v > 0 && c > 0 && p > 0)) [[unlikely]]  continue;
+                    daily[i] =
+                        scale * std::abs(c / p - value_type(1)) / (c * v);
+                }
+            };
+
+        if (thread_level > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    size_type(1),
+                    col_s,
+                    [&illiq_func](auto begin, auto end) mutable -> void  {
+                        illiq_func(begin, end);
+                    })
+            };
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else
+            illiq_func(1, col_s);
+
+        result_ = _skip_nan_roll_mean_(daily, roll_count_, 1);
+        daily_.swap(daily);
+    }
+
+    inline void pre()  { result_.clear(); daily_.clear(); }
+    inline void post()  {   }
+
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+
+    inline const result_type &
+    get_daily_illiq() const  { return (daily_); }
+    inline result_type &get_daily_illiq()  { return (daily_); }
+
+    explicit
+    AmihudIlliquidityVisitor(size_type roll_count = 21,
+                             value_type scale = 1)
+        : roll_count_(roll_count), scale_(scale)  {   }
+
+private:
+
+    const size_type     roll_count_;
+    const value_type    scale_;
+    result_type         result_ { };
+    result_type         daily_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using amihud_v = AmihudIlliquidityVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

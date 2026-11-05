@@ -476,6 +476,35 @@ static inline auto _reduce_to_product_(const V &v) noexcept  {
 
 // ----------------------------------------------------------------------------
 
+template<typename V>
+inline V
+_skip_nan_roll_mean_(const V &in,
+                     std::size_t period,
+                     std::size_t first_valid)  {
+
+    using value_type = typename V::value_type;
+
+    const std::size_t   col_s { in.size() };
+    V                   result(col_s,
+                               std::numeric_limits<value_type>::quiet_NaN());
+
+    for (std::size_t i { first_valid + period - 1 }; i < col_s; ++i)  {
+        value_type  sum { 0 };
+        std::size_t cnt { 0 };
+
+        for (std::size_t j { i + 1 - period }; j <= i; ++j)
+            if (! std::isnan(in[j])) [[likely]]  {
+                sum += in[j];
+                ++cnt;
+            }
+        if (cnt > 0)  result[i] = sum / value_type(cnt);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename I = unsigned long>
 struct  LastVisitor  {
 

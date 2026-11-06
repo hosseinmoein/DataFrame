@@ -8423,6 +8423,264 @@ static void test_AmihudIlliquidityVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_CorwinSchultzSpreadVisitor()  {
+
+    std::cout << "\nTesting CorwinSchultzSpreadVisitor{ } ..." << std::endl;
+
+    auto    near = [](double a, double b) -> bool  {
+        return (std::abs(a - b) <= 1e-9 * std::abs(b) + 1e-15);
+    };
+
+    ULDataFrame                 df;
+    StlVecType<unsigned long>   idxvec =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
+          123458, 123459, 123460, 123461, 123462, 123463, 123464 };
+    StlVecType<double>          high =
+        { 101.8, 101.9, 102.6, 103.5, 103.4, 102.4, 104.0, 105.0,
+          104.9, 105.3, 106.5, 106.3, 105.6, 106.0, 107.0 };
+    StlVecType<double>          low =
+        { 99.5, 100.1, 100.2, 101.9, 101.8, 100.9, 101.0, 103.2,
+          102.8, 102.9, 104.6, 104.8, 103.9, 103.8, 105.5 };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("high", high),
+                 std::make_pair("low", low));
+
+    cs_spread_v<double> cs_floor;
+    cs_spread_v<double> cs_raw { 1, false };
+    cs_spread_v<double> cs_roll4 { 4, true };
+
+    df.single_act_visit<double, double>("low", "high", cs_floor);
+    df.single_act_visit<double, double>("low", "high", cs_raw);
+    df.single_act_visit<double, double>("low", "high", cs_roll4);
+
+    const auto  &sf = cs_floor.get_result();
+    const auto  &sr = cs_raw.get_result();
+    const auto  &s4 = cs_roll4.get_result();
+
+    assert(sf.size() == 15);
+    assert(sr.size() == 15);
+    assert(s4.size() == 15);
+
+    // Index 0 has no previous bar
+    //
+    assert(std::isnan(sf[0]));
+    assert(std::isnan(sr[0]));
+    for (size_t i = 0; i < 4; ++i)  assert(std::isnan(s4[i]));
+
+    // With the default roll count the result is the raw (floored) estimate
+    //
+    assert(near(sf[1], 0.012423803886503448));
+    assert(near(sf[2], 0.011976659353238734));
+    assert(sf[3] == 0.0);
+    assert(near(sf[4], 0.013235046770359669));
+    assert(sf[5] == 0.0);
+    assert(near(sf[6], 0.006081070033822022));
+    assert(sf[7] == 0.0);
+    assert(near(sf[8], 0.013113794139407497));
+    assert(near(sf[9], 0.016029026926238928));
+    assert(sf[10] == 0.0);
+    assert(near(sf[11], 0.011910779062301086));
+    assert(sf[12] == 0.0);
+    assert(near(sf[13], 0.013389201299554022));
+    assert(sf[14] == 0.0);
+    for (size_t i = 1; i < 15; ++i)
+        assert(sf[i] >= 0.0);
+
+    // Without flooring the negative estimates are kept
+    //
+    assert(near(sr[1], 0.012423803886503448));
+    assert(near(sr[3], -0.00981724755955304));
+    assert(near(sr[5], -0.007254684723046436));
+    assert(near(sr[7], -0.011693093347818718));
+    assert(near(sr[10], -0.012400091955422925));
+    assert(near(sr[12], -0.0030518420808204683));
+    assert(near(sr[14], -0.012265804046702482));
+    for (size_t i = 1; i < 15; ++i)
+        assert(sr[i] <= sf[i] + 1e-15 || sf[i] == sr[i]);
+
+    // The spread getter is the raw, per pair series even when rolling
+    //
+    for (size_t i = 0; i < 15; ++i)
+        assert((std::isnan(cs_roll4.get_spread()[i]) && std::isnan(sf[i])) ||
+               cs_roll4.get_spread()[i] == sf[i]);
+
+    // Rolling mean over the last 4 estimates
+    //
+    assert(near(s4[4], 0.009408877502525462));
+    assert(near(s4[5], 0.006302926530899601));
+    assert(near(s4[14], 0.006324995090463777));
+
+    // A NaN in a bar spoils the two pairs it belongs to. The rolling mean
+    // skips those.
+    //
+    {
+        ULDataFrame df2;
+        auto        low2 = low;
+
+        low2[6] = std::numeric_limits<double>::quiet_NaN();
+        df2.load_data(StlVecType<unsigned long>{
+                          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
+                      std::make_pair("high", high),
+                      std::make_pair("low", low2));
+
+        cs_spread_v<double> cs_nan;
+        cs_spread_v<double> cs_nan3 { 3, true };
+
+        df2.single_act_visit<double, double>("low", "high", cs_nan);
+        df2.single_act_visit<double, double>("low", "high", cs_nan3);
+
+        const auto  &sn = cs_nan.get_result();
+        const auto  &s3 = cs_nan3.get_result();
+
+        for (size_t i : { 0, 6, 7 })  assert(std::isnan(sn[i]));
+        for (size_t i : { 1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14 })
+            assert(! std::isnan(sn[i]));
+
+        assert(std::isnan(s3[2]));
+        assert(near(s3[3], 0.008133487746580728));
+        assert(near(s3[5], 0.0044116822567865565));
+        assert(near(s3[6], 0.006617523385179834));  // mean of bars 4, 5
+        assert(s3[7] == 0.0);                       // only bar 5 is valid
+        assert(near(s3[8], 0.013113794139407497));  // only bar 8 valid
+        assert(near(s3[9], 0.014571410532823213));
+        assert(near(s3[14], 0.004463067099851341));
+    }
+
+    // Flat bars (H == L) have no range, hence no spread
+    //
+    {
+        ULDataFrame df3;
+
+        df3.load_data(StlVecType<unsigned long> { 1, 2, 3 },
+                      std::make_pair("high", StlVecType<double> { 5, 5, 5 }),
+                      std::make_pair("low", StlVecType<double> { 5, 5, 5 }));
+
+        cs_spread_v<double> cs_flat;
+
+        df3.single_act_visit<double, double>("low", "high", cs_flat);
+        assert(std::isnan(cs_flat.get_result()[0]));
+        assert(cs_flat.get_result()[1] == 0.0);
+        assert(cs_flat.get_result()[2] == 0.0);
+    }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    {
+        cs_spread_v<double> bad_roll { 15 };
+        cs_spread_v<double> zero_roll { 0 };
+        bool                thrown { false };
+
+        try  {
+            df.single_act_visit<double, double>("low", "high", bad_roll);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+
+        thrown = false;
+        try  {
+            df.single_act_visit<double, double>("low", "high", zero_roll);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    // Large data, which takes the multithreaded path
+    //
+    {
+        constexpr size_t    N { 300000 };
+        ULDataFrame         df_big;
+        StlVecType<double>  big_high(N);
+        StlVecType<double>  big_low(N);
+
+        for (size_t i = 0; i < N; ++i)  {
+            const double    mid { 50.0 + 10.0 * std::sin(double(i) * 0.001) };
+            const double    half { 0.2 + 0.1 * std::abs(std::cos(double(i))) };
+
+            big_high[i] = mid + half;
+            big_low[i] = mid - half;
+        }
+
+        StlVecType<unsigned long>   big_idx(N);
+
+        std::iota(big_idx.begin(), big_idx.end(), 0UL);
+        df_big.load_data(std::move(big_idx),
+                         std::make_pair("high", big_high),
+                         std::make_pair("low", big_low));
+
+        cs_spread_v<double> cs_big { 1, false };
+
+        df_big.single_act_visit<double, double>("low", "high", cs_big);
+
+        const double    k { 3.0 - 2.0 * std::sqrt(2.0) };
+
+        for (size_t i : { 1, 2, 12345, 150000, 299999 })  {
+            const double    hl0 { std::log(big_high[i - 1] / big_low[i - 1]) };
+            const double    hl1 { std::log(big_high[i] / big_low[i]) };
+            const double    hl2 {
+                std::log(std::max(big_high[i - 1], big_high[i]) /
+                         std::min(big_low[i - 1], big_low[i]))
+            };
+            const double    beta { hl0 * hl0 + hl1 * hl1 };
+            const double    alpha {
+                (std::sqrt(2.0 * beta) - std::sqrt(beta)) / k -
+                std::sqrt(hl2 * hl2 / k)
+            };
+            const double    expected {
+                2.0 * (std::exp(alpha) - 1.0) / (1.0 + std::exp(alpha))
+            };
+
+            assert(near(cs_big.get_result()[i], expected));
+        }
+        assert(std::isnan(cs_big.get_result()[0]));
+    }
+
+    // Real data: IBM
+    //
+    StrDataFrame    ibm_df;
+
+    try  {
+        ibm_df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    cs_spread_v<double, std::string>    ibm_raw;
+    cs_spread_v<double, std::string>    ibm_20 { 20, true };
+    cs_spread_v<double, std::string>    ibm_nofloor { 1, false };
+
+    ibm_df.single_act_visit<double, double>("IBM_Low", "IBM_High", ibm_raw);
+    ibm_df.single_act_visit<double, double>("IBM_Low", "IBM_High", ibm_20);
+    ibm_df.single_act_visit<double, double>("IBM_Low", "IBM_High", ibm_nofloor);
+
+    const auto  &r1 = ibm_raw.get_result();
+    const auto  &r20 = ibm_20.get_result();
+
+    assert(r1.size() == 5031);
+    assert(std::isnan(r1[0]));
+    assert(r1[1] == 0.0);
+    assert(near(r1[2], 0.021128136681725255));
+    assert(near(r1[100], 0.03321411373260442));
+    assert(r1[2500] == 0.0);
+    assert(r1[5030] == 0.0);
+    assert(std::isnan(r20[19]));
+    assert(near(r20[20], 0.009787997883926512));
+    assert(near(r20[21], 0.010431282869297226));
+    assert(near(r20[2500], 0.002778441510972533));
+    assert(near(r20[5030], 0.002521880094260608));
+    assert(near(ibm_nofloor.get_result()[1], -0.010531744664658293));
+
+    size_t  neg_cnt { 0 };
+
+    for (size_t i = 1; i < 5031; ++i)
+        neg_cnt += ibm_nofloor.get_result()[i] < 0.0 ? 1 : 0;
+    assert(neg_cnt == 2249);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -8485,6 +8743,7 @@ int main(int, char *[])  {
     test_EWMAVolVisitor();
     test_RogersSatchellVolVisitor();
     test_AmihudIlliquidityVisitor();
+    test_CorwinSchultzSpreadVisitor();
 
     return (0);
 }

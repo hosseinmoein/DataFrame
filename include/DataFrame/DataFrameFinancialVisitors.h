@@ -9888,6 +9888,148 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using amihud_v = AmihudIlliquidityVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+// Corwin-Schultz high-low bid-ask spread estimator (Corwin & Schultz, 2012).
+// It estimates the effective relative spread from daily high and low prices
+// alone. The high-low range of a bar contains both volatility and spread, but
+// the volatility part grows with time while the spread part does not. Comparing
+// the one bar range with the two bar range separates the two.
+//
+//     beta   = ln(H[i - 1] / L[i - 1])^2 + ln(H[i] / L[i])^2
+//     gamma  = ln(max(H[i - 1], H[i]) / min(L[i - 1], L[i]))^2
+//     k      = 3 - 2 * sqrt(2)
+//     alpha  = (sqrt(2 * beta) - sqrt(beta)) / k - sqrt(gamma / k)
+//     S[i]   = 2 * (exp(alpha) - 1) / (1 + exp(alpha))
+//
+// S[i] is the spread as a fraction of price (0.01 is 1%). It uses bars i - 1
+// and i, so it never looks ahead. Index 0 has no previous bar and is NaN.
+//
+// A two bar estimate can come out negative (it is a difference of noisy
+// quantities). If floor_at_zero is true, as the authors recommend when
+// averaging, negative estimates are set to zero.
+//
+// If roll_count > 1, the result is the mean of the last roll_count two-bar
+// estimates, NaN estimates skipped (the first roll_count results are then
+// NaN). With the default roll_count of 1 the result is the raw two bar
+// estimate.
+//
+// Bars must satisfy H >= L > 0. A NaN in either bar of a pair gives a NaN
+// estimate. The estimator is not adjusted for overnight gaps.
+//
+// The columns must be passed in this order: low, high.
+//
+// get_result() returns the (rolling) spread. get_spread() returns the raw two
+// bar estimates.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  CorwinSchultzSpreadVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &, const K &,
+               const H &low_begin, const H &low_end,
+               const H &high_begin, const H &high_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(high_begin, high_end))
+        };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            roll_count_ == 0 || roll_count_ >= col_s)
+            throw DataFrameError("CorwinSchultzSpreadVisitor: All columns "
+                                 "must be of equal size and 0 < roll count < "
+                                 "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        constexpr value_type    nan { std::numeric_limits<T>::quiet_NaN() };
+        constexpr value_type    k { T(3) - T(2) * T(1.41421356237309504880) };
+
+        result_type spread(col_s, nan);
+        auto        spread_func =
+            [&spread,
+             &low_begin = std::as_const(low_begin),
+             &high_begin = std::as_const(high_begin),
+             floor_at_zero = floor_at_zero_]
+            (size_type begin, size_type end) -> void  {
+                for (size_type i { begin }; i < end; ++i) [[likely]]  {
+                    const value_type    h0 { *(high_begin + (i - 1)) };
+                    const value_type    l0 { *(low_begin + (i - 1)) };
+                    const value_type    h1 { *(high_begin + i) };
+                    const value_type    l1 { *(low_begin + i) };
+                    const value_type    hl0 { std::log(h0 / l0) };
+                    const value_type    hl1 { std::log(h1 / l1) };
+                    const value_type    hl2 {
+                        std::log(std::max(h0, h1) / std::min(l0, l1))
+                    };
+                    const value_type    beta { hl0 * hl0 + hl1 * hl1 };
+                    const value_type    gamma { hl2 * hl2 };
+                    const value_type    alpha {
+                        (std::sqrt(T(2) * beta) - std::sqrt(beta)) / k -
+                        std::sqrt(gamma / k)
+                    };
+
+                    // 2 * (e^a - 1) / (1 + e^a) == 2 * tanh(a / 2)
+                    //
+                    value_type  s { T(2) * std::tanh(alpha / T(2)) };
+
+                    if (floor_at_zero && s < 0) [[unlikely]]  s = 0;
+                    spread[i] = s;
+                }
+            };
+
+        if (thread_level > 2)  {
+            auto    futures {
+                ThreadGranularity::thr_pool_.parallel_loop<value_type>(
+                    size_type(1),
+                    col_s,
+                    spread_func)
+            };
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else
+            spread_func(1, col_s);
+
+        if (roll_count_ > 1)
+            result_ = _skip_nan_roll_mean_(spread, roll_count_, 1);
+        else
+            result_ = spread;
+        spread_.swap(spread);
+    }
+
+    inline void pre()  { result_.clear(); spread_.clear(); }
+    inline void post()  {   }
+
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+
+    inline const result_type &get_spread() const  { return (spread_); }
+    inline result_type &get_spread()  { return (spread_); }
+
+    explicit
+    CorwinSchultzSpreadVisitor(size_type roll_count = 1,
+                               bool floor_at_zero = true)
+        : roll_count_(roll_count), floor_at_zero_(floor_at_zero)  {   }
+
+private:
+
+    const size_type roll_count_;
+    const bool      floor_at_zero_;
+    result_type     result_ { };
+    result_type     spread_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using cs_spread_v = CorwinSchultzSpreadVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

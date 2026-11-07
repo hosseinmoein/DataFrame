@@ -8681,6 +8681,278 @@ static void test_CorwinSchultzSpreadVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_VolumeProfileVisitor()  {
+
+    std::cout << "\nTesting VolumeProfileVisitor{ } ..." << std::endl;
+
+    auto    near = [](double a, double b) -> bool  {
+        return (std::abs(a - b) <= 1e-9 * std::abs(b) + 1e-12);
+    };
+
+    ULDataFrame                 df;
+    StlVecType<unsigned long>   idxvec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    StlVecType<double>          price =
+        { 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+    StlVecType<long>            volume =
+        { 5, 10, 20, 40, 80, 30, 15, 12, 6, 4, 2 };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("price", price),
+                 std::make_pair("volume", volume));
+
+    // 5 bins of width 2 over [10, 20]: [10, 12), [12, 14), [14, 16),
+    // [16, 18) and [18, 20]. The last bin includes the maximum price.
+    //
+    vol_profile_v<double>   vp { 5, 0.7 };
+
+    df.single_act_visit<double, long>("price", "volume", vp);
+
+    const auto  &prof = vp.get_result();
+    const auto  &lev = vp.get_price_levels();
+
+    assert(prof.size() == 5);
+    assert(lev.size() == 5);
+    assert(prof[0] == 15.0);
+    assert(prof[1] == 60.0);
+    assert(prof[2] == 110.0);
+    assert(prof[3] == 27.0);
+    assert(prof[4] == 12.0);
+    assert(near(lev[0], 11.0));
+    assert(near(lev[1], 13.0));
+    assert(near(lev[2], 15.0));
+    assert(near(lev[3], 17.0));
+    assert(near(lev[4], 19.0));
+    assert(near(vp.get_poc_price(), 15.0));
+
+    // Target 156.8. Start with 110 (bin 2). The two bins below hold 75 and the
+    // two above 39, so bins 1 and 0 are added: 185 >= 156.8.
+    //
+    assert(near(vp.get_value_area_low(), 10.0));
+    assert(near(vp.get_value_area_high(), 16.0));
+
+    // The volume in the profile adds up to the total volume
+    //
+    assert(std::accumulate(prof.begin(), prof.end(), 0.0) == 224.0);
+
+    // Value area percentage of 100% covers all the bins. 30% is met by the
+    // POC bin alone.
+    //
+    {
+        vol_profile_v<double>   vp_all { 5, 1.0 };
+        vol_profile_v<double>   vp_30 { 5, 0.3 };
+
+        df.single_act_visit<double, long>("price", "volume", vp_all);
+        df.single_act_visit<double, long>("price", "volume", vp_30);
+        assert(near(vp_all.get_value_area_low(), 10.0));
+        assert(near(vp_all.get_value_area_high(), 20.0));
+        assert(near(vp_30.get_value_area_low(), 14.0));
+        assert(near(vp_30.get_value_area_high(), 16.0));
+        assert(near(vp_30.get_poc_price(), 15.0));
+    }
+
+    // A single bin holds everything
+    //
+    {
+        vol_profile_v<double>   vp_one { 1, 0.7 };
+
+        df.single_act_visit<double, long>("price", "volume", vp_one);
+        assert(vp_one.get_result().size() == 1);
+        assert(vp_one.get_result()[0] == 224.0);
+        assert(near(vp_one.get_price_levels()[0], 15.0));
+        assert(near(vp_one.get_poc_price(), 15.0));
+        assert(near(vp_one.get_value_area_low(), 10.0));
+        assert(near(vp_one.get_value_area_high(), 20.0));
+    }
+
+    // Ties for the POC go to the lowest bin
+    //
+    {
+        ULDataFrame df_tie;
+
+        df_tie.load_data(StlVecType<unsigned long>{ 1, 2, 3, 4 },
+                         std::make_pair("price",
+                                        StlVecType<double>{ 0, 1, 2, 3 }),
+                         std::make_pair("volume",
+                                        StlVecType<long>{ 7, 3, 3, 7 }));
+
+        vol_profile_v<double>   vp_tie { 2, 0.5 };
+
+        df_tie.single_act_visit<double, long>("price", "volume", vp_tie);
+        assert(vp_tie.get_result()[0] == 10.0);
+        assert(vp_tie.get_result()[1] == 10.0);
+        assert(near(vp_tie.get_poc_price(), 0.75));
+    }
+
+    // NaN price, NaN volume and negative volume are skipped, and a skipped
+    // observation does not stretch the price range.
+    //
+    {
+        ULDataFrame df2;
+        auto        price2 = price;
+        auto        volume2 = volume;
+
+        price2[10] = std::numeric_limits<double>::quiet_NaN();  // was 20
+        volume2[0] = -3;                                        // was 10
+        price2[3] = 13.5;
+        df2.load_data(StlVecType<unsigned long>{
+                          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+                      std::make_pair("price", price2),
+                      std::make_pair("volume", volume2));
+
+        vol_profile_v<double>   vp2 { 5, 0.7 };
+
+        df2.single_act_visit<double, long>("price", "volume", vp2);
+
+        // Valid prices run over [11, 19] and the width is 1.6
+        //
+        const auto  &p2 = vp2.get_result();
+
+        assert(near(vp2.get_price_levels()[0], 11.8));
+        assert(near(vp2.get_price_levels()[4], 18.2));
+
+        // 13.5 falls in bin 1, and the maximum price 19 is clamped into the
+        // last bin.
+        //
+        assert(p2[0] == 30.0);
+        assert(p2[1] == 120.0);
+        assert(p2[2] == 30.0);
+        assert(p2[3] == 27.0);
+        assert(p2[4] == 10.0);
+        assert(std::accumulate(p2.begin(), p2.end(), 0.0) == 217.0);
+        assert(near(vp2.get_poc_price(), 13.4));
+    }
+
+    // No valid observation, or no volume
+    //
+    {
+        ULDataFrame df_nan;
+
+        df_nan.load_data(
+            StlVecType<unsigned long>{ 1, 2 },
+            std::make_pair("price",
+                           StlVecType<double>{
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN() }),
+            std::make_pair("volume", StlVecType<long> { 4, 5 }));
+
+        vol_profile_v<double>   vp_nan { 4, 0.7 };
+
+        df_nan.single_act_visit<double, long>("price", "volume", vp_nan);
+        assert(vp_nan.get_result().size() == 4);
+        for (auto v : vp_nan.get_result())  assert(v == 0.0);
+        assert(std::isnan(vp_nan.get_poc_price()));
+        assert(std::isnan(vp_nan.get_value_area_high()));
+        assert(std::isnan(vp_nan.get_value_area_low()));
+
+        ULDataFrame df_zero;
+
+        df_zero.load_data(StlVecType<unsigned long>{ 1, 2 },
+                          std::make_pair("price", StlVecType<double>{ 1, 2 }),
+                          std::make_pair("volume", StlVecType<long>{ 0, 0 }));
+
+        vol_profile_v<double>   vp_zero { 4, 0.7 };
+
+        df_zero.single_act_visit<double, long>("price", "volume", vp_zero);
+        assert(std::isnan(vp_zero.get_poc_price()));
+        assert(std::isnan(vp_zero.get_value_area_high()));
+        assert(std::isnan(vp_zero.get_value_area_low()));
+    }
+
+    // All prices equal: the width is zero and all volume is in the first bin
+    //
+    {
+        ULDataFrame df_flat;
+
+        df_flat.load_data(StlVecType<unsigned long>{ 1, 2, 3 },
+                          std::make_pair("price",
+                                         StlVecType<double>{ 5, 5, 5 }),
+                          std::make_pair("volume",
+                                         StlVecType<long>{ 1, 2, 3 }));
+
+        vol_profile_v<double>   vp_flat { 4, 0.7 };
+
+        df_flat.single_act_visit<double, long>("price", "volume", vp_flat);
+        assert(vp_flat.get_result()[0] == 6.0);
+        assert(vp_flat.get_result()[1] == 0.0);
+        assert(near(vp_flat.get_poc_price(), 5.0));
+        assert(near(vp_flat.get_value_area_low(), 5.0));
+        assert(near(vp_flat.get_value_area_high(), 5.0));
+    }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    {
+        vol_profile_v<double>   zero_bins { 0, 0.7 };
+        vol_profile_v<double>   bad_pct { 5, 1.5 };
+        vol_profile_v<double>   zero_pct { 5, 0.0 };
+        bool                    thrown { false };
+
+        try  {
+            df.single_act_visit<double, long>("price", "volume", zero_bins);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+
+        thrown = false;
+        try  {
+            df.single_act_visit<double, long>("price", "volume", bad_pct);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+
+        thrown = false;
+        try  {
+            df.single_act_visit<double, long>("price", "volume", zero_pct);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    // Real data: IBM
+    //
+    StrDataFrame    ibm_df;
+
+    try  {
+        ibm_df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+        ::exit(-1);
+    }
+
+    vol_profile_v<double, std::string>  ibm_20 { 20, 0.7 };
+
+    ibm_df.single_act_visit<double, long>
+        ("IBM_Adj_Close", "IBM_Volume", ibm_20);
+
+    const auto  &ip = ibm_20.get_result();
+
+    assert(ip.size() == 20);
+    assert(ip[0] == 231459400.0);
+    assert(ip[1] == 610604900.0);
+    assert(ip[2] == 3173843100.0);
+    assert(ip[19] == 178296100.0);
+    assert(std::accumulate(ip.begin(), ip.end(), 0.0) == 30419702800.0);
+    assert(near(ibm_20.get_price_levels()[0], 38.64049345));
+    assert(near(ibm_20.get_price_levels()[19], 158.07055855000002));
+    assert(near(ibm_20.get_poc_price(), 57.49787215));
+    assert(near(ibm_20.get_value_area_low(), 41.7833899));
+    assert(near(ibm_20.get_value_area_high(), 123.4986976));
+
+    vol_profile_v<double, std::string>  ibm_50 { 50, 0.5 };
+
+    ibm_df.single_act_visit<double, long>
+        ("IBM_Adj_Close", "IBM_Volume", ibm_50);
+    assert(ibm_50.get_result().size() == 50);
+    assert(ibm_50.get_result()[0] == 76784700.0);
+    assert(ibm_50.get_result()[25] == 184138700.0);
+    assert(near(ibm_50.get_poc_price(), 54.3549757));
+    assert(near(ibm_50.get_value_area_low(), 48.0691828));
+    assert(near(ibm_50.get_value_area_high(), 85.7839402));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -8744,6 +9016,7 @@ int main(int, char *[])  {
     test_RogersSatchellVolVisitor();
     test_AmihudIlliquidityVisitor();
     test_CorwinSchultzSpreadVisitor();
+    test_VolumeProfileVisitor();
 
     return (0);
 }

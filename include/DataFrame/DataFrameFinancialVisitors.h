@@ -8160,15 +8160,6 @@ using pav_v = PeaksAndValleysVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Stochastic Oscillator: %K and %D
-//
-// %K = 100 * (close - lowest_low(k_period)) /
-//             (highest_high(k_period) - lowest_low(k_period))
-// %D = simple moving average of %K over d_period
-//
-// get_result() and get_pct_k() return %K. get_pct_d() returns %D.
-// If the highest high equals the lowest low over a window, %K is 0.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  StochasticOscillatorVisitor  {
 
@@ -8313,18 +8304,6 @@ using stoch_v = StochasticOscillatorVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Money Flow Index (MFI), a volume-weighted RSI
-//
-// typical price = (high + low + close) / 3
-// raw money flow = typical price * volume
-// MFI = 100 * positive_flow / (positive_flow + negative_flow)
-//       over a rolling window of "period" bars. A bar's flow is positive
-//       (negative) if its typical price is above (below) the previous bar's.
-//       Bars with unchanged typical price count toward neither.
-//
-// The first "period" values are NaN. If there is no flow at all in a window,
-// the MFI is 0.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  MoneyFlowIndexVisitor  {
 
@@ -8464,21 +8443,6 @@ using mfi_v = MoneyFlowIndexVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Aroon indicator: Aroon Up, Aroon Down and Aroon Oscillator
-//
-// For each bar, the window is the current bar plus the previous "period" bars
-// (period + 1 bars in all).
-//
-// Aroon Up   = 100 * (period - bars_since_highest_high) / period
-// Aroon Down = 100 * (period - bars_since_lowest_low) / period
-// Oscillator = Aroon Up - Aroon Down  (range -100 to 100)
-//
-// If the highest high (lowest low) occurs more than once in the window, the
-// most recent occurrence counts. The first "period" values of all results are
-// NaN. A window that contains a NaN in the relevant column gives NaN.
-//
-// get_result() and get_aroon_up() return Aroon Up.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  AroonVisitor  {
 
@@ -8632,18 +8596,6 @@ using aroon_v = AroonVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Donchian Channels
-//
-// upper band  = highest high over the last "period" bars, including the
-//               current bar
-// lower band  = lowest low over the last "period" bars, including the
-//               current bar
-// middle band = (upper band + lower band) / 2
-//
-// The first period - 1 values of all results are NaN.
-//
-// get_result() and get_upper_band() return the upper band.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  DonchianChannelsVisitor  {
 
@@ -8778,26 +8730,6 @@ using donchian_v = DonchianChannelsVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Supertrend
-//
-// ATR = Wilder's smoothed average true range over "period" bars. It is
-//       seeded with the simple mean of the first "period" true ranges
-//       (the first bar's true range is high - low).
-// basic upper = (high + low) / 2 + multiplier * ATR
-// basic lower = (high + low) / 2 - multiplier * ATR
-// The final bands only tighten while the trend holds: the final upper band
-// can only move down (and the final lower band only up) until the previous
-// close breaks through it.
-// Supertrend = final lower band in an uptrend, final upper band in a downtrend.
-// The trend flips when the close crosses the active band.
-//
-// The first period - 1 values of all results are NaN. The first valid bar
-// starts in an uptrend. Input columns must not contain NaN.
-//
-// get_result() and get_supertrend() return the Supertrend line.
-// get_trend() returns +1 for an uptrend and -1 for a downtrend.
-// get_upper_band() and get_lower_band() return the final bands.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  SupertrendVisitor  {
 
@@ -8937,35 +8869,6 @@ using supertrend_v = SupertrendVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Ichimoku Cloud (Ichimoku Kinko Hyo)
-//
-// tenkan-sen (conversion line) = (highest high + lowest low) / 2 over
-//                                tenkan_period bars (default 9)
-// kijun-sen (base line) = same over kijun_period bars (default 26)
-// senkou span A = (tenkan-sen + kijun-sen) / 2, plotted displacement bars
-//                 ahead (default 26)
-// senkou span B = (highest high + lowest low) / 2 over senkou_b_period bars
-//                 (default 52), plotted displacement bars ahead
-// chikou span = close, plotted displacement bars behind
-//
-// All results have the same length as the input. The cloud is aligned to the
-// bar it is plotted under: senkou[i] is computed from bars up to
-// i - displacement, so it is known at bar i and has no look-ahead. The
-// cloud's projection past the last input bar is not part of the results.
-// chikou[i] = close[i + displacement] by definition, so it does look ahead
-// and its last displacement values are NaN. Do not use it as a feature in a
-// backtest.
-//
-// Unavailable values are NaN:
-//   tenkan-sen:  the first tenkan_period - 1 values
-//   kijun-sen:   the first kijun_period - 1 values
-//   span A:      the first max(tenkan_period, kijun_period) - 1 +
-//                displacement values
-//   span B:      the first senkou_b_period - 1 + displacement values
-//   chikou span: the last displacement values
-//
-// get_result() and get_tenkan_sen() return the conversion line.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  IchimokuVisitor  {
 
@@ -9152,35 +9055,6 @@ using ichimoku_v = IchimokuVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Value at Risk (VaR) and Conditional Value at Risk (CVaR, also known as
-// Expected Shortfall) of a series of returns.
-//
-// VaR at confidence level c (e.g. 0.95) is the loss that is not expected to be
-// exceeded, over one return period, with probability c. CVaR is the expected
-// loss given that the loss is at least as large as VaR. Both are reported as
-// losses, i.e. a positive number means a loss. CVaR >= VaR always.
-//
-// var_policy::historical (default)
-//   Non-parametric. VaR is the negated (1 - c) quantile of the empirical
-//   return distribution, linearly interpolated between the two neighboring
-//   order statistics. CVaR is the negated mean of all returns that are less
-//   than or equal to that quantile.
-// var_policy::gaussian
-//   Assumes returns are normally distributed with sample mean mu and sample
-//   standard deviation sigma (population standard deviation, if biased is
-//   true). With z being the inverse normal CDF at c:
-//       VaR = -mu + z * sigma
-//       CVaR = -mu + sigma * pdf(z) / (1 - c)
-//   This is meaningful, only if the return series is close to normal
-//   distribution.
-//
-// The input (column) to this visitor is assumed to be returns, not prices.
-// NaN values (e.g. the leading NaNs generated by ReturnVisitor) are skipped.
-// If there is no valid return (or less than 2 for the gaussian policy), the
-// results are NaN.
-//
-// get_result() and get_var() return VaR. get_cvar() returns CVaR.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  ValueAtRiskVisitor  {
 
@@ -9363,27 +9237,6 @@ using varisk_v = ValueAtRiskVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Calmar Ratio is the annualized compound return of a strategy divided by its
-// maximum drawdown:
-//     Calmar = (final_equity ^ (periods_per_year / n) - 1) / max_drawdown
-// where the equity curve starts at 1 and is compounded from the returns, and
-// the maximum drawdown is the largest peak-to-trough decline of that curve as
-// a fraction of the peak (always >= 0). The starting capital counts as the
-// first peak, so a loss from the very first period is a drawdown.
-//
-// The input (column) to this visitor is assumed to be returns, not prices.
-// By default the returns are simple (percentage) returns. If log_returns is
-// true, they are taken to be log returns. NaN values (e.g. the leading NaNs
-// generated by ReturnVisitor) are skipped. A simple return <= -1 wipes out
-// the equity curve (final equity 0, max drawdown 1).
-//
-// If there is no drawdown at all, the ratio is +infinity if the annualized
-// return is positive, and NaN if it is zero. If there is no valid return, all
-// results are NaN.
-//
-// get_result() returns the Calmar ratio. get_annualized_return() and
-// get_max_drawdown() return the two components.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  CalmarRatioVisitor  {
 
@@ -9474,28 +9327,6 @@ using calmarr_v = CalmarRatioVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Information Ratio measures the consistency of an asset's (or a portfolio's)
-// excess return over a benchmark per unit of the risk taken to get it:
-//     IR = mean(asset_ret - benchmark_ret) / std(asset_ret - benchmark_ret)
-// The denominator is the tracking error.
-//
-// Both input columns are assumed to be returns, not prices. Observations
-// where either of the two values is NaN are skipped.
-//
-// The result is per period by default. If periods_per_year is greater than 1,
-// the result is annualized by sqrt(periods_per_year), and the active return
-// and the tracking error are annualized by periods_per_year and
-// sqrt(periods_per_year), respectively. If biased is true, the population
-// standard deviation is used. If there are less than 2 valid observations,
-// the results are NaN. A zero tracking error gives +/-infinity or NaN.
-//
-// Mathematically, this is the same quantity SharpeRatioVisitor calculates, if
-// its second return column is a benchmark. This visitor additionally
-// annualizes, skips NaNs and exposes the two components.
-//
-// get_result() returns the Information Ratio. get_active_return() and
-// get_tracking_error() return the two components.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  InformationRatioVisitor  {
 
@@ -9575,25 +9406,6 @@ using infor_v = InformationRatioVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// EWMA (RiskMetrics) volatility. It is the exponentially weighted moving
-// estimate of the volatility of a return series, assuming zero mean returns:
-//
-//     var[0] = r[0]^2
-//     var[t] = lambda * var[t-1] + (1 - lambda) * r[t]^2
-//     vol[t] = sqrt(var[t] * trading_periods)
-//
-// The input column is assumed to be returns, not prices. Note that lambda is
-// the weight of the previous variance (RiskMetrics convention), not the
-// weight of the newest observation as in the decay parameter of
-// ExponentiallyWeightedVarVisitor. The first valid observation seeds the
-// variance, so the first few results are noisy until the seed has decayed.
-// NaN observations are skipped: their results are NaN and the variance state
-// carries over to the next valid observation. Results before the first valid
-// observation are NaN.
-//
-// The result is annualized by sqrt(trading_periods). Pass 1 for the per
-// period volatility. lambda must be in (0, 1) exclusive.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  EWMAVolVisitor  {
 
@@ -9656,19 +9468,6 @@ using ewma_vol_v = EWMAVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Rogers-Satchell volatility estimator. It uses open, high, low and close
-// prices and, unlike Parkinson and Garman-Klass, allows for a non-zero drift:
-//
-//     rs[i]  = ln(H/C) * ln(H/O) + ln(L/C) * ln(L/O)
-//     vol[i] = sqrt(mean(rs over the last roll_count bars) * trading_periods)
-//
-// The rolling window includes the current bar (same as ParkinsonVolVisitor).
-// The first roll_count - 1 results are NaN. For valid bars (L <= O, C <= H)
-// each rs[i] is >= 0. The result is annualized by sqrt(trading_periods).
-//
-// The columns must be passed in this order: low, high, open, close, as in
-// GarmanKlassVolVisitor and YangZhangVolVisitor.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  RogersSatchellVolVisitor  {
 
@@ -9771,29 +9570,6 @@ using rs_vol_v = RogersSatchellVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Amihud illiquidity ratio. It measures the price impact of volume: the
-// absolute return per unit of dollar volume. A higher value means a less
-// liquid market.
-//
-//     ret[i]    = close[i] / close[i - 1] - 1
-//     illiq[i]  = scale * |ret[i]| / (close[i] * volume[i])
-//     result[i] = mean of illiq over the last roll_count bars
-//
-// The rolling window includes the current bar. A bar's illiq is NaN if its
-// volume, its close or the previous close is NaN or not positive (this
-// includes zero volume bars, where the ratio is unbounded). NaN bars are
-// skipped by the rolling mean, which is over the remaining bars of the window.
-// A window with no valid bar gives NaN. Index 0 has no return, so the first
-// roll_count results are NaN.
-//
-// Use scale to put the ratio into convenient units. 1e6 is the convention in
-// the academic literature for dollar volume in dollars. The default is 1.
-//
-// The columns must be passed in this order: close, volume.
-//
-// get_result() returns the rolling mean. get_daily_illiq() returns the
-// per-bar values.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  AmihudIlliquidityVisitor  {
 
@@ -9890,38 +9666,6 @@ using amihud_v = AmihudIlliquidityVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Corwin-Schultz high-low bid-ask spread estimator (Corwin & Schultz, 2012).
-// It estimates the effective relative spread from daily high and low prices
-// alone. The high-low range of a bar contains both volatility and spread, but
-// the volatility part grows with time while the spread part does not. Comparing
-// the one bar range with the two bar range separates the two.
-//
-//     beta   = ln(H[i - 1] / L[i - 1])^2 + ln(H[i] / L[i])^2
-//     gamma  = ln(max(H[i - 1], H[i]) / min(L[i - 1], L[i]))^2
-//     k      = 3 - 2 * sqrt(2)
-//     alpha  = (sqrt(2 * beta) - sqrt(beta)) / k - sqrt(gamma / k)
-//     S[i]   = 2 * (exp(alpha) - 1) / (1 + exp(alpha))
-//
-// S[i] is the spread as a fraction of price (0.01 is 1%). It uses bars i - 1
-// and i, so it never looks ahead. Index 0 has no previous bar and is NaN.
-//
-// A two bar estimate can come out negative (it is a difference of noisy
-// quantities). If floor_at_zero is true, as the authors recommend when
-// averaging, negative estimates are set to zero.
-//
-// If roll_count > 1, the result is the mean of the last roll_count two-bar
-// estimates, NaN estimates skipped (the first roll_count results are then
-// NaN). With the default roll_count of 1 the result is the raw two bar
-// estimate.
-//
-// Bars must satisfy H >= L > 0. A NaN in either bar of a pair gives a NaN
-// estimate. The estimator is not adjusted for overnight gaps.
-//
-// The columns must be passed in this order: low, high.
-//
-// get_result() returns the (rolling) spread. get_spread() returns the raw two
-// bar estimates.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  CorwinSchultzSpreadVisitor  {
 
@@ -10029,6 +9773,173 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using cs_spread_v = CorwinSchultzSpreadVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  VolumeProfileVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H, typename V>
+    inline void
+    operator()(const K &, const K &,
+               const H &price_begin, const H &price_end,
+               const V &volume_begin, const V &volume_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(price_begin, price_end))
+        };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(volume_begin, volume_end)) ||
+            num_bins_ == 0 || ! (va_pct_ > 0 && va_pct_ <= 1))
+            throw DataFrameError("VolumeProfileVisitor: All columns must be "
+                                 "of equal size, number of bins must be > 0 "
+                                 "and value area percentage must be in "
+                                 "(0, 1]");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        constexpr value_type    nan { std::numeric_limits<T>::quiet_NaN() };
+
+        auto        valid =
+            [&price_begin = std::as_const(price_begin),
+             &volume_begin = std::as_const(volume_begin)]
+            (size_type i) -> bool  {
+                const value_type    p { *(price_begin + i) };
+                const value_type    v { T(*(volume_begin + i)) };
+
+                return ((! std::isnan(p)) && v >= 0);  // NaN volume fails
+            };
+        value_type  min_p { std::numeric_limits<T>::max() };
+        value_type  max_p { std::numeric_limits<T>::lowest() };
+        size_type   valid_cnt { 0 };
+
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            if (valid(i)) [[likely]]  {
+                const value_type    p { *(price_begin + i) };
+
+                min_p = std::min(min_p, p);
+                max_p = std::max(max_p, p);
+                valid_cnt += 1;
+            }
+        }
+
+        result_type profile(num_bins_, 0);
+        result_type levels(num_bins_, nan);
+
+        poc_price_ = va_high_ = va_low_ = nan;
+        if (valid_cnt == 0)  {
+            result_.swap(profile);
+            levels_.swap(levels);
+            return;
+        }
+
+        const value_type    width { (max_p - min_p) / T(num_bins_) };
+
+        for (size_type i { 0 }; i < num_bins_; ++i) [[likely]]
+            levels[i] = min_p + (T(i) + T(0.5)) * width;
+
+        value_type  total { 0 };
+
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            if (valid(i)) [[likely]]  {
+                const value_type    p { *(price_begin + i) };
+                const value_type    v { T(*(volume_begin + i)) };
+                size_type           bin { 0 };
+
+                if (width > 0)
+                    bin = std::min(size_type((p - min_p) / width),
+                                   num_bins_ - 1);
+                profile[bin] += v;
+                total += v;
+            }
+        }
+
+        if (total > 0)  {
+            size_type   poc { 0 };
+
+            for (size_type i { 1 }; i < num_bins_; ++i) [[likely]]
+                if (profile[i] > profile[poc])  poc = i;
+
+            const value_type    target { va_pct_ * total };
+            size_type           lo { poc };
+            size_type           hi { poc };
+            value_type          acc { profile[poc] };
+
+            while (acc < target && (lo > 0 || hi + 1 < num_bins_))  {
+                value_type  above { 0 };
+                value_type  below { 0 };
+                size_type   n_above { 0 };
+                size_type   n_below { 0 };
+
+                for (size_type j { hi + 1 };
+                     j < num_bins_ && j <= (hi + 2); ++j)  {
+                    above += profile[j];
+                    n_above += 1;
+                }
+                for (size_type j { 1 }; j <= 2 && j <= lo; ++j)  {
+                    below += profile[lo - j];
+                    n_below += 1;
+                }
+
+                if (n_above > 0 && (n_below == 0 || above >= below))  {
+                    hi += n_above;
+                    acc += above;
+                }
+                else  {
+                    lo -= n_below;
+                    acc += below;
+                }
+            }
+
+            poc_price_ = levels[poc];
+            va_low_ = min_p + T(lo) * width;
+            va_high_ = min_p + T(hi + 1) * width;
+        }
+
+        result_.swap(profile);
+        levels_.swap(levels);
+    }
+
+    inline void
+    pre()  {
+
+        result_.clear();
+        levels_.clear();
+        poc_price_ = va_high_ = va_low_ = std::numeric_limits<T>::quiet_NaN();
+    }
+    inline void post()  {   }
+
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+
+    inline const result_type &
+    get_price_levels() const  { return (levels_); }
+    inline result_type &get_price_levels()  { return (levels_); }
+
+    inline value_type get_poc_price() const  { return (poc_price_); }
+    inline value_type get_value_area_high() const  { return (va_high_); }
+    inline value_type get_value_area_low() const  { return (va_low_); }
+
+    explicit
+    VolumeProfileVisitor(size_type num_bins = 24,
+                         value_type value_area_pct = 0.7)
+        : num_bins_(num_bins), va_pct_(value_area_pct)  {   }
+
+private:
+
+    const size_type     num_bins_;
+    const value_type    va_pct_;
+    result_type         result_ { };
+    result_type         levels_ { };
+    value_type          poc_price_ { std::numeric_limits<T>::quiet_NaN() };
+    value_type          va_high_ { std::numeric_limits<T>::quiet_NaN() };
+    value_type          va_low_ { std::numeric_limits<T>::quiet_NaN() };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using vol_profile_v = VolumeProfileVisitor<T, I, A>;
 
 } // namespace hmdf
 

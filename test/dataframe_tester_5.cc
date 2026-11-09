@@ -8953,6 +8953,317 @@ static void test_VolumeProfileVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_PairsSpreadVisitor()  {
+
+    std::cout << "\nTesting PairsSpreadVisitor{ } ..." << std::endl;
+
+    const double                nval = std::numeric_limits<double>::quiet_NaN();
+    auto                        near =
+        [](double a, double b) -> bool  {
+            return (std::abs(a - b) < 0.000001);
+        };
+    ULDataFrame                 df;
+    StlVecType<unsigned long>   idxvec(20);
+
+    std::iota(idxvec.begin(), idxvec.end(), 0UL);
+
+    // B is the independent asset and A is roughly 2 * B + 5 + mean reverting
+    // noise. The expected values were calculated by an independent brute
+    // force implementation of OLS and rolling statistics.
+    //
+    StlVecType<double>  a =
+        { 103.0966, 103.3874, 99.3161, 102.4687, 103.9124, 103.6243, 103.8741,
+          103.7796, 103.7974, 102.1705, 103.9823, 104.4696, 105.3045, 105.4812,
+          106.3169, 103.9437, 103.2873, 104.0997, 103.4713, 100.5303 };
+    StlVecType<double>  b =
+        { 49.0483, 49.3369, 47.0613, 48.7363, 49.5022, 49.1518, 48.7774,
+          49.142, 48.8208, 48.5497, 49.4138, 50.0315, 49.9545, 49.852, 50.0451,
+          49.3082, 48.8237, 49.4816, 49.3251, 47.6758 };
+    StlVecType<double>  a_nan =
+        { 103.0966, 103.3874, 99.3161, nval, 103.9124, 103.6243, 103.8741,
+          103.7796, 103.7974, 102.1705, 103.9823, 104.4696, 105.3045, 105.4812,
+          106.3169, nval, 103.2873, 104.0997, 103.4713, 100.5303 };
+    StlVecType<double>  b_nan =
+        { 49.0483, 49.3369, 47.0613, 48.7363, 49.5022, 49.1518, 48.7774,
+          49.142, 48.8208, nval, 49.4138, 50.0315, 49.9545, 49.852, 50.0451,
+          nval, 48.8237, 49.4816, 49.3251, 47.6758 };
+    StlVecType<double>  b_lead =
+        { nval, nval, nval, nval, 49.5022, 49.1518, 48.7774,
+          49.142, 48.8208, 48.5497, 49.4138, 50.0315, 49.9545, 49.852, 50.0451,
+          49.3082, 48.8237, 49.4816, 49.3251, 47.6758 };
+    StlVecType<double>  lin_a;
+    StlVecType<double>  lin_b;
+
+    for (int i = 1; i <= 10; ++i)  {
+        lin_b.push_back(double(i));
+        lin_a.push_back(3.0 * double(i) + 1.0);
+    }
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("A", a),
+                 std::make_pair("B", b),
+                 std::make_pair("A_nan", a_nan),
+                 std::make_pair("B_nan", b_nan),
+                 std::make_pair("B_lead", b_lead));
+
+    // Static hedge ratio and static z-score
+    //
+    {
+        pairs_spread_v<double>  ps;
+
+        df.single_act_visit<double, double>("A", "B", ps);
+
+        assert(ps.get_result().size() == 20);
+        assert(ps.get_spread().size() == 20);
+        assert(ps.get_hedge_ratio().size() == 20);
+        assert(ps.get_intercept().size() == 20);
+
+        assert(near(ps.get_hedge_ratio()[0], 1.996802));
+        assert(near(ps.get_hedge_ratio()[19], 1.996802));
+        assert(near(ps.get_intercept()[0], 5.468905));
+        assert(near(ps.get_intercept()[19], 5.468905));
+        assert(near(ps.get_spread()[0], -0.312066));
+        assert(near(ps.get_spread()[11], -0.902322));
+        assert(near(ps.get_spread()[19], -0.137755));
+        assert(near(ps.get_result()[0], -0.617493));
+        assert(near(ps.get_result()[11], -1.785447));
+        assert(near(ps.get_result()[19], -0.272579));
+    }
+
+    // Rolling hedge ratio (8) and rolling z-score (5). The first hedge ratio
+    // is at index 7 and the first z-score is at index 7 + 5 - 1 = 11.
+    //
+    {
+        pairs_spread_v<double>  ps { 8, 5 };
+
+        df.single_act_visit<double, double>("A", "B", ps);
+
+        assert(std::isnan(ps.get_hedge_ratio()[6]));
+        assert(std::isnan(ps.get_spread()[6]));
+        assert(near(ps.get_hedge_ratio()[7], 1.905081));
+        assert(near(ps.get_intercept()[7], 9.879607));
+        assert(near(ps.get_spread()[7], 0.280486));
+        assert(near(ps.get_hedge_ratio()[19], 2.239100));
+        assert(near(ps.get_intercept()[19], -6.351751));
+        assert(near(ps.get_spread()[19], 0.131157));
+
+        for (std::size_t i = 0; i < 11; ++i)
+            assert(std::isnan(ps.get_result()[i]));
+        assert(near(ps.get_result()[11], -0.527821));
+        assert(near(ps.get_result()[12], 0.694730));
+        assert(near(ps.get_result()[19], 0.653011));
+
+        // Chain the spread into the half-life visitor. The first spread is at
+        // index 7, so the first half-life with a 12 bar window is at index
+        // 7 + 12 - 1 = 18.
+        //
+        df.load_column("rolling_spread", std::move(ps.get_spread()));
+
+        half_life_v<double> hl { 12 };
+
+        df.single_act_visit<double>("rolling_spread", hl);
+        for (std::size_t i = 0; i < 18; ++i)
+            assert(std::isnan(hl.get_result()[i]));
+        assert(near(hl.get_ar_coefficient()[18], 0.129776));
+        assert(near(hl.get_result()[18], 0.339454));
+        assert(near(hl.get_ar_coefficient()[19], 0.062132));
+        assert(near(hl.get_result()[19], 0.249469));
+    }
+
+    // Static hedge ratio and rolling z-score (6)
+    //
+    {
+        pairs_spread_v<double>  ps { 0, 6 };
+
+        df.single_act_visit<double, double>("A", "B", ps);
+
+        assert(near(ps.get_hedge_ratio()[0], 1.996802));
+        assert(std::isnan(ps.get_result()[4]));
+        assert(near(ps.get_result()[5], 1.413042));
+        assert(near(ps.get_result()[10], -0.815611));
+        assert(near(ps.get_result()[19], -0.436606));
+    }
+
+    // Rolling hedge ratio (8) and static z-score
+    //
+    {
+        pairs_spread_v<double>  ps { 8, 0 };
+
+        df.single_act_visit<double, double>("A", "B", ps);
+
+        assert(std::isnan(ps.get_result()[6]));
+        assert(near(ps.get_result()[7], 0.312660));
+        assert(near(ps.get_result()[10], -0.486192));
+        assert(near(ps.get_result()[19], -0.038217));
+    }
+
+    // Biased (population) standard deviation
+    //
+    {
+        pairs_spread_v<double>  ps { 8, 5, false, true };
+
+        df.single_act_visit<double, double>("A", "B", ps);
+
+        assert(near(ps.get_result()[11], -0.590122));
+        assert(near(ps.get_result()[19], 0.730088));
+    }
+
+    // Log prices
+    //
+    {
+        pairs_spread_v<double>  ps { 0, 0, true };
+
+        df.single_act_visit<double, double>("A", "B", ps);
+
+        assert(near(ps.get_hedge_ratio()[0], 0.947184));
+        assert(near(ps.get_intercept()[0], 0.951478));
+        assert(near(ps.get_spread()[0], -0.003017));
+        assert(near(ps.get_result()[0], -0.621754));
+        assert(near(ps.get_result()[11], -1.769655));
+        assert(near(ps.get_result()[19], -0.276442));
+    }
+
+    // NaNs in the middle: Pairs with a NaN are skipped
+    //
+    {
+        pairs_spread_v<double>  ps_stat;
+        pairs_spread_v<double>  ps_roll { 6, 4 };
+
+        df.single_act_visit<double, double>("A_nan", "B_nan", ps_stat);
+        df.single_act_visit<double, double>("A_nan", "B_nan", ps_roll);
+
+        assert(near(ps_stat.get_hedge_ratio()[0], 1.969178));
+        assert(near(ps_stat.get_intercept()[0], 6.858460));
+        assert(near(ps_stat.get_spread()[0], -0.346672));
+        assert(std::isnan(ps_stat.get_spread()[3]));
+        assert(std::isnan(ps_stat.get_spread()[9]));
+        assert(std::isnan(ps_stat.get_spread()[15]));
+        assert(std::isnan(ps_stat.get_result()[3]));
+        assert(near(ps_stat.get_result()[0], -0.641810));
+        assert(near(ps_stat.get_result()[11], -1.684295));
+        assert(near(ps_stat.get_result()[19], -0.389293));
+
+        assert(std::isnan(ps_roll.get_hedge_ratio()[4]));
+        assert(near(ps_roll.get_hedge_ratio()[5], 1.888481));
+        assert(near(ps_roll.get_intercept()[5], 10.471512));
+        assert(std::isnan(ps_roll.get_spread()[9]));
+        assert(near(ps_roll.get_spread()[19], 0.127604));
+        for (std::size_t i = 0; i < 8; ++i)
+            assert(std::isnan(ps_roll.get_result()[i]));
+        assert(near(ps_roll.get_result()[10], 1.106335));
+        assert(near(ps_roll.get_result()[19], 1.073855));
+    }
+
+    // Leading NaNs: The first window starts at the first valid bar, so there
+    // are no partially filled windows. First hedge ratio is at 4 + 5 - 1 = 8.
+    // First spread is at 8 and first z-score is at 8 + 3 - 1 = 10.
+    //
+    {
+        pairs_spread_v<double>  ps { 5, 3 };
+
+        df.single_act_visit<double, double>("A", "B_lead", ps);
+
+        for (std::size_t i = 0; i < 8; ++i)  {
+            assert(std::isnan(ps.get_hedge_ratio()[i]));
+            assert(std::isnan(ps.get_spread()[i]));
+        }
+        for (std::size_t i = 0; i < 10; ++i)
+            assert(std::isnan(ps.get_result()[i]));
+
+        assert(near(ps.get_hedge_ratio()[8], 0.034140));
+        assert(near(ps.get_intercept()[8], 102.122009));
+        assert(near(ps.get_hedge_ratio()[9], 1.855644));
+        assert(near(ps.get_result()[10], 0.104707));
+        assert(near(ps.get_result()[11], 0.656370));
+        assert(near(ps.get_hedge_ratio()[19], 1.928733));
+        assert(near(ps.get_intercept()[19], 8.707309));
+        assert(near(ps.get_spread()[19], -0.130876));
+        assert(near(ps.get_result()[19], 1.130290));
+    }
+
+    // Perfect linear relationship: A = 3 * B + 1
+    //
+    {
+        ULDataFrame df_lin;
+        StlVecType<unsigned long>   lin_idx(10);
+
+        std::iota(lin_idx.begin(), lin_idx.end(), 0UL);
+        df_lin.load_data(std::move(lin_idx),
+                         std::make_pair("A", lin_a),
+                         std::make_pair("B", lin_b));
+
+        pairs_spread_v<double>  ps;
+
+        df_lin.single_act_visit<double, double>("A", "B", ps);
+        for (std::size_t i = 0; i < 10; ++i)  {
+            assert(std::abs(ps.get_hedge_ratio()[i] - 3.0) < 0.000000001);
+            assert(std::abs(ps.get_intercept()[i] - 1.0) < 0.000000001);
+            assert(std::abs(ps.get_spread()[i]) < 0.000000001);
+        }
+
+        // B constant: there is no slope
+        //
+        ULDataFrame df_flat;
+
+        df_flat.load_data(StlVecType<unsigned long>{ 0, 1, 2, 3, 4 },
+                          std::make_pair("A",
+                                         StlVecType<double>{ 1, 2, 3, 4, 5 }),
+                          std::make_pair("B",
+                                         StlVecType<double>{ 7, 7, 7, 7, 7 }));
+
+        pairs_spread_v<double>  ps_flat;
+
+        df_flat.single_act_visit<double, double>("A", "B", ps_flat);
+        for (std::size_t i = 0; i < 5; ++i)  {
+            assert(std::isnan(ps_flat.get_hedge_ratio()[i]));
+            assert(std::isnan(ps_flat.get_spread()[i]));
+            assert(std::isnan(ps_flat.get_result()[i]));
+        }
+    }
+
+    // Re-using a visitor must not leak the previous run
+    //
+    {
+        pairs_spread_v<double>  ps;
+
+        df.single_act_visit<double, double>("A", "B", ps);
+        df.single_act_visit<double, double>("A_nan", "B_nan", ps);
+        assert(ps.get_result().size() == 20);
+        assert(near(ps.get_hedge_ratio()[0], 1.969178));
+    }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    {
+        pairs_spread_v<double>  bad_hedge { 2, 0 };
+        pairs_spread_v<double>  big_hedge { 21, 0 };
+        pairs_spread_v<double>  bad_z { 0, 1 };
+        bool                    thrown { false };
+
+        try  {
+            df.single_act_visit<double, double>("A", "B", bad_hedge);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+
+        thrown = false;
+        try  {
+            df.single_act_visit<double, double>("A", "B", big_hedge);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+
+        thrown = false;
+        try  {
+            df.single_act_visit<double, double>("A", "B", bad_z);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -9017,6 +9328,7 @@ int main(int, char *[])  {
     test_AmihudIlliquidityVisitor();
     test_CorwinSchultzSpreadVisitor();
     test_VolumeProfileVisitor();
+    test_PairsSpreadVisitor();
 
     return (0);
 }

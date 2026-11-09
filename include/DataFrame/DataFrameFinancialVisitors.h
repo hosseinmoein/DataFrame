@@ -9941,6 +9941,555 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using vol_profile_v = VolumeProfileVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+// Rolling OLS regression (with intercept) of y on x over a window of "period"
+// consecutive positions, ending at (and including) each position. A position
+// where either x or y is NaN is skipped. If "period" is 0, the window is the
+// whole series (from its first valid position), so there is only one result,
+// at the last position.
+//
+// The first window starts at the first valid position, so leading NaNs never
+// produce partially filled windows. Results are NaN before the first full
+// window, wherever there are fewer than "min_cnt" valid pairs and wherever x
+// is (numerically) constant within the window.
+//
+// Running sums, taken about a local shift, make this O(n). They are rebuilt
+// from scratch once every "period" steps to bound round-off drift.
+//
+template<typename V>
+inline void
+_roll_ols_(const V &x, const V &y,
+           std::size_t period, std::size_t min_cnt,
+           V &slope, V &intercept)  {
+
+    using value_type = typename V::value_type;
+
+    constexpr value_type    nan {
+        std::numeric_limits<value_type>::quiet_NaN()
+    };
+    const std::size_t       col_s { x.size() };
+
+    slope.assign(col_s, nan);
+    intercept.assign(col_s, nan);
+
+    auto    is_valid =
+        [&x = std::as_const(x), &y = std::as_const(y)]
+        (std::size_t i) -> bool  {
+            return (! (std::isnan(x[i]) || std::isnan(y[i])));
+        };
+
+    std::size_t first { 0 };
+
+    while (first < col_s && ! is_valid(first))  first += 1;
+    if (first == col_s)  return;
+    if (period == 0)  period = col_s - first;
+
+    const std::size_t   start { first + period - 1 };
+
+    if (start >= col_s)  return;
+
+    value_type  x0 { 0 };  // The shift
+    value_type  y0 { 0 };
+    value_type  sx { 0 };
+    value_type  sy { 0 };
+    value_type  sxx { 0 };
+    value_type  sxy { 0 };
+    std::size_t cnt { 0 };
+
+    auto    add =
+        [&sx, &sy, &sxx, &sxy, &cnt,
+         &x0 = std::as_const(x0), &y0 = std::as_const(y0),
+         &x = std::as_const(x), &y = std::as_const(y)]
+        (std::size_t i) -> void  {
+            const value_type    dx { x[i] - x0 };
+            const value_type    dy { y[i] - y0 };
+
+            sx += dx;
+            sy += dy;
+            sxx += dx * dx;
+            sxy += dx * dy;
+            cnt += 1;
+        };
+    auto    remove =
+        [&sx, &sy, &sxx, &sxy, &cnt,
+         &x0 = std::as_const(x0), &y0 = std::as_const(y0),
+         &x = std::as_const(x), &y = std::as_const(y)]
+        (std::size_t i) -> void  {
+            const value_type    dx { x[i] - x0 };
+            const value_type    dy { y[i] - y0 };
+
+            sx -= dx;
+            sy -= dy;
+            sxx -= dx * dx;
+            sxy -= dx * dy;
+            cnt -= 1;
+        };
+    auto    rebuild =
+        [&sx, &sy, &sxx, &sxy, &cnt, &is_valid, period, &add, &x0, &y0,
+         &x = std::as_const(x), &y = std::as_const(y)]
+        (std::size_t last) -> void  {
+            sx = sy = sxx = sxy = value_type(0);
+            cnt = 0;
+
+            bool    shifted { false };
+
+            for (std::size_t j { last + 1 - period }; j <= last; ++j)
+                if (is_valid(j)) [[likely]]  {
+                    if (! shifted)  {
+                        x0 = x[j];
+                        y0 = y[j];
+                        shifted = true;
+                    }
+                    add(j);
+                }
+        };
+
+    for (std::size_t i { start }; i < col_s; ++i)  {
+        if ((i - start) % period == 0)
+            rebuild(i);
+        else  {
+            if (is_valid(i)) [[likely]]  add(i);
+            if (is_valid(i - period)) [[likely]]  remove(i - period);
+        }
+
+        if (cnt >= min_cnt) [[likely]]  {
+            const value_type    n { value_type(cnt) };
+            const value_type    den { n * sxx - sx * sx };
+
+            // A (numerically) constant x has no slope
+            //
+            if (den > n * sxx * value_type(1e-12)) [[likely]]  {
+                const value_type    b { (n * sxy - sx * sy) / den };
+
+                slope[i] = b;
+                intercept[i] = (sy - b * sx) / n + y0 - b * x0;
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+// Pairs trading: hedge ratio, spread and spread z-score of two price series.
+//
+// The spread is spread[i] = A[i] - hedge_ratio[i] * B[i] - intercept[i],
+// where A is the first column (the "dependent" asset) and B is the second
+// column (the "independent" asset). The hedge ratio and the intercept come
+// from an OLS regression of A on B.
+//
+// If hedge_roll_count is 0, one static regression over the whole series is
+// used for every bar. Be aware that this is a full-sample estimate and it has
+// look-ahead bias. If hedge_roll_count is > 0 (and must be >= 3), the
+// regression is rolled over the trailing hedge_roll_count bars (ending at and
+// including the current bar), so there is no look-ahead bias. The first
+// hedge ratio is available at bar (first valid bar + hedge_roll_count - 1).
+//
+// The z-score is (spread[i] - mean) / stdev. If zscore_roll_count is 0, mean
+// and stdev are those of the whole spread series (look-ahead bias again).
+// Otherwise (must be >= 2), they are the trailing zscore_roll_count bars of
+// the spread, ending at and including the current bar. The first z-score is
+// available zscore_roll_count - 1 bars after the first available spread. So,
+// with both rolling, the first z-score is at bar (first valid bar +
+// hedge_roll_count + zscore_roll_count - 2).
+//
+// If log_prices is true, the regression and the spread are in terms of
+// natural log of prices (non-positive prices become NaN).
+// If biased is true, stdev uses n as its divisor, otherwise n - 1.
+//
+// NaN pairs are skipped in the regressions and the z-score statistics. The
+// result is NaN wherever the spread, mean, stdev or the hedge ratio is not
+// available, or when stdev is zero.
+//
+// get_result() is the z-score. All the result vectors are as long as the
+// columns.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  PairsSpreadVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H, typename V>
+    inline void
+    operator()(const K &, const K &,
+               const H &a_begin, const H &a_end,
+               const V &b_begin, [[maybe_unused]] const V &b_end)  {
+
+        const size_type col_s { size_type(std::distance(a_begin, a_end)) };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s != size_type(std::distance(b_begin, b_end)) ||
+            (hedge_roll_count_ != 0 &&
+                (hedge_roll_count_ < 3 || hedge_roll_count_ > col_s)) ||
+            (zscore_roll_count_ != 0 &&
+                (zscore_roll_count_ < 2 || zscore_roll_count_ > col_s)))
+            throw DataFrameError("PairsSpreadVisitor: Both columns must be "
+                                 "of equal size, hedge roll count must be 0 "
+                                 "or in [3, column size] and z-score roll "
+                                 "count must be 0 or in [2, column size]");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (col_s == 0)  return;
+
+        constexpr value_type    nan { std::numeric_limits<T>::quiet_NaN() };
+
+        result_type a_val(col_s, nan);
+        result_type b_val(col_s, nan);
+
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    a { value_type(*(a_begin + i)) };
+            const value_type    b { value_type(*(b_begin + i)) };
+
+            if (log_prices_)  {
+                // NaN fails the comparison
+                //
+                a_val[i] = a > value_type(0) ? std::log(a) : nan;
+                b_val[i] = b > value_type(0) ? std::log(b) : nan;
+            }
+            else  {
+                a_val[i] = a;
+                b_val[i] = b;
+            }
+        }
+
+        result_type hedge;
+        result_type intercept;
+
+        if (hedge_roll_count_ == 0)  {
+            _roll_ols_(b_val, a_val, 0, 3, hedge, intercept);
+            hedge.assign(col_s, hedge.back());
+            intercept.assign(col_s, intercept.back());
+        }
+        else
+            _roll_ols_(b_val, a_val, hedge_roll_count_, 3, hedge, intercept);
+
+        result_type spread(col_s, nan);
+
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  // NaN propagates
+            spread[i] = a_val[i] - hedge[i] * b_val[i] - intercept[i];
+
+        result_type mean;
+        result_type stdev;
+
+        if (zscore_roll_count_ == 0)  {
+            roll_mean_std_(spread, 0, 2, biased_, mean, stdev);
+            mean.assign(col_s, mean.back());
+            stdev.assign(col_s, stdev.back());
+        }
+        else
+            roll_mean_std_(spread,
+                           zscore_roll_count_,
+                           2,
+                           biased_,
+                           mean,
+                           stdev);
+
+        result_type zscore(col_s, nan);
+
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]
+            if (stdev[i] > value_type(0)) [[likely]]  // NaN fails
+                zscore[i] = (spread[i] - mean[i]) / stdev[i];
+
+        result_.swap(zscore);
+        spread_.swap(spread);
+        hedge_.swap(hedge);
+        intercept_.swap(intercept);
+    }
+
+    inline void
+    pre()  {
+
+        result_.clear();
+        spread_.clear();
+        hedge_.clear();
+        intercept_.clear();
+    }
+    inline void post()  {   }
+
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+
+    inline const result_type &get_spread() const  { return (spread_); }
+    inline result_type &get_spread()  { return (spread_); }
+
+    inline const result_type &get_hedge_ratio() const  { return (hedge_); }
+    inline result_type &get_hedge_ratio()  { return (hedge_); }
+
+    inline const result_type &
+    get_intercept() const  { return (intercept_); }
+    inline result_type &get_intercept()  { return (intercept_); }
+
+    explicit
+    PairsSpreadVisitor(size_type hedge_roll_count = 0,
+                       size_type zscore_roll_count = 0,
+                       bool log_prices = false,
+                       bool biased = false)
+        : hedge_roll_count_(hedge_roll_count),
+          zscore_roll_count_(zscore_roll_count),
+          log_prices_(log_prices),
+          biased_(biased)  {   }
+
+private:
+
+    // Rolling mean and standard deviation over a window of "period" consecutive
+    // positions, ending at (and including) each position. NaN values are
+    // skipped. If "period" is 0, the window is the whole series (from its
+    // first valid position), so there is only one result, at the last position.
+    //
+    // The first window starts at the first valid position, so leading NaNs
+    // never produce partially filled windows. Results are NaN before the first
+    // full window and wherever there are fewer than "min_cnt" (at least 2)
+    // valid values.
+    //
+    // Same O(n) running-sums technique as _roll_ols_().
+    //
+    template<typename V>
+    inline static void
+    roll_mean_std_(const V &in,
+                   std::size_t period,
+                   std::size_t min_cnt,
+                   bool biased,
+                   V &mean,
+                   V &stdev)  {
+
+        using value_type = typename V::value_type;
+
+        constexpr value_type    nan {
+            std::numeric_limits<value_type>::quiet_NaN()
+        };
+        const std::size_t       col_s { in.size() };
+
+        mean.assign(col_s, nan);
+        stdev.assign(col_s, nan);
+
+        std::size_t first { 0 };
+
+        while (first < col_s && std::isnan(in[first]))  first += 1;
+        if (first == col_s)  return;
+        if (period == 0)  period = col_s - first;
+
+        const std::size_t   start { first + period - 1 };
+
+        if (start >= col_s)  return;
+
+        value_type  shift { 0 };
+        value_type  s1 { 0 };
+        value_type  s2 { 0 };
+        std::size_t cnt { 0 };
+
+        auto    add =
+            [&in = std::as_const(in), &shift = std::as_const(shift),
+             &s1, &s2, &cnt]
+            (std::size_t i) -> void  {
+                const value_type    d { in[i] - shift };
+
+                s1 += d;
+                s2 += d * d;
+                cnt += 1;
+            };
+        auto    remove =
+            [&in = std::as_const(in), &shift = std::as_const(shift),
+             &s1, &s2, &cnt]
+            (std::size_t i) -> void  {
+                const value_type    d { in[i] - shift };
+
+                s1 -= d;
+                s2 -= d * d;
+                cnt -= 1;
+            };
+        auto    rebuild =
+            [&in = std::as_const(in), &shift, &s1, &s2, &cnt, &add, period]
+            (std::size_t last) -> void  {
+                s1 = s2 = value_type(0);
+                cnt = 0;
+
+                bool    shifted { false };
+
+                for (std::size_t j { last + 1 - period }; j <= last; ++j)
+                    if (! std::isnan(in[j])) [[likely]]  {
+                        if (! shifted)  {
+                            shift = in[j];
+                            shifted = true;
+                        }
+                        add(j);
+                    }
+            };
+
+        for (std::size_t i { start }; i < col_s; ++i)  {
+            if ((i - start) % period == 0)
+                rebuild(i);
+            else  {
+                if (! std::isnan(in[i])) [[likely]]
+                    add(i);
+                if (! std::isnan(in[i - period])) [[likely]]
+                    remove(i - period);
+            }
+
+            if (cnt >= std::max(min_cnt, std::size_t(2))) [[likely]]  {
+                const value_type    n { value_type(cnt) };
+                const value_type    ssd { s2 - s1 * s1 / n }; // Sum of sq dev
+                const value_type    var {
+                    std::max(ssd, value_type(0)) /
+                    (biased ? n : n - value_type(1))
+                };
+
+                mean[i] = s1 / n + shift;
+                stdev[i] = std::sqrt(var);
+            }
+        }
+    }
+
+    const size_type hedge_roll_count_;
+    const size_type zscore_roll_count_;
+    const bool      log_prices_;
+    const bool      biased_;
+    result_type     result_ { };
+    result_type     spread_ { };
+    result_type     hedge_ { };
+    result_type     intercept_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using pairs_spread_v = PairsSpreadVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+// Half-life of mean reversion of a series (typically a pairs-trading spread,
+// see PairsSpreadVisitor) in number of bars.
+//
+// It fits the discrete Ornstein-Uhlenbeck (AR(1)) model
+//     s[t] = c + phi * s[t - 1] + e[t]
+// by OLS on  s[t] - s[t - 1] = c + (phi - 1) * s[t - 1] + e[t]  and the
+// half-life is  -ln(2) / ln(phi)  for 0 < phi < 1. Note that this is the
+// exact AR(1) half-life, not the -ln(2) / (phi - 1) approximation.
+//
+// If phi >= 1 the series doesn't mean revert and the half-life is +infinity.
+// If phi <= 0 the series oscillates around its mean and the half-life is not
+// defined (NaN).
+//
+// If roll_count is 0, one regression over the whole series is used and
+// the same value is reported for every bar (full-sample, so look-ahead bias).
+// Otherwise (must be >= 4), the regression is rolled over the trailing
+// roll_count bars, ending at and including the current bar. The first result
+// is available roll_count - 1 bars after the first valid value (e.g. the first
+// available spread of PairsSpreadVisitor).
+//
+// NaN values are skipped (along with the pairs they are a part of). At least 3
+// valid (s[t - 1], s[t]) pairs are required, otherwise the result is NaN.
+//
+// get_result() is the half-life and get_ar_coefficient() is phi. Both are as
+// long as the column. To convert the half-life from bars to time, multiply
+// it by the bar duration.
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  HalfLifeVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H>
+    inline void
+    operator()(const K &, const K &,
+               const H &column_begin, const H &column_end)  {
+
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
+        const size_type win { roll_count_ == 0 ? col_s : roll_count_ };
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (win < 4 || win > col_s)
+            throw DataFrameError("HalfLifeVisitor: Column size must be >= 4 "
+                                 "and roll count must be 0 or in [4, column "
+                                 "size]");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        constexpr value_type    nan { std::numeric_limits<T>::quiet_NaN() };
+
+        if (win < 4 || win > col_s)  {  // Nothing to compute
+            result_.assign(col_s, nan);
+            phi_.assign(col_s, nan);
+            return;
+        }
+
+        // x[k] = s[k], y[k] = s[k + 1] - s[k]. So, a regression result at k
+        // belongs to bar k + 1.
+        //
+        result_type x(col_s - 1, nan);
+        result_type y(col_s - 1, nan);
+
+        for (size_type k { 0 }; k < col_s - 1; ++k) [[likely]]  {
+            const value_type    prev { value_type(*(column_begin + k)) };
+            const value_type    curr { value_type(*(column_begin + (k + 1))) };
+
+            x[k] = prev;
+            y[k] = curr - prev;
+        }
+
+        result_type slope;
+        result_type intercept;
+
+        _roll_ols_(x, y,
+                   roll_count_ == 0 ? 0 : (roll_count_ - 1),
+                   3,
+                   slope,
+                   intercept);
+
+        result_type result(col_s, nan);
+        result_type phi(col_s, nan);
+
+        if (roll_count_ == 0)  {
+            const value_type    p { value_type(1) + slope.back() };
+
+            phi.assign(col_s, p);
+            result.assign(col_s, calc_half_life_(p));
+        }
+        else
+            for (size_type k { 0 }; k < col_s - 1; ++k) [[likely]]  {
+                const value_type    p { value_type(1) + slope[k] };
+
+                phi[k + 1] = p;
+                result[k + 1] = calc_half_life_(p);
+            }
+
+        result_.swap(result);
+        phi_.swap(phi);
+    }
+
+    inline void pre()  { result_.clear(); phi_.clear(); }
+    inline void post()  {   }
+
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+
+    inline const result_type &
+    get_ar_coefficient() const  { return (phi_); }
+    inline result_type &get_ar_coefficient()  { return (phi_); }
+
+    explicit
+    HalfLifeVisitor(size_type roll_count = 0) : roll_count_(roll_count)  {   }
+
+private:
+
+    static inline value_type
+    calc_half_life_(value_type phi)  {
+
+        if (std::isnan(phi)) [[unlikely]]
+            return (std::numeric_limits<value_type>::quiet_NaN());
+        if (phi >= value_type(1)) [[unlikely]]
+            return (std::numeric_limits<value_type>::infinity());
+        if (phi <= value_type(0)) [[unlikely]]
+            return (std::numeric_limits<value_type>::quiet_NaN());
+        return (-std::log(value_type(2)) / std::log(phi));
+    }
+
+    const size_type roll_count_;
+    result_type     result_ { };
+    result_type     phi_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using half_life_v = HalfLifeVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

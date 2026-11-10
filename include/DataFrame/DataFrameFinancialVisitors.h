@@ -10071,39 +10071,6 @@ _roll_ols_(const V &x, const V &y,
 
 // ----------------------------------------------------------------------------
 
-// Pairs trading: hedge ratio, spread and spread z-score of two price series.
-//
-// The spread is spread[i] = A[i] - hedge_ratio[i] * B[i] - intercept[i],
-// where A is the first column (the "dependent" asset) and B is the second
-// column (the "independent" asset). The hedge ratio and the intercept come
-// from an OLS regression of A on B.
-//
-// If hedge_roll_count is 0, one static regression over the whole series is
-// used for every bar. Be aware that this is a full-sample estimate and it has
-// look-ahead bias. If hedge_roll_count is > 0 (and must be >= 3), the
-// regression is rolled over the trailing hedge_roll_count bars (ending at and
-// including the current bar), so there is no look-ahead bias. The first
-// hedge ratio is available at bar (first valid bar + hedge_roll_count - 1).
-//
-// The z-score is (spread[i] - mean) / stdev. If zscore_roll_count is 0, mean
-// and stdev are those of the whole spread series (look-ahead bias again).
-// Otherwise (must be >= 2), they are the trailing zscore_roll_count bars of
-// the spread, ending at and including the current bar. The first z-score is
-// available zscore_roll_count - 1 bars after the first available spread. So,
-// with both rolling, the first z-score is at bar (first valid bar +
-// hedge_roll_count + zscore_roll_count - 2).
-//
-// If log_prices is true, the regression and the spread are in terms of
-// natural log of prices (non-positive prices become NaN).
-// If biased is true, stdev uses n as its divisor, otherwise n - 1.
-//
-// NaN pairs are skipped in the regressions and the z-score statistics. The
-// result is NaN wherever the spread, mean, stdev or the hedge ratio is not
-// available, or when stdev is zero.
-//
-// get_result() is the z-score. All the result vectors are as long as the
-// columns.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  PairsSpreadVisitor  {
 

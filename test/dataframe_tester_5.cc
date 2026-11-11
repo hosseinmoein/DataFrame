@@ -9264,6 +9264,247 @@ static void test_PairsSpreadVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_HalfLifeVisitor()  {
+
+    std::cout << "\nTesting HalfLifeVisitor{ } ..." << std::endl;
+
+    const double                nval = std::numeric_limits<double>::quiet_NaN();
+    auto                        near = [](double a, double b) -> bool  {
+        return (std::abs(a - b) < 0.000001);
+    };
+    ULDataFrame                 df;
+    StlVecType<unsigned long>   idxvec(30);
+
+    std::iota(idxvec.begin(), idxvec.end(), 0UL);
+
+    // Noisy AR(1) with phi = 0.8. The expected values were calculated by an
+    // independent brute force implementation of OLS.
+    //
+    StlVecType<double>  s =
+        { 1.5, 1.2412, 0.7608, 0.6339, 0.8502, -0.1982, 0.6836, 0.318,
+          -0.0438, -0.5585, 0.0191, 0.3527, 0.9044, 1.1701, 1.0676, 1.0183,
+          1.2823, 0.587, 0.4467, 0.5483, 0.2123, 0.5307, 0.2485, 0.5352,
+          0.4985, 0.63, -0.2548, -0.634, 0.1651, 0.2211 };
+    StlVecType<double>  s_nan =
+        { 1.5, 1.2412, 0.7608, 0.6339, 0.8502, -0.1982, 0.6836, nval, nval,
+          -0.5585, 0.0191, 0.3527, 0.9044, 1.1701, 1.0676, 1.0183, 1.2823,
+          0.587, 0.4467, 0.5483, 0.2123, 0.5307, 0.2485, 0.5352, 0.4985,
+          0.63, -0.2548, -0.634, 0.1651, 0.2211 };
+    StlVecType<double>  half;       // 64, 32, 16, ... exactly phi = 0.5
+    StlVecType<double>  explosive;  // 1.1 ^ t
+    StlVecType<double>  alternating;
+    StlVecType<double>  short_col { 1.0, 0.5, 0.25 };
+
+    for (int i = 0; i < 12; ++i)  {
+        half.push_back(64.0 * std::pow(0.5, i));
+        explosive.push_back(std::pow(1.1, i));
+        alternating.push_back((i % 2) ? -1.0 : 1.0);
+    }
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("s", s),
+                 std::make_pair("s_nan", s_nan));
+
+    // Full sample: The same value for every bar
+    //
+    {
+        half_life_v<double> hl;
+
+        df.single_act_visit<double>("s", hl);
+        assert(hl.get_result().size() == 30);
+        assert(hl.get_ar_coefficient().size() == 30);
+        for (std::size_t i = 0; i < 30; ++i)  {
+            assert(near(hl.get_ar_coefficient()[i], 0.555125));
+            assert(near(hl.get_result()[i], 1.177694));
+        }
+
+        half_life_v<double> hl_nan;
+
+        df.single_act_visit<double>("s_nan", hl_nan);
+        for (std::size_t i = 0; i < 30; ++i)  {
+            assert(near(hl_nan.get_ar_coefficient()[i], 0.496310));
+            assert(near(hl_nan.get_result()[i], 0.989428));
+        }
+    }
+
+    // Rolling. The first result is at index 12 - 1 = 11.
+    //
+    {
+        half_life_v<double> hl { 12 };
+
+        df.single_act_visit<double>("s", hl);
+        for (std::size_t i = 0; i < 11; ++i)  {
+            assert(std::isnan(hl.get_result()[i]));
+            assert(std::isnan(hl.get_ar_coefficient()[i]));
+        }
+        assert(near(hl.get_ar_coefficient()[11], 0.462109));
+        assert(near(hl.get_result()[11], 0.897912));
+        assert(near(hl.get_ar_coefficient()[14], 0.488436));
+        assert(near(hl.get_result()[14], 0.967344));
+        assert(near(hl.get_ar_coefficient()[20], 0.546849));
+        assert(near(hl.get_result()[20], 1.148389));
+        assert(near(hl.get_ar_coefficient()[29], 0.347656));
+        assert(near(hl.get_result()[29], 0.656054));
+
+        // The same, but with a gap of two NaNs at indices 7 and 8. Windows
+        // that don't include the gap are not affected.
+        //
+        half_life_v<double> hl_nan { 12 };
+
+        df.single_act_visit<double>("s_nan", hl_nan);
+        for (std::size_t i = 0; i < 11; ++i)
+            assert(std::isnan(hl_nan.get_result()[i]));
+        assert(near(hl_nan.get_ar_coefficient()[11], 0.337889));
+        assert(near(hl_nan.get_result()[11], 0.638823));
+        assert(near(hl_nan.get_ar_coefficient()[14], 0.369196));
+        assert(near(hl_nan.get_result()[14], 0.695633));
+        assert(near(hl_nan.get_result()[20], hl.get_result()[20]));
+        assert(near(hl_nan.get_result()[29], hl.get_result()[29]));
+    }
+
+    // Exact cases
+    //
+    {
+        ULDataFrame df_ex;
+        StlVecType<unsigned long>   idx12(12);
+
+        std::iota(idx12.begin(), idx12.end(), 0UL);
+        df_ex.load_data(std::move(idx12),
+                        std::make_pair("half", half),
+                        std::make_pair("explosive", explosive),
+                        std::make_pair("alternating", alternating));
+
+        // phi = 0.5 --> half-life of exactly 1 bar
+        //
+        half_life_v<double> hl_half;
+
+        df_ex.single_act_visit<double>("half", hl_half);
+        for (std::size_t i = 0; i < 12; ++i)  {
+            assert(std::abs(hl_half.get_ar_coefficient()[i] - 0.5) < 1e-9);
+            assert(std::abs(hl_half.get_result()[i] - 1.0) < 1e-9);
+        }
+
+        half_life_v<double> hl_half_roll { 6 };
+
+        df_ex.single_act_visit<double>("half", hl_half_roll);
+        for (std::size_t i = 0; i < 5; ++i)
+            assert(std::isnan(hl_half_roll.get_result()[i]));
+        for (std::size_t i = 5; i < 12; ++i)
+            assert(std::abs(hl_half_roll.get_result()[i] - 1.0) < 1e-9);
+
+        // phi >= 1: it doesn't mean revert
+        //
+        half_life_v<double> hl_exp;
+
+        df_ex.single_act_visit<double>("explosive", hl_exp);
+        for (std::size_t i = 0; i < 12; ++i)  {
+            assert(std::abs(hl_exp.get_ar_coefficient()[i] - 1.1) < 1e-9);
+            assert(std::isinf(hl_exp.get_result()[i]));
+            assert(hl_exp.get_result()[i] > 0);
+        }
+
+        // phi <= 0: Oscillating, half-life is not defined
+        //
+        half_life_v<double> hl_alt;
+
+        df_ex.single_act_visit<double>("alternating", hl_alt);
+        for (std::size_t i = 0; i < 12; ++i)  {
+            assert(std::abs(hl_alt.get_ar_coefficient()[i] + 1.0) < 1e-9);
+            assert(std::isnan(hl_alt.get_result()[i]));
+        }
+    }
+
+    // phi = 0.9 --> half-life = -ln(2) / ln(0.9) = 6.578813
+    //
+    {
+        ULDataFrame df_slow;
+        StlVecType<unsigned long>   idx(15);
+
+        std::iota(idx.begin(), idx.end(), 0UL);
+        df_slow.load_data(std::move(idx),
+                          std::make_pair("slow", StlVecType<double>{
+                              100.0, 90.0, 81.0, 72.9, 65.61, 59.049,
+                              53.1441, 47.82969, 43.046721, 38.7420489,
+                              34.86784401, 31.381059609, 28.2429536481,
+                              25.41865828329, 22.876792454961 }));
+
+        half_life_v<double> hl;
+
+        df_slow.single_act_visit<double>("slow", hl);
+        for (std::size_t i = 0; i < 15; ++i)  {
+            assert(std::abs(hl.get_ar_coefficient()[i] - 0.9) < 1e-9);
+            assert(std::abs(hl.get_result()[i] - 6.578813478960585) < 1e-6);
+        }
+    }
+
+    // Too few valid pairs: All NaN
+    //
+    {
+        ULDataFrame df_few;
+
+        df_few.load_data(StlVecType<unsigned long>{ 0, 1, 2, 3, 4, 5 },
+                         std::make_pair("s",
+                             StlVecType<double>{
+                                 nval, nval, nval, nval, 1.0, 2.0 }));
+
+        half_life_v<double> hl;
+
+        df_few.single_act_visit<double>("s", hl);
+        for (std::size_t i = 0; i < 6; ++i)
+            assert(std::isnan(hl.get_result()[i]));
+    }
+
+    // Re-using a visitor must not leak the previous run
+    //
+    {
+        half_life_v<double> hl { 12 };
+
+        df.single_act_visit<double>("s", hl);
+        df.single_act_visit<double>("s_nan", hl);
+        assert(hl.get_result().size() == 30);
+        assert(near(hl.get_result()[14], 0.695633));
+    }
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+    {
+        half_life_v<double> bad_roll { 3 };
+        half_life_v<double> big_roll { 31 };
+        bool                thrown { false };
+
+        try  {
+            df.single_act_visit<double>("s", bad_roll);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+
+        thrown = false;
+        try  {
+            df.single_act_visit<double>("s", big_roll);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+
+        // Column too short for the full-sample regression
+        //
+        ULDataFrame df_short;
+
+        df_short.load_data(StlVecType<unsigned long>{ 0, 1, 2 },
+                           std::make_pair("s", short_col));
+
+        half_life_v<double> hl;
+
+        thrown = false;
+        try  {
+            df_short.single_act_visit<double>("s", hl);
+        }
+        catch (const DataFrameError &)  { thrown = true; }
+        assert(thrown);
+    }
+#endif // HMDF_SANITY_EXCEPTIONS
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[])  {
 
     ULDataFrame::set_optimum_thread_level();
@@ -9329,6 +9570,7 @@ int main(int, char *[])  {
     test_CorwinSchultzSpreadVisitor();
     test_VolumeProfileVisitor();
     test_PairsSpreadVisitor();
+    test_HalfLifeVisitor();
 
     return (0);
 }

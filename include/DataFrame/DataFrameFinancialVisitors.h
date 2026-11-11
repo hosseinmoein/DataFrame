@@ -10321,33 +10321,6 @@ using pairs_spread_v = PairsSpreadVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-// Half-life of mean reversion of a series (typically a pairs-trading spread,
-// see PairsSpreadVisitor) in number of bars.
-//
-// It fits the discrete Ornstein-Uhlenbeck (AR(1)) model
-//     s[t] = c + phi * s[t - 1] + e[t]
-// by OLS on  s[t] - s[t - 1] = c + (phi - 1) * s[t - 1] + e[t]  and the
-// half-life is  -ln(2) / ln(phi)  for 0 < phi < 1. Note that this is the
-// exact AR(1) half-life, not the -ln(2) / (phi - 1) approximation.
-//
-// If phi >= 1 the series doesn't mean revert and the half-life is +infinity.
-// If phi <= 0 the series oscillates around its mean and the half-life is not
-// defined (NaN).
-//
-// If roll_count is 0, one regression over the whole series is used and
-// the same value is reported for every bar (full-sample, so look-ahead bias).
-// Otherwise (must be >= 4), the regression is rolled over the trailing
-// roll_count bars, ending at and including the current bar. The first result
-// is available roll_count - 1 bars after the first valid value (e.g. the first
-// available spread of PairsSpreadVisitor).
-//
-// NaN values are skipped (along with the pairs they are a part of). At least 3
-// valid (s[t - 1], s[t]) pairs are required, otherwise the result is NaN.
-//
-// get_result() is the half-life and get_ar_coefficient() is phi. Both are as
-// long as the column. To convert the half-life from bars to time, multiply
-// it by the bar duration.
-//
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  HalfLifeVisitor  {
 

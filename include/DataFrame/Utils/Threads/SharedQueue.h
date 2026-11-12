@@ -65,6 +65,12 @@ public:
     inline optional_ret
     pop_front(bool wait_on_front = true) noexcept;
 
+    // Wake every thread blocked in pop_front(true), even though this queue
+    // is still empty, so they can look for work somewhere else (e.g. the
+    // pool's local queues).
+    //
+    inline void wake_waiters() noexcept;
+	
     bool empty() const noexcept;
     size_type size() const noexcept;
 
@@ -76,6 +82,7 @@ private:
     mutable std::mutex              mutex_ { };
     mutable std::condition_variable cvx_ { };
     QueueType                       queue_ { };
+    size_type                       wake_epoch_ { 0 };
 };
 
 } // namespace hmdf

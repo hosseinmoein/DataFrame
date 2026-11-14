@@ -150,9 +150,12 @@ ThreadPool::dispatch(bool immediately, F &&routine, As && ... args)  {
         add_thread(1);
 
     if (local_queue_)  {  // Is this one of the pool threads
-        const guard_type    guard { state_ };
+        {
+            const guard_type    guard { state_ };
 
-        local_queue_->push(work_unit);
+            local_queue_->push(work_unit);
+        }
+        global_queue_.wake_waiters();  // Idle workers may steal it
     }
     else
         global_queue_.push(work_unit);

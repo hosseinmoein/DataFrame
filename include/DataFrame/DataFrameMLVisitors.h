@@ -342,6 +342,23 @@ public:
 
 private:
 
+    // The similarity matrix is symmetric by definition, s(i, k) == s(k, i).
+    // The responsibility and availability matrices are not.
+    //
+    // All of them are row-major: element (i, k) is data point i and candidate
+    // exemplar k. The inner loops below always run over k, so they walk
+    // memory contiguously.
+    //
+    // If SYM_SIMIL_ is true, the similarity matrix is stored as a packed
+    // triangle (n * (n + 1) / 2 elements instead of n * n). That saves memory
+    // but half of every row of a packed triangle is not contiguous, so the
+    // sweeps below are slower (about 30-40% for n >= 1000).
+    //
+    inline static constexpr bool    SYM_SIMIL_ { false };
+
+    using sim_mat_t = Matrix<double, matrix_orient::row_major, SYM_SIMIL_>;
+    using dense_mat_t = Matrix<double, matrix_orient::row_major, false>;
+
     const size_type iter_num_;
     const bool      cc_;
     const double    dfactor_;
@@ -350,38 +367,23 @@ private:
     cluster_type    clusters_ { };       // Clusters
     order_type      clusters_idxs_ { };  // Clusters indices
 
-    // Symmetric access into the packed (upper-triangular-inclusive)
-    // similarity array. sim(i, j) == sim(j, i), but get_similarity_()
-    // only ever physically stores the i <= j half -- a lookup with
-    // i > j must swap to the row that was actually filled, rather
-    // than reusing row i's own packed offset (which, for a column
-    // less than i, silently lands on some unrelated pair's entry).
-    //
-    static inline double
-    sim_at_(const vec_t<double> &simil, long i, long j, long col_s)  {
-
-        if (i <= j)
-            return (simil[(i * col_s) - ((i * (i + 1)) >> 1) + j]);
-        return (simil[(j * col_s) - ((j * (j + 1)) >> 1) + i]);
-    }
-
     template<typename H>
-    inline vec_t<double>
+    inline sim_mat_t
     get_similarity_(const H &column_begin, long col_s)  {
 
-        vec_t<double>   simil((col_s * (col_s + 1)) / 2, 0.0);
-        double          min_dist { std::numeric_limits<double>::max() };
+        sim_mat_t   simil { col_s, col_s, 0.0 };
+        double      min_dist { std::numeric_limits<double>::max() };
 
         // Compute similarity between distinct data points i and j
         //
         for (long i { 0 }; i < col_s - 1; ++i) [[likely]]  {
             const value_type    &i_val { *(column_begin + i) };
-            const long          i_idx { (i * col_s) - ((i * (i + 1)) >> 1) };
 
             for (long j { i + 1 }; j < col_s; ++j)  [[likely]]  {
                 const double    dist { -dfunc_(i_val, *(column_begin + j)) };
 
-                simil[i_idx + j] = dist;
+                simil(i, j) = dist;
+                if constexpr (! SYM_SIMIL_)  simil(j, i) = dist;
                 if (dist < min_dist)  min_dist = dist;
             }
         }
@@ -389,106 +391,119 @@ private:
         // Assign min to diagonals
         //
         for (long i { 0 }; i < col_s; ++i)
-            simil[(i * col_s) + i - ((i * (i + 1)) >> 1)] = min_dist;
+            simil(i, i) = min_dist;
 
         return (simil);
     }
-
+	
+    // avail and respon must be col_s x col_s and filled with zeros
+    //
     inline void
-    get_avail_and_respon_(const vec_t<double> &simil,
+    get_avail_and_respon_(const sim_mat_t &simil,
                           long col_s,
-                          vec_t<double> &avail,
-                          vec_t<double> &respon)  {
+                          dense_mat_t &avail,
+                          dense_mat_t &respon)  {
 
-        avail.resize(col_s * col_s, 0.0);
-        respon.resize(col_s * col_s, 0.0);
+        if (iter_num_ == 0)  return;
 
         const double    one_df { 1.0 - dfactor_ };
 
-        for (size_type m { 0 }; m < iter_num_; ++m) [[likely]]  {
-            // Update responsibility:
-            //   r(i, k) = s(i, k) - max_{k' != k} [a(i, k') + s(i, k')]
-            //
-            // For fixed i, "max excluding k" only ever needs the
-            // overall max and, for whichever k achieves it, the
-            // second-highest value -- both obtainable in one O(n)
-            // pass instead of redoing an O(n) search for every k
-            // (which made this O(n^2) per row / O(n^3) per iteration
-            // instead of the documented O(n) per row / O(n^2) total).
-            //
-            for (long i = 0; i < col_s; ++i) [[likely]]  {
+        // Column totals of the positive responsibilities,
+        //   col_sum[k] = sum_{i != k} max(0, r(i, k)),
+        // and the diagonal r(k, k). Both are needed by the availability
+        // update and are collected while the responsibilities are computed.
+        //
+        vec_t<double>   col_sum (col_s, 0.0);
+        vec_t<double>   next_col_sum (col_s, 0.0);
+        vec_t<double>   diag (col_s, 0.0);
+        vec_t<double>   next_diag (col_s, 0.0);
+
+        // Update responsibility of data point i (row i):
+        //   r(i, k) = s(i, k) - max_{k' != k} [a(i, k') + s(i, k')]
+        //
+        // For fixed i, "max excluding k" only needs the overall max and, for
+        // whichever k achieves it, the second-highest value -- both obtainable
+        // in one O(n) pass.
+        //
+        auto    update_respon_row =
+            [&](long i, vec_t<double> &csum, vec_t<double> &dg) -> void  {
                 double  max1 { -std::numeric_limits<double>::max() };
                 double  max2 { -std::numeric_limits<double>::max() };
                 long    argmax1 { -1 };
 
-                for (long jj { 0 }; jj < col_s; ++jj) [[likely]]  {
-                    const double    value {
-                        sim_at_(simil, i, jj, col_s) + avail[jj * col_s + i]
-                    };
+                for (long k { 0 }; k < col_s; ++k) [[likely]]  {
+                    const double    value { simil(i, k) + avail(i, k) };
 
                     if (value > max1)  {
                         max2 = max1;
                         max1 = value;
-                        argmax1 = jj;
+                        argmax1 = k;
                     }
                     else if (value > max2)
                         max2 = value;
                 }
 
-                for (long j { 0 }; j < col_s; ++j) [[likely]]  {
-                    const double    max_diff { (j == argmax1) ? max2 : max1 };
-                    const long      j_idx { j * col_s + i };
+                for (long k { 0 }; k < col_s; ++k) [[likely]]  {
+                    const double    max_diff { (k == argmax1) ? max2 : max1 };
 
-                    respon[j_idx] =
-                        one_df * (sim_at_(simil, i, j, col_s) - max_diff) +
-                        dfactor_ * respon[j_idx];
+                    respon(i, k) =
+                        one_df * (simil(i, k) - max_diff) +
+                        dfactor_ * respon(i, k);
                 }
-            }
 
-            // Update availability
-            // Do diagonals first
-            //
+                dg[i] = respon(i, i);
+
+                const double    saved { csum[i] };  // exclude i' == k
+
+                for (long k { 0 }; k < col_s; ++k) [[likely]]
+                    csum[k] += std::max(0.0, respon(i, k));
+                csum[i] = saved;
+            };
+
+        // Availability update of row i needs only row i of responsibility
+        // and availability plus the column totals of this iteration. So,
+        // it is fused with the responsibility update of row i for the next
+        // iteration. This way, there is a single sweep over the matrices
+        // per iteration.
+        //
+        // First iteration's responsibilities (availabilities are all zeros)
+        //
+        for (long i { 0 }; i < col_s; ++i) [[likely]]
+            update_respon_row(i, col_sum, diag);
+
+        for (size_type m { 0 }; m < iter_num_; ++m) [[likely]]  {
+            const bool  last { m + 1 == iter_num_ };
+
+            if (! last)
+                std::fill(next_col_sum.begin(), next_col_sum.end(), 0.0);
+
             for (long i { 0 }; i < col_s; ++i) [[likely]]  {
-                const long  s1 { i * col_s };
-                const long  s2 { i * col_s + i };
-                double      sum { 0.0 };
+                // a(k, k) = sum_{i != k} max(0, r(i, k))
+                // a(i, k) =
+                //     min(0, r(k, k) + sum_{i' not in {i, k}} max(0, r(i', k)))
+                //
+                // The column total is reused for every i by subtracting out
+                // just the i' = i term.
+                //
+                for (long k { 0 }; k < col_s; ++k) [[likely]]  {
+                    if (i ^ k) [[likely]]
+                        avail(i, k) =
+                            one_df *
+                            std::min(0.0,
+                                     diag[k] + col_sum[k] -
+                                     std::max(0.0, respon(i, k))) +
+                            dfactor_ * avail(i, k);
+                    else
+                        avail(i, k) =
+                            one_df * col_sum[k] + dfactor_ * avail(i, k);
+                }
 
-                for (long ii { 0 }; ii < col_s; ++ii) [[likely]]
-                    if (ii ^ i)
-                        sum += std::max(0.0, respon[s1 + ii]);
-
-                avail[s2] = one_df * sum + dfactor_ * avail[s2];
+                if (! last)  update_respon_row(i, next_col_sum, next_diag);
             }
 
-            // Off-diagonals: a(i, j) needs
-            // sum_{i' not in {i, j}} max(0, r(i', j)) for every i, with
-            // j fixed. Rather than rescanning all n indices for every
-            // (i, j) pair (O(n) work x O(n^2) pairs = O(n^3) per
-            // iteration), compute the column total once per j --
-            // sum_{i' != j} max(0, r(i', j)), O(n) -- and reuse it for
-            // every i by subtracting out just the i'=i term.
-            //
-            for (long j { 0 }; j < col_s; ++j) [[likely]]  {
-                const long  s1 { j * col_s };
-                double      total_j { 0.0 };
-
-                for (long ii { 0 }; ii < col_s; ++ii) [[likely]]
-                    if (ii ^ j)
-                        total_j += std::max(0.0, respon[s1 + ii]);
-
-                for (long i { 0 }; i < col_s; ++i) [[likely]]  {
-                    if (i ^ j) [[likely]]  {  // Not equal
-                        const long      s2 { j * col_s + i };
-                        const double    sum {
-                            total_j - std::max(0.0, respon[s1 + i])
-                        };
-
-                        avail[s2] =
-                            one_df *
-                            std::min(0.0, respon[s1 + j] + sum) + dfactor_ *
-                            avail[s2];
-                    }
-                }
+            if (! last)  {
+                col_sum.swap(next_col_sum);
+                diag.swap(next_diag);
             }
         }
     }
@@ -542,17 +557,15 @@ public:
                           std::distance(column_begin, column_end)))
         };
 
-        const vec_t<double> simil = get_similarity_(column_begin, col_s);
-        vec_t<double>       avail;
-        vec_t<double>       respon;
+        const auto  simil { get_similarity_(column_begin, col_s) };
+        dense_mat_t avail { col_s, col_s, 0.0 };
+        dense_mat_t respon { col_s, col_s, 0.0 };
 
         get_avail_and_respon_(simil, col_s, avail, respon);
 
         result_.reserve(std::min(col_s / 100, long(16)));
         for (long i { 0 }; i < col_s; ++i) [[likely]]  {
-            const long  idx { i * col_s + i };
-
-            if (respon[idx] + avail[idx] > 0.0)
+            if (respon(i, i) + avail(i, i) > 0.0)
                 result_.push_back(&*(column_begin + i));
         }
 

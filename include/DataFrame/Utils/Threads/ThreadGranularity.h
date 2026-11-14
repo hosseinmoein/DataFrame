@@ -76,44 +76,38 @@ struct  SpinLock  {
 
     inline void lock() noexcept {
 
-        const std::thread::id   thr_id = std::this_thread::get_id();
+        const std::thread::id   thr_id { std::this_thread::get_id() };
 
-        if (thr_id != owner_) [[likely]]  {
-#ifdef __cpp_lib_atomic_flag_test
-            while (true) {
-                if (! lock_.test_and_set(std::memory_order_acquire)) break;
-                while (lock_.test(std::memory_order_relaxed)) ;
-            }
-#else
-            while (lock_.test_and_set(std::memory_order_acquire)) ;
-#endif // __cpp_lib_atomic_flag_test
-            owner_ = thr_id;
+        if (thr_id != owner_.load(std::memory_order_relaxed)) [[likely]]  {
+            while (lock_.test_and_set(std::memory_order_acquire))
+                wait_until_free_();
+            owner_.store(thr_id, std::memory_order_relaxed);
         }
 
         count_ += 1;
     }
     [[nodiscard]] inline bool try_lock() noexcept {
 
-        const std::thread::id   thr_id = std::this_thread::get_id();
+        const std::thread::id   thr_id { std::this_thread::get_id() };
 
-        if (thr_id == owner_ ||
+        if (thr_id == owner_.load(std::memory_order_relaxed) ||
             ! lock_.test_and_set(std::memory_order_acquire))  {
-            owner_ = thr_id;
+            owner_.store(thr_id, std::memory_order_relaxed);
             count_ += 1;
         }
 
-        return (thr_id == owner_);
+        return (thr_id == owner_.load(std::memory_order_relaxed));
     }
     inline void unlock() noexcept {
 
-        const std::thread::id   thr_id = std::this_thread::get_id();
+        const std::thread::id   thr_id { std::this_thread::get_id() };
 
-        if (thr_id == owner_) [[likely]]  {
+        if (thr_id == owner_.load(std::memory_order_relaxed)) [[likely]]  {
             count_ -= 1;
 
             assert(count_ >= 0);
             if (count_ == 0)  {
-                owner_ = std::thread::id { };
+                owner_.store(std::thread::id { }, std::memory_order_relaxed);
                 lock_.clear(std::memory_order_release);
             }
         }
@@ -125,9 +119,38 @@ struct  SpinLock  {
 
 private:
 
-    std::atomic_flag    lock_ = ATOMIC_FLAG_INIT;
-    std::thread::id     owner_ { };
-    int                 count_ { 0 };
+    // Spin briefly, because the lock is usually held for a very short time.
+    // If it is still taken after that, the holder is most likely descheduled
+    // (more threads than cores). Then, spinning only burns our time slice
+    // and delays the holder, so give the CPU away.
+    //
+    inline void wait_until_free_() noexcept {
+
+        constexpr int   SPINS_BEFORE_YIELD { 64 };
+        int             spins { 0 };
+
+#ifdef __cpp_lib_atomic_flag_test
+        while (lock_.test(std::memory_order_relaxed))  {
+#else
+        while (true)  {
+#endif // __cpp_lib_atomic_flag_test
+            if (++spins < SPINS_BEFORE_YIELD)  {
+#if defined(__x86_64__) || defined(__i386__)
+                __builtin_ia32_pause();
+#elif defined(__aarch64__) || defined(__arm__)
+                asm volatile ("yield" ::: "memory");
+#endif
+            }
+            else  {
+                std::this_thread::yield();
+                break;
+            }
+        }
+    }
+
+    std::atomic_flag                lock_ = ATOMIC_FLAG_INIT;
+    std::atomic<std::thread::id>    owner_ { };
+    int                             count_ { 0 };
 };
 
 // ----------------------------------------------------------------------------

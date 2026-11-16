@@ -4537,7 +4537,7 @@ public:
 
         result.reserve(col_s);
 
-        size_type   cat { nan_ != 0 ? 0 : 1 };
+        size_type   cat { nan_ != size_type(0) ? size_type(0) : size_type(1) };
 
         for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
             const value_type    &value { *(column_begin + i) };

@@ -1840,8 +1840,8 @@ struct  HullRollingMeanVisitor  {
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         if (roll_count_ <= 1)  return;
 
@@ -1883,8 +1883,8 @@ struct  HullRollingMeanVisitor  {
             fut2.get();
         }
         else  {
-            wma_half (idx_begin, idx_end, column_begin, column_end);
-            wma_full (idx_begin, idx_end, column_begin, column_end);
+            wma_half(idx_begin, idx_end, column_begin, column_end);
+            wma_full(idx_begin, idx_end, column_begin, column_end);
         }
         wma_full.post();
         wma_half.post();
@@ -1899,8 +1899,8 @@ struct  HullRollingMeanVisitor  {
                     [&wma_full = std::as_const(wma_full.get_result()),
                      &result]
                     (auto begin, auto end) mutable -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]  {
-                            value_type  &r = result[i];
+                        for (size_type i { begin }; i < end; ++i) [[likely]]  {
+                            value_type  &r { result[i] };
 
                             r = T(2) * r - wma_full[i];
                         }
@@ -1919,8 +1919,9 @@ struct  HullRollingMeanVisitor  {
                            });
         }
 
-        wma_t   wma_sqrt { WeightedMeanVisitor<T, I>(),
-                           size_type(std::sqrt(roll_count_)) };
+        wma_t   wma_sqrt {
+            WeightedMeanVisitor<T, I>(), size_type(std::sqrt(roll_count_))
+        };
 
         wma_sqrt.pre();
         wma_sqrt (idx_begin, idx_end, result.begin(), result.end());
@@ -2488,13 +2489,15 @@ struct  GarmanKlassVolVisitor  {
 
     template<typename K, typename H>
     inline void
-    operator() (const K &, const K &,
-                const H &low_begin, const H &low_end,
-                const H &high_begin, const H &high_end,
-                const H &open_begin, const H &open_end,
-                const H &close_begin, const H &close_end)  {
+    operator()(const K &, const K &,
+               const H &low_begin, const H &low_end,
+               const H &high_begin, const H &high_end,
+               const H &open_begin, const H &open_end,
+               const H &close_begin, const H &close_end)  {
 
-        const size_type col_s = std::distance(close_begin, close_end);
+        const size_type col_s {
+            size_type(std::distance(close_begin, close_end))
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
@@ -2511,55 +2514,59 @@ struct  GarmanKlassVolVisitor  {
         result_type             result(
             col_s, std::numeric_limits<T>::quiet_NaN());
 
+        // The per-bar term below depends only on the bar index j, not on the
+        // window being summed. It used to be recomputed (2 std::log() calls)
+        // every time a bar fell into a window, i.e. roll_count_ times per
+        // bar. Now it is computed once per bar, and every window is summed
+        // from the cached terms in exactly the same order, and with exactly
+        // the same per-term expression, as before. So the results are
+        // unchanged.
+        //
+        const size_type n_terms { col_s > 0 ? col_s - 1 : 0 };
+        result_type     terms(n_terms);
+
+        for (size_type j { 0 }; j < n_terms; ++j) [[likely]]  {
+            const value_type    hl_rt {
+                std::log(*(high_begin + j) / *(low_begin + j))
+            };
+            const value_type    co_rt {
+                std::log(*(close_begin + j) / *(open_begin + j))
+            };
+
+            terms[j] = T(0.5) * hl_rt * hl_rt - cf * co_rt * co_rt;
+        }
+
+        const size_type roll_count { roll_count_ };
+        const size_type trading_periods { trading_periods_ };
+        auto            window_vol =
+            [roll_count, trading_periods, &terms](size_type i) -> value_type  {
+                value_type  sum { 0 };
+                size_type   cnt { 0 };
+
+                for (size_type j { i - roll_count }; j < i; ++j)  {
+                    sum += terms[j];
+                    cnt += 1;
+                }
+                return (std::sqrt((sum / T(cnt)) * trading_periods));
+            };
+
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
             ThreadGranularity::get_thread_level() > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_count_,
                     col_s,
-                    [this, &result,
-                     &low_begin, &high_begin, &open_begin, &close_begin]
-                    (auto begin, auto end) mutable -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]  {
-                            value_type  sum { 0 };
-                            size_type   cnt { 0 };
-
-                            for (size_type j { i - this->roll_count_ };
-                                 j < i; ++j) {
-                                const value_type    hl_rt =
-                                    std::log(*(high_begin + j) /
-                                             *(low_begin + j));
-                                const value_type    co_rt =
-                                    std::log(*(close_begin + j) /
-                                             *(open_begin + j));
-
-                                sum += T(0.5) * hl_rt * hl_rt -
-                                       cf * co_rt * co_rt;
-                                cnt += 1;
-                            }
-                            result[i] = std::sqrt((sum / T(cnt)) *
-                                                  this->trading_periods_);
-                        }
-                    });
+                    [&result, &window_vol](auto begin, auto end) -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]
+                            result[i] = window_vol(i);
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            for (size_type i { roll_count_ }; i < col_s; ++i) [[likely]]  {
-                value_type  sum { 0 };
-                size_type   cnt { 0 };
-
-                for (size_type j { i - roll_count_ }; j < i; ++j) {
-                    const value_type    hl_rt =
-                        std::log(*(high_begin + j) / *(low_begin + j));
-                    const value_type    co_rt =
-                        std::log(*(close_begin + j) / *(open_begin + j));
-
-                    sum += T(0.5) * hl_rt * hl_rt - cf * co_rt * co_rt;
-                    cnt += 1;
-                }
-                result[i] = std::sqrt((sum / T(cnt)) * trading_periods_);
-            }
+            for (size_type i { roll_count_ }; i < col_s; ++i) [[likely]]
+                result[i] = window_vol(i);
         }
         result_.swap(result);
     }
@@ -2583,6 +2590,7 @@ template<typename T, typename I = unsigned long, std::size_t A = 0>
 using gk_vol_v = GarmanKlassVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
+
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  YangZhangVolVisitor  {
 
@@ -2600,7 +2608,6 @@ struct  YangZhangVolVisitor  {
             size_type(std::distance(close_begin, close_end))
         };
 
-
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (roll_count_ == 0 ||
             col_s != size_type(std::distance(low_begin, low_end)) ||
@@ -2617,105 +2624,79 @@ struct  YangZhangVolVisitor  {
         const value_type    norm { T(1) / T(roll_count_ - 1) };
         result_type         result(col_s, std::numeric_limits<T>::quiet_NaN());
 
+        // The log-return terms below depend only on the bar index j, not on
+        // the window being summed. They used to be recomputed (5 std::log()
+        // calls each) every time a bar fell into a window, i.e. roll_count_
+        // times per bar. Now they are computed once per bar, and every
+        // window is summed from the cached terms in exactly the same order,
+        // and with exactly the same per-term expressions, as before.
+        // So the results are unchanged.
+        //
+        const size_type n_terms { col_s > 0 ? col_s - 1 : 0 };
+        result_type     c_terms(n_terms);
+        result_type     o_terms(n_terms);
+        result_type     rs_terms(n_terms);
+
+        for (size_type j { 0 }; j < n_terms; ++j) [[likely]]  {
+            const value_type    open { *(open_begin + j) };
+            const value_type    close { *(close_begin + j) };
+            const value_type    ho_rt { std::log(*(high_begin + j) / open) };
+            const value_type    lo_rt { std::log(*(low_begin + j) / open) };
+            const value_type    co_rt { std::log(close / open) };
+            const value_type    oc_rt {
+                j > 0 ? std::log(open / *(close_begin + (j - 1)))
+                      : std::numeric_limits<T>::quiet_NaN()
+            };
+            const value_type    cc_rt {
+                j > 0 ? std::log(close / *(close_begin + (j - 1)))
+                      : std::numeric_limits<T>::quiet_NaN()
+            };
+            // Rogers-Satchell volatility
+            const value_type    rs_vol {
+                ho_rt * (ho_rt - co_rt) + lo_rt * (lo_rt - co_rt)
+            };
+
+            c_terms[j] = cc_rt * cc_rt * norm;
+            o_terms[j] = oc_rt * oc_rt * norm;
+            rs_terms[j] = rs_vol * norm;
+        }
+
+        const size_type roll_count { roll_count_ };
+        const size_type trading_periods { trading_periods_ };
+        auto            window_vol =
+            [roll_count, trading_periods, k, one_k,
+             &c_terms, &o_terms, &rs_terms](size_type i) -> value_type  {
+                value_type  c_vol_sum { 0 };
+                value_type  o_vol_sum { 0 };
+                value_type  rs_vol_sum { 0 };
+
+                for (size_type j { i - roll_count }; j < i; ++j) [[likely]]  {
+                    c_vol_sum += c_terms[j];
+                    o_vol_sum += o_terms[j];
+                    rs_vol_sum += rs_terms[j];
+                }
+                return (std::sqrt(o_vol_sum + k * c_vol_sum +
+                                  one_k * rs_vol_sum) *
+                        std::sqrt(trading_periods));
+            };
+
         if (col_s >= (ThreadPool::MUL_THR_THHOLD / 2) &&
             ThreadGranularity::get_thread_level() > 2)  {
             auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     roll_count_,
                     col_s,
-                    [this, &result,
-                     k, one_k, norm,
-                     &low_begin, &high_begin, &open_begin, &close_begin]
-                    (auto begin, auto end) mutable -> void  {
-                        for (size_type i { begin }; i < end; ++i) [[likely]]  {
-                            value_type  c_vol_sum { 0 };
-                            value_type  o_vol_sum { 0 };
-                            value_type  rs_vol_sum { 0 };
-
-                            for (size_type j { i - this->roll_count_ };
-                                 j < i; ++j) [[likely]]  {
-                                const value_type    open { *(open_begin + j) };
-                                const value_type    close {
-                                    *(close_begin + j) };
-                                const value_type    ho_rt {
-                                    std::log(*(high_begin + j) / open)
-                                };
-                                const value_type    lo_rt {
-                                    std::log(*(low_begin + j) / open)
-                                };
-                                const value_type    co_rt {
-                                    std::log(close/ open) };
-                                const value_type    oc_rt {
-                                    j > 0
-                                        ? std::log(open /
-                                                   *(close_begin + (j - 1)))
-                                        : std::numeric_limits<T>::quiet_NaN()
-                                };
-                                const value_type    cc_rt {
-                                    j > 0
-                                        ? std::log(close /
-                                                   *(close_begin + (j - 1)))
-                                        : std::numeric_limits<T>::quiet_NaN()
-                                };
-                                // Rogers-Satchell volatility
-                                const value_type    rs_vol {
-                                    ho_rt * (ho_rt - co_rt) +
-                                    lo_rt * (lo_rt - co_rt) };
-
-                                c_vol_sum += cc_rt * cc_rt * norm;
-                                o_vol_sum += oc_rt * oc_rt * norm;
-                                rs_vol_sum += rs_vol * norm;
-                            }
-                            result[i] =
-                                std::sqrt(o_vol_sum +
-                                          k * c_vol_sum +
-                                          one_k * rs_vol_sum) *
-                                std::sqrt(this->trading_periods_);
-                        }
+                    [&result, &window_vol](auto begin, auto end) -> void  {
+                        for (size_type i { begin }; i < end; ++i) [[likely]]
+                            result[i] = window_vol(i);
                     })
             };
 
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            for (size_type i { roll_count_ }; i < col_s; ++i) [[likely]]  {
-                value_type  c_vol_sum { 0 };
-                value_type  o_vol_sum { 0 };
-                value_type  rs_vol_sum { 0 };
-
-                for (size_type j { i - roll_count_ }; j < i; ++j) [[likely]]  {
-                    const value_type    open { *(open_begin + j) };
-                    const value_type    close { *(close_begin + j) };
-                    const value_type    ho_rt {
-                        std::log(*(high_begin + j) / open)
-                    };
-                    const value_type    lo_rt {
-                        std::log(*(low_begin + j) / open)
-                    };
-                    const value_type    co_rt { std::log(close/ open) };
-                    const value_type    oc_rt {
-                        j > 0
-                            ? std::log(open / *(close_begin + (j - 1)))
-                            : std::numeric_limits<T>::quiet_NaN()
-                    };
-                    const value_type    cc_rt {
-                        j > 0
-                            ? std::log(close / *(close_begin + (j - 1)))
-                            : std::numeric_limits<T>::quiet_NaN()
-                    };
-                    // Rogers-Satchell volatility
-                    const value_type    rs_vol {
-                        ho_rt * (ho_rt - co_rt) + lo_rt * (lo_rt - co_rt)
-                    };
-
-                    c_vol_sum += cc_rt * cc_rt * norm;
-                    o_vol_sum += oc_rt * oc_rt * norm;
-                    rs_vol_sum += rs_vol * norm;
-                }
-                result[i] =
-                    std::sqrt(o_vol_sum + k * c_vol_sum + one_k * rs_vol_sum) *
-                    std::sqrt(trading_periods_);
-            }
+            for (size_type i { roll_count_ }; i < col_s; ++i) [[likely]]
+                result[i] = window_vol(i);
         }
         result_.swap(result);
     }
@@ -2858,13 +2839,15 @@ struct  FisherTransVisitor  {
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &low_begin, const H &low_end,
-                const H &high_begin, const H &high_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &low_begin, const H &low_end,
+               const H &high_begin, const H &high_end)  {
 
-        const size_type col_s = std::distance(low_begin, low_end);
-        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : ThreadGranularity::get_thread_level();
+        const size_type col_s { size_type(std::distance(low_begin, low_end)) };
+        const auto      thread_level {
+            (col_s < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : ThreadGranularity::get_thread_level()
+        };
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(high_begin, high_end)) ||
@@ -2876,16 +2859,17 @@ struct  FisherTransVisitor  {
         result_type mid_hl(col_s);
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
                     [&mid_hl, &low_begin, &high_begin]
                     (auto begin, auto end) mutable -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]
+                        for (size_type i { begin }; i < end; ++i) [[likely]]
                             mid_hl[i] = (*(low_begin + i) +
                                          *(high_begin + i)) * T(0.5);
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2895,9 +2879,11 @@ struct  FisherTransVisitor  {
         }
 
         SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v {
-            MaxVisitor<T, I>(), roll_count_ };
+            MaxVisitor<T, I>(), roll_count_
+        };
         SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v {
-            MinVisitor<T, I>(), roll_count_ };
+            MinVisitor<T, I>(), roll_count_
+        };
 
         max_v.pre();
         max_v (idx_begin, idx_end, mid_hl.begin(), mid_hl.end());
@@ -2909,7 +2895,7 @@ struct  FisherTransVisitor  {
         result_type result(col_s);
 
         if (thread_level > 2)  {
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<value_type>(
                     size_type(0),
                     col_s,
@@ -2917,7 +2903,7 @@ struct  FisherTransVisitor  {
                      &max_v = std::as_const(max_v.get_result()),
                      &result, &mid_hl = std::as_const(mid_hl)]
                     (auto begin, auto end) mutable -> void  {
-                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                        for (size_type i { begin }; i < end; ++i) [[likely]]  {
                             const value_type    low { min_v[i] };
                             const value_type    diff { max_v[i] - low };
 
@@ -2926,7 +2912,8 @@ struct  FisherTransVisitor  {
                                  (diff >= T(0.001) ? diff : T(0.001))) -
                                 T(0.5);
                         }
-                    });
+                    })
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -2940,8 +2927,8 @@ struct  FisherTransVisitor  {
             }
         }
 
-        size_type   i = 0;
-        value_type  val = 0;
+        size_type   i { 0 };
+        value_type  val { 0 };
 
         // This is done for efficiency, so we do not use a third vector
         //

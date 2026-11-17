@@ -240,6 +240,26 @@ static S &operator << (S &stream, const Matrix<T, MO> &data);
 
 // ----------------------------------------------------------------------------
 
+// Formatting a number with the stream's operator<< goes through the stream's
+// locale machinery (num_put) and is slow. When the stream is in its default
+// state, that formatting is exactly what std::to_chars produces (with
+// chars_format::general and the stream's precision for floating points).
+// So a plain stream is detected once per write, and then numbers are
+// formatted with std::to_chars into a stack buffer.
+// Streams that were customized (flags like fixed/scientific/showpos/hex,
+// a width, or a non-classic locale) never take this path.
+//
+template<typename S>
+inline static bool _is_plain_fmt_stream_(const S &o)  {
+
+    return (o.flags() == (std::ios_base::skipws | std::ios_base::dec) &&
+            o.width() == 0 &&
+            o.precision() >= 0 &&
+            o.getloc() == std::locale::classic());
+}
+
+// ----------------------------------------------------------------------------
+
 template<std::integral T>
 static inline T _atoi_(const char *str, int len)  {
 
@@ -297,14 +317,12 @@ static inline T _atoi_(const char *str, int len)  {
 template<std::floating_point T>
 static inline T _str_to_fp_(const std::string &value) noexcept  {
 
-#ifdef __cpp_lib_to_chars
     const char  *first { value.data() };
     const char  *last { first + value.size() };
     T           result;
     const auto  [ptr, ec] { std::from_chars(first, last, result) };
 
     if (ec == std::errc { } && ptr == last)  return (result);
-#endif // __cpp_lib_to_chars
 
     if constexpr (std::is_same_v<T, float>)
         return (std::strtof(value.c_str(), nullptr));
@@ -1744,6 +1762,43 @@ template<typename S, typename T>
 inline static S &_write_csv_df_index_(S &o, const T &value)  {
 
     return (o << value);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline constexpr bool   _csv_fast_fp_v_ =
+    std::is_same_v<T, float> || std::is_same_v<T, double>;
+
+// --------------------------------------
+
+// Writes the value the same way _write_csv_df_index_() does, but when plain
+// is true (see _is_plain_fmt_stream_()), integers and float/double are
+// formatted with std::to_chars.
+//
+template<typename S, typename T>
+inline static S &_write_csv_df_value_(S &o, const T &value, bool plain)  {
+
+    if constexpr ((std::is_integral_v<T> || _csv_fast_fp_v_<T>) &&
+                  ! std::is_same_v<T, bool>)  {
+        if (plain) [[likely]]  {
+            char                    buf[512];
+            std::to_chars_result    res;
+
+            if constexpr (_csv_fast_fp_v_<T>)
+                res = std::to_chars(buf, buf + sizeof(buf), value,
+                                    std::chars_format::general,
+                                    static_cast<int>(o.precision()));
+            else
+                res = std::to_chars(buf, buf + sizeof(buf), value);
+
+            if (res.ec == std::errc { }) [[likely]]  {
+                o.write(buf, res.ptr - buf);
+                return (o);
+            }
+        }
+    }
+    return (_write_csv_df_index_(o, value));
 }
 
 // ----------------------------------------------------------------------------

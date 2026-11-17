@@ -317,12 +317,14 @@ static inline T _atoi_(const char *str, int len)  {
 template<std::floating_point T>
 static inline T _str_to_fp_(const std::string &value) noexcept  {
 
+#ifdef __cpp_lib_to_chars
     const char  *first { value.data() };
     const char  *last { first + value.size() };
     T           result;
     const auto  [ptr, ec] { std::from_chars(first, last, result) };
 
     if (ec == std::errc { } && ptr == last)  return (result);
+#endif // __cpp_lib_to_chars
 
     if constexpr (std::is_same_v<T, float>)
         return (std::strtof(value.c_str(), nullptr));

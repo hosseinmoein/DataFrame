@@ -8539,27 +8539,19 @@ public:
             static_cast<typename IsoForest<T>::size_type>(col_s)
         };
 
-        result_.reserve(col_s / 10 + 4);
         if (nt_ > normalization_type::none)  {
             const auto  &nr { norm.get_result() };
 
-            for (size_type i { 0 }; i < col_s; ++i)  {
-                const double    s { forest.outlier_score(nr[i], data_size) };
-
-                scores_[i] = s;
-                if (s > threshold_)  result_.push_back(i);
-            }
+            forest.outlier_scores(nr.begin(), nr.begin() + col_s,
+                                  data_size, scores_);
         }
-        else  {
-            for (size_type i { 0 }; i < col_s; ++i)  {
-                const double    s {
-                    forest.outlier_score(*(column_begin + i), data_size)
-                };
+        else
+            forest.outlier_scores(column_begin, column_begin + col_s,
+                                  data_size, scores_);
 
-                scores_[i] = s;
-                if (s > threshold_)  result_.push_back(i);
-            }
-        }
+        result_.reserve(col_s / 10 + 4);
+        for (size_type i { 0 }; i < col_s; ++i)
+            if (scores_[i] > threshold_)  result_.push_back(i);
     }
 
     DEFINE_PRE_POST

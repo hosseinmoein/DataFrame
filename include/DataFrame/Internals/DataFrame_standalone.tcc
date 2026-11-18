@@ -1783,20 +1783,30 @@ inline static S &_write_csv_df_value_(S &o, const T &value, bool plain)  {
 
     if constexpr ((std::is_integral_v<T> || _csv_fast_fp_v_<T>) &&
                   ! std::is_same_v<T, bool>)  {
-        if (plain) [[likely]]  {
-            char                    buf[512];
-            std::to_chars_result    res;
-
-            if constexpr (_csv_fast_fp_v_<T>)
-                res = std::to_chars(buf, buf + sizeof(buf), value,
-                                    std::chars_format::general,
-                                    static_cast<int>(o.precision()));
+        if constexpr (std::is_same_v<T, char> ||
+                      std::is_same_v<T, unsigned char>)  {
+            if (std::isprint(value)) [[likely]]
+                o << value;
             else
-                res = std::to_chars(buf, buf + sizeof(buf), value);
+                o << static_cast<int>(value);
+            return (o);
+        }
+        else  {
+            if (plain) [[likely]]  {
+                char                    buf[512];
+                std::to_chars_result    res;
 
-            if (res.ec == std::errc { }) [[likely]]  {
-                o.write(buf, res.ptr - buf);
-                return (o);
+                if constexpr (_csv_fast_fp_v_<T>)
+                    res = std::to_chars(buf, buf + sizeof(buf), value,
+                                        std::chars_format::general,
+                                        static_cast<int>(o.precision()));
+                else
+                    res = std::to_chars(buf, buf + sizeof(buf), value);
+
+                if (res.ec == std::errc { }) [[likely]]  {
+                    o.write(buf, res.ptr - buf);
+                    return (o);
+                }
             }
         }
     }

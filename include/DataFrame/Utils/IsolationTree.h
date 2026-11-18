@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/Utils/Concepts.h>
+
 #include <random>
 #include <vector>
 
@@ -107,6 +109,19 @@ public:
     template<typename I>
     void fit(const I &begin, const I &end);
     double outlier_score(const value_type &value, size_type data_size) const;
+
+    // Scores every value in [begin, end) and writes the n scores into
+    // "scores". The result for each value is bit-identical to what
+    // outlier_score() returns, but the trees are walked in the outer loop and
+    // the values in the inner loop. That way each tree stays cache-resident
+    // while all the values go through it, instead of every value streaming
+    // through all the trees.
+    //
+    template<typename I, random_acc_cont C>
+    void outlier_scores(const I &begin,
+                        const I &end,
+                        size_type data_size,
+                        C &scores) const;
 
 private:
 

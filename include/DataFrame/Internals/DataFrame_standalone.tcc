@@ -1768,53 +1768,6 @@ inline static S &_write_csv_df_index_(S &o, const T &value)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T>
-inline constexpr bool   _csv_fast_fp_v_ =
-    std::is_same_v<T, float> || std::is_same_v<T, double>;
-
-// --------------------------------------
-
-// Writes the value the same way _write_csv_df_index_() does, but when plain
-// is true (see _is_plain_fmt_stream_()), integers and float/double are
-// formatted with std::to_chars.
-//
-template<typename S, typename T>
-inline static S &_write_csv_df_value_(S &o, const T &value, bool plain)  {
-
-    if constexpr ((std::is_integral_v<T> || _csv_fast_fp_v_<T>) &&
-                  ! std::is_same_v<T, bool>)  {
-        if constexpr (std::is_same_v<T, char> ||
-                      std::is_same_v<T, unsigned char>)  {
-            if (std::isprint(value)) [[likely]]
-                o << value;
-            else
-                o << static_cast<int>(value);
-            return (o);
-        }
-        else  {
-            if (plain) [[likely]]  {
-                char                    buf[512];
-                std::to_chars_result    res;
-
-                if constexpr (_csv_fast_fp_v_<T>)
-                    res = std::to_chars(buf, buf + sizeof(buf), value,
-                                        std::chars_format::general,
-                                        static_cast<int>(o.precision()));
-                else
-                    res = std::to_chars(buf, buf + sizeof(buf), value);
-
-                if (res.ec == std::errc { }) [[likely]]  {
-                    o.write(buf, res.ptr - buf);
-                    return (o);
-                }
-            }
-        }
-    }
-    return (_write_csv_df_index_(o, value));
-}
-
-// ----------------------------------------------------------------------------
-
 template<typename S>
 inline static S &
 _write_csv_df_index_(S &o, const DateTime &value, DT_FORMAT format)  {
@@ -1845,6 +1798,47 @@ inline static S &_write_csv_df_index_(S &o, unsigned char value)  {
         return (o << value);
     else
         return (o << static_cast<unsigned int>(value));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline constexpr bool   _csv_fast_fp_v_ {
+    std::is_same_v<T, float> || std::is_same_v<T, double>
+};
+
+// --------------------------------------
+
+// Writes the value the same way _write_csv_df_index_() does, but when plain
+// is true (see _is_plain_fmt_stream_()), integers and float/double are
+// formatted with std::to_chars.
+//
+template<typename S, typename T>
+inline static S &_write_csv_df_value_(S &o, const T &value, bool plain)  {
+
+    if constexpr ((std::is_integral_v<T> || _csv_fast_fp_v_<T>) &&
+                  (! std::is_same_v<T, char>) &&
+                  (! std::is_same_v<T, unsigned char>) &&
+                  (! std::is_same_v<T, bool>))  {
+        if (plain) [[likely]]  {
+            char                    buf[512];
+            std::to_chars_result    res;
+
+            if constexpr (_csv_fast_fp_v_<T>)
+                res = std::to_chars(buf, buf + sizeof(buf),
+                                    value,
+                                    std::chars_format::general,
+                                    static_cast<int>(o.precision()));
+            else
+                res = std::to_chars(buf, buf + sizeof(buf), value);
+
+            if (res.ec == std::errc { }) [[likely]]  {
+                o.write(buf, res.ptr - buf);
+                return (o);
+            }
+        }
+    }
+    return (_write_csv_df_index_(o, value));
 }
 
 // ----------------------------------------------------------------------------

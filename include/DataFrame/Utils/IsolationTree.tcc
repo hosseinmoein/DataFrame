@@ -140,13 +140,22 @@ template<typename T>
 double IsoTree<T>::
 path_len(const value_type &value, size_type node, size_type depth) const  {
 
-    const IsoNode<value_type>   &node_val { iso_tree_[node] };
+    const IsoNode<value_type>   *nodes { iso_tree_.data() };
 
-    if (node_val.left >= 0 || node_val.right >= 0) [[likely]]  {
-        if (value < node_val.split_value && node_val.left >= 0)
-            return (path_len(value, node_val.left, depth + 1));
-        else if (node_val.right >= 0)
-            return (path_len(value, node_val.right, depth + 1));
+    while (true)  {
+        const IsoNode<value_type>   &node_val { nodes[node] };
+
+        if (node_val.left >= 0 || node_val.right >= 0) [[likely]]  {
+            if (value < node_val.split_value && node_val.left >= 0)
+                node = node_val.left;
+            else if (node_val.right >= 0)
+                node = node_val.right;
+            else
+                break;
+
+            depth += 1;
+        }
+        else  break;
     }
     return (double(depth));
 }
@@ -198,6 +207,38 @@ outlier_score(const value_type &value, size_type data_size) const  {
     return (std::pow(2.0, -avg_path_len / calc_depth_(data_size)));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename T>
+template<typename I, random_acc_cont C>
+void IsoForest<T>::
+outlier_scores(const I &begin,
+               const I &end,
+               size_type data_size,
+               C &scores) const  {
+
+    const size_type n { size_type(std::distance(begin, end)) };
+
+    std::fill(scores.begin(), scores.end(), 0.0);
+
+    // The trees are visited in the same order as in outlier_score(), so each
+    // sum is accumulated in the same order and the result is bit-identical.
+    //
+    for (const auto &tree : forest_)  {
+        const size_type root { tree.root_idx() };
+        auto            citer { begin };
+
+        for (size_type i { 0 }; i < n; ++i, ++citer)
+            scores[i] += tree.path_len(*citer, root, 0);
+    }
+
+    const double    num_trees { double(forest_.size()) };
+    const double    c { calc_depth_(data_size) };
+
+    for (size_type i { 0 }; i < n; ++i)
+        scores[i] = std::pow(2.0, -(scores[i] / num_trees) / c);
+}
+	
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -1717,37 +1717,49 @@ void test_get_data_by_affin()  {
              [](const double &x, const double &y) -> double  {
                  return (std::fabs(x - y));
              },
-             25);  //  Number of iterations
+             101);  //  Number of iterations
 
-    assert(views.size() == 4);
+    assert(views.size() == 19);
 
-    assert(views[0].get_index().size() == 157);
-    assert(views[0].get_column<double>("IBM_Open").size() == 157);
-    assert(views[0].get_index()[0] == "2014-10-21");
-    assert(views[0].get_index()[156] == "2018-02-01");
-    assert(views[0].get_column<double>("IBM_High")[140] == 162.899994);
-    assert(views[0].get_column<long>("IBM_Volume")[100] == 2543100);
+    assert(views[0].get_index().size() == 69);
+    assert(views[0].get_column<double>("IBM_Open").size() == 69);
+    assert(views[0].get_index()[0] == "2014-01-02");
+    assert(views[0].get_index()[67] == "2014-10-09");
+    assert(std::fabs(views[0].get_column<double>("IBM_High")[42] - 188.99) <
+               0.0001);
+    assert(views[0].get_column<long>("IBM_Volume")[12] == 4733000);
 
-    assert(views[1].get_index().size() == 309);
-    assert(views[1].get_column<double>("IBM_Open").size() == 309);
-    assert(views[1].get_index()[0] == "2014-01-02");
-    assert(views[1].get_index()[308] == "2018-01-18");
-    assert(views[1].get_column<double>("IBM_High")[200] == 182.839996);
-    assert(views[1].get_column<long>("IBM_Volume")[100] == 3721600);
+    assert(views[1].get_index().size() == 78);
+    assert(views[1].get_column<double>("IBM_Open").size() == 78);
+    assert(views[1].get_index()[0] == "2014-01-07");
+    assert(views[1].get_index()[77] == "2014-09-30");
+    assert(std::fabs(views[1].get_column<double>("IBM_High")[50] - 190.39) <
+               0.0001);
+    assert(views[1].get_column<long>("IBM_Volume")[12] == 5125000);
 
-    assert(views[2].get_index().size() == 256);
-    assert(views[2].get_column<double>("IBM_Open").size() == 256);
-    assert(views[2].get_index()[0] == "2014-11-20");
-    assert(views[2].get_index()[255] == "2020-02-13");
-    assert(views[2].get_column<double>("IBM_High")[200] == 156.800003);
-    assert(views[2].get_column<long>("IBM_Volume")[100] == 2838100);
+    assert(views[2].get_index().size() == 75);
+    assert(views[2].get_column<double>("IBM_Open").size() == 75);
+    assert(views[2].get_index()[0] == "2014-10-20");
+    assert(views[2].get_index()[74] == "2018-01-29");
+    assert(std::fabs(views[2].get_column<double>("IBM_High")[22] - 167.85) <
+               0.0001);
+    assert(views[2].get_column<long>("IBM_Volume")[70] == 7466200);
 
-    assert(views[3].get_index().size() == 999);
-    assert(views[3].get_column<double>("IBM_Open").size() == 999);
-    assert(views[3].get_index()[0] == "2014-12-15");
-    assert(views[3].get_index()[998] == "2020-10-30");
-    assert(views[3].get_column<double>("IBM_High")[200] == 152.929993);
-    assert(views[3].get_column<long>("IBM_Volume")[100] == 3924800);
+    assert(views[3].get_index().size() == 105);
+    assert(views[3].get_column<double>("IBM_Open").size() == 105);
+    assert(views[3].get_index()[0] == "2014-11-20");
+    assert(views[3].get_index()[104] == "2018-04-17");
+    assert(std::fabs(views[3].get_column<double>("IBM_High")[10] - 158.6) <
+               0.0001);
+    assert(views[3].get_column<long>("IBM_Volume")[100] == 3870600);
+
+    assert(views[18].get_index().size() == 92);
+    assert(views[18].get_column<double>("IBM_Open").size() == 92);
+    assert(views[18].get_index()[0] == "2016-01-20");
+    assert(views[18].get_index()[91] == "2020-10-06");
+    assert(std::fabs(views[18].get_column<double>("IBM_High")[10] - 123.09) <
+               0.0001);
+    assert(views[18].get_column<long>("IBM_Volume")[60] == 8099000);
 }
 
 // ----------------------------------------------------------------------------
@@ -6480,7 +6492,7 @@ int main(int, char *[]) {
     test_remove_data_by_stdev();
     test_get_data_by_stdev();
     test_get_data_by_kmeans();
-    // test_get_data_by_affin();
+    test_get_data_by_affin();
     test_remove_data_by_hampel();
     test_DBSCANVisitor();
     test_MeanShiftVisitor();

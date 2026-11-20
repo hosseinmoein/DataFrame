@@ -313,12 +313,14 @@ struct  print_csv2_header_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename S, typename ... Ts>
 struct  print_csv2_data_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline print_csv2_data_functor_ (std::size_t i, S &o, DT_FORMAT dtf)
-        : index(i), os(o), dt_format(dtf)  {  }
+	inline print_csv2_data_functor_(std::size_t i, S &o, DT_FORMAT dtf,
+                                    bool plain_fmt = false)
+        : index(i), os(o), dt_format(dtf), plain(plain_fmt)  {  }
 
     const std::size_t   index;
     S                   &os;
     const DT_FORMAT     dt_format;
+    const bool          plain;
 
     template<typename T>
     void operator() (const T &vec);

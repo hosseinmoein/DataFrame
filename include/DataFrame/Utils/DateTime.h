@@ -47,22 +47,22 @@ namespace hmdf
 // DateTime::string_format().
 //
 enum class DT_FORMAT : unsigned short int  {
-    AMR_DT = 1,        // e.g. 09/16/99
-    AMR_DT_CTY = 2,    // e.g. 09/16/1999
-    EUR_DT = 3,        // e.g. 16/09/99
-    EUR_DT_CTY = 4,    // e.g. 16/09/1999
-    DT_TM = 5,         // e.g. 09/16/1999 13:51:04
-    SCT_DT = 6,        // e.g. Sep 16, 1999
-    DT_MMDDYYYY = 7,   // e.g. 09161999
-    DT_YYYYMMDD = 8,   // e.g. 19990916
-    DT_TM2 = 9,        // e.g. 09/16/1999 13:51:04.124
-    DT_DATETIME = 10,  // e.g. 19990916 13:51:04.124
-    DT_PRECISE = 11,   // e.g. 1516179600.874123908 = Epoch.Nanoseconds
-    ISO_DT_TM = 12,    // e.g. 1999-09-16 13:51:04.000234
-    ISO_DT = 13,       // e.g. 1999-09-16
-    ISO_DT_NANO = 14,  // e.g. 1999-09-16 13:51:04.123456789
-    AMR_DT_TM = 15,    // e.g. 09/16/1999 13:51:04.000234
-    EUR_DT_TM = 16,    // e.g. 16/09/1999 13:51:04.000234
+    AMR_DT = 1,       // e.g. 09/16/99
+    AMR_DT_CTY = 2,   // e.g. 09/16/1999
+    EUR_DT = 3,       // e.g. 16/09/99
+    EUR_DT_CTY = 4,   // e.g. 16/09/1999
+    DT_TM = 5,        // e.g. 09/16/1999 13:51:04
+    SCT_DT = 6,       // e.g. Sep 16, 1999
+    DT_MMDDYYYY = 7,  // e.g. 09161999
+    DT_YYYYMMDD = 8,  // e.g. 19990916
+    DT_TM2 = 9,       // e.g. 09/16/1999 13:51:04.124
+    DT_DATETIME = 10, // e.g. 19990916 13:51:04.124
+    DT_PRECISE = 11,  // e.g. 1516179600.874123908 = Epoch.Nanoseconds
+    ISO_DT_TM = 12,   // e.g. 1999-09-16 13:51:04.000234
+    ISO_DT = 13,      // e.g. 1999-09-16
+    ISO_DT_NANO = 14, // e.g. 1999-09-16 13:51:04.123456789
+    AMR_DT_TM = 15,   // e.g. 09/16/1999 13:51:04.000234
+    EUR_DT_TM = 16,   // e.g. 16/09/1999 13:51:04.000234
 };
 
 // --------------------------------------
@@ -272,6 +272,33 @@ public:
     HMDF_API void set_timezone(DT_TIME_ZONE tz);
     [[nodiscard]] HMDF_API DT_TIME_ZONE get_timezone() const;
 
+    // Time zone conversions (mktime(), localtime_r()) work by setting the TZ
+    // environment variable and calling tzset(), and then restoring both.
+    // This is expensive, because every tzset() that sees a changed TZ reloads
+    // the time zone database -- twice for every conversion.
+    //
+    // A TimezoneScope sets TZ once, for the given time zone, and restores it
+    // when the scope ends. While it is alive, DateTime operations in that
+    // same time zone do not touch TZ at all. Use it around a loop that does
+    // many DateTime operations in one time zone. Scopes can be nested.
+    //
+    // NOTE: Like all the other time zone handling in this class, this is not
+    //       multithread-safe, because TZ is process-wide. Also, while a
+    //       scope is alive, TZ is set for the whole program.
+    //
+    struct  TimezoneScope  {
+
+        HMDF_API explicit TimezoneScope(DT_TIME_ZONE tz);
+        HMDF_API ~TimezoneScope();
+
+        TimezoneScope(const TimezoneScope &) = delete;
+        TimezoneScope &operator =(const TimezoneScope &) = delete;
+
+    private:
+
+        const DT_TIME_ZONE  prev_;
+    };
+
     HMDF_API DateTime &operator =(DateType rhs);  // dt = 20181223
 
     // Currently, the following formats are supported:
@@ -363,7 +390,7 @@ private:
     template<typename T>
     using INVALID_VALUE_ = typename std::numeric_limits<T>;
 
-    inline static const char    *TIMEZONES_[]  {
+    inline static const char    *TIMEZONES_[] {
 #ifdef _MSC_VER
         "\"TZ=GMT\"",
         "\"TZ=Argentina Standard Time\"",        // "America/Buenos_Aires",
@@ -430,22 +457,22 @@ private:
         "Europe/Budapest"
 #endif // _MSC_VER
     };
-    inline static const EpochType   INVALID_TIME_T_  {
+    inline static const EpochType   INVALID_TIME_T_ {
         INVALID_VALUE_<EpochType>::max()
     };
-    inline static const DateType    INVALID_DATE_  {
+    inline static const DateType    INVALID_DATE_ {
         INVALID_VALUE_<DateType>::max()
     };
-    inline static const HourType    INVALID_HOUR_  {
+    inline static const HourType    INVALID_HOUR_ {
         INVALID_VALUE_<HourType>::max()
     };
-    inline static const MinuteType  INVALID_MINUTE_  {
+    inline static const MinuteType  INVALID_MINUTE_ {
         INVALID_VALUE_<MinuteType>::max()
     };
-    inline static const SecondType  INVALID_SECOND_  {
+    inline static const SecondType  INVALID_SECOND_ {
         INVALID_VALUE_<SecondType>::max()
     };
-    inline static const DatePartType  INVALID_DYEAR_  {
+    inline static const DatePartType  INVALID_DYEAR_ {
         INVALID_VALUE_<DatePartType>::max()
     };
 
@@ -462,7 +489,7 @@ private:
         }
     };
 
-    inline static const DT_initializer  dt_init_  {   };
+    inline static const DT_initializer  dt_init_ {   };
 
     DateType        date_ { INVALID_DATE_ };  // Like 20190518
     HourType        hour_ { INVALID_HOUR_ };
@@ -476,7 +503,13 @@ private:
 
     inline static void change_env_timezone_(DT_TIME_ZONE time_zone);
     inline static void reset_env_timezone_(DT_TIME_ZONE time_zone);
+    inline static void apply_env_timezone_(DT_TIME_ZONE time_zone);
 
+    // The time zone that the innermost live TimezoneScope has put in TZ, or
+    // LOCAL (TZ is unset) if there is no such scope.
+    //
+    inline static DT_TIME_ZONE  scope_tz_ { DT_TIME_ZONE::LOCAL };
+	
     [[nodiscard]] static DatePartType
     days_in_month_(DT_MONTH month, DatePartType year) noexcept;
 
@@ -492,7 +525,7 @@ private:
     //
     void breaktime_(EpochType the_time, NanosecondType nanosec) noexcept;
 
-    inline static const char *const MONTH_[]  {
+    inline static const char *const MONTH_[] {
         "January",
         "February",
         "March",
@@ -506,7 +539,7 @@ private:
         "November",
         "December"
     };
-    inline static const char *const MONTH_BR_[]  {
+    inline static const char *const MONTH_BR_[] {
         "Jan",
         "Feb",
         "Mar",
@@ -520,7 +553,7 @@ private:
         "Nov",
         "Dec"
     };
-    inline static const char *const WDAY_[]  {
+    inline static const char *const WDAY_[] {
         "Sunday",
         "Monday",
         "Tuesday",
@@ -529,7 +562,7 @@ private:
         "Friday",
         "Saturday"
     };
-    inline static const char *const WDAY_BR_[]  {
+    inline static const char *const WDAY_BR_[] {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };
 };

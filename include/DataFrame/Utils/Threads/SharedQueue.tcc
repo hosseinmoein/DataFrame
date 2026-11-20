@@ -54,14 +54,37 @@ SharedQueue<T>::push(const value_type &element) noexcept  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
+inline void
+SharedQueue<T>::wake_waiters() noexcept  {
+
+    {
+        const AutoLockable  lock { mutex_ };
+
+        wake_epoch_ += 1;
+    }
+    cvx_.notify_all();
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
 inline typename SharedQueue<T>::optional_ret
 SharedQueue<T>::pop_front(bool wait_on_front) noexcept  {
 
     optional_ret                    ret { };
     std::unique_lock<std::mutex>    ul { mutex_ };
 
-    if (wait_on_front)
-        cvx_.wait_for(ul, 2s, [this]() -> bool { return (! queue_.empty()); });
+    if (wait_on_front)  {
+        const size_type epoch { wake_epoch_ };
+
+        // Return when there is an element, when somebody called
+        // wake_waiters(), or after the timeout
+        //
+        cvx_.wait_for(ul, 2s,
+                      [this, epoch]() -> bool  {
+                          return (! queue_.empty() || wake_epoch_ != epoch);
+                      });
+    }
 
     if (! queue_.empty())  {
         ret = queue_.front();

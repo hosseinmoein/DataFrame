@@ -302,8 +302,7 @@ Matrix<T, MO, IS_SYM>::is_symmetric() const noexcept  {
 
     for (size_type r { 1 }; r < rows(); ++r)
         for (size_type c { 0 }; c < r; ++c)
-            if (at(r, c) != at(c, r))
-                return (false);
+            if (at(r, c) != at(c, r))  return (false);
 
     return (true);
 }
@@ -1781,7 +1780,7 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA1, typename MA2, typename MA3>
 void Matrix<T, MO, IS_SYM>::
-diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
+diagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
     // NOTE: e_vecs must be a row-major matrix and it is stored transposed, as
     // in tridiagonalize_(). On exit row k of e_vecs is the k-th eigenvector.

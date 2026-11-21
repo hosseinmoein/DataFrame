@@ -395,7 +395,7 @@ private:
 
         return (simil);
     }
-	
+
     // avail and respon must be col_s x col_s and filled with zeros
     //
     inline void
@@ -3839,25 +3839,45 @@ private:
 
         const long  x_col_s { long(std::distance(x_begin, x_end)) };
         const long  y_col_s { long(std::distance(y_begin, y_end)) };
-        matrix_t    mt {
-            x_col_s + 1, y_col_s + 1,
+
+        // Row i of the cost matrix only depends on row i - 1 and on the
+        // previous element of row i, so two rows are all we need
+        // (O(y_col_s) memory instead of O(x_col_s * y_col_s)).
+        //
+        // Within a row, only min(curr[j - 1], ...) and the addition are on
+        // the loop-carried dependency chain. The cost of every cell and the
+        // min of the two cells above are independent of it, so they are
+        // computed in their own loops first.
+        //
+        constexpr result_type       inf {
             std::numeric_limits<result_type>::infinity()
         };
+        std::vector<result_type>    prev(y_col_s + 1, inf);
+        std::vector<result_type>    curr(y_col_s + 1, inf);
+        std::vector<result_type>    cost(y_col_s + 1);
+        std::vector<result_type>    above(y_col_s + 1);
 
-        mt(0, 0) = 0;
+        prev[0] = 0;
         for (long i { 1 }; i <= x_col_s; ++i)  {
             const value_type    &xval { *(x_begin + (i - 1)) };
 
-            for (long j { 1 }; j <= y_col_s; ++j)  {
-                const result_type   cost { dfunc_(xval, *(y_begin + (j - 1))) };
+            if (use_def_dist_)
+                for (long j { 1 }; j <= y_col_s; ++j)
+                    cost[j] = def_dist_(xval, *(y_begin + (j - 1)));
+            else
+                for (long j { 1 }; j <= y_col_s; ++j)
+                    cost[j] = dfunc_(xval, *(y_begin + (j - 1)));
 
-                mt(i, j) =
-                    cost +
-                    std::min({ mt(i - 1, j), mt(i, j - 1), mt(i - 1, j - 1) });
-            }
+            for (long j { 1 }; j <= y_col_s; ++j)
+                above[j] = std::min(prev[j], prev[j - 1]);
+
+            curr[0] = inf;
+            for (long j { 1 }; j <= y_col_s; ++j)
+                curr[j] = cost[j] + std::min(above[j], curr[j - 1]);
+            prev.swap(curr);
         }
 
-        result_ = mt(x_col_s, y_col_s);
+        result_ = prev[y_col_s];
     }
 
 public:
@@ -3895,12 +3915,24 @@ public:
     DynamicTimeWarpVisitor(
         normalization_type norm_type = normalization_type::none,
         distance_func &&f = def_dist_)
-        : nt_(norm_type), dfunc_(std::forward<distance_func>(f))  {   }
+        : nt_(norm_type), dfunc_(std::forward<distance_func>(f))  {
+
+        // Detect the built-in distance function, so it can be called directly
+        // (inlined) instead of through std::function for every cell.
+        //
+        using fptr_t = result_type (*)(const value_type &, const value_type &);
+
+        const fptr_t    *fp { dfunc_.template target<fptr_t>() };
+
+        use_def_dist_ = fp && (*fp == &def_dist_);
+    }
+
 
 private:
 
     const normalization_type    nt_;
     distance_func               dfunc_;
+    bool                        use_def_dist_ { false };
     result_type                 result_ { 0 };
 };
 
@@ -7548,7 +7580,7 @@ public:
         }
         return (residuals);
     }
-	
+
     explicit
     KrigingVisitor(const KrigingParams<value_type> &params = { })
         : params_(params)  {   }

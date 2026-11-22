@@ -4781,9 +4781,9 @@ struct  PartialAutoCorrVisitor  {
 
 private:
 
-    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
-                                               lazy_type<T>,
-                                               value_type_of<T>>::type;
+    using data_t =
+        typename std::conditional_t<
+            std::is_arithmetic_v<T>, lazy_type<T>, value_type_of<T>>::type;
     using matrix_t = Matrix<data_t, matrix_orient::row_major>;
 
 public:
@@ -4792,9 +4792,8 @@ public:
     using index_type = I;
     using size_type = std::size_t;
     using result_type =
-        typename std::conditional_t<std::is_arithmetic_v<T>,
-                                    vec_type<data_t>,
-                                    vec_type<matrix_t>>;
+        typename std::conditional_t<
+            std::is_arithmetic_v<T>, vec_type<data_t>, vec_type<matrix_t>>;
 
     template <typename K, typename H>
     inline void
@@ -4809,22 +4808,18 @@ public:
                 "PartialAutoCorrVisitor: Time-series is too short");
         if (max_lag_ > 375)
             throw DataFrameError("PartialAutoCorrVisitor: Maximum lag is 375");
-#endif // HMDF_SANITY_EXCEPTIONS
 
-#ifdef HMDF_SANITY_EXCEPTIONS
         if constexpr (! std::is_arithmetic_v<value_type>)  {
             const size_type dim { column_begin->size() };
 
             for (size_type i { 1 }; i < col_s; ++i)
                 if ((column_begin + i)->size() != dim)
-                    throw DataFrameError("PartialAutoCorrVisitor: "
-                                         "Inconsistent data dimensions");
+                    throw DataFrameError(
+                        "PartialAutoCorrVisitor: Inconsistent data dimensions");
         }
 #endif // HMDF_SANITY_EXCEPTIONS
 
         result_type         result(max_lag_);
-        matrix_t            x;
-        matrix_t            y;
         data_t              mean { 0 };
         std::vector<data_t> dim_mean;
 
@@ -4858,67 +4853,103 @@ public:
             for (size_type d { 0 }; d < dim; ++d)
                 dim_mean[d] /= data_t(col_s);
         }
-        for (size_type k { 1 }; k < max_lag_; ++k)  {
-            x.clear();
-            y.clear();
 
-            const size_type rows { col_s - k };
+        // PACF at lag k is the last coefficient of the OLS regression of
+        // y_t = z_t on its k previous values z_{t-k} ... z_{t-1}, over the
+        // N - k available rows. The normal equations of that regression only
+        // need, for rows i = 0 ... N - k - 1:
+        //
+        //   G_k(a, b) = sum_i z_{i + a} * z_{i + b},  a, b = 0 ... k
+        //
+        // x'x is the block a, b < k of G_k and x'y is the block a < k, b = k.
+        // Going from lag k to lag k - 1 only adds the single row i = N - k.
+        // So one Gram product G_K for the largest lag K, and one rank-1
+        // update per lag, replace building and multiplying a new
+        // (N - k) x (k * dim) design matrix for every lag.
+        //
+        if (max_lag_ > 1)  {
+            size_type   dim { 1 };
+
+            if constexpr (! std::is_arithmetic_v<value_type>)
+                dim = column_begin->size();
+
+            const size_type max_k { max_lag_ - 1 };       // Largest lag
+            const size_type n_cols { (max_k + 1) * dim }; // lags 0 ... K
+            const size_type n_rows { col_s - max_k };
+
+            // The demeaned observations, one row of dim values each
+            //
+            std::vector<data_t> z(col_s * dim);
 
             if constexpr (std::is_arithmetic_v<value_type>)  {
-                x.resize(rows, k);
-                y.resize(rows, 1);
-                for (size_type i { 0 }; i < rows; ++i)  {
-                    y(i, 0) = data_t(*(column_begin + (i + k))) - mean;
-                    for (size_type j { 0 }; j < k; ++j)
-                        x(i, j) = *(column_begin + (i + j)) - mean;
-                }
+                for (size_type t { 0 }; t < col_s; ++t)
+                    z[t] = data_t(*(column_begin + t)) - mean;
             }
             else  {
-                const size_type dim { column_begin->size() };
-
-                x.resize(col_s - k, k * dim, 0);
-                y.resize(col_s - k, dim, 0);
-
-                // y row i: the dim components of observation (i + k),
-                //          demeaned per dimension
-                //
-                for (size_type i { 0 }; i < rows; ++i)  {
-                    const auto  &obs_y { *(column_begin + (i + k)) };
+                for (size_type t { 0 }; t < col_s; ++t)  {
+                    const auto  &obs { *(column_begin + t) };
 
                     for (size_type d { 0 }; d < dim; ++d)
-                        y(i, d) = data_t(obs_y[d]) - dim_mean[d];
-
-                    // x row i: lagged observations, demeaned per dimension
-                    // block j: columns [j * dim ... j * dim + dim - 1]
-                    //
-                    for (size_type j { 0 }; j < k; ++j)  {
-                        const auto  &obs_x { *(column_begin + (i + j)) };
-
-                        for (size_type d { 0 }; d < dim; ++d)
-                            x(i, j * dim + d) = obs_x[d] - dim_mean[d];
-                    }
+                        z[t * dim + d] = data_t(obs[d]) - dim_mean[d];
                 }
             }
 
-            const auto  x_trans = x.transpose();
-            const auto  phi = (x_trans * x).inverse() * x_trans * y;
+            // G_K = Z'Z where Z(i, a * dim + d) = z_{i + a}[d]
+            //
+            matrix_t    zm {
+                static_cast<long>(n_rows), static_cast<long>(n_cols)
+            };
 
-            if constexpr (std::is_arithmetic_v<value_type>)  {
-                result[k] = phi(k - 1, 0);
+            for (size_type i { 0 }; i < n_rows; ++i)  {
+                for (size_type c { 0 }; c < n_cols; ++c)
+                    zm(i, c) = z[i * dim + c];  // Row-major windows of z
             }
-            else  {
-                const size_type dim { column_begin->size() };
 
-                // The partial autocorrelation matrix at lag k is the last
-                // dimXdim block of phi: rows [(k - 1) * dim ... k * dim - 1],
-                // all dim columns
-                //
-                matrix_t    res { long(dim), long(dim), 0 };
+            auto    gram { zm.transpose() * zm };
 
-                for (size_type r { 0 }; r < dim; ++r)
+            for (size_type k { max_k }; k >= 1; --k)  {
+                const size_type kd { k * dim };
+                matrix_t        xtx {
+                    static_cast<long>(kd), static_cast<long>(kd)
+                };
+                matrix_t        xty {
+                    static_cast<long>(kd), static_cast<long>(dim)
+                };
+
+                for (size_type r { 0 }; r < kd; ++r)  {
+                    for (size_type c { 0 }; c < kd; ++c)
+                        xtx(r, c) = gram(r, c);
                     for (size_type c { 0 }; c < dim; ++c)
-                        res(r, c) = phi((k - 1) * dim + r, c);
-                result[k] = std::move(res);
+                        xty(r, c) = gram(r, kd + c);
+                }
+
+                const auto  phi { xtx.inverse() * xty };
+
+                if constexpr (std::is_arithmetic_v<value_type>)  {
+                    result[k] = phi(k - 1, 0);
+                }
+                else  {
+                    // The partial autocorrelation matrix at lag k is the last
+                    // dimXdim block of phi:
+                    //     rows [(k - 1) * dim ... k * dim - 1],
+                    // all dim columns
+                    //
+                    matrix_t    res { long(dim), long(dim), 0 };
+
+                    for (size_type r { 0 }; r < dim; ++r)
+                        for (size_type c { 0 }; c < dim; ++c)
+                            res(r, c) = phi((k - 1) * dim + r, c);
+                    result[k] = std::move(res);
+                }
+
+                // Lag k - 1 has one more row (i = N - k), which only touches
+                // the lags 0 ... k - 1
+                //
+                const data_t    *zrow { &z[(col_s - k) * dim] };
+
+                for (size_type r { 0 }; r < kd; ++r)
+                    for (size_type c { 0 }; c < kd; ++c)
+                        gram(r, c) += zrow[r] * zrow[c];
             }
         }
 

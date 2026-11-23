@@ -4696,7 +4696,7 @@ operator * (const Matrix<T, MO, IS_SYM> &lhs,
 
 // ----------------------------------------------------------------------------
 
-// Naïve but cache friendly O(n^3) algorithm
+// Naive but cache friendly O(n^3) algorithm
 //
 template<typename T, matrix_orient MO1, matrix_orient MO2,
          bool IS_SYM1, bool IS_SYM2>
@@ -4755,7 +4755,47 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
         (lhs_cols >= 600L || rhs_cols >= 600L)
             ? ThreadGranularity::get_thread_level() : 0
     };
-    auto        col_lbd =
+
+    // A short left operand (a row vector, or a few rows) times a matrix. The
+    // loop nests below have an inner loop over the rows of the left operand,
+    // which is then 1 to 4 iterations long: every multiply-add becomes a
+    // load, add, store through result, a dependency chain of about 8 cycles.
+    // Here NB outputs of a row are accumulated in registers instead, giving
+    // NB independent chains. Every output is still the sum over the inner
+    // index in increasing order, starting from zero, exactly as above, so the
+    // results are bit-identical.
+    //
+    if (lhs_rows <= 4 && thread_level <= 2)  {
+        constexpr long  NB { 8 };
+
+        for (long i { 0 }; i < lhs_rows; ++i)  {
+            long    j { 0 };
+
+            for (; j + NB <= rhs_cols; j += NB)  {
+                T   acc[NB] = { };
+
+                for (long cc { 0 }; cc < lhs_cols; ++cc)  {
+                    const T a { lhs(i, cc) };
+
+                    for (long t { 0 }; t < NB; ++t)
+                        acc[t] += a * rhs(cc, j + t);
+                }
+                for (long t { 0 }; t < NB; ++t)
+                    result(i, j + t) = acc[t];
+            }
+            for (; j < rhs_cols; ++j)  {
+                T   acc { };
+
+                for (long cc { 0 }; cc < lhs_cols; ++cc)
+                    acc += lhs(i, cc) * rhs(cc, j);
+                result(i, j) = acc;
+            }
+        }
+
+        return (result);
+    }
+
+    auto    col_lbd =
         [lhs_rows, lhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -4787,7 +4827,7 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
                 }
             }
         };
-    auto        row_lbd =
+    auto    row_lbd =
         [lhs_cols, rhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {

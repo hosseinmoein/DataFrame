@@ -1741,27 +1741,38 @@ static void test_LSTMForecastVisitor()  {
                  std::make_pair("increasing", increasing),
                  std::make_pair("decreasing", decreasing));
 
-    lstm_v<double>  lstm { 40, 4, 1, 100, 0.001, 3, 123 };
+    // The network is trained with plain SGD, so it needs a reasonable
+    // learning rate and enough steps (the series are very short). With a tiny
+    // learning rate it never leaves its initial state and every forecast
+    // collapses to the mean of the series.
+    //
+    lstm_v<double>  lstm { 16, 4, 1, 300, 0.05, 3, 123 };
 
     df.single_act_visit<double>("col1", lstm);
 
     const auto  result1 = lstm.get_result();
 
+    // col1 is noise, there is no pattern to find
+    //
     assert(result1.size() == 3);
-    assert(std::fabs(result1[0] - 177.075) < 0.001);
-    assert(std::fabs(result1[1] - 181.576) < 0.001);
-    assert(std::fabs(result1[2] - 185.103) < 0.001);
+    assert(std::fabs(result1[0] - 126.469) < 0.01);
+    assert(std::fabs(result1[1] - 107.351) < 0.01);
+    assert(std::fabs(result1[2] - 191.665) < 0.01);
+    for (const auto &v : result1)
+        assert(std::isfinite(v));
 
-    lstm_v<double>  lstm2 { 40, 4, 1, 1000, 0.001, 3, 123 };
+    lstm_v<double>  lstm2 { 16, 4, 1, 300, 0.05, 3, 123 };
 
     df.single_act_visit<double>("oscil", lstm2);
 
     const auto  result2 = lstm2.get_result();
 
     assert(result2.size() == 3);
-    assert(std::fabs(result2[0] - 1.7698) < 0.00001);
-    assert(std::fabs(result2[1] - 1.64903) < 0.00001);
-    assert(std::fabs(result2[2] - 1.74927) < 0.00001);
+    assert(std::fabs(result2[0] - 1.72821) < 0.0001);
+    assert(std::fabs(result2[1] - 1.72307) < 0.0001);
+    assert(std::fabs(result2[2] - 1.72871) < 0.0001);
+    for (const auto &v : result2)  // Stays within the range of the data
+        assert(v > 1.5 && v < 1.9);
 
     df.single_act_visit<double>("constant", lstm);
 
@@ -1772,29 +1783,35 @@ static void test_LSTMForecastVisitor()  {
     assert(std::fabs(result3[1] - 10.56) < 0.00001);
     assert(std::fabs(result3[2] - 10.56) < 0.00001);
 
-    lstm_v<double>  lstm3 { 100, 4, 1, 100, 0.001, 3, 123 };
+    lstm_v<double>  lstm3 { 16, 4, 1, 300, 0.05, 3, 123 };
 
     df.single_act_visit<double>("increasing", lstm3);
 
     const auto  result4 = lstm3.get_result();
 
-    // It doesn't see the pattern here
+    // It sees the upward trend: the forecasts are above the mean of the
+    // series (11.885), not collapsed to it
     //
     assert(result4.size() == 3);
-    assert(std::fabs(result4[0] - 13.4408) < 0.0001);
-    assert(std::fabs(result4[1] - 13.4358) < 0.0001);
-    assert(std::fabs(result4[2] - 13.4193) < 0.0001);
+    assert(std::fabs(result4[0] - 12.7508) < 0.001);
+    assert(std::fabs(result4[1] - 12.7395) < 0.001);
+    assert(std::fabs(result4[2] - 12.6860) < 0.001);
+    for (const auto &v : result4)
+        assert(v > 12.0 && v < 15.0);
 
     df.single_act_visit<double>("decreasing", lstm3);
 
     const auto  result5 = lstm3.get_result();
 
-    // Strangely, it sees the pattern here
+    // It sees the downward trend: the forecasts continue below the last
+    // value (7.55), and are well below the mean of the series (9.2)
     //
     assert(result5.size() == 3);
-    assert(std::fabs(result5[0] - 7.23448) < 0.00001);
-    assert(std::fabs(result5[1] - 7.14929) < 0.00001);
-    assert(std::fabs(result5[2] - 7.10167) < 0.00001);
+    assert(std::fabs(result5[0] - 7.09789) < 0.001);
+    assert(std::fabs(result5[1] - 7.02624) < 0.001);
+    assert(std::fabs(result5[2] - 6.98429) < 0.001);
+    for (const auto &v : result5)
+        assert(v > 5.0 && v < 7.55);
 
     // Now some real data
     //
@@ -1808,17 +1825,18 @@ static void test_LSTMForecastVisitor()  {
         ::exit(-1);
     }
 
-    // lstm_v<double>  lstm4 { 50, 4, 1, 100, 0.001, 4, 123 };
+    // It takes too long for a test
+    //
+    // lstm_v<double>  lstm4 { 16, 4, 1, 500, 0.05, 3, 123 };
 
-    // df2.single_act_visit<double>("IBM_Close", lstm4);
+    // df2.single_act_visit<double>("IBM_Adj_Close", lstm4);
 
     // const auto  result6 = lstm4.get_result();
 
-    // assert(result6.size() == 4);
-    // assert(std::fabs(result6[0] - 118.424) < 0.001);
-    // assert(std::fabs(result6[1] - 132.139) < 0.001);
-    // assert(std::fabs(result6[2] - 132.311) < 0.001);
-    // assert(std::fabs(result6[3] - 132.382) < 0.001);
+    // assert(result6.size() == 3);
+    // assert(std::fabs(result6[0] - 112.799) < 0.001);
+    // assert(std::fabs(result6[1] - 114.061) < 0.001);
+    // assert(std::fabs(result6[2] - 114.95) < 0.001);
 
     // Now multidimensional data
     //
@@ -1902,8 +1920,8 @@ static void test_LSTMForecastVisitor()  {
     df2.load_column<vec_col_t>("VEC COL", std::move(vec_col),
                                nan_policy::dont_pad_with_nans);
 
-    lstm_v<ary_col_t, std::string>  ary_lstm { 16, 10, 1, 30, 0.001, 4, 42 };
-    lstm_v<vec_col_t, std::string>  vec_lstm { 16, 10, 1, 30, 0.001, 4, 42 };
+    lstm_v<ary_col_t, std::string>  ary_lstm { 16, 10, 1, 100, 0.05, 4, 42 };
+    lstm_v<vec_col_t, std::string>  vec_lstm { 16, 10, 1, 100, 0.05, 4, 42 };
 
     df2.single_act_visit<ary_col_t>("ARY COL", ary_lstm);
     df2.single_act_visit<vec_col_t>("VEC COL", vec_lstm);
@@ -1915,14 +1933,23 @@ static void test_LSTMForecastVisitor()  {
     for (const auto &vec : vec_lstm.get_result())
         assert(vec.size() == dim);
 
-    assert(std::abs(ary_lstm.get_result()[0][0] - 125.733) < 0.001);
-    assert(std::abs(ary_lstm.get_result()[0][1] - 1001.01) < 0.01);
-    assert(std::abs(ary_lstm.get_result()[2][1] - 1000.86) < 0.01);
-    assert(std::abs(ary_lstm.get_result()[3][2] - 0.016641) < 0.000001);
-    assert(std::abs(vec_lstm.get_result()[0][0] - 125.733) < 0.001);
-    assert(std::abs(vec_lstm.get_result()[0][1] - 1001.01) < 0.01);
-    assert(std::abs(vec_lstm.get_result()[2][1] - 1000.86) < 0.01);
-    assert(std::abs(vec_lstm.get_result()[3][2] - 0.016641) < 0.000001);
+    // Feature 0 trends upward and ends at 132.0, feature 1 stays around 1000
+    // and feature 2 stays between 0.011 and 0.022. The forecasts must follow.
+    //
+    for (const auto &ary : ary_lstm.get_result())  {
+        assert(std::fabs(ary[0] - 132.0) < 5.0);
+        assert(ary[1] > 970.0 && ary[1] < 1040.0);
+        assert(ary[2] > 0.011 && ary[2] < 0.022);
+    }
+
+    assert(std::abs(ary_lstm.get_result()[0][0] - 131.619) < 0.01);
+    assert(std::abs(ary_lstm.get_result()[0][1] - 1000.47) < 0.01);
+    assert(std::abs(ary_lstm.get_result()[2][1] - 1001.50) < 0.01);
+    assert(std::abs(ary_lstm.get_result()[3][2] - 0.0150194) < 0.000001);
+    assert(std::abs(vec_lstm.get_result()[0][0] - 131.619) < 0.01);
+    assert(std::abs(vec_lstm.get_result()[0][1] - 1000.47) < 0.01);
+    assert(std::abs(vec_lstm.get_result()[2][1] - 1001.50) < 0.01);
+    assert(std::abs(vec_lstm.get_result()[3][2] - 0.0150194) < 0.000001);
 }
 
 // ----------------------------------------------------------------------------

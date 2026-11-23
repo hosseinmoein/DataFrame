@@ -5625,9 +5625,8 @@ private:
     static constexpr bool   is_md_ { random_acc_cont<T> };
 
     using data_t =
-        typename std::conditional_t<! is_md_,
-                                    lazy_type<T>,
-                                    value_type_of<T>>::type;
+        typename std::conditional_t<
+            ! is_md_, lazy_type<T>, value_type_of<T>>::type;
 
 public:
 
@@ -6249,6 +6248,13 @@ public:
                 //
                 const matrix_t  target { make_input_matrix(i + seq_len_) };
 
+                // The gradients accumulate in backward(), so they must be
+                // cleared before every step. Otherwise every step would use
+                // the sum of the gradients of all the previous steps.
+                //
+                lstm.zero_grad();
+                linear.zero_grad();
+
                 // Forward pass
                 //
                 const mat_vec_t outputs { lstm.forward(inputs) };
@@ -6265,7 +6271,17 @@ public:
                 //
                 const matrix_t d_linear { linear.backward(lstm.h_last, dloss) };
 
-                lstm.backward({ d_linear });
+                // Only the output of the last time step feeds the linear
+                // layer (and the loss), so only the last time step receives a
+                // gradient from outside. backward() propagates it back
+                // through all the time steps. It takes one gradient matrix per
+                // time step, so the others are zero.
+                //
+                mat_vec_t   douts(seq_len_,
+                                  matrix_t { batch_size_, hidden_size_, 0 });
+
+                douts.back() = d_linear;
+                lstm.backward(douts);
 
                 // Parameter update
                 //

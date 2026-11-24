@@ -4524,28 +4524,39 @@ public:
         //
         pvec_t      dists(col_s);
         knn_mat_t   neighbors { long(col_s), long(k_) };
-        rch_mat_t   reach_dists { long(col_s), long(k_) };
         dist_vec_t  lrd(col_s, 0);  // Local Reachability Density
 
+        // First pass: the k nearest neighbors of every point
+        //
         for (size_type i { 0 }; i < col_s; ++i)  {
             if (nt_ > normalization_type::none)
                 get_knn_(norm.get_result().begin(), col_s, i, neighbors, dists);
             else
                 get_knn_(column_begin, col_s, i, neighbors, dists);
+        }
 
+        // Second pass: reach_dist(p, o) = max(k_distance(o), dist(p, o)), where
+        // k_distance(o) is the distance of o to its k-th nearest neighbor.
+        // lrd(p) is the inverse of the mean reach_dist from p to its neighbors.
+        //
+        for (size_type i { 0 }; i < col_s; ++i)  {
             double  sum_reach_dist { 0 };
 
             for (long j { 0 }; j < neighbors.cols(); ++j)  {
-                const double    reach_d {
-                    std::max(neighbors(i, j).first,
-                             dfunc_(*(column_begin + j), *(column_begin + i)))
+                const double    k_dist_o {
+                    neighbors(long(neighbors(long(i), j).second),
+                              neighbors.cols() - 1).first
                 };
 
-                reach_dists(long(i), j) = reach_d;
-                sum_reach_dist += reach_d;
+                sum_reach_dist +=
+                    std::max(k_dist_o, neighbors(long(i), j).first);
             }
 
-            lrd[i] = double(k_) / sum_reach_dist;
+            // The small constant keeps the density finite and stable when
+            // there are more than k identical (or nearly identical) points,
+            // where the reach distances are zero or just rounding noise.
+            //
+            lrd[i] = 1.0 / (sum_reach_dist / double(k_) + 1e-10);
         }
 
         result_.reserve(((col_s / 40) < 32) ? size_type(32) : col_s / 40);
@@ -4602,19 +4613,23 @@ private:
             };
 
             for (auto &fut : futures)  fut.get();
-            ThreadGranularity::thr_pool_.parallel_sort(
-                dists.begin(), dists.end(),
-                [](const auto &lhs, const auto &rhs)  {
-                    return (lhs.first < rhs.first);
-                });
         }
         else  {
             lbd(size_type(0), col_s);
-            std::sort(dists.begin(), dists.end(),
-                      [](const auto &lhs, const auto &rhs)  {
-                          return (lhs.first < rhs.first);
-                      });
         }
+
+        // Only the k + 1 smallest distances (the first one being the point
+        // itself) are needed, in order. That is a partial selection, O(n),
+        // not a sort of all n. The index breaks the ties between equal
+        // distances, so the neighbors are well defined (std::sort leaves the
+        // order of equal elements unspecified).
+        //
+        std::partial_sort(dists.begin(), dists.begin() + (k_ + 1), dists.end(),
+                          [](const auto &lhs, const auto &rhs)  {
+                              return (lhs.first < rhs.first ||
+                                      (lhs.first == rhs.first &&
+                                       lhs.second < rhs.second));
+                          });
 
         // Skip the first element which is 0 (distance of index with itself)
         //

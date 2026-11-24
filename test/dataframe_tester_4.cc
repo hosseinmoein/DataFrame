@@ -4625,11 +4625,11 @@ static void test_AnomalyDetectByLOFVisitor()  {
     ibm.get_column<double>("IBM_Adj_Close")[5000] = 1.5;
     ibm.get_column<double>("IBM_Adj_Close")[5030] = 20.0;
 
-    and_lof_v<double, std::string>  anomaly { 10, 2.0 };
+    and_lof_v<double, std::string>  anomaly { 10, 5.0 };
 
     ibm.single_act_visit<double>("IBM_Adj_Close", anomaly);
 
-    const std::vector<std::size_t>  result = { 502, 1001, 2002, 5000 };
+    const std::vector<std::size_t>  result = { 502, 1001, 2002, 5000, 5030 };
 
     assert((anomaly.get_result() == result));
 
@@ -4647,12 +4647,17 @@ static void test_AnomalyDetectByLOFVisitor()  {
     }
     df2.load_column("sine col", std::move(sine_col));
 
-    and_lof_v<double>   anomaly2 { 10, 1.5 };
+    and_lof_v<double>   anomaly2 { 40, 5.0 };
 
-    // It doesn't work for sine wave data. All the scores are 1.
-    //
     df2.single_act_visit<double>("sine col", anomaly2);
-    assert(anomaly2.get_result().empty());
+
+    const std::vector<std::size_t>  result2 = {
+        0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420,
+        450, 480, 510, 540, 570, 600, 630, 660, 690, 720, 750, 780, 810, 840,
+        870, 900, 930, 960, 990, 1020
+    };
+
+    assert(anomaly2.get_result() == result2);
 
     // Now multidimensional data
     //

@@ -323,7 +323,7 @@ static inline T _str_to_fp_(const std::string &value) noexcept  {
     T           result;
     const auto  [ptr, ec] { std::from_chars(first, last, result) };
 
-    if (ec == std::errc { } && ptr == last)  return (result);
+    if (ec == std::errc{ } && ptr == last)  return (result);
 #endif // __cpp_lib_to_chars
 
     if constexpr (std::is_same_v<T, float>)
@@ -425,10 +425,9 @@ static S &operator << (S &stream, const Matrix<T, MO> &data)  {
         for (long r { 0 }; r < data.rows(); ++r)  {
             for (long c { 0 }; c < data.cols(); ++c)
                 stream << data(r, c) << '|';
-            if (r < (data.rows() - 1))
-                stream << '\n';
-            else
-                stream << ']';
+
+            if (r < (data.rows() - 1))  stream << '\n';
+            else  stream << ']';
         }
     }
     return (stream);
@@ -648,8 +647,7 @@ _create_column_from_triple_(DF &df, T &triple) {
 
 // ----------------------------------------------------------------------------
 
-template<typename SRC_DF, typename DST_DF, typename T,
-         typename I_V, typename V>
+template<typename SRC_DF, typename DST_DF, typename T, typename I_V, typename V>
 static inline void
 _load_groupby_data_1_(
     const SRC_DF &source,
@@ -1398,10 +1396,8 @@ inline static S &_write_json_df_index_(S &o, const std::string &value)  {
 template<typename S>
 inline static S &_write_json_df_index_(S &o, char value)  {
 
-    if (std::isprint(value))
-        return (o << value);
-    else
-        return (o << static_cast<int>(value));
+    if (std::isprint(value))  return (o << value);
+    else  return (o << static_cast<int>(value));
 }
 
 // ----------------------------------------------------------------------------
@@ -1409,10 +1405,8 @@ inline static S &_write_json_df_index_(S &o, char value)  {
 template<typename S>
 inline static S &_write_json_df_index_(S &o, unsigned char value)  {
 
-    if (std::isprint(value))
-        return (o << value);
-    else
-        return (o << static_cast<unsigned int>(value));
+    if (std::isprint(value))  return (o << value);
+    else  return (o << static_cast<unsigned int>(value));
 }
 
 // ----------------------------------------------------------------------------
@@ -1430,16 +1424,9 @@ _get_token_from_file_(std::istream &file,
     while ((ch = rdbuf->sbumpc()) != std::char_traits<char>::eof())  {
         const char  c { static_cast<char>(ch) };
 
-        if (c == delim)  {
-            break;
-        }
-        else if (c == alt_delim)  {
-            rdbuf->sungetc();
-            break;
-        }
-        else  {
-            value += c;
-        }
+        if (c == delim)  { break; }
+        else if (c == alt_delim)  { rdbuf->sungetc(); break; }
+        else  { value += c; }
     }
 }
 
@@ -1455,10 +1442,8 @@ _get_token_from_string_(std::string &str,
 
     for (const auto s : str | std::views::drop(str_idx))  {
         idx += 1;
-        if (s == delim)
-            break;
-        else  [[likely]]
-            value += s;
+        if (s == delim)  break;
+        else  [[likely]]  value += s;
     }
     str_idx += idx;
 }
@@ -1502,8 +1487,10 @@ _get_dbl_dbl_pair_from_value_(const char *value)  {
     using val_t = std::pair<double, double>;
 
     std::size_t vcnt { 0 };
-    val_t       data { std::numeric_limits<double>::quiet_NaN(),
-                       std::numeric_limits<double>::quiet_NaN() };
+    val_t       data {
+        std::numeric_limits<double>::quiet_NaN(),
+        std::numeric_limits<double>::quiet_NaN()
+    };
 
     while (value[vcnt] && value[vcnt] != '<')  ++vcnt;
     if (! value[vcnt])  return (data);
@@ -1605,8 +1592,7 @@ _get_str_vec_from_value_(const char *value)  {
     std::size_t vcnt { 0 };
     std::string buffer;
 
-    while (value[vcnt] != '[')
-        buffer += value[vcnt++];
+    while (value[vcnt] != '[')  buffer += value[vcnt++];
 
     vec_t   data;
 
@@ -1783,10 +1769,8 @@ _write_csv_df_index_(S &o, const DateTime &value, DT_FORMAT format)  {
 template<typename S>
 inline static S &_write_csv_df_index_(S &o, char value)  {
 
-    if (std::isprint(value))
-        return (o << value);
-    else
-        return (o << static_cast<int>(value));
+    if (std::isprint(value))  return (o << value);
+    else  return (o << static_cast<int>(value));
 }
 
 // ----------------------------------------------------------------------------
@@ -1794,10 +1778,8 @@ inline static S &_write_csv_df_index_(S &o, char value)  {
 template<typename S>
 inline static S &_write_csv_df_index_(S &o, unsigned char value)  {
 
-    if (std::isprint(value))
-        return (o << value);
-    else
-        return (o << static_cast<unsigned int>(value));
+    if (std::isprint(value))  return (o << value);
+    else  return (o << static_cast<unsigned int>(value));
 }
 
 // ----------------------------------------------------------------------------
@@ -2138,7 +2120,7 @@ _write_binary_str_set_(STRM &strm, const S &str_sets,
 template<typename STRM, typename M>
 inline static STRM &
 _write_binary_str_dbl_map_(STRM &strm, const M &sd_maps,
-                          std::size_t start_row, std::size_t end_row)  {
+                           std::size_t start_row, std::size_t end_row)  {
 
     _write_binary_common_(strm, sd_maps, start_row, end_row);
 
@@ -2173,7 +2155,7 @@ _read_binary_common_(STRM &strm, bool needs_flipping, std::size_t start_row)  {
     strm.read(reinterpret_cast<char *>(&vec_size), sizeof(vec_size));
     if (needs_flipping)
         vec_size =
-            SwapBytes<decltype(vec_size), sizeof(vec_size)> { }(vec_size);
+            SwapBytes<decltype(vec_size), sizeof(vec_size)>{ }(vec_size);
 
     if (start_row > vec_size)  {
         String1K    err;
@@ -2203,30 +2185,34 @@ _read_binary_string_(STRM &strm, V &str_vec, bool needs_flipping,
     if (needs_flipping)  {
         SwapBytes<uint16_t, sizeof(uint16_t)>   swaper { };
 
-        for (auto &s : sizes)
-            s = swaper(s);
+        for (auto &s : sizes)  s = swaper(s);
     }
 
     const uint64_t  read_end {
-        num_rows == std::numeric_limits<std::size_t>::max()
+        (num_rows == std::numeric_limits<std::size_t>::max() ||
+         (start_row + num_rows) > vec_size)
             ? vec_size : uint64_t(start_row + num_rows)
     };
 
-    // Now read the strings. We read all data regardless of num_rows
-    // to advance the file pointer
+    // The strings are variable size, but all the sizes are known. So the rows
+    // before and after the window are skipped with one seek each, instead of
+    // one seek per row.
     //
-    str_vec.reserve(read_end > vec_size
-                        ? vec_size - start_row : read_end - start_row);
-    for (uint64_t i { 0 }; i < vec_size; ++i)  {
-        if (i >= start_row && i < read_end) [[likely]]  {
-            STR_T   str(std::size_t(sizes[i]), 0);
+    uint64_t    skip_before { 0 };
+    uint64_t    skip_after { 0 };
 
-            strm.read(str.data(), sizes[i] * sizeof(char));
-            str_vec.emplace_back(std::move(str));
-        }
-        else
-            strm.seekg(sizes[i], std::ios_base::cur);
+    for (uint64_t i { 0 }; i < start_row; ++i)  skip_before += sizes[i];
+    for (uint64_t i { read_end }; i < vec_size; ++i)  skip_after += sizes[i];
+
+    if (skip_before)  strm.seekg(skip_before, std::ios_base::cur);
+    str_vec.reserve(read_end - start_row);
+    for (uint64_t i { start_row }; i < read_end; ++i)  {
+        STR_T   str(std::size_t(sizes[i]), 0);
+
+        strm.read(str.data(), sizes[i] * sizeof(char));
+        str_vec.emplace_back(std::move(str));
     }
+    if (skip_after)  strm.seekg(skip_after, std::ios_base::cur);
 
     return (strm);
 }
@@ -2336,8 +2322,7 @@ _read_binary_str_dbl_pair_(STRM &strm, V &p_vec, bool needs_flipping,
     if (needs_flipping)  {
         SwapBytes<uint16_t, sizeof(uint16_t)>   swaper { };
 
-        for (auto &s : str_sizes)
-            s = swaper(s);
+        for (auto &s : str_sizes)  s = swaper(s);
     }
 
     const uint64_t  read_end {
@@ -2346,21 +2331,29 @@ _read_binary_str_dbl_pair_(STRM &strm, V &p_vec, bool needs_flipping,
             ? vec_size : uint64_t(start_row + num_rows)
     };
 
-    p_vec.reserve(read_end - start_row);
-    for (uint64_t i { 0 }; i < vec_size; ++i)  {
-        if (i >= start_row && i < read_end) [[likely]]  {
-            std::string str(std::size_t(str_sizes[i]), 0);
-            double      val { 0 };
+    // Every row is a string followed by a double. Skip the rows before and
+    // after the window with one seek each.
+    //
+    uint64_t    skip_before { 0 };
+    uint64_t    skip_after { 0 };
 
-            strm.read(str.data(), str_sizes[i] * sizeof(char));
-            strm.read(reinterpret_cast<char *>(&val), sizeof(val));
-            if (needs_flipping)
-                val = SwapBytes<double, sizeof(val)> { }(val);
-            p_vec.emplace_back(std::move(str), std::move(val));
-        }
-        else
-            strm.seekg(str_sizes[i] + sizeof(double), std::ios_base::cur);
+    for (uint64_t i { 0 }; i < start_row; ++i)
+        skip_before += str_sizes[i] + sizeof(double);
+    for (uint64_t i { read_end }; i < vec_size; ++i)
+        skip_after += str_sizes[i] + sizeof(double);
+
+    if (skip_before)  strm.seekg(skip_before, std::ios_base::cur);
+    p_vec.reserve(read_end - start_row);
+    for (uint64_t i { start_row }; i < read_end; ++i)  {
+        std::string str(std::size_t(str_sizes[i]), 0);
+        double      val { 0 };
+
+        strm.read(str.data(), str_sizes[i] * sizeof(char));
+        strm.read(reinterpret_cast<char *>(&val), sizeof(val));
+        if (needs_flipping)  val = SwapBytes<double, sizeof(val)>{ }(val);
+        p_vec.emplace_back(std::move(str), std::move(val));
     }
+    if (skip_after)  strm.seekg(skip_after, std::ios_base::cur);
 
     return (strm);
 }
@@ -2384,8 +2377,7 @@ _read_binary_str_str_pair_(STRM &strm, V &p_vec, bool needs_flipping,
     if (needs_flipping)  {
         SwapBytes<uint16_t, sizeof(uint16_t)>   swaper { };
 
-        for (auto &s : str_sizes)
-            s = swaper(s);
+        for (auto &s : str_sizes)  s = swaper(s);
     }
 
     const uint64_t  read_end {
@@ -2856,19 +2848,16 @@ _inv_merge_(Con &original,
     // Copy the remaining elements of left sub-original (if there are any)
     // to temp
     //
-    while (i <= mid - 1)
-        temp[k++] = original[i++];
+    while (i <= mid - 1)  temp[k++] = original[i++];
 
     // Copy the remaining elements of right sub-original (if there are any)
     // to temp
     //
-    while (j <= right)
-        temp[k++] = original[j++];
+    while (j <= right)  temp[k++] = original[j++];
 
     // Copy back the merged elements to original original
     //
-    for (i = left; i <= right; i++)
-        original[i] = temp[i];
+    for (i = left; i <= right; i++)  original[i] = temp[i];
 
     return (inv_count);
 }
@@ -2907,24 +2896,24 @@ _inv_merge_sort_(Con &original,
             fut_type    left_fut {
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
-                        _inv_merge_sort_<Con, Comp>,
-                    std::ref(original),
-                    std::ref(temp),
-                    left,
-                    mid,
-                    comp,
-                    thread_level)
+                    _inv_merge_sort_<Con, Comp>,
+                        std::ref(original),
+                        std::ref(temp),
+                        left,
+                        mid,
+                        comp,
+                        thread_level)
             };
             fut_type    right_fut {
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
                     _inv_merge_sort_<Con, Comp>,
-                    std::ref(original),
-                    std::ref(temp),
-                    mid + 1,
-                    right,
-                    comp,
-                    thread_level)
+                        std::ref(original),
+                        std::ref(temp),
+                        mid + 1,
+                        right,
+                        comp,
+                        thread_level)
             };
 
             ThreadGranularity::thr_pool_.run_task();
@@ -2933,8 +2922,7 @@ _inv_merge_sort_(Con &original,
         }
         else  {
             inv_count +=
-                _inv_merge_sort_(original, temp, left, mid, comp,
-                                 thread_level);
+                _inv_merge_sort_(original, temp, left, mid, comp, thread_level);
             inv_count +=
                 _inv_merge_sort_(original, temp, mid + 1, right, comp,
                                  thread_level);
@@ -3259,7 +3247,7 @@ V _shift_vector_(const V &vec, long shift)  {
 
     if (col_s == 0)  return (V());
 
-    auto        make_zero_elem =
+    auto    make_zero_elem =
         [&vec = std::as_const(vec)]() -> value_type  {
             if constexpr (random_acc_cont<value_type>)  {
                 // value_type is itself a container (vector/array of doubles).
@@ -3278,7 +3266,7 @@ V _shift_vector_(const V &vec, long shift)  {
                 return (value_type(0));
             }
         };
-    V           shifted(col_s, make_zero_elem());
+    V       shifted(col_s, make_zero_elem());
 
     for (long i { 0 }; i < col_s; ++i)  {
         const auto  j { i - shift };
@@ -3300,7 +3288,7 @@ V _shift_vector_(const V &vec, long shift)  {
 // If n is already a power of 2, return n
 //
 static inline
-std::int64_t _next_pow2_(std::int64_t n) {
+std::int64_t _next_pow2_(std::int64_t n)  {
 
     // Set all bits to 1 from the most significant set bit to the right
     //
@@ -3322,7 +3310,7 @@ std::int64_t _next_pow2_(std::int64_t n) {
 //
 template<typename T>
 static inline void
-_kshape_fft_(std::vector<std::complex<T>> &x, bool inverse = false) {
+_kshape_fft_(std::vector<std::complex<T>> &x, bool inverse = false)  {
 
     const long  col_s { static_cast<long>(x.size()) };
 

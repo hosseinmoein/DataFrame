@@ -1432,6 +1432,13 @@ fast_ica(std::vector<const char *> &&col_names,
             auto    w_new { gwx.transpose() * data_mat_flat };
 
             w_new.ew_divide(data_t(samples));
+
+            // Keep the unit-length w from the start of this iteration. The
+            // convergence test below must compare w_new against this, not
+            // against w after it is scaled by the mean of g'(wx).
+            //
+            const auto  w_prev { w };
+
             w.ew_multiply(gwx_deriv.mean());
             w_new -= w;
 
@@ -1444,7 +1451,12 @@ fast_ica(std::vector<const char *> &&col_names,
 
             normalize(w_new, get_norm(w_new));
 
-            const auto  delta { (w - w_new).norm() };
+            // w and -w are the same independent component, so the change
+            // is measured up to sign.
+            //
+            const auto  delta {
+                std::min((w_prev - w_new).norm(), (w_prev + w_new).norm())
+            };
 
             w = w_new;
             if (delta < params.epsilon)  break;

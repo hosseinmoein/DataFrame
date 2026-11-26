@@ -5097,16 +5097,16 @@ static void test_fast_ica()  {
 
     assert(result.rows() == 5031);
     assert(result.cols() == 2);
-    assert((std::fabs(result(0, 0) - -0.42696) < 0.00001));
-    assert((std::fabs(result(0, 1) - 0.285257) < 0.000001));
-    assert((std::fabs(result(678, 0) - 0.682723) < 0.000001));
-    assert((std::fabs(result(678, 1) - 0.070691) < 0.000001));
-    assert((std::fabs(result(1852, 0) - 0.693654) < 0.000001));
-    assert((std::fabs(result(1852, 1) - 0.623284) < 0.000001));
-    assert((std::fabs(result(4008, 0) - 0.56028) < 0.00001));
-    assert((std::fabs(result(4008, 1) - -0.203453) < 0.000001));
-    assert((std::fabs(result(5030, 0) - -2.75905) < 0.00001));
-    assert((std::fabs(result(5030, 1) - -1.04257) < 0.00001));
+    assert((std::fabs(result(0, 0) - 0.426962) < 0.000001));
+    assert((std::fabs(result(0, 1) - -0.285257) < 0.000001));
+    assert((std::fabs(result(678, 0) - -0.682732) < 0.0000001));
+    assert((std::fabs(result(678, 1) - -0.0706922) < 0.0000001));
+    assert((std::fabs(result(1852, 0) - -0.693664) < 0.000001));
+    assert((std::fabs(result(1852, 1) - -0.623285) < 0.000001));
+    assert((std::fabs(result(4008, 0) - -0.560234) < 0.000001));
+    assert((std::fabs(result(4008, 1) - 0.203469) < 0.000001));
+    assert((std::fabs(result(5030, 0) - 2.75907) < 0.00001));
+    assert((std::fabs(result(5030, 1) - 1.04257) < 0.00001));
 
     // Now multidimensional data
     //
@@ -5220,13 +5220,13 @@ static void test_fast_ica()  {
     assert(vec_col_res.rows() == 20);
 
     assert(std::abs(ary_col_res(0, 0) - 1.65614) < 0.00001);
-    assert(std::abs(ary_col_res(0, 1) - 3.46064) < 0.00001);
-    assert(std::abs(ary_col_res(0, 2) - -0.065332) < 0.000001);
+    assert(std::abs(ary_col_res(0, 1) - -3.46064) < 0.00001);
+    assert(std::abs(ary_col_res(0, 2) - -0.0653303) < 0.0000001);
     assert(std::abs(ary_col_res(9, 0) - 1.33882) < 0.00001);
-    assert(std::abs(ary_col_res(9, 1) - -0.886272) < 0.000001);
+    assert(std::abs(ary_col_res(9, 1) - 0.886273) < 0.000001);
     assert(std::abs(ary_col_res(15, 2) - -1.96797) < 0.00001);
     assert(std::abs(ary_col_res(19, 0) - 1.03096) < 0.00001);
-    assert(std::abs(ary_col_res(19, 1) - -0.793463) < 0.000001);
+    assert(std::abs(ary_col_res(19, 1) - 0.793459) < 0.000001);
     assert(std::abs(ary_col_res(19, 2) - 0.46598) < 0.00001);
 }
 

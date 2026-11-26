@@ -509,7 +509,7 @@ bool DateTime::is_us_business_day() const noexcept  {
     const DatePartType  m_day { dmonth() };   // 1 - 31
     const DT_MONTH      mon { month() };      // JAN - DEC
     const DT_WEEKDAY    w_day { dweek() };    // SUN - SAT
-    const DateType      date_part { date() };  // e.g. 20190110
+    const DateType      date_part { date() }; // e.g. 20190110
 
     return (! (is_weekend() ||
                is_newyear() ||
@@ -1090,7 +1090,7 @@ std::string DateTime::string_format(DT_FORMAT format) const  {
 
 // ----------------------------------------------------------------------------
 
-inline void DateTime::change_env_timezone_(DT_TIME_ZONE time_zone)  {
+inline void DateTime::apply_env_timezone_(DT_TIME_ZONE time_zone)  {
 
     if (time_zone != DT_TIME_ZONE::LOCAL)  {
 #ifdef _WIN32
@@ -1102,13 +1102,7 @@ inline void DateTime::change_env_timezone_(DT_TIME_ZONE time_zone)  {
         ::tzset();
 #endif // _WIN32
     }
-}
-
-// ----------------------------------------------------------------------------
-
-inline void DateTime::reset_env_timezone_(DT_TIME_ZONE time_zone)  {
-
-    if (time_zone != DT_TIME_ZONE::LOCAL)  {
+    else  {
 #ifdef _WIN32
         // SetEnvironmentVariable(L"TZ", nullptr);
         _putenv("TZ=");
@@ -1117,6 +1111,44 @@ inline void DateTime::reset_env_timezone_(DT_TIME_ZONE time_zone)  {
         ::unsetenv("TZ");
         ::tzset();
 #endif // _WIN32
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+// If a TimezoneScope for this very time zone is alive, TZ is already right.
+// This includes the case of no scope and the LOCAL time zone, where TZ has to
+// be unset.
+//
+inline void DateTime::change_env_timezone_(DT_TIME_ZONE time_zone)  {
+
+    if (time_zone != scope_tz_)  apply_env_timezone_(time_zone);
+}
+
+// ----------------------------------------------------------------------------
+
+inline void DateTime::reset_env_timezone_(DT_TIME_ZONE time_zone)  {
+
+    if (time_zone != scope_tz_)  apply_env_timezone_(scope_tz_);
+}
+
+// ----------------------------------------------------------------------------
+
+DateTime::TimezoneScope::TimezoneScope(DT_TIME_ZONE tz) : prev_(scope_tz_)  {
+
+    if (tz != prev_)  {
+        apply_env_timezone_(tz);
+        scope_tz_ = tz;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+DateTime::TimezoneScope::~TimezoneScope()  {
+
+    if (scope_tz_ != prev_)  {
+        scope_tz_ = prev_;
+        apply_env_timezone_(prev_);
     }
 }
 

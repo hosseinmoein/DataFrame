@@ -246,8 +246,10 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator()(const T &vec)  {
 
     _write_csv_df_header_<std::ostream, ValueType>(os, name, er - sr) << ':';
 
+    const bool  plain { _is_plain_fmt_stream_(os) };
+ 
     for (long i { sr }; i < er; ++i)
-        _write_csv_df_index_(os, vec[i]) << delim;
+        _write_csv_df_value_(os, vec[i], plain) << delim;
     os << '\n';
 
     return;
@@ -386,7 +388,7 @@ print_csv2_data_functor_<S, Ts ...>::operator()(const T &vec)  {
         if constexpr (std::same_as<ValueType, DateTime>)
             _write_csv_df_index_(os, vec[index], dt_format);
         else
-            _write_csv_df_index_(os, vec[index]);
+            _write_csv_df_value_(os, vec[index], plain);
     }
 }
 

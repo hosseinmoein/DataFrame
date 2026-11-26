@@ -1226,7 +1226,7 @@ struct  ExtremumVisitor  {
 
     using compare_type = Cmp;
 
-    inline void operator() (const index_type &idx, const value_type &val)  {
+    inline void operator()(const index_type &idx, const value_type &val)  {
 
         counter_ += 1;
         if (is_nan__(val)) [[unlikely]]  {
@@ -1246,14 +1246,14 @@ struct  ExtremumVisitor  {
     }
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end) {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end) {
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (std::distance(idx_begin, idx_end) <
                 std::distance(column_begin, column_end))
-            throw DataFrameError("ExtremumVisitor: column size must be <= "
-                                 "index size");
+            throw DataFrameError(
+                "ExtremumVisitor: column size must be <= index size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         GET_COL_SIZE
@@ -1281,16 +1281,15 @@ struct  ExtremumVisitor  {
                 [this] (const auto &begin, const auto &end) -> value_type  {
                     value_type  extremum { value_type(*begin) };
 
-                    if (! this->skip_nan_)  {
+                    if (! skip_nan_)  {
                         for (auto citer { begin + 1 }; citer < end; ++citer)  {
-                            if (this->cmp_(extremum, *citer))
+                            if (cmp_(extremum, *citer))
                                 extremum = *citer;
                         }
                     }
                     else  {
                         for (auto citer { begin + 1 }; citer < end; ++citer)  {
-                            if (this->cmp_(extremum, *citer) &&
-                                ! is_nan__(*citer))
+                            if (cmp_(extremum, *citer) && ! is_nan__(*citer))
                                 extremum = *citer;
                         }
                     }
@@ -1338,16 +1337,17 @@ struct  ExtremumVisitor  {
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
         is_first = true;
         pos_ = 0;
         counter_ = 0;
         extremum_ = value_type { };
     }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (extremum_); }
-    inline index_type get_index () const  { return (index_); }
-    inline size_type get_position () const  { return (pos_); }
+    inline void post()  {  }
+    inline result_type get_result() const  { return (extremum_); }
+    inline index_type get_index() const  { return (index_); }
+    inline size_type get_position() const  { return (pos_); }
+    inline bool is_skip_nan() const  { return (skip_nan_); }
 
     DECL_CTOR(ExtremumVisitor)
 
@@ -3603,6 +3603,138 @@ private:
 
 // ----------------------------------------------------------------------------
 
+// Specialization of SimpleRollAdopter for rolling Min/Max (ExtremumVisitor).
+// The generic adopter above visits every window from scratch, which is
+// O(N * roll_count). For min/max a monotonic deque of candidate positions
+// gives the same answer in O(N). It reproduces ExtremumVisitor's semantics
+// exactly:
+//   - Ties keep the first (earliest) occurrence in the window.
+//   - When not skipping NaNs, NaN elements are never picked as the extremum,
+//     except that a NaN as the first element of a window makes the window's
+//     result NaN.
+//   - When skipping NaNs, NaN elements are ignored, and a window that is all
+//     NaNs yields a default constructed value (as ExtremumVisitor does).
+// For windows large enough for ExtremumVisitor to run multi-threaded, the
+// generic algorithm is used.
+//
+template<typename T, typename I, typename Cmp, std::size_t A>
+struct  SimpleRollAdopter<ExtremumVisitor<T, I, Cmp>, T, I, A>  {
+
+private:
+
+    using visitor_t = ExtremumVisitor<T, I, Cmp>;
+    using f_result_t = typename visitor_t::result_type;
+    using compare_t = typename visitor_t::compare_type;
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type =
+        std::vector<f_result_t,
+                    typename allocator_declare<f_result_t, A>::type>;
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (roll_count_ == 0 || roll_count_ > col_s)
+            throw DataFrameError(
+                "SimpleRollAdopter: roll count must be <= column size");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        if (roll_count_ == 0)  return;
+
+        result_.reserve(col_s);
+        for (size_type i { 0 }; i < roll_count_ - 1 && i < col_s; ++i)
+            result_.push_back(std::numeric_limits<f_result_t>::quiet_NaN());
+
+        if (roll_count_ > col_s)  return;
+
+        if (roll_count_ >= ThreadPool::MUL_THR_THHOLD) [[unlikely]]  {
+            for (size_type i { 0 }; (i + roll_count_) <= col_s; ++i)  {
+                visitor_.pre();
+                visitor_(idx_begin + i, idx_begin + (i + roll_count_),
+                         column_begin + i, column_begin + (i + roll_count_));
+                visitor_.post();
+                result_.push_back(visitor_.get_result());
+            }
+            return;
+        }
+
+        const compare_t cmp { };
+        const bool      skip_nan { visitor_.is_skip_nan() };
+
+        // Ring buffer of positions of the candidate extrema in the current
+        // window. Values from front to back are in order of decreasing
+        // "strength", and ties are kept, so the front is always the earliest
+        // extremum.
+        //
+        std::vector<size_type>  dq(roll_count_);
+        size_type               head { 0 };
+        size_type               cnt { 0 };
+
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            // Drop the position that fell out of the window
+            //
+            if (cnt > 0 && dq[head] + roll_count_ <= i)  {
+                if (++head == roll_count_)  head = 0;
+                cnt -= 1;
+            }
+
+            const value_type    &val = *(column_begin + i);
+
+            if (! is_nan__(val)) [[likely]]  {
+                while (cnt > 0)  {
+                    size_type   back { head + cnt - 1 };
+
+                    if (back >= roll_count_)  back -= roll_count_;
+                    if (cmp(*(column_begin + dq[back]), val))  --cnt;
+                    else  break;
+                }
+
+                size_type   tail { head + cnt };
+
+                if (tail >= roll_count_)  tail -= roll_count_;
+                dq[tail] = i;
+                cnt += 1;
+            }
+
+            if ((i + 1) < roll_count_)  continue;
+
+            const value_type    &first {
+                *(column_begin + (i + 1 - roll_count_))
+            };
+
+            if (! skip_nan && is_nan__(first)) [[unlikely]]
+                result_.push_back(first);
+            else if (cnt > 0) [[likely]]
+                result_.push_back(*(column_begin + dq[head]));
+            else
+                result_.push_back(value_type { });
+        }
+    }
+
+    inline void pre()  { visitor_.pre(); result_.clear(); }
+    inline void post()  { visitor_.post(); }
+    inline const result_type &get_result() const  { return (result_); }
+    inline result_type &get_result()  { return (result_); }
+
+    SimpleRollAdopter(visitor_t &&functor, size_type r_count)
+        : visitor_(std::move(functor)), roll_count_(r_count)  {   }
+
+private:
+
+    visitor_t       visitor_ { };
+    const size_type roll_count_ { 0 };
+    result_type     result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
 // This can only work with visitors that accept one data item at a time
 //
 template<typename F, typename T, typename I = unsigned long>
@@ -3629,8 +3761,8 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (period_ == 0 || period_ >= col_s)
-            throw DataFrameError("StepRollAdopter: period must be < "
-                                 "column size");
+            throw DataFrameError(
+                "StepRollAdopter: period must be < column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         if (period_ == 0)  return;
@@ -3681,15 +3813,15 @@ public:
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (init_roll_count_ == 0 || init_roll_count_ >= col_s)
-            throw DataFrameError("ExpandingRollAdopter: roll count must be < "
-                                 "column size");
+            throw DataFrameError(
+                "ExpandingRollAdopter: roll count must be < column size");
 #endif // HMDF_SANITY_EXCEPTIONS
 
         if (init_roll_count_ == 0)  return;
 
         result_.reserve(col_s);
 
-        std::size_t rc = init_roll_count_;
+        std::size_t rc { init_roll_count_ };
 
         for (std::size_t i { 0 }; i < rc - 1 && i < col_s; ++i) [[likely]]
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
@@ -3794,7 +3926,7 @@ struct  StatsVisitor  {
         }
     }
 
-    inline void pre ()  {
+    inline void pre()  {
 
         n_ = 0;
         m1_ = m2_ = m3_ = m4_ = 0;
@@ -3999,9 +4131,9 @@ public:
                const H &y_begin, const H &y_end)  {
 
         const size_type col_s {
-            size_Type(std::min ({ std::distance(idx_begin, idx_end),
-                                  std::distance(x_begin, x_end),
-                                  std::distance(y_begin, y_end) }))
+            size_Type(std::min({ std::distance(idx_begin, idx_end),
+                                 std::distance(x_begin, x_end),
+                                 std::distance(y_begin, y_end) }))
         };
 
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
@@ -4044,9 +4176,10 @@ public:
                             const auto &x_begin, const auto &y_begin,
                             const auto &idx_begin) -> void  {
 
-                        for (size_type i = 0; i < col_s; ++i)  {
-                            const value_type    val =
-                                *(x_begin + i) - *(y_begin + i);
+                        for (size_type i { 0 }; i < col_s; ++i)  {
+                            const value_type    val {
+                                *(x_begin + i) - *(y_begin + i)
+                            };
 
                             vis(*idx_begin, val);
                         }
@@ -4071,7 +4204,7 @@ public:
                 v_y_(idx_begin, idx_end, y_begin, y_begin + col_s);
             }
             else  {
-                for (size_type i = 0; i < col_s; ++i)  {
+                for (size_type i { 0 }; i < col_s; ++i)  {
                     v_x_(*idx_begin, *(x_begin + i) - *(y_begin + i));
                 }
             }
@@ -4161,24 +4294,25 @@ struct  CumSumVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
-        value_type      running_sum = 0;
+        value_type  running_sum { 0 };
+
         GET_COL_SIZE
 
         result_type result;
 
         result.reserve(col_s);
         if (! skip_nan_)  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
                 running_sum += *(column_begin + i);
                 result.push_back(running_sum);
             }
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    &value = *(column_begin + i);
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    &value { *(column_begin + i) };
 
                 if (! is_nan__(value)) [[likely]]  {
                     running_sum += value;
@@ -4215,8 +4349,8 @@ struct  CumCountVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -4224,7 +4358,7 @@ struct  CumCountVisitor  {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
             if (! is_nan__(*(column_begin + i))) [[likely]]
                 running_cnt += 1;
             result.push_back(running_cnt);
@@ -4249,24 +4383,25 @@ struct  CumProdVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
-        value_type      running_prod = 1;
+        value_type  running_prod { 1 };
+
         GET_COL_SIZE
 
         result_type result;
 
         result.reserve(col_s);
         if (! skip_nan_)  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
                 running_prod *= *(column_begin + i);
                 result.push_back(running_prod);
             }
         }
         else  {
-            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-                const value_type    &value = *(column_begin + i);
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    &value { *(column_begin + i) };
 
                 if (! is_nan__(value)) [[likely]]  {
                     running_prod *= value;
@@ -4379,7 +4514,8 @@ struct  CategoryVisitor  {
 
 private:
 
-    struct t_less_  {
+    struct  t_less_  {
+
         inline bool
         operator() (const T *lhs, const T *rhs) const { return (*lhs < *rhs); }
     };
@@ -4401,18 +4537,19 @@ public:
 
         result.reserve(col_s);
 
-        size_type   cat = nan_ != 0 ? 0 : 1;
+        size_type   cat { nan_ != size_type(0) ? size_type(0) : size_type(1) };
 
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            const value_type    &value = *(column_begin + i);
+        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+            const value_type    &value { *(column_begin + i) };
 
             if (is_nan__(value))  {
                 result.push_back(nan_);
                 continue;
             }
 
-            const typename map_type::const_iterator citer =
-                cat_map_.find(&value);
+            const typename map_type::const_iterator citer {
+                cat_map_.find(&value)
+            };
 
             if (citer == cat_map_.end())  {
                 cat_map_.insert({ &value, cat });
@@ -4464,7 +4601,9 @@ struct  FactorizeVisitor  {
     operator()(const K &, const K &,
                const H &column_begin, const H &column_end)  {
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_s {
+            size_type(std::distance(column_begin, column_end))
+        };
         result_type     result;
 
         if (col_s >= ThreadPool::MUL_THR_THHOLD &&
@@ -4477,9 +4616,10 @@ struct  FactorizeVisitor  {
                     for (; begin < end; ++begin)
                         result[begin] = this->ffunc_(*(column_begin + begin));
                 };
-            auto    futures =
+            auto    futures {
                 ThreadGranularity::thr_pool_.parallel_loop<char>(
-                    size_type(0), col_s, std::move(lbd));
+                    size_type(0), col_s, std::move(lbd))
+            };
 
             for (auto &fut : futures)  fut.get();
         }
@@ -4530,8 +4670,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -4641,9 +4781,9 @@ struct  PartialAutoCorrVisitor  {
 
 private:
 
-    using data_t = typename std::conditional_t<std::is_arithmetic_v<T>,
-                                               lazy_type<T>,
-                                               value_type_of<T>>::type;
+    using data_t =
+        typename std::conditional_t<
+            std::is_arithmetic_v<T>, lazy_type<T>, value_type_of<T>>::type;
     using matrix_t = Matrix<data_t, matrix_orient::row_major>;
 
 public:
@@ -4652,9 +4792,8 @@ public:
     using index_type = I;
     using size_type = std::size_t;
     using result_type =
-        typename std::conditional_t<std::is_arithmetic_v<T>,
-                                    vec_type<data_t>,
-                                    vec_type<matrix_t>>;
+        typename std::conditional_t<
+            std::is_arithmetic_v<T>, vec_type<data_t>, vec_type<matrix_t>>;
 
     template <typename K, typename H>
     inline void
@@ -4669,22 +4808,18 @@ public:
                 "PartialAutoCorrVisitor: Time-series is too short");
         if (max_lag_ > 375)
             throw DataFrameError("PartialAutoCorrVisitor: Maximum lag is 375");
-#endif // HMDF_SANITY_EXCEPTIONS
 
-#ifdef HMDF_SANITY_EXCEPTIONS
         if constexpr (! std::is_arithmetic_v<value_type>)  {
             const size_type dim { column_begin->size() };
 
             for (size_type i { 1 }; i < col_s; ++i)
                 if ((column_begin + i)->size() != dim)
-                    throw DataFrameError("PartialAutoCorrVisitor: "
-                                         "Inconsistent data dimensions");
+                    throw DataFrameError(
+                        "PartialAutoCorrVisitor: Inconsistent data dimensions");
         }
 #endif // HMDF_SANITY_EXCEPTIONS
 
         result_type         result(max_lag_);
-        matrix_t            x;
-        matrix_t            y;
         data_t              mean { 0 };
         std::vector<data_t> dim_mean;
 
@@ -4718,67 +4853,103 @@ public:
             for (size_type d { 0 }; d < dim; ++d)
                 dim_mean[d] /= data_t(col_s);
         }
-        for (size_type k { 1 }; k < max_lag_; ++k)  {
-            x.clear();
-            y.clear();
 
-            const size_type rows { col_s - k };
+        // PACF at lag k is the last coefficient of the OLS regression of
+        // y_t = z_t on its k previous values z_{t-k} ... z_{t-1}, over the
+        // N - k available rows. The normal equations of that regression only
+        // need, for rows i = 0 ... N - k - 1:
+        //
+        //   G_k(a, b) = sum_i z_{i + a} * z_{i + b},  a, b = 0 ... k
+        //
+        // x'x is the block a, b < k of G_k and x'y is the block a < k, b = k.
+        // Going from lag k to lag k - 1 only adds the single row i = N - k.
+        // So one Gram product G_K for the largest lag K, and one rank-1
+        // update per lag, replace building and multiplying a new
+        // (N - k) x (k * dim) design matrix for every lag.
+        //
+        if (max_lag_ > 1)  {
+            size_type   dim { 1 };
+
+            if constexpr (! std::is_arithmetic_v<value_type>)
+                dim = column_begin->size();
+
+            const size_type max_k { max_lag_ - 1 };       // Largest lag
+            const size_type n_cols { (max_k + 1) * dim }; // lags 0 ... K
+            const size_type n_rows { col_s - max_k };
+
+            // The demeaned observations, one row of dim values each
+            //
+            std::vector<data_t> z(col_s * dim);
 
             if constexpr (std::is_arithmetic_v<value_type>)  {
-                x.resize(rows, k);
-                y.resize(rows, 1);
-                for (size_type i { 0 }; i < rows; ++i)  {
-                    y(i, 0) = data_t(*(column_begin + (i + k))) - mean;
-                    for (size_type j { 0 }; j < k; ++j)
-                        x(i, j) = *(column_begin + (i + j)) - mean;
-                }
+                for (size_type t { 0 }; t < col_s; ++t)
+                    z[t] = data_t(*(column_begin + t)) - mean;
             }
             else  {
-                const size_type dim { column_begin->size() };
-
-                x.resize(col_s - k, k * dim, 0);
-                y.resize(col_s - k, dim, 0);
-
-                // y row i: the dim components of observation (i + k),
-                //          demeaned per dimension
-                //
-                for (size_type i { 0 }; i < rows; ++i)  {
-                    const auto  &obs_y { *(column_begin + (i + k)) };
+                for (size_type t { 0 }; t < col_s; ++t)  {
+                    const auto  &obs { *(column_begin + t) };
 
                     for (size_type d { 0 }; d < dim; ++d)
-                        y(i, d) = data_t(obs_y[d]) - dim_mean[d];
-
-                    // x row i: lagged observations, demeaned per dimension
-                    // block j: columns [j * dim ... j * dim + dim - 1]
-                    //
-                    for (size_type j { 0 }; j < k; ++j)  {
-                        const auto  &obs_x { *(column_begin + (i + j)) };
-
-                        for (size_type d { 0 }; d < dim; ++d)
-                            x(i, j * dim + d) = obs_x[d] - dim_mean[d];
-                    }
+                        z[t * dim + d] = data_t(obs[d]) - dim_mean[d];
                 }
             }
 
-            const auto  x_trans = x.transpose();
-            const auto  phi = (x_trans * x).inverse() * x_trans * y;
+            // G_K = Z'Z where Z(i, a * dim + d) = z_{i + a}[d]
+            //
+            matrix_t    zm {
+                static_cast<long>(n_rows), static_cast<long>(n_cols)
+            };
 
-            if constexpr (std::is_arithmetic_v<value_type>)  {
-                result[k] = phi(k - 1, 0);
+            for (size_type i { 0 }; i < n_rows; ++i)  {
+                for (size_type c { 0 }; c < n_cols; ++c)
+                    zm(i, c) = z[i * dim + c];  // Row-major windows of z
             }
-            else  {
-                const size_type dim { column_begin->size() };
 
-                // The partial autocorrelation matrix at lag k is the last
-                // dimXdim block of phi: rows [(k - 1) * dim ... k * dim - 1],
-                // all dim columns
-                //
-                matrix_t    res { long(dim), long(dim), 0 };
+            auto    gram { zm.transpose() * zm };
 
-                for (size_type r { 0 }; r < dim; ++r)
+            for (size_type k { max_k }; k >= 1; --k)  {
+                const size_type kd { k * dim };
+                matrix_t        xtx {
+                    static_cast<long>(kd), static_cast<long>(kd)
+                };
+                matrix_t        xty {
+                    static_cast<long>(kd), static_cast<long>(dim)
+                };
+
+                for (size_type r { 0 }; r < kd; ++r)  {
+                    for (size_type c { 0 }; c < kd; ++c)
+                        xtx(r, c) = gram(r, c);
                     for (size_type c { 0 }; c < dim; ++c)
-                        res(r, c) = phi((k - 1) * dim + r, c);
-                result[k] = std::move(res);
+                        xty(r, c) = gram(r, kd + c);
+                }
+
+                const auto  phi { xtx.inverse() * xty };
+
+                if constexpr (std::is_arithmetic_v<value_type>)  {
+                    result[k] = phi(k - 1, 0);
+                }
+                else  {
+                    // The partial autocorrelation matrix at lag k is the last
+                    // dimXdim block of phi:
+                    //     rows [(k - 1) * dim ... k * dim - 1],
+                    // all dim columns
+                    //
+                    matrix_t    res { long(dim), long(dim), 0 };
+
+                    for (size_type r { 0 }; r < dim; ++r)
+                        for (size_type c { 0 }; c < dim; ++c)
+                            res(r, c) = phi((k - 1) * dim + r, c);
+                    result[k] = std::move(res);
+                }
+
+                // Lag k - 1 has one more row (i = N - k), which only touches
+                // the lags 0 ... k - 1
+                //
+                const data_t    *zrow { &z[(col_s - k) * dim] };
+
+                for (size_type r { 0 }; r < kd; ++r)
+                    for (size_type c { 0 }; c < kd; ++c)
+                        gram(r, c) += zrow[r] * zrow[c];
             }
         }
 

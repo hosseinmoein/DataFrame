@@ -1032,7 +1032,6 @@ read_csv2_(S &stream,
     // stream is exhausted.
     //
     size_type           rows_read_this_call { 0 };
-    std::stringstream   sstream;
     const bool          user_schema { ! schema.empty() };
 
     // header_read / requested_col_count / spec_vec are, as of this change,
@@ -1102,8 +1101,12 @@ read_csv2_(S &stream,
         if (line.empty() || line[0] == '#' ||
             line[0] == '\n' || line[0] == '\r') [[unlikely]]  continue;
 
-        sstream.clear();
-        sstream.str(line);
+        // Tokenizing is done directly on line, with tok_pos being the
+        // position of the next unread char. This replaces a stringstream
+        // that was re-initialized for every line.
+        //
+        const size_type line_s { line.size() };
+        size_type       tok_pos { 0 };
 
         // Is the caller specifying the schema
         //
@@ -1409,7 +1412,17 @@ read_csv2_(S &stream,
             type_str.reserve(14);
             col_name.reserve(32);
             token.reserve(32);
-            while (std::getline(sstream, token, delim))  {
+            while (tok_pos < line_s)  {
+                const char  *tb = line.data() + tok_pos;
+                const char  *te =
+                    static_cast<const char *>(
+                        std::memchr(tb, delim, line_s - tok_pos));
+                const size_type tlen =
+                    te ? size_type(te - tb) : line_s - tok_pos;
+
+                token.assign(tb, tlen);
+                tok_pos += te ? tlen + 1 : tlen;
+
                 const size_type token_s = token.size();
                 size_type       token_idx { 0 };
 
@@ -1728,14 +1741,9 @@ read_csv2_(S &stream,
         //
         if (actual_col_count <= 0) [[unlikely]]  {
             if (user_schema)  {
-                const std::streampos    old_pos = sstream.tellg();
-
-                std::getline(sstream, value);
-                sstream.seekg(old_pos);
                 actual_col_count =
                     static_cast<int>(
-                        std::count(value.begin(), value.end(), delim)) +
-                    1;
+                        std::count(line.begin(), line.end(), delim)) + 1;
             }
             else
                 actual_col_count = requested_col_count;
@@ -1751,8 +1759,17 @@ read_csv2_(S &stream,
             //
             for (int col_idx = 0; col_idx < actual_col_count; ++col_idx)  {
                 value.clear();
-                if (! sstream.eof()) [[likely]]
-                    std::getline(sstream, value, delim);
+                if (tok_pos < line_s) [[likely]]  {
+                    const char  *tb = line.data() + tok_pos;
+                    const char  *te =
+                        static_cast<const char *>(
+                            std::memchr(tb, delim, line_s - tok_pos));
+                    const size_type tlen =
+                        te ? size_type(te - tb) : line_s - tok_pos;
+
+                    value.assign(tb, tlen);
+                    tok_pos += te ? tlen + 1 : tlen;
+                }
 
                 const auto  val_size = value.size();
 
@@ -1773,7 +1790,7 @@ read_csv2_(S &stream,
                         if (val_size > 0) [[likely]]
                             std::any_cast<StlVecType<float> &>
                                 (col_spec.col_vec).push_back(
-                                     std::strtof(value.c_str(), nullptr));
+                                     _str_to_fp_<float>(value));
                         else
                             std::any_cast<StlVecType<float> &>
                                 (col_spec.col_vec).push_back(get_nan<float>());
@@ -1783,7 +1800,7 @@ read_csv2_(S &stream,
                         if (val_size > 0) [[likely]]
                             std::any_cast<StlVecType<double> &>
                                 (col_spec.col_vec).push_back(
-                                     std::strtod(value.c_str(), nullptr));
+                                     _str_to_fp_<double>(value));
                         else
                             std::any_cast<StlVecType<double> &>
                                 (col_spec.col_vec).push_back(
@@ -1794,7 +1811,7 @@ read_csv2_(S &stream,
                         if (val_size > 0) [[likely]]
                             std::any_cast<StlVecType<long double> &>
                                 (col_spec.col_vec).push_back(
-                                     std::strtold(value.c_str(), nullptr));
+                                     _str_to_fp_<long double>(value));
                         else
                             std::any_cast<StlVecType<long double> &>
                                 (col_spec.col_vec).push_back(

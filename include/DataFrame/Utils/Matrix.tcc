@@ -302,8 +302,7 @@ Matrix<T, MO, IS_SYM>::is_symmetric() const noexcept  {
 
     for (size_type r { 1 }; r < rows(); ++r)
         for (size_type c { 0 }; c < r; ++c)
-            if (at(r, c) != at(c, r))
-                return (false);
+            if (at(r, c) != at(c, r))  return (false);
 
     return (true);
 }
@@ -1657,6 +1656,13 @@ template<typename MA1, typename MA2, typename MA3>
 void Matrix<T, MO, IS_SYM>::
 tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
+    // NOTE: e_vecs holds the TRANSPOSE of the matrix the algorithm works on,
+    // i.e. every element (r, c) of the algorithm is stored at e_vecs(c, r).
+    // The algorithm walks its matrix down the columns in all of its O(n^3)
+    // loops. With the transposed storage all of them are contiguous in the
+    // row-major memory. The arithmetic and its order are unchanged.
+    //
+
     for (size_type r { e_vecs.rows() - 1 }; r > 0; --r)  {
         // Scale to avoid under/overflow.
         //
@@ -1670,9 +1676,9 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
         if (scale == T(0))  {
             imagi(0, r) = e_vals(0, r - 1);
             for (size_type c { 0 }; c < r; ++c)  {
-                e_vals(0, c) = e_vecs(r - 1, c);
-                e_vecs(r, c) = 0;
+                e_vals(0, c) = e_vecs(c, r - 1);
                 e_vecs(c, r) = 0;
+                e_vecs(r, c) = 0;
             }
         }
         else  {
@@ -1698,12 +1704,12 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
             for (size_type c { 0 }; c < r; ++c)  {
                 const value_type    &ff { e_vals(0, c) };
 
-                e_vecs(c, r) = ff;
+                e_vecs(r, c) = ff;
                 g = imagi(0, c) + e_vecs(c, c) * ff;
 
                 for (size_type cc { c + 1 }; cc <= r - 1; ++cc)  {
-                    g += e_vecs(cc, c) * e_vals(0, cc);
-                    imagi(0, cc) += e_vecs(cc, c) * ff;
+                    g += e_vecs(c, cc) * e_vals(0, cc);
+                    imagi(0, cc) += e_vecs(c, cc) * ff;
                 }
                 imagi(0, c) = g;
             }
@@ -1722,11 +1728,11 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
             for (size_type c { 0 }; c < r; ++c)  {
                 for (size_type cc { c }; cc <= r - 1; ++cc)
-                    e_vecs(cc, c) -= e_vals(0, c) * imagi(0, cc) +
+                    e_vecs(c, cc) -= e_vals(0, c) * imagi(0, cc) +
                                      imagi(0, c) * e_vals(0, cc);
 
-                e_vals(0, c) = e_vecs(r - 1, c);
-                e_vecs(r, c) = 0;
+                e_vals(0, c) = e_vecs(c, r - 1);
+                e_vecs(c, r) = 0;
             }
         }
 
@@ -1736,34 +1742,34 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
     // Accumulate transformations.
     //
     for (size_type r { 0 }; r < e_vecs.rows() - 1; ++r)  {
-        e_vecs(e_vecs.rows() - 1, r) = e_vecs(r, r);
+        e_vecs(r, e_vecs.rows() - 1) = e_vecs(r, r);
         e_vecs(r, r) = 1;
 
         const value_type    &h { e_vals(0, r + 1) };
 
         if (h != T(0))  {
             for (size_type c { 0 }; c <= r; ++c)
-                e_vals(0, c) = e_vecs(c, r + 1) / h;
+                e_vals(0, c) = e_vecs(r + 1, c) / h;
 
             for (size_type c { 0 }; c <= r; ++c)  {
                 value_type  g { 0 };
 
                 for (size_type rr { 0 }; rr <= r; ++rr)
-                    g += e_vecs(rr, r + 1) * e_vecs(rr, c);
+                    g += e_vecs(r + 1, rr) * e_vecs(c, rr);
 
                 for (size_type rr { 0 }; rr <= r; ++rr)
-                    e_vecs(rr, c) -= g * e_vals(0, rr);
+                    e_vecs(c, rr) -= g * e_vals(0, rr);
             }
         }
         for (size_type rr { 0 }; rr <= r; ++rr)
-            e_vecs(rr, r + 1) = 0;
+            e_vecs(r + 1, rr) = 0;
     }
 
     for (size_type c { 0 }; c < e_vecs.cols(); ++c)  {
-        e_vals(0, c) = e_vecs(e_vecs.rows() - 1, c);
-        e_vecs(e_vecs.rows() - 1, c) = 0;
+        e_vals(0, c) = e_vecs(c, e_vecs.rows() - 1);
+        e_vecs(c, e_vecs.rows() - 1) = 0;
     }
-    e_vecs(e_vecs.rows() - 1, e_vecs.cols() - 1) = 1;
+    e_vecs(e_vecs.cols() - 1, e_vecs.rows() - 1) = 1;
     imagi(0, 0) = 0;
 
     return;
@@ -1774,23 +1780,30 @@ tridiagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 template<typename T,  matrix_orient MO, bool IS_SYM>
 template<typename MA1, typename MA2, typename MA3>
 void Matrix<T, MO, IS_SYM>::
-diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
+diagonalize_(MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
 
-    for (size_type c { 1 }; c < e_vecs.cols(); ++c)
+    // NOTE: e_vecs must be a row-major matrix and it is stored transposed, as
+    // in tridiagonalize_(). On exit row k of e_vecs is the k-th eigenvector.
+    // Row k is the k-th eigenvector, so each rotation below updates two
+    // contiguous rows.
+    //
+    const size_type n { e_vecs.cols() };
+
+    for (size_type c { 1 }; c < n; ++c)
         imagi(0, c - 1) = imagi(0, c);
-    imagi(0, e_vecs.cols() - 1) = 0;
+    imagi(0, n - 1) = 0;
 
     value_type  f { 0 };
     value_type  tst1 { 0 };
 
-    for (size_type c { 0 }; c < e_vecs.cols(); ++c)  {
+    for (size_type c { 0 }; c < n; ++c)  {
         // Find small subdiagonal element
         //
         tst1 = std::max(tst1, std::abs(e_vals(0, c)) + std::abs(imagi(0, c)));
 
         size_type   m { c };
 
-        while (m < e_vecs.cols())  {
+        while (m < n)  {
             if (std::abs(imagi(0, m)) <= (value_type(EPSILON_) * tst1))
                 break;
             m += 1;
@@ -1816,7 +1829,7 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
                 const value_type    dl1 { e_vals(0, c + 1) };
                 value_type          h { g - e_vals(0, c) };
 
-                for (size_type cc { c + 2 }; cc < e_vecs.cols(); ++cc)
+                for (size_type cc { c + 2 }; cc < n; ++cc)
                     e_vals(0, cc) -= h;
 
                 f += h;
@@ -1843,15 +1856,18 @@ diagonalize_ (MA1 &e_vecs, MA2 &e_vals, MA3 &imagi) noexcept  {
                     s = imagi(0, cc) / dis;
                     cunit = p / dis;
                     p = cunit * e_vals(0, cc) - s * g;
-                    e_vals(0, cc + 1) =
-                        h + s * (cunit * g + s * e_vals(0, cc));
+                    e_vals(0, cc + 1) = h + s * (cunit * g + s * e_vals(0, cc));
 
                     // Accumulate transformation.
                     //
-                    for (size_type r { 0 }; r < e_vecs.rows (); ++r)  {
-                        h = e_vecs(r, cc + 1);
-                        e_vecs(r, cc + 1) = s * e_vecs(r, cc) + cunit * h;
-                        e_vecs(r, cc) = cunit * e_vecs(r, cc) - s * h;
+                    value_type  *lo { &e_vecs(cc, 0) };
+                    value_type  *hi { &e_vecs(cc + 1, 0) };
+
+                    for (size_type r { 0 }; r < n; ++r)  {
+                        const value_type    h2 { hi[r] };
+
+                        hi[r] = s * lo[r] + cunit * h2;
+                        lo[r] = cunit * lo[r] - s * h2;
                     }
                 }
 
@@ -1888,15 +1904,41 @@ eigen_space(MA1 &eigenvalues, MA2 &eigenvectors, bool sort_values) const  {
     Matrix  imagi { 1, cols() }; // Imaginary part
 
     if (is_symmetric())  {
-        for (size_type r { 0 }; r < rows(); ++r)
-            for (size_type c { 0 }; c < cols(); ++c)
-                tmp_evecs(r, c) = at(r, c);
+        // The two routines below work on the transposed matrix (so that all
+        // their O(n^3) loops are contiguous). A is symmetric, so its
+        // transpose is itself. They need a row-major work matrix regardless
+        // of the orientation of the matrix type the caller asked for.
+        //
+        using work_t = Matrix<value_type, matrix_orient::row_major, false>;
+
+        const size_type n { rows() };
+        work_t          work { n, n };
+
+        for (size_type r { 0 }; r < n; ++r)
+            for (size_type c { 0 }; c < n; ++c)
+                work(r, c) = at(r, c);
 
         for (size_type c { 0 }; c < cols(); ++c)
             tmp_evals(0, c) = at(rows() - 1, c);
 
-        tridiagonalize_(tmp_evecs, tmp_evals, imagi);
-        diagonalize_(tmp_evecs, tmp_evals, imagi);
+        tridiagonalize_(work, tmp_evals, imagi);
+        diagonalize_(work, tmp_evals, imagi);
+
+        // Row k of work is the k-th eigenvector. Transpose it into the
+        // result (blocked, to stay cache friendly).
+        //
+        constexpr size_type blk { 32 };
+
+        for (size_type rb { 0 }; rb < n; rb += blk)  {
+            for (size_type cb { 0 }; cb < n; cb += blk)  {
+                const size_type r_end { std::min(rb + blk, n) };
+                const size_type c_end { std::min(cb + blk, n) };
+
+                for (size_type r { rb }; r < r_end; ++r)
+                    for (size_type c { cb }; c < c_end; ++c)
+                        tmp_evecs(r, c) = work(c, r);
+            }
+        }
     }
     else  {
         Matrix  hess_form { rows(), cols() };
@@ -4654,7 +4696,7 @@ operator * (const Matrix<T, MO, IS_SYM> &lhs,
 
 // ----------------------------------------------------------------------------
 
-// Naïve but cache friendly O(n^3) algorithm
+// Naive but cache friendly O(n^3) algorithm
 //
 template<typename T, matrix_orient MO1, matrix_orient MO2,
          bool IS_SYM1, bool IS_SYM2>
@@ -4713,7 +4755,47 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
         (lhs_cols >= 600L || rhs_cols >= 600L)
             ? ThreadGranularity::get_thread_level() : 0
     };
-    auto        col_lbd =
+
+    // A short left operand (a row vector, or a few rows) times a matrix. The
+    // loop nests below have an inner loop over the rows of the left operand,
+    // which is then 1 to 4 iterations long: every multiply-add becomes a
+    // load, add, store through result, a dependency chain of about 8 cycles.
+    // Here NB outputs of a row are accumulated in registers instead, giving
+    // NB independent chains. Every output is still the sum over the inner
+    // index in increasing order, starting from zero, exactly as above, so the
+    // results are bit-identical.
+    //
+    if (lhs_rows <= 4 && thread_level <= 2)  {
+        constexpr long  NB { 8 };
+
+        for (long i { 0 }; i < lhs_rows; ++i)  {
+            long    j { 0 };
+
+            for (; j + NB <= rhs_cols; j += NB)  {
+                T   acc[NB] = { };
+
+                for (long cc { 0 }; cc < lhs_cols; ++cc)  {
+                    const T a { lhs(i, cc) };
+
+                    for (long t { 0 }; t < NB; ++t)
+                        acc[t] += a * rhs(cc, j + t);
+                }
+                for (long t { 0 }; t < NB; ++t)
+                    result(i, j + t) = acc[t];
+            }
+            for (; j < rhs_cols; ++j)  {
+                T   acc { };
+
+                for (long cc { 0 }; cc < lhs_cols; ++cc)
+                    acc += lhs(i, cc) * rhs(cc, j);
+                result(i, j) = acc;
+            }
+        }
+
+        return (result);
+    }
+
+    auto    col_lbd =
         [lhs_rows, lhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {
@@ -4745,7 +4827,7 @@ operator * (const Matrix<T, MO1, IS_SYM1> &lhs,
                 }
             }
         };
-    auto        row_lbd =
+    auto    row_lbd =
         [lhs_cols, rhs_cols, &result,
          &lhs = std::as_const(lhs), &rhs = std::as_const(rhs)]
         (auto begin, auto end) -> void  {

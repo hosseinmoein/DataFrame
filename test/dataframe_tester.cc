@@ -2772,57 +2772,57 @@ static void test_gen_datetime_index()  {
     assert(idx_vec1[10] == 20280101);
     assert(idx_vec1[20] == 20380101);
 
-    // idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-    //                                            "12/31/2038",
-    //                                            time_frequency::monthly,
-    //                                            3,
-    //                                            DT_TIME_ZONE::AM_NEW_YORK);
-    // assert(idx_vec1.size() == 84);
-    // assert(idx_vec1.capacity() == 86);
-    // assert(idx_vec1[0] == 20180101);
-    // assert(idx_vec1[1] == 20180401);
-    // assert(idx_vec1[2] == 20180701);
-    // assert(idx_vec1[40] == 20280101);
-    // assert(idx_vec1[83] == 20381001);
+    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                               "12/31/2038",
+                                               time_frequency::monthly,
+                                               3,
+                                               DT_TIME_ZONE::AM_NEW_YORK);
+    assert(idx_vec1.size() == 84);
+    assert(idx_vec1.capacity() == 86);
+    assert(idx_vec1[0] == 20180101);
+    assert(idx_vec1[1] == 20180401);
+    assert(idx_vec1[2] == 20180701);
+    assert(idx_vec1[40] == 20280101);
+    assert(idx_vec1[83] == 20381001);
 
-    // idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-    //                                            "12/31/2038",
-    //                                            time_frequency::weekly,
-    //                                            4,
-    //                                            DT_TIME_ZONE::AM_NEW_YORK);
-    // assert(idx_vec1.size() == 274);
-    // assert(idx_vec1.capacity() == 274);
-    // assert(idx_vec1[0] == 20180101);
-    // assert(idx_vec1[1] == 20180129);
-    // assert(idx_vec1[2] == 20180226);
-    // assert(idx_vec1[272] == 20381108);
-    // assert(idx_vec1[273] == 20381206);
+    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                               "12/31/2038",
+                                               time_frequency::weekly,
+                                               4,
+                                               DT_TIME_ZONE::AM_NEW_YORK);
+    assert(idx_vec1.size() == 274);
+    assert(idx_vec1.capacity() == 274);
+    assert(idx_vec1[0] == 20180101);
+    assert(idx_vec1[1] == 20180129);
+    assert(idx_vec1[2] == 20180226);
+    assert(idx_vec1[272] == 20381108);
+    assert(idx_vec1[273] == 20381206);
 
-    // idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-    //                                            "12/31/2038",
-    //                                            time_frequency::daily,
-    //                                            1,
-    //                                            DT_TIME_ZONE::AM_NEW_YORK);
-    // assert(idx_vec1.size() == 7669);
-    // assert(idx_vec1.capacity() == 7670);
-    // assert(idx_vec1[0] == 20180101);
-    // assert(idx_vec1[1] == 20180102);
-    // assert(idx_vec1[2] == 20180103);
-    // assert(idx_vec1[7667] == 20381229);
-    // assert(idx_vec1[7668] == 20381230);
+    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                               "12/31/2038",
+                                               time_frequency::daily,
+                                               1,
+                                               DT_TIME_ZONE::AM_NEW_YORK);
+    assert(idx_vec1.size() == 7669);
+    assert(idx_vec1.capacity() == 7670);
+    assert(idx_vec1[0] == 20180101);
+    assert(idx_vec1[1] == 20180102);
+    assert(idx_vec1[2] == 20180103);
+    assert(idx_vec1[7667] == 20381229);
+    assert(idx_vec1[7668] == 20381230);
 
-    // idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-    //                                            "12/31/2022",
-    //                                            time_frequency::hourly,
-    //                                            1,
-    //                                            DT_TIME_ZONE::AM_NEW_YORK);
-    // assert(idx_vec1.size() == 43800);
-    // assert(idx_vec1.capacity() == 43801);
-    // assert(idx_vec1[0] == 1514782800);
-    // assert(idx_vec1[1] == 1514786400);
-    // assert(idx_vec1[2] == 1514790000);
-    // assert(idx_vec1[43798] == 1672455600);
-    // assert(idx_vec1[43799] == 1672459200);
+    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                               "12/31/2022",
+                                               time_frequency::hourly,
+                                               1,
+                                               DT_TIME_ZONE::AM_NEW_YORK);
+    assert(idx_vec1.size() == 43800);
+    assert(idx_vec1.capacity() == 43801);
+    assert(idx_vec1[0] == 1514782800);
+    assert(idx_vec1[1] == 1514786400);
+    assert(idx_vec1[2] == 1514790000);
+    assert(idx_vec1[43798] == 1672455600);
+    assert(idx_vec1[43799] == 1672459200);
 
     idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
                                                "03/31/2018",

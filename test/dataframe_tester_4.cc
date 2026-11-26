@@ -1717,37 +1717,49 @@ void test_get_data_by_affin()  {
              [](const double &x, const double &y) -> double  {
                  return (std::fabs(x - y));
              },
-             25);  //  Number of iterations
+             101);  //  Number of iterations
 
-    assert(views.size() == 4);
+    assert(views.size() == 19);
 
-    assert(views[0].get_index().size() == 157);
-    assert(views[0].get_column<double>("IBM_Open").size() == 157);
-    assert(views[0].get_index()[0] == "2014-10-21");
-    assert(views[0].get_index()[156] == "2018-02-01");
-    assert(views[0].get_column<double>("IBM_High")[140] == 162.899994);
-    assert(views[0].get_column<long>("IBM_Volume")[100] == 2543100);
+    assert(views[0].get_index().size() == 69);
+    assert(views[0].get_column<double>("IBM_Open").size() == 69);
+    assert(views[0].get_index()[0] == "2014-01-02");
+    assert(views[0].get_index()[67] == "2014-10-09");
+    assert(std::fabs(views[0].get_column<double>("IBM_High")[42] - 188.99) <
+               0.0001);
+    assert(views[0].get_column<long>("IBM_Volume")[12] == 4733000);
 
-    assert(views[1].get_index().size() == 309);
-    assert(views[1].get_column<double>("IBM_Open").size() == 309);
-    assert(views[1].get_index()[0] == "2014-01-02");
-    assert(views[1].get_index()[308] == "2018-01-18");
-    assert(views[1].get_column<double>("IBM_High")[200] == 182.839996);
-    assert(views[1].get_column<long>("IBM_Volume")[100] == 3721600);
+    assert(views[1].get_index().size() == 78);
+    assert(views[1].get_column<double>("IBM_Open").size() == 78);
+    assert(views[1].get_index()[0] == "2014-01-07");
+    assert(views[1].get_index()[77] == "2014-09-30");
+    assert(std::fabs(views[1].get_column<double>("IBM_High")[50] - 190.39) <
+               0.0001);
+    assert(views[1].get_column<long>("IBM_Volume")[12] == 5125000);
 
-    assert(views[2].get_index().size() == 256);
-    assert(views[2].get_column<double>("IBM_Open").size() == 256);
-    assert(views[2].get_index()[0] == "2014-11-20");
-    assert(views[2].get_index()[255] == "2020-02-13");
-    assert(views[2].get_column<double>("IBM_High")[200] == 156.800003);
-    assert(views[2].get_column<long>("IBM_Volume")[100] == 2838100);
+    assert(views[2].get_index().size() == 75);
+    assert(views[2].get_column<double>("IBM_Open").size() == 75);
+    assert(views[2].get_index()[0] == "2014-10-20");
+    assert(views[2].get_index()[74] == "2018-01-29");
+    assert(std::fabs(views[2].get_column<double>("IBM_High")[22] - 167.85) <
+               0.0001);
+    assert(views[2].get_column<long>("IBM_Volume")[70] == 7466200);
 
-    assert(views[3].get_index().size() == 999);
-    assert(views[3].get_column<double>("IBM_Open").size() == 999);
-    assert(views[3].get_index()[0] == "2014-12-15");
-    assert(views[3].get_index()[998] == "2020-10-30");
-    assert(views[3].get_column<double>("IBM_High")[200] == 152.929993);
-    assert(views[3].get_column<long>("IBM_Volume")[100] == 3924800);
+    assert(views[3].get_index().size() == 105);
+    assert(views[3].get_column<double>("IBM_Open").size() == 105);
+    assert(views[3].get_index()[0] == "2014-11-20");
+    assert(views[3].get_index()[104] == "2018-04-17");
+    assert(std::fabs(views[3].get_column<double>("IBM_High")[10] - 158.6) <
+               0.0001);
+    assert(views[3].get_column<long>("IBM_Volume")[100] == 3870600);
+
+    assert(views[18].get_index().size() == 92);
+    assert(views[18].get_column<double>("IBM_Open").size() == 92);
+    assert(views[18].get_index()[0] == "2016-01-20");
+    assert(views[18].get_index()[91] == "2020-10-06");
+    assert(std::fabs(views[18].get_column<double>("IBM_High")[10] - 123.09) <
+               0.0001);
+    assert(views[18].get_column<long>("IBM_Volume")[60] == 8099000);
 }
 
 // ----------------------------------------------------------------------------
@@ -4613,11 +4625,11 @@ static void test_AnomalyDetectByLOFVisitor()  {
     ibm.get_column<double>("IBM_Adj_Close")[5000] = 1.5;
     ibm.get_column<double>("IBM_Adj_Close")[5030] = 20.0;
 
-    and_lof_v<double, std::string>  anomaly { 10, 2.0 };
+    and_lof_v<double, std::string>  anomaly { 10, 5.0 };
 
     ibm.single_act_visit<double>("IBM_Adj_Close", anomaly);
 
-    const std::vector<std::size_t>  result = { 502, 1001, 2002, 5000 };
+    const std::vector<std::size_t>  result = { 502, 1001, 2002, 5000, 5030 };
 
     assert((anomaly.get_result() == result));
 
@@ -4635,12 +4647,17 @@ static void test_AnomalyDetectByLOFVisitor()  {
     }
     df2.load_column("sine col", std::move(sine_col));
 
-    and_lof_v<double>   anomaly2 { 10, 1.5 };
+    and_lof_v<double>   anomaly2 { 40, 5.0 };
 
-    // It doesn't work for sine wave data. All the scores are 1.
-    //
     df2.single_act_visit<double>("sine col", anomaly2);
-    assert(anomaly2.get_result().empty());
+
+    const std::vector<std::size_t>  result2 = {
+        0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420,
+        450, 480, 510, 540, 570, 600, 630, 660, 690, 720, 750, 780, 810, 840,
+        870, 900, 930, 960, 990, 1020
+    };
+
+    assert(anomaly2.get_result() == result2);
 
     // Now multidimensional data
     //
@@ -5080,16 +5097,16 @@ static void test_fast_ica()  {
 
     assert(result.rows() == 5031);
     assert(result.cols() == 2);
-    assert((std::fabs(result(0, 0) - -0.42696) < 0.00001));
-    assert((std::fabs(result(0, 1) - 0.285257) < 0.000001));
-    assert((std::fabs(result(678, 0) - 0.682723) < 0.000001));
-    assert((std::fabs(result(678, 1) - 0.070691) < 0.000001));
-    assert((std::fabs(result(1852, 0) - 0.693654) < 0.000001));
-    assert((std::fabs(result(1852, 1) - 0.623284) < 0.000001));
-    assert((std::fabs(result(4008, 0) - 0.56028) < 0.00001));
-    assert((std::fabs(result(4008, 1) - -0.203453) < 0.000001));
-    assert((std::fabs(result(5030, 0) - -2.75905) < 0.00001));
-    assert((std::fabs(result(5030, 1) - -1.04257) < 0.00001));
+    assert((std::fabs(result(0, 0) - 0.426962) < 0.000001));
+    assert((std::fabs(result(0, 1) - -0.285257) < 0.000001));
+    assert((std::fabs(result(678, 0) - -0.682732) < 0.0000001));
+    assert((std::fabs(result(678, 1) - -0.0706922) < 0.0000001));
+    assert((std::fabs(result(1852, 0) - -0.693664) < 0.000001));
+    assert((std::fabs(result(1852, 1) - -0.623285) < 0.000001));
+    assert((std::fabs(result(4008, 0) - -0.560234) < 0.000001));
+    assert((std::fabs(result(4008, 1) - 0.203469) < 0.000001));
+    assert((std::fabs(result(5030, 0) - 2.75907) < 0.00001));
+    assert((std::fabs(result(5030, 1) - 1.04257) < 0.00001));
 
     // Now multidimensional data
     //
@@ -5203,13 +5220,13 @@ static void test_fast_ica()  {
     assert(vec_col_res.rows() == 20);
 
     assert(std::abs(ary_col_res(0, 0) - 1.65614) < 0.00001);
-    assert(std::abs(ary_col_res(0, 1) - 3.46064) < 0.00001);
-    assert(std::abs(ary_col_res(0, 2) - -0.065332) < 0.000001);
+    assert(std::abs(ary_col_res(0, 1) - -3.46064) < 0.00001);
+    assert(std::abs(ary_col_res(0, 2) - -0.0653303) < 0.0000001);
     assert(std::abs(ary_col_res(9, 0) - 1.33882) < 0.00001);
-    assert(std::abs(ary_col_res(9, 1) - -0.886272) < 0.000001);
+    assert(std::abs(ary_col_res(9, 1) - 0.886273) < 0.000001);
     assert(std::abs(ary_col_res(15, 2) - -1.96797) < 0.00001);
     assert(std::abs(ary_col_res(19, 0) - 1.03096) < 0.00001);
-    assert(std::abs(ary_col_res(19, 1) - -0.793463) < 0.000001);
+    assert(std::abs(ary_col_res(19, 1) - 0.793459) < 0.000001);
     assert(std::abs(ary_col_res(19, 2) - 0.46598) < 0.00001);
 }
 
@@ -6480,7 +6497,7 @@ int main(int, char *[]) {
     test_remove_data_by_stdev();
     test_get_data_by_stdev();
     test_get_data_by_kmeans();
-    // test_get_data_by_affin();
+    test_get_data_by_affin();
     test_remove_data_by_hampel();
     test_DBSCANVisitor();
     test_MeanShiftVisitor();

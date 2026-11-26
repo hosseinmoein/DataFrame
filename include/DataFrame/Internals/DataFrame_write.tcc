@@ -144,8 +144,10 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
                         << params.delim;
             }
             else  {
+                const bool  plain { _is_plain_fmt_stream_(o) };
+
                 for (long i = start_row; i < end_row; ++i)
-                    _write_csv_df_index_(o, indices_[i]) << params.delim;
+                    _write_csv_df_value_(o, indices_[i], plain) << params.delim;
             }
             o << '\n';
         }
@@ -196,6 +198,7 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
         need_pre_comma = false;
 
         const SpinGuard guard_2(lock_);
+        const bool      plain_fmt { _is_plain_fmt_stream_(o) };
 
         for (long i = start_row; i < end_row; ++i)  {
             size_type   count = 0;
@@ -204,7 +207,7 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
                 if constexpr (std::same_as<IndexType, DateTime>)
                     _write_csv_df_index_(o, indices_[i], params.dt_format);
                 else
-                    o << indices_[i];
+                    _write_csv_df_value_(o, indices_[i], plain_fmt);
 
                 need_pre_comma = true;
                 count += 1;
@@ -212,8 +215,9 @@ write(S &o, io_format iof, const WriteParams<> params) const  {
 
             for (auto citer = column_list_.begin();
                  citer != column_list_.end(); ++citer, ++count)  {
-                print_csv2_data_functor_<S, Ts ...>  functor (
-                    i, o, params.dt_format);
+                print_csv2_data_functor_<S, Ts ...>  functor {
+                    size_type(i), o, params.dt_format
+                };
 
                 if (need_pre_comma && count > 0)  o << params.delim;
                 else  need_pre_comma = true;

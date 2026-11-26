@@ -271,11 +271,18 @@ gen_datetime_index(const char *start_datetime,
                    long increment,
                    DT_TIME_ZONE tz)  {
 
-    DateTime                start_di(start_datetime,
-                                     DT_DATE_STYLE::AME_STYLE, tz);
-    const DateTime          end_di(end_datetime, DT_DATE_STYLE::AME_STYLE, tz);
-    const double            diff = end_di.diff_seconds(start_di);
-    StlVecType<IndexType>   index_vec;
+    // Every step below converts to/from this time zone. Don't switch TZ on
+    // and off for each one of them.
+    //
+    const DateTime::TimezoneScope   tz_scope { tz };
+    DateTime                        start_di {
+        start_datetime, DT_DATE_STYLE::AME_STYLE, tz
+    };
+    const DateTime                  end_di {
+        end_datetime, DT_DATE_STYLE::AME_STYLE, tz
+    };
+    const double                    diff { end_di.diff_seconds(start_di) };
+    StlVecType<IndexType>           index_vec;
 
     switch(t_freq)  {
     case time_frequency::annual:

@@ -644,6 +644,8 @@ private:
            value_type &cdivr,
            value_type &cdivi) noexcept;
 
+    // Data parts
+    //
     size_type   rows_ { 0 };
     size_type   cols_ { 0 };
     storage_t   matrix_ { };
